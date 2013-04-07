@@ -287,6 +287,21 @@ LabelSequence::getHash(bool case_sensitive) const {
     return (hash_val);
 }
 
+size_t
+LabelSequence::getFullHash(bool case_sensitive, unsigned int seed) const {
+    size_t length;
+    const uint8_t* s = getData(&length);
+
+    size_t hash_val = seed;
+    while (length > 0) {
+        const uint8_t c = *s++;
+        boost::hash_combine(hash_val, case_sensitive ? c :
+                            isc::dns::name::internal::maptolower[c]);
+        --length;
+    }
+    return (hash_val);
+}
+
 std::string
 LabelSequence::toText(bool omit_final_dot) const {
     const uint8_t* np = &data_[offsets_[first_label_]];

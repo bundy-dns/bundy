@@ -386,6 +386,15 @@ public:
     /// \return A hash value for this label sequence.
     size_t getHash(bool case_sensitive) const;
 
+    /// \brief Calculate a hash value for the label sequence with a separate
+    /// seed.
+    ///
+    /// This method is similar to getHash(), but calculates the hash over
+    /// the enter data of the label sequence with a (usually externally
+    /// unpredictable) separate seed value.  The resulting hash value is
+    /// therefore considered reasonably unpredictable.
+    size_t getFullHash(bool case_sensitive, unsigned int seed) const;
+
     /// \brief Checks whether the label sequence is absolute
     ///
     /// \return true if the last label is the root label
