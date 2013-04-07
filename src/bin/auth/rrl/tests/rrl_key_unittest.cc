@@ -13,6 +13,7 @@
 // PERFORMANCE OF THIS SOFTWARE.
 
 #include <auth/rrl/rrl_key.h>
+#include <auth/rrl/rrl_response_type.h>
 
 #include <dns/name.h>
 #include <dns/rrtype.h>
@@ -55,83 +56,81 @@ protected:
 TEST_F(RRLKeyTest, constructAndCompare) {
     // Check various patterns of construction and compare
     const RRLKey key1(*ep4_, RRType::A(), &qlabels_, RRClass::IN(),
-                      RRLKey::RESPONSE_QUERY, MASK4, MASK6, 0);
+                      RESPONSE_QUERY, MASK4, MASK6, 0);
     // Only differing in "host ID" of the address.  the key should be
     // identical.
     ep4_.reset(IOEndpoint::create(IPPROTO_UDP, IOAddress("192.0.2.2"), 53));
     EXPECT_TRUE(key1 == RRLKey(*ep4_, RRType::A(), &qlabels_, RRClass::IN(),
-                               RRLKey::RESPONSE_QUERY, MASK4,
-                               MASK6, 0));
+                               RESPONSE_QUERY, MASK4, MASK6, 0));
 
     // If the network is different, it should be a different key.
     ep4_.reset(IOEndpoint::create(IPPROTO_UDP, IOAddress("192.0.1.1"), 53));
     EXPECT_FALSE(key1 == RRLKey(*ep4_, RRType::A(), &qlabels_, RRClass::IN(),
-                                RRLKey::RESPONSE_QUERY, MASK4, MASK6, 0));
+                                RESPONSE_QUERY, MASK4, MASK6, 0));
 
     // same for IPv6
     const RRLKey key2(*ep6_, RRType::A(), &qlabels_, RRClass::IN(),
-                      RRLKey::RESPONSE_QUERY, MASK4, MASK6, 0);
+                      RESPONSE_QUERY, MASK4, MASK6, 0);
     ep6_.reset(IOEndpoint::create(IPPROTO_UDP, IOAddress("2001:db8::2"), 0));
     EXPECT_TRUE(key2 == RRLKey(*ep6_, RRType::A(), &qlabels_, RRClass::IN(),
-                               RRLKey::RESPONSE_QUERY, MASK4, MASK6, 0));
+                               RESPONSE_QUERY, MASK4, MASK6, 0));
 
     ep6_.reset(IOEndpoint::create(IPPROTO_UDP, IOAddress("2001:db8:0:100::2"),
                                   53));
     EXPECT_FALSE(key2 == RRLKey(*ep6_, RRType::A(), &qlabels_, RRClass::IN(),
-                                RRLKey::RESPONSE_QUERY, MASK4, MASK6, 0));
+                                RESPONSE_QUERY, MASK4, MASK6, 0));
 
     // If type is different keys, are different
     ep4_.reset(IOEndpoint::create(IPPROTO_UDP, IOAddress("192.0.2.1"), 53));
     EXPECT_FALSE(key1 == RRLKey(*ep4_, RRType::NS(), &qlabels_, RRClass::IN(),
-                                RRLKey::RESPONSE_QUERY, MASK4, MASK6, 0));
+                                RESPONSE_QUERY, MASK4, MASK6, 0));
     // same for qname
     const LabelSequence labels(Name::ROOT_NAME());
     EXPECT_FALSE(key1 == RRLKey(*ep4_, RRType::NS(), &labels, RRClass::IN(),
-                                RRLKey::RESPONSE_QUERY, MASK4, MASK6, 0));
+                                RESPONSE_QUERY, MASK4, MASK6, 0));
     // case of names should be ignored
     const Name name_upper("EXAMPLE.COM");
     const LabelSequence labels_upper(name_upper);
     EXPECT_TRUE(key1 == RRLKey(*ep4_, RRType::A(), &labels_upper,
-                               RRClass::IN(),RRLKey::RESPONSE_QUERY, MASK4,
-                               MASK6, 0));
+                               RRClass::IN(), RESPONSE_QUERY, MASK4, MASK6, 0));
 
     // same for qclass, but only for the least 7 bits
     EXPECT_FALSE(key1 == RRLKey(*ep4_, RRType::A(), &qlabels_, RRClass::CH(),
-                                RRLKey::RESPONSE_QUERY, MASK4, MASK6, 0));
+                                RESPONSE_QUERY, MASK4, MASK6, 0));
     EXPECT_TRUE(key1 == RRLKey(*ep4_, RRType::A(), &qlabels_,
                                RRClass(129), // 129 mod 2^7 == 1
-                               RRLKey::RESPONSE_QUERY, MASK4, MASK6, 0));
+                               RESPONSE_QUERY, MASK4, MASK6, 0));
     // same for response type
     EXPECT_FALSE(key1 == RRLKey(*ep4_, RRType::A(), &qlabels_, RRClass::IN(),
-                                RRLKey::RESPONSE_DELEGATION, MASK4, MASK6, 0));
+                                RESPONSE_DELEGATION, MASK4, MASK6, 0));
     // for responses other than QUERY and DELEGATION, qtype and class are
     // ignored
     const RRLKey key3(*ep4_, RRType::A(), &qlabels_, RRClass::IN(),
-                      RRLKey::RESPONSE_NXDOMAIN, MASK4, MASK6, 0);
+                      RESPONSE_NXDOMAIN, MASK4, MASK6, 0);
     EXPECT_TRUE(key3 == RRLKey(*ep4_, RRType::MX(), &qlabels_, RRClass::IN(),
-                               RRLKey::RESPONSE_NXDOMAIN, MASK4, MASK6, 0));
+                               RESPONSE_NXDOMAIN, MASK4, MASK6, 0));
     EXPECT_TRUE(key3 == RRLKey(*ep4_, RRType::A(), &qlabels_, RRClass::CH(),
-                               RRLKey::RESPONSE_NXDOMAIN, MASK4, MASK6, 0));
+                               RESPONSE_NXDOMAIN, MASK4, MASK6, 0));
     const RRLKey key4(*ep4_, RRType::A(), &qlabels_, RRClass::IN(),
-                      RRLKey::RESPONSE_ERROR, MASK4, MASK6, 0);
+                      RESPONSE_ERROR, MASK4, MASK6, 0);
     EXPECT_TRUE(key4 == RRLKey(*ep4_, RRType::MX(), &qlabels_, RRClass::IN(),
-                               RRLKey::RESPONSE_ERROR, MASK4, MASK6, 0));
+                               RESPONSE_ERROR, MASK4, MASK6, 0));
     EXPECT_TRUE(key4 == RRLKey(*ep4_, RRType::A(), &qlabels_, RRClass::CH(),
-                               RRLKey::RESPONSE_ERROR, MASK4, MASK6, 0));
+                               RESPONSE_ERROR, MASK4, MASK6, 0));
 
     // qname could be omitted
     const RRLKey key5(*ep4_, RRType::A(), NULL, RRClass::IN(),
-                      RRLKey::RESPONSE_QUERY, MASK4, MASK6, 0);
+                      RESPONSE_QUERY, MASK4, MASK6, 0);
     EXPECT_TRUE(key5 == RRLKey(*ep4_, RRType::A(), NULL, RRClass::IN(),
-                               RRLKey::RESPONSE_QUERY, MASK4, MASK6, 0));
+                               RESPONSE_QUERY, MASK4, MASK6, 0));
 }
 
 TEST_F(RRLKeyTest, getHash) {
     // Equivalent keys should have the same hash
     const RRLKey key1(*ep4_, RRType::A(), &qlabels_, RRClass::IN(),
-                      RRLKey::RESPONSE_QUERY, MASK4, MASK6, 0);
+                      RESPONSE_QUERY, MASK4, MASK6, 0);
     const RRLKey key2(*ep4_, RRType::A(), &qlabels_, RRClass::IN(),
-                      RRLKey::RESPONSE_QUERY, MASK4, MASK6, 0);
+                      RESPONSE_QUERY, MASK4, MASK6, 0);
     EXPECT_TRUE(key1 == key2);  // check the assumption
     EXPECT_EQ(key1.getHash(), key2.getHash());
 
@@ -139,7 +138,7 @@ TEST_F(RRLKeyTest, getHash) {
     // we know in these examples they are different (assuming the algorithm
     // won't change soon).
     const RRLKey key3(*ep6_, RRType::A(), &qlabels_, RRClass::IN(),
-                      RRLKey::RESPONSE_QUERY, MASK4, MASK6, 0);
+                      RESPONSE_QUERY, MASK4, MASK6, 0);
     EXPECT_FALSE(key1 == key3);
     EXPECT_NE(key1.getHash(), key3.getHash());
 }

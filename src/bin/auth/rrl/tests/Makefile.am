@@ -27,6 +27,7 @@ noinst_PROGRAMS = run_unittests
 
 run_unittests_SOURCES = run_unittests.cc
 run_unittests_SOURCES += rrl_key_unittest.cc
+run_unittests_SOURCES += rrl_entry_unittest.cc
 
 run_unittests_CPPFLAGS = $(AM_CPPFLAGS) $(GTEST_INCLUDES)
 run_unittests_LDFLAGS = $(AM_LDFLAGS) $(GTEST_LDFLAGS)

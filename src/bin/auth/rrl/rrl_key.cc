@@ -13,6 +13,7 @@
 // PERFORMANCE OF THIS SOFTWARE.
 
 #include <auth/rrl/rrl_key.h>
+#include <auth/rrl/rrl_response_type.h>
 
 #include <dns/labelsequence.h>
 #include <dns/rrtype.h>

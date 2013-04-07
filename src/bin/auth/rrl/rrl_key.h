@@ -15,6 +15,8 @@
 #ifndef AUTH_RRL_KEY_H
 #define AUTH_RRL_KEY_H 1
 
+#include <auth/rrl/rrl_response_type.h>
+
 #include <dns/labelsequence.h>
 #include <dns/rrtype.h>
 #include <dns/rrclass.h>
@@ -36,14 +38,6 @@ namespace detail {
 
 class RRLKey {
 public:
-    enum ResponseType {
-	RESPONSE_FREE = 0,
-	RESPONSE_QUERY,
-	RESPONSE_DELEGATION,
-	RESPONSE_NXDOMAIN,
-	RESPONSE_ERROR
-    };
-
     RRLKey(const asiolink::IOEndpoint& client_addr, const dns::RRType& qtype,
            const dns::LabelSequence* qname, const dns::RRClass& qclass,
            ResponseType resp_type, uint32_t ipv4_mask,
