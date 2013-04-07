@@ -53,6 +53,8 @@ public:
         return (boost::hash_range(cp, cp + sizeof(*this)));
     }
 
+    ResponseType getResponseType() const { return (rtype_); }
+
 private:
     uint32_t ip_[2];            // client IP prefix, up to 64 bits
     uint32_t qname_hash_;
