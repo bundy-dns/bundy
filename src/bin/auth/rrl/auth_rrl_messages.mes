@@ -14,5 +14,6 @@
 
 $NAMESPACE isc::auth::rrl
 
-% AUTH_RRL_CONSIDER consider limiting %1
-TBD
+% AUTH_RRL_ENTRY_EXPANDED increase from %1 to %2 RRL entries with %3 bins; average search length %4
+
+% AUTH_RRL_TABLE_EXPANDED increase from %1 to %2 RRL bins for %3 entries; average search length %4
