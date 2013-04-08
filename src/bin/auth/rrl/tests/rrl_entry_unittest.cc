@@ -122,7 +122,7 @@ TEST_F(RRLEntryTest, updateBalance) {
     EXPECT_EQ(1, entries_[1].getResponseBalance(rates_, 2));
     EXPECT_EQ(RRL_OK, entries_[1].updateBalance(ts_bases_, rates_, 0, now + 2,
                                                 15));
-    EXPECT_EQ(0, entries_[1].getResponseBalance(rates_, 2));
+    EXPECT_EQ(0, entries_[1].getResponseBalance(rates_, 0));
     // next one will be dropped again, and after 3 seconds, the balance
     // could become 2, but it can't be larger than rate, so should actually
     // be 1.

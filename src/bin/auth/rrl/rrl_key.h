@@ -38,10 +38,20 @@ namespace detail {
 
 class RRLKey {
 public:
+    // For requirements of STL containers.  We don't directly use keys
+    // constructed by this.
+    RRLKey() {}
+
     RRLKey(const asiolink::IOEndpoint& client_addr, const dns::RRType& qtype,
            const dns::LabelSequence* qname, const dns::RRClass& qclass,
            ResponseType resp_type, uint32_t ipv4_mask,
            const uint32_t ipv6_masks[4], uint32_t hash_seed);
+
+    RRLKey& operator=(const RRLKey& source) {
+        // See the constructor's note about ugly memcpy
+        std::memcpy(this, &source, sizeof(*this));
+        return (*this);
+    }
 
     bool operator==(const RRLKey& other) const {
         return (std::memcmp(this, &other, sizeof(*this)) == 0);

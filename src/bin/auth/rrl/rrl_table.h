@@ -30,6 +30,8 @@ namespace isc {
 namespace auth {
 namespace rrl {
 namespace detail {
+class RRLKey;
+class RRLRate;
 
 /// \brief Table maintaining RRL entries.
 class RRLTable : boost::noncopyable {
@@ -65,8 +67,11 @@ public:
 
     /// \brief Returns the current number of entries.
     ///
-    /// Mostly for testing only.
-    size_t getEntryCount() const { return (num_entries_); }
+    /// Mostly for testing only (this performs expensive integrity check).
+    size_t getEntryCount() const {
+        assert(num_entries_ == lru_.size());
+        return (num_entries_);
+    }
 
     /// \brief Return the total hash bins inside the table.
     ///
@@ -91,8 +96,17 @@ public:
 
     void expandEntries(size_t count_to_add);
 
+    /// \brief Search for an entry for a response and optionally create it.
+    RRLEntry* getEntry(const RRLKey& key,
+                       const RRLEntry::TimestampBases& ts_bases,
+                       const RRLRate& rates, std::time_t now, int window);
+
 private:
+    // Post-search helper of getEntry().
+    void refEntry(RRLEntry& entry, int probes, std::time_t now);
+
     const size_t max_entries_;
+    static const size_t MAX_EXPAND_COUNT = 1000; // following BIND 9
     size_t num_entries_;
     // Placeholder of table entries.  This must be placed before the hash
     // and LRU, as they are expected to be (auto)unlinked on destruction.

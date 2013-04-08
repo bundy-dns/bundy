@@ -43,7 +43,7 @@ public:
     boost::intrusive::list_member_hook<> lru_hook_;
 
     void reset(const RRLKey& key, unsigned int hash_gen) {
-        new(&key_placeholder_) RRLKey(key);
+        key_ = key;
         responses_ = 0;
         log_qname_ = 0;
         timestamp_gen_ = 0;
@@ -53,6 +53,15 @@ public:
         log_secs_ = 0;
         timestamp_ = 0;
         slip_cnt_ = 0;
+        pad_ = 0;
+    }
+
+    void setHashGen(unsigned int gen) {
+        hash_gen_ = (gen > 0) ? 1 : 0;
+    }
+
+    unsigned int getHashGen() const {
+        return (hash_gen_);
     }
 
     /// \brief Bases of timestamps for the RRL entries.
@@ -86,34 +95,31 @@ public:
     /// \brief Return the current balance for the entry, focusing on whether
     /// it's negative.
     ///
-    /// If the internal current balance is not negative, it simply returns 0
-    /// (following the BIND 9 implementation).  Otherwise, it calculates the
-    /// expected next balance with the given age and returns it.  So the
-    /// return value of this method should be used if the balance is expected
-    /// to be (still) negative or not, rather than to get the absolute
-    /// balance value.
+    /// If the internal current balance is positive, it simply returns that
+    /// value.  Otherwise, it calculates the/ expected next balance with the
+    /// given age and returns it.  So the return value of this method should
+    /// be used if the corresponding entry is expected to be (still) penalized
+    /// or not, rather than to get the absolute balance value.
     int getResponseBalance(const RRLRate& rates, int age) const;
+
+    const RRLKey& getKey() const { return (key_); }
 
 private:
     static const unsigned int TIMESTAMP_VALID = 1;
     static const unsigned int TIMESTAMP_INVALID = 0;
 
-    const RRLKey& getKey() const {
-        const void* p = key_placeholder_;
-        return (*static_cast<const RRLKey*>(p));
-    }
-
-    uint8_t key_placeholder_[sizeof(RRLKey)];
+    RRLKey key_;
+    uint32_t pad_;
     int32_t responses_ : 24; // response_balance, debit_rrl_entry, debit_log
     uint32_t log_qname_ : 8;
 
-    uint32_t timestamp_gen_ : TIMESTAMP_GEN_BITS; // set in set_age  (fully private?)
-    uint32_t timestamp_valid_ : 1; // set in set_age (fully private?)
-    uint32_t hash_gen_ : 1;        // set in get_entry (fully private)
-    uint32_t logged_ : 1;          // set in log_end, dns_rrl()
-    uint32_t log_secs_ : 11;       // set in debit_rrl_entry, dns_rrl()
-    uint32_t timestamp_ : TIMESTAMP_BITS;   // set in set_age
-    uint32_t slip_cnt_ : 4;     // only used in debit_rrl_entry
+    uint32_t timestamp_gen_ : TIMESTAMP_GEN_BITS;
+    uint32_t timestamp_valid_ : 1;
+    uint32_t hash_gen_ : 1;
+    uint32_t logged_ : 1;
+    uint32_t log_secs_ : 11;
+    uint32_t timestamp_ : TIMESTAMP_BITS;
+    uint32_t slip_cnt_ : 4;
 };
 
 } // namespace detail

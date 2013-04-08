@@ -27,7 +27,7 @@ Result
 RRLEntry::updateBalance(TimestampBases& ts_bases, RRLRate& rates,
                         double /*qps*/, std::time_t now, int window)
 {
-    const int rate = rates.getRate(getKey().getResponseType());
+    const int rate = rates.getRate(key_.getResponseType());
     if (rate == 0) {
         return (RRL_OK);
     }
@@ -66,8 +66,8 @@ RRLEntry::updateBalance(TimestampBases& ts_bases, RRLRate& rates,
 
 int
 RRLEntry::getResponseBalance(const RRLRate& rates, int age) const {
-    const int rate = responses_ >= 0 ? 0 :
-        rates.getRate(getKey().getResponseType());
+    const int rate = responses_ > 0 ? 0 :
+        rates.getRate(key_.getResponseType());
     const int balance = responses_ + age * rate;
     if (balance > rate) {
         return (rate);
