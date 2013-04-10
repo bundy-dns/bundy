@@ -70,9 +70,10 @@ public:
     getCurrentBase(std::time_t now) {
         const int ts = now - bases_[current_];
         if (ts >= MAX_TIMESTAMP || ts < -MAX_TIME_TRAVEL) {
-            callback_(current_);
+            const size_t new_current = (current_ + 1) % BASES_COUNT;
+            callback_(new_current);
 
-            current_ = (current_ + 1) % BASES_COUNT;
+            current_ = new_current;
             bases_[current_] = now;
         }
         return (std::pair<std::time_t, size_t>(bases_[current_], current_));

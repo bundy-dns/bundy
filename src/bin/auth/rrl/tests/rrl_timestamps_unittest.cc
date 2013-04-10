@@ -78,7 +78,7 @@ TEST_F(RRLTimestampsTest, getCurrentBase) {
     result = ts_bases_.getCurrentBase(now);
     EXPECT_EQ(now, result.first);
     EXPECT_EQ(1, result.second);
-    EXPECT_EQ(0, callback_param_); // callback should be called for 0th gen
+    EXPECT_EQ(1, callback_param_); // callback should be called for 1st gen
 
     // If the current base is in "far future", it's assumed to result from
     // clock change and the base is updated, too.
@@ -86,7 +86,7 @@ TEST_F(RRLTimestampsTest, getCurrentBase) {
     result = ts_bases_.getCurrentBase(now);
     EXPECT_EQ(now, result.first);
     EXPECT_EQ(2, result.second);
-    EXPECT_EQ(1, callback_param_);
+    EXPECT_EQ(2, callback_param_);
 
     // With two more updates, it overrides the 0th generation again.
     EXPECT_EQ(3, ts_bases_.getCurrentBase(now + 4095).second);
