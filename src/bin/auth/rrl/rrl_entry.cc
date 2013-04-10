@@ -25,7 +25,7 @@ const int RRLEntry::TIMESTAMP_FOREVER;
 
 Result
 RRLEntry::updateBalance(TimestampBases& ts_bases, RRLRate& rates,
-                        double /*qps*/, std::time_t now, int window)
+                        int slip, double /*qps*/, std::time_t now, int window)
 {
     const int rate = rates.getRate(key_.getResponseType());
     if (rate == 0) {
@@ -34,18 +34,20 @@ RRLEntry::updateBalance(TimestampBases& ts_bases, RRLRate& rates,
 
     // Treat time jumps into the recent past as no time.
     // Treat entries older than the window as if they were just created
-    // Credit other entries.
+    // Credit other entries.  The slip count will be reset after some
+    // period of no query.
     const int age = getAge(ts_bases, now);
     if (age > 0) {
+        // Credit tokens earned during elapsed time.
         if (age > window) {
             responses_ = rate;
-            //slip_cnt_ = 0;
+            slip_cnt_ = 0;
         } else {
             responses_ += rate * age;
             // The balance cannot be more positive than rate
             if (responses_ > rate) {
                 responses_ = rate;
-                //slip_cnt_ = 0;
+                slip_cnt_ = 0;
             }
         }
     }
@@ -61,6 +63,17 @@ RRLEntry::updateBalance(TimestampBases& ts_bases, RRLRate& rates,
         responses_ = min;
     }
 
+    // Drop this response unless it should slip.  If configured slip count
+    // is 1, all penalized queries will result in slip.
+    if (slip != 0) {
+        if (slip == 1 || slip_cnt_++ == 0) {
+            // TBD: log it
+            return (RRL_SLIP);
+        } else if (slip_cnt_ >= slip) {
+            slip_cnt_ = 0;
+        }
+    }
+    // TBD: log it.
     return (RRL_DROP);
 }
 

@@ -105,7 +105,8 @@ TEST_F(RRLEntryTest, updateBalance) {
     time_t now = 12;
 
     // RRL is disabled for normal responses, so the result should be "OK"
-    EXPECT_EQ(RRL_OK, entries_[0].updateBalance(ts_bases_, rates_, 0, now, 15));
+    EXPECT_EQ(RRL_OK, entries_[0].updateBalance(ts_bases_, rates_, 0, 0, now,
+                                                15));
     // getResponseBalance is always 0 despite the value of age
     EXPECT_EQ(0, entries_[0].getResponseBalance(rates_, 0));
     EXPECT_EQ(0, entries_[0].getResponseBalance(rates_, 1));
@@ -113,31 +114,88 @@ TEST_F(RRLEntryTest, updateBalance) {
 
     // For NXDOMAIN, credit/sec is 1, so the first response is okay, but the
     // second (in the same sec window) will be dropped
-    EXPECT_EQ(RRL_OK, entries_[1].updateBalance(ts_bases_, rates_, 0, now, 15));
+    EXPECT_EQ(RRL_OK, entries_[1].updateBalance(ts_bases_, rates_, 0, 0, now,
+                                                15));
     EXPECT_EQ(0, entries_[1].getResponseBalance(rates_, 0));
-    EXPECT_EQ(RRL_DROP, entries_[1].updateBalance(ts_bases_, rates_, 0, now,
+    EXPECT_EQ(RRL_DROP, entries_[1].updateBalance(ts_bases_, rates_, 0, 0, now,
                                                   15));
     EXPECT_EQ(-1, entries_[1].getResponseBalance(rates_, 0));
     // 2 sec later, the balance will be positive again.
     EXPECT_EQ(1, entries_[1].getResponseBalance(rates_, 2));
-    EXPECT_EQ(RRL_OK, entries_[1].updateBalance(ts_bases_, rates_, 0, now + 2,
-                                                15));
+    EXPECT_EQ(RRL_OK, entries_[1].updateBalance(ts_bases_, rates_, 0, 0,
+                                                now + 2, 15));
     EXPECT_EQ(0, entries_[1].getResponseBalance(rates_, 0));
     // next one will be dropped again, and after 3 seconds, the balance
     // could become 2, but it can't be larger than rate, so should actually
     // be 1.
-    EXPECT_EQ(RRL_DROP, entries_[1].updateBalance(ts_bases_, rates_, 0, now + 2,
-                                                  15));
+    EXPECT_EQ(RRL_DROP, entries_[1].updateBalance(ts_bases_, rates_, 0, 0,
+                                                  now + 2, 15));
     EXPECT_EQ(1, entries_[1].getResponseBalance(rates_, 3));
-    EXPECT_EQ(RRL_OK, entries_[1].updateBalance(ts_bases_, rates_, 0, now + 5,
-                                                15));
-    EXPECT_EQ(RRL_DROP, entries_[1].updateBalance(ts_bases_, rates_, 0, now + 5,
-                                                  15));
+    EXPECT_EQ(RRL_OK, entries_[1].updateBalance(ts_bases_, rates_, 0, 0,
+                                                now + 5, 15));
+    EXPECT_EQ(RRL_DROP, entries_[1].updateBalance(ts_bases_, rates_, 0, 0,
+                                                  now + 5, 15));
     for (int balance = -1; balance >= -15; --balance) {
         EXPECT_EQ(balance, entries_[1].getResponseBalance(rates_, 0));
-        EXPECT_EQ(RRL_DROP, entries_[1].updateBalance(ts_bases_, rates_, 0,
+        EXPECT_EQ(RRL_DROP, entries_[1].updateBalance(ts_bases_, rates_, 0, 0,
                                                       now + 5, 15));
     }
     EXPECT_EQ(-15, entries_[1].getResponseBalance(rates_, 0));
+}
+
+TEST_F(RRLEntryTest, updateBalanceSlip) {
+    time_t now = 12;
+
+    // Same setup as the NXDOMAIN case of updateBalance test, but slip is set
+    // to 0.  The first response is okay in any case.
+    EXPECT_EQ(RRL_OK, entries_[1].updateBalance(ts_bases_, rates_, 2, 0, now,
+                                                15));
+    // The second in the same sec window would be dropped, but since slip > 0
+    // and this is the first one that would be dropped, so the result should be
+    // SLIP.
+    EXPECT_EQ(RRL_SLIP, entries_[1].updateBalance(ts_bases_, rates_, 2, 0, now,
+                                                  15));
+    // The next one should be drop.
+    EXPECT_EQ(RRL_DROP, entries_[1].updateBalance(ts_bases_, rates_, 2, 0, now,
+                                                  15));
+    // And the next one is slip again, and so on.
+    EXPECT_EQ(RRL_SLIP, entries_[1].updateBalance(ts_bases_, rates_, 2, 0, now,
+                                                  15));
+
+    // 4 seconds later, the balance will be positive again.
+    EXPECT_EQ(1, entries_[1].getResponseBalance(rates_, 4));
+    EXPECT_EQ(RRL_OK, entries_[1].updateBalance(ts_bases_, rates_, 2, 0,
+                                                now + 4, 15));
+    // In this case, the previous slip count is remembered, so the next
+    // result will be drop, and the next one is slip.
+    EXPECT_EQ(RRL_DROP, entries_[1].updateBalance(ts_bases_, rates_, 2, 0,
+                                                  now + 4, 15));
+    EXPECT_EQ(RRL_SLIP, entries_[1].updateBalance(ts_bases_, rates_, 2, 0,
+                                                  now + 4, 15));
+
+    // Another 4 sec later, the balance will still be 1 because it cannot be
+    // larger than the rate, but slip count should be reset to 0, so the
+    // first query after OK will be SLIP.
+    EXPECT_EQ(1, entries_[1].getResponseBalance(rates_, 4));
+    EXPECT_EQ(RRL_OK, entries_[1].updateBalance(ts_bases_, rates_, 2, 0,
+                                                now + 8, 15));
+    EXPECT_EQ(RRL_SLIP, entries_[1].updateBalance(ts_bases_, rates_, 2, 0,
+                                                  now + 8, 15));
+
+    // Likewise, after a window-size sec the slip count will be reset.
+    EXPECT_EQ(RRL_OK, entries_[1].updateBalance(ts_bases_, rates_, 2, 0,
+                                                now + 24, 15)); // 24 > 8 + 15
+    EXPECT_EQ(RRL_SLIP, entries_[1].updateBalance(ts_bases_, rates_, 2, 0,
+                                                  now + 24, 15));
+
+    // The next one will result in drop, and slip count will be reset.
+    EXPECT_EQ(RRL_DROP, entries_[1].updateBalance(ts_bases_, rates_, 2, 0,
+                                                  now + 24, 15));
+    // If configured slip count is 1, all penalized queries will result in
+    // slip.
+    EXPECT_EQ(RRL_SLIP, entries_[1].updateBalance(ts_bases_, rates_, 1, 0,
+                                                  now + 24, 15));
+    EXPECT_EQ(RRL_SLIP, entries_[1].updateBalance(ts_bases_, rates_, 1, 0,
+                                                  now + 24, 15));
 }
 }

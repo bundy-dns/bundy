@@ -216,7 +216,7 @@ TEST_F(RRLTableTest, lru) {
     // won't be granted within 2 seconds.
     // The resulting LRU will be: entry6->entry2
     for (int i = 0; i < 15; ++i) {
-        entry2->updateBalance(ts_bases_, rates_, 0, 20, 15);
+        entry2->updateBalance(ts_bases_, rates_, 0, 0, 20, 15);
     }
     EXPECT_EQ(0, entry2->getResponseBalance(rates_, 2));
     RRLEntry* entry6 = table_.getEntry(
@@ -228,7 +228,7 @@ TEST_F(RRLTableTest, lru) {
     // new entry(ies) will be created.
     // The resulting LRU: entry7->entry6->entry2
     for (int i = 0; i < 15; ++i) {
-        entry6->updateBalance(ts_bases_, rates_, 0, 20, 15);
+        entry6->updateBalance(ts_bases_, rates_, 0, 0, 20, 15);
     }
     EXPECT_EQ(0, entry6->getResponseBalance(rates_, 2));
     RRLEntry* entry7 = table_.getEntry(
@@ -256,7 +256,7 @@ TEST_F(RRLTableTest, lruInSmallTable) {
     // Look for and create a new entry, and get it penalized.
     RRLEntry* entry = small_table.getEntry(key_, ts_bases_, rates_, 10, 15);
     for (int i = 0; i < 15; ++i) {
-        entry->updateBalance(ts_bases_, rates_, 0, 20, 15);
+        entry->updateBalance(ts_bases_, rates_, 0, 0, 20, 15);
     }
 
     // Another search would normally result in creating new entries, but due
@@ -279,7 +279,7 @@ TEST_F(RRLTableTest, autoExpand) {
             RRLKey(*ep_, RRType(i), &qlabels_, RRClass::IN(),
                    RESPONSE_QUERY, MASK4, MASK6, 1), ts_bases_,
             rates_, 20, 15);
-        entry->updateBalance(ts_bases_, rates_, 0, 20, 15);
+        entry->updateBalance(ts_bases_, rates_, 0, 0, 20, 15);
     }
     EXPECT_EQ(1, table_.getBinSize());
     // Next lookup will trigger expansion.

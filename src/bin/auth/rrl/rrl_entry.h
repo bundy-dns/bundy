@@ -90,7 +90,7 @@ public:
     }
 
     Result updateBalance(TimestampBases& ts_bases, RRLRate& rates,
-                         double qps, std::time_t now, int window);
+                         int slip, double qps, std::time_t now, int window);
 
     /// \brief Return the current balance for the entry, focusing on whether
     /// it's negative.
