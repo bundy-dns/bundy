@@ -104,6 +104,16 @@ public:
 
     const RRLKey& getKey() const { return (key_); }
 
+    /// \brief Return true iff the entry is "free".
+    ///
+    /// An entry is considered to be free if it's allocated but is never
+    /// actively used.
+    bool isFree() const { return (!hash_hook_.is_linked()); }
+
+    size_t getTimestampGen() const { return (timestamp_gen_); }
+
+    void invalidateTimestamp() { timestamp_valid_ = TIMESTAMP_INVALID; }
+
 private:
     static const unsigned int TIMESTAMP_VALID = 1;
     static const unsigned int TIMESTAMP_INVALID = 0;

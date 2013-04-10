@@ -146,7 +146,7 @@ RRLTable::getEntry(const RRLKey& key, const RRLEntry::TimestampBases& ts_bases,
     const LRUList::reverse_iterator it_end = lru_.rend();
     LRUList::reverse_iterator it = lru_.rbegin();
     for (; it != it_end; ++it) {
-        if (!it->hash_hook_.is_linked()) {
+        if (it->isFree()) {
             break;
         }
         const int age = it->getAge(ts_bases, now);
@@ -165,7 +165,7 @@ RRLTable::getEntry(const RRLKey& key, const RRLEntry::TimestampBases& ts_bases,
     }
     // TBD it->logged
     RRLEntry& entry = *it;
-    if (entry.hash_hook_.is_linked()) {
+    if (!entry.isFree()) {
         const size_t old_hval = entry.getKey().getHash();
         Hash& h = (entry.getHashGen() == hash_gen_) ? *hash_ : *old_hash_;
         HashList& old_ent_bin = *h.bins_[old_hval % h.bins_.size()];
@@ -201,6 +201,31 @@ RRLTable::refEntry(RRLEntry& entry, int probes, std::time_t now) {
         hash_->check_time_ = now;
         probes_ = 0;
         searches_ = 0;
+    }
+}
+
+void
+RRLTable::timestampBaseUpdated(size_t gen) {
+    // All entries older than configured "window" seconds are ancient,
+    // useless history.  Their timestamps can be treated as if they are
+    // all the same.
+    // We only do arithmetic on more recent timestamps, so bases for
+    // older timestamps can be recycled provided the old timestamps are
+    // marked as ancient history.
+    // This loop is almost always very short because most entries are
+    // recycled after one second and any entries that need to be marked
+    // are older than TIMESTAMP_BASES_COUNT * MAX_TIMESTAMP seconds.
+    const LRUList::reverse_iterator it_end = lru_.rend();
+    size_t i = 0;
+    for (LRUList::reverse_iterator it = lru_.rbegin();
+         it != it_end && (it->getTimestampGen() == gen || it->isFree());
+         ++it, ++i)
+    {
+        it->invalidateTimestamp();
+    }
+    if (i > 0) {
+        LOG_DEBUG(logger, DBGLVL_TRACE_BASIC, AUTH_RRL_ENTRY_TIMESTAMP_UPDATED).
+            arg(i);
     }
 }
 

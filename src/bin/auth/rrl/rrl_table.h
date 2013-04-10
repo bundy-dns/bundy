@@ -92,14 +92,18 @@ public:
         return (hash_->gen_);
     }
 
+    /// \brief Expand the table so it can perform search more efficiently.
     void expand(std::time_t now);
 
+    /// \brief Allocate more RRL entries stored in the table.
     void expandEntries(size_t count_to_add);
 
     /// \brief Search for an entry for a response and optionally create it.
     RRLEntry* getEntry(const RRLKey& key,
                        const RRLEntry::TimestampBases& ts_bases,
                        const RRLRate& rates, std::time_t now, int window);
+
+    void timestampBaseUpdated(size_t gen);
 
 private:
     // Post-search helper of getEntry().

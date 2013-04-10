@@ -298,4 +298,70 @@ TEST_F(RRLTableTest, autoExpand) {
                     30, 15));
     EXPECT_EQ(expected_new_bins, table_.getBinSize());
 }
+
+TEST_F(RRLTableTest, updateTimestampBase) {
+    table_.expandEntries(100);
+    table_.expand(10);
+    const int WINDOW = 15;      // in this test this doesn't matter
+    const std::time_t NOW = 0;  // ditto
+
+    // set up two entries using 0th timestamp base
+    RRLEntry* entry1 = table_.getEntry(key_, ts_bases_, rates_, NOW, WINDOW);
+    entry1->setAge(ts_bases_, 20);
+    RRLEntry* entry2 = table_.getEntry(
+        RRLKey(*ep_, RRType::NS(), &qlabels_, RRClass::IN(), RESPONSE_QUERY,
+               MASK4, MASK6, 1), ts_bases_, rates_, NOW, WINDOW);
+    entry2->setAge(ts_bases_, 25);
+
+    // force making new a timestamp base (1st) at time 5000  and create
+    // an entry using the base
+    EXPECT_EQ(1, ts_bases_.getCurrentBase(5000).second);
+    RRLEntry* entry3 = table_.getEntry(
+        RRLKey(*ep_, RRType::SOA(), &qlabels_, RRClass::IN(), RESPONSE_QUERY,
+               MASK4, MASK6, 1), ts_bases_, rates_, NOW, WINDOW);
+    entry3->setAge(ts_bases_, 5001);
+
+    // make 2 more timestamp base, and update the 0th base, too (with a
+    // "past" time for the sake of test)
+    EXPECT_EQ(2, ts_bases_.getCurrentBase(10000).second);
+    EXPECT_EQ(3, ts_bases_.getCurrentBase(15000).second);
+    EXPECT_EQ(0, ts_bases_.getCurrentBase(10).second);
+
+    // then create another entry.  it will use timestamp base #0.
+    RRLEntry* entry4 = table_.getEntry(
+        RRLKey(*ep_, RRType::MX(), &qlabels_, RRClass::IN(), RESPONSE_QUERY,
+               MASK4, MASK6, 1), ts_bases_, rates_, NOW, WINDOW);
+    entry4->setAge(ts_bases_, 15);
+
+    // At this point, the LRU list is: entry4->3->2->1.  All entries have valid
+    // timestamp.  Entries 1, 2, and 4 are using base ID 0.
+    EXPECT_EQ(0, entry1->getAge(ts_bases_, 20));
+    EXPECT_EQ(0, entry2->getAge(ts_bases_, 25));
+    EXPECT_EQ(0, entry3->getAge(ts_bases_, 5001));
+    EXPECT_EQ(0, entry4->getAge(ts_bases_, 15));
+
+    // Now emulate timestamp base update for ID 0.  Timestamps for entry 1
+    // and 2 are invalidated.  entry3 still has a valid timestamp.
+    // same for entry4, even if it uses base ID 0 because it's in the head
+    // of the LRU list followed by entry3 (using a different base ID).
+    table_.timestampBaseUpdated(0);
+    EXPECT_EQ(RRLEntry::TIMESTAMP_FOREVER, entry1->getAge(ts_bases_, 20));
+    EXPECT_EQ(RRLEntry::TIMESTAMP_FOREVER, entry2->getAge(ts_bases_, 25));
+    EXPECT_EQ(0, entry3->getAge(ts_bases_, 5001));
+    EXPECT_EQ(0, entry4->getAge(ts_bases_, 15));
+
+    // Move entry 1 and 2 to the head of the LRU list, too.  The LRU list is
+    // now: entry2->1->4->3 (and actually followed by free entries, which have
+    // tentative timestamp base ID of 0)
+    EXPECT_TRUE(table_.getEntry(key_, ts_bases_, rates_, NOW, WINDOW));
+    EXPECT_TRUE(table_.getEntry(
+                    RRLKey(*ep_, RRType::NS(), &qlabels_, RRClass::IN(),
+                           RESPONSE_QUERY, MASK4, MASK6, 1), ts_bases_, rates_,
+                    NOW, WINDOW));
+
+    // emulate timestamp base update for ID 1.  timestamp of entry 3 should
+    // be invalidated (skipping all free entries).
+    table_.timestampBaseUpdated(1);
+    EXPECT_EQ(RRLEntry::TIMESTAMP_FOREVER, entry3->getAge(ts_bases_, 5001));
+}
 }
