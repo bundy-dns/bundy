@@ -10,7 +10,8 @@ CLEANFILES = *.gcno *.gcda
 
 noinst_LTLIBRARIES = libauth_rrl.la
 
-libauth_rrl_la_SOURCES = rrl_key.h rrl_key.cc
+libauth_rrl_la_SOURCES = rrl.h rrl.cc
+libauth_rrl_la_SOURCES += rrl_key.h rrl_key.cc
 libauth_rrl_la_SOURCES += rrl_entry.h rrl_entry.cc
 libauth_rrl_la_SOURCES += rrl_table.h rrl_table.cc
 libauth_rrl_la_SOURCES += logger.h logger.cc

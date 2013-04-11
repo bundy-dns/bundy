@@ -100,11 +100,7 @@ TEST_F(RRLKeyTest, constructAndCompare) {
     EXPECT_TRUE(key1 == RRLKey(*ep4_, RRType::A(), &qlabels_,
                                RRClass(129), // 129 mod 2^7 == 1
                                RESPONSE_QUERY, MASK4, MASK6, 0));
-    // same for response type
-    EXPECT_FALSE(key1 == RRLKey(*ep4_, RRType::A(), &qlabels_, RRClass::IN(),
-                                RESPONSE_DELEGATION, MASK4, MASK6, 0));
-    // for responses other than QUERY and DELEGATION, qtype and class are
-    // ignored
+    // for responses other than QUERY, qtype and class are ignored
     const RRLKey key3(*ep4_, RRType::A(), &qlabels_, RRClass::IN(),
                       RESPONSE_NXDOMAIN, MASK4, MASK6, 0);
     EXPECT_TRUE(key3 == RRLKey(*ep4_, RRType::MX(), &qlabels_, RRClass::IN(),

@@ -26,6 +26,7 @@ if HAVE_GTEST
 noinst_PROGRAMS = run_unittests
 
 run_unittests_SOURCES = run_unittests.cc
+run_unittests_SOURCES += rrl_unittest.cc
 run_unittests_SOURCES += rrl_key_unittest.cc
 run_unittests_SOURCES += rrl_entry_unittest.cc
 run_unittests_SOURCES += rrl_timestamps_unittest.cc

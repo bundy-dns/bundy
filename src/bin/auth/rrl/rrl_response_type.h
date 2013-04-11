@@ -22,7 +22,6 @@ namespace detail {
 
 enum ResponseType {
     RESPONSE_QUERY = 0,
-    RESPONSE_DELEGATION,
     RESPONSE_NXDOMAIN,
     RESPONSE_ERROR
 };

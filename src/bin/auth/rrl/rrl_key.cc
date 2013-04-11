@@ -46,7 +46,7 @@ RRLKey::RRLKey(const IOEndpoint& client_addr, const dns::RRType& qtype,
 
     rtype_ = resp_type;
 
-    if (resp_type == RESPONSE_QUERY || resp_type == RESPONSE_DELEGATION) {
+    if (resp_type == RESPONSE_QUERY) {
         qclass_ = qclass.getCode() & 0x7f;
         qtype_ = qtype.getCode();
     }

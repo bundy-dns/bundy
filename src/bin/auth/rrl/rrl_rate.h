@@ -36,7 +36,6 @@ public:
     int getRate(ResponseType type) const {
         switch (type) {
         case RESPONSE_QUERY:
-        case RESPONSE_DELEGATION:
             return (responses_per_second_);
         case RESPONSE_NXDOMAIN:
             return (nxdomains_per_second_);
