@@ -257,7 +257,8 @@ struct ConfigurableClientList::MutableResult {
     const DataSourceInfo* info;
     operator FindResult() const {
         // Conversion to the right result.
-        return (FindResult(datasrc_client, finder, exact, genKeeper(info)));
+        return (FindResult(datasrc_client, finder, exact, matched_labels,
+                           genKeeper(info)));
     }
 };
 
@@ -291,6 +292,7 @@ ConfigurableClientList::findInternal(MutableResult& candidate,
                 candidate.datasrc_client = client;
                 candidate.finder = result.zone_finder;
                 candidate.matched = true;
+                candidate.matched_labels = result.label_count;
                 candidate.exact = true;
                 candidate.info = &info;
                 return;
@@ -302,14 +304,7 @@ ConfigurableClientList::findInternal(MutableResult& candidate,
                     // We don't need the labels at the first partial match,
                     // we have nothing to compare with. So we don't get it
                     // (as a performance) and hope we will not need it at all.
-                    const uint8_t labels(candidate.matched ?
-                        result.zone_finder->getOrigin().getLabelCount() : 0);
-                    if (candidate.matched && candidate.matched_labels == 0) {
-                        // But if the hope turns out to be false, we need to
-                        // compute it for the first match anyway.
-                        candidate.matched_labels = candidate.finder->
-                            getOrigin().getLabelCount();
-                    }
+                    const uint8_t labels = result.label_count;
                     if (labels > candidate.matched_labels ||
                         !candidate.matched) {
                         // This one is strictly better. Replace it.

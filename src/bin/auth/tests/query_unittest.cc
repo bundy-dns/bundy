@@ -71,11 +71,11 @@ public:
         switch (result.code) {
             case result::SUCCESS:
                 return (FindResult(&client_, result.zone_finder, true,
-                                   keeper));
+                                   result.label_count, keeper));
             case result::PARTIALMATCH:
                 if (!exact) {
                     return (FindResult(&client_, result.zone_finder, false,
-                                       keeper));
+                                       result.label_count, keeper));
                 }
             default:
                 return (FindResult());
@@ -349,7 +349,8 @@ public:
         nsec_name_ = nsec_name;
         nsec_context_.reset(
             new GenericContext(*this, FIND_DEFAULT, // a fake value
-                               ResultContext(code, rrset, RESULT_NSEC_SIGNED)));
+                               ResultContext(code, rrset, RESULT_NSEC_SIGNED),
+                               nsec_name.getLabelCount()));
     }
 
     // Once called, the findNSEC3 will return the provided result for the next
@@ -392,7 +393,9 @@ protected:
         ConstRRsetPtr rp = stripRRsigs(rrset, options);
         return (ZoneFinderContextPtr(
                     new GenericContext(*this, options,
-                                       ResultContext(code, rp, flags))));
+                                       ResultContext(code, rp, flags),
+                                       rrset ?
+                                       rrset->getName().getLabelCount() : 0)));
     }
 
 private:
@@ -521,7 +524,7 @@ MockZoneFinder::findAll(const Name& name, std::vector<ConstRRsetPtr>& target,
             return (ZoneFinderContextPtr(
                         new GenericContext(*this, options,
                                            ResultContext(SUCCESS, RRsetPtr()),
-                                           target)));
+                                           target, name.getLabelCount())));
         }
     }
 
@@ -864,15 +867,15 @@ public:
         // if it's either an exact match or a super domain; otherwise there's
         // no match in the map.  See also datasrc/tests/mock_client.cc.
 
-        // Eliminate the case of empty map to simply the rest of the code
+        // Eliminate the case of empty map to simplify the rest of the code
         if (zone_finders_.empty()) {
-            return (FindResult(result::NOTFOUND, ZoneFinderPtr()));
+            return (FindResult(result::NOTFOUND, ZoneFinderPtr(), 0));
         }
 
         std::map<Name, ZoneFinderPtr>::const_iterator it =
             zone_finders_.upper_bound(origin);
         if (it == zone_finders_.begin()) { // no predecessor
-            return (FindResult(result::NOTFOUND, ZoneFinderPtr()));
+            return (FindResult(result::NOTFOUND, ZoneFinderPtr(), 0));
         }
 
         --it;                   // get the predecessor
@@ -881,11 +884,14 @@ public:
         const NameComparisonResult compar(it->first.compare(origin));
         switch (compar.getRelation()) {
         case NameComparisonResult::EQUAL:
-            return (FindResult(result::SUCCESS, it->second, flags));
+            return (FindResult(result::SUCCESS, it->second,
+                               it->first.getLabelCount(), flags));
         case NameComparisonResult::SUPERDOMAIN:
-            return (FindResult(result::PARTIALMATCH, it->second, flags));
+            return (FindResult(result::PARTIALMATCH, it->second,
+                               it->first.getLabelCount(), flags));
         default:
-            return (FindResult(result::NOTFOUND, ZoneFinderPtr()));
+            return (FindResult(result::NOTFOUND, ZoneFinderPtr(),
+                               it->first.getLabelCount()));
         }
     }
 

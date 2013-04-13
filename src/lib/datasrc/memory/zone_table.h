@@ -88,13 +88,15 @@ public:
     /// See \c findZone() about the semantics of the members.
     struct FindResult {
         FindResult(result::Result param_code,
-                   const ZoneData* param_zone_data,
+                   const ZoneData* param_zone_data, size_t param_label_count,
                    result::ResultFlags param_flags = result::FLAGS_DEFAULT) :
-            code(param_code), flags(param_flags), zone_data(param_zone_data)
+            code(param_code), flags(param_flags), zone_data(param_zone_data),
+            label_count(param_label_count)
         {}
         const result::Result code;
         const result::ResultFlags flags;
         const ZoneData* const zone_data;
+        const size_t label_count;
     };
 
 private:

@@ -139,6 +139,11 @@ public:
     /// the result code ("success" or "not found") and the found object,
     /// i.e., avoid using \c NULL to mean "not found", etc.
     ///
+    /// label count is the number of labels of the zone's origin name,
+    /// if a zone is found; otherwise 0.  It should be identical to
+    /// zone_finder->getOrigin().getLabelCount(), but could be more
+    /// efficient if getOrigin() is relatively expensive.
+    ///
     /// This is a simple value class with no internal state, so for
     /// convenience we allow the applications to refer to the members
     /// directly.
@@ -148,13 +153,15 @@ public:
     struct FindResult {
         FindResult(result::Result param_code,
                    const ZoneFinderPtr param_zone_finder,
+                   size_t param_label_count,
                    result::ResultFlags param_flags = result::FLAGS_DEFAULT) :
             code(param_code), flags(param_flags),
-            zone_finder(param_zone_finder)
+            zone_finder(param_zone_finder), label_count(param_label_count)
         {}
         const result::Result code;
         const result::ResultFlags flags;
         const ZoneFinderPtr zone_finder;
+        const size_t label_count;
     };
 
     ///

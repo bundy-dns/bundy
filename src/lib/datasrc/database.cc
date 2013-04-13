@@ -100,7 +100,8 @@ DatabaseClient::findZone(const Name& name) const {
     if (zone.first) {
         return (FindResult(result::SUCCESS,
                            ZoneFinderPtr(new Finder(accessor_,
-                                                    zone.second, name))));
+                                                    zone.second, name)),
+                           name.getLabelCount()));
     }
     // Then super domains
     // Start from 1, as 0 is covered above
@@ -111,11 +112,13 @@ DatabaseClient::findZone(const Name& name) const {
             return (FindResult(result::PARTIALMATCH,
                                ZoneFinderPtr(new Finder(accessor_,
                                                         zone.second,
-                                                        superdomain))));
+                                                        superdomain)),
+
+                               superdomain.getLabelCount()));
         }
     }
     // No, really nothing
-    return (FindResult(result::NOTFOUND, ZoneFinderPtr()));
+    return (FindResult(result::NOTFOUND, ZoneFinderPtr(), 0));
 }
 
 bool
@@ -448,11 +451,11 @@ DatabaseClient::Finder::findAll(const bundy::dns::Name& name,
                                 std::vector<bundy::dns::ConstRRsetPtr>& target,
                                 const FindOptions options)
 {
+    const DBResultContext result = findInternal(name, RRType::ANY(),
+                                                &target, options);
     return (ZoneFinderContextPtr(new GenericContext(
-                                     *this, options,
-                                     findInternal(name, RRType::ANY(),
-                                                  &target, options),
-                                     target)));
+                                     *this, options, result.context_,
+                                     target, result.match_label_count_)));
 }
 
 ZoneFinderContextPtr
@@ -463,10 +466,10 @@ DatabaseClient::Finder::find(const bundy::dns::Name& name,
     if (type == RRType::ANY()) {
         bundy_throw(bundy::Unexpected, "Use findAll to answer ANY");
     }
+    const DBResultContext result = findInternal(name, type, NULL, options);
     return (ZoneFinderContextPtr(new GenericContext(
-                                     *this, options,
-                                     findInternal(name, type, NULL,
-                                                  options))));
+                                     *this, options, result.context_,
+                                     result.match_label_count_)));
 }
 
 DatabaseClient::Finder::DelegationSearchResult
@@ -630,7 +633,7 @@ DatabaseClient::Finder::findDelegationPoint(const bundy::dns::Name& name,
 // covering NSEC record.
 //
 // If none of the above applies in any level, the search fails with NXDOMAIN.
-ZoneFinder::ResultContext
+DatabaseClient::Finder::DBResultContext
 DatabaseClient::Finder::findWildcardMatch(
     const Name& name, const RRType& type, const FindOptions options,
     const DelegationSearchResult& dresult, vector<ConstRRsetPtr>* target,
@@ -676,12 +679,15 @@ DatabaseClient::Finder::findWildcardMatch(
                           DATASRC_DATABASE_WILDCARD_CANCEL_NS).
                     arg(accessor_->getDBName()).arg(wildcard).
                     arg(dresult.first_ns->getName());
-                return (ResultContext(DELEGATION, dresult.first_ns));
+                return (DBResultContext(
+                            dresult.first_ns->getName().getLabelCount(),
+                            DELEGATION, dresult.first_ns));
             } else if (!hasSubdomains(name.split(i - 1).toText())) {
                 // The wildcard match is the best one, find the final result
                 // at it.  Note that wildcard should never be the zone origin.
                 return (findOnNameResult(name, type, options, false, found,
-                                         &wildcard, target, dnssec_ctx));
+                                         &wildcard, target, dnssec_ctx,
+                                         superdomain.getLabelCount() + 1));
             } else {
 
                 // more specified match found, cancel wildcard match
@@ -689,7 +695,7 @@ DatabaseClient::Finder::findWildcardMatch(
                           DATASRC_DATABASE_WILDCARD_CANCEL_SUB).
                     arg(accessor_->getDBName()).arg(wildcard).
                     arg(name).arg(superdomain);
-                return (ResultContext(NXDOMAIN, ConstRRsetPtr()));
+                return (DBResultContext(0, NXDOMAIN, ConstRRsetPtr()));
             }
 
         } else if (hasSubdomains(wildcard)) {
@@ -699,21 +705,22 @@ DatabaseClient::Finder::findWildcardMatch(
                 arg(accessor_->getDBName()).arg(wildcard).arg(name);
             const FindResultFlags flags = (RESULT_WILDCARD |
                                            dnssec_ctx.getResultFlags());
-            return (ResultContext(NXRRSET,
-                                  dnssec_ctx.getDNSSECRRset(Name(wildcard),
-                                                            true), flags));
+            return (DBResultContext(superdomain.getLabelCount() + 1, NXRRSET,
+                                    dnssec_ctx.getDNSSECRRset(Name(wildcard),
+                                                              true), flags));
         }
     }
 
     // Nothing found at any level.
-    return (ResultContext(NXDOMAIN, ConstRRsetPtr()));
+    return (DBResultContext(0, NXDOMAIN, ConstRRsetPtr()));
 }
 
-ZoneFinder::ResultContext
+DatabaseClient::Finder::DBResultContext
 DatabaseClient::Finder::logAndCreateResult(
     const Name& name, const string* wildname, const RRType& type,
     ZoneFinder::Result code, ConstRRsetPtr rrset,
-    const bundy::log::MessageID& log_id, FindResultFlags flags) const
+    const bundy::log::MessageID& log_id, FindResultFlags flags,
+    uint8_t match_labels) const
 {
     if (rrset) {
         if (wildname == NULL) {
@@ -736,7 +743,7 @@ DatabaseClient::Finder::logAndCreateResult(
                 arg(getClass()).arg(*wildname);
         }
     }
-    return (ResultContext(code, rrset, flags));
+    return (DBResultContext(match_labels, code, rrset, flags));
 }
 
 DatabaseClient::Finder::FindDNSSECContext::FindDNSSECContext(
@@ -852,7 +859,7 @@ DatabaseClient::Finder::FindDNSSECContext::getResultFlags() {
     return (RESULT_DEFAULT);
 }
 
-ZoneFinder::ResultContext
+DatabaseClient::Finder::DBResultContext
 DatabaseClient::Finder::findOnNameResult(const Name& name,
                                          const RRType& type,
                                          const FindOptions options,
@@ -860,7 +867,8 @@ DatabaseClient::Finder::findOnNameResult(const Name& name,
                                          const FoundRRsets& found,
                                          const string* wildname,
                                          std::vector<bundy::dns::ConstRRsetPtr>*
-                                         target, FindDNSSECContext& dnssec_ctx)
+                                         target, FindDNSSECContext& dnssec_ctx,
+                                         uint8_t match_labels)
 {
     const bool wild = (wildname != NULL);
     // For wildcard case with DNSSEC required, the caller would need to
@@ -887,7 +895,7 @@ DatabaseClient::Finder::findOnNameResult(const Name& name,
                                    nsi->second,
                                    wild ? DATASRC_DATABASE_WILDCARD_NS :
                                    DATASRC_DATABASE_FOUND_DELEGATION_EXACT,
-                                   flags));
+                                   flags, match_labels));
 
     } else if (type != RRType::CNAME() && cni != found.second.end()) {
         // We are not searching for a CNAME but nevertheless we have found one
@@ -903,7 +911,7 @@ DatabaseClient::Finder::findOnNameResult(const Name& name,
         return (logAndCreateResult(name, wildname, type, CNAME, cni->second,
                                    wild ? DATASRC_DATABASE_WILDCARD_CNAME :
                                    DATASRC_DATABASE_FOUND_CNAME,
-                                   flags));
+                                   flags, match_labels));
     } else if (wti != found.second.end()) {
         bool any(type == RRType::ANY());
         if (any) {
@@ -941,7 +949,7 @@ DatabaseClient::Finder::findOnNameResult(const Name& name,
         // includes the case where we were explicitly querying for a CNAME and
         // found it.  It also includes the case where we were querying for an
         // NS RRset and found it at the apex of the zone.)
-        return (ResultContext(SUCCESS, wti->second, flags));
+        return (DBResultContext(match_labels, SUCCESS, wti->second, flags));
     }
 
     // If we get here, we have found something at the requested name but not
@@ -958,15 +966,17 @@ DatabaseClient::Finder::findOnNameResult(const Name& name,
         // NULL for 'wildname'.
         return (logAndCreateResult(name, NULL, type, NXRRSET, dnssec_rrset,
                                    DATASRC_DATABASE_FOUND_NXRRSET_NSEC,
-                                   flags | RESULT_NSEC_SIGNED));
+                                   flags | RESULT_NSEC_SIGNED,
+                                   match_labels));
     }
     return (logAndCreateResult(name, wildname, type, NXRRSET, dnssec_rrset,
                                wild ? DATASRC_DATABASE_WILDCARD_NXRRSET :
                                DATASRC_DATABASE_FOUND_NXRRSET,
-                               flags | dnssec_ctx.getResultFlags()));
+                               flags | dnssec_ctx.getResultFlags(),
+                               match_labels));
 }
 
-ZoneFinder::ResultContext
+DatabaseClient::Finder::DBResultContext
 DatabaseClient::Finder::findNoNameResult(const Name& name, const RRType& type,
                                          FindOptions options,
                                          const DelegationSearchResult& dresult,
@@ -984,17 +994,18 @@ DatabaseClient::Finder::findNoNameResult(const Name& name, const RRType& type,
         LOG_DEBUG(logger, DBG_TRACE_DETAILED,
                   DATASRC_DATABASE_FOUND_EMPTY_NONTERMINAL).
             arg(accessor_->getDBName()).arg(name);
-        return (ResultContext(NXRRSET, dnssec_ctx.getDNSSECRRset(name, true),
-                              dnssec_ctx.getResultFlags()));
+        return (DBResultContext(name.getLabelCount(), NXRRSET,
+                                dnssec_ctx.getDNSSECRRset(name, true),
+                                dnssec_ctx.getResultFlags()));
     } else if ((options & NO_WILDCARD) == 0) {
         // It's not an empty non-terminal and wildcard matching is not
         // disabled, so check for wildcards. If there is a wildcard match
         // (i.e. all results except NXDOMAIN) return it; otherwise fall
         // through to the NXDOMAIN case below.
-        const ResultContext wcontext =
+        const DBResultContext wcontext =
             findWildcardMatch(name, type, options, dresult, target,
                               dnssec_ctx);
-        if (wcontext.code != NXDOMAIN) {
+        if (wcontext.context_.code != NXDOMAIN) {
             return (wcontext);
         }
     }
@@ -1003,11 +1014,11 @@ DatabaseClient::Finder::findNoNameResult(const Name& name, const RRType& type,
     // NSEC records if requested).
     LOG_DEBUG(logger, DBG_TRACE_DETAILED, DATASRC_DATABASE_NO_MATCH).
               arg(accessor_->getDBName()).arg(name).arg(type).arg(getClass());
-    return (ResultContext(NXDOMAIN, dnssec_ctx.getDNSSECRRset(name, true),
-                          dnssec_ctx.getResultFlags()));
+    return (DBResultContext(0, NXDOMAIN, dnssec_ctx.getDNSSECRRset(name, true),
+                            dnssec_ctx.getResultFlags()));
 }
 
-ZoneFinder::ResultContext
+DatabaseClient::Finder::DBResultContext
 DatabaseClient::Finder::findInternal(const Name& name, const RRType& type,
                                      std::vector<ConstRRsetPtr>* target,
                                      const FindOptions options)
@@ -1039,7 +1050,8 @@ DatabaseClient::Finder::findInternal(const Name& name, const RRType& type,
     const DelegationSearchResult dresult = findDelegationPoint(name, options);
     if (dresult.rrset) {
         // In this case no special flags are needed.
-        return (ResultContext(dresult.code, dresult.rrset));
+        return (DBResultContext(dresult.rrset->getName().getLabelCount(),
+                                dresult.code, dresult.rrset));
     }
 
     // If there is no delegation, look for the exact match to the request
@@ -1060,7 +1072,7 @@ DatabaseClient::Finder::findInternal(const Name& name, const RRType& type,
         // the final result.
         const bool is_origin = (name == getOrigin());
         return (findOnNameResult(name, type, options, is_origin, found, NULL,
-                                 target, dnssec_ctx));
+                                 target, dnssec_ctx, name.getLabelCount()));
     } else {
         // Did not find anything at all at the domain name, so check for
         // subdomains or wildcards.

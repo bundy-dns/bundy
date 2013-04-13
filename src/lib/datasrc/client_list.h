@@ -178,11 +178,12 @@ public:
         /// It simply fills in the member variables according to the
         /// parameters. See the member descriptions for their meaning.
         FindResult(DataSourceClient* dsrc_client, const ZoneFinderPtr& finder,
-                   bool exact_match,
+                   bool exact_match, uint8_t matched_labels,
                    const boost::shared_ptr<LifeKeeper>& life_keeper) :
             dsrc_client_(dsrc_client),
             finder_(finder),
             exact_match_(exact_match),
+            matched_labels_(matched_labels),
             life_keeper_(life_keeper)
         {}
 
@@ -192,7 +193,8 @@ public:
         /// NULL, and exact_match_ is false.
         FindResult() :
             dsrc_client_(NULL),
-            exact_match_(false)
+            exact_match_(false),
+            matched_labels_(0)
         {}
 
         /// \brief Comparison operator.
@@ -227,6 +229,8 @@ public:
 
         /// \brief If the result is an exact match.
         const bool exact_match_;
+
+        const uint8_t matched_labels_;
 
         /// \brief Something that holds the dsrc_client_ valid.
         ///

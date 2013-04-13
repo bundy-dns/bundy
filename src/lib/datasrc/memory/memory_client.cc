@@ -75,7 +75,8 @@ InMemoryClient::findZone(const bundy::dns::Name& zone_name) const {
         finder.reset(new InMemoryZoneFinder(*result.zone_data, getClass()));
     }
 
-    return (DataSourceClient::FindResult(result.code, finder, result.flags));
+    return (DataSourceClient::FindResult(result.code, finder,
+                                         result.label_count, result.flags));
 }
 
 const ZoneData*

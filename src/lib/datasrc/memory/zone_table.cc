@@ -149,12 +149,12 @@ ZoneTable::findZone(const Name& name) const {
         break;
     case ZoneTableTree::NOTFOUND:
         // We have no data there, so translate the pointer to NULL as well
-        return (FindResult(result::NOTFOUND, NULL));
+        return (FindResult(result::NOTFOUND, NULL, 0));
     default:
         // Can Not Happen
         assert(0);
         // Because of warning
-        return (FindResult(result::NOTFOUND, NULL));
+        return (FindResult(result::NOTFOUND, NULL, 0));
     }
 
     // Can Not Happen (remember, NOTFOUND is handled).  node should also have
@@ -167,7 +167,7 @@ ZoneTable::findZone(const Name& name) const {
     const result::ResultFlags flags =
         zone_data->isEmpty() ? result::ZONE_EMPTY : result::FLAGS_DEFAULT;
     return (FindResult(my_result, zone_data->isEmpty() ? NULL : zone_data,
-                       flags));
+                       node->getAbsoluteLabelCount(), flags));
 }
 
 } // end of namespace memory
