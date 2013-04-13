@@ -152,7 +152,8 @@ InMemoryClient::findZone(const isc::dns::Name& zone_name) const {
         finder.reset(new InMemoryZoneFinder(*result.zone_data, getClass()));
     }
 
-    return (DataSourceClient::FindResult(result.code, finder));
+    return (DataSourceClient::FindResult(result.code, finder,
+                                         result.label_count));
 }
 
 const ZoneData*

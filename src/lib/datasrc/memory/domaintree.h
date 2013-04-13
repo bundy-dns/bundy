@@ -246,6 +246,17 @@ public:
     isc::dns::LabelSequence getAbsoluteLabels(
         uint8_t buf[isc::dns::LabelSequence::MAX_SERIALIZED_LENGTH]) const;
 
+    size_t getAbsoluteLabelCount() const {
+        size_t count = 0;
+        for (const DomainTreeNode<T>* node = this;
+             node;
+             node = node->getUpperNode())
+        {
+            count += node->getLabels().getLabelCount();
+        }
+        return (count);
+    }
+
     /// \brief Return the data stored in this node.
     ///
     /// You should not delete the data, it is deleted when the tree is

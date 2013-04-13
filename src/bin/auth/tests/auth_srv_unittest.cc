@@ -1615,7 +1615,8 @@ public:
             return (ZoneFinderContextPtr(new ZoneFinder::GenericContext(
                                              *this, options,
                                              ResultContext(SUCCESS,
-                                                           fake_rrset_))));
+                                                           fake_rrset_),
+                                             name.getLabelCount())));
         }
         return (real_zone_finder_->find(name, type, options));
     }
@@ -1682,7 +1683,8 @@ public:
                                         new FakeZoneFinder(result.zone_finder,
                                                            throw_when_,
                                                            isc_exception_,
-                                                           fake_rrset_))));
+                                                           fake_rrset_)),
+                           result.label_count_));
     }
 
     isc::datasrc::ZoneUpdaterPtr

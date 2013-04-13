@@ -154,22 +154,22 @@ MockDataSourceClient::MockDataSourceClient(
 DataSourceClient::FindResult
 MockDataSourceClient::findZone(const Name& name) const {
     if (zones.empty()) {
-        return (FindResult(result::NOTFOUND, ZoneFinderPtr()));
+        return (FindResult(result::NOTFOUND, ZoneFinderPtr(), 0));
     }
     set<Name>::const_iterator it(zones.upper_bound(name));
     if (it == zones.begin()) {
-        return (FindResult(result::NOTFOUND, ZoneFinderPtr()));
+        return (FindResult(result::NOTFOUND, ZoneFinderPtr(), 0));
     }
     --it;
     NameComparisonResult compar(it->compare(name));
     const ZoneFinderPtr finder(new Finder(*it));
     switch (compar.getRelation()) {
     case NameComparisonResult::EQUAL:
-        return (FindResult(result::SUCCESS, finder));
+        return (FindResult(result::SUCCESS, finder, it->getLabelCount()));
     case NameComparisonResult::SUPERDOMAIN:
-        return (FindResult(result::PARTIALMATCH, finder));
+        return (FindResult(result::PARTIALMATCH, finder, it->getLabelCount()));
     default:
-        return (FindResult(result::NOTFOUND, ZoneFinderPtr()));
+        return (FindResult(result::NOTFOUND, ZoneFinderPtr(), 0));
     }
 }
 

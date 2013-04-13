@@ -70,11 +70,11 @@ public:
         switch (result.code) {
             case result::SUCCESS:
                 return (FindResult(&client_, result.zone_finder, true,
-                                   keeper));
+                                   result.label_count_, keeper));
             case result::PARTIALMATCH:
                 if (!exact) {
                     return (FindResult(&client_, result.zone_finder, false,
-                                       keeper));
+                                       result.label_count_, keeper));
                 }
             default:
                 return (FindResult());
@@ -329,7 +329,8 @@ public:
         nsec_name_ = nsec_name;
         nsec_context_.reset(
             new GenericContext(*this, FIND_DEFAULT, // a fake value
-                               ResultContext(code, rrset, RESULT_NSEC_SIGNED)));
+                               ResultContext(code, rrset, RESULT_NSEC_SIGNED),
+                               nsec_name.getLabelCount()));
     }
 
     // Once called, the findNSEC3 will return the provided result for the next
@@ -372,7 +373,9 @@ protected:
         ConstRRsetPtr rp = stripRRsigs(rrset, options);
         return (ZoneFinderContextPtr(
                     new GenericContext(*this, options,
-                                       ResultContext(code, rp, flags))));
+                                       ResultContext(code, rp, flags),
+                                       rrset ?
+                                       rrset->getName().getLabelCount() : 0)));
     }
 
 private:
@@ -501,7 +504,7 @@ MockZoneFinder::findAll(const Name& name, std::vector<ConstRRsetPtr>& target,
             return (ZoneFinderContextPtr(
                         new GenericContext(*this, options,
                                            ResultContext(SUCCESS, RRsetPtr()),
-                                           target)));
+                                           target, name.getLabelCount())));
         }
     }
 
@@ -842,9 +845,11 @@ public:
             const NameComparisonResult result =
                 origin.compare((it->first).reverse());
             if (result.getRelation() == NameComparisonResult::EQUAL) {
-                return (FindResult(result::SUCCESS, it->second));
+                return (FindResult(result::SUCCESS, it->second,
+                                   it->first.getLabelCount()));
             } else if (result.getRelation() == NameComparisonResult::SUBDOMAIN) {
-                return (FindResult(result::PARTIALMATCH, it->second));
+                return (FindResult(result::PARTIALMATCH, it->second,
+                                   it->first.getLabelCount()));
             }
         }
 
@@ -852,7 +857,7 @@ public:
         // found (we have already handled the element the iterator
         // points to).
         if (it == zone_finders_.begin()) {
-            return (FindResult(result::NOTFOUND, ZoneFinderPtr()));
+            return (FindResult(result::NOTFOUND, ZoneFinderPtr(), 0));
         }
 
         // Check if the previous element is a partial match.
@@ -860,10 +865,11 @@ public:
         const NameComparisonResult result =
             origin.compare((it->first).reverse());
         if (result.getRelation() == NameComparisonResult::SUBDOMAIN) {
-            return (FindResult(result::PARTIALMATCH, it->second));
+            return (FindResult(result::PARTIALMATCH, it->second,
+                               it->first.getLabelCount()));
         }
 
-        return (FindResult(result::NOTFOUND, ZoneFinderPtr()));
+        return (FindResult(result::NOTFOUND, ZoneFinderPtr(), 0));
     }
 
     virtual ZoneUpdaterPtr getUpdater(const isc::dns::Name&, bool, bool) const {

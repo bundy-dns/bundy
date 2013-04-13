@@ -30,6 +30,7 @@
 #include <gtest/gtest.h>
 
 #include <boost/bind.hpp>
+#include <boost/function.hpp>
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
 
@@ -452,6 +453,63 @@ TEST(ZoneFinderContextSQLite3Test, escapedText) {
     EXPECT_EQ(ZoneFinder::SUCCESS, ctx->code);
     EXPECT_EQ("escaped.example.org. 3600 IN TXT \"Hello~World\\;\\\"\"\n",
               ctx->rrset->toText());
+}
+
+TEST_P(ZoneFinderContextTest, getMatchLabelCount) {
+    // Normal (non type ANY) lookup
+    // successful exact match
+    EXPECT_EQ(4, finder_->find(Name("ns1.example.org."), RRType::A())
+              ->getMatchLabelCount());
+    EXPECT_EQ(5, finder_->find(Name("a.b.wild.example.org."), RRType::A())
+              ->getMatchLabelCount());
+    // delegation
+    EXPECT_EQ(4, finder_->find(Name("a.b.example.org."), RRType::A())
+              ->getMatchLabelCount());
+    // CNAME
+    EXPECT_EQ(4, finder_->find(Name("alias.example.org."), RRType::A())
+              ->getMatchLabelCount());
+    // DNAME: labels should be that of the DNAME owner name, not qname
+    EXPECT_EQ(4, finder_->find(Name("www.dname.example.org."), RRType::A())
+              ->getMatchLabelCount());
+    // NXDOMAIN
+    EXPECT_EQ(0, finder_->find(Name("nxdomain.example.org."), RRType::A())
+              ->getMatchLabelCount());
+    // NXRRSET, normal case
+    EXPECT_EQ(4, finder_->find(Name("ns1.example.org."), RRType::MX())
+              ->getMatchLabelCount());
+    EXPECT_EQ(5, finder_->find(Name("a.b.wild.example.org."), RRType::MX())
+              ->getMatchLabelCount());
+    // NXRRSET, empty name
+    EXPECT_EQ(4, finder_->find(Name("empty.example.org."), RRType::A())
+              ->getMatchLabelCount());
+    EXPECT_EQ(5, finder_->find(Name("c.d.emptywild.example.org."), RRType::MX())
+              ->getMatchLabelCount());
+
+    // Type ANY lookup (technically we should clear target every time, but
+    // for this test it doesn't matter)
+    // successful exact match
+    vector<ConstRRsetPtr> target;
+    EXPECT_EQ(4, finder_->findAll(Name("ns1.example.org."), target)
+              ->getMatchLabelCount());
+    EXPECT_EQ(5, finder_->findAll(Name("a.b.wild.example.org."), target)
+              ->getMatchLabelCount());
+    // delegation
+    EXPECT_EQ(4, finder_->findAll(Name("a.b.example.org."), target)
+              ->getMatchLabelCount());
+    // CNAME
+    EXPECT_EQ(4, finder_->findAll(Name("alias.example.org."), target)
+              ->getMatchLabelCount());
+    // DNAME: labels should be that of the DNAME owner name, not qname
+    EXPECT_EQ(4, finder_->findAll(Name("www.dname.example.org."), target)
+              ->getMatchLabelCount());
+    // NXDOMAIN
+    EXPECT_EQ(0, finder_->findAll(Name("nxdomain.example.org."), target)
+              ->getMatchLabelCount());
+    // NXRRSET, empty name ("normal" NXRRSET shouldn't be possible for ANY)
+    EXPECT_EQ(4, finder_->findAll(Name("empty.example.org."), target)
+              ->getMatchLabelCount());
+    EXPECT_EQ(5, finder_->findAll(Name("c.d.emptywild.example.org."), target)
+              ->getMatchLabelCount());
 }
 
 }

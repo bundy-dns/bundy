@@ -1741,10 +1741,14 @@ doFindTest(ZoneFinder& finder,
            ZoneFinder::FindResultFlags expected_flags =
            ZoneFinder::RESULT_DEFAULT,
            const isc::dns::Name& expected_name = isc::dns::Name::ROOT_NAME(),
-           const ZoneFinder::FindOptions options = ZoneFinder::FIND_DEFAULT)
+           const ZoneFinder::FindOptions options = ZoneFinder::FIND_DEFAULT,
+           int expected_orig_lcount = -1) // -1 = not checked
 {
     SCOPED_TRACE("doFindTest " + name.toText() + " " + type.toText());
     ConstZoneFinderContextPtr result = finder.find(name, type, options);
+    if (expected_orig_lcount >= 0) {
+        EXPECT_EQ(expected_orig_lcount, result->getMatchLabelCount());
+    }
     findTestCommon(finder, name, type, result, expected_type, expected_ttl,
                    expected_result, expected_rdatas, expected_sig_rdatas,
                    expected_flags, expected_name, options);
@@ -1881,7 +1885,9 @@ TEST_P(DatabaseClientTest, find) {
     expected_rdatas_.push_back("192.0.2.1");
     doFindTest(*finder, isc::dns::Name("www.example.org."),
                qtype_, qtype_, rrttl_, ZoneFinder::SUCCESS,
-               expected_rdatas_, expected_sig_rdatas_);
+               expected_rdatas_, expected_sig_rdatas_,
+               ZoneFinder::RESULT_DEFAULT, Name::ROOT_NAME(),
+               ZoneFinder::FIND_DEFAULT, 4);
 
     expected_rdatas_.clear();
     expected_sig_rdatas_.clear();
@@ -2534,10 +2540,14 @@ TEST_P(DatabaseClientTest, wildcard) {
                                    "FAKEFAKEFAKE");
     doFindTest(*finder, isc::dns::Name("a.wild.example.org"),
                qtype_, qtype_, rrttl_, ZoneFinder::SUCCESS, expected_rdatas_,
-               expected_sig_rdatas_, ZoneFinder::RESULT_WILDCARD);
+               expected_sig_rdatas_, ZoneFinder::RESULT_WILDCARD,
+               Name::ROOT_NAME(), ZoneFinder::FIND_DEFAULT,
+               5);              // 5 = #labels of *.wild.example.org.
     doFindTest(*finder, isc::dns::Name("b.a.wild.example.org"),
                qtype_, qtype_, rrttl_, ZoneFinder::SUCCESS, expected_rdatas_,
-               expected_sig_rdatas_, ZoneFinder::RESULT_WILDCARD);
+               expected_sig_rdatas_, ZoneFinder::RESULT_WILDCARD,
+               Name::ROOT_NAME(), ZoneFinder::FIND_DEFAULT,
+               5);
     expected_rdatas_.clear();
     expected_sig_rdatas_.clear();
     doFindTest(*finder, isc::dns::Name("a.wild.example.org"),
@@ -3054,6 +3064,10 @@ TEST_P(DatabaseClientTest, getAll) {
                         ZoneFinder::DNAME, RRType::DNAME(), expected_rdatas_,
                         isc::dns::Name("dname.example.org."));
     // It should get the data on success
+    EXPECT_EQ(4,
+              finder->findAll(isc::dns::Name("www2.example.org."),
+                              target)->getMatchLabelCount());
+    target.clear();
     EXPECT_EQ(ZoneFinder::SUCCESS,
               finder->findAll(isc::dns::Name("www2.example.org."),
                               target)->code);
@@ -3083,6 +3097,7 @@ TEST_P(DatabaseClientTest, getAll) {
     ConstZoneFinderContextPtr result =
         finder->findAll(Name("a.wild.example.org"), target,
                         ZoneFinder::FIND_DNSSEC);
+    EXPECT_EQ(5, result->getMatchLabelCount());
     EXPECT_EQ(ZoneFinder::SUCCESS, result->code);
     EXPECT_TRUE(result->isWildcard());
     EXPECT_TRUE(result->isNSECSigned());
@@ -3112,18 +3127,26 @@ TEST_P(DatabaseClientTest, getAll) {
     EXPECT_EQ(RRType::RRSIG(), sig->getType());
     EXPECT_EQ("NSEC 5 3 3600 20000101000000 20000201000000 12345 example.org. "
               "FAKEFAKEFAKE", sig->getRdataIterator()->getCurrent().toText());
+
+    EXPECT_EQ(5,
+              finder->findAll(Name("b.a.wild.example.org"), target)->
+              getMatchLabelCount());
 }
 
 TEST_P(DatabaseClientTest, getOrigin) {
     const DataSourceClient::FindResult result =
         client_->findZone(Name("example.org"));
     ASSERT_EQ(result::SUCCESS, result.code);
+    EXPECT_EQ(3, result.label_count_);
     boost::shared_ptr<DatabaseClient::Finder> finder(
         dynamic_pointer_cast<DatabaseClient::Finder>(result.zone_finder));
     if (is_mock_) {
         EXPECT_EQ(READONLY_ZONE_ID, finder->zone_id());
     }
     EXPECT_EQ(zname_, finder->getOrigin());
+
+    // PARTIALMATCH case.  label_count_ should be the same
+    EXPECT_EQ(3, client_->findZone(Name("www.example.org")).label_count_);
 }
 
 TEST_P(DatabaseClientTest, updaterFinder) {

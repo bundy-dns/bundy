@@ -32,7 +32,7 @@ namespace {
 class NopClient : public DataSourceClient {
 public:
     virtual FindResult findZone(const isc::dns::Name&) const {
-        return (FindResult(result::NOTFOUND, ZoneFinderPtr()));
+        return (FindResult(result::NOTFOUND, ZoneFinderPtr(), 0));
     }
     virtual ZoneUpdaterPtr getUpdater(const isc::dns::Name&, bool, bool)
         const

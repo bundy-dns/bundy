@@ -245,6 +245,9 @@ TEST_F(MemoryClientTest, load) {
     ASSERT_NE(static_cast<const ZoneData*>(NULL), zone_data);
     EXPECT_FALSE(zone_data->isSigned());
     EXPECT_FALSE(zone_data->isNSEC3Signed());
+
+    EXPECT_EQ(3, client_->findZone(Name("example.org")).label_count_);
+    EXPECT_EQ(3, client_->findZone(Name("www.example.org")).label_count_);
 }
 
 TEST_F(MemoryClientTest, loadFromIterator) {

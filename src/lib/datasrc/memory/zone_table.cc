@@ -113,18 +113,19 @@ ZoneTable::findZone(const Name& name) const {
         break;
     case ZoneTableTree::NOTFOUND:
         // We have no data there, so translate the pointer to NULL as well
-        return (FindResult(result::NOTFOUND, NULL));
+        return (FindResult(result::NOTFOUND, NULL, 0));
     default:
         // Can Not Happen
         assert(0);
         // Because of warning
-        return (FindResult(result::NOTFOUND, NULL));
+        return (FindResult(result::NOTFOUND, NULL, 0));
     }
 
     // Can Not Happen (remember, NOTFOUND is handled)
     assert(node != NULL);
 
-    return (FindResult(my_result, node->getData()));
+    return (FindResult(my_result, node->getData(),
+                       node->getAbsoluteLabelCount()));
 }
 
 } // end of namespace memory
