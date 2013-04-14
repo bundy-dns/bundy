@@ -404,3 +404,7 @@ worth filing a bug report).  In any case, the authoritative server
 simply drops the NOTIFY message; if it's a temporary failure or
 delayed startup, subsequently resent messages will eventually reach
 Zonemgr.
+
+% AUTH_RRL_CHECK_APPLY Response rate limite applied: %1
+
+% AUTH_RRL_CHECK_APPLY_ERROR Error response is dropped due to rate limiting

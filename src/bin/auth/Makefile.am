@@ -82,7 +82,8 @@ EXTRA_DIST += b10-auth.xml.pre
 EXTRA_DIST += statistics_items.h.pre statistics.cc.pre
 EXTRA_DIST += tests/statistics_unittest.cc.pre
 
-b10_auth_LDADD =  $(top_builddir)/src/lib/datasrc/libb10-datasrc.la
+b10_auth_LDADD = rrl/libauth_rrl.la
+b10_auth_LDADD += $(top_builddir)/src/lib/datasrc/libb10-datasrc.la
 b10_auth_LDADD += $(top_builddir)/src/lib/dns/libb10-dns++.la
 b10_auth_LDADD += $(top_builddir)/src/lib/util/libb10-util.la
 b10_auth_LDADD += $(top_builddir)/src/lib/util/io/libb10-util-io.la

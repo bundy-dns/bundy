@@ -14,6 +14,8 @@
 
 #include <config.h>
 
+#include <auth/rrl/rrl.h>
+
 #include <util/io/sockaddr_util.h>
 
 #include <dns/message.h>
@@ -2106,6 +2108,135 @@ TEST_F(AuthSrvTest, loadZoneCommand) {
     // it should be initially accepted)
     args->set("origin", Element::create("example.com"));
     sendCommand(server, "loadzone", args, 0);
+}
+
+TEST_F(AuthSrvTest, responseLimit) {
+    // By default it's disabled
+    EXPECT_FALSE(server.getRRL());
+    // We can set it.
+    server.setRRL(new rrl::ResponseLimiter(100, 20, 1, 0, 1, 2, 2,
+                                           32 /* RRL per full IPv4 address */,
+                                           56, false, 10));
+    EXPECT_TRUE(server.getRRL());
+
+    updateInMemory(server, "example.", CONFIG_INMEMORY_EXAMPLE);
+
+    createDataFromFile("nsec3query_nodnssec_fromWire.wire");
+
+    // Initial query (at time "10") should be accepted.
+    server.processMessage(*io_message, *parse_message, *response_obuffer,
+                          &dnsserv, 20);
+    EXPECT_TRUE(dnsserv.hasAnswer());
+    headerCheck(*parse_message, default_qid, Rcode::NOERROR(),
+                opcode.getCode(), QR_FLAG | AA_FLAG, 1, 1, 2, 1);
+
+    // Since the configured response-per-second is 1, the second query
+    // will result in "slip".  The response is almost empty and with TC bit on.
+    parse_message->clear(Message::PARSE);
+    server.processMessage(*io_message, *parse_message, *response_obuffer,
+                          &dnsserv, 20);
+    EXPECT_TRUE(dnsserv.hasAnswer());
+    headerCheck(*parse_message, default_qid, Rcode::NOERROR(),
+                opcode.getCode(), QR_FLAG | AA_FLAG | TC_FLAG, 1, 0, 0, 0);
+
+    // The third one will be dropped.
+    parse_message->clear(Message::PARSE);
+    server.processMessage(*io_message, *parse_message, *response_obuffer,
+                          &dnsserv, 20);
+    EXPECT_FALSE(dnsserv.hasAnswer());
+
+    // The same query from a different address should be allowed
+    // (since the previous one was dropped parse_message should still be
+    // a valid query except the AA and QR flag)
+    parse_message->setHeaderFlag(Message::HEADERFLAG_AA, false);
+    parse_message->setHeaderFlag(Message::HEADERFLAG_QR, false);
+    createRequestPacket(*parse_message, IPPROTO_UDP, NULL, "192.0.2.254");
+    parse_message->clear(Message::PARSE);
+    server.processMessage(*io_message, *parse_message, *response_obuffer,
+                          &dnsserv, 20);
+    EXPECT_TRUE(dnsserv.hasAnswer());
+    headerCheck(*parse_message, default_qid, Rcode::NOERROR(),
+                opcode.getCode(), QR_FLAG | AA_FLAG, 1, 1, 2, 1);
+
+    // TCP should be allowed
+    createDataFromFile("nsec3query_nodnssec_fromWire.wire", IPPROTO_TCP);
+    parse_message->clear(Message::PARSE);
+    server.processMessage(*io_message, *parse_message, *response_obuffer,
+                          &dnsserv, 20);
+    EXPECT_TRUE(dnsserv.hasAnswer());
+    headerCheck(*parse_message, default_qid, Rcode::NOERROR(),
+                opcode.getCode(), QR_FLAG | AA_FLAG, 1, 1, 2, 1);
+
+    // After some period of silence it will be allowed again
+    createDataFromFile("nsec3query_nodnssec_fromWire.wire");
+    parse_message->clear(Message::PARSE);
+    server.processMessage(*io_message, *parse_message, *response_obuffer,
+                          &dnsserv, 40);
+    EXPECT_TRUE(dnsserv.hasAnswer());
+    headerCheck(*parse_message, default_qid, Rcode::NOERROR(),
+                opcode.getCode(), QR_FLAG | AA_FLAG, 1, 1, 2, 1);
+}
+
+TEST_F(AuthSrvTest, responseLimitRefused) {
+    // Similar to the previous case, but the query doesn't match any zone
+    // and would result in REFUSED.
+    server.setRRL(new rrl::ResponseLimiter(100, 20, 1, 0, 1, 2, 2, 24, 56,
+                                           false, 10));
+
+    updateInMemory(server, "example.", CONFIG_INMEMORY_EXAMPLE);
+    createDataFromFile("examplequery_fromWire.wire");
+
+    // First query: will result in REFUSED.
+    server.processMessage(*io_message, *parse_message, *response_obuffer,
+                          &dnsserv, 20);
+    EXPECT_TRUE(dnsserv.hasAnswer());
+    headerCheck(*parse_message, default_qid, Rcode::REFUSED(),
+                opcode.getCode(), QR_FLAG, 1, 0, 0, 0);
+
+    // Second one will be dropped, not slipped.
+    parse_message->clear(Message::PARSE);
+    server.processMessage(*io_message, *parse_message, *response_obuffer,
+                          &dnsserv, 20);
+    EXPECT_FALSE(dnsserv.hasAnswer());
+
+    // TCP should be allowed
+    createDataFromFile("examplequery_fromWire.wire", IPPROTO_TCP);
+    parse_message->clear(Message::PARSE);
+    server.processMessage(*io_message, *parse_message, *response_obuffer,
+                          &dnsserv, 20);
+    EXPECT_TRUE(dnsserv.hasAnswer());
+    headerCheck(*parse_message, default_qid, Rcode::REFUSED(),
+                opcode.getCode(), QR_FLAG, 1, 0, 0, 0);
+}
+
+TEST_F(AuthSrvTest, responseLimitError) {
+    // Similar to the previous ones, but for general errors.
+
+    server.setRRL(new rrl::ResponseLimiter(100, 20, 1, 0, 1, 2, 2, 24, 56,
+                                           false, 10));
+    createDataFromFile("multiquestion_fromWire.wire");
+
+    // First query: will result in FORMERR.
+    server.processMessage(*io_message, *parse_message, *response_obuffer,
+                          &dnsserv, 20);
+    EXPECT_TRUE(dnsserv.hasAnswer());
+    headerCheck(*parse_message, default_qid, Rcode::FORMERR(),
+                opcode.getCode(), QR_FLAG, 2, 0, 0, 0);
+
+    // Second one will be dropped
+    parse_message->clear(Message::PARSE);
+    server.processMessage(*io_message, *parse_message, *response_obuffer,
+                          &dnsserv, 20);
+    EXPECT_FALSE(dnsserv.hasAnswer());
+
+    // TCP should be allowed
+    createDataFromFile("multiquestion_fromWire.wire", IPPROTO_TCP);
+    parse_message->clear(Message::PARSE);
+    server.processMessage(*io_message, *parse_message, *response_obuffer,
+                          &dnsserv, 20);
+    EXPECT_TRUE(dnsserv.hasAnswer());
+    headerCheck(*parse_message, default_qid, Rcode::FORMERR(),
+                opcode.getCode(), QR_FLAG, 2, 0, 0, 0);
 }
 
 }

@@ -41,7 +41,14 @@
 
 #include <boost/shared_ptr.hpp>
 
+#include <ctime>
+
 namespace isc {
+namespace auth {
+namespace rrl {
+class ResponseLimiter;
+}
+}
 namespace util {
 namespace io {
 class BaseSocketSessionForwarder;
@@ -133,7 +140,8 @@ public:
     void processMessage(const isc::asiolink::IOMessage& io_message,
                         isc::dns::Message& message,
                         isc::util::OutputBuffer& buffer,
-                        isc::asiodns::DNSServer* server);
+                        isc::asiodns::DNSServer* server,
+                        std::time_t now = 0);
 
     /// \brief Updates the configuration for the \c AuthSrv object.
     ///
@@ -272,6 +280,14 @@ public:
     /// zero, no timeouts are used, and the connection will remain
     /// open forever.
     void setTCPRecvTimeout(size_t timeout);
+
+    /// \brief Set ResponseLimiter (can be NULL, disabling existing limiter).
+    void setRRL(isc::auth::rrl::ResponseLimiter* resp_limiter);
+
+    /// \brief Return currently set ResponseLimiter (can be NULL).
+    ///
+    /// Mainly for testing purposes.
+    const isc::auth::rrl::ResponseLimiter* getRRL() const;
 
 private:
     AuthSrvImpl* impl_;
