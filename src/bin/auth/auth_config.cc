@@ -12,6 +12,8 @@
 // OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 // PERFORMANCE OF THIS SOFTWARE.
 
+#include <auth/rrl/rrl.h>
+
 #include <dns/name.h>
 #include <dns/rrclass.h>
 
@@ -33,12 +35,14 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <ctime>
 
 using namespace std;
 using namespace isc::dns;
 using namespace isc::data;
 using namespace isc::datasrc;
 using namespace isc::server_common::portconfig;
+using isc::auth::rrl::ResponseLimiter;
 
 namespace {
 
@@ -137,6 +141,64 @@ private:
     size_t timeout_;
 };
 
+/// \brief Configuration for response rate limit
+class RateLimitConfig : public AuthConfigParser {
+public:
+    RateLimitConfig(AuthSrv& server) :
+        server_(server)
+    {}
+
+    virtual void build(ConstElementPtr config) {
+        // The config interface is currently counter-intuitive: the user
+        // is responsible to set all non default values (regardless of the
+        // running configuration), so this method only has to modify
+        // explicitly set config values.
+
+        if (!config->contains("enable") ||
+            !config->get("enable")->boolValue()) {
+            // leave limiter_ NULL, and will clear the current in commit()
+            return;
+        }
+
+        // We hard code default values; no easy way to get it in this code.
+        const size_t max_entries = getIntVal(config, "max-table-size", 20000);
+        const size_t min_entries = getIntVal(config, "min-table-size", 500);
+        const int responses_per_second =
+            getIntVal(config, "responses-per-second", 0);
+        const int nxdomains_per_second =
+            getIntVal(config, "nxdomains-per-second", 0);
+        const int errors_per_second =
+            getIntVal(config, "errors-per-second", 0);
+        const int slip = getIntVal(config, "slip", 2);
+        const int window = getIntVal(config, "window", 15);
+        const int ipv4_prefixlen = getIntVal(config, "ipv4-prefix-length", 24);
+        const int ipv6_prefixlen = getIntVal(config, "ipv6-prefix-length", 56);
+        const bool log_only = config->contains("log-only") ?
+            config->get("log-only")->boolValue() : false;
+
+        limiter_.reset(new ResponseLimiter(
+                           max_entries, min_entries, responses_per_second,
+                           nxdomains_per_second, errors_per_second, window,
+                           slip, ipv4_prefixlen, ipv6_prefixlen, log_only,
+                           std::time(NULL)));
+    }
+
+    virtual void commit() {
+        server_.setRRL(limiter_.release());
+    }
+private:
+    int getIntVal(ConstElementPtr item, const string& item_name,
+                  int default_value) const
+    {
+        if (item->contains(item_name)) {
+            return (item->get(item_name)->intValue());
+        }
+        return (default_value);
+    }
+    AuthSrv& server_;
+    std::auto_ptr<isc::auth::rrl::ResponseLimiter> limiter_;
+};
+
 } // end of unnamed namespace
 
 AuthConfigParser*
@@ -170,6 +232,8 @@ createAuthConfigParser(AuthSrv& server, const std::string& config_id) {
         return (new VersionConfig());
     } else if (config_id == "tcp_recv_timeout") {
         return (new TCPRecvTimeoutConfig(server));
+    } else if (config_id == "rate-limit") {
+        return (new RateLimitConfig(server));
     } else {
         isc_throw(AuthConfigError, "Unknown configuration identifier: " <<
                   config_id);

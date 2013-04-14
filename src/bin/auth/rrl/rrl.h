@@ -37,7 +37,7 @@ namespace rrl {
 class ResponseLimiter : boost::noncopyable {
 public:
     /// \brief Constructor.
-    ResponseLimiter(size_t max_entries, size_t min_entries,
+    ResponseLimiter(size_t max_table_size, size_t min_table_size,
                     int responses_per_second, int nxdomains_per_second,
                     int errors_per_second, int window, int slip,
                     int ipv4_prefixlen, int ipv6_prefixlen, bool log_only,
@@ -56,7 +56,6 @@ public:
     int getNXDOMAINRate() const;
     int getErrorRate() const;
     size_t getEntryCount() const;
-    int getRate() const;
     int getWindow() const;
     int getSlip() const;
     std::time_t getCurrentTimestampBase(std::time_t now) const;

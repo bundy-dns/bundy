@@ -61,12 +61,12 @@ setMask(void* mask, size_t mask_len, int plen) {
 }
 
 struct ResponseLimiter::ResponseLimiterImpl {
-    ResponseLimiterImpl(size_t max_entries, int min_entries,
+    ResponseLimiterImpl(size_t max_table_size, int min_table_size,
                         int responses_per_second,
                         int nxdomains_per_second, int errors_per_second,
                         int window, int slip, int ipv4_prefixlen,
                         int ipv6_prefixlen, bool log_only, std::time_t now) :
-        table_(max_entries),
+        table_(max_table_size),
         rates_(responses_per_second, nxdomains_per_second, errors_per_second),
         window_(window), slip_(slip),
         ts_bases_(now, boost::bind(&RRLTable::timestampBaseUpdated, &table_,
@@ -81,8 +81,13 @@ struct ResponseLimiter::ResponseLimiterImpl {
         }
         setMask(&ipv4_mask_, sizeof(ipv4_mask_), ipv4_prefixlen);
         setMask(&ipv6_mask_, sizeof(ipv6_mask_), ipv6_prefixlen);
+        if (max_table_size < min_table_size) {
+            isc_throw(InvalidParameter, "max-table-size (" << max_table_size
+                      << ") must not be smaller than min-table-size ("
+                      << min_table_size << ")");
+        }
 
-        table_.expandEntries(min_entries);
+        table_.expandEntries(min_table_size);
         table_.expand(now);
     }
     RRLTable table_;
@@ -95,13 +100,13 @@ struct ResponseLimiter::ResponseLimiterImpl {
     uint32_t ipv6_mask_[4];
 };
 
-ResponseLimiter::ResponseLimiter(size_t max_entries, size_t min_entries,
+ResponseLimiter::ResponseLimiter(size_t max_table_size, size_t min_table_size,
                                  int responses_per_second,
                                  int nxdomains_per_second,
                                  int errors_per_second, int window, int slip,
                                  int ipv4_prefixlen, int ipv6_prefixlen,
                                  bool log_only, std::time_t now) :
-    impl_(new ResponseLimiterImpl(max_entries, min_entries,
+    impl_(new ResponseLimiterImpl(max_table_size, min_table_size,
                                   responses_per_second, nxdomains_per_second,
                                   errors_per_second, window, slip,
                                   ipv4_prefixlen, ipv6_prefixlen, log_only,

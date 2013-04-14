@@ -76,6 +76,9 @@ TEST_F(ResponseLimiterTest, params) {
     // min entries must be positive
     EXPECT_THROW(ResponseLimiter(100, 0, 3, 4, 5, 15, 2, 24, 56, false, 10),
                  isc::InvalidParameter);
+    // must be max >= min
+    EXPECT_THROW(ResponseLimiter(10, 100, 3, 4, 5, 15, 2, 24, 56, false, 10),
+                 isc::InvalidParameter);
 }
 
 TEST_F(ResponseLimiterTest, prefixes) {

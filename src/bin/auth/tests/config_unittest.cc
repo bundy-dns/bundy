@@ -12,6 +12,8 @@
 // OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 // PERFORMANCE OF THIS SOFTWARE.
 
+#include <auth/rrl/rrl.h>
+
 #include <gtest/gtest.h>
 
 #include <exceptions/exceptions.h>
@@ -37,6 +39,8 @@
 #include <testutils/socket_request.h>
 
 #include <sstream>
+#include <cstring>
+#include <arpa/inet.h>
 
 using namespace std;
 using namespace isc::dns;
@@ -152,6 +156,101 @@ TEST_F(AuthConfigTest, tcpRecvTimeoutConfig) {
     EXPECT_EQ(2000, dnss_.getTCPRecvTimeout());
     EXPECT_THROW(configureAuthServer(server, Element::fromJSON(
                     "{ \"tcp_recv_timeout\": -123 }")),
+                 AuthConfigError);
+}
+
+TEST_F(AuthConfigTest, rrlConfig) {
+    const uint32_t DEF_MASK4 = htonl(0xffffff00);
+    const uint32_t DEF_MASK6[4] = { 0xffffffff, htonl(0xffffff00), 0, 0 };
+
+    EXPECT_FALSE(server.getRRL());
+    configureAuthServer(server, Element::fromJSON(
+                            "{ \"rate-limit\": {\"enable\": true}}"));
+    const isc::auth::rrl::ResponseLimiter* limiter = server.getRRL();
+    ASSERT_TRUE(limiter);
+
+    // Parameters should have the default
+    EXPECT_EQ(0, limiter->getResponseRate());
+    EXPECT_EQ(0, limiter->getNXDOMAINRate());
+    EXPECT_EQ(0, limiter->getErrorRate());
+    EXPECT_EQ(500, limiter->getEntryCount());
+    EXPECT_EQ(15, limiter->getWindow());
+    EXPECT_EQ(2, limiter->getSlip());
+    EXPECT_FALSE(limiter->isLogOnly());
+    EXPECT_EQ(DEF_MASK4, limiter->getIPv4Mask());
+    EXPECT_EQ(0, std::memcmp(DEF_MASK6, limiter->getIPv6Mask(),
+                             sizeof(DEF_MASK6)));
+
+    // Check we can disable it again.
+    configureAuthServer(server, Element::fromJSON(
+                            "{ \"rate-limit\": {\"enable\": false}}"));
+    EXPECT_FALSE(server.getRRL());
+
+    // make sure all non default value is passed correctly, while others
+    // will be set to the default.
+    configureAuthServer(server, Element::fromJSON(
+                            "{ \"rate-limit\":"
+                            "  {\"enable\": true,"
+                            "   \"min-table-size\": 1000,"
+                            "   \"max-table-size\": 10000,"
+                            "   \"responses-per-second\": 1,"
+                            "   \"nxdomains-per-second\": 2,"
+                            "   \"errors-per-second\": 3"
+                            "}}"));
+    limiter = server.getRRL();
+    ASSERT_TRUE(limiter);
+    EXPECT_EQ(1, limiter->getResponseRate());
+    EXPECT_EQ(2, limiter->getNXDOMAINRate());
+    EXPECT_EQ(3, limiter->getErrorRate());
+    EXPECT_EQ(1000, limiter->getEntryCount());
+    EXPECT_EQ(15, limiter->getWindow());
+    EXPECT_EQ(2, limiter->getSlip());
+    EXPECT_FALSE(limiter->isLogOnly());
+    EXPECT_EQ(DEF_MASK4, limiter->getIPv4Mask());
+    EXPECT_EQ(0, std::memcmp(DEF_MASK6, limiter->getIPv6Mask(),
+                             sizeof(DEF_MASK6)));
+
+    configureAuthServer(server, Element::fromJSON(
+                            "{ \"rate-limit\":"
+                            "  {\"enable\": true,"
+                            "   \"slip\": 3,"
+                            "   \"window\": 20,"
+                            "   \"ipv4-prefix-length\": 32,"
+                            "   \"ipv6-prefix-length\": 0,"
+                            "   \"log-only\": true"
+                            "}}"));
+    limiter = server.getRRL();
+    ASSERT_TRUE(limiter);
+    EXPECT_EQ(0, limiter->getResponseRate());
+    EXPECT_EQ(0, limiter->getNXDOMAINRate());
+    EXPECT_EQ(0, limiter->getErrorRate());
+    EXPECT_EQ(500, limiter->getEntryCount());
+    EXPECT_EQ(20, limiter->getWindow());
+    EXPECT_EQ(3, limiter->getSlip());
+    EXPECT_TRUE(limiter->isLogOnly());
+
+    const uint32_t CUSTOM_MASK4 = htonl(0xffffffff);
+    const uint32_t CUSTOM_MASK6[4] = { 0, 0, 0, 0 };
+
+    EXPECT_EQ(CUSTOM_MASK4, limiter->getIPv4Mask());
+    EXPECT_EQ(0, std::memcmp(CUSTOM_MASK6, limiter->getIPv6Mask(),
+                             sizeof(CUSTOM_MASK6)));
+
+    // Invalid config
+    EXPECT_THROW(configureAuthServer(
+                     server, Element::fromJSON(
+                         "{ \"rate-limit\": {\"enable\": 1}}")),
+                 AuthConfigError);
+    EXPECT_THROW(configureAuthServer(server, Element::fromJSON(
+                                         "{ \"rate-limit\":"
+                                         "  {\"enable\": true,"
+                                         "   \"ipv4-prefix-length\": 33}}")),
+                 AuthConfigError);
+    EXPECT_THROW(configureAuthServer(server, Element::fromJSON(
+                                         "{ \"rate-limit\":"
+                                         "  {\"enable\": true,"
+                                         "   \"max-table-size\": 100,"
+                                         "   \"min-table-size\": 1000}}")),
                  AuthConfigError);
 }
 

@@ -95,6 +95,67 @@
         "item_type": "integer",
         "item_optional": false,
         "item_default": 5000
+      },
+      { "item_name": "rate-limit",
+        "item_type": "map",
+	"item_optional": true,
+	"map_item_spec": [
+	  { "item_name": "enable",
+	    "item_type": "boolean",
+	    "item_optional": false,
+	    "item_default": false
+          },
+	  { "item_name": "min-table-size",
+	    "item_type": "integer",
+	    "item_optional": false,
+	    "item_default": 500
+          },
+	  { "item_name": "max-table-size",
+	    "item_type": "integer",
+	    "item_optional": false,
+	    "item_default": 20000
+          },
+	  { "item_name": "responses-per-second",
+	    "item_type": "integer",
+	    "item_optional": false,
+	    "item_default": 0
+          },
+	  { "item_name": "errors-per-second",
+	    "item_type": "integer",
+	    "item_optional": false,
+	    "item_default": 0
+          },
+	  { "item_name": "nxdomains-per-second",
+	    "item_type": "integer",
+	    "item_optional": false,
+	    "item_default": 0
+          },
+	  { "item_name": "slip",
+	    "item_type": "integer",
+	    "item_optional": false,
+	    "item_default": 2
+          },
+	  { "item_name": "window",
+	    "item_type": "integer",
+	    "item_optional": false,
+	    "item_default": 15
+          },
+	  { "item_name": "ipv4-prefix-length",
+	    "item_type": "integer",
+	    "item_optional": false,
+	    "item_default": 24
+          },
+	  { "item_name": "ipv6-prefix-length",
+	    "item_type": "integer",
+	    "item_optional": false,
+	    "item_default": 56
+          },
+	  { "item_name": "log-only",
+	    "item_type": "boolean",
+	    "item_optional": false,
+	    "item_default": false
+          }
+	]
       }
     ],
     "commands": [
