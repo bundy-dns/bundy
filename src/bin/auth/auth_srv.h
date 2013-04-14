@@ -289,6 +289,8 @@ public:
     /// Mainly for testing purposes.
     const isc::auth::rrl::ResponseLimiter* getRRL() const;
 
+    std::time_t getCurrentTime() const;
+
 private:
     AuthSrvImpl* impl_;
     isc::asiolink::SimpleCallback* checkin_;

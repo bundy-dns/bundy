@@ -405,6 +405,10 @@ simply drops the NOTIFY message; if it's a temporary failure or
 delayed startup, subsequently resent messages will eventually reach
 Zonemgr.
 
-% AUTH_RRL_CHECK_APPLY Response rate limite applied: %1
+% AUTH_RRL_CHECK_APPLY Response rate limit applied: %1
 
 % AUTH_RRL_CHECK_APPLY_ERROR Error response is dropped due to rate limiting
+
+% AUTH_START_RRL Enabling response rate limiting
+
+% AUTH_STOP_RRL Disabling response rate limiting

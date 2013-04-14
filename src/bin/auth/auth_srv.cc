@@ -21,6 +21,7 @@
 
 #include <asiolink/asiolink.h>
 #include <asiolink/io_endpoint.h>
+#include <asiolink/interval_timer.h>
 
 #include <config/ccsession.h>
 
@@ -299,6 +300,10 @@ public:
     /// Response Limiter.  Default is NULL, meaning disabled
     boost::scoped_ptr<ResponseLimiter> resp_limiter_;
 
+    /// Current timestamp, granularity of seconds.
+    std::time_t now_;
+    boost::scoped_ptr<asiolink::IntervalTimer> clock_timer_; // time keeper
+
     /// \brief Resume the server
     ///
     /// This is a wrapper call for DNSServer::resume(done). Query/Response
@@ -320,6 +325,20 @@ public:
                           const IOMessage& io_message, std::time_t now,
                           std::auto_ptr<TSIGContext> tsig_context =
                           std::auto_ptr<TSIGContext>());
+
+    void startTimer() {
+        if (!clock_timer_) {
+            now_ = std::time(NULL);
+            clock_timer_.reset(new asiolink::IntervalTimer(io_service_));
+            clock_timer_->setup(boost::bind(&AuthSrvImpl::updateClock, this),
+                                1000);
+        }
+    }
+
+    void stopTimer() {
+        clock_timer_.reset();
+        now_ = 0;
+    }
 
 private:
     bool responseChecker(const IOEndpoint* client_addr, bool is_tcp,
@@ -348,6 +367,9 @@ private:
         response.setHeaderFlag(Message::HEADERFLAG_TC);
         return (true);
     }
+    void updateClock() {
+        now_ = std::time(NULL);
+    }
 
     bool xfrout_connected_;
     AbstractXfroutClient& xfrout_client_;
@@ -362,6 +384,7 @@ AuthSrvImpl::AuthSrvImpl(AbstractXfroutClient& xfrout_client,
     keyring_(NULL),
     ddns_base_forwarder_(ddns_forwarder),
     ddns_forwarder_(NULL),
+    now_(0),
     xfrout_connected_(false),
     xfrout_client_(xfrout_client)
 {}
@@ -390,7 +413,8 @@ public:
         // This is not done in processMessage itself (which would be
         // equivalent), to allow tests to inspect the message handling.
         MessageHolder message_holder(*message);
-        server_->processMessage(io_message, *message, *buffer, server);
+        server_->processMessage(io_message, *message, *buffer, server,
+                                server_->getCurrentTime());
     }
 private:
     AuthSrv* server_;
@@ -1014,10 +1038,22 @@ AuthSrv::setTCPRecvTimeout(size_t timeout) {
 
 void
 AuthSrv::setRRL(ResponseLimiter* resp_limiter) {
+    if (resp_limiter) {
+        LOG_DEBUG(auth_logger, DBG_AUTH_OPS, AUTH_START_RRL);
+        impl_->startTimer();
+    } else {
+        LOG_DEBUG(auth_logger, DBG_AUTH_OPS, AUTH_STOP_RRL);
+        impl_->stopTimer();
+    }
     impl_->resp_limiter_.reset(resp_limiter);
 }
 
 const ResponseLimiter*
 AuthSrv::getRRL() const {
     return (impl_->resp_limiter_.get());
+}
+
+std::time_t
+AuthSrv::getCurrentTime() const {
+    return (impl_->now_);
 }
