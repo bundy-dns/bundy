@@ -29,9 +29,11 @@
 #include <asiolink/io_endpoint.h>
 
 #include <boost/bind.hpp>
+#include <boost/functional/hash.hpp>
 
 #include <cstring>
 #include <vector>
+#include <unistd.h>
 
 using isc::asiolink::IOEndpoint;
 using namespace isc::dns;
@@ -58,6 +60,17 @@ setMask(void* mask, size_t mask_len, int plen) {
 
     std::memcpy(mask, &buf[0], mask_len);
 }
+
+// Calculate reasonably (though not cryptographically) unpredictable hash
+// seed.
+uint32_t
+getHashSeed(std::time_t now) {
+    size_t hash_val = 0;
+    boost::hash_combine(hash_val, static_cast<size_t>(now));
+    boost::hash_combine(hash_val, static_cast<size_t>(getpid()));
+
+    return (hash_val);
+}
 }
 
 struct ResponseLimiter::ResponseLimiterImpl {
@@ -71,7 +84,8 @@ struct ResponseLimiter::ResponseLimiterImpl {
         window_(window), slip_(slip),
         ts_bases_(now, boost::bind(&RRLTable::timestampBaseUpdated, &table_,
                                    _1)),
-        log_only_(log_only)
+        log_only_(log_only),
+        hash_seed_(getHashSeed(now))
     {
         if (ipv4_prefixlen < 0 || ipv4_prefixlen > 32) {
             isc_throw(InvalidParameter, "bad IPv4 prefix: " << ipv4_prefixlen);
@@ -98,6 +112,7 @@ struct ResponseLimiter::ResponseLimiterImpl {
     const bool log_only_;
     uint32_t ipv4_mask_;
     uint32_t ipv6_mask_[4];
+    const uint32_t hash_seed_;
 };
 
 ResponseLimiter::ResponseLimiter(size_t max_table_size, size_t min_table_size,
@@ -200,7 +215,7 @@ ResponseLimiter::check(const asiolink::IOEndpoint& client_addr,
     RRLEntry* entry =
         impl_->table_.getEntry(RRLKey(client_addr, qtype, qname, qclass,
                                       resp_type, impl_->ipv4_mask_,
-                                      impl_->ipv6_mask_, 1128),
+                                      impl_->ipv6_mask_, impl_->hash_seed_),
                                impl_->ts_bases_, impl_->rates_, now,
                                impl_->window_);
     assert(entry);
