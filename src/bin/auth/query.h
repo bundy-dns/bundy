@@ -19,6 +19,7 @@
 #include <datasrc/zone.h>
 
 #include <boost/noncopyable.hpp>
+#include <boost/function.hpp>
 
 #include <functional>
 #include <vector>
@@ -27,6 +28,7 @@ namespace isc {
 namespace dns {
 class Message;
 class Name;
+class LabelSequence;
 class RRType;
 class RRset;
 }
@@ -66,6 +68,23 @@ namespace auth {
 /// accidentally, and since it's considered a temporary development state,
 /// we keep this name at the moment.
 class Query : boost::noncopyable {
+public:
+    /// \brief Functor type to check if special action is needed for query
+    /// responses.
+    ///
+    /// \param rcode Expected Rcode of the response.
+    /// \param qname "inputed" query name: for delegation result (due to NS
+    /// or DNAME), it's the delegated zone name; if wildcard match happens,
+    /// it's the wildcard name; otherwise it's the query name.  In case of
+    /// NXDOMAIN or REFUSED, it's NULL.
+    /// \param qtype "inputed" query type: for delegation result (due to NS
+    /// or DNAME), the corresponding delegation type; if it results in CNAME,
+    /// it's CNAME; if it results in NXRRSET (the Rcode is NOERROR), it's
+    /// SOA.
+    typedef boost::function<bool(const dns::Rcode& rcode,
+                                 const dns::LabelSequence* qnme,
+                                 const dns::RRType& qtype)>
+    ResponseChecker;
 private:
     /// \brief Initial reserved size for the vectors in Query
     ///
@@ -175,7 +194,7 @@ private:
     /// it returns false.  In the former case, the caller is expected to
     /// terminate the query processing, because it should have been completed
     /// within this method.
-    bool processDSAtChild();
+    bool processDSAtChild(ResponseChecker resp_checker);
 
     /// \brief Add NSEC3 to the response for a closest encloser proof for a
     /// given name.
@@ -288,7 +307,6 @@ public:
         additionals_.reserve(RESERVE_RRSETS);
     }
 
-
     /// Process the query.
     ///
     /// This method first identifies the zone that best matches the query
@@ -325,7 +343,8 @@ public:
     ///     possible.
     void process(datasrc::ClientList& client_list,
                  const isc::dns::Name& qname, const isc::dns::RRType& qtype,
-                 isc::dns::Message& response, bool dnssec = false);
+                 isc::dns::Message& response, bool dnssec = false,
+                 ResponseChecker resp_checker = ResponseChecker());
 
     /// \short Bad zone data encountered.
     ///

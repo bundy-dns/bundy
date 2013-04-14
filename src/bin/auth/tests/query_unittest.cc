@@ -15,6 +15,7 @@
 #include <boost/bind.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/static_assert.hpp>
+#include <boost/foreach.hpp>
 
 #include <exceptions/exceptions.h>
 
@@ -44,6 +45,7 @@
 #include <map>
 #include <sstream>
 #include <vector>
+#include <utility>
 
 using namespace std;
 using namespace isc::dns;
@@ -368,14 +370,17 @@ protected:
     ZoneFinderContextPtr createContext(FindOptions options,
                                        Result code,
                                        isc::dns::ConstRRsetPtr rrset,
-                                       FindResultFlags flags = RESULT_DEFAULT)
+                                       FindResultFlags flags = RESULT_DEFAULT,
+                                       uint8_t match_labels = 0)
     {
         ConstRRsetPtr rp = stripRRsigs(rrset, options);
+        if (match_labels == 0 && rrset) {
+            match_labels = rrset->getName().getLabelCount();
+        }
         return (ZoneFinderContextPtr(
                     new GenericContext(*this, options,
                                        ResultContext(code, rp, flags),
-                                       rrset ?
-                                       rrset->getName().getLabelCount() : 0)));
+                                       match_labels)));
     }
 
 private:
@@ -691,7 +696,9 @@ MockZoneFinder::find(const Name& name, const RRType& type,
                                               RESULT_WILDCARD |
                                               (use_nsec3_ ?
                                                RESULT_NSEC3_SIGNED :
-                                               RESULT_NSEC_SIGNED)));
+                                               RESULT_NSEC_SIGNED),
+                                              found_rrset->second->getName().
+                                              getLabelCount()));
                     } else {
                         // No matched QTYPE, this case is for NXRRSET with
                         // WILDCARD
@@ -2810,4 +2817,144 @@ TEST(QueryTestSingle, DuplicateNameRemoval) {
         }
     }
 }
+
+bool
+testResponseChecker(const Rcode& rcode, const LabelSequence* qname,
+                    const RRType& qtype, const Rcode* expected_rcode,
+                    const Name* expected_qname,
+                    const RRType* expected_qtype,
+                    bool* called, bool result)
+{
+    *called = true;
+    EXPECT_EQ(*expected_rcode, rcode);
+    if (Name(*expected_qname) == Name("null-name")) { // special case
+        EXPECT_FALSE(qname);
+    } else {
+        EXPECT_EQ(LabelSequence(*expected_qname), *qname);
+    }
+    EXPECT_EQ(*expected_qtype, qtype);
+    return (result);
+}
+
+struct TestParam {
+    TestParam(const string& qname_txt, const string& expected_qname_txt,
+              const string& qtype_txt, const string& expected_qtype_txt,
+              const Rcode& expected_rcode) :
+        qname_(qname_txt),
+        expected_qname_(expected_qname_txt.empty() ? qname_ :
+                        Name(expected_qname_txt)),
+        qtype_(qtype_txt),
+        expected_qtype_(expected_qtype_txt.empty() ? qtype_txt :
+                        expected_qtype_txt),
+        expected_rcode_(expected_rcode)
+    {}
+    Name qname_;
+    Name expected_qname_;
+    RRType qtype_;
+    RRType expected_qtype_;
+    Rcode expected_rcode_;
+};
+
+TEST_P(QueryTest, responseChecker) {
+    vector<TestParam> params;
+    // normal exact match
+    params.push_back(TestParam("mx.example.com", "", "MX", "",
+                               Rcode::NOERROR()));
+    // delegation for longer name
+    params.push_back(TestParam("www.delegation.example.com",
+                               "delegation.example.com", "A", "NS",
+                               Rcode::NOERROR()));
+    // delegation on zone cut
+    params.push_back(TestParam("delegation.example.com", "", "A", "NS",
+                               Rcode::NOERROR()));
+    // DNAME
+    params.push_back(TestParam("www.dname.example.com", "dname.example.com",
+                               "A", "DNAME", Rcode::NOERROR()));
+    // CNAME
+    params.push_back(TestParam("cname.example.com", "cname.example.com", "A",
+                               "CNAME", Rcode::NOERROR()));
+    // NXRRSET
+    params.push_back(TestParam("mx.example.com", "", "TXT", "SOA",
+                               Rcode::NOERROR()));
+    // NXDOMAIN (expected qname is the zone name)
+    params.push_back(TestParam("nxdomain.example.com", "example.com", "A",
+                               "", Rcode::NXDOMAIN()));
+    // NXRRSET (empty)
+    params.push_back(TestParam("no.example.com", "", "A", "SOA",
+                               Rcode::NOERROR()));
+    // wildcard (same number of labels)
+    params.push_back(TestParam("www.wild.example.com", "*.wild.example.com",
+                               "A", "A", Rcode::NOERROR()));
+    // wildcard (more number of labels than '*')
+    params.push_back(TestParam("x.y.wild.example.com", "*.wild.example.com",
+                               "A", "A", Rcode::NOERROR()));
+    // no matching zone (REFUSED error, name should be NULL)
+    params.push_back(TestParam("www.example.org", "null-name", "A", "A",
+                               Rcode::REFUSED()));
+    // DS at child
+    params.push_back(TestParam("example.com", "", "DS", "DS",
+                               Rcode::NOERROR()));
+
+    BOOST_FOREACH(const TestParam& param, params) {
+        for (int i = 0; i < 2; ++i) {
+            bool checker_called = false;
+            response.clear(Message::RENDER);
+            response.setRcode(Rcode::NOERROR());
+            response.setOpcode(Opcode::QUERY());
+            bool checker_ret_val = (i == 0); // return true first, then false
+
+            query.process(*list_, param.qname_, param.qtype_, response, false,
+                          boost::bind(testResponseChecker, _1, _2, _3,
+                                      &param.expected_rcode_,
+                                      &param.expected_qname_,
+                                      &param.expected_qtype_,
+                                      &checker_called, checker_ret_val));
+            EXPECT_TRUE(checker_called);
+
+            if (!checker_ret_val) {
+                // If checker returns false there will be no records in the
+                // response
+                EXPECT_EQ(0, response.getRRCount(Message::SECTION_ANSWER));
+                EXPECT_EQ(0, response.getRRCount(Message::SECTION_AUTHORITY));
+                EXPECT_EQ(0, response.getRRCount(Message::SECTION_ADDITIONAL));
+            } else if (param.expected_rcode_ != Rcode::REFUSED()) {
+                // On the other hand, unless it's REFUSED due to no matching
+                // zone, there'll be at least one answer or authority record.
+                EXPECT_LT(0, response.getRRCount(Message::SECTION_ANSWER) +
+                          response.getRRCount(Message::SECTION_AUTHORITY));
+            }
+        }
+    }
+}
+
+TEST_F(QueryTestForMockOnly, responseCheckerForDSAtGrandParentAndChild) {
+    // See dsAtGrandParentAndChild for setup.
+
+    const Name childname("grand.delegation.example.com");
+    mock_client.addZone(ZoneFinderPtr(new AlternateZoneFinder(childname)));
+    for (int i = 0; i < 2; ++i) {
+        bool checker_called = false;
+        response.clear(Message::RENDER);
+        response.setRcode(Rcode::NOERROR());
+        response.setOpcode(Opcode::QUERY());
+        bool checker_ret_val = (i == 0);
+
+        query.process(*list_, childname, RRType::DS(), response, true,
+                      boost::bind(testResponseChecker, _1, _2, _3,
+                                  &Rcode::NOERROR(), &childname,
+                                  &RRType::DS(), &checker_called,
+                                  checker_ret_val));
+        EXPECT_TRUE(checker_called);
+
+        if (!checker_ret_val) {
+            EXPECT_EQ(0, response.getRRCount(Message::SECTION_ANSWER));
+            EXPECT_EQ(0, response.getRRCount(Message::SECTION_AUTHORITY));
+            EXPECT_EQ(0, response.getRRCount(Message::SECTION_ADDITIONAL));
+        } else {
+            // should have SOA, NSEC, and RRSIGs in authority section.
+            EXPECT_EQ(4, response.getRRCount(Message::SECTION_AUTHORITY));
+        }
+    }
+}
+
 }

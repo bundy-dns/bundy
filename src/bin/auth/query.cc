@@ -352,12 +352,58 @@ findZone(const ClientList& list, const Name& qname, RRType qtype) {
     }
     return (list.find(qname.split(1)));
 }
+
+bool
+checkResponse(const Query::ResponseChecker& resp_checker,
+              ZoneFinder::Context& fcontext, const Name& qname,
+              const RRType& qtype, uint8_t zone_label_count)
+{
+    LabelSequence qlabels(qname);
+
+    if (fcontext.code == ZoneFinder::DELEGATION ||
+        fcontext.code == ZoneFinder::DNAME)
+    {
+        const size_t match_count = fcontext.getMatchLabelCount();
+        const RRType delegation_type =
+            (fcontext.code == ZoneFinder::DELEGATION) ?
+            RRType::NS() : RRType::DNAME();
+        if (match_count != qname.getLabelCount()) {
+            qlabels.stripLeft(qname.getLabelCount() - match_count);
+        }
+        return (resp_checker(Rcode::NOERROR(), &qlabels, delegation_type));
+    } else if (fcontext.code == ZoneFinder::NXDOMAIN) {
+        // Note: "qname.getLabelCount() > zone_label_count" must hold in case
+        // of NXDOMAIN; otherwise the zone or datasrc implementation is broken,
+        // so we'd just propagate exception from LabelSequence.
+        qlabels.stripLeft(qname.getLabelCount() - zone_label_count);
+        return (resp_checker(Rcode::NXDOMAIN(), &qlabels, qtype));
+    }
+
+    RRType answer_qtype(qtype);
+    if (fcontext.code == ZoneFinder::CNAME) {
+        answer_qtype = RRType::CNAME();
+    } else if (fcontext.code == ZoneFinder::NXRRSET) {
+        answer_qtype = RRType::SOA();
+    }
+    if (fcontext.isWildcard()) {
+        // Build the matched wildcard name by stripping the matching labels
+        // of the original qname followed by the '*' label.
+        uint8_t labels_buf[LabelSequence::MAX_SERIALIZED_LENGTH];
+        LabelSequence wlabels(LabelSequence::WILDCARD(), labels_buf);
+        qlabels.stripLeft(1 + qname.getLabelCount() -
+                          fcontext.getMatchLabelCount());
+        wlabels.extend(qlabels, labels_buf);
+        return (resp_checker(Rcode::NOERROR(), &wlabels, answer_qtype));
+    }
+    return (resp_checker(Rcode::NOERROR(), &qlabels, answer_qtype));
+}
 }
 
 void
 Query::process(datasrc::ClientList& client_list,
                const isc::dns::Name& qname, const isc::dns::RRType& qtype,
-               isc::dns::Message& response, bool dnssec)
+               isc::dns::Message& response, bool dnssec,
+               ResponseChecker resp_checker)
 {
     // Set up the cleaner object so internal pointers and vectors are
     // always reset after scope leaves this method
@@ -380,8 +426,12 @@ Query::process(datasrc::ClientList& client_list,
         // we may still have authority at the child side.  If we do, the query
         // has to be handled there.
         if (*qtype_ == RRType::DS() && qname_->getLabelCount() > 1 &&
-            processDSAtChild()) {
+            processDSAtChild(resp_checker)) {
             return;
+        }
+
+        if (resp_checker) {
+            resp_checker(Rcode::REFUSED(), NULL, qtype);
         }
         response_->setHeaderFlag(Message::HEADERFLAG_AA, false);
         response_->setRcode(Rcode::REFUSED());
@@ -403,6 +453,14 @@ Query::process(datasrc::ClientList& client_list,
                            dnssec_opt_);
     }
     ZoneFinderContextPtr db_context(find());
+    // Check if we need to do anything special for the response.  DELEGATION
+    // case should be deferred due to the special DS handling.
+    if (resp_checker && db_context->code != ZoneFinder::DELEGATION &&
+        !checkResponse(resp_checker, *db_context, qname, qtype,
+                       result.matched_labels_))
+    {
+        return;
+    }
     switch (db_context->code) {
         case ZoneFinder::DNAME: {
             // First, put the dname into the answer
@@ -496,7 +554,15 @@ Query::process(datasrc::ClientList& client_list,
             // if we are an authority of the child, too.  If so, we need to
             // complete the process in the child as specified in Section
             // 2.2.1.2. of RFC3658.
-            if (*qtype_ == RRType::DS() && processDSAtChild()) {
+            if (*qtype_ == RRType::DS() && processDSAtChild(resp_checker)) {
+                return;
+            }
+
+            // Now we can perform deferred check.
+            if (resp_checker && !checkResponse(resp_checker, *db_context,
+                                               qname, qtype,
+                                               result.matched_labels_))
+            {
                 return;
             }
 
@@ -566,7 +632,7 @@ Query::reset() {
 }
 
 bool
-Query::processDSAtChild() {
+Query::processDSAtChild(ResponseChecker resp_checker) {
     const ClientList::FindResult zresult = client_list_->find(*qname_, true);
 
     if (zresult.dsrc_client_ == NULL) {
@@ -582,6 +648,14 @@ Query::processDSAtChild() {
     // The important point in this case is to return SOA so that the resolver
     // that happens to contact us can hunt for the appropriate parent zone
     // by seeing the SOA.
+    if (resp_checker) {
+        // With our simplified assumption we don't have to examine the find()
+        // result.
+        const LabelSequence qlabels(*qname_);
+        if (!resp_checker(Rcode::NOERROR(), &qlabels, RRType::DS())) {
+            return (true); // return true so the caller exists immediately
+        }
+    }
     response_->setHeaderFlag(Message::HEADERFLAG_AA);
     response_->setRcode(Rcode::NOERROR());
     addSOA(*zresult.finder_);
@@ -596,6 +670,5 @@ Query::processDSAtChild() {
     response_creator_.create(*response_, answers_, authorities_, additionals_);
     return (true);
 }
-
 }
 }
