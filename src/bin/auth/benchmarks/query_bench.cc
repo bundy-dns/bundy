@@ -88,8 +88,8 @@ private:
     typedef boost::shared_ptr<const IOEndpoint> IOEndpointPtr;
 protected:
     QueryBenchMark(const BenchQueries& queries, Message& query_message,
-                   OutputBuffer& buffer, bool enable_rrl, size_t* slip_count,
-                   size_t* drop_count) :
+                   OutputBuffer& buffer, bool enable_rrl, size_t num_sources,
+                   size_t* slip_count, size_t* drop_count) :
         server_(new AuthSrv(xfrout_client, ddns_forwarder)),
         queries_(queries),
         query_message_(query_message),
@@ -104,8 +104,7 @@ protected:
                                 200000, 200000, 5, 5, 5, 15, 2, 32, 56, false,
                                 now));
         }
-        const size_t n_endpoints = enable_rrl ? 100000 : 1;
-        for (uint32_t i = 0; i < n_endpoints; ++i) {
+        for (uint32_t i = 0; i < num_sources; ++i) {
             const string addr_txt =
                 boost::lexical_cast<string>((i >> 24) & 0xff) + "." +
                 boost::lexical_cast<string>((i >> 16) & 0xff) + "." +
@@ -171,10 +170,10 @@ public:
                           const BenchQueries& queries,
                           Message& query_message,
                           OutputBuffer& buffer,
-                          bool enable_rrl, size_t* slip_count,
-                          size_t* drop_count) :
-        QueryBenchMark(queries, query_message, buffer, enable_rrl, slip_count,
-                       drop_count)
+                          bool enable_rrl, size_t num_sources,
+                          size_t* slip_count, size_t* drop_count) :
+        QueryBenchMark(queries, query_message, buffer, enable_rrl, num_sources,
+                       slip_count, drop_count)
     {
         // Note: setDataSrcClientLists() may be deprecated, but until then
         // we use it because we want to be synchronized with the server.
@@ -195,10 +194,10 @@ public:
                          const BenchQueries& queries,
                          Message& query_message,
                          OutputBuffer& buffer,
-                         bool enable_rrl, size_t* slip_count,
-                         size_t* drop_count) :
-        QueryBenchMark(queries, query_message, buffer, enable_rrl, slip_count,
-                       drop_count)
+                         bool enable_rrl, size_t num_sources,
+                         size_t* slip_count, size_t* drop_count) :
+        QueryBenchMark(queries, query_message, buffer, enable_rrl, num_sources,
+                       slip_count, drop_count)
     {
         server_->getDataSrcClientsMgr().setDataSrcClientLists(
             configureDataSource(
@@ -247,6 +246,7 @@ updateCurrentTime(int) {
 }
 
 const int ITERATION_DEFAULT = 1;
+const size_t SOURCES_DEFAULT = 1;
 enum DataSrcType {
     SQLITE3,
     MEMORY
@@ -256,7 +256,7 @@ void
 usage() {
     cerr <<
         "Usage: query_bench [-d] [-n iterations] [-t datasrc_type] [-o origin]"
-        " [-r] datasrc_file query_datafile\n"
+        " [-r] [-s num] datasrc_file query_datafile\n"
         "  -d Enable debug logging to stdout\n"
         "  -n Number of iterations per test case (default: "
          << ITERATION_DEFAULT << ")\n"
@@ -264,6 +264,7 @@ usage() {
         "  -o Origin name of datasrc_file necessary for \"memory\", "
         "ignored for others\n"
         "  -r enable response rate limit\n"
+        "  -s number of client's source addresses (useful with -r)\n"
         "  datasrc_file: sqlite3 DB file for \"sqlite3\", "
         "textual master file for \"memory\" datasrc\n"
         "  query_datafile: queryperf style input data"
@@ -276,11 +277,12 @@ int
 main(int argc, char* argv[]) {
     int ch;
     int iteration = ITERATION_DEFAULT;
+    size_t num_sources = SOURCES_DEFAULT;
     const char* opt_datasrc_type = "sqlite3";
     const char* origin = NULL;
     bool enable_rrl = false;
     bool debug_log = false;
-    while ((ch = getopt(argc, argv, "dn:t:o:r")) != -1) {
+    while ((ch = getopt(argc, argv, "dn:t:o:rs:")) != -1) {
         switch (ch) {
         case 'n':
             iteration = atoi(optarg);
@@ -293,6 +295,9 @@ main(int argc, char* argv[]) {
             break;
         case 'r':
             enable_rrl = true;
+            break;
+        case 's':
+            num_sources = atoi(optarg);
             break;
         case 'd':
             debug_log = true;
@@ -358,14 +363,16 @@ main(int argc, char* argv[]) {
             BenchMark<Sqlite3QueryBenchMark>(
                 iteration, Sqlite3QueryBenchMark(datasrc_file, queries,
                                                  message, buffer, enable_rrl,
-                                                 &slip_count, &drop_count));
+                                                 num_sources, &slip_count,
+                                                 &drop_count));
             break;
         case MEMORY:
             cout << "Benchmark with In Memory Data Source" << endl;
             BenchMark<MemoryQueryBenchMark>(
                 iteration, MemoryQueryBenchMark(datasrc_file, origin, queries,
                                                 message, buffer, enable_rrl,
-                                                &slip_count, &drop_count));
+                                                num_sources, &slip_count,
+                                                &drop_count));
             break;
         }
         if (enable_rrl) {
