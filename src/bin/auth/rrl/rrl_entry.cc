@@ -16,6 +16,8 @@
 #include <auth/rrl/rrl_result.h>
 #include <auth/rrl/rrl_rate.h>
 
+#include <algorithm>
+
 namespace isc {
 namespace auth {
 namespace rrl {
@@ -79,13 +81,12 @@ RRLEntry::updateBalance(TimestampBases& ts_bases, RRLRate& rates,
 
 int
 RRLEntry::getResponseBalance(const RRLRate& rates, int age) const {
-    const int rate = responses_ > 0 ? 0 :
-        rates.getRate(key_.getResponseType());
-    const int balance = responses_ + age * rate;
-    if (balance > rate) {
-        return (rate);
+    if (responses_ > 0) {
+        return (responses_);
     }
-    return (balance);
+    const int rate = rates.getRate(key_.getResponseType());
+    const int balance = responses_ + age * rate;
+    return (std::min(rate, balance));
 }
 
 } // namespace detail

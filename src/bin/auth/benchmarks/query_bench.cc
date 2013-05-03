@@ -17,6 +17,8 @@
 #include <bench/benchmark.h>
 #include <bench/benchmark_util.h>
 
+#include <auth/rrl/rrl.h>
+
 #include <util/buffer.h>
 
 #include <dns/message.h>
@@ -44,6 +46,9 @@
 
 #include <iostream>
 #include <vector>
+#include <ctime>
+#include <csignal>
+#include <unistd.h>
 
 using namespace std;
 using namespace isc;
@@ -61,6 +66,8 @@ using namespace isc::asiolink;
 namespace {
 // Commonly used constant:
 XfroutClient xfrout_client("dummy_path"); // path doesn't matter
+
+std::time_t now;
 
 // Just something to pass as the server to resume
 class DummyServer : public DNSServer {
@@ -81,16 +88,38 @@ private:
     typedef boost::shared_ptr<const IOEndpoint> IOEndpointPtr;
 protected:
     QueryBenchMark(const BenchQueries& queries, Message& query_message,
-                   OutputBuffer& buffer) :
+                   OutputBuffer& buffer, bool enable_rrl, size_t* slip_count,
+                   size_t* drop_count) :
         server_(new AuthSrv(xfrout_client, ddns_forwarder)),
         queries_(queries),
         query_message_(query_message),
         buffer_(buffer),
         dummy_socket(IOSocket::getDummyUDPSocket()),
-        dummy_endpoint(IOEndpointPtr(IOEndpoint::create(IPPROTO_UDP,
-                                                        IOAddress("192.0.2.1"),
-                                                        53210)))
-    {}
+        enable_rrl_(enable_rrl), slip_count_(slip_count),
+        drop_count_(drop_count)
+    {
+        if (enable_rrl) {
+            now = std::time(NULL);
+            server_->setRRL(new auth::rrl::ResponseLimiter(
+                                200000, 200000, 5, 5, 5, 15, 2, 32, 56, false,
+                                now));
+        }
+        const size_t n_endpoints = enable_rrl ? 100000 : 1;
+        for (uint32_t i = 0; i < n_endpoints; ++i) {
+            const string addr_txt =
+                boost::lexical_cast<string>((i >> 24) & 0xff) + "." +
+                boost::lexical_cast<string>((i >> 16) & 0xff) + "." +
+                boost::lexical_cast<string>((i >> 8) & 0xff) + "." +
+                boost::lexical_cast<string>(i & 0xff);
+            dummy_endpoints.push_back(IOEndpointPtr(IOEndpoint::create(
+                                                        IPPROTO_UDP,
+                                                        IOAddress(addr_txt),
+                                                        53210)));
+        }
+        ep_begin_ = dummy_endpoints.begin();
+        ep_end_ = dummy_endpoints.end();
+        ep_it_ = ep_begin_;
+    }
 public:
     unsigned int run() {
         BenchQueries::const_iterator query;
@@ -98,11 +127,22 @@ public:
         DummyServer server;
         for (query = queries_.begin(); query != query_end; ++query) {
             IOMessage io_message(&(*query)[0], (*query).size(), dummy_socket,
-                                 *dummy_endpoint);
+                                 **ep_it_);
+            if (++ep_it_ == ep_end_) {
+                ep_it_ = ep_begin_;
+            }
             query_message_.clear(Message::PARSE);
             buffer_.clear();
             server_->processMessage(io_message, query_message_, buffer_,
-                                    &server);
+                                    &server, now);
+            if (enable_rrl_) {
+                if (buffer_.getLength() == 0) {
+                    ++*drop_count_;
+                } else if (query_message_.getHeaderFlag(
+                               Message::HEADERFLAG_TC)) {
+                    ++*slip_count_;
+                }
+            }
         }
 
         return (queries_.size());
@@ -116,7 +156,13 @@ private:
     Message& query_message_;
     OutputBuffer& buffer_;
     IOSocket& dummy_socket;
-    IOEndpointPtr dummy_endpoint;
+    vector<IOEndpointPtr> dummy_endpoints;
+    vector<IOEndpointPtr>::const_iterator ep_begin_;
+    vector<IOEndpointPtr>::const_iterator ep_end_;
+    vector<IOEndpointPtr>::const_iterator ep_it_;
+    const bool enable_rrl_;
+    size_t* slip_count_;
+    size_t* drop_count_;
 };
 
 class Sqlite3QueryBenchMark  : public QueryBenchMark {
@@ -124,8 +170,11 @@ public:
     Sqlite3QueryBenchMark(const char* const datasrc_file,
                           const BenchQueries& queries,
                           Message& query_message,
-                          OutputBuffer& buffer) :
-        QueryBenchMark(queries, query_message, buffer)
+                          OutputBuffer& buffer,
+                          bool enable_rrl, size_t* slip_count,
+                          size_t* drop_count) :
+        QueryBenchMark(queries, query_message, buffer, enable_rrl, slip_count,
+                       drop_count)
     {
         // Note: setDataSrcClientLists() may be deprecated, but until then
         // we use it because we want to be synchronized with the server.
@@ -145,8 +194,11 @@ public:
                          const char* const zone_origin,
                          const BenchQueries& queries,
                          Message& query_message,
-                         OutputBuffer& buffer) :
-        QueryBenchMark(queries, query_message, buffer)
+                         OutputBuffer& buffer,
+                         bool enable_rrl, size_t* slip_count,
+                         size_t* drop_count) :
+        QueryBenchMark(queries, query_message, buffer, enable_rrl, slip_count,
+                       drop_count)
     {
         server_->getDataSrcClientsMgr().setDataSrcClientLists(
             configureDataSource(
@@ -161,7 +213,7 @@ public:
 
 void
 printQPSResult(unsigned int iteration, double duration,
-            double iteration_per_second)
+               double iteration_per_second)
 {
     cout.precision(6);
     cout << "Processed " << iteration << " queries in "
@@ -188,6 +240,12 @@ BenchMark<MemoryQueryBenchMark>::printResult() const {
 }
 
 namespace {
+void
+updateCurrentTime(int) {
+    alarm(1);
+    now = std::time(NULL);
+}
+
 const int ITERATION_DEFAULT = 1;
 enum DataSrcType {
     SQLITE3,
@@ -198,13 +256,14 @@ void
 usage() {
     cerr <<
         "Usage: query_bench [-d] [-n iterations] [-t datasrc_type] [-o origin]"
-        " datasrc_file query_datafile\n"
+        " [-r] datasrc_file query_datafile\n"
         "  -d Enable debug logging to stdout\n"
         "  -n Number of iterations per test case (default: "
          << ITERATION_DEFAULT << ")\n"
         "  -t Type of data source: sqlite3|memory (default: sqlite3)\n"
         "  -o Origin name of datasrc_file necessary for \"memory\", "
         "ignored for others\n"
+        "  -r enable response rate limit\n"
         "  datasrc_file: sqlite3 DB file for \"sqlite3\", "
         "textual master file for \"memory\" datasrc\n"
         "  query_datafile: queryperf style input data"
@@ -219,8 +278,9 @@ main(int argc, char* argv[]) {
     int iteration = ITERATION_DEFAULT;
     const char* opt_datasrc_type = "sqlite3";
     const char* origin = NULL;
+    bool enable_rrl = false;
     bool debug_log = false;
-    while ((ch = getopt(argc, argv, "dn:t:o:")) != -1) {
+    while ((ch = getopt(argc, argv, "dn:t:o:r")) != -1) {
         switch (ch) {
         case 'n':
             iteration = atoi(optarg);
@@ -230,6 +290,9 @@ main(int argc, char* argv[]) {
             break;
         case 'o':
             origin = optarg;
+            break;
+        case 'r':
+            enable_rrl = true;
             break;
         case 'd':
             debug_log = true;
@@ -282,19 +345,32 @@ main(int argc, char* argv[]) {
         cout << "  Query data: file=" << query_data_file << " ("
              << queries.size() << " queries)" << endl << endl;
 
+        if (enable_rrl) {
+            alarm(1);
+            std::signal(SIGALRM, updateCurrentTime);
+        }
+
+        size_t slip_count = 0;
+        size_t drop_count = 0;
         switch (datasrc_type) {
         case SQLITE3:
             cout << "Benchmark with SQLite3" << endl;
             BenchMark<Sqlite3QueryBenchMark>(
                 iteration, Sqlite3QueryBenchMark(datasrc_file, queries,
-                                                 message, buffer));
+                                                 message, buffer, enable_rrl,
+                                                 &slip_count, &drop_count));
             break;
         case MEMORY:
             cout << "Benchmark with In Memory Data Source" << endl;
             BenchMark<MemoryQueryBenchMark>(
                 iteration, MemoryQueryBenchMark(datasrc_file, origin, queries,
-                                                message, buffer));
+                                                message, buffer, enable_rrl,
+                                                &slip_count, &drop_count));
             break;
+        }
+        if (enable_rrl) {
+            std::cout << "Slip: " << slip_count << ", Drop: " << drop_count
+                      << std::endl;
         }
     } catch (const std::exception& ex) {
         cout << "Test unexpectedly failed: " << ex.what() << endl;

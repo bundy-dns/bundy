@@ -51,7 +51,10 @@ class RRLTable : boost::noncopyable {
         Hash(unsigned int gen, size_t bin_count) :
             check_time_(0), gen_(gen)
         {
-            bins_.assign(bin_count, boost::shared_ptr<HashList>(new HashList));
+            bins_.reserve(bin_count);
+            for (size_t i = 0; i < bin_count; ++i) {
+                bins_.push_back(boost::shared_ptr<HashList>(new HashList));
+            }
         }
         std::time_t check_time_;
         const unsigned int gen_;

@@ -120,7 +120,7 @@ private:
 
     RRLKey key_;
     uint32_t pad_;
-    int32_t responses_ : 24; // response_balance, debit_rrl_entry, debit_log
+    int32_t responses_ : 24;
     uint32_t log_qname_ : 8;
 
     uint32_t timestamp_gen_ : TIMESTAMP_GEN_BITS;

@@ -150,7 +150,7 @@ RRLTable::getEntry(const RRLKey& key, const RRLEntry::TimestampBases& ts_bases,
             break;
         }
         const int age = it->getAge(ts_bases, now);
-        if (age <= 1) { // lease recently used is still too recent; create more
+        if (age <= 1) { // least recently used is still too recent; create more
             it = it_end;
             break;
         }
