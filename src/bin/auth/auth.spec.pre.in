@@ -98,7 +98,20 @@
       },
       { "item_name": "rate-limit",
         "item_type": "map",
-	"item_optional": true,
+	"item_optional": false,
+	"item_default": {
+	  "enable": false,
+	  "min-table-size": 500,
+	  "max-table-size": 20000,
+	  "responses-per-second": 0,
+	  "errors-per-second": 0,
+	  "nxdomains-per-second": 0,
+	  "slip": 2,
+	  "window": 15,
+	  "ipv4-prefix-length": 24,
+	  "ipv6-prefix-length": 56,
+	  "log-only": false
+	},
 	"map_item_spec": [
 	  { "item_name": "enable",
 	    "item_type": "boolean",
