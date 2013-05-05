@@ -2862,25 +2862,25 @@ TEST_P(QueryTest, responseChecker) {
                                Rcode::NOERROR()));
     // delegation for longer name
     params.push_back(TestParam("www.delegation.example.com",
-                               "delegation.example.com", "A", "NS",
+                               "delegation.example.com", "A", "TYPE0",
                                Rcode::NOERROR()));
     // delegation on zone cut
-    params.push_back(TestParam("delegation.example.com", "", "A", "NS",
+    params.push_back(TestParam("delegation.example.com", "", "A", "TYPE0",
                                Rcode::NOERROR()));
     // DNAME
     params.push_back(TestParam("www.dname.example.com", "dname.example.com",
-                               "A", "DNAME", Rcode::NOERROR()));
+                               "A", "TYPE0", Rcode::NOERROR()));
     // CNAME
     params.push_back(TestParam("cname.example.com", "cname.example.com", "A",
                                "CNAME", Rcode::NOERROR()));
     // NXRRSET
-    params.push_back(TestParam("mx.example.com", "", "TXT", "SOA",
+    params.push_back(TestParam("mx.example.com", "", "TXT", "TYPE0",
                                Rcode::NOERROR()));
     // NXDOMAIN (expected qname is the zone name)
     params.push_back(TestParam("nxdomain.example.com", "example.com", "A",
                                "", Rcode::NXDOMAIN()));
     // NXRRSET (empty)
-    params.push_back(TestParam("no.example.com", "", "A", "SOA",
+    params.push_back(TestParam("no.example.com", "", "A", "TYPE0",
                                Rcode::NOERROR()));
     // wildcard (same number of labels)
     params.push_back(TestParam("www.wild.example.com", "*.wild.example.com",

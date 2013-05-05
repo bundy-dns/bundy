@@ -364,13 +364,10 @@ checkResponse(const Query::ResponseChecker& resp_checker,
         fcontext.code == ZoneFinder::DNAME)
     {
         const size_t match_count = fcontext.getMatchLabelCount();
-        const RRType delegation_type =
-            (fcontext.code == ZoneFinder::DELEGATION) ?
-            RRType::NS() : RRType::DNAME();
         if (match_count != qname.getLabelCount()) {
             qlabels.stripLeft(qname.getLabelCount() - match_count);
         }
-        return (resp_checker(Rcode::NOERROR(), &qlabels, delegation_type));
+        return (resp_checker(Rcode::NOERROR(), &qlabels, RRType(0)));
     } else if (fcontext.code == ZoneFinder::NXDOMAIN) {
         // Note: "qname.getLabelCount() > zone_label_count" must hold in case
         // of NXDOMAIN; otherwise the zone or datasrc implementation is broken,
@@ -383,7 +380,7 @@ checkResponse(const Query::ResponseChecker& resp_checker,
     if (fcontext.code == ZoneFinder::CNAME) {
         answer_qtype = RRType::CNAME();
     } else if (fcontext.code == ZoneFinder::NXRRSET) {
-        answer_qtype = RRType::SOA();
+        answer_qtype = RRType(0);
     }
     if (fcontext.isWildcard()) {
         // Build the matched wildcard name by stripping the matching labels

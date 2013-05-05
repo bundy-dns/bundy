@@ -78,9 +78,10 @@ public:
     /// it's the wildcard name; otherwise it's the query name.  In case of
     /// NXDOMAIN or REFUSED, it's NULL.
     /// \param qtype "inputed" query type: for delegation result (due to NS
-    /// or DNAME), the corresponding delegation type; if it results in CNAME,
-    /// it's CNAME; if it results in NXRRSET (the Rcode is NOERROR), it's
-    /// SOA.
+    /// or DNAME) or NXRRSET, it's "TYPE0", indicating it's type independent;
+    /// if it results in CNAME, it's CNAME; otherwise it's the original qtype.
+    ///
+    /// \return true if no special action is needed; otherwise false
     typedef boost::function<bool(const dns::Rcode& rcode,
                                  const dns::LabelSequence* qnme,
                                  const dns::RRType& qtype)>
@@ -334,6 +335,12 @@ public:
     /// shouldn't happen in real-life (as BadZone means wrong data, it should
     /// have been rejected upon loading).
     ///
+    /// If resp_checker is not empty (evaluated to true), the functor is called
+    /// after the query is resolved (but before building the response message).
+    /// If the functor returns false, it means the caller needs to do special
+    /// action for the query, so the result of the \c process() method is
+    /// skipped and it returns at that point.
+    ///
     /// \param client_list The datasource list wherein the answer to the query
     /// is to be found.
     /// \param qname The query name
@@ -341,6 +348,8 @@ public:
     /// \param response The response message to store the answer to the query.
     /// \param dnssec If the answer should include signatures and NSEC/NSEC3 if
     ///     possible.
+    /// \param resp_checker If not empty, a functor called to check if a
+    /// special action is needed for the query result.
     void process(datasrc::ClientList& client_list,
                  const isc::dns::Name& qname, const isc::dns::RRType& qtype,
                  isc::dns::Message& response, bool dnssec = false,
