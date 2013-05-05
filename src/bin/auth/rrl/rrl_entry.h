@@ -53,7 +53,6 @@ public:
         log_secs_ = 0;
         timestamp_ = 0;
         slip_cnt_ = 0;
-        pad_ = 0;
     }
 
     void setHashGen(unsigned int gen) {
@@ -119,7 +118,6 @@ private:
     static const unsigned int TIMESTAMP_INVALID = 0;
 
     RRLKey key_;
-    uint32_t pad_;
     int32_t responses_ : 24;
     uint32_t log_qname_ : 8;
 
