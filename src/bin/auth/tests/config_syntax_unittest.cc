@@ -41,7 +41,7 @@ TEST_F(AuthConfigSyntaxTest, inmemoryDefaultFileType) {
                 "  [{\"type\": \"memory\", \"class\": \"IN\", "
                 "    \"zones\": [{\"origin\": \"example.com\","
                 "                 \"file\": \""
-                TEST_DATA_DIR "/example.zone\"}]}]}"), true));
+                TEST_DATA_DIR "/example.zone\"}]}]}"), false));
 }
 
 TEST_F(AuthConfigSyntaxTest, inmemorySQLite3Backend) {
