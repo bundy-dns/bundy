@@ -15,16 +15,25 @@
 #ifndef AUTH_RESPONSE_TYPE_H
 #define AUTH_RESPONSE_TYPE_H 1
 
+#include <stdint.h>
+
+#include <boost/static_assert.hpp>
+
 namespace isc {
 namespace auth {
 namespace rrl {
 namespace detail {
 
+/// \brief Type of responses in terms of RRL.
 enum ResponseType {
     RESPONSE_QUERY = 0,
     RESPONSE_NXDOMAIN,
-    RESPONSE_ERROR
+    RESPONSE_ERROR,
+    RESPONSE_TYPE_MAX = RESPONSE_ERROR
 };
+
+// Make sure types fit in a 8-bit storage.
+BOOST_STATIC_ASSERT(RESPONSE_TYPE_MAX < 256);
 
 } // namespace detail
 } // namespace rrl

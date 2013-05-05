@@ -22,6 +22,7 @@
 #include <dns/rrclass.h>
 
 #include <boost/functional/hash.hpp>
+#include <boost/static_assert.hpp>
 
 #include <cstring>
 
@@ -38,8 +39,10 @@ namespace detail {
 
 class RRLKey {
 public:
-    // For requirements of STL containers.  We don't directly use keys
-    // constructed by this.
+    /// \brief The default constructor.
+    ///
+    /// This is defined for requirements of STL containers.  We don't
+    /// directly use keys constructed by this.
     RRLKey() {}
 
     RRLKey(const asiolink::IOEndpoint& client_addr, const dns::RRType& qtype,
@@ -48,31 +51,42 @@ public:
            const uint32_t ipv6_masks[4], uint32_t hash_seed);
 
     RRLKey& operator=(const RRLKey& source) {
-        // See the constructor's note about ugly memcpy
-        std::memcpy(this, &source, sizeof(*this));
+        std::memcpy(&key_, &source.key_, sizeof(key_));
         return (*this);
     }
 
     bool operator==(const RRLKey& other) const {
-        return (std::memcmp(this, &other, sizeof(*this)) == 0);
+        return (std::memcmp(&key_, &other.key_, sizeof(key_)) == 0);
     }
 
     size_t getHash() const {
         const uint8_t* cp = static_cast<const uint8_t*>(
-            static_cast<const void*>(this));
-        return (boost::hash_range(cp, cp + sizeof(*this)));
+            static_cast<const void*>(&key_));
+        return (boost::hash_range(cp, cp + sizeof(key_)));
     }
 
-    ResponseType getResponseType() const { return (rtype_); }
+    ResponseType getResponseType() const {
+        return (static_cast<ResponseType>(key_.rtype));
+    }
 
 private:
-    uint32_t ip_[2];            // client IP prefix, up to 64 bits
-    uint32_t qname_hash_;
-    uint16_t qtype_;            // qtype code value
-    uint8_t ipv6_ : 1;          // used for logging
-    uint8_t qclass_ : 7;        // least 7 bits of qclass code value
-    ResponseType rtype_;
+    // Actual key elements.  We use a separate struct so this part should
+    // be plain old data and can be safely used with low level <cstring>
+    // APIs (std::memXXX).
+    struct {
+        uint32_t ip[2];            // client IP prefix, up to 64 bits
+        uint32_t qname_hash;       // a hash value of qname
+        uint16_t qtype;            // qtype code value
+        uint8_t ipv6 : 1;          // used for logging
+        uint8_t qclass : 7;        // least 7 bits of qclass code value
+        uint8_t rtype;             // ResponseType
+    } key_;
 };
+
+// Make sure the key objects are as small as we expect; the specific value
+// is not important for the behavior, but it proves our assumption on memory
+// footprint.
+BOOST_STATIC_ASSERT(sizeof(RRLKey) == 16);
 
 } // namespace detail
 } // namespace rrl

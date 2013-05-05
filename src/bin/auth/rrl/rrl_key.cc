@@ -40,35 +40,33 @@ RRLKey::RRLKey(const IOEndpoint& client_addr, const dns::RRType& qtype,
                ResponseType resp_type, uint32_t ipv4_mask,
                const uint32_t ipv6_masks[4], uint32_t hash_seed)
 {
-    // This is not type safe, but we want to use memcmp for operator==, so
-    // all bits should be 0-cleared first.
-    memset(this, 0, sizeof(*this));
+    memset(&key_, 0, sizeof(key_));
 
-    rtype_ = resp_type;
+    key_.rtype = resp_type;
 
     if (resp_type == RESPONSE_QUERY) {
-        qclass_ = qclass.getCode() & 0x7f;
-        qtype_ = qtype.getCode();
+        key_.qclass = qclass.getCode() & 0x7f;
+        key_.qtype = qtype.getCode();
     }
 
     if (qname) {
-        qname_hash_ = qname->getFullHash(false, hash_seed);
+        key_.qname_hash = qname->getFullHash(false, hash_seed);
     }
 
     const struct sockaddr& client_sa = client_addr.getSockAddr();
     switch (client_sa.sa_family) {
     case AF_INET:
-        ip_[0] =
+        key_.ip[0] =
             (convertSockAddr<sockaddr_in>(&client_sa)->sin_addr.s_addr &
              ipv4_mask);
         break;
     case AF_INET6:
-        ipv6_ = 1;
-        std::memcpy(ip_,
+        key_.ipv6 = 1;
+        std::memcpy(key_.ip,
                     &convertSockAddr<sockaddr_in6>(&client_sa)->sin6_addr,
-                    sizeof(ip_));
+                    sizeof(key_.ip));
         for (int i = 0; i < 2; ++i) {
-            ip_[i] &= ipv6_masks[i];
+            key_.ip[i] &= ipv6_masks[i];
         }
     }
 }
