@@ -25,6 +25,7 @@
 #include <boost/static_assert.hpp>
 
 #include <cstring>
+#include <string>
 
 #include <stdint.h>
 
@@ -68,6 +69,16 @@ public:
     ResponseType getResponseType() const {
         return (static_cast<ResponseType>(key_.rtype));
     }
+
+    /// \brief Return a textual representation of IP prefix of the key.
+    ///
+    /// The returned string is in the form of <ipv4-or-ipv6 address>[/plen].
+    /// Since the caller may not know the address family of the prefix,
+    /// this method needs to take prefixlen parameters for both cases.
+    /// If it's an IPv6 prefix, ipv6_prefixlen will be used;
+    /// otherwise ipv4_prefixlen will be used.  If the prefixlen is too
+    /// large for the address family, isc::InvalidParameter will be thrown.
+    std::string getIPText(size_t ipv4_prefixlen, size_t ipv6_prefixlen) const;
 
 private:
     // Actual key elements.  We use a separate struct so this part should

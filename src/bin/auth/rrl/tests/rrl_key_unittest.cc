@@ -138,4 +138,22 @@ TEST_F(RRLKeyTest, getHash) {
     EXPECT_FALSE(key1 == key3);
     EXPECT_NE(key1.getHash(), key3.getHash());
 }
+
+TEST_F(RRLKeyTest, getIPText) {
+    // IPv4 prefix or address
+    const RRLKey key1(*ep4_, RRType::A(), &qlabels_, RRClass::IN(),
+                      RESPONSE_QUERY, MASK4, MASK6, 0);
+    EXPECT_EQ("192.0.2.0/24", key1.getIPText(24, 56));
+    EXPECT_EQ("192.0.2.0", key1.getIPText(32, 56));
+
+    // IPv6 prefix or address
+    const RRLKey key2(*ep6_, RRType::A(), &qlabels_, RRClass::IN(),
+                      RESPONSE_QUERY, MASK4, MASK6, 0);
+    EXPECT_EQ("2001:db8::/56", key2.getIPText(24, 56));
+    EXPECT_EQ("2001:db8::", key2.getIPText(24, 128));
+
+    // invalid prefixlen
+    EXPECT_THROW(key1.getIPText(33, 56), isc::InvalidParameter);
+    EXPECT_THROW(key1.getIPText(24, 129), isc::InvalidParameter);
+}
 }
