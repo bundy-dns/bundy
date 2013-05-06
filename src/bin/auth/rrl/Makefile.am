@@ -14,6 +14,7 @@ libauth_rrl_la_SOURCES = rrl.h rrl.cc
 libauth_rrl_la_SOURCES += rrl_key.h rrl_key.cc
 libauth_rrl_la_SOURCES += rrl_entry.h rrl_entry.cc
 libauth_rrl_la_SOURCES += rrl_table.h rrl_table.cc
+libauth_rrl_la_SOURCES += rrl_name_pool.h rrl_name_pool.cc
 libauth_rrl_la_SOURCES += logger.h logger.cc
 libauth_rrl_la_SOURCES += rrl_response_type.h
 libauth_rrl_la_SOURCES += rrl_rate.h
