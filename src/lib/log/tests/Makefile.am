@@ -53,6 +53,7 @@ logger_lock_test_CPPFLAGS = $(AM_CPPFLAGS)
 logger_lock_test_LDFLAGS = $(AM_LDFLAGS)
 logger_lock_test_LDADD  = $(top_builddir)/src/lib/log/libb10-log.la
 logger_lock_test_LDADD += $(top_builddir)/src/lib/util/libb10-util.la
+logger_lock_test_LDADD += $(top_builddir)/src/lib/util/threads/libb10-threads.la
 logger_lock_test_LDADD += $(top_builddir)/src/lib/exceptions/libb10-exceptions.la
 logger_lock_test_LDADD += $(AM_LDADD) $(LOG4CPLUS_LIBS)
 
