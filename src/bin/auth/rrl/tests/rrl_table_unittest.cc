@@ -29,6 +29,8 @@
 
 #include <gtest/gtest.h>
 
+#include <arpa/inet.h>
+
 using namespace isc::auth::rrl::detail;
 using namespace isc::dns;
 using isc::asiolink::IOEndpoint;
@@ -36,8 +38,13 @@ using isc::asiolink::IOAddress;
 
 namespace {
 
-const uint32_t MASK4 = htonl(0xffffff00);
-const uint32_t MASK6[4] = { 0xffffffff, htonl(0xfffffff0), 0, 0 };
+uint32_t
+htonlWrapper(uint32_t val) {
+    return (htonl(val));
+}
+
+const uint32_t MASK4 = htonlWrapper(0xffffff00);
+const uint32_t MASK6[4] = { 0xffffffff, htonlWrapper(0xfffffff0), 0, 0 };
 
 // For constructing TimestampBases; we don't need it in this test.
 void noopCallback(size_t) {}
