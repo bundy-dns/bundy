@@ -33,6 +33,8 @@
 #include <cstring>
 #include <vector>
 
+#include <arpa/inet.h>
+
 using namespace isc::auth::rrl;
 using namespace isc::dns;
 using isc::asiolink::IOEndpoint;
@@ -40,8 +42,13 @@ using isc::asiolink::IOAddress;
 
 namespace {
 
-const uint32_t MASK4 = htonl(0xffffff00);
-const uint32_t MASK6[4] = { 0xffffffff, htonl(0xffffff00), 0, 0 };
+uint32_t
+htonlWrapper(uint32_t val) {
+    return (htonl(val));
+}
+
+const uint32_t MASK4 = htonlWrapper(0xffffff00);
+const uint32_t MASK6[4] = { 0xffffffff, htonlWrapper(0xffffff00), 0, 0 };
 
 class ResponseLimiterTest : public ::testing::Test {
 protected:
@@ -114,7 +121,7 @@ TEST_F(ResponseLimiterTest, prefixes) {
                              &mask6[0], 16));
 
     // mask ending with 1000 0000.  also the prefix len is an odd number.
-    EXPECT_EQ(htonl(0xffff8000),
+    EXPECT_EQ(htonlWrapper(0xffff8000),
               ResponseLimiter(100, 50, 3, 4, 5, 15, 2, 17, 56, false, 10).
               getIPv4Mask());
     mask6.assign(7, 0xff);
