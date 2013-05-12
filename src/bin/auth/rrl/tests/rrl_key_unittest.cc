@@ -99,12 +99,17 @@ TEST_F(RRLKeyTest, constructAndCompare) {
     EXPECT_TRUE(key1 == RRLKey(*ep4_, RRType::A(), &labels_upper,
                                RRClass::IN(), RESPONSE_QUERY, MASK4, MASK6, 0));
 
-    // same for qclass, but only for the least 7 bits
+    // same for qclass, but only for the least 6 bits and "big class" flag
     EXPECT_FALSE(key1 == RRLKey(*ep4_, RRType::A(), &qlabels_, RRClass::CH(),
                                 RESPONSE_QUERY, MASK4, MASK6, 0));
-    EXPECT_TRUE(key1 == RRLKey(*ep4_, RRType::A(), &qlabels_,
-                               RRClass(129), // 129 mod 2^7 == 1
-                               RESPONSE_QUERY, MASK4, MASK6, 0));
+    EXPECT_FALSE(key1 == RRLKey(*ep4_, RRType::A(), &qlabels_,
+                                RRClass(65), // 65 mod 2^6 == 1, with big flag
+                                RESPONSE_QUERY, MASK4, MASK6, 0));
+    // 129 mod 2^6 == 1, and both have big class flag, so not distinguishable.
+    EXPECT_TRUE(RRLKey(*ep4_, RRType::A(), &qlabels_, RRClass(65),
+                       RESPONSE_QUERY, MASK4, MASK6, 0) ==
+                RRLKey(*ep4_, RRType::A(), &qlabels_, RRClass(129),
+                       RESPONSE_QUERY, MASK4, MASK6, 0));
     // for responses other than QUERY, qtype and class are ignored
     const RRLKey key3(*ep4_, RRType::A(), &qlabels_, RRClass::IN(),
                       RESPONSE_NXDOMAIN, MASK4, MASK6, 0);
@@ -160,5 +165,36 @@ TEST_F(RRLKeyTest, getIPText) {
     // invalid prefixlen
     EXPECT_THROW(key1.getIPText(33, 56), isc::InvalidParameter);
     EXPECT_THROW(key1.getIPText(24, 129), isc::InvalidParameter);
+}
+
+TEST_F(RRLKeyTest, getClassText) {
+    // Some common classes, for both IPv4 and IPv6 (which share a bit
+    // with qclass field of the key)
+    EXPECT_EQ("IN", RRLKey(*ep4_, RRType::A(), &qlabels_, RRClass::IN(),
+                           RESPONSE_QUERY, MASK4, MASK6, 0).getClassText());
+    EXPECT_EQ("CH", RRLKey(*ep6_, RRType::A(), &qlabels_, RRClass::CH(),
+                           RESPONSE_QUERY, MASK4, MASK6, 0).getClassText());
+    // qclass isn't set for non QUERY types
+    EXPECT_EQ("CLASS0", RRLKey(*ep4_, RRType::A(), &qlabels_, RRClass::IN(),
+                               RESPONSE_NXDOMAIN, MASK4, MASK6, 0).
+              getClassText());
+    EXPECT_EQ("CLASS0", RRLKey(*ep4_, RRType::A(), &qlabels_, RRClass::IN(),
+                               RESPONSE_ERROR, MASK4, MASK6, 0).getClassText());
+    // only lower 6 bits are kept
+    EXPECT_EQ("?", RRLKey(*ep4_, RRType::A(), &qlabels_, RRClass((1 << 6) + 1),
+                          RESPONSE_QUERY, MASK4, MASK6, 0).getClassText());
+}
+
+TEST_F(RRLKeyTest, getType) {
+    EXPECT_EQ(RRType::A(),
+              RRLKey(*ep4_, RRType::A(), &qlabels_, RRClass::IN(),
+                     RESPONSE_QUERY, MASK4, MASK6, 0).getType());
+    // For types other than query, value of 0 is used
+    EXPECT_EQ(RRType(0),
+              RRLKey(*ep4_, RRType::A(), &qlabels_, RRClass::IN(),
+                     RESPONSE_NXDOMAIN, MASK4, MASK6, 0).getType());
+    EXPECT_EQ(RRType(0),
+              RRLKey(*ep4_, RRType::A(), &qlabels_, RRClass::IN(),
+                     RESPONSE_ERROR, MASK4, MASK6, 0).getType());
 }
 }

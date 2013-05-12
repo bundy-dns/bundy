@@ -80,6 +80,28 @@ public:
     /// large for the address family, isc::InvalidParameter will be thrown.
     std::string getIPText(size_t ipv4_prefixlen, size_t ipv6_prefixlen) const;
 
+    /// \brief Return a textual description of the query type.
+    ///
+    /// Due to internal implementation details not all information of the
+    /// query class is stored in the key; only the lower 7 bits are held.
+    /// So this method returns a descriptive string for the stored 7 bits
+    /// with clarification.
+    ///
+    /// If the ResponseType is not RESPONSE_QUERY on construction, the stored
+    /// 7-bit value is always 0.  This method, if called, returns like other
+    /// cases, just treating the value of 0 is the class code.
+    std::string getClassText() const;
+
+    /// \brief Return the query type stored in the key.
+    ///
+    /// If the key is constructed with the response type of RESPONSE_QUERY,
+    /// it returns an \c RRType object identical to the given qtype on
+    /// construction; otherwise it always returns an RRType object whose code
+    /// is 0.
+    dns::RRType getType() const {
+        return (dns::RRType(key_.qtype));
+    }
+
 private:
     // Actual key elements.  We use a separate struct so this part should
     // be plain old data and can be safely used with low level <cstring>
@@ -88,10 +110,13 @@ private:
         uint32_t ip[2];            // client IP prefix, up to 64 bits
         uint32_t qname_hash;       // a hash value of qname
         uint16_t qtype;            // qtype code value
-        uint8_t ipv6 : 1;          // used for logging
-        uint8_t qclass : 7;        // least 7 bits of qclass code value
+        uint8_t ipv6 : 1; // 1 iff ip is an IPv6 address;used for logging
+        uint8_t big_class : 1; // 1 iff qclass code >= (1 << 6)
+        uint8_t qclass : 6;        // least 6 bits of qclass code value
         uint8_t rtype;             // ResponseType
     } key_;
+
+    static const uint8_t MAX_ENCODED_CLASS_CODE = 0x3f;
 };
 
 // Make sure the key objects are as small as we expect; the specific value

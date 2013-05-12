@@ -48,7 +48,10 @@ RRLKey::RRLKey(const IOEndpoint& client_addr, const dns::RRType& qtype,
     key_.rtype = resp_type;
 
     if (resp_type == RESPONSE_QUERY) {
-        key_.qclass = qclass.getCode() & 0x7f;
+        key_.qclass = qclass.getCode() & MAX_ENCODED_CLASS_CODE;
+        if (qclass.getCode() > MAX_ENCODED_CLASS_CODE) {
+            key_.big_class = 1;
+        }
         key_.qtype = qtype.getCode();
     }
 
@@ -118,6 +121,14 @@ RRLKey::getIPText(size_t ipv4_prefixlen, size_t ipv6_prefixlen) const {
     }
 
     return (sstr.str());
+}
+
+std::string
+RRLKey::getClassText() const {
+    if (key_.big_class) {
+        return ("?");
+    }
+    return (dns::RRClass(key_.qclass & MAX_ENCODED_CLASS_CODE).toText());
 }
 
 } // namespace detail
