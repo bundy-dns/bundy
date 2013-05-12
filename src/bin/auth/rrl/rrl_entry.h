@@ -20,6 +20,8 @@
 #include <auth/rrl/rrl_rate.h>
 #include <auth/rrl/rrl_timestamps.h>
 
+#include <dns/dns_fwd.h>
+
 #include <boost/intrusive/list.hpp>
 
 #include <cassert>
@@ -31,11 +33,19 @@ namespace auth {
 namespace rrl {
 namespace detail {
 
+class NamePool;
+
 class RRLEntry {
 private:
     static const size_t TIMESTAMP_BITS = 12;
     static const size_t TIMESTAMP_GEN_BITS = 2;
     static const size_t TIMESTAMP_BASES_COUNT = 1 << TIMESTAMP_GEN_BITS;
+
+    // Width of the bit field for indexing pooled names for logging
+    static const size_t LOG_QNAMES_BITS = 8;
+    // max number of pooled names.  note that we subtract it by 1 so all
+    // indices including "max" fit in the LOG_QNAMES_BITS bits.
+    static const size_t LOG_QNAMES = (1 << LOG_QNAMES_BITS) - 1;
 public:
     static const int TIMESTAMP_FOREVER = 1 << TIMESTAMP_BITS;
 public:
@@ -45,7 +55,7 @@ public:
     void reset(const RRLKey& key, unsigned int hash_gen) {
         key_ = key;
         responses_ = 0;
-        log_qname_ = 0;
+        log_qname_ = LOG_QNAMES;
         timestamp_gen_ = 0;
         timestamp_valid_ = TIMESTAMP_INVALID;
         hash_gen_ = (hash_gen > 0) ? 1 : 0;
@@ -113,13 +123,29 @@ public:
 
     void invalidateTimestamp() { timestamp_valid_ = TIMESTAMP_INVALID; }
 
+    /// \brief Return a string representing the state of the entry with given
+    /// parameters.
+    std::string makeLogMessage(const char* str1, const char* str2,
+                               Result result, const dns::Rcode& rcode,
+                               NamePool& names, const dns::Name* qname,
+                               bool save_qname, int ipv4_prefixlen,
+                               int ipv6_prefixlen);
+
+    /// \brief Create a new name pool object that can be passed to
+    /// makeLogMessage().
+    ///
+    /// Its capacity depends on internal restriction of RRLEntry, so it's
+    /// defined as a static member function of the class.  The ownership is
+    /// passed to the caller; the caller is responsible to delete it.
+    static NamePool* createNamePool();
+
 private:
     static const unsigned int TIMESTAMP_VALID = 1;
     static const unsigned int TIMESTAMP_INVALID = 0;
 
     RRLKey key_;
     int32_t responses_ : 24;
-    uint32_t log_qname_ : 8;
+    uint32_t log_qname_ : LOG_QNAMES_BITS;
 
     uint32_t timestamp_gen_ : TIMESTAMP_GEN_BITS;
     uint32_t timestamp_valid_ : 1;

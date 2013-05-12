@@ -15,8 +15,14 @@
 #include <auth/rrl/rrl_entry.h>
 #include <auth/rrl/rrl_result.h>
 #include <auth/rrl/rrl_rate.h>
+#include <auth/rrl/rrl_name_pool.h>
+
+#include <dns/rcode.h>
 
 #include <algorithm>
+#include <utility>
+
+using namespace isc::dns;
 
 namespace isc {
 namespace auth {
@@ -79,6 +85,11 @@ RRLEntry::updateBalance(TimestampBases& ts_bases, RRLRate& rates,
     return (RRL_DROP);
 }
 
+NamePool*
+RRLEntry::createNamePool() {
+    return (new NamePool(LOG_QNAMES));
+}
+
 int
 RRLEntry::getResponseBalance(const RRLRate& rates, int age) const {
     if (responses_ > 0) {
@@ -87,6 +98,75 @@ RRLEntry::getResponseBalance(const RRLRate& rates, int age) const {
     const int rate = rates.getRate(key_.getResponseType());
     const int balance = responses_ + age * rate;
     return (std::min(rate, balance));
+}
+
+std::string
+RRLEntry::makeLogMessage(const char* str1, const char* str2, Result result,
+                         const Rcode& rcode, NamePool& names,
+                         const Name* qname, bool save_qname,
+                         int ipv4_prefixlen, int ipv6_prefixlen)
+{
+    std::stringstream ss;
+
+    if (str1) {
+        ss << str1;
+    }
+    if (str2) {
+        ss << str2;
+    }
+
+    switch (result) {
+    case RRL_OK:
+        break;
+    case RRL_DROP:
+        ss << "drop ";
+        break;
+    case RRL_SLIP:
+        ss << "slip ";
+        break;
+    }
+
+    const ResponseType resp_type = key_.getResponseType();
+    switch (resp_type) {
+    case RESPONSE_QUERY:
+        break;
+    case RESPONSE_NXDOMAIN:
+        ss << "NXDOMAIN ";
+        break;
+    case RESPONSE_ERROR:
+        if (rcode == Rcode::NOERROR()) {
+            ss << "error ";
+        } else {
+            ss << rcode << " error ";
+        }
+        break;
+    }
+    ss << "response to " << key_.getIPText(ipv4_prefixlen, ipv6_prefixlen);
+
+    if (resp_type == RESPONSE_QUERY || resp_type == RESPONSE_NXDOMAIN) {
+        const Name* saved_qname = names.getName(log_qname_);
+        if (!saved_qname && save_qname && qname) {
+            const std::pair<bool, size_t> save_result = names.saveName(*qname);
+            if (save_result.first) {
+                log_qname_ = save_result.second;
+            }
+        }
+        if (qname || saved_qname) {
+            ss << " for "
+               << (qname ? qname->toText(true) : saved_qname->toText(true));
+        } else {
+            ss << " for (?)";
+        }
+
+        if (resp_type == RESPONSE_QUERY) {
+            ss << ' ' << key_.getClassText();
+            const RRType qtype = key_.getType();
+            if (qtype != RRType(0)) {
+                ss << ' ' << qtype;
+            }
+        }
+    }
+    return (ss.str());
 }
 
 } // namespace detail

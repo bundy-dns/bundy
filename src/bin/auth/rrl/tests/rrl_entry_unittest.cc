@@ -16,12 +16,14 @@
 #include <auth/rrl/rrl_result.h>
 #include <auth/rrl/rrl_rate.h>
 #include <auth/rrl/rrl_key.h>
+#include <auth/rrl/rrl_name_pool.h>
 
 #include <asiolink/io_endpoint.h>
 #include <asiolink/io_address.h>
 
 #include <dns/name.h>
 #include <dns/labelsequence.h>
+#include <dns/rcode.h>
 #include <dns/rrtype.h>
 #include <dns/rrclass.h>
 
@@ -70,11 +72,10 @@ protected:
                                  RESPONSE_NXDOMAIN, MASK4, MASK6, 4200), 0);
     }
 
-private:
+protected:
     boost::scoped_ptr<const IOEndpoint> ep_;
     const Name qname_;
     const LabelSequence qlabels_;
-protected:
     RRLRate rates_;
     RRLEntry::TimestampBases ts_bases_;
     vector<RRLEntry> entries_;
@@ -204,5 +205,68 @@ TEST_F(RRLEntryTest, updateBalanceSlip) {
                                                   now + 24, 15));
     EXPECT_EQ(RRL_SLIP, entries_[1].updateBalance(ts_bases_, rates_, 1, 0,
                                                   now + 24, 15));
+}
+
+TEST_F(RRLEntryTest, makeLogMessage) {
+    boost::scoped_ptr<NamePool> names(RRLEntry::createNamePool());
+
+    // A normal case
+    EXPECT_EQ("would limit response to 192.0.2.0/24 for example.com IN A",
+              entries_[0].makeLogMessage("would ", "limit ", RRL_OK,
+                                         Rcode::NOERROR(), *names,
+                                         &qname_, true, 24, 56));
+
+    // omitting leading text
+    EXPECT_EQ("limit response to 192.0.2.0/24 for example.com IN A",
+              entries_[0].makeLogMessage(NULL, "limit ", RRL_OK,
+                                         Rcode::NOERROR(), *names,
+                                         &qname_, true, 24, 56));
+    EXPECT_EQ("consider limiting response to 192.0.2.0/24 for example.com IN A",
+              entries_[0].makeLogMessage("consider limiting ", NULL, RRL_OK,
+                                         Rcode::NOERROR(), *names,
+                                         &qname_, true, 24, 56));
+
+    // Other result codes than OK
+    EXPECT_EQ("would drop response to 192.0.2.0/24 for example.com IN A",
+              entries_[0].makeLogMessage("would ", NULL, RRL_DROP,
+                                         Rcode::NOERROR(), *names,
+                                         &qname_, true, 24, 56));
+    EXPECT_EQ("would slip response to 192.0.2.0/24 for example.com IN A",
+              entries_[0].makeLogMessage("would ", NULL, RRL_SLIP,
+                                         Rcode::NOERROR(), *names,
+                                         &qname_, true, 24, 56));
+
+    // Other response types than query
+    EXPECT_EQ("limit NXDOMAIN response to 192.0.2.0/24 for example.com",
+              entries_[1].makeLogMessage(NULL, "limit ", RRL_OK,
+                                         Rcode::NOERROR(), *names,
+                                         &qname_, true, 24, 56));
+    RRLEntry entry;
+    entry.reset(RRLKey(*ep_, RRType::A(), &qlabels_, RRClass::IN(),
+                       RESPONSE_ERROR, MASK4, MASK6, 4200), 0);
+    EXPECT_EQ("limit error response to 192.0.2.0/24",
+              entry.makeLogMessage(NULL, "limit ", RRL_OK, Rcode::NOERROR(),
+                                   *names, &qname_, true, 24, 56));
+    EXPECT_EQ("limit REFUSED error response to 192.0.2.0/24",
+              entry.makeLogMessage(NULL, "limit ", RRL_OK, Rcode::REFUSED(),
+                                   *names, &qname_, true, 24, 56));
+
+    // qname is not given to makeLogMessage but already remembered in the pool
+    EXPECT_EQ("would limit response to 192.0.2.0/24 for example.com IN A",
+              entries_[0].makeLogMessage("would ", "limit ", RRL_OK,
+                                         Rcode::NOERROR(), *names,
+                                         NULL, true, 24, 56));
+    // qname is totally unknown
+    entry.reset(RRLKey(*ep_, RRType::A(), &qlabels_, RRClass::IN(),
+                       RESPONSE_QUERY, MASK4, MASK6, 4200), 0);
+    EXPECT_EQ("limit response to 192.0.2.0/24 for (?) IN A",
+              entry.makeLogMessage(NULL, "limit ", RRL_OK, Rcode::NOERROR(),
+                                   *names, NULL, true, 24, 56));
+    // type-independent result
+    entry.reset(RRLKey(*ep_, RRType(0), &qlabels_, RRClass::IN(),
+                       RESPONSE_QUERY, MASK4, MASK6, 4200), 0);
+    EXPECT_EQ("limit response to 192.0.2.0/24 for example.com IN",
+              entry.makeLogMessage(NULL, "limit ", RRL_OK, Rcode::NOERROR(),
+                                   *names, &qname_, true, 24, 56));
 }
 }
