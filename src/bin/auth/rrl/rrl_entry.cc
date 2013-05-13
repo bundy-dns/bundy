@@ -16,6 +16,7 @@
 #include <auth/rrl/rrl_result.h>
 #include <auth/rrl/rrl_rate.h>
 #include <auth/rrl/rrl_name_pool.h>
+#include <auth/rrl/logger.h>
 
 #include <dns/rcode.h>
 
@@ -167,6 +168,29 @@ RRLEntry::makeLogMessage(const char* str1, const char* str2, Result result,
         }
     }
     return (ss.str());
+}
+
+bool
+RRLEntry::dumpLimitLog(const Name* qname, NamePool& names,
+                       const dns::Rcode& rcode, bool log_only,
+                       int ipv4_prefixlen, int ipv6_prefixlen,
+                       std::string& log_msg)
+{
+    bool newly_logged = false;
+    if ((!logged_ || log_secs_ >= MAX_LOG_SECS) && logger.isInfoEnabled()) {
+        log_msg = makeLogMessage(log_only ? "would " : NULL,
+                                 logged_ ? "continue limiting " : "limit ",
+                                 RRL_OK, rcode, names, qname, true,
+                                 ipv4_prefixlen, ipv6_prefixlen);
+        logger.info(AUTH_RRL_LIMIT).arg(log_msg);
+
+        if (!logged_) {
+            newly_logged = true;
+            logged_ = true;
+        }
+        log_secs_ = 0;
+    }
+    return (newly_logged);
 }
 
 } // namespace detail

@@ -17,6 +17,7 @@
 #include <auth/rrl/rrl_rate.h>
 #include <auth/rrl/rrl_key.h>
 #include <auth/rrl/rrl_name_pool.h>
+#include <auth/rrl/logger.h>
 
 #include <asiolink/io_endpoint.h>
 #include <asiolink/io_address.h>
@@ -32,6 +33,7 @@
 #include <boost/scoped_ptr.hpp>
 
 #include <vector>
+#include <string>
 
 #include <arpa/inet.h>
 
@@ -268,5 +270,34 @@ TEST_F(RRLEntryTest, makeLogMessage) {
     EXPECT_EQ("limit response to 192.0.2.0/24 for example.com IN",
               entry.makeLogMessage(NULL, "limit ", RRL_OK, Rcode::NOERROR(),
                                    *names, &qname_, true, 24, 56));
+}
+
+TEST_F(RRLEntryTest, dumpLimitLog) {
+    // this test doesn't work as expected if log level is set to INFO or lower
+    // (it's the case by default, so this condition shouldn't be too
+    // restrictive)
+    if (!logger.isInfoEnabled()) {
+        return;
+    }
+
+    boost::scoped_ptr<NamePool> names(RRLEntry::createNamePool());
+    std::string log_msg;
+
+    // First limit log.
+    EXPECT_TRUE(entries_[0].dumpLimitLog(&qname_, *names, Rcode::NOERROR(),
+                                         false, 24, 56, log_msg));
+    EXPECT_EQ("limit response to 192.0.2.0/24 for example.com IN A", log_msg);
+
+    // Once logged it'll be suppressed
+    log_msg.clear();
+    EXPECT_FALSE(entries_[0].dumpLimitLog(&qname_, *names, Rcode::NOERROR(),
+                                          false, 24, 56, log_msg));
+    EXPECT_EQ("", log_msg);
+
+    // log_only case
+    EXPECT_TRUE(entries_[1].dumpLimitLog(&qname_, *names, Rcode::NOERROR(),
+                                         true, 24, 56, log_msg));
+    EXPECT_EQ("would limit NXDOMAIN response to 192.0.2.0/24 for example.com",
+              log_msg);
 }
 }

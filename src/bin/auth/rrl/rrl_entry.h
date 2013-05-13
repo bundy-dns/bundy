@@ -23,6 +23,7 @@
 #include <dns/dns_fwd.h>
 
 #include <boost/intrusive/list.hpp>
+#include <boost/static_assert.hpp>
 
 #include <cassert>
 #include <ctime>
@@ -46,8 +47,15 @@ private:
     // max number of pooled names.  note that we subtract it by 1 so all
     // indices including "max" fit in the LOG_QNAMES_BITS bits.
     static const size_t LOG_QNAMES = (1 << LOG_QNAMES_BITS) - 1;
+
+    // Width of the bit field for elapsed time since the entry is logged
+    static const size_t LOG_SECS_BITS = 11;
+    // log suppression period in seconds. it must fit in the bit field
+    static const size_t MAX_LOG_SECS = 1800;
+    BOOST_STATIC_ASSERT(MAX_LOG_SECS < (1 << LOG_SECS_BITS));
 public:
     static const int TIMESTAMP_FOREVER = 1 << TIMESTAMP_BITS;
+    BOOST_STATIC_ASSERT(TIMESTAMP_FOREVER > (1 << LOG_SECS_BITS));
 public:
     boost::intrusive::list_member_hook<> hash_hook_;
     boost::intrusive::list_member_hook<> lru_hook_;
@@ -131,6 +139,22 @@ public:
                                bool save_qname, int ipv4_prefixlen,
                                int ipv6_prefixlen);
 
+    /// \brief Dump a log message of an event for a response being
+    /// rate-limited.
+    ///
+    /// Log messages are also rate limited; it's logged first time the
+    /// corresponding response is limited, and then suppressed until the limit
+    /// is stopped or for 30 minutes.  If logged, log_msg will be set to the
+    /// log message (any previous content will be removed) so the caller can
+    /// also use the message for its own logging or other purposes.
+    ///
+    /// \return true if a log is dumped for the entry first time; false
+    /// otherwise.
+    bool dumpLimitLog(const dns::Name* qname, NamePool& names,
+                      const dns::Rcode& rcode, bool log_only,
+                      int ipv4_prefixlen, int ipv6_prefixlen,
+                      std::string& log_msg);
+
     /// \brief Create a new name pool object that can be passed to
     /// makeLogMessage().
     ///
@@ -150,8 +174,8 @@ private:
     uint32_t timestamp_gen_ : TIMESTAMP_GEN_BITS;
     uint32_t timestamp_valid_ : 1;
     uint32_t hash_gen_ : 1;
-    uint32_t logged_ : 1;
-    uint32_t log_secs_ : 11;
+    uint32_t logged_ : 1; // 1 iff it's once logged (need to call log_end)
+    uint32_t log_secs_ : LOG_SECS_BITS; // seconds since last time it's logged
     uint32_t timestamp_ : TIMESTAMP_BITS;
     uint32_t slip_cnt_ : 4;
 };
