@@ -63,6 +63,11 @@ public:
     /// \brief Free a previously saved name so it can be saved for another
     /// name.
     ///
+    /// This method does nothing if index is the max number.  This way
+    /// the caller can always call this method whether or not prior call
+    /// to saveName() succeeds (indicated in the second element of its
+    /// return value).
+    ///
     /// \throw InvalidOperation the name of the specified index is already
     /// freed.
     /// \throw std::out_of_range index is invalid.

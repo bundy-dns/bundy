@@ -90,6 +90,9 @@ NamePool::saveName(const dns::Name& name) {
 
 void
 NamePool::freeName(size_t index) {
+    if (index == impl_->max_names_) {
+        return;
+    }
     NameEntry& entry = *impl_->names_.at(index);
     if (entry.hook.is_linked()) {
         isc_throw(InvalidOperation, "NamePool::freeName error: double free");

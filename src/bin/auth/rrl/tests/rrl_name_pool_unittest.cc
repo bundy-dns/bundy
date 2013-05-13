@@ -59,6 +59,8 @@ TEST(RRLNamePool, tests) {
     // we can free names; duplicate free attempt would result in exception.
     names.freeName(0);
     EXPECT_THROW(names.freeName(0), isc::InvalidOperation);
+    // if index = max size, freeName() should be nop
+    EXPECT_NO_THROW(names.freeName(2));
 
     // then we can add another name again.
     result = names.saveName(Name("example"));
