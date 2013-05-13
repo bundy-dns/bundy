@@ -59,6 +59,21 @@ RRLEntry::updateBalance(TimestampBases& ts_bases, RRLRate& rates,
                 slip_cnt_ = 0;
             }
         }
+
+        // Find the seconds since last log message without overflowing
+        // small counter.  This counter is reset when an entry is
+        // created.  It is not necessarily reset when some requests
+        // are answered provided other requests continue to be dropped
+        // or slipped.  This can happen when the request rate is just
+        // at the limit.
+        if (logged_) {
+            const int new_log_secs = log_secs_ + age;
+            if (new_log_secs > MAX_LOG_SECS) {
+                log_secs_ = MAX_LOG_SECS;
+            } else {
+                log_secs_ = new_log_secs;
+            }
+        }
     }
     setAge(ts_bases, now);
 

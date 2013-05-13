@@ -283,6 +283,10 @@ TEST_F(RRLEntryTest, dumpLimitLog) {
     boost::scoped_ptr<NamePool> names(RRLEntry::createNamePool());
     std::string log_msg;
 
+    // Initialize: set the internal timestamp = 0
+    entries_[0].setAge(ts_bases_, 10);
+    entries_[1].setAge(ts_bases_, 10);
+
     // First limit log.
     EXPECT_TRUE(entries_[0].dumpLimitLog(&qname_, *names, Rcode::NOERROR(),
                                          false, 24, 56, log_msg));
@@ -295,9 +299,35 @@ TEST_F(RRLEntryTest, dumpLimitLog) {
     EXPECT_EQ("", log_msg);
 
     // log_only case
-    EXPECT_TRUE(entries_[1].dumpLimitLog(&qname_, *names, Rcode::NOERROR(),
+    EXPECT_TRUE(entries_[1].dumpLimitLog(&qname_, *names, Rcode::NXDOMAIN(),
                                          true, 24, 56, log_msg));
     EXPECT_EQ("would limit NXDOMAIN response to 192.0.2.0/24 for example.com",
               log_msg);
+    // it'll be suppressed for 1800 seconds.  it's counted only in
+    // updateBalance().  at time 1809, the elapsed time since the first log
+    // is 1799 sec.
+    log_msg.clear();
+    entries_[1].updateBalance(ts_bases_, rates_, 1, 0, 1809, 15);
+    EXPECT_FALSE(entries_[1].dumpLimitLog(&qname_, *names, Rcode::NOERROR(),
+                                          true, 24, 56, log_msg));
+    EXPECT_EQ("", log_msg);
+    // At time 1810 logging is continued.  But since this is not the first
+    // log, dumpLimitLog returns false.
+    entries_[1].updateBalance(ts_bases_, rates_, 1, 0, 1810, 15);
+    EXPECT_FALSE(entries_[1].dumpLimitLog(&qname_, *names, Rcode::NOERROR(),
+                                          true, 24, 56, log_msg));
+    EXPECT_EQ("would continue limiting NXDOMAIN response to 192.0.2.0/24 for "
+              "example.com", log_msg);
+    // it's suppressed again.
+    log_msg.clear();
+    EXPECT_FALSE(entries_[1].dumpLimitLog(&qname_, *names, Rcode::NOERROR(),
+                                          true, 24, 56, log_msg));
+    EXPECT_EQ("", log_msg);
+    // Overflow situation shouldn't confuse the suppression detection logic.
+    entries_[1].updateBalance(ts_bases_, rates_, 1, 0, 1810 + (1 << 11), 15);
+    EXPECT_FALSE(entries_[1].dumpLimitLog(&qname_, *names, Rcode::NOERROR(),
+                                          true, 24, 56, log_msg));
+    EXPECT_EQ("would continue limiting NXDOMAIN response to 192.0.2.0/24 for "
+              "example.com", log_msg);
 }
 }

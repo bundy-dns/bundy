@@ -56,6 +56,9 @@ private:
 public:
     static const int TIMESTAMP_FOREVER = 1 << TIMESTAMP_BITS;
     BOOST_STATIC_ASSERT(TIMESTAMP_FOREVER > (1 << LOG_SECS_BITS));
+
+    static const int STOP_LOG_SECS = 60;
+    BOOST_STATIC_ASSERT(STOP_LOG_SECS < (1 << LOG_SECS_BITS));
 public:
     boost::intrusive::list_member_hook<> hash_hook_;
     boost::intrusive::list_member_hook<> lru_hook_;
