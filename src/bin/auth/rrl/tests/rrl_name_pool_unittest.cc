@@ -35,6 +35,7 @@ TEST(RRLNamePool, tests) {
     // Initially pool is empty.  getName() would result in out_of_range,
     // except for the special value = max size, in which it returns NULL,
     // indicating the name would have to be saved.
+    EXPECT_EQ(0, names.getSize());
     EXPECT_THROW(names.getName(0), std::out_of_range);
     EXPECT_EQ(static_cast<const Name*>(NULL), names.getName(2));
 
@@ -43,11 +44,13 @@ TEST(RRLNamePool, tests) {
     EXPECT_TRUE(result.first);
     EXPECT_EQ(0, result.second);
     EXPECT_EQ(Name("example.com"), *names.getName(0));
+    EXPECT_EQ(1, names.getSize());
 
     result = names.saveName(Name("example.org"));
     EXPECT_TRUE(result.first);
     EXPECT_EQ(1, result.second);
     EXPECT_EQ(Name("example.org"), *names.getName(1));
+    EXPECT_EQ(2, names.getSize());
 
     // out-of-range cases still hold
     EXPECT_THROW(names.getName(3), std::out_of_range);
@@ -58,6 +61,7 @@ TEST(RRLNamePool, tests) {
 
     // we can free names; duplicate free attempt would result in exception.
     names.freeName(0);
+    EXPECT_EQ(1, names.getSize());
     EXPECT_THROW(names.freeName(0), isc::InvalidOperation);
     // if index = max size, freeName() should be nop
     EXPECT_NO_THROW(names.freeName(2));
@@ -67,5 +71,6 @@ TEST(RRLNamePool, tests) {
     EXPECT_TRUE(result.first);
     EXPECT_EQ(0, result.second);
     EXPECT_EQ(Name("example"), *names.getName(0));
+    EXPECT_EQ(2, names.getSize());
 }
 }

@@ -163,7 +163,7 @@ RRLTable::getEntry(const RRLKey& key, const RRLEntry::TimestampBases& ts_bases,
         expandEntries(std::min((num_entries_ + 1) / 2, MAX_EXPAND_COUNT));
         it = lru_.rbegin();
     }
-    // TBD it->logged
+    // TBD it->logged: (make sure --num_logged_)
     RRLEntry& entry = *it;
     if (!entry.isFree()) {
         const size_t old_hval = entry.getKey().getHash();
@@ -228,6 +228,27 @@ RRLTable::timestampBaseUpdated(size_t gen) {
             arg(i);
     }
 }
+
+#ifdef notyet
+void
+RRLTable::stopLogs(const RRLEntry::TimestampBases& ts_bases, std::time_t now) {
+    if (!last_logged_) {
+        // TBD
+    }
+    const LRUList::reverse_iterator it_end = lru_.rend();
+    for (LRUList::reverse_iterator it = iterator_to(last_logged_);
+         it != it_end;
+         ++it)
+    {
+        // TBD check logged
+
+        if (now != 0) {
+            //const int age = it->getAge(ts_bases, now);
+        }
+        it->endLog();
+    }
+}
+#endif
 
 } // namespace detail
 } // namespace rrl

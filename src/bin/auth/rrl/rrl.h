@@ -25,6 +25,7 @@
 #include <boost/noncopyable.hpp>
 
 #include <ctime>
+#include <string>
 #include <stdint.h>
 
 namespace isc {
@@ -49,7 +50,8 @@ public:
     Result check(const asiolink::IOEndpoint& client_addr,
                  bool is_tcp, const dns::RRClass& qclass,
                  const dns::RRType& qtype, const dns::LabelSequence* qname,
-                 const dns::Rcode& rcode, std::time_t now);
+                 const dns::Rcode& rcode, std::time_t now,
+                 std::string& log_msg);
 
     /// getters basically for testing purposes
     int getResponseRate() const;

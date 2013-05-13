@@ -158,6 +158,9 @@ public:
                       int ipv4_prefixlen, int ipv6_prefixlen,
                       std::string& log_msg);
 
+    void endLimitLog(NamePool& names, bool log_only, int ipv4_prefixlen,
+                     int ipv6_prefixlen, std::string* log_msg = NULL);
+
     /// \brief Create a new name pool object that can be passed to
     /// makeLogMessage().
     ///

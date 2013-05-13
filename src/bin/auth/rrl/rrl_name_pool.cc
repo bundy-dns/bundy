@@ -100,6 +100,11 @@ NamePool::freeName(size_t index) {
     impl_->free_names_.push_front(entry);
 }
 
+size_t
+NamePool::getSize() const {
+    return (impl_->names_.size() - impl_->free_names_.size());
+}
+
 } // namespace detail
 } // namespace rrl
 } // namespace auth

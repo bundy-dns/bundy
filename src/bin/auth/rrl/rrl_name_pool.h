@@ -76,6 +76,14 @@ public:
     /// a value returned by a previous call to saveName().
     void freeName(size_t index);
 
+    /// \brief Return the number of pooled names that are in use.
+    ///
+    /// This method can be slow and is only intended to be used for tests or
+    /// other diagnostic purposes.
+    ///
+    /// \throw None
+    size_t getSize() const;
+
 private:
     struct Impl;
     Impl* impl_;

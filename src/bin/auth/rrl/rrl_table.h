@@ -65,7 +65,7 @@ class RRLTable : boost::noncopyable {
 public:
     RRLTable(size_t max_entries) :
         max_entries_(max_entries), num_entries_(0), hash_gen_(0), searches_(0),
-        probes_(0)
+        probes_(0), num_logged_(0), last_logged_(NULL)
     {}
 
     /// \brief Returns the current number of entries.
@@ -108,6 +108,10 @@ public:
 
     void timestampBaseUpdated(size_t gen);
 
+    void startLog(RRLEntry* entry);
+
+    void stopLog(std::time_t now);
+
 private:
     // Post-search helper of getEntry().
     void refEntry(RRLEntry& entry, int probes, std::time_t now);
@@ -124,6 +128,8 @@ private:
     unsigned int hash_gen_;
     size_t searches_;
     size_t probes_;
+    size_t num_logged_;
+    RRLEntry* last_logged_;
 };
 
 } // namespace detail

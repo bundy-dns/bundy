@@ -21,3 +21,5 @@ $NAMESPACE isc::auth::rrl
 % AUTH_RRL_ENTRY_TIMESTAMP_UPDATED rrl new time base scanned %1 entries
 
 % AUTH_RRL_LIMIT %1
+
+% AUTH_RRL_LIMIT_END %1

@@ -16,6 +16,7 @@
 #define AUTH_RRL_LOGGER_H 1
 
 #include <log/logger.h>
+#include <log/macros.h>
 #include <auth/rrl/auth_rrl_messages.h>
 
 namespace isc {

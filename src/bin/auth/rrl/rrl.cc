@@ -16,6 +16,7 @@
 #include <auth/rrl/rrl_rate.h>
 #include <auth/rrl/rrl_table.h>
 #include <auth/rrl/rrl_entry.h>
+#include <auth/rrl/rrl_name_pool.h>
 #include <auth/rrl/rrl_response_type.h>
 
 #include <dns/name.h>
@@ -32,6 +33,7 @@
 #include <boost/functional/hash.hpp>
 
 #include <cstring>
+#include <string>
 #include <vector>
 #include <unistd.h>
 
@@ -85,16 +87,20 @@ struct ResponseLimiter::ResponseLimiterImpl {
         ts_bases_(now, boost::bind(&RRLTable::timestampBaseUpdated, &table_,
                                    _1)),
         log_only_(log_only),
-        hash_seed_(getHashSeed(now))
+        ipv4_prefixlen_(ipv4_prefixlen), ipv6_prefixlen_(ipv6_prefixlen),
+        hash_seed_(getHashSeed(now)),
+        log_names_(RRLEntry::createNamePool())
     {
-        if (ipv4_prefixlen < 0 || ipv4_prefixlen > 32) {
-            isc_throw(InvalidParameter, "bad IPv4 prefix: " << ipv4_prefixlen);
+        if (ipv4_prefixlen_ < 0 || ipv4_prefixlen_ > 32) {
+            isc_throw(InvalidParameter, "bad IPv4 prefix: " <<
+                      ipv4_prefixlen_);
         }
-        if (ipv6_prefixlen < 0 || ipv6_prefixlen > 128) {
-            isc_throw(InvalidParameter, "bad IPv6 prefix: " << ipv6_prefixlen);
+        if (ipv6_prefixlen_ < 0 || ipv6_prefixlen_ > 128) {
+            isc_throw(InvalidParameter, "bad IPv6 prefix: " <<
+                      ipv6_prefixlen_);
         }
-        setMask(&ipv4_mask_, sizeof(ipv4_mask_), ipv4_prefixlen);
-        setMask(&ipv6_mask_, sizeof(ipv6_mask_), ipv6_prefixlen);
+        setMask(&ipv4_mask_, sizeof(ipv4_mask_), ipv4_prefixlen_);
+        setMask(&ipv6_mask_, sizeof(ipv6_mask_), ipv6_prefixlen_);
         if (max_table_size < min_table_size) {
             isc_throw(InvalidParameter, "max-table-size (" << max_table_size
                       << ") must not be smaller than min-table-size ("
@@ -110,9 +116,12 @@ struct ResponseLimiter::ResponseLimiterImpl {
     const int slip_;
     RRLEntry::TimestampBases ts_bases_;
     const bool log_only_;
+    const int ipv4_prefixlen_;
     uint32_t ipv4_mask_;
+    const int ipv6_prefixlen_;
     uint32_t ipv6_mask_[4];
     const uint32_t hash_seed_;
+    boost::scoped_ptr<NamePool> log_names_;
 };
 
 ResponseLimiter::ResponseLimiter(size_t max_table_size, size_t min_table_size,
@@ -199,8 +208,14 @@ Result
 ResponseLimiter::check(const asiolink::IOEndpoint& client_addr,
                        bool is_tcp, const RRClass& qclass,
                        const RRType& qtype, const LabelSequence* qname,
-                       const Rcode& rcode, std::time_t now)
+                       const Rcode& rcode, std::time_t now,
+                       std::string& /*log_msg*/)
 {
+#if 0
+    // Do possible maintenance for logging.
+    impl_->table_.stopLog(now)
+#endif
+
     // Notice TCP responses when scaling limits by qps (not yet)
     // Do not try to rate limit TCP responses.
     if (is_tcp) {
@@ -223,8 +238,19 @@ ResponseLimiter::check(const asiolink::IOEndpoint& client_addr,
     const Result result =
         entry->updateBalance(impl_->ts_bases_, impl_->rates_, impl_->slip_, 0,
                              now, impl_->window_);
+    if (result == RRL_OK) {
+        return (RRL_OK);
+    }
 
-    // TBD: log non OK results here.
+    // Log occasionally non-OK results
+#if 0
+    if (entry->dumpLog(qname, *impl_->log_names_, impl_->log_only_,
+                       impl_->ipv4_prefixlen_, impl_->ipv6_prefixlen_,
+                       log_msg))
+    {
+        impl_->table_.startLog(entry);
+    }
+#endif
 
     return (result);
 }

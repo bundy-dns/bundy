@@ -208,6 +208,25 @@ RRLEntry::dumpLimitLog(const Name* qname, NamePool& names,
     return (newly_logged);
 }
 
+void
+RRLEntry::endLimitLog(NamePool& names, bool log_only, int ipv4_prefixlen,
+                      int ipv6_prefixlen, std::string* log_msg)
+{
+    if (!logged_) {
+        isc_throw(InvalidOperation,
+                  "RRLEntry::endLog called without starting logging");
+    }
+    const std::string& msg = makeLogMessage(
+        NULL, log_only ? "would stop limiting " : "stop limiting ", RRL_OK,
+        Rcode::NOERROR(), names, NULL, false, ipv4_prefixlen, ipv6_prefixlen);
+    LOG_INFO(logger, AUTH_RRL_LIMIT_END).arg(msg);
+    if (log_msg) {
+        *log_msg = msg;
+    }
+
+    names.freeName(log_qname_);
+}
+
 } // namespace detail
 } // namespace rrl
 } // namespace auth

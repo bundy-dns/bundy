@@ -31,6 +31,7 @@
 #include <boost/scoped_ptr.hpp>
 
 #include <cstring>
+#include <string>
 #include <vector>
 
 #include <arpa/inet.h>
@@ -135,32 +136,33 @@ TEST_F(ResponseLimiterTest, prefixes) {
 TEST_F(ResponseLimiterTest, check) {
     // It should be sufficient to check basic behavior; details tests are
     // done for component classes.
+    std::string log_msg;
 
     // TCP is always okay
     EXPECT_EQ(RRL_OK, rrl_.check(*ep4_, true, qclass_, qtype_, &qlabels_,
-                                 Rcode::NOERROR(), 20));
+                                 Rcode::NOERROR(), 20, log_msg));
     EXPECT_EQ(RRL_OK, rrl_.check(*ep6_, true, qclass_, qtype_, &qlabels_,
-                                 Rcode::NOERROR(), 20));
+                                 Rcode::NOERROR(), 20, log_msg));
 
     // First query is okay.  then the next one will be slipped, and then
     // dropped.
     EXPECT_EQ(RRL_OK, rrl_.check(*ep4_, false, qclass_, qtype_, &qlabels_,
-                                 Rcode::NOERROR(), 20));
+                                 Rcode::NOERROR(), 20, log_msg));
     EXPECT_EQ(RRL_SLIP, rrl_.check(*ep4_, false, qclass_, qtype_, &qlabels_,
-                                   Rcode::NOERROR(), 20));
+                                   Rcode::NOERROR(), 20, log_msg));
     EXPECT_EQ(RRL_DROP, rrl_.check(*ep4_, false, qclass_, qtype_, &qlabels_,
-                                   Rcode::NOERROR(), 20));
+                                   Rcode::NOERROR(), 20, log_msg));
     // NXDOMAIN and errors are considered different types.  errors of different
     // Rcodes are considered to be of the same type.
     EXPECT_EQ(RRL_OK, rrl_.check(*ep4_, false, qclass_, qtype_, &qlabels_,
-                                 Rcode::NXDOMAIN(), 20));
+                                 Rcode::NXDOMAIN(), 20, log_msg));
     EXPECT_EQ(RRL_OK, rrl_.check(*ep4_, false, qclass_, qtype_, &qlabels_,
-                                 Rcode::REFUSED(), 20));
+                                 Rcode::REFUSED(), 20, log_msg));
     EXPECT_EQ(RRL_OK, rrl_.check(*ep4_, false, qclass_, qtype_, &qlabels_,
-                                 Rcode::SERVFAIL(), 20));
+                                 Rcode::SERVFAIL(), 20, log_msg));
 
     // it will be okay again at least in window-sec later
     EXPECT_EQ(RRL_OK, rrl_.check(*ep4_, false, qclass_, qtype_, &qlabels_,
-                                 Rcode::NOERROR(), 35));
+                                 Rcode::NOERROR(), 35, log_msg));
 }
 }
