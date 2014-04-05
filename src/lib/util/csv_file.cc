@@ -80,7 +80,7 @@ CSVRow::checkIndex(const size_t at) const {
 }
 
 CSVFile::CSVFile(const std::string& filename)
-    : primary_separator_(','), filename_(filename), fs_(), cols_(0),
+    : filename_(filename), fs_(), cols_(0),
       read_msg_() {
 }
 
