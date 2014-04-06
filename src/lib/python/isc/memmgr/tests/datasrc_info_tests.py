@@ -176,7 +176,7 @@ class TestSegmentInfo(unittest.TestCase):
         self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.SYNCHRONIZING)
 
         # c) with no readers, complete_update() from UPDATING must go
-        # directly to READY state
+        # directly to COPYING state
         self.__si_to_ready_state()
         self.__sgmt_info.add_event((42,))
         e = self.__sgmt_info.start_update()
@@ -185,7 +185,7 @@ class TestSegmentInfo(unittest.TestCase):
         self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.UPDATING)
         e = self.__sgmt_info.complete_update()
         self.assertTupleEqual(e, (42,))
-        self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.READY)
+        self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.COPYING)
 
         # in SYNCHRONIZING state
         self.__si_to_synchronizing_state()

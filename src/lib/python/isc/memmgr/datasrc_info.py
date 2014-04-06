@@ -109,9 +109,9 @@ class SegmentInfo:
 
     # Helper method used in complete_update(), sync_reader() and
     # remove_reader().
-    def __sync_reader_helper(self, new_state):
+    def __sync_reader_helper(self):
         if not self.__old_readers:
-            self.__state = new_state
+            self.__state = self.COPYING
             if self.__events:
                 return self.__events.popleft()
 
@@ -177,7 +177,7 @@ class SegmentInfo:
             self.__state = self.SYNCHRONIZING
             self.__old_readers = self.__readers
             self.__readers = set()
-            return self.__sync_reader_helper(self.READY)
+            return self.__sync_reader_helper()
         elif self.__state == self.COPYING:
             self.__state = self.READY
             return None
@@ -209,7 +209,7 @@ class SegmentInfo:
         self.__old_readers.remove(reader_session_id)
         self.__readers.add(reader_session_id)
 
-        return self.__sync_reader_helper(self.COPYING)
+        return self.__sync_reader_helper()
 
     def remove_reader(self, reader_session_id):
         """This method must only be called in the SYNCHRONIZING
@@ -227,7 +227,7 @@ class SegmentInfo:
                                    'incorrect state: ' + str(self.__state))
         if reader_session_id in self.__old_readers:
             self.__old_readers.remove(reader_session_id)
-            return self.__sync_reader_helper(self.COPYING)
+            return self.__sync_reader_helper()
         elif reader_session_id in self.__readers:
             self.__readers.remove(reader_session_id)
             return None
