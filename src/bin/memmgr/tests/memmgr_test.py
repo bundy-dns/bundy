@@ -52,6 +52,9 @@ class MockMemmgr(memmgr.Memmgr):
         finally:
             isc.config.ModuleCCSession = orig_cls
 
+    def _create_builder_thread(self):
+        self.builder_thread_created = True
+
 # Defined for easier tests with DataSrcClientsMgr.reconfigure(), which
 # only needs get_value() method
 class MockConfigData:
@@ -172,11 +175,12 @@ class TestMemmgr(unittest.TestCase):
         # Set _config_params to empty config; enough for the test
         self.__mgr._config_params = {}
 
-        # _setup_module should add data_sources remote module with
-        # expected parameters.
+        # _setup_module should start the builder thread and add data_sources
+        # remote module with expected parameters.
         self.__mgr._setup_ccsession()
         self.assertEqual([], self.__mgr.mod_ccsession.add_remote_params)
         self.__mgr._setup_module()
+        self.assertTrue(self.__mgr.builder_thread_created)
         self.assertEqual([('data_sources',
                            self.__mgr._datasrc_config_handler)],
                          self.__mgr.mod_ccsession.add_remote_params)
