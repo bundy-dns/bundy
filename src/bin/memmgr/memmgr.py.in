@@ -205,6 +205,13 @@ class Memmgr(BIND10Server):
     def _setup_module(self):
         """Module specific initialization for BIND10Server."""
         try:
+            # If self._config_params is None, it means the initial call to
+            # __update_config() failed.  We cannot fail at that point due to
+            # API contract, but this is the time to terminate.
+            if self._config_params is None:
+                raise BIND10ServerFatal('memmgr failed in ' +
+                                        'initial configuration')
+
             # memmgr isn't usable if data source is not configured, and
             # as long as cfgmgr is ready there's no timing issue.  So we
             # immediately shut it down if it's missing.  See ddns.py.in

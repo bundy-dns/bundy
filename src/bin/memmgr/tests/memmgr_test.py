@@ -163,6 +163,15 @@ class TestMemmgr(unittest.TestCase):
         self.assertIsNotNone(re.search('not writable', answer[1]))
 
     def test_setup_module(self):
+        # _setup_module raises an exception if the initial configuration setup
+        # failed
+        self.assertIsNone(self.__mgr._config_params) # make sure the expetation
+        self.assertRaises(isc.server_common.bind10_server.BIND10ServerFatal,
+                          self.__mgr._setup_module)
+
+        # Set _config_params to empty config; enough for the test
+        self.__mgr._config_params = {}
+
         # _setup_module should add data_sources remote module with
         # expected parameters.
         self.__mgr._setup_ccsession()
