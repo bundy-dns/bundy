@@ -298,9 +298,11 @@ class TestMemmgr(unittest.TestCase):
         """
         # Some mocks
         class SgmtInfo:
-            def complete_update():
+            def complete_update(self):
                 return 'command'
-        sgmt_info = SgmtInfo
+            def switch_versions(self):
+                self.version_switched = True
+        sgmt_info = SgmtInfo()
         class DataSrcInfo:
             def __init__(self):
                 self.segment_info_map = \
@@ -327,6 +329,8 @@ class TestMemmgr(unittest.TestCase):
         self.assertEqual([], notif_ref)
         self.assertEqual(['command'], commands)
         del commands[:]
+        # segment version swhould have been switched
+        self.assertTrue(sgmt_info.version_switched)
         # The new command is sent
         # Once again the same, but with the last command - nothing new pushed
         sgmt_info.complete_update = lambda: None
