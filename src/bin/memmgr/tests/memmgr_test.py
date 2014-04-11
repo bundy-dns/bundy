@@ -34,6 +34,10 @@ class MyCCSession(MockModuleCCSession, isc.config.ConfigData):
         isc.config.ConfigData.__init__(self, module_spec)
         self.add_remote_params = [] # for inspection
         self.add_remote_exception = None # to raise exception from the method
+        self.rpc_call_exception = None
+        self.rpc_call_params = []
+        self._session = self    # internal session, to mock group_sendmsg
+        self.sendmsg_params = []
 
     def start(self):
         pass
@@ -43,7 +47,19 @@ class MyCCSession(MockModuleCCSession, isc.config.ConfigData):
             raise self.add_remote_exception
         self.add_remote_params.append((mod_name, handler))
 
+    def rpc_call(self, command, group, params):
+        if self.rpc_call_exception is not None:
+            raise self.rpc_call_exception
+        self.rpc_call_params.append((command, group, params))
+
+    def group_sendmsg(self, cmd, group, to):
+        self.sendmsg_params.append((cmd, group, to))
+
 class MockMemmgr(memmgr.Memmgr):
+    def __init__(self):
+        super().__init__()
+        self.builder_thread_created = False
+
     def _setup_ccsession(self):
         orig_cls = isc.config.ModuleCCSession
         isc.config.ModuleCCSession = MyCCSession
@@ -175,15 +191,21 @@ class TestMemmgr(unittest.TestCase):
         # Set _config_params to empty config; enough for the test
         self.__mgr._config_params = {}
 
-        # _setup_module should start the builder thread and add data_sources
-        # remote module with expected parameters.
+        # check what _setup_module should do:
+        # - start the builder thread
+        # - add data_sources remote module with expected parameters
+        # - get initial set of segment readers
         self.__mgr._setup_ccsession()
+        self.assertFalse(self.__mgr.builder_thread_created)
         self.assertEqual([], self.__mgr.mod_ccsession.add_remote_params)
+        self.assertEqual([], self.__mgr.mod_ccsession.rpc_call_params)
         self.__mgr._setup_module()
         self.assertTrue(self.__mgr.builder_thread_created)
         self.assertEqual([('data_sources',
                            self.__mgr._datasrc_config_handler)],
                          self.__mgr.mod_ccsession.add_remote_params)
+        self.assertEqual([('members', 'Msgq', {'group': 'SegmentReader'})],
+                         self.__mgr.mod_ccsession.rpc_call_params)
 
         # If data source isn't configured it's considered fatal (checking the
         # same scenario with two possible exception types)
@@ -194,6 +216,12 @@ class TestMemmgr(unittest.TestCase):
 
         self.__mgr.mod_ccsession.add_remote_exception = \
             isc.config.ModuleSpecError('faked exception')
+        self.assertRaises(isc.server_common.bind10_server.BIND10ServerFatal,
+                          self.__mgr._setup_module)
+
+        # Same for getting initial segment readers.
+        self.__mgr.mod_ccsession.rpc_call_exception = isc.config.RPCError(1,
+                                                                          'e')
         self.assertRaises(isc.server_common.bind10_server.BIND10ServerFatal,
                           self.__mgr._setup_module)
 
@@ -252,8 +280,10 @@ class TestMemmgr(unittest.TestCase):
         self.assertEqual(2, len(self.__mgr._datasrc_info_list))
 
     def test_init_segments(self):
-        """
-        Test the initialization of segments ‒ just load everything found in there.
+        """Test the initialization of segments.
+
+        just load everything found in there.
+
         """
         # Fake a lot of things. These are objects hard to set up, so this is
         # easier.
@@ -261,6 +291,7 @@ class TestMemmgr(unittest.TestCase):
             def __init__(self):
                 self.events = []
                 self.__state = None
+                self.added_readers = []
 
             def add_event(self, cmd):
                 self.events.append(cmd)
@@ -271,6 +302,9 @@ class TestMemmgr(unittest.TestCase):
 
             def get_state(self):
                 return self.__state
+
+            def add_reader(self, reader):
+                self.added_readers.append(reader)
 
         sgmt_info = SgmtInfo()
         class DataSrcInfo:
@@ -283,7 +317,11 @@ class TestMemmgr(unittest.TestCase):
         self.__mgr._builder_cv = threading.Condition()
 
         # Run the initialization
+        self.__mgr._segment_readers = ['reader1', 'reader2']
         self.__mgr._init_segments(dsrc_info)
+
+        # all readers should have been added to the segment(s).
+        self.assertEqual(['reader1', 'reader2'], sgmt_info.added_readers)
 
         # The event was pushed into the segment info
         command = ('load', None, dsrc_info, isc.dns.RRClass.IN, 'name')
@@ -302,6 +340,8 @@ class TestMemmgr(unittest.TestCase):
                 return 'command'
             def switch_versions(self):
                 self.version_switched = True
+            def get_reset_param(self, type):
+                return 'test-segment-params'
         sgmt_info = SgmtInfo()
         class DataSrcInfo:
             def __init__(self):
@@ -329,16 +369,29 @@ class TestMemmgr(unittest.TestCase):
         self.assertEqual([], notif_ref)
         self.assertEqual(['command'], commands)
         del commands[:]
-        # segment version swhould have been switched
+        # segment version should have been switched
         self.assertTrue(sgmt_info.version_switched)
+
         # The new command is sent
-        # Once again the same, but with the last command - nothing new pushed
+        # Once again the same, but with the last command - nothing new pushed,
+        # but a notification should be sent to readers
+        self.__mgr._mod_cc = MyCCSession(None, None, None) # fake mod_ccsession
+        self.__mgr._segment_readers = ['reader1']
         sgmt_info.complete_update = lambda: None
         notif_ref.append(('load-completed', dsrc_info, isc.dns.RRClass.IN,
                           'name'))
         self.__mgr._notify_from_builder()
         self.assertEqual([], notif_ref)
         self.assertEqual([], commands)
+        self.assertEqual(1, len(self.__mgr.mod_ccsession.sendmsg_params))
+        (cmd, group, cc) = self.__mgr.mod_ccsession.sendmsg_params[0]
+        self.assertEqual('SegmentReader', group)
+        self.assertEqual('reader1', cc)
+        command, val = isc.config.parse_command(cmd)
+        self.assertEqual('segment_info_update', command)
+        self.assertEqual({'data-source-class': 'IN',
+                          'data-source-name': 'name',
+                          'segment-params': 'test-segment-params'}, val)
         # This is invalid (unhandled) notification name
         notif_ref.append(('unhandled',))
         self.assertRaises(ValueError, self.__mgr._notify_from_builder)

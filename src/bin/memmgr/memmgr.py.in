@@ -48,15 +48,20 @@ class ConfigError(Exception):
 class Memmgr(BIND10Server):
     def __init__(self):
         BIND10Server.__init__(self)
+
+        # The following attributes are defined as "protected" so tests can
+        # inspect it; others shouldn't use them directly.
+
         # Running configurable parameters: on initial configuration this will
         # be a dict: str=>config_value.
-        # This is defined as "protected" so tests can inspect it; others
-        # shouldn't use it directly.
         self._config_params = None
 
         # The manager to keep track of data source configuration.  Allow
         # tests to inspect/tweak it.
         self._datasrc_clients_mgr = DataSrcClientsMgr(use_cache=True)
+
+        # List of strings, each identifies 'lname' of segment readers.
+        self._segment_readers = []
 
         # List of DataSrcInfo.  Used as a queue to maintain info for all
         # active configuration generations.  Allow tests to inspec it.
@@ -161,8 +166,17 @@ class Memmgr(BIND10Server):
                 if cmd is not None:
                     self._cmd_to_builder(cmd)
                 else:
-                    pass
-                    # TODO: Send to the readers, #2858
+                    params = {
+                        'data-source-class': str(rrclass),
+                        'data-source-name': dsrc_name,
+                        'segment-params': sgmt_info.get_reset_param(
+                            SegmentInfo.READER)
+                    }
+                    cmd = isc.config.create_command('segment_info_update',
+                                                    params)
+                    for reader in self._segment_readers:
+                        self.mod_ccsession._session.group_sendmsg(
+                            cmd, 'SegmentReader', to=reader)
             else:
                 raise ValueError('Unknown notification name: ' + notif_name)
 
@@ -221,6 +235,14 @@ class Memmgr(BIND10Server):
             # _datasrc_config_handler will expect it to be running.
             self._create_builder_thread()
 
+            # TODO: this has no effect right now.
+            # self.mod_ccsession.subscribe_notification(
+            #     'SegmentReader', self._reader_notification)
+
+            # populate initial set of segment readers
+            self._segment_readers = self.mod_ccsession.rpc_call(
+                'members', 'Msgq', params={'group': 'SegmentReader'})
+
             # memmgr isn't usable if data source is not configured, and
             # as long as cfgmgr is ready there's no timing issue.  So we
             # immediately shut it down if it's missing.  See ddns.py.in
@@ -261,6 +283,8 @@ class Memmgr(BIND10Server):
         for key, sgmt_info in datasrc_info.segment_info_map.items():
             rrclass, dsrc_name = key
             cmd = ('load', None, datasrc_info, rrclass, dsrc_name)
+            for reader in self._segment_readers:
+                sgmt_info.add_reader(reader)
             sgmt_info.add_event(cmd)
             send_cmd = sgmt_info.start_update()
             assert cmd == send_cmd and sgmt_info.get_state() == \
