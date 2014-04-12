@@ -158,23 +158,27 @@ class Memmgr(BIND10Server):
             if notif_name == 'load-completed':
                 (_, dsrc_info, rrclass, dsrc_name) = notification
                 sgmt_info = dsrc_info.segment_info_map[(rrclass, dsrc_name)]
-                sgmt_info.switch_versions()
                 cmd = sgmt_info.complete_update()
                 # It may return another load command on the same data source.
                 # If it is so, we execute it too, before we start
                 # synchronizing with the readers.
                 if cmd is not None:
                     self._cmd_to_builder(cmd)
-                else:
+
+                # If there are readers of the old version of this segment,
+                # notify them so they'll move to the newly loaded version.
+                old_readers = sgmt_info.get_old_readers()
+                if old_readers:
                     params = {
                         'data-source-class': str(rrclass),
                         'data-source-name': dsrc_name,
                         'segment-params': sgmt_info.get_reset_param(
                             SegmentInfo.READER)
                     }
-                    cmd = isc.config.create_command('segment_info_update',
-                                                    params)
-                    for reader in self._segment_readers:
+                    for reader in old_readers:
+                        params['reader'] = reader
+                        cmd = isc.config.create_command('segment_info_update',
+                                                        params)
                         self.mod_ccsession._session.group_sendmsg(
                             cmd, 'SegmentReader', to=reader)
             else:

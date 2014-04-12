@@ -336,12 +336,14 @@ class TestMemmgr(unittest.TestCase):
         """
         # Some mocks
         class SgmtInfo:
+            def __init__(self):
+                self.old_readers = set()
             def complete_update(self):
                 return 'command'
-            def switch_versions(self):
-                self.version_switched = True
             def get_reset_param(self, type):
                 return 'test-segment-params'
+            def get_old_readers(self):
+                return self.old_readers
         sgmt_info = SgmtInfo()
         class DataSrcInfo:
             def __init__(self):
@@ -369,14 +371,12 @@ class TestMemmgr(unittest.TestCase):
         self.assertEqual([], notif_ref)
         self.assertEqual(['command'], commands)
         del commands[:]
-        # segment version should have been switched
-        self.assertTrue(sgmt_info.version_switched)
 
         # The new command is sent
         # Once again the same, but with the last command - nothing new pushed,
         # but a notification should be sent to readers
         self.__mgr._mod_cc = MyCCSession(None, None, None) # fake mod_ccsession
-        self.__mgr._segment_readers = ['reader1']
+        sgmt_info.old_readers.add('reader1')
         sgmt_info.complete_update = lambda: None
         notif_ref.append(('load-completed', dsrc_info, isc.dns.RRClass.IN,
                           'name'))
@@ -391,7 +391,8 @@ class TestMemmgr(unittest.TestCase):
         self.assertEqual('segment_info_update', command)
         self.assertEqual({'data-source-class': 'IN',
                           'data-source-name': 'name',
-                          'segment-params': 'test-segment-params'}, val)
+                          'segment-params': 'test-segment-params',
+                          'reader': 'reader1'}, val)
         # This is invalid (unhandled) notification name
         notif_ref.append(('unhandled',))
         self.assertRaises(ValueError, self.__mgr._notify_from_builder)
