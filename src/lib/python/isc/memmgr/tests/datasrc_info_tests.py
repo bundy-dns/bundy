@@ -153,6 +153,10 @@ class TestSegmentInfo(unittest.TestCase):
         self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.COPYING)
 
     def test_complete_update(self):
+        self.__ver_switched = 0        # number of version switches
+        def count_verswitch():
+            self.__ver_switched += 1
+
         # in READY state
         self.__si_to_ready_state()
         self.assertRaises(SegmentInfoError, self.__sgmt_info.complete_update)
@@ -164,39 +168,49 @@ class TestSegmentInfo(unittest.TestCase):
         #
         # a) with no events
         self.__si_to_updating_state()
+        self.__sgmt_info._switch_versions = lambda: count_verswitch()
         e = self.__sgmt_info.complete_update()
         self.assertIsNone(e)
-        self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.SYNCHRONIZING)
+        self.assertEqual(self.__sgmt_info.get_state(),
+                         SegmentInfo.SYNCHRONIZING)
+        self.assertEqual(1, self.__ver_switched)
 
         # b) with events
         self.__si_to_updating_state()
+        self.__sgmt_info._switch_versions = lambda: count_verswitch()
         self.__sgmt_info.add_event((81,))
         e = self.__sgmt_info.complete_update()
         self.assertIsNone(e) # old_readers is not empty
-        self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.SYNCHRONIZING)
+        self.assertEqual(self.__sgmt_info.get_state(),
+                         SegmentInfo.SYNCHRONIZING)
+        self.assertEqual(2, self.__ver_switched)
 
         # c) with no readers, complete_update() from UPDATING must go
         # directly to COPYING state
         self.__si_to_ready_state()
+        self.__sgmt_info._switch_versions = lambda: count_verswitch()
         self.__sgmt_info.add_event((42,))
         e = self.__sgmt_info.start_update()
         self.assertTupleEqual(e, (42,))
         self.assertSetEqual(self.__sgmt_info.get_readers(), set())
         self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.UPDATING)
         e = self.__sgmt_info.complete_update()
+        self.assertEqual(3, self.__ver_switched) # version still switched
         self.assertTupleEqual(e, (42,))
         self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.COPYING)
 
         # in SYNCHRONIZING state
         self.__si_to_synchronizing_state()
         self.assertRaises(SegmentInfoError, self.__sgmt_info.complete_update)
-        self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.SYNCHRONIZING)
+        self.assertEqual(self.__sgmt_info.get_state(),
+                         SegmentInfo.SYNCHRONIZING)
 
-        # in COPYING state
+        # in COPYING state.  No version switch in this case.
         self.__si_to_copying_state()
         e = self.__sgmt_info.complete_update()
         self.assertIsNone(e)
         self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.READY)
+        self.assertEqual(3, self.__ver_switched)
 
     def test_sync_reader(self):
         # in READY state, it must raise an exception
@@ -338,11 +352,11 @@ class TestSegmentInfo(unittest.TestCase):
         self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.SYNCHRONIZING)
 
     def test_switch_versions(self):
-        self.__sgmt_info.switch_versions()
+        self.__sgmt_info._switch_versions()
         self.__check_sgmt_reset_param(SegmentInfo.WRITER, 1)
         self.__check_sgmt_reset_param(SegmentInfo.READER, 0)
 
-        self.__sgmt_info.switch_versions()
+        self.__sgmt_info._switch_versions()
         self.__check_sgmt_reset_param(SegmentInfo.WRITER, 0)
         self.__check_sgmt_reset_param(SegmentInfo.READER, 1)
 
@@ -364,7 +378,7 @@ class TestSegmentInfo(unittest.TestCase):
         self.assertRaises(SegmentInfoError,
                           TestSegmentInfo().get_reset_param,
                           SegmentInfo.WRITER)
-        self.assertRaises(SegmentInfoError, TestSegmentInfo().switch_versions)
+        self.assertRaises(SegmentInfoError, TestSegmentInfo()._switch_versions)
 
 class MockClientList:
     """A mock ConfigurableClientList class.

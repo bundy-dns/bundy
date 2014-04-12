@@ -174,6 +174,7 @@ class SegmentInfo:
         is an error if this method is called in other states than
         UPDATING and COPYING."""
         if self.__state == self.UPDATING:
+            self._switch_versions()
             self.__state = self.SYNCHRONIZING
             self.__old_readers = self.__readers
             self.__readers = set()
@@ -290,20 +291,23 @@ class SegmentInfo:
         """
         raise SegmentInfoError('get_reset_param is not implemented')
 
-    def switch_versions(self):
+    def _switch_versions(self):
         """Switch internal information for the reader segment and writer
         segment.
 
-        This method is expected to be called when the writer on one version
-        of memory segment completes updates and the memmgr is going to
-        have readers switch to the updated version.  Details of the
-        information to be switched would depend on the segment type, and
-        are delegated to the specific subclass.
+        This method is expected to be called when the SegmentInfo state
+        changes from UPDATING to SYNCHRONIZING (or to COPYING if no old
+        readers).  It's also when the memmgr is going to have readers switch
+        to the updated version.  Details of the information to be switched
+        would depend on the segment type, and are delegated to the specific
+        subclass.
 
-        Each subclass must implement this method.
+        Each subclass must implement this method.  This method is not
+        expected to be called outside of SegmentInfo and its subclasses,
+        except for tests.
 
         """
-        raise SegmentInfoError('switch_versions is not implemented')
+        raise SegmentInfoError('_switch_versions is not implemented')
 
 class MappedSegmentInfo(SegmentInfo):
     """SegmentInfo implementation of 'mapped' type memory segments.
@@ -339,7 +343,7 @@ class MappedSegmentInfo(SegmentInfo):
         mapped_file = self.__mapped_file_base + '.' + str(ver)
         return {'mapped-file': mapped_file}
 
-    def switch_versions(self):
+    def _switch_versions(self):
         # Swith the versions as noted in the constructor.
         self.__writer_ver = 1 - self.__writer_ver
 
