@@ -55,6 +55,44 @@ class MyCCSession(MockModuleCCSession, isc.config.ConfigData):
     def group_sendmsg(self, cmd, group, to):
         self.sendmsg_params.append((cmd, group, to))
 
+# Test mock of SegmentInfo.  Faking many methods with hooks for easy inspection.
+class MockSegmentInfo(SegmentInfo):
+    def __init__(self):
+        super().__init__()
+        self.events = []
+        self.__state = None
+        self.added_readers = []
+        self.old_readers = set()
+        self.ret_sync_reader = None # return value of sync_reader()
+        self.raise_on_sync_reader = False
+
+    def add_event(self, cmd):
+        self.events.append(cmd)
+        self.__state = SegmentInfo.UPDATING
+
+    def start_update(self):
+        return self.events[0]
+
+    def get_state(self):
+        return self.__state
+
+    def add_reader(self, reader):
+        self.added_readers.append(reader)
+
+    def complete_update(self):
+        return 'command'
+
+    def get_reset_param(self, type):
+        return 'test-segment-params'
+
+    def get_old_readers(self):
+        return self.old_readers
+
+    def sync_reader(self, reader):
+        if self.raise_on_sync_reader:
+            raise ValueError('exception from sync_reader')
+        return self.ret_sync_reader
+
 class MockMemmgr(memmgr.Memmgr):
     def __init__(self):
         super().__init__()
@@ -70,6 +108,10 @@ class MockMemmgr(memmgr.Memmgr):
 
     def _create_builder_thread(self):
         self.builder_thread_created = True
+
+class MockDataSrcInfo:
+    def __init__(self, sgmt_info):
+        self.segment_info_map = {(isc.dns.RRClass.IN, "name"): sgmt_info}
 
 # Defined for easier tests with DataSrcClientsMgr.reconfigure(), which
 # only needs get_value() method
@@ -287,31 +329,8 @@ class TestMemmgr(unittest.TestCase):
         """
         # Fake a lot of things. These are objects hard to set up, so this is
         # easier.
-        class SgmtInfo:
-            def __init__(self):
-                self.events = []
-                self.__state = None
-                self.added_readers = []
-
-            def add_event(self, cmd):
-                self.events.append(cmd)
-                self.__state = SegmentInfo.UPDATING
-
-            def start_update(self):
-                return self.events[0]
-
-            def get_state(self):
-                return self.__state
-
-            def add_reader(self, reader):
-                self.added_readers.append(reader)
-
-        sgmt_info = SgmtInfo()
-        class DataSrcInfo:
-            def __init__(self):
-                self.segment_info_map = \
-                    {(isc.dns.RRClass.IN, "name"): sgmt_info}
-        dsrc_info = DataSrcInfo()
+        sgmt_info = MockSegmentInfo()
+        dsrc_info = MockDataSrcInfo(sgmt_info)
 
         # Pretend to have the builder thread
         self.__mgr._builder_cv = threading.Condition()
@@ -335,21 +354,8 @@ class TestMemmgr(unittest.TestCase):
         handles them.
         """
         # Some mocks
-        class SgmtInfo:
-            def __init__(self):
-                self.old_readers = set()
-            def complete_update(self):
-                return 'command'
-            def get_reset_param(self, type):
-                return 'test-segment-params'
-            def get_old_readers(self):
-                return self.old_readers
-        sgmt_info = SgmtInfo()
-        class DataSrcInfo:
-            def __init__(self):
-                self.segment_info_map = \
-                    {(isc.dns.RRClass.IN, "name"): sgmt_info}
-        dsrc_info = DataSrcInfo()
+        sgmt_info = MockSegmentInfo()
+        dsrc_info = MockDataSrcInfo(sgmt_info)
         class Sock:
             def recv(self, size):
                 pass
@@ -406,6 +412,68 @@ class TestMemmgr(unittest.TestCase):
         self.__mgr._cmd_to_builder(('test',))
         self.assertEqual([('test',)], self.__mgr._builder_command_queue)
         del self.__mgr._builder_command_queue[:]
+
+    def test_mod_command_handler(self):
+        # unknown name of command will be rejected.  known cases are tested
+        # separately.
+        ans = self.__mgr._mod_command_handler('unknown', {})
+        self.assertEqual(1, parse_answer(ans)[0])
+
+    def test_segment_info_update_ack(self):
+        "Normal case of segment_info_update_ack command"
+
+        commands = []
+        def cmd_to_builder(cmd):
+            commands.append(cmd)
+        self.__mgr._cmd_to_builder = lambda cmd: cmd_to_builder(cmd)
+
+        sgmt_info = MockSegmentInfo()
+        dsrc_info = MockDataSrcInfo(sgmt_info)
+        self.__mgr._datasrc_info_list.append(dsrc_info)
+
+        # If sync_reader() returns None, no command should be sent to
+        # the segment builder.
+        self.assertEqual(False, self.__mgr._mod_command_handler(
+            'segment_info_update_ack', {'data-source-class': 'IN',
+                                        'data-source-name': 'name',
+                                        'reader': 'reader0'}))
+        self.assertEqual([], commands)
+
+        # If sync_returns() something, it's passed to the builder.
+        sgmt_info.ret_sync_reader = 'cmd'
+        self.assertEqual(False, self.__mgr._mod_command_handler(
+            'segment_info_update_ack', {'data-source-class': 'IN',
+                                        'data-source-name': 'name',
+                                        'reader': 'reader0'}))
+        self.assertEqual(['cmd'], commands)
+
+    def test_bad_segment_info_update_ack(self):
+        "Check various invalid cases of segment_info_update_ack command"
+
+        # there's no datasrc info
+        self.assertIsNone(self.__mgr._mod_command_handler(
+            'segment_info_update_ack', {}))
+        sgmt_info = MockSegmentInfo()
+        dsrc_info = MockDataSrcInfo(sgmt_info)
+        self.__mgr._datasrc_info_list.append(dsrc_info)
+        # missing necesary keys or invalid values
+        self.assertIsNone(self.__mgr._mod_command_handler(
+            'segment_info_update_ack', {}))
+        self.assertIsNone(self.__mgr._mod_command_handler(
+            'segment_info_update_ack', {'data-source-class': 'badclass'}))
+        self.assertIsNone(self.__mgr._mod_command_handler(
+            'segment_info_update_ack', {'data-source-class': 'IN'}))
+        self.assertIsNone(self.__mgr._mod_command_handler(
+            'segment_info_update_ack', {'data-source-class': 'IN',
+                                        'data-source-name': 'noname'}))
+        self.assertIsNone(self.__mgr._mod_command_handler(
+            'segment_info_update_ack', {'data-source-class': 'IN',
+                                        'data-source-name': 'name'}))
+        sgmt_info.raise_on_sync_reader = True
+        self.assertIsNone(self.__mgr._mod_command_handler(
+            'segment_info_update_ack', {'data-source-class': 'IN',
+                                        'data-source-name': 'name',
+                                        'reader': 'reader0'}))
 
 if __name__== "__main__":
     isc.log.resetUnitTestRootLogger()

@@ -41,6 +41,18 @@ The memmgr daemon received a new version of data source configuration,
 and has successfully applied it to the local state.  Loading of new zone
 data into memory will possibly take place.
 
+% MEMMGR_DATASRC_SGMTINFO_ACK_FAIL failed to handle command: %1
+Error happend in handling the segment_info_update_ack command.
+This is an unexpected situation, most likely to be a bug of the
+sender implementation.
+
+% MEMMGR_LOAD_COMPLETED load completed for '%1/%2', %3 new load command, %4 readers notified
+An informational message.  The memmgr was notified from a helper
+thread of the completion of loading zone data.  The corresponding data
+source and RR class names are shown.  It also shows whether a new load
+command was immediately sent to the thread, and how many segment
+readers were notified.
+
 % MEMMGR_NO_DATASRC_CONF failed to add data source configuration: %1
 The memmgr daemon tried to incorporate data source configuration on
 its startup but failed to do so.  Due to internal implementation
@@ -49,3 +61,8 @@ installed correctly.  So, if this error message is logged, you should
 probably reinstall the entire system, preferably from the scratch, and
 see if it still happens.  The memmgr daemon cannot do any meaningful
 work without data sources, so it immediately terminates itself.
+
+% MEMMGR_SGMTINFO_ACK received a memory segment info update ack for '%1/%2'
+An informational message.  The memmgr received a memory segment info
+update ack command in response to an update message it has sent.
+The corresponding data source and RR class names are shown.

@@ -71,6 +71,36 @@ class Memmgr(BIND10Server):
         self._builder_command_queue = []
         self._builder_response_queue = []
 
+    def _mod_command_handler(self, cmd, args):
+        if cmd == 'segment_info_update_ack':
+            # We usually expect the following to succeed, as long as the
+            # sender is implemented correctly.  But a buggy module could
+            # still send a bogus message, and since we cannot raise an
+            # exception due to API contract, we catch everything and log it.
+            # Whether it succeeds or fail, this command isn't exected to
+            # be returned with an answer, so we return either None or False
+            # (separating these for testing purposes).
+            try:
+                # TODO: we should eventually handle multiple generations
+                dsrc_info = self._datasrc_info_list[-1]
+                rrclass = isc.dns.RRClass(args['data-source-class'])
+                dsrc_name = args['data-source-name']
+                sgmt_info = dsrc_info.segment_info_map[(rrclass, dsrc_name)]
+                bcmd = sgmt_info.sync_reader(args['reader'])
+            except Exception as ex:
+                logger.error(MEMMGR_DATASRC_SGMTINFO_ACK_FAIL, str(ex))
+                return None
+            if bcmd is not None:
+                # _cmd_to_builder() can be reasonably assumed exception-free;
+                # if it ever raises one, that should be fatal so we'll simply
+                # die.
+                self._cmd_to_builder(bcmd)
+            logger.debug(logger.DBGLVL_TRACE_BASIC, MEMMGR_SGMTINFO_ACK,
+                         dsrc_name, rrclass)
+            return False
+        else:
+            return isc.config.create_answer(1, 'unknown command: ' + cmd)
+
     def _config_handler(self, new_config):
         """Configuration handler, called via BIND10Server.
 
@@ -177,10 +207,14 @@ class Memmgr(BIND10Server):
                     }
                     for reader in old_readers:
                         params['reader'] = reader
-                        cmd = isc.config.create_command('segment_info_update',
-                                                        params)
+                        rcmd = isc.config.create_command('segment_info_update',
+                                                         params)
                         self.mod_ccsession._session.group_sendmsg(
-                            cmd, 'SegmentReader', to=reader)
+                            rcmd, 'SegmentReader', to=reader)
+                logger.debug(logger.DBGLVL_TRACE_BASIC, MEMMGR_LOAD_COMPLETED,
+                             dsrc_name, rrclass,
+                             'without' if cmd is None else 'with',
+                             len(old_readers))
             else:
                 raise ValueError('Unknown notification name: ' + notif_name)
 
