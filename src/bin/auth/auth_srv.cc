@@ -963,7 +963,7 @@ AuthSrv::reconfigureDone(ConstElementPtr params) {
     // ACK the segment
     impl_->config_session_->
         groupSendMsg(isc::config::createCommand("segment_info_update_ack",
-                                                params), "MemMgr");
+                                                params), "Memmgr");
 }
 
 void
