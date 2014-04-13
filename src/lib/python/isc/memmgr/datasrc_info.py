@@ -187,25 +187,35 @@ class SegmentInfo:
                                    'incorrect state: ' + str(self.__state))
 
     def sync_reader(self, reader_session_id):
-        """This method must only be called in the SYNCHRONIZING
-        state. memmgr should call it when it receives the
-        "segment_update_ack" message from a reader module. It moves the
+        """Synchronize segment info with a reader.
+
+        memmgr should call it when it receives the
+        "segment_update_ack" message from a reader module.
+
+        If this method is called in the SYNCHRONIZING state, it moves the
         given ID from the set of reader modules that are using the "old"
         version of the segment to the set of reader modules that are
         using the "current" version of the segment, and if there are no
         reader modules using the "old" version of the segment, the state
         is changed to COPYING. If the state has changed to COPYING, it
         pops the head (oldest) event from the pending events queue and
-        returns it; otherwise it returns None."""
+        returns it; otherwise it returns None.
+
+        This method can also be called in other states if the reader newly
+        subscribes and is notified of a readable segment.  In this case
+        this method effectively does nothing.  But the caller doesn't have
+        to care about the differences based on the internal state.
+
+        """
         if self.__state != self.SYNCHRONIZING:
-            raise SegmentInfoError('sync_reader() called in ' +
-                                   'incorrect state: ' + str(self.__state))
+            return None
+
         if reader_session_id not in self.__old_readers:
-            raise SegmentInfoError('Reader session ID is not in old readers set: ' +
-                                   str(reader_session_id))
+            raise SegmentInfoError('Reader session ID is not in old readers ' +
+                                   'set: ' + str(reader_session_id))
         if reader_session_id in self.__readers:
-            raise SegmentInfoError('Reader session ID is already in readers set: ' +
-                                   str(reader_session_id))
+            raise SegmentInfoError('Reader session ID is already in readers ' +
+                                   'set: ' + str(reader_session_id))
 
         self.__old_readers.remove(reader_session_id)
         self.__readers.add(reader_session_id)

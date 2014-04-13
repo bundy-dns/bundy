@@ -214,19 +214,17 @@ class TestSegmentInfo(unittest.TestCase):
         self.assertEqual(3, self.__ver_switched)
 
     def test_sync_reader(self):
-        # in READY state, it must raise an exception
+        # in other states than SYNCHRONIZING, it's no-op.
         self.__si_to_ready_state()
-        self.assertRaises(SegmentInfoError, self.__sgmt_info.sync_reader, (0))
+        self.assertIsNone(self.__sgmt_info.sync_reader(0))
         self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.READY)
 
-        # in UPDATING state, it must raise an exception
         self.__si_to_updating_state()
-        self.assertRaises(SegmentInfoError, self.__sgmt_info.sync_reader, (0))
+        self.assertIsNone(self.__sgmt_info.sync_reader(0))
         self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.UPDATING)
 
-        # in COPYING state, it must raise an exception
         self.__si_to_copying_state()
-        self.assertRaises(SegmentInfoError, self.__sgmt_info.sync_reader, (0))
+        self.assertIsNone(self.__sgmt_info.sync_reader(0))
         self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.COPYING)
 
         # in SYNCHRONIZING state:
