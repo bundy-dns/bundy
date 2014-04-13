@@ -277,7 +277,9 @@ class MyCCSession(isc.config.ModuleCCSession):
                       want_answer=False):
         # remember the passed parameter, and return dummy sequence
         self._sent_msg.append((msg, group))
-        if self._sendmsg_exception is not None:
+        # in our assumption, group_sendmsg() should never raise an exception
+        # unless an aswer is required, so we exclude that case in this hook.
+        if want_answer and self._sendmsg_exception is not None:
             raise self._sendmsg_exception
         return self.FAKE_SEQUENCE
 
@@ -1102,8 +1104,14 @@ class TestDDNSSession(unittest.TestCase):
     def check_session_msg(self, result, expect_recv=2):
         '''Check post update communication with other modules.'''
         # iff the update succeeds, b10-ddns should tell interested other
-        # modules the information about the update zone.  Possible modules
-        # are xfrout and auth: for xfrout, the message format should be:
+        # modules the information about the update zone.  Eventually this should
+        # be conslidated into a single notify to the group 'ZoneUpdateListener'
+        # whose parameter should be:
+        # {'zone_updated': {'datasource': <data_source_name>,
+        #                   'origin': <updated_zone_name>,
+        #                   'class': <updated_zone_class>}}
+        # Until it's completed, we'll also notify specific modules, which are
+        # xfrout and auth: for xfrout, the message format should be:
         # {'command': ['notify', {'zone_name': <updated_zone_name>,
         #                         'zone_class', <updated_zone_class>}]}
         # for auth, it should be:
@@ -1115,11 +1123,20 @@ class TestDDNSSession(unittest.TestCase):
         # group_recvmsg(), which is normally 2, but can be 0 if send fails;
         # if the message is to be sent
         if result == UPDATE_SUCCESS:
-            expected_sentmsg = 2
+            expected_sentmsg = 3
             self.assertEqual(expected_sentmsg,
                              len(self.__cc_session._sent_msg))
             self.assertEqual(expect_recv, self.__cc_session._recvmsg_called)
             msg_cnt = 0
+            sent_msg, sent_group = self.__cc_session._sent_msg[msg_cnt]
+            sent_cmd = sent_msg['notification']
+            self.assertEqual('notifications/ZoneUpdateListener', sent_group)
+            self.assertEqual('zone_updated', sent_cmd[0])
+            self.assertEqual(3, len(sent_cmd[1]))
+            self.assertEqual(TEST_ZONE_NAME.to_text(), sent_cmd[1]['origin'])
+            self.assertEqual(TEST_RRCLASS.to_text(), sent_cmd[1]['class'])
+            self.assertEqual('sqlite3', sent_cmd[1]['datasource'])
+            msg_cnt += 1
             sent_msg, sent_group = self.__cc_session._sent_msg[msg_cnt]
             sent_cmd = sent_msg['command']
             self.assertEqual('Auth', sent_group)

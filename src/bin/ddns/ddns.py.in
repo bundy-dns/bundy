@@ -56,9 +56,6 @@ TRACE_BASIC = logger.DBGLVL_TRACE_BASIC
 # Well known path settings.  We need to define
 # SPECFILE_LOCATION: ddns configuration spec file
 # SOCKET_FILE: Unix domain socket file to communicate with b10-auth
-# AUTH_SPECFILE_LOCATION: b10-auth configuration spec file (tentatively
-#  necessarily for sqlite3-only-and-older-datasrc-API stuff).  This should be
-#  gone once we migrate to the new API and start using generalized config.
 #
 # If B10_FROM_SOURCE is set in the environment, we use data files
 # from a directory relative to that, otherwise we use the ones
@@ -459,6 +456,10 @@ class DDNSServer:
         ret = self.__send_response(sock, self.__response_renderer.get_data(),
                                    remote_addr)
         if result == isc.ddns.session.UPDATE_SUCCESS:
+            self._cc.notify('ZoneUpdateListener', 'zone_updated',
+                            { 'datasource': 'sqlite3', # hardcode for now
+                              'origin': str(zname),
+                              'class': str(zclass) })
             self.__notify_auth(zname, zclass)
             self.__notify_xfrout(zname, zclass)
         return ret
