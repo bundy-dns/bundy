@@ -110,23 +110,40 @@ class Memmgr(BIND10Server):
                          dsrc_name, rrclass)
             return False
         elif cmd == 'loadzone':
-            try:
-                dsrc_info, rrclass, dsrc_name, zone_name, sgmt_info = \
-                        self.__handle_loadzone_args(args)
-            except _LoadZoneError as ex:
-                logger.error(MEMMGR_LOADZONE_FAIL, str(ex))
-                return isc.config.create_answer(1, 'bad loadzone parameters: '
-                                                + str(ex))
-            sgmt_info.add_event(('load', zone_name, dsrc_info, rrclass,
-                                 dsrc_name))
-            bcmd = sgmt_info.start_update()
-            if bcmd is not None:
-                self._cmd_to_builder(bcmd)
-            logger.debug(logger.DBGLVL_TRACE_BASIC, MEMMGR_LOADZONE,
-                         zone_name, rrclass, dsrc_name)
-            return isc.config.create_answer(0)
+            return self.__update_zone(cmd, args)
         else:
             return isc.config.create_answer(1, 'unknown command: ' + cmd)
+
+    def __update_zone(self, cmd, args):
+        "Unified helper to load/update zone."
+
+        try:
+            dsrc_info, rrclass, dsrc_name, zone_name, sgmt_info = \
+                self.__handle_loadzone_args(args)
+            # If it's manually invoked, it will be helpeful to consider
+            # missing segment info an error; if it's update notification,
+            # this is a normal condition for a 'local' segment.
+            if sgmt_info is None and cmd == 'loadzone':
+                raise _LoadZoneError("no memory segment in '%s' for"
+                                     "RR class %s" % (dsrc_name, rrclass))
+            elif sgmt_info is None:
+                return
+        except _LoadZoneError as ex:
+            # Note: basically this can only happen for user-invoked command;
+            # otherwise it's internal bug.  So we simply say 'loadzone' here.
+            logger.error(MEMMGR_LOADZONE_FAIL, str(ex))
+            return isc.config.create_answer(1, 'bad loadzone parameters: '
+                                            + str(ex))
+        sgmt_info.add_event(('load', zone_name, dsrc_info, rrclass, dsrc_name))
+        bcmd = sgmt_info.start_update()
+        if bcmd is not None:
+            self._cmd_to_builder(bcmd)
+        if cmd == 'loadzone':
+            logger.info(MEMMGR_LOADZONE, zone_name, rrclass, dsrc_name)
+            return isc.config.create_answer(0)
+        else:
+            logger.debug(logger.DBGLVL_TRACE_BASIC, MEMMGR_UPDATE_ZONE,
+                         zone_name, rrclass, dsrc_name)
 
     def __handle_loadzone_args(self, args):
         "Parse loadzone args and return helpful error on failure"
@@ -149,8 +166,7 @@ class Memmgr(BIND10Server):
         try:
             sgmt_info = dsrc_info.segment_info_map[(rrclass, dsrc_name)]
         except KeyError as ex:
-            raise _LoadZoneError("no memory segment in '%s' for RR class %s" %
-                                 (dsrc_name, rrclass))
+            sgmt_info = None    # not necessarily an error, maybe it's 'local'
         return dsrc_info, rrclass, dsrc_name, zone_name, sgmt_info
 
     def _config_handler(self, new_config):
@@ -328,9 +344,24 @@ class Memmgr(BIND10Server):
         self._master_sock.close()
         self._builder_sock.close()
 
-    def _reader_notification(self, ev_name, params):
-        "Callback of module membership notification."
+    def _zone_update_notification(self, ev_name, params):
+        """Callback of zone update notification.
 
+        Defined as 'protected' only for testing purposes.  Shouldn't be called
+        directly otherwise.
+
+        """
+        if ev_name != 'zone_updated':
+            return
+        self.__update_zone(ev_name, params)
+
+    def _reader_notification(self, ev_name, params):
+        """Callback of module membership notification.
+
+        Defined as 'protected' only for testing purposes.  Shouldn't be called
+        directly otherwise.
+
+        """
         # We're only interested in subscribe/unsucribe notifications for
         # the segment reader group.  Note that 'group' param must be included
         # for (un)subscribe.
@@ -389,6 +420,10 @@ class Memmgr(BIND10Server):
             # Now is the time to start the builder thread;
             # _datasrc_config_handler will expect it to be running.
             self._create_builder_thread()
+
+            # subscribe to the group to be notified of updates to zones.
+            self.mod_ccsession.subscribe_notification(
+                'ZoneUpdateListener', self._zone_update_notification)
 
             # populate and maintain segment readers.  We first subscribe to
             # the membership notification group, and then get the set of

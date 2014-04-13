@@ -80,6 +80,10 @@ suggested to check the entire system.
 % MEMMGR_LOADZONE received a load command for %1/%2 in data source '%3'
 An informational message.  The memmgr received a loadzone command.
 
+% MEMMGR_UPDATE_ZONE received a zone update event for %1/%2 in data source '%3'
+An informational message.  The memmgr received an update notification
+for a zone from other module.
+
 % MEMMGR_LOADZONE_FAIL failed to handle command: %1
 Error happend in handling the zoneload command.
 

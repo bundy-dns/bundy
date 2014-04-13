@@ -266,9 +266,10 @@ class TestMemmgr(unittest.TestCase):
         # check what _setup_module should do:
         # 1. start the builder thread
         # 2. add data_sources remote module with expected parameters
-        # 3. subscribe to module member group
-        # 4. get initial set of segment readers
-        # 3 must be done before 4.  sub_notify() confirms this ordering.
+        # 3. subscribe to zone update listener group
+        # 4. subscribe to module member group
+        # 5. get initial set of segment readers
+        # 4 must be done before 5.  sub_notify() confirms this ordering.
         self.__mgr._setup_ccsession()
         sub_notify_params = []
         def sub_notify(g, c):
@@ -282,7 +283,9 @@ class TestMemmgr(unittest.TestCase):
         self.assertEqual([], self.__mgr.mod_ccsession.rpc_call_params)
         self.__mgr._setup_module()
         self.assertTrue(self.__mgr.builder_thread_created)
-        self.assertEqual([('cc_members', self.__mgr._reader_notification)],
+        self.assertEqual([('ZoneUpdateListener',
+                           self.__mgr._zone_update_notification),
+                          ('cc_members', self.__mgr._reader_notification)],
                          sub_notify_params)
         self.assertEqual([('data_sources',
                            self.__mgr._datasrc_config_handler)],
@@ -537,8 +540,8 @@ class TestMemmgr(unittest.TestCase):
                                         'data-source-name': 'name',
                                         'reader': 'reader0'}))
 
-    def test_loadzone(self):
-        "Normal case of loadzone command"
+    def __check_load_or_update_zone(self, cmd, handler):
+        "Common checks for load or update zone callbacks."
 
         commands = []
         self.__mgr._cmd_to_builder = lambda cmd: commands.append(cmd)
@@ -552,22 +555,28 @@ class TestMemmgr(unittest.TestCase):
                           isc.dns.RRClass('IN'), 'name')
 
         # If start_update() returns an event, it's passed to the builder.
-        ans = self.__mgr._mod_command_handler('loadzone',
-                                              {'datasource': 'name',
-                                               'class': 'IN', 'origin': 'zone'})
-        self.assertEqual(0, parse_answer(ans)[0])
+        ans = handler(cmd, {'datasource': 'name',
+                            'class': 'IN', 'origin': 'zone'})
+        if cmd == 'loadzone':
+            self.assertEqual(0, parse_answer(ans)[0])
         self.assertEqual([expected_event], sgmt_info.events)
         self.assertEqual([expected_event], commands)
 
         # If start_update() returns None, the event is only stored in the
         # segment info.
         sgmt_info.start_update = lambda: None
-        ans = self.__mgr._mod_command_handler('loadzone',
-                                              {'datasource': 'name',
-                                               'class': 'IN', 'origin': 'zone'})
-        self.assertEqual(0, parse_answer(ans)[0])
+        ans = handler(cmd, {'datasource': 'name',
+                            'class': 'IN', 'origin': 'zone'})
+        if cmd == 'loadzone':
+            self.assertEqual(0, parse_answer(ans)[0])
         self.assertEqual([expected_event, expected_event], sgmt_info.events)
         self.assertEqual([expected_event], commands)
+
+    def test_loadzone(self):
+        "Normal case of loadzone command"
+
+        self.__check_load_or_update_zone('loadzone',
+                                         self.__mgr._mod_command_handler)
 
     def test_bad_loadzone(self):
         "Check various invalid cases of loadzone command"
@@ -656,6 +665,17 @@ class TestMemmgr(unittest.TestCase):
         self.__mgr._reader_notification('unsubscribed',
                                         {'client': 'baz',
                                          'group': 'SegmentReader'})
+
+    def test_zone_update_notification(self):
+        "Test zone update notification callback."
+
+        # unrelated notifications should be ignored and shouldn't cause
+        # disruption.
+        self.__mgr._zone_update_notification('unknown', {})
+
+        # Perform the same tests for the 'loadzone' command.
+        self.__check_load_or_update_zone('zone_updated',
+                                         self.__mgr._zone_update_notification)
 
 if __name__== "__main__":
     isc.log.resetUnitTestRootLogger()
