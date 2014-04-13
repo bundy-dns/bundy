@@ -278,19 +278,26 @@ class TestSegmentInfo(unittest.TestCase):
         self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.SYNCHRONIZING)
 
     def test_remove_reader(self):
-        # in READY state, it must raise an exception
+        # in READY state, it should return None, unless the specified reader
+        # doesn't exist.
         self.__si_to_ready_state()
+        self.__sgmt_info.add_reader(4)
         self.assertRaises(SegmentInfoError, self.__sgmt_info.remove_reader, (0))
+        self.assertIsNone(self.__sgmt_info.remove_reader(4))
         self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.READY)
 
-        # in UPDATING state, it must raise an exception
+        # Same for UPDATING state.
         self.__si_to_updating_state()
+        self.__sgmt_info.add_reader(4)
         self.assertRaises(SegmentInfoError, self.__sgmt_info.remove_reader, (0))
+        self.assertIsNone(self.__sgmt_info.remove_reader(4))
         self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.UPDATING)
 
-        # in COPYING state, it must raise an exception
+        # Same for COPYING state.
         self.__si_to_copying_state()
+        self.__sgmt_info.add_reader(4)
         self.assertRaises(SegmentInfoError, self.__sgmt_info.remove_reader, (0))
+        self.assertIsNone(self.__sgmt_info.remove_reader(4))
         self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.COPYING)
 
         # in SYNCHRONIZING state:

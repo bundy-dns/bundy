@@ -213,20 +213,25 @@ class SegmentInfo:
         return self.__sync_reader_helper()
 
     def remove_reader(self, reader_session_id):
-        """This method must only be called in the SYNCHRONIZING
-        state. memmgr should call it when it's notified that an existing
+        """Remove the given segment reader from the SegmentInfo.
+
+        memmgr should call it when it's notified that an existing
         reader has unsubscribed. It removes the given reader ID from
         either the set of readers that use the "current" version of the
         segment or the "old" version of the segment (wherever the reader
-        belonged), and in the latter case, if there are no reader
-        modules using the "old" version of the segment, the state is
+        belonged).  In the latter case, the state must be SYNCHRONIZING
+        (only in that state can __old_readers be non-empty), and if there are
+        no reader modules using the "old" version of the segment, the state is
         changed to COPYING. If the state has changed to COPYING, it pops
         the head (oldest) event from the pending events queue and
-        returns it; otherwise it returns None."""
-        if self.__state != self.SYNCHRONIZING:
-            raise SegmentInfoError('remove_reader() called in ' +
-                                   'incorrect state: ' + str(self.__state))
+        returns it; otherwise it returns None.
+
+        """
+        # if self.__state != self.SYNCHRONIZING:
+        #     raise SegmentInfoError('remove_reader() called in ' +
+        #                            'incorrect state: ' + str(self.__state))
         if reader_session_id in self.__old_readers:
+            assert(self.__state == self.SYNCHRONIZING)
             self.__old_readers.remove(reader_session_id)
             return self.__sync_reader_helper()
         elif reader_session_id in self.__readers:
