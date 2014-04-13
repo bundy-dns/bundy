@@ -258,15 +258,14 @@ class MyCCSession(isc.config.ModuleCCSession):
             if module_name in self.__callbacks:
                 self.__callbacks[module_name](self._zonemgr_config,
                                               ConfigData(ZONEMGR_MODULE_SPEC))
+        if module_name is 'data_sources':
+            class FakeConfigData():
+                def get_value(self, param):
+                    return [{}]
+            if update_callback is not None:
+                update_callback(None, FakeConfigData())
 
     def get_remote_config_value(self, module_name, item):
-        if module_name == "Auth" and item == "database_file":
-            return self.auth_db_file, False
-        if module_name == "Auth" and item == "datasources":
-            if self.auth_datasources is None:
-                return [], True # default
-            else:
-                return self.auth_datasources, False
         if module_name == 'Zonemgr' and item == 'secondary_zones':
             if item in self._zonemgr_config:
                 return self._zonemgr_config[item], False
@@ -475,36 +474,6 @@ class TestDDNSServer(unittest.TestCase):
         acl = self.ddns_server._zone_config[(TEST_ZONE_NAME, TEST_RRCLASS)]
         self.assertEqual(ACCEPT, acl.execute(TEST_ACL_CONTEXT))
 
-    def test_datasrc_config(self):
-        # By default (in our faked config) it should be derived from the
-        # test data source
-        rrclass, datasrc_client = self.ddns_server._datasrc_info
-        self.assertEqual(RRClass.IN, rrclass)
-        self.assertEqual(DataSourceClient.SUCCESS,
-                         datasrc_client.find_zone(Name('example.org'))[0])
-
-        # emulating an update.  calling add_remote_config_by_name is a
-        # convenient faked way to invoke the callback.  We set the db file
-        # to a bogus one; the current implementation will create an unusable
-        # data source client.
-        self.__cc_session.auth_db_file = './notexistentdir/somedb.sqlite3'
-        self.__cc_session._auth_config = \
-            {'database_file': './notexistentdir/somedb.sqlite3'}
-        self.__cc_session.add_remote_config_by_name('Auth')
-        rrclass, datasrc_client = self.ddns_server._datasrc_info
-        self.assertEqual(RRClass.IN, rrclass)
-        self.assertRaises(isc.datasrc.Error,
-                          datasrc_client.find_zone, Name('example.org'))
-
-        # Check the current info isn't changed if the new config doesn't
-        # update it.
-        info_orig = self.ddns_server._datasrc_info
-        self.ddns_server._datasrc_info = 42 # dummy value, should be kept.
-        self.__cc_session._auth_config = {'other_config': 'value'}
-        self.__cc_session.add_remote_config_by_name('Auth')
-        self.assertEqual(42, self.ddns_server._datasrc_info)
-        self.ddns_server._datasrc_info = info_orig
-
     def test_secondary_zones_config(self):
         # By default it should be an empty list
         self.assertEqual(set(), self.ddns_server._secondary_zones)
@@ -570,14 +539,12 @@ class TestDDNSServer(unittest.TestCase):
         self.assertEqual([1 for i in range(0, num_ex)], added_pause)
 
     def test_remote_config_fail(self):
-        # If getting config of Auth or Zonemgr fails on construction of
+        # If getting config of Zonemgr fails on construction of
         # DDNServer, it should result in an exception and a few times
         # of retries.  We test all possible cases, changing the number of
         # raised exceptions and the type of exceptions that can happen,
         # which should also cover the fatal error case.
         for i in range(0, 4):
-            self.__check_remote_config_fail('Auth', i, ModuleCCSessionError)
-            self.__check_remote_config_fail('Auth', i, ModuleSpecError)
             self.__check_remote_config_fail('Zonemgr', i, ModuleCCSessionError)
             self.__check_remote_config_fail('Zonemgr', i, ModuleSpecError)
 
@@ -1288,6 +1255,16 @@ class TestDDNSSession(unittest.TestCase):
 
         # reset the session class to the real one
         self.server._UpdateSessionClass = isc.ddns.session.UpdateSession
+
+        # set up minimal faked data source clients
+        class FakeDataSourceClient:
+            def find_zone(self, zname):
+                return [DataSourceClient.SUCCESS] # this is enough here
+        class FakeDataSourceClientList:
+            def find(self, zname, want_exact_match, want_finder):
+                return FakeDataSourceClient(), None, None
+        self.server._datasrc_clients = {TEST_RRCLASS:
+                                        FakeDataSourceClientList()}
 
         # install all-drop ACL
         new_config = { 'zones': [ { 'origin': TEST_ZONE_NAME_STR,
