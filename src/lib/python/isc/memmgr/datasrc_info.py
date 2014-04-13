@@ -227,9 +227,6 @@ class SegmentInfo:
         returns it; otherwise it returns None.
 
         """
-        # if self.__state != self.SYNCHRONIZING:
-        #     raise SegmentInfoError('remove_reader() called in ' +
-        #                            'incorrect state: ' + str(self.__state))
         if reader_session_id in self.__old_readers:
             assert(self.__state == self.SYNCHRONIZING)
             self.__old_readers.remove(reader_session_id)
