@@ -423,9 +423,7 @@ class TestMemmgr(unittest.TestCase):
         "Normal case of segment_info_update_ack command"
 
         commands = []
-        def cmd_to_builder(cmd):
-            commands.append(cmd)
-        self.__mgr._cmd_to_builder = lambda cmd: cmd_to_builder(cmd)
+        self.__mgr._cmd_to_builder = lambda cmd: commands.append(cmd)
 
         sgmt_info = MockSegmentInfo()
         dsrc_info = MockDataSrcInfo(sgmt_info)
@@ -474,6 +472,62 @@ class TestMemmgr(unittest.TestCase):
             'segment_info_update_ack', {'data-source-class': 'IN',
                                         'data-source-name': 'name',
                                         'reader': 'reader0'}))
+
+    def test_loadzone(self):
+        "Normal case of loadzone command"
+
+        commands = []
+        self.__mgr._cmd_to_builder = lambda cmd: commands.append(cmd)
+
+        sgmt_info = MockSegmentInfo()
+        dsrc_info = MockDataSrcInfo(sgmt_info)
+        self.__mgr._datasrc_info_list.append(dsrc_info)
+
+        # Expected builder event for the loadzone parameters
+        expected_event = ('load', isc.dns.Name('zone'), dsrc_info,
+                          isc.dns.RRClass('IN'), 'name')
+
+        # If start_update() returns an event, it's passed to the builder.
+        ans = self.__mgr._mod_command_handler('loadzone',
+                                              {'datasource': 'name',
+                                               'class': 'IN', 'origin': 'zone'})
+        self.assertEqual(0, parse_answer(ans)[0])
+        self.assertEqual([expected_event], sgmt_info.events)
+        self.assertEqual([expected_event], commands)
+
+        # If start_update() returns None, the event is only stored in the
+        # segment info.
+        sgmt_info.start_update = lambda: None
+        ans = self.__mgr._mod_command_handler('loadzone',
+                                              {'datasource': 'name',
+                                               'class': 'IN', 'origin': 'zone'})
+        self.assertEqual(0, parse_answer(ans)[0])
+        self.assertEqual([expected_event, expected_event], sgmt_info.events)
+        self.assertEqual([expected_event], commands)
+
+    def test_bad_loadzone(self):
+        "Check various invalid cases of loadzone command"
+
+        # there's no datasrc info
+        self.assertEqual(1, parse_answer(self.__mgr._mod_command_handler(
+            'loadzone', {}))[0])
+
+        sgmt_info = MockSegmentInfo()
+        dsrc_info = MockDataSrcInfo(sgmt_info)
+        self.__mgr._datasrc_info_list.append(dsrc_info)
+
+        # missing necesary keys or invalid values
+        self.assertEqual(1, parse_answer(self.__mgr._mod_command_handler(
+            'loadzone', {}))[0])
+        self.assertEqual(1, parse_answer(self.__mgr._mod_command_handler(
+            'loadzone', {'class': 'badclass', 'datasource': 'name',
+                         'origin': 'zone'}))[0])
+        self.assertEqual(1, parse_answer(self.__mgr._mod_command_handler(
+            'loadzone', {'class': 'IN', 'datasource': 'name',
+                         'origin': 'bad..name'}))[0])
+        self.assertEqual(1, parse_answer(self.__mgr._mod_command_handler(
+            'loadzone', {'class': 'IN', 'datasource': 'noname',
+                         'origin': 'zone'}))[0])
 
 if __name__== "__main__":
     isc.log.resetUnitTestRootLogger()

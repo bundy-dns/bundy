@@ -46,6 +46,12 @@ Error happend in handling the segment_info_update_ack command.
 This is an unexpected situation, most likely to be a bug of the
 sender implementation.
 
+% MEMMGR_LOADZONE received a load command for %1/%2 in data source '%3'
+An informational message.  The memmgr received a loadzone command.
+
+% MEMMGR_LOADZONE_FAIL failed to handle command: %1
+Error happend in handling the zoneload command.
+
 % MEMMGR_LOAD_COMPLETED load completed for '%1/%2', %3 new load command, %4 readers notified
 An informational message.  The memmgr was notified from a helper
 thread of the completion of loading zone data.  The corresponding data

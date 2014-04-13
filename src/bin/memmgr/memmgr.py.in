@@ -23,6 +23,7 @@ import socket
 import threading
 
 sys.path.append('@@PYTHONPATH@@')
+import isc.dns
 import isc.log
 from isc.config import ModuleSpecError, ModuleCCSessionError
 from isc.log_messages.memmgr_messages import *
@@ -44,6 +45,9 @@ isc.util.process.rename()
 class ConfigError(Exception):
     """An exception class raised for configuration errors of Memmgr."""
     pass
+
+class _LoadZoneError(Exception):
+    "Internal error in parsing loadzone command."
 
 class Memmgr(BIND10Server):
     def __init__(self):
@@ -98,8 +102,49 @@ class Memmgr(BIND10Server):
             logger.debug(logger.DBGLVL_TRACE_BASIC, MEMMGR_SGMTINFO_ACK,
                          dsrc_name, rrclass)
             return False
+        elif cmd == 'loadzone':
+            try:
+                dsrc_info, rrclass, dsrc_name, zone_name, sgmt_info = \
+                        self.__handle_loadzone_args(args)
+            except _LoadZoneError as ex:
+                logger.error(MEMMGR_LOADZONE_FAIL, str(ex))
+                return isc.config.create_answer(1, 'bad loadzone parameters: '
+                                                + str(ex))
+            sgmt_info.add_event(('load', zone_name, dsrc_info, rrclass,
+                                 dsrc_name))
+            bcmd = sgmt_info.start_update()
+            if bcmd is not None:
+                self._cmd_to_builder(bcmd)
+            logger.debug(logger.DBGLVL_TRACE_BASIC, MEMMGR_LOADZONE,
+                         zone_name, rrclass, dsrc_name)
+            return isc.config.create_answer(0)
         else:
             return isc.config.create_answer(1, 'unknown command: ' + cmd)
+
+    def __handle_loadzone_args(self, args):
+        "Parse loadzone args and return helpful error on failure"
+
+        if len(self._datasrc_info_list) == 0:
+            raise _LoadZoneError('no data source is configured')
+        dsrc_info = self._datasrc_info_list[-1]
+        if (not 'class' in args or not 'datasource' in args or
+            not 'origin' in args):
+            raise _LoadZoneError('missing parameters')
+        try:
+            rrclass = isc.dns.RRClass(args['class'])
+        except isc.dns.InvalidRRClass as ex:
+            raise _LoadZoneError('bad class: ' + str(ex))
+        try:
+            zone_name = isc.dns.Name(args['origin'])
+        except Exception as ex: # there can be many types of error
+            raise _LoadZoneError('bad zone origin:' + str(ex))
+        dsrc_name = args['datasource']
+        try:
+            sgmt_info = dsrc_info.segment_info_map[(rrclass, dsrc_name)]
+        except KeyError as ex:
+            raise _LoadZoneError("no memory segment in '%s' for RR class %s" %
+                                 (dsrc_name, rrclass))
+        return dsrc_info, rrclass, dsrc_name, zone_name, sgmt_info
 
     def _config_handler(self, new_config):
         """Configuration handler, called via BIND10Server.
