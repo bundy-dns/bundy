@@ -204,8 +204,6 @@ class MyCCSession(isc.config.ModuleCCSession):
         self._started = False
         self._stopped = False
         # Used as the return value of get_remote_config_value.  Customizable.
-        self.auth_db_file = READ_ZONE_DB_FILE
-        # Used as the return value of get_remote_config_value.  Customizable.
         self.auth_datasources = None
         # faked cc channel, providing group_send/recvmsg itself.  The following
         # attributes are for inspection/customization in tests.
