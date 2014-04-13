@@ -38,6 +38,7 @@ class MyCCSession(MockModuleCCSession, isc.config.ConfigData):
         self.rpc_call_params = []
         self._session = self    # internal session, to mock group_sendmsg
         self.sendmsg_params = []
+        self.subscribe_notification_params = []
 
     def start(self):
         pass
@@ -51,9 +52,13 @@ class MyCCSession(MockModuleCCSession, isc.config.ConfigData):
         if self.rpc_call_exception is not None:
             raise self.rpc_call_exception
         self.rpc_call_params.append((command, group, params))
+        return []
 
     def group_sendmsg(self, cmd, group, to):
         self.sendmsg_params.append((cmd, group, to))
+
+    def subscribe_notification(self, group, callback):
+        self.subscribe_notification_params.append((group, callback))
 
 # Test mock of SegmentInfo.  Faking many methods with hooks for easy inspection.
 class MockSegmentInfo(SegmentInfo):
@@ -77,6 +82,7 @@ class MockSegmentInfo(SegmentInfo):
         return self.__state
 
     def add_reader(self, reader):
+        super().add_reader(reader)
         self.added_readers.append(reader)
 
     def complete_update(self):
@@ -153,6 +159,30 @@ class TestMemmgr(unittest.TestCase):
         # If at test created a mapped-files directory, delete it.
         if os.path.isdir(self.__test_mapped_file_dir):
             os.rmdir(self.__test_mapped_file_dir)
+
+    def __check_segment_info_update(self, sgmt_info, expected_reader):
+        """Helper method for common set of checks on sent segment_info_update.
+
+        This method assumes the caller to setup the test case with
+        MockSegmentInfo and MockDataSrcInfo.
+
+        """
+
+        # Confirm the expected form of message has been sent.
+        self.assertEqual(1, len(self.__mgr.mod_ccsession.sendmsg_params))
+        (cmd, group, cc) = self.__mgr.mod_ccsession.sendmsg_params[0]
+        self.assertEqual('SegmentReader', group)
+        self.assertEqual(expected_reader, cc)
+        command, val = isc.config.parse_command(cmd)
+        self.assertEqual('segment_info_update', command)
+        self.assertEqual({'data-source-class': 'IN',
+                          'data-source-name': 'name',
+                          'segment-params': 'test-segment-params',
+                          'reader': expected_reader}, val)
+
+        # Confirm the number of outstanding updates is managed.
+        self.assertEqual(
+            1, self.__mgr._segment_readers[expected_reader][sgmt_info])
 
     def test_init(self):
         """Check some initial conditions"""
@@ -234,15 +264,26 @@ class TestMemmgr(unittest.TestCase):
         self.__mgr._config_params = {}
 
         # check what _setup_module should do:
-        # - start the builder thread
-        # - add data_sources remote module with expected parameters
-        # - get initial set of segment readers
+        # 1. start the builder thread
+        # 2. add data_sources remote module with expected parameters
+        # 3. subscribe to module member group
+        # 4. get initial set of segment readers
+        # 3 must be done before 4.  sub_notify() confirms this ordering.
         self.__mgr._setup_ccsession()
+        sub_notify_params = []
+        def sub_notify(g, c):
+            if not sub_notify_params:
+                self.assertEqual({}, self.__mgr._segment_readers)
+            sub_notify_params.append((g, c))
+        self.__mgr.mod_ccsession.subscribe_notification = \
+            lambda g, c: sub_notify(g, c)
         self.assertFalse(self.__mgr.builder_thread_created)
         self.assertEqual([], self.__mgr.mod_ccsession.add_remote_params)
         self.assertEqual([], self.__mgr.mod_ccsession.rpc_call_params)
         self.__mgr._setup_module()
         self.assertTrue(self.__mgr.builder_thread_created)
+        self.assertEqual([('cc_members', self.__mgr._reader_notification)],
+                         sub_notify_params)
         self.assertEqual([('data_sources',
                            self.__mgr._datasrc_config_handler)],
                          self.__mgr.mod_ccsession.add_remote_params)
@@ -336,7 +377,7 @@ class TestMemmgr(unittest.TestCase):
         self.__mgr._builder_cv = threading.Condition()
 
         # Run the initialization
-        self.__mgr._segment_readers = ['reader1', 'reader2']
+        self.__mgr._segment_readers = {'reader1': {}, 'reader2': {}}
         self.__mgr._init_segments(dsrc_info)
 
         # all readers should have been added to the segment(s).
@@ -383,6 +424,7 @@ class TestMemmgr(unittest.TestCase):
         # but a notification should be sent to readers
         self.__mgr._mod_cc = MyCCSession(None, None, None) # fake mod_ccsession
         sgmt_info.old_readers.add('reader1')
+        self.__mgr._segment_readers['reader1'] = {}
         sgmt_info.complete_update = lambda: None
         notif_ref.append(('load-completed', dsrc_info, isc.dns.RRClass.IN,
                           'name'))
@@ -391,14 +433,7 @@ class TestMemmgr(unittest.TestCase):
         self.assertEqual([], commands)
         self.assertEqual(1, len(self.__mgr.mod_ccsession.sendmsg_params))
         (cmd, group, cc) = self.__mgr.mod_ccsession.sendmsg_params[0]
-        self.assertEqual('SegmentReader', group)
-        self.assertEqual('reader1', cc)
-        command, val = isc.config.parse_command(cmd)
-        self.assertEqual('segment_info_update', command)
-        self.assertEqual({'data-source-class': 'IN',
-                          'data-source-name': 'name',
-                          'segment-params': 'test-segment-params',
-                          'reader': 'reader1'}, val)
+        self.__check_segment_info_update(sgmt_info, 'reader1')
         # This is invalid (unhandled) notification name
         notif_ref.append(('unhandled',))
         self.assertRaises(ValueError, self.__mgr._notify_from_builder)
@@ -430,20 +465,37 @@ class TestMemmgr(unittest.TestCase):
         self.__mgr._datasrc_info_list.append(dsrc_info)
 
         # If sync_reader() returns None, no command should be sent to
-        # the segment builder.
-        self.assertEqual(False, self.__mgr._mod_command_handler(
-            'segment_info_update_ack', {'data-source-class': 'IN',
-                                        'data-source-name': 'name',
-                                        'reader': 'reader0'}))
-        self.assertEqual([], commands)
+        # the segment builder.  We emulate the situation where there are
+        # two outstanding segment_info_update.  The counter is updated
+        # for each callto _mod_command_handler, and sync_reader() is called
+        # if and only if all outstanding segment_info_update's are responded.
+        sgmt_readers = self.__mgr._segment_readers
+        sgmt_readers['reader0'] = {sgmt_info: 2}
+        for i in (0, 1):
+            self.assertEqual(False, self.__mgr._mod_command_handler(
+                'segment_info_update_ack', {'data-source-class': 'IN',
+                                            'data-source-name': 'name',
+                                            'reader': 'reader0'}))
+            self.assertEqual([], commands)
+            if i == 0:
+                self.assertEqual(1, sgmt_readers['reader0'][sgmt_info])
+            else:
+                self.assertFalse(sgmt_info in sgmt_readers['reader0'])
 
         # If sync_returns() something, it's passed to the builder.
-        sgmt_info.ret_sync_reader = 'cmd'
-        self.assertEqual(False, self.__mgr._mod_command_handler(
-            'segment_info_update_ack', {'data-source-class': 'IN',
-                                        'data-source-name': 'name',
-                                        'reader': 'reader0'}))
-        self.assertEqual(['cmd'], commands)
+        self.__mgr._segment_readers['reader0'] = {sgmt_info: 2}
+        for i in (0, 1):
+            sgmt_info.ret_sync_reader = 'cmd'
+            self.assertEqual(False, self.__mgr._mod_command_handler(
+                'segment_info_update_ack', {'data-source-class': 'IN',
+                                            'data-source-name': 'name',
+                                            'reader': 'reader0'}))
+            if i == 0:
+                self.assertEqual(1, sgmt_readers['reader0'][sgmt_info])
+                self.assertEqual([], commands)
+            else:
+                self.assertFalse(sgmt_info in sgmt_readers['reader0'])
+                self.assertEqual(['cmd'], commands)
 
     def test_bad_segment_info_update_ack(self):
         "Check various invalid cases of segment_info_update_ack command"
@@ -467,7 +519,19 @@ class TestMemmgr(unittest.TestCase):
         self.assertIsNone(self.__mgr._mod_command_handler(
             'segment_info_update_ack', {'data-source-class': 'IN',
                                         'data-source-name': 'name'}))
+
+        # not necessarily invalid, but less common case: reader has been
+        # removed by the time of handling update_ack.
+        self.assertEqual(False,
+                         self.__mgr._mod_command_handler(
+                             'segment_info_update_ack',
+                             {'data-source-class': 'IN',
+                              'data-source-name': 'name',
+                              'reader': 'reader0'}))
+
+        # exception from sync_readers
         sgmt_info.raise_on_sync_reader = True
+        self.__mgr._segment_readers['reader0'] = {sgmt_info: 1}
         self.assertIsNone(self.__mgr._mod_command_handler(
             'segment_info_update_ack', {'data-source-class': 'IN',
                                         'data-source-name': 'name',
@@ -528,6 +592,70 @@ class TestMemmgr(unittest.TestCase):
         self.assertEqual(1, parse_answer(self.__mgr._mod_command_handler(
             'loadzone', {'class': 'IN', 'datasource': 'noname',
                          'origin': 'zone'}))[0])
+
+    def test_reader_notification(self):
+        "Test module membership notification callback."
+
+        # unrelated notifications should be ignored and shouldn't cause
+        # disruption.
+        self.__mgr._reader_notification('connected', {'client': 'foo'})
+        self.__mgr._reader_notification('disconnected', {'client': 'foo'})
+        self.__mgr._reader_notification('subscribed', {'group': 'TestGroup'})
+        self.__mgr._reader_notification('unsubscribed', {'group': 'TestGroup'})
+
+        # necessary setup for the memmgr
+        self.__mgr._mod_cc = MyCCSession(None, None, None) # fake mod_ccsession
+        sgmt_info = MockSegmentInfo()
+        dsrc_info = MockDataSrcInfo(sgmt_info)
+        self.__mgr._datasrc_info_list.append(dsrc_info)
+
+        # basic case of new subscriber.  the reader should be added to the
+        # segment info, and info_update should be sent to the reader.
+        self.__mgr._reader_notification('subscribed',
+                                        {'client': 'foo',
+                                         'group': 'SegmentReader'})
+        self.assertEqual(['foo'], sgmt_info.added_readers)
+        self.__check_segment_info_update(sgmt_info, 'foo')
+
+        # duplicate subscribe notification.  rare, but possible.  basically
+        # no-op.
+        self.__mgr._reader_notification('subscribed',
+                                        {'client': 'foo',
+                                         'group': 'SegmentReader'})
+        self.assertEqual(['foo'], sgmt_info.added_readers) # should be no change
+
+        # if a reader segment isn't yet available, no info_update will be sent.
+        self.__mgr.mod_ccsession.sendmsg_params = []
+        sgmt_info.get_reset_param = lambda x: None
+        self.__mgr._reader_notification('subscribed',
+                                        {'client': 'bar',
+                                         'group': 'SegmentReader'})
+        self.assertEqual([], self.__mgr.mod_ccsession.sendmsg_params)
+
+        # basic case of unsubscription of a reader.  reader will be removed
+        # from memmgr's list.  unless remove_reader() returns a new command,
+        # no new command will be sent to the builder.
+        commands = []
+        self.__mgr._cmd_to_builder = lambda cmd: commands.append(cmd)
+        self.__mgr._reader_notification('unsubscribed',
+                                        {'client': 'foo',
+                                         'group': 'SegmentReader'})
+        self.assertFalse('foo' in self.__mgr._segment_readers)
+        self.assertEqual([], commands)
+
+        # if remove_reader() returns a new command, it will be sent to builder.
+        sgmt_info.remove_reader = lambda r: 'some command'
+        self.__mgr._reader_notification('unsubscribed',
+                                        {'client': 'bar',
+                                         'group': 'SegmentReader'})
+        self.assertFalse('bar' in self.__mgr._segment_readers)
+        self.assertEqual(['some command'], commands)
+
+        # if specified reader doesn't exist in the memmgr's list, it's ignored
+        # although it's an unexpected event.
+        self.__mgr._reader_notification('unsubscribed',
+                                        {'client': 'baz',
+                                         'group': 'SegmentReader'})
 
 if __name__== "__main__":
     isc.log.resetUnitTestRootLogger()

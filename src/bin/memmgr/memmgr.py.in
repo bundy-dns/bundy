@@ -36,6 +36,7 @@ import isc.util.process
 import isc.util.traceback_handler
 
 MODULE_NAME = 'memmgr'
+SEGMENT_READER_GROUP = 'SegmentReader'
 
 isc.log.init('b10-memmgr', buffer=True)
 logger = isc.log.Logger(MODULE_NAME)
@@ -64,8 +65,10 @@ class Memmgr(BIND10Server):
         # tests to inspect/tweak it.
         self._datasrc_clients_mgr = DataSrcClientsMgr(use_cache=True)
 
-        # List of strings, each identifies 'lname' of segment readers.
-        self._segment_readers = []
+        # Diect: string=>dict, mapping 'lname' of segment readers to another
+        # dict, which maps segment info to the number of outstanding
+        # segment_info_update for the reader.
+        self._segment_readers = {}
 
         # List of DataSrcInfo.  Used as a queue to maintain info for all
         # active configuration generations.  Allow tests to inspec it.
@@ -90,15 +93,19 @@ class Memmgr(BIND10Server):
                 rrclass = isc.dns.RRClass(args['data-source-class'])
                 dsrc_name = args['data-source-name']
                 sgmt_info = dsrc_info.segment_info_map[(rrclass, dsrc_name)]
-                bcmd = sgmt_info.sync_reader(args['reader'])
+                reader = args['reader']
+                if not reader in self._segment_readers:
+                    logger.info(MEMMGR_DATASRC_SGMTINFO_ACK_NOREADER, reader)
+                    return False
+                self._segment_readers[reader][sgmt_info] -= 1
+                if self._segment_readers[reader][sgmt_info] == 0:
+                    del self._segment_readers[reader][sgmt_info]
+                    bcmd = sgmt_info.sync_reader(reader)
+                    if bcmd is not None:
+                        self._cmd_to_builder(bcmd)
             except Exception as ex:
                 logger.error(MEMMGR_DATASRC_SGMTINFO_ACK_FAIL, str(ex))
                 return None
-            if bcmd is not None:
-                # _cmd_to_builder() can be reasonably assumed exception-free;
-                # if it ever raises one, that should be fatal so we'll simply
-                # die.
-                self._cmd_to_builder(bcmd)
             logger.debug(logger.DBGLVL_TRACE_BASIC, MEMMGR_SGMTINFO_ACK,
                          dsrc_name, rrclass)
             return False
@@ -214,6 +221,33 @@ class Memmgr(BIND10Server):
             self._builder_command_queue.append(cmd)
             self._builder_cv.notify_all()
 
+    def __notify_readers(self, rrclass, dsrc_name, sgmt_info, readers,
+                         skip_ok=False):
+        """Helper to form and send segment_info_update message to readers.
+
+        Unless 'skip_ok' is explicitly set to True a segment for readers
+        must be available.
+
+        """
+
+        reset_param = sgmt_info.get_reset_param(SegmentInfo.READER)
+        if reset_param is None:
+            assert(skip_ok)
+            return
+        params = {
+            'data-source-class': str(rrclass),
+            'data-source-name': dsrc_name,
+            'segment-params': reset_param
+        }
+        for reader in readers:
+            params['reader'] = reader
+            rcmd = isc.config.create_command('segment_info_update', params)
+            self.mod_ccsession._session.group_sendmsg(
+                rcmd, SEGMENT_READER_GROUP, to=reader)
+            if not sgmt_info in self._segment_readers[reader]:
+                self._segment_readers[reader][sgmt_info] = 0
+            self._segment_readers[reader][sgmt_info] += 1
+
     def _notify_from_builder(self):
         """
         Read the notifications from the builder thread.
@@ -244,18 +278,8 @@ class Memmgr(BIND10Server):
                 # notify them so they'll move to the newly loaded version.
                 old_readers = sgmt_info.get_old_readers()
                 if old_readers:
-                    params = {
-                        'data-source-class': str(rrclass),
-                        'data-source-name': dsrc_name,
-                        'segment-params': sgmt_info.get_reset_param(
-                            SegmentInfo.READER)
-                    }
-                    for reader in old_readers:
-                        params['reader'] = reader
-                        rcmd = isc.config.create_command('segment_info_update',
-                                                         params)
-                        self.mod_ccsession._session.group_sendmsg(
-                            rcmd, 'SegmentReader', to=reader)
+                    self.__notify_readers(rrclass, dsrc_name, sgmt_info,
+                                          old_readers)
                 logger.debug(logger.DBGLVL_TRACE_BASIC, MEMMGR_LOAD_COMPLETED,
                              dsrc_name, rrclass,
                              'without' if cmd is None else 'with',
@@ -304,6 +328,54 @@ class Memmgr(BIND10Server):
         self._master_sock.close()
         self._builder_sock.close()
 
+    def _reader_notification(self, ev_name, params):
+        "Callback of module membership notification."
+
+        # We're only interested in subscribe/unsucribe notifications for
+        # the segment reader group.  Note that 'group' param must be included
+        # for (un)subscribe.
+        if ((ev_name != 'subscribed' and ev_name != 'unsubscribed') or
+            params['group'] != SEGMENT_READER_GROUP):
+            return
+
+        reader = params['client']
+        logger.info(MEMMGR_CCMEMBER_NOTIFY, ev_name, reader)
+        try:
+            self.__update_reader(ev_name, reader)
+        except Exception as ex:
+            # An unexpected error, but propagating it will kill memmgr, and
+            # it may not necessarily a defect of memmgr itself, so we'll keep
+            # running.
+            logger.error(MEMMGR_CCMEMBER_NOTIFY_FAIL, ex)
+
+    def __update_reader(self, ev_name, reader):
+        "Helper of _reader_notification, handling notifications in detail."
+
+        if ev_name == 'subscribed':
+            if reader in self._segment_readers:
+                logger.info(MEMMGR_CCMEMBER_DUP_SUBSCRIBED, reader)
+            else:
+                self._segment_readers[reader] = {}
+                for dsrc_info in self._datasrc_info_list:
+                    for key, sgmt_info in dsrc_info.segment_info_map.items():
+                        sgmt_info.add_reader(reader)
+                        rrclass, dsrc_name = key
+                        # If a reader segment is ready, we should tell the
+                        # reader about it.  It's possible a readable segment
+                        # isn't ready yet, so set skip_ok to True.
+                        self.__notify_readers(rrclass, dsrc_name, sgmt_info,
+                                              [reader], skip_ok=True)
+        else:                   # must be 'unsubscribed'
+            if not reader in self._segment_readers:
+                logger.warn(MEMMGR_CCMEMBER_DUP_UNSUBSCRIBED, reader)
+            else:
+                del self._segment_readers[reader]
+                for dsrc_info in self._datasrc_info_list:
+                    for sgmt_info in dsrc_info.segment_info_map.values():
+                        bcmd = sgmt_info.remove_reader(reader)
+                        if bcmd is not None:
+                            self._cmd_to_builder(bcmd)
+
     def _setup_module(self):
         """Module specific initialization for BIND10Server."""
         try:
@@ -318,13 +390,18 @@ class Memmgr(BIND10Server):
             # _datasrc_config_handler will expect it to be running.
             self._create_builder_thread()
 
-            # TODO: this has no effect right now.
-            # self.mod_ccsession.subscribe_notification(
-            #     'SegmentReader', self._reader_notification)
-
-            # populate initial set of segment readers
-            self._segment_readers = self.mod_ccsession.rpc_call(
-                'members', 'Msgq', params={'group': 'SegmentReader'})
+            # populate and maintain segment readers.  We first subscribe to
+            # the membership notification group, and then get the set of
+            # readers at this point.  This ordering is critical; otherwise
+            # we could miss a new reader that appears immediately after we
+            # populate the initial list.
+            self.mod_ccsession.subscribe_notification('cc_members',
+                                                      self._reader_notification)
+            # This rpc_call should either return a list or raise an exception.
+            readers = self.mod_ccsession.rpc_call(
+                'members', 'Msgq', params={'group': SEGMENT_READER_GROUP})
+            for r in readers:
+                self._segment_readers[r] = {}
 
             # memmgr isn't usable if data source is not configured, and
             # as long as cfgmgr is ready there's no timing issue.  So we
@@ -366,7 +443,7 @@ class Memmgr(BIND10Server):
         for key, sgmt_info in datasrc_info.segment_info_map.items():
             rrclass, dsrc_name = key
             cmd = ('load', None, datasrc_info, rrclass, dsrc_name)
-            for reader in self._segment_readers:
+            for reader in self._segment_readers.keys():
                 sgmt_info.add_reader(reader)
             sgmt_info.add_event(cmd)
             send_cmd = sgmt_info.start_update()

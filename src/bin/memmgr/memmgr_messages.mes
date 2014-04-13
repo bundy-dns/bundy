@@ -16,6 +16,28 @@
 # <topsrcdir>/tools/reorder_message_file.py to make sure the
 # messages are in the correct order.
 
+% MEMMGR_CCMEMBER_DUP_SUBSCRIBED duplicate segment reader subscription (ignored): %1
+The subscription of a segment reader has been notified more than once.
+This can happen at the timing of memmgr's initialization.  If this message
+is shown at some later time, it's more likely to be some internal defect.
+
+% MEMMGR_CCMEMBER_DUP_UNSUBSCRIBED duplicate or spurious segment reader unsubscription (ignored): %1
+The unsubscription of a segment reader has been notified but the memmgr
+doesn't know the reader.  This is an unexpected event, and most likely
+to be a defect in msgq or memmgr itself.  But memmgr keeps running, just
+warning about it.
+
+% MEMMGR_CCMEMBER_NOTIFY notified of module membership update: %1 %2
+An informational message (but logged at the 'info' level since this should
+be a relatively rare event).  There is an update on module membership
+for a memory segment reader.
+
+% MEMMGR_CCMEMBER_NOTIFY_FAIL failed to update segment reader information: %1
+An unexpected error happens while handling a notification about a segment
+reader.  This can be either a defect of memmgr or msgq, or there might be a
+malicious module in the system pretending to be the msgq.  memmgr keeps
+running, but it's suggested to check the entire system.
+
 % MEMMGR_CONFIG_FAIL failed to apply configuration updates: %1
 The memmgr daemon tried to apply configuration updates but found an error.
 The cause of the error is included in the message.  None of the received
@@ -45,6 +67,15 @@ data into memory will possibly take place.
 Error happend in handling the segment_info_update_ack command.
 This is an unexpected situation, most likely to be a bug of the
 sender implementation.
+
+% MEMMGR_DATASRC_SGMTINFO_ACK_NOREADER no segment reader for update_ack: %1
+The memmgr received an acknowledgement for an update on memory segment
+information, but the sender was unknown for the memmgr.  This could happen,
+although less commonly, if a reader unsubscribed from the reader's group
+immediately after it sent an update_ack message, depending on the delivery
+timing of these messages.  If this is the likely cause of the message,
+it can be ignored.  Otherwise, there may be some system defect, and it's
+suggested to check the entire system.
 
 % MEMMGR_LOADZONE received a load command for %1/%2 in data source '%3'
 An informational message.  The memmgr received a loadzone command.
