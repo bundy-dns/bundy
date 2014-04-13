@@ -151,16 +151,16 @@ class SegmentInfo:
         it changes the state to UPDATING and returns the head (oldest)
         event (without removing it from the pending events queue). This
         tells the caller (memmgr) that it should initiate the update
-        process with the builder. In all other cases it returns None."""
-        if self.__state == self.READY:
-            if self.__events:
-                self.__state = self.UPDATING
-                return self.__events[0]
-            else:
-                return None
+        process with the builder. In all other cases it returns None.
 
-        raise SegmentInfoError('start_update() called in ' +
-                               'incorrect state: ' + str(self.__state))
+        Note that this method can be called at any state as zone update
+        can happen at any timing, even while loading the same/other zone.
+
+        """
+        if self.__state == self.READY and self.__events:
+            self.__state = self.UPDATING
+            return self.__events[0]
+        return None
 
     def complete_update(self):
         """This method should be called when memmgr is notified by the
