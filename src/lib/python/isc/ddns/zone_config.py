@@ -37,18 +37,15 @@ class ZoneConfig:
     until the details are fixed.
 
     '''
-    def __init__(self, secondaries, datasrc_class, datasrc_client, acl_map={}):
+    #def __init__(self, secondaries, datasrc_class, datasrc_client, acl_map={}):
+    def __init__(self, secondaries, datasrc_clients, acl_map={}):
         '''Constructor.
 
         Parameters:
         - secondaries: a set of 2-element tuples.  Each element is a pair
           of isc.dns.Name and isc.dns.RRClass, and identifies a single
           secondary zone.
-        - datasrc_class: isc.dns.RRClass object.  Specifies the RR class
-          of datasrc_client.
-        - datasrc_client: isc.dns.DataSourceClient object.  A data source
-          class for the RR class of datasrc_class.  It's expected to contain
-          a zone that is eventually updated in the ddns package.
+        - datasrc_clients: dict from RRClass to ConfigurableClientList
         - acl_map: a dictionary that maps a tuple of
           (isc.dns.Name, isc.dns.RRClass) to an isc.dns.dns.RequestACL
           object.  It defines an ACL to be applied to the zone defined
@@ -57,19 +54,24 @@ class ZoneConfig:
 
         '''
         self.__secondaries = secondaries
-        self.__datasrc_class = datasrc_class
-        self.__datasrc_client = datasrc_client
+        self.__datasrc_clients = datasrc_clients
+        self.__datasrc_class = None
+        self.__datasrc_client = None
         self.__default_acl = DEFAULT_ACL
         self.__acl_map = acl_map
 
     def find_zone(self, zone_name, zone_class):
         '''Return the type and accessor client object for given zone.'''
-        if self.__datasrc_class == zone_class and \
-                self.__datasrc_client.find_zone(zone_name)[0] == \
-                DataSourceClient.SUCCESS:
+        if not zone_class in self.__datasrc_clients:
+            return ZONE_NOTFOUND, None
+        dsrc_client = self.__datasrc_clients[zone_class].find(zone_name, True,
+                                                              False)[0]
+        if dsrc_client is None:
+            return ZONE_NOTFOUND, None
+        if dsrc_client.find_zone(zone_name)[0] == DataSourceClient.SUCCESS:
             if (zone_name, zone_class) in self.__secondaries:
                 return ZONE_SECONDARY, None
-            return ZONE_PRIMARY, self.__datasrc_client
+            return ZONE_PRIMARY, dsrc_client
         return ZONE_NOTFOUND, None
 
     def get_update_acl(self, zone_name, zone_class):

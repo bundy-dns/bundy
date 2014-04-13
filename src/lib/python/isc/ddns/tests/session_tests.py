@@ -94,6 +94,13 @@ def create_rrset(name, rrclass, rrtype, ttl, rdatas = []):
         add_rdata(rrset, rdata)
     return rrset
 
+class FakeDataSourceClientList:
+    def __init__(self, client):
+        self.found_client = client
+
+    def find(self, zone_name, want_exact_match, want_finder):
+        return self.found_client, None, None
+
 class SessionModuleTests(unittest.TestCase):
     '''Tests for module-level functions in the session.py module'''
 
@@ -196,12 +203,15 @@ class SessionTestBase(unittest.TestCase):
         shutil.copyfile(READ_ZONE_DB_FILE, WRITE_ZONE_DB_FILE)
         self._datasrc_client = DataSourceClient("sqlite3",
                                                 WRITE_ZONE_DB_CONFIG)
+        self._dsrc_client_list = \
+            FakeDataSourceClientList(self._datasrc_client)
         self._update_msg = create_update_msg()
         self._acl_map = {(TEST_ZONE_NAME, TEST_RRCLASS):
                              REQUEST_LOADER.load([{"action": "ACCEPT"}])}
         self._session = UpdateSession(self._update_msg, TEST_CLIENT4,
-                                      ZoneConfig(set(), TEST_RRCLASS,
-                                                 self._datasrc_client,
+                                      ZoneConfig(set(),
+                                                 {TEST_RRCLASS:
+                                                  self._dsrc_client_list},
                                                  self._acl_map))
         self._session._get_update_zone()
         self._session._create_diff()
@@ -328,7 +338,8 @@ class SessionTest(SessionTestBase):
                                                 RRType.SOA)])
         session = UpdateSession(msg, TEST_CLIENT4,
                                 ZoneConfig({(TEST_ZONE_NAME, TEST_RRCLASS)},
-                                           TEST_RRCLASS, self._datasrc_client))
+                                           {TEST_RRCLASS:
+                                            self._dsrc_client_list}))
         self.assertEqual(UPDATE_ERROR, session.handle()[0])
         self.check_response(session.get_message(), Rcode.NOTIMP)
 
@@ -337,7 +348,8 @@ class SessionTest(SessionTestBase):
         msg = create_update_msg(zones=[Question(zname, zclass, RRType.SOA)])
         session = UpdateSession(msg, TEST_CLIENT4,
                                 ZoneConfig({(TEST_ZONE_NAME, TEST_RRCLASS)},
-                                           TEST_RRCLASS, self._datasrc_client))
+                                           {TEST_RRCLASS:
+                                            self._dsrc_client_list}))
         self.assertEqual(UPDATE_ERROR, session.handle()[0])
         self.check_response(session.get_message(), Rcode.NOTAUTH)
 
@@ -357,12 +369,12 @@ class SessionTest(SessionTestBase):
         class BadDataSourceClient:
             def find_zone(self, name):
                 raise isc.datasrc.Error('faked exception')
+        bad_clist = FakeDataSourceClientList(BadDataSourceClient())
         msg = create_update_msg(zones=[Question(TEST_ZONE_NAME, TEST_RRCLASS,
                                                 RRType.SOA)])
         session = UpdateSession(msg, TEST_CLIENT4,
                                 ZoneConfig({(TEST_ZONE_NAME, TEST_RRCLASS)},
-                                           TEST_RRCLASS,
-                                           BadDataSourceClient()))
+                                           {TEST_RRCLASS: bad_clist}))
         self.assertEqual(UPDATE_ERROR, session.handle()[0])
         self.check_response(session.get_message(), Rcode.SERVFAIL)
 
@@ -617,7 +629,7 @@ class SessionTest(SessionTestBase):
            from 'prerequisites'. Then checks if __check_prerequisites()
            returns the Rcode specified in 'expected'.'''
         msg = create_update_msg([TEST_ZONE_RECORD], prerequisites)
-        zconfig = ZoneConfig(set(), TEST_RRCLASS, self._datasrc_client,
+        zconfig = ZoneConfig(set(), {TEST_RRCLASS: self._dsrc_client_list},
                              self._acl_map)
         session = UpdateSession(msg, TEST_CLIENT4, zconfig)
         session._get_update_zone()
@@ -643,7 +655,7 @@ class SessionTest(SessionTestBase):
            from 'updates'. Then checks if __do_prescan()
            returns the Rcode specified in 'expected'.'''
         msg = create_update_msg([TEST_ZONE_RECORD], [], updates)
-        zconfig = ZoneConfig(set(), TEST_RRCLASS, self._datasrc_client,
+        zconfig = ZoneConfig(set(), {TEST_RRCLASS: self._dsrc_client_list},
                              self._acl_map)
         session = UpdateSession(msg, TEST_CLIENT4, zconfig)
         session._get_update_zone()
@@ -663,7 +675,7 @@ class SessionTest(SessionTestBase):
            from 'updates'. Then checks if __handle()
            results in a response with rcode 'expected'.'''
         msg = create_update_msg([TEST_ZONE_RECORD], prerequisites, updates)
-        zconfig = ZoneConfig(set(), TEST_RRCLASS, self._datasrc_client,
+        zconfig = ZoneConfig(set(), {TEST_RRCLASS: self._dsrc_client_list},
                              self._acl_map)
         session = UpdateSession(msg, TEST_CLIENT4, zconfig)
 
@@ -1501,8 +1513,10 @@ class SessionACLTest(SessionTestBase):
         '''
         # create a separate session, with default (empty) ACL map.
         session = UpdateSession(self._update_msg,
-                                TEST_CLIENT4, ZoneConfig(set(), TEST_RRCLASS,
-                                                         self._datasrc_client))
+                                TEST_CLIENT4,
+                                ZoneConfig(set(),
+                                           {TEST_RRCLASS:
+                                            self._dsrc_client_list}))
         # then the request should be rejected.
         self.assertEqual((UPDATE_ERROR, None, None), session.handle())
 
@@ -1513,8 +1527,9 @@ class SessionACLTest(SessionTestBase):
                        REQUEST_LOADER.load([{"action": "DROP", "from":
                                                  TEST_CLIENT4[0]}])}
         session = UpdateSession(msg, TEST_CLIENT4,
-                                ZoneConfig([], TEST_RRCLASS,
-                                           self._datasrc_client, acl_map))
+                                ZoneConfig([],
+                                           {TEST_RRCLASS:
+                                            self._dsrc_client_list}, acl_map))
         self.assertEqual((UPDATE_DROP, None, None), session.handle())
         self.assertEqual(None, session.get_message())
 
@@ -1530,18 +1545,20 @@ class SessionACLTest(SessionTestBase):
         # If the message doesn't contain TSIG, it doesn't match the ACCEPT
         # ACL entry, and the request should be rejected.
         session = UpdateSession(self._update_msg,
-                                TEST_CLIENT4, ZoneConfig(set(), TEST_RRCLASS,
-                                                         self._datasrc_client,
-                                                         acl_map))
+                                TEST_CLIENT4,
+                                ZoneConfig(set(),
+                                           {TEST_RRCLASS:
+                                            self._dsrc_client_list}, acl_map))
         self.assertEqual((UPDATE_ERROR, None, None), session.handle())
         self.check_response(session.get_message(), Rcode.REFUSED)
 
         # If the message contains TSIG, it should match the ACCEPT
         # ACL entry, and the request should be granted.
         session = UpdateSession(create_update_msg(tsig_key=TEST_TSIG_KEY),
-                                TEST_CLIENT4, ZoneConfig(set(), TEST_RRCLASS,
-                                                         self._datasrc_client,
-                                                         acl_map))
+                                TEST_CLIENT4,
+                                ZoneConfig(set(),
+                                           {TEST_RRCLASS:
+                                            self._dsrc_client_list}, acl_map))
         self.assertEqual((UPDATE_SUCCESS, TEST_ZONE_NAME, TEST_RRCLASS),
                          session.handle())
 

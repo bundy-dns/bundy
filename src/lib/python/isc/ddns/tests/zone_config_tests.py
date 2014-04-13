@@ -32,8 +32,17 @@ TEST_ACL_CONTEXT = isc.acl.dns.RequestContext(
     socket.getaddrinfo("192.0.2.1", 1234, 0, socket.SOCK_DGRAM,
                        socket.IPPROTO_UDP, socket.AI_NUMERICHOST)[0][4])
 
+class FakeDataSourceClientList:
+    "Faked configurable data source client list used in the ZoneConfigTest."
+
+    def __init__(self, client):
+        self.found_client = client
+
+    def find(self, zone_name, want_exact_match, want_finder):
+        return self.found_client, None, None
+
 class FakeDataSourceClient:
-    '''Faked data source client used in the ZoneConfigTest.
+    """Faked data source client used in the ZoneConfigTest.
 
     It emulates isc.datasrc.DataSourceClient, but only has to provide
     the find_zone() interface (and only the first element of the return
@@ -41,7 +50,7 @@ class FakeDataSourceClient:
     any input.  It can be dynamically customized via the set_find_result()
     method.
 
-    '''
+    """
     def __init__(self):
         self.__find_result = DataSourceClient.SUCCESS
 
@@ -55,8 +64,10 @@ class ZoneConfigTest(unittest.TestCase):
     '''Some basic tests for the ZoneConfig class.'''
     def setUp(self):
         self.__datasrc_client = FakeDataSourceClient()
+        self.__dsrc_client_list = \
+            FakeDataSourceClientList(self.__datasrc_client)
         self.zconfig = ZoneConfig({(TEST_SECONDARY_ZONE_NAME, TEST_RRCLASS)},
-                                  TEST_RRCLASS, self.__datasrc_client)
+                                  {TEST_RRCLASS: self.__dsrc_client_list})
 
     def test_find_zone(self):
         # Primay zone case: zone is in the data source, and not in secondaries
@@ -78,6 +89,15 @@ class ZoneConfigTest(unittest.TestCase):
         self.assertEqual((ZONE_NOTFOUND, None),
                          (self.zconfig.find_zone(Name('example'),
                                                  TEST_RRCLASS)))
+        # class mismatch
+        self.assertEqual((ZONE_NOTFOUND, None),
+                         (self.zconfig.find_zone(TEST_ZONE_NAME, RRClass.CH)))
+        # zone not in the matching client list.
+        self.__dsrc_client_list.found_client = None
+        self.assertEqual((ZONE_NOTFOUND, None),
+                         (self.zconfig.find_zone(TEST_ZONE_NAME,
+                                                 TEST_RRCLASS)))
+        self.__dsrc_client_list.found_client = self.__datasrc_client
         # a bit unusual case: zone not in the data source, but in secondaries.
         # this is probably a configuration error, but ZoneConfig doesn't do
         # this level check.
@@ -88,18 +108,18 @@ class ZoneConfigTest(unittest.TestCase):
         # zone class doesn't match (but zone name matches)
         self.__datasrc_client.set_find_result(DataSourceClient.SUCCESS)
         zconfig = ZoneConfig({(TEST_SECONDARY_ZONE_NAME, TEST_RRCLASS)},
-                             RRClass.CH, self.__datasrc_client)
+                             {RRClass.CH: self.__dsrc_client_list})
         self.assertEqual((ZONE_NOTFOUND, None),
                          (zconfig.find_zone(TEST_ZONE_NAME, TEST_RRCLASS)))
         # similar to the previous case, but also in the secondary list
         zconfig = ZoneConfig({(TEST_ZONE_NAME, TEST_RRCLASS)},
-                             RRClass.CH, self.__datasrc_client)
+                             {RRClass.CH: self.__dsrc_client_list})
         self.assertEqual((ZONE_NOTFOUND, None),
                          (zconfig.find_zone(TEST_ZONE_NAME, TEST_RRCLASS)))
 
         # check some basic tests varying the secondary list.
         # empty secondary list doesn't cause any disruption.
-        zconfig = ZoneConfig(set(), TEST_RRCLASS, self.__datasrc_client)
+        zconfig = ZoneConfig(set(), {TEST_RRCLASS: self.__dsrc_client_list})
         self.assertEqual((ZONE_PRIMARY, self.__datasrc_client),
                          self.zconfig.find_zone(TEST_ZONE_NAME, TEST_RRCLASS))
         # adding some mulitle tuples, including subdomain of the test zone
@@ -108,15 +128,17 @@ class ZoneConfigTest(unittest.TestCase):
                               (Name('example'), TEST_RRCLASS),
                               (Name('sub.example.org'), TEST_RRCLASS),
                               (TEST_ZONE_NAME, RRClass.CH)},
-                             TEST_RRCLASS, self.__datasrc_client)
+                             {TEST_RRCLASS: self.__dsrc_client_list})
         self.assertEqual((ZONE_PRIMARY, self.__datasrc_client),
                          self.zconfig.find_zone(TEST_ZONE_NAME, TEST_RRCLASS))
 
 class ACLConfigTest(unittest.TestCase):
     def setUp(self):
         self.__datasrc_client = FakeDataSourceClient()
+        self.__dsrc_client_list = \
+            FakeDataSourceClientList(self.__datasrc_client)
         self.__zconfig = ZoneConfig({(TEST_SECONDARY_ZONE_NAME, TEST_RRCLASS)},
-                                    TEST_RRCLASS, self.__datasrc_client)
+                                    {TEST_RRCLASS: self.__dsrc_client_list})
 
     def test_get_update_acl(self):
         # By default, no ACL is set, and the default ACL is "reject all"
