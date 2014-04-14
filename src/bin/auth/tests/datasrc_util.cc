@@ -63,7 +63,7 @@ createSQLite3DB(RRClass zclass, const Name& zname,
                   "Error setting up; command failed: " << install_cmd);
     }
 
-    DataSourceClientContainer container("sqlite3",
+    DataSourceClientContainer container("sqlite3", "sqlite3",
                                         Element::fromJSON(
                                             "{\"database_file\": \"" +
                                             string(db_file) + "\"}"));

@@ -856,6 +856,8 @@ createDataSrcClientList(DataSrcType type, DataSourceClient& client) {
 
 class MockClient : public DataSourceClient {
 public:
+    MockClient() : DataSourceClient("mock") {}
+
     virtual FindResult findZone(const isc::dns::Name& origin) const {
         // Identify the next (strictly) larger name than the given 'origin' in
         // the map.  Its predecessor (if any) is the longest matching name

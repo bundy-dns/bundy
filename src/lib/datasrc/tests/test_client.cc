@@ -76,7 +76,7 @@ createSQLite3Client(RRClass zclass, const Name& zname,
 
     boost::shared_ptr<SQLite3Accessor> accessor(
         new SQLite3Accessor(db_file, zclass.toText()));
-    boost::shared_ptr<DatabaseClient> client(new DatabaseClient(zclass,
+    boost::shared_ptr<DatabaseClient> client(new DatabaseClient("test", zclass,
                                                                 accessor));
 
     ZoneUpdaterPtr updater = client->getUpdater(zname, true);

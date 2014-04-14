@@ -53,7 +53,8 @@ public:
         DataSourceLibraryError(file, line, what) {}
 };
 
-typedef DataSourceClient* ds_creator(isc::data::ConstElementPtr config,
+typedef DataSourceClient* ds_creator(const std::string& datasrc_name,
+                                     isc::data::ConstElementPtr config,
                                      std::string& error);
 typedef void ds_destructor(DataSourceClient* instance);
 
@@ -162,6 +163,7 @@ public:
     ///            for the given type, or if there was a problem during
     ///            initialization
     ///
+    /// \param datasrc_name A name of the underlying data source.
     /// \param type The type of the datasource client. Based on the value of
     ///             type, a specific backend library is used, by appending the
     ///             string '_ds.so' to the given type, and loading that as the
@@ -169,7 +171,8 @@ public:
     /// \param config Type-specific configuration data, see the documentation
     ///               of the datasource backend type for information on what
     ///               configuration data to pass.
-    DataSourceClientContainer(const std::string& type,
+    DataSourceClientContainer(const std::string& datasrc_name,
+                              const std::string& type,
                               isc::data::ConstElementPtr config);
 
     /// \brief Destructor

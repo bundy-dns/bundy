@@ -41,7 +41,7 @@ pathtestHelper(const std::string& file, const std::string& expected_error) {
     try {
         // cppcheck-suppress unusedScopedObject We just check if it throws
         // to create, not use it. That's OK.
-        DataSourceClientContainer(file, ElementPtr());
+        DataSourceClientContainer("test", file, ElementPtr());
     } catch (const DataSourceLibraryError& dsle) {
         error = dsle.what();
     }
@@ -92,9 +92,9 @@ TEST(FactoryTest, paths) {
     setenv("B10_FROM_BUILD", builddir.c_str(), 1);
 
     // Test some bad input values
-    ASSERT_THROW(DataSourceClientContainer("", ElementPtr()),
+    ASSERT_THROW(DataSourceClientContainer("test", "", ElementPtr()),
                  DataSourceLibraryError);
-    ASSERT_THROW(DataSourceClientContainer(".so", ElementPtr()),
+    ASSERT_THROW(DataSourceClientContainer("test", ".so", ElementPtr()),
                  DataSourceLibraryError);
 }
 
@@ -104,47 +104,47 @@ TEST(FactoryTest, sqlite3ClientBadConfig) {
     // Then we do some very basic operation on the client (detailed
     // tests are left to the implementation-specific backends)
     ElementPtr config;
-    ASSERT_THROW(DataSourceClientContainer("sqlite3", config),
+    ASSERT_THROW(DataSourceClientContainer("sqlite3", "sqlite3", config),
                  DataSourceError);
 
     config = Element::create("asdf");
-    ASSERT_THROW(DataSourceClientContainer("sqlite3", config),
+    ASSERT_THROW(DataSourceClientContainer("sqlite3", "sqlite3", config),
                  DataSourceError);
 
     config = Element::createMap();
-    ASSERT_THROW(DataSourceClientContainer("sqlite3", config),
+    ASSERT_THROW(DataSourceClientContainer("sqlite3", "sqlite3", config),
                  DataSourceError);
 
     config->set("class", ElementPtr());
-    ASSERT_THROW(DataSourceClientContainer("sqlite3", config),
+    ASSERT_THROW(DataSourceClientContainer("sqlite3", "sqlite3", config),
                  DataSourceError);
 
     config->set("class", Element::create(1));
-    ASSERT_THROW(DataSourceClientContainer("sqlite3", config),
+    ASSERT_THROW(DataSourceClientContainer("sqlite3", "sqlite3", config),
                  DataSourceError);
 
     config->set("class", Element::create("FOO"));
-    ASSERT_THROW(DataSourceClientContainer("sqlite3", config),
+    ASSERT_THROW(DataSourceClientContainer("sqlite3", "sqlite3", config),
                  DataSourceError);
 
     config->set("class", Element::create("IN"));
-    ASSERT_THROW(DataSourceClientContainer("sqlite3", config),
+    ASSERT_THROW(DataSourceClientContainer("sqlite3", "sqlite3", config),
                  DataSourceError);
 
     config->set("database_file", ElementPtr());
-    ASSERT_THROW(DataSourceClientContainer("sqlite3", config),
+    ASSERT_THROW(DataSourceClientContainer("sqlite3", "sqlite3", config),
                  DataSourceError);
 
     config->set("database_file", Element::create(1));
-    ASSERT_THROW(DataSourceClientContainer("sqlite3", config),
+    ASSERT_THROW(DataSourceClientContainer("sqlite3", "sqlite3", config),
                  DataSourceError);
 
     config->set("database_file", Element::create("/foo/bar/doesnotexist"));
-    ASSERT_THROW(DataSourceClientContainer("sqlite3", config),
+    ASSERT_THROW(DataSourceClientContainer("sqlite3", "sqlite3", config),
                  DataSourceError);
 
     config->set("database_file", Element::create(SQLITE_DBFILE_EXAMPLE_ORG));
-    DataSourceClientContainer dsc("sqlite3", config);
+    DataSourceClientContainer dsc("sqlite3", "sqlite3", config);
 
     DataSourceClient::FindResult result1(
         dsc.getInstance().findZone(isc::dns::Name("example.org.")));
@@ -162,7 +162,7 @@ TEST(FactoryTest, sqlite3ClientBadConfig) {
 }
 
 TEST(FactoryTest, badType) {
-    ASSERT_THROW(DataSourceClientContainer("foo", ElementPtr()),
+    ASSERT_THROW(DataSourceClientContainer("foo", "foo", ElementPtr()),
                                            DataSourceError);
 }
 

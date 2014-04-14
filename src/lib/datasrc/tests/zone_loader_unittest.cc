@@ -51,6 +51,7 @@ namespace {
 class MockClient : public DataSourceClient {
 public:
     MockClient() :
+        DataSourceClient("mock"),
         commit_called_(false),
         missing_zone_(false),
         rrclass_(RRClass::IN())
@@ -327,7 +328,8 @@ protected:
             writer->install();
             writer->cleanup();
         }
-        source_client_.reset(new memory::InMemoryClient(ztable_segment_,
+        source_client_.reset(new memory::InMemoryClient("memory",
+                                                        ztable_segment_,
                                                         rrclass_));
     }
 private:

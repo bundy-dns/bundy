@@ -59,12 +59,13 @@ public:
     ///
     //@{
 
-    /// Default constructor.
+    /// Constructor.
     ///
     /// This constructor internally involves resource allocation, and if
     /// it fails, a corresponding standard exception will be thrown.
     /// It never throws an exception otherwise.
-    InMemoryClient(boost::shared_ptr<ZoneTableSegment> ztable_segment,
+    InMemoryClient(const std::string& datasrc_name,
+                   boost::shared_ptr<ZoneTableSegment> ztable_segment,
                    isc::dns::RRClass rrclass);
     //@}
 

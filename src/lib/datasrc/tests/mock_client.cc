@@ -126,7 +126,7 @@ private:
 // A test data source. It pretends it has some zones.
 
 MockDataSourceClient::MockDataSourceClient(const char* zone_names[]) :
-    have_a_(true), use_baditerator_(true)
+    DataSourceClient("mock"), have_a_(true), use_baditerator_(true)
 {
     for (const char** zone = zone_names; *zone; ++zone) {
         zones.insert(Name(*zone));
@@ -138,6 +138,7 @@ MockDataSourceClient::MockDataSourceClient(const char* zone_names[]) :
 MockDataSourceClient::MockDataSourceClient(
     const string& type,
     const data::ConstElementPtr& configuration) :
+    DataSourceClient("mock"),
     type_(type),
     configuration_(configuration),
     have_a_(true), use_baditerator_(true)

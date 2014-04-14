@@ -428,6 +428,10 @@ class DataSrcClient(unittest.TestCase):
                           isc.dns.RRType.A,
                           "foo")
 
+    def test_get_datasource_name(self):
+        client = isc.datasrc.DataSourceClient("sqlite3", READ_ZONE_DB_CONFIG)
+        self.assertEqual("sqlite3", client.get_datasource_name());
+
 class DataSrcUpdater(unittest.TestCase):
 
     def setUp(self):

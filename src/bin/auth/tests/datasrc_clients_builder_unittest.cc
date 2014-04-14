@@ -421,7 +421,7 @@ TEST_F(DataSrcClientsBuilderTest,
     ConstElementPtr sql_cfg = Element::fromJSON("{ \"type\": \"sqlite3\","
                                                 "\"database_file\": \""
                                                 + test_db + "\"}");
-    DataSourceClientContainer sql_ds("sqlite3", sql_cfg);
+    DataSourceClientContainer sql_ds("sqlite3", "sqlite3", sql_cfg);
     ZoneUpdaterPtr sql_updater =
         sql_ds.getInstance().getUpdater(Name("example.org"), false);
     sql_updater->addRRset(

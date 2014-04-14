@@ -82,7 +82,8 @@ createInMemoryClient(RRClass zclass, const Name& zname) {
     writer.load();
     writer.install();
     writer.cleanup();
-    boost::shared_ptr<InMemoryClient> client(new InMemoryClient(ztable_segment,
+    boost::shared_ptr<InMemoryClient> client(new InMemoryClient("test",
+                                                                ztable_segment,
                                                                 zclass));
 
     return (client);

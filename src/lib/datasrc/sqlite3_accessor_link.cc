@@ -78,7 +78,9 @@ checkConfig(ConstElementPtr config, ElementPtr errors) {
 } // end unnamed namespace
 
 DataSourceClient *
-createInstance(isc::data::ConstElementPtr config, std::string& error) {
+createInstance(const std::string& datasrc_name,
+               isc::data::ConstElementPtr config, std::string& error)
+{
     // Initialize the logging dictionary
     isc::log::MessageInitializer::loadDictionary(true);
 
@@ -92,7 +94,8 @@ createInstance(isc::data::ConstElementPtr config, std::string& error) {
     try {
         boost::shared_ptr<DatabaseAccessor> sqlite3_accessor(
             new SQLite3Accessor(dbfile, "IN")); // XXX: avoid hardcode RR class
-        return (new DatabaseClient(isc::dns::RRClass::IN(), sqlite3_accessor));
+        return (new DatabaseClient(datasrc_name, isc::dns::RRClass::IN(),
+                                   sqlite3_accessor));
     } catch (const std::exception& exc) {
         error = std::string("Error creating SQLite3 datasource: ") +
             exc.what();

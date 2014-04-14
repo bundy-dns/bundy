@@ -64,7 +64,8 @@ public:
     // Overwrite the list's method to get a data source with given type
     // and configuration. We mock the data source and don't create the
     // container. This is just to avoid some complexity in the tests.
-    virtual DataSourcePair getDataSourceClient(const string& type,
+    virtual DataSourcePair getDataSourceClient(const string&,
+                                               const string& type,
                                                const ConstElementPtr&
                                                configuration)
     {

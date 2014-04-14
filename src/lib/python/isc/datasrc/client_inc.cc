@@ -80,6 +80,10 @@ Todo: This class is still not complete. It will need more factory\n\
 methods, e.g. for (re)loading a zone.\n\
 ";
 
+const char* const DataSourceClient_getDataSourceName_doc = "\
+get_datasource_name() -> string\n\
+";
+
 const char* const DataSourceClient_findZone_doc = "\
 find_zone(name) -> (code, ZoneFinder)\n\
 \n\

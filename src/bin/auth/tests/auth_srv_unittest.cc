@@ -1696,6 +1696,7 @@ public:
     FakeClient(const DataSourceClient* real_client,
                ThrowWhen throw_when, bool isc_exception,
                ConstRRsetPtr fake_rrset = ConstRRsetPtr()) :
+        DataSourceClient("fake"),
         real_client_ptr_(real_client),
         throw_when_(throw_when),
         isc_exception_(isc_exception),

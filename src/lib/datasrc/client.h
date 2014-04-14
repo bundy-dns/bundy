@@ -15,6 +15,7 @@
 #ifndef DATA_SOURCE_CLIENT_H
 #define DATA_SOURCE_CLIENT_H 1
 
+#include <string>
 #include <utility>
 
 #include <boost/noncopyable.hpp>
@@ -160,7 +161,7 @@ public:
     /// \name Constructors and Destructor.
     ///
 protected:
-    /// Default constructor.
+    /// Constructor.
     ///
     /// This is intentionally defined as protected as this base class
     /// should never be instantiated directly.
@@ -169,12 +170,33 @@ protected:
     /// This interface does not specify which exceptions can happen (at least
     /// at this moment), and the caller should expect any type of exception
     /// and react accordingly.
-    DataSourceClient() {}
+    ///
+    /// The passed string will be used for the returned value of
+    /// \c getDataSourceName() opaquely.  This class does not use the name
+    /// in any special way.
+    ///
+    /// \param datasrc_name A name of the underlying data source.
+    DataSourceClient(const std::string& datasrc_name) :
+        datasrc_name_(datasrc_name)
+    {}
 
 public:
     /// The destructor.
     virtual ~DataSourceClient() {}
     //@}
+
+    /// \brief Return the underlying data source name.
+    ///
+    /// In fact, this method simply returns the string passed to the
+    /// constructor.  There is no conceivable reason for customizing the
+    /// behavior of this method, so it's simply implemented as a non-virtual
+    /// method of the base class.
+    ///
+    /// \throw none.
+    /// \return the data source name.
+    const std::string& getDataSourceName() const {
+        return (datasrc_name_);
+    }
 
     /// Returns a \c ZoneFinder for a zone that best matches the given name.
     ///
@@ -433,6 +455,9 @@ public:
     /// \return true if the zone previously existed and has been deleted by
     /// this method; false if the zone didn't exist.
     virtual bool deleteZone(const dns::Name& zone_name);
+
+private:
+    const std::string datasrc_name_;
 };
 }
 }

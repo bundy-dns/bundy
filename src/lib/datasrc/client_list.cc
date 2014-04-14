@@ -61,7 +61,7 @@ ConfigurableClientList::DataSourceInfo::DataSourceInfo(
     if (cache_conf_ && cache_conf_->isEnabled()) {
         ztable_segment_.reset(ZoneTableSegment::create(
                                   rrclass, cache_conf_->getSegmentType()));
-        cache_.reset(new InMemoryClient(ztable_segment_, rrclass));
+        cache_.reset(new InMemoryClient(name_, ztable_segment_, rrclass));
     }
 }
 
@@ -118,7 +118,7 @@ ConfigurableClientList::configure(const ConstElementPtr& config,
                 // this is essentially no-op.  In the latter case, it's
                 // of no use unless cache is allowed; we simply skip
                 // building it in that case.
-                dsrc_pair = getDataSourceClient(type, param_conf);
+                dsrc_pair = getDataSourceClient(datasrc_name, type, param_conf);
             } catch (const DataSourceLibraryError& ex) {
                 LOG_ERROR(logger, DATASRC_LIBRARY_ERROR).
                     arg(datasrc_name).arg(rrclass_).arg(ex.what());
@@ -405,7 +405,8 @@ ConfigurableClientList::getCachedZoneWriter(const Name& name,
 // purpose of the function is to provide a very thin wrapper to be able to
 // replace the call to DataSourceClientContainer constructor in tests.
 ConfigurableClientList::DataSourcePair
-ConfigurableClientList::getDataSourceClient(const string& type,
+ConfigurableClientList::getDataSourceClient(const string& datasrc_name,
+                                            const string& type,
                                             const ConstElementPtr&
                                             configuration)
 {
@@ -414,7 +415,8 @@ ConfigurableClientList::getDataSourceClient(const string& type,
     }
 
     DataSourceClientContainerPtr
-        container(new DataSourceClientContainer(type, configuration));
+        container(new DataSourceClientContainer(datasrc_name, type,
+                                                configuration));
     return (DataSourcePair(&container->getInstance(), container));
 }
 

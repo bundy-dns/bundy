@@ -1169,7 +1169,7 @@ void
 DatabaseClientTest::createClient(const DatabaseClientTestParam* test_param) {
     current_accessor_ = test_param->accessor_creator();
     is_mock_ = (dynamic_cast<MockAccessor*>(current_accessor_.get()) != NULL);
-    client_.reset(new DatabaseClient(qclass_, current_accessor_));
+    client_.reset(new DatabaseClient("dbtest", qclass_, current_accessor_));
 
     // set up the commonly used finder.
     const DataSourceClient::FindResult result(client_->findZone(zname_));
@@ -1413,7 +1413,7 @@ TEST_P(DatabaseClientTest, superZone) {
 TEST(GenericDatabaseClientTest, noAccessorException) {
     // We need a dummy variable here; some compiler would regard it a mere
     // declaration instead of an instantiation and make the test fail.
-    EXPECT_THROW(DatabaseClient dummy(RRClass::IN(),
+    EXPECT_THROW(DatabaseClient dummy("dummy", RRClass::IN(),
                                       boost::shared_ptr<DatabaseAccessor>()),
                  isc::InvalidParameter);
 }
@@ -1426,7 +1426,7 @@ TEST_P(DatabaseClientTest, noZoneIterator) {
 // If the zone doesn't exist and iteration is not implemented, it still throws
 // the exception it doesn't exist
 TEST(GenericDatabaseClientTest, noZoneNotImplementedIterator) {
-    EXPECT_THROW(DatabaseClient(RRClass::IN(),
+    EXPECT_THROW(DatabaseClient("test", RRClass::IN(),
                                 boost::shared_ptr<DatabaseAccessor>(
                                     new NopAccessor())).getIterator(
                                         Name("example.com")),
@@ -1434,7 +1434,7 @@ TEST(GenericDatabaseClientTest, noZoneNotImplementedIterator) {
 }
 
 TEST(GenericDatabaseClientTest, notImplementedIterator) {
-    EXPECT_THROW(DatabaseClient(RRClass::IN(),
+    EXPECT_THROW(DatabaseClient("test", RRClass::IN(),
                     boost::shared_ptr<DatabaseAccessor>(
                         new NopAccessor())).getIterator(Name("example.org")),
                  isc::NotImplemented);

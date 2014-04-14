@@ -66,6 +66,14 @@ public:
 };
 
 PyObject*
+DataSourceClient_getDataSourceName(PyObject* po_self, PyObject*) {
+    s_DataSourceClient* const self = static_cast<s_DataSourceClient*>(po_self);
+
+    const string& datasrc_name = self->client->getDataSourceName();
+    return (Py_BuildValue("s", datasrc_name.c_str()));
+}
+
+PyObject*
 DataSourceClient_findZone(PyObject* po_self, PyObject* args) {
     s_DataSourceClient* const self = static_cast<s_DataSourceClient*>(po_self);
     PyObject *name;
@@ -289,6 +297,8 @@ DataSourceClient_getJournalReader(PyObject* po_self, PyObject* args) {
 // 3. Argument type
 // 4. Documentation
 PyMethodDef DataSourceClient_methods[] = {
+    { "get_datasource_name", DataSourceClient_getDataSourceName, METH_NOARGS,
+      DataSourceClient_getDataSourceName_doc },
     { "find_zone", DataSourceClient_findZone, METH_VARARGS,
       DataSourceClient_findZone_doc },
     { "create_zone", DataSourceClient_createZone, METH_VARARGS,
@@ -319,6 +329,7 @@ DataSourceClient_init(PyObject* po_self, PyObject* args, PyObject*) {
             isc::data::ConstElementPtr ds_config =
                 isc::data::Element::fromJSON(ds_config_str);
             self->cppobj = new DataSourceClientContainer(ds_type_str,
+                                                         ds_type_str,
                                                          ds_config);
             self->client = &self->cppobj->getInstance();
             self->keeper = NULL;

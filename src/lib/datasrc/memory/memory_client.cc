@@ -43,8 +43,10 @@ namespace memory {
 
 using boost::shared_ptr;
 
-InMemoryClient::InMemoryClient(shared_ptr<ZoneTableSegment> ztable_segment,
+InMemoryClient::InMemoryClient(const std::string& datasrc_name,
+                               shared_ptr<ZoneTableSegment> ztable_segment,
                                RRClass rrclass) :
+    DataSourceClient(datasrc_name),
     ztable_segment_(ztable_segment),
     rrclass_(rrclass)
 {}

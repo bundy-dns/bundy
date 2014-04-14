@@ -171,7 +171,8 @@ protected:
     MemoryClientTest() : zclass_(RRClass::IN()),
                          ztable_segment_(new test::ZoneTableSegmentMock(
                              zclass_, mem_sgmt_)),
-                         client_(new InMemoryClient(ztable_segment_, zclass_))
+                         client_(new InMemoryClient("memory", ztable_segment_,
+                                                    zclass_))
     {}
     void TearDown() {
         client_.reset();
@@ -312,7 +313,7 @@ TEST_F(MemoryClientTest, loadMemoryAllocationFailures) {
             // even allocations done from InMemoryClient constructor
             // fail (due to MemorySegmentMock throwing) and we check for
             // leaks when this happens.
-            InMemoryClient client2(ztable_segment, zclass_);
+            InMemoryClient client2("memory", ztable_segment, zclass_);
             loadZoneIntoTable(*ztable_segment, Name("example.org"), zclass_,
                               TEST_DATA_DIR "/example.org.zone");
         }, std::bad_alloc);

@@ -109,9 +109,11 @@ LibraryContainer::getSym(const char* name) {
     return (sym);
 }
 
-DataSourceClientContainer::DataSourceClientContainer(const std::string& type,
-                                                     ConstElementPtr config)
-: ds_lib_(getDataSourceLibFile(type))
+DataSourceClientContainer::DataSourceClientContainer(
+    const std::string& datasrc_name,
+    const std::string& type,
+    ConstElementPtr config)
+    : ds_lib_(getDataSourceLibFile(type))
 {
     // We are casting from a data to a function pointer here
     // Some compilers (rightfully) complain about that, but
@@ -124,7 +126,7 @@ DataSourceClientContainer::DataSourceClientContainer(const std::string& type,
 
     std::string error;
     try {
-        instance_ = ds_create(config, error);
+        instance_ = ds_create(datasrc_name, config, error);
         if (instance_ == NULL) {
             isc_throw(DataSourceError, error);
         }

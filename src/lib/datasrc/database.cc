@@ -82,10 +82,10 @@ private:
 } // end unnamed namespace
 
 
-DatabaseClient::DatabaseClient(RRClass rrclass,
+DatabaseClient::DatabaseClient(const std::string& datasrc_name, RRClass rrclass,
                                boost::shared_ptr<DatabaseAccessor>
                                accessor) :
-    rrclass_(rrclass), accessor_(accessor)
+    DataSourceClient(datasrc_name), rrclass_(rrclass), accessor_(accessor)
 {
     if (!accessor_) {
         isc_throw(isc::InvalidParameter,

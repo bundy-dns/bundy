@@ -874,11 +874,14 @@ public:
     /// \exception isc::InvalidParameter if accessor is NULL. It might throw
     /// standard allocation exception as well, but doesn't throw anything else.
     ///
+    /// \param datasrc_name The name of the underlying data source.  See the
+    /// base class constructor.
     /// \param rrclass The RR class of the zones that this client will handle.
     /// \param accessor The accessor to the database to use to get data.
     ///  As the parameter suggests, the client takes ownership of the accessor
     ///  and will delete it when itself deleted.
-    DatabaseClient(isc::dns::RRClass rrclass,
+    DatabaseClient(const std::string& datasrc_name,
+                   isc::dns::RRClass rrclass,
                    boost::shared_ptr<DatabaseAccessor> accessor);
 
 

@@ -513,7 +513,8 @@ public:
     ///     not needed. However, in such case, it is the caller's
     ///     responsibility to ensure the data source client is deleted when
     ///     needed.
-    virtual DataSourcePair getDataSourceClient(const std::string& type,
+    virtual DataSourcePair getDataSourceClient(const std::string& datasrc_name,
+					       const std::string& type,
                                                const data::ConstElementPtr&
                                                configuration);
 

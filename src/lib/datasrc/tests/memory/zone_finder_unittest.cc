@@ -1616,7 +1616,7 @@ TEST_F(InMemoryZoneFinderTest, NSECNonExistentTest) {
     updater_.reset();
     loadZoneIntoTable(*ztable_segment, name, class_,
                       TEST_DATA_DIR "/2504-test.zone");
-    InMemoryClient client(ztable_segment, class_);
+    InMemoryClient client("memory", ztable_segment, class_);
 
     DataSourceClient::FindResult result(client.findZone(name));
 
@@ -1779,7 +1779,7 @@ TEST_F(InMemoryZoneFinderNSEC3Test, findNSEC3MissingOrigin) {
      updater_.reset();
      loadZoneIntoTable(*ztable_segment, name, class_,
                        TEST_DATA_DIR "/2503-test.zone");
-     InMemoryClient client(ztable_segment, class_);
+     InMemoryClient client("memory", ztable_segment, class_);
 
      DataSourceClient::FindResult result(client.findZone(name));
 

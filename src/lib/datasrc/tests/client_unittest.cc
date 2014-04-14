@@ -31,6 +31,7 @@ namespace {
  */
 class NopClient : public DataSourceClient {
 public:
+    NopClient() : DataSourceClient("nop") {}
     virtual FindResult findZone(const isc::dns::Name&) const {
         return (FindResult(result::NOTFOUND, ZoneFinderPtr()));
     }
@@ -62,6 +63,10 @@ TEST_F(ClientTest, defaultGetZoneCount) {
 
 TEST_F(ClientTest, defaultCreateZone) {
     EXPECT_THROW(client_.createZone(Name("example.com.")), isc::NotImplemented);
+}
+
+TEST_F(ClientTest, getDataSourceName) {
+    EXPECT_EQ("nop", client_.getDataSourceName());
 }
 
 }
