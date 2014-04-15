@@ -162,8 +162,8 @@ class FakeUpdateSession:
 
     def handle(self):
         if self.__faked_result == UPDATE_SUCCESS:
-            return self.__faked_result, TEST_ZONE_NAME, TEST_RRCLASS
-        return self.__faked_result, None, None
+            return self.__faked_result, TEST_ZONE_NAME, TEST_RRCLASS, 'testsrc'
+        return self.__faked_result, None, None, None
 
     def get_message(self):
         self.__msg.make_response()
@@ -1135,7 +1135,7 @@ class TestDDNSSession(unittest.TestCase):
             self.assertEqual(3, len(sent_cmd[1]))
             self.assertEqual(TEST_ZONE_NAME.to_text(), sent_cmd[1]['origin'])
             self.assertEqual(TEST_RRCLASS.to_text(), sent_cmd[1]['class'])
-            self.assertEqual('sqlite3', sent_cmd[1]['datasource'])
+            self.assertEqual('testsrc', sent_cmd[1]['datasource'])
             msg_cnt += 1
             sent_msg, sent_group = self.__cc_session._sent_msg[msg_cnt]
             sent_cmd = sent_msg['command']

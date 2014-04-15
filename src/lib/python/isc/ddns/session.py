@@ -222,7 +222,7 @@ class UpdateSession:
     def handle(self):
         '''Handle the update request according to RFC2136.
 
-        This method returns a tuple of the following three elements that
+        This method returns a tuple of the following elements that
         indicate the result of the request.
         - Result code of the request processing, which are:
           UPDATE_SUCCESS Update request granted and succeeded.
@@ -236,6 +236,8 @@ class UpdateSession:
           UPDATE_SUCCESS; otherwise None.
         - The RR class of the updated zone (isc.dns.RRClass object) in case
           of UPDATE_SUCCESS; otherwise None.
+        - The name of the used data source associated with DataSourceClient
+          in case of UPDATE_SUCCESS; otherwise None.
 
         '''
         try:
@@ -250,30 +252,32 @@ class UpdateSession:
             prereq_result = self.__check_prerequisites()
             if prereq_result != Rcode.NOERROR:
                 self.__make_response(prereq_result)
-                return UPDATE_ERROR, self.__zname, self.__zclass
+                return UPDATE_ERROR, self.__zname, self.__zclass, None
             update_result = self.__do_update()
             if update_result != Rcode.NOERROR:
                 self.__make_response(update_result)
-                return UPDATE_ERROR, self.__zname, self.__zclass
+                return UPDATE_ERROR, self.__zname, self.__zclass, None
             self.__make_response(Rcode.NOERROR)
-            return UPDATE_SUCCESS, self.__zname, self.__zclass
+            datasrc_name = self.__datasrc_client.get_datasource_name()
+            return UPDATE_SUCCESS, self.__zname, self.__zclass, datasrc_name
         except UpdateError as e:
             if not e.nolog:
-                logger.debug(logger.DBGLVL_TRACE_BASIC, LIBDDNS_UPDATE_PROCESSING_FAILED,
+                logger.debug(logger.DBGLVL_TRACE_BASIC,
+                             LIBDDNS_UPDATE_PROCESSING_FAILED,
                              ClientFormatter(self.__client_addr, self.__tsig),
                              ZoneFormatter(e.zname, e.zclass), e)
             # If RCODE is specified, create a corresponding resonse and return
             # ERROR; otherwise clear the message and return DROP.
             if e.rcode is not None:
                 self.__make_response(e.rcode)
-                return UPDATE_ERROR, None, None
+                return UPDATE_ERROR, None, None, None
             self.__message = None
-            return UPDATE_DROP, None, None
+            return UPDATE_DROP, None, None, None
         except isc.datasrc.Error as e:
             logger.error(LIBDDNS_DATASRC_ERROR,
                          ClientFormatter(self.__client_addr, self.__tsig), e)
             self.__make_response(Rcode.SERVFAIL)
-            return UPDATE_ERROR, None, None
+            return UPDATE_ERROR, None, None, None
 
     def _get_update_zone(self):
         '''Parse the zone section and find the zone to be updated.

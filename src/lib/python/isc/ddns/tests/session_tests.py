@@ -298,10 +298,11 @@ class SessionTest(SessionTestBase):
 
     def test_handle(self):
         '''Basic update case'''
-        result, zname, zclass = self._session.handle()
+        result, zname, zclass, dsrc_name = self._session.handle()
         self.assertEqual(UPDATE_SUCCESS, result)
         self.assertEqual(TEST_ZONE_NAME, zname)
         self.assertEqual(TEST_RRCLASS, zclass)
+        self.assertEqual('sqlite3', dsrc_name)
 
         # Just checking these are different from the success code.
         self.assertNotEqual(UPDATE_ERROR, result)
@@ -311,10 +312,11 @@ class SessionTest(SessionTestBase):
         # Zone section is empty
         msg = create_update_msg(zones=[])
         session = UpdateSession(msg, TEST_CLIENT6, None)
-        result, zname, zclass = session.handle()
+        result, zname, zclass, dsrc_name = session.handle()
         self.assertEqual(UPDATE_ERROR, result)
         self.assertEqual(None, zname)
         self.assertEqual(None, zclass)
+        self.assertEqual(None, dsrc_name)
         self.check_response(session.get_message(), Rcode.FORMERR)
 
         # Zone section contains multiple records
@@ -640,7 +642,7 @@ class SessionTest(SessionTestBase):
         self.assertEqual(expected.to_text(),
             session._UpdateSession__check_prerequisites().to_text())
         # Now see if handle finds the same result
-        (result, _, _) = session.handle()
+        (result, _, _, _) = session.handle()
         self.assertEqual(expected.to_text(),
                          session._UpdateSession__message.get_rcode().to_text())
         # And that the result looks right
@@ -680,7 +682,7 @@ class SessionTest(SessionTestBase):
         session = UpdateSession(msg, TEST_CLIENT4, zconfig)
 
         # Now see if handle finds the same result
-        (result, _, _) = session.handle()
+        (result, _, _, _) = session.handle()
         self.assertEqual(expected.to_text(),
                          session._UpdateSession__message.get_rcode().to_text())
         # And that the result looks right
@@ -1518,7 +1520,7 @@ class SessionACLTest(SessionTestBase):
                                            {TEST_RRCLASS:
                                             self._dsrc_client_list}))
         # then the request should be rejected.
-        self.assertEqual((UPDATE_ERROR, None, None), session.handle())
+        self.assertEqual((UPDATE_ERROR, None, None, None), session.handle())
 
         # recreate the request message, and test with an ACL that would result
         # in 'DROP'.  get_message() should return None.
@@ -1530,7 +1532,7 @@ class SessionACLTest(SessionTestBase):
                                 ZoneConfig([],
                                            {TEST_RRCLASS:
                                             self._dsrc_client_list}, acl_map))
-        self.assertEqual((UPDATE_DROP, None, None), session.handle())
+        self.assertEqual((UPDATE_DROP, None, None, None), session.handle())
         self.assertEqual(None, session.get_message())
 
     def test_update_tsigacl_check(self):
@@ -1549,7 +1551,7 @@ class SessionACLTest(SessionTestBase):
                                 ZoneConfig(set(),
                                            {TEST_RRCLASS:
                                             self._dsrc_client_list}, acl_map))
-        self.assertEqual((UPDATE_ERROR, None, None), session.handle())
+        self.assertEqual((UPDATE_ERROR, None, None, None), session.handle())
         self.check_response(session.get_message(), Rcode.REFUSED)
 
         # If the message contains TSIG, it should match the ACCEPT
@@ -1559,8 +1561,8 @@ class SessionACLTest(SessionTestBase):
                                 ZoneConfig(set(),
                                            {TEST_RRCLASS:
                                             self._dsrc_client_list}, acl_map))
-        self.assertEqual((UPDATE_SUCCESS, TEST_ZONE_NAME, TEST_RRCLASS),
-                         session.handle())
+        self.assertEqual((UPDATE_SUCCESS, TEST_ZONE_NAME, TEST_RRCLASS,
+                          'sqlite3'), session.handle())
 
 if __name__ == "__main__":
     isc.log.init("bind10")
