@@ -3160,16 +3160,25 @@ class TestXfrinProcessMockCC:
 
 class TestXfrinProcessMockCCSession:
     def __init__(self):
-        self.send_called = False
+        self.send_called = 0    # number of group_sendmsg() called
         self.send_called_correctly = False
+        self.notify_sent_correctly = False
         self.recv_called = False
         self.recv_called_correctly = False
 
     def group_sendmsg(self, msg, module, want_answer=False):
-        self.send_called = True
+        self.send_called += 1
         if module == 'Auth' and msg['command'][0] == 'loadzone':
             self.send_called_correctly = True
             seq = "random-e068c2de26d760f20cf10afc4b87ef0f"
+        elif module == 'notifications/ZoneUpdateListener':
+            notification = msg['notification']
+            if (notification[0] == 'zone_updated' and
+                Name(notification[1]['origin']) == Name('example.org') and
+                notification[1]['class'] == 'IN' and
+                notification[1]['datasource'] == 'test-datasrc'):
+                self.notify_sent_correctly = True
+                return "random-e068c2de26d760f20cf10afc4b87ef0f"
         else:
             seq = None
 
@@ -3245,12 +3254,13 @@ class TestXfrinProcess(unittest.TestCase):
         """
         return "example.org/IN"
 
-    def publish_xfrin_news(self, zone_name, rrclass, ret):
+    def publish_xfrin_news(self, datasrc_name, zone_name, rrclass, ret):
         """
         Part of pretending to be the server as well. This just logs the
         success/failure of the previous operation.
         """
         if ret == XFRIN_OK:
+            xfrin._notify_zoneupdate(self, datasrc_name, zone_name, rrclass)
             xfrin._do_auth_loadzone(self, zone_name, rrclass)
 
         self.__published.append(ret)
@@ -3274,10 +3284,15 @@ class TestXfrinProcess(unittest.TestCase):
         and expected sequence of transfers is passed to specify what test
         should happen.
         """
+        class MyDataSourceClient:
+            # process_xfrin() will eventually call this method, so we need to
+            # fake it.  We only need this method for the purpose of this test.
+            def get_datasource_name(self):
+                return 'test-datasrc'
         self.__rets = rets
         published = rets[-1]
         xfrin.process_xfrin(self, XfrinRecorder(), Name("example.org."),
-                            RRClass.IN, None, zone_soa, None,
+                            RRClass.IN, MyDataSourceClient(), zone_soa, None,
                             TEST_MASTER_IPV4_ADDRINFO, True, None,
                             request_ixfr,
                             xfrin.Counters(xfrin.SPECFILE_LOCATION),
@@ -3294,8 +3309,9 @@ class TestXfrinProcess(unittest.TestCase):
         """
         self.__do_test([XFRIN_OK], [RRType.IXFR], ZoneInfo.REQUEST_IXFR_FIRST)
         # Check there was loadzone command
-        self.assertTrue(self._send_cc_session.send_called)
+        self.assertEqual(2, self._send_cc_session.send_called)
         self.assertTrue(self._send_cc_session.send_called_correctly)
+        self.assertTrue(self._send_cc_session.notify_sent_correctly)
         self.assertTrue(self._send_cc_session.recv_called)
         self.assertTrue(self._send_cc_session.recv_called_correctly)
 
@@ -3346,8 +3362,9 @@ class TestXfrinProcess(unittest.TestCase):
         """
         self.__do_test([XFRIN_OK], [RRType.IXFR],
                        ZoneInfo.REQUEST_IXFR_FIRST)
-        self.assertTrue(self._send_cc_session.send_called)
+        self.assertEqual(2, self._send_cc_session.send_called)
         self.assertTrue(self._send_cc_session.send_called_correctly)
+        self.assertTrue(self._send_cc_session.notify_sent_correctly)
         self.assertTrue(self._send_cc_session.recv_called)
         self.assertTrue(self._send_cc_session.recv_called_correctly)
 

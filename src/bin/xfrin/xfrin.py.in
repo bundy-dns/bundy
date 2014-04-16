@@ -41,6 +41,7 @@ from isc.server_common.tsig_keyring import init_keyring, get_keyring
 from isc.server_common.datasrc_clients_mgr import DataSrcClientsMgr, ConfigError
 from isc.log_messages.xfrin_messages import *
 from isc.dns import *
+from isc.cc.proto_defs import CC_PAYLOAD_NOTIFICATION, CC_GROUP_NOTIFICATION_PREFIX
 
 isc.log.init("b10-xfrin", buffer=True)
 logger = isc.log.Logger("xfrin")
@@ -1260,7 +1261,8 @@ def __process_xfrin(server, zone_name, rrclass, datasrc_client, zone_soa,
     # Publish the zone transfer result news, so zonemgr can reset the
     # zone timer, and xfrout can notify the zone's slaves if the result
     # is success.
-    server.publish_xfrin_news(zone_name, rrclass, ret)
+    server.publish_xfrin_news(datasrc_client.get_datasource_name(), zone_name,
+                              rrclass, ret)
 
     if exception is not None:
         raise exception
@@ -1467,6 +1469,31 @@ def _do_auth_loadzone(server, zone_name, zone_class):
         seq = server._send_cc_session.group_sendmsg(msg, AUTH_MODULE_NAME,
                                                     want_answer=True)
         answer, env = server._send_cc_session.group_recvmsg(False, seq)
+
+def _notify_zoneupdate(server, dsrc_name, zone_name, zone_class):
+    """Helper for notifying interested modules of the update.
+
+    This is defined here so it can be used from tests.  It's essentially a
+    private function otherwise.
+
+    """
+
+    params = {
+        'origin': str(zone_name),
+        'class': str(zone_class),
+        'datasource': dsrc_name
+    }
+
+    # Unfortunately we cannot use ModuleCCSession.notify() (see
+    # publish_xfrin_news), so we need to build the low-level data ourselves.
+    notification = ['zone_updated', params]
+    # Our assumption is that group_sendmsg() doesn't block or fail as long
+    # as msgq is running and we don't request an answer, and if msgq dies
+    # it's a fatal system error.
+    server._send_cc_session.group_sendmsg({CC_PAYLOAD_NOTIFICATION:
+                                           notification},
+                                          CC_GROUP_NOTIFICATION_PREFIX +
+                                          'ZoneUpdateListener')
 
 class Xfrin:
     def __init__(self):
@@ -1742,15 +1769,23 @@ class Xfrin:
 
         return (addr.family, socket.SOCK_STREAM, (str(addr), port))
 
-    def publish_xfrin_news(self, zone_name, zone_class, xfr_result):
-        '''Send command to xfrout/zone manager module.
+    def publish_xfrin_news(self, dsrc_name, zone_name, zone_class, xfr_result):
+        """Send command to xfrout/zone manager module.
+
         If xfrin has finished successfully for one zone, tell the good
-        news(command: zone_new_data_ready) to zone manager and xfrout.
+        news(command: zone_new_data_ready) to interested modules.
         if xfrin failed, just tell the bad news to zone manager, so that
-        it can reset the refresh timer for that zone. '''
+        it can reset the refresh timer for that zone.
+
+        """
         param = {'zone_name': zone_name.to_text(),
                  'zone_class': zone_class.to_text()}
         if xfr_result == XFRIN_OK:
+            # Note: this mostly solves the FIXME below (except that it cannot
+            # use ModuleCCSession).  We should eventually migrate to the
+            # general notification for auth and zonemgr, too.
+            _notify_zoneupdate(self, dsrc_name, zone_name, zone_class)
+
             # FIXME: Due to the hack with two different CC sessions
             # (see the _cc_setup comment) and the fact the rpc_call
             # is a high-level call present only at ModuleCCSession,
