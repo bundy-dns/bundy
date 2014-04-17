@@ -26,6 +26,7 @@
 #include <gtest/gtest.h>
 
 #include <boost/function.hpp>
+#include <boost/bind.hpp>
 
 using namespace isc::dns;
 using namespace isc::data;
@@ -199,53 +200,89 @@ TEST(DataSrcClientsMgrTest, holder) {
     EXPECT_THROW(TestDataSrcClientsMgr::Holder holder2(mgr), isc::Unexpected);
 }
 
-TEST(DataSrcClientsMgrTest, reload) {
-    TestDataSrcClientsMgr mgr;
+namespace {
+/* wrapper for hiding the optional argument for loadZone(). */
+void loadZoneWrapper(TestDataSrcClientsMgr* mgr, const ConstElementPtr& args) {
+    mgr->loadZone(args);
+}
+
+void checkLoadOrUpdateZone(boost::function<void(const ConstElementPtr& args)>
+                           handler)
+{
     EXPECT_TRUE(FakeDataSrcClientsBuilder::started);
     EXPECT_TRUE(FakeDataSrcClientsBuilder::command_queue->empty());
 
+    // mutable, as it's overridden later in the test.
     isc::data::ElementPtr args =
         isc::data::Element::fromJSON("{ \"class\": \"IN\","
-                                     "  \"origin\": \"example.com\" }");
-    mgr.loadZone(args);
+                                     "  \"origin\": \"example.com\", "
+                                     "  \"datasource\": \"testsrc\"}");
+    handler(args);
     EXPECT_EQ(1, FakeDataSrcClientsBuilder::command_queue->size());
-    mgr.loadZone(args);
+    handler(args);
     EXPECT_EQ(2, FakeDataSrcClientsBuilder::command_queue->size());
 
     // Should fail with non-string 'class' value
     args->set("class", Element::create(1));
-    EXPECT_THROW(mgr.loadZone(args), CommandError);
+    EXPECT_THROW(handler(args), CommandError);
     EXPECT_EQ(2, FakeDataSrcClientsBuilder::command_queue->size());
 
     // And with badclass
     args->set("class", Element::create("BADCLASS"));
-    EXPECT_THROW(mgr.loadZone(args), CommandError);
+    EXPECT_THROW(handler(args), CommandError);
     EXPECT_EQ(2, FakeDataSrcClientsBuilder::command_queue->size());
 
     // Should succeed without 'class'
     args->remove("class");
-    mgr.loadZone(args);
+    handler(args);
     EXPECT_EQ(3, FakeDataSrcClientsBuilder::command_queue->size());
 
     // but fail without origin, without sending new commands
     args->remove("origin");
-    EXPECT_THROW(mgr.loadZone(args), CommandError);
+    EXPECT_THROW(handler(args), CommandError);
     EXPECT_EQ(3, FakeDataSrcClientsBuilder::command_queue->size());
 
     // And for 'origin' that is not a string
     args->set("origin", Element::create(1));
-    EXPECT_THROW(mgr.loadZone(args), CommandError);
+    EXPECT_THROW(handler(args), CommandError);
     EXPECT_EQ(3, FakeDataSrcClientsBuilder::command_queue->size());
 
     // And origin that is not a correct name
     args->set("origin", Element::create(".."));
-    EXPECT_THROW(mgr.loadZone(args), CommandError);
+    EXPECT_THROW(handler(args), CommandError);
     EXPECT_EQ(3, FakeDataSrcClientsBuilder::command_queue->size());
 
     // same for empty data and data that is not a map
-    EXPECT_THROW(mgr.loadZone(isc::data::ConstElementPtr()), CommandError);
-    EXPECT_THROW(mgr.loadZone(isc::data::Element::createList()), CommandError);
+    EXPECT_THROW(handler(isc::data::ConstElementPtr()), CommandError);
+    EXPECT_THROW(handler(isc::data::Element::createList()), CommandError);
     EXPECT_EQ(3, FakeDataSrcClientsBuilder::command_queue->size());
+
+    // "datasource" is provided but not a string
+    EXPECT_THROW(handler(isc::data::Element::fromJSON(
+                             "{ \"origin\": \".\", \"datasource\": 42 }")),
+                 CommandError);
+}
+}
+
+TEST(DataSrcClientsMgrTest, reload) {
+    TestDataSrcClientsMgr mgr;
+
+    checkLoadOrUpdateZone(boost::bind(loadZoneWrapper, &mgr, _1));
+
+    // For LOADZONE, datasource can be omitted.
+    const size_t orig_qlen = FakeDataSrcClientsBuilder::command_queue->size();
+    mgr.loadZone(isc::data::Element::fromJSON("{ \"origin\": \".\"}"));
+    EXPECT_EQ(orig_qlen + 1, FakeDataSrcClientsBuilder::command_queue->size());
+}
+
+TEST(DataSrcClientsMgrTest, updateZone) {
+    TestDataSrcClientsMgr mgr;
+
+    checkLoadOrUpdateZone(boost::bind(&TestDataSrcClientsMgr::updateZone, &mgr,
+                                      _1));
+    // UPDATEZONE requires datasource be specified.
+    EXPECT_THROW(mgr.updateZone(isc::data::Element::fromJSON(
+                                    "{ \"origin\": \".\"}")), CommandError);
 }
 
 TEST(DataSrcClientsMgrTest, segmentUpdate) {

@@ -280,6 +280,14 @@ public:
     /// memory manager for segments, if some are remotely mapped.
     void listsReconfigured();
 
+    /// \brief Notification callback for zone updates.
+    ///
+    /// \param event_name Should be "zone_updated"
+    /// \param params parameters for the zone_updated notification, consisting
+    /// of origin, (RR) class, and data source name.
+    void zoneUpdated(const std::string& event_name,
+                     const isc::data::ConstElementPtr& params);
+
 private:
     void reconfigureDone(isc::data::ConstElementPtr request);
     void foreignCommand(const std::string& command, const std::string&,

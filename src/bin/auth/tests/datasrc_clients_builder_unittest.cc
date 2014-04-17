@@ -76,6 +76,7 @@ protected:
     }
 
     void configureZones();      // used for loadzone related tests
+    void checkLoadOrUpdateZone(CommandID cmdid);
 
     ClientListMapPtr clients_map; // configured clients
     std::list<Command> command_queue; // test command queue
@@ -387,14 +388,9 @@ TEST_F(DataSrcClientsBuilderTest, loadZone) {
     newZoneChecks(clients_map, rrclass);
 }
 
-TEST_F(DataSrcClientsBuilderTest,
-#ifdef USE_STATIC_LINK
-       DISABLED_loadZoneSQLite3
-#else
-       loadZoneSQLite3
-#endif
-    )
-{
+// Shared test for both LOADZONE and UPDATEZONE
+void
+DataSrcClientsBuilderTest::checkLoadOrUpdateZone(CommandID cmdid) {
     // Prepare the database first
     const std::string test_db = TEST_DATA_BUILDDIR "/auth_test.sqlite3.copied";
     std::stringstream ss("example.org. 3600 IN SOA . . 0 0 0 0 0\n"
@@ -416,7 +412,7 @@ TEST_F(DataSrcClientsBuilderTest,
               find(Name("example.org")).finder_->
               find(Name("www.example.org"), RRType::A())->code);
 
-    // Add the record to the underlying sqlite database, by loading
+    // Add the record to the underlying sqlite database, by loading/updating
     // it as a separate datasource, and updating it
     ConstElementPtr sql_cfg = Element::fromJSON("{ \"type\": \"sqlite3\","
                                                 "\"database_file\": \""
@@ -433,12 +429,12 @@ TEST_F(DataSrcClientsBuilderTest,
               find(Name("example.org")).finder_->
               find(Name("www.example.org"), RRType::A())->code);
 
-    // Now send the command to reload it
-    const Command loadzone_cmd(LOADZONE, Element::fromJSON(
-                                   "{\"class\": \"IN\","
-                                   " \"origin\": \"example.org\"}"),
-                               FinishedCallback());
-    EXPECT_TRUE(builder.handleCommand(loadzone_cmd));
+    // Now send the command to reload/update it
+    const Command cmd(cmdid, Element::fromJSON(
+                          "{\"class\": \"IN\","
+                          " \"origin\": \"example.org\"}"),
+                      FinishedCallback());
+    EXPECT_TRUE(builder.handleCommand(cmd));
     // And now it should be present too.
     EXPECT_EQ(ZoneFinder::SUCCESS,
               clients_map->find(rrclass)->second->
@@ -446,7 +442,7 @@ TEST_F(DataSrcClientsBuilderTest,
               find(Name("www.example.org"), RRType::A())->code);
 
     // An error case: the zone has no configuration. (note .com here)
-    const Command nozone_cmd(LOADZONE, Element::fromJSON(
+    const Command nozone_cmd(cmdid, Element::fromJSON(
                                  "{\"class\": \"IN\","
                                  " \"origin\": \"example.com\"}"),
                              FinishedCallback());
@@ -457,8 +453,8 @@ TEST_F(DataSrcClientsBuilderTest,
               find(Name("example.org")).finder_->
               find(Name("example.org"), RRType::SOA())->code);
 
-    // attempt of reloading a zone but in-memory cache is disabled.  In this
-    // case the command is simply ignored.
+    // attempt of reloading/updating a zone but in-memory cache is disabled.
+    // In this case the command is simply ignored.
     const size_t orig_lock_count = map_mutex.lock_count;
     const size_t orig_unlock_count = map_mutex.unlock_count;
     const ConstElementPtr config2(Element::fromJSON("{"
@@ -470,11 +466,11 @@ TEST_F(DataSrcClientsBuilderTest,
         "}]}"));
     clients_map = configureDataSource(config2);
     builder.handleCommand(
-                     Command(LOADZONE, Element::fromJSON(
+                     Command(cmdid, Element::fromJSON(
                                  "{\"class\": \"IN\","
                                  " \"origin\": \"example.org\"}"),
                              FinishedCallback()));
-    // Only one mutex was needed because there was no actual reload.
+    // Only one mutex was needed because there was no actual reload/update.
     EXPECT_EQ(orig_lock_count + 1, map_mutex.lock_count);
     EXPECT_EQ(orig_unlock_count + 1, map_mutex.unlock_count);
 
@@ -489,7 +485,7 @@ TEST_F(DataSrcClientsBuilderTest,
     clients_map = configureDataSource(config_nozone);
     EXPECT_THROW(
         builder.handleCommand(
-            Command(LOADZONE, Element::fromJSON(
+            Command(cmdid, Element::fromJSON(
                         "{\"class\": \"IN\","
                         " \"origin\": \"nosuchzone.example\"}"),
                     FinishedCallback())),
@@ -510,11 +506,33 @@ TEST_F(DataSrcClientsBuilderTest,
             "}]"), false);           // false = disable cache
     (*clients_map)[rrclass] = nocache_list;
     EXPECT_THROW(builder.handleCommand(
-                     Command(LOADZONE, Element::fromJSON(
+                     Command(cmdid, Element::fromJSON(
                                  "{\"class\": \"IN\","
                                  " \"origin\": \"example.org\"}"),
                              FinishedCallback())),
                  TestDataSrcClientsBuilder::InternalCommandError);
+}
+
+TEST_F(DataSrcClientsBuilderTest,
+#ifdef USE_STATIC_LINK
+       DISABLED_loadZoneSQLite3
+#else
+       loadZoneSQLite3
+#endif
+    )
+{
+    checkLoadOrUpdateZone(LOADZONE);
+}
+
+TEST_F(DataSrcClientsBuilderTest,
+#ifdef USE_STATIC_LINK
+       DISABLED_updateZoneSQLite3
+#else
+       updateZoneSQLite3
+#endif
+    )
+{
+    checkLoadOrUpdateZone(UPDATEZONE);
 }
 
 TEST_F(DataSrcClientsBuilderTest, loadBrokenZone) {
@@ -652,6 +670,37 @@ TEST_F(DataSrcClientsBuilderTest,
                                  " \"class\": \"IN\"}"),
                              FinishedCallback())),
                  TestDataSrcClientsBuilder::InternalCommandError);
+}
+
+// Similar to the previous case, but for UPDATEZLONE command.  In this case,
+// non-writable cache isn't considered an error, and just ignored.
+TEST_F(DataSrcClientsBuilderTest,
+#ifdef USE_SHARED_MEMORY
+       updateInNonWritableCache
+#else
+       DISABLED_updateInNonWritableCache
+#endif
+    )
+{
+    const ConstElementPtr config = Element::fromJSON(
+        "{"
+        "\"IN\": [{"
+        "   \"type\": \"MasterFiles\","
+        "   \"params\": {"
+        "       \"test1.example\": \"" +
+        std::string(TEST_DATA_BUILDDIR "/test1.zone.copied") + "\"},"
+        "   \"cache-enable\": true,"
+        "   \"cache-type\": \"mapped\""
+        "}]}");
+    clients_map = configureDataSource(config);
+
+    EXPECT_TRUE(builder.handleCommand(
+                    Command(UPDATEZONE,
+                            Element::fromJSON(
+                                "{\"origin\": \"test1.example\","
+                                " \"class\": \"IN\","
+                                " \"datasource\": \"MasterFiles\"}"),
+                            FinishedCallback())));
 }
 
 // Test the SEGMENT_INFO_UPDATE command. This test is little bit

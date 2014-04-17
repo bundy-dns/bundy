@@ -81,6 +81,13 @@ enum CommandID {
     LOADZONE,     ///< Load a new version of zone into a memory,
                   ///  the argument to the command is a map containing 'class'
                   ///  and 'origin' elements, both should have been validated.
+    UPDATEZONE,   ///< Similar to LOADZONE, but is intended to be used for
+                  ///  internal notification from other modules.  It takes
+                  ///  specific data source name where the updated zone is
+                  ///  expected to belong.  It also silently ignores the command
+                  ///  if the underlying memory segment is not writable
+                  ///  (implicitly assuming it's shared-memory based and is
+                  ///  updated by another module).
     SEGMENT_INFO_UPDATE, ///< The memory manager sent an update about segments.
     SHUTDOWN,     ///< Shutdown the builder; no argument
     NUM_COMMANDS
@@ -357,47 +364,13 @@ public:
              const datasrc_clientmgr_internal::FinishedCallback& callback =
              datasrc_clientmgr_internal::FinishedCallback())
     {
-        if (!args) {
-            isc_throw(CommandError, "loadZone argument empty");
-        }
-        if (args->getType() != isc::data::Element::map) {
-            isc_throw(CommandError, "loadZone argument not a map");
-        }
-        if (!args->contains("origin")) {
-            isc_throw(CommandError,
-                      "loadZone argument has no 'origin' value");
-        }
-        // Also check if it really is a valid name
-        try {
-            dns::Name(args->get("origin")->stringValue());
-        } catch (const isc::Exception& exc) {
-            isc_throw(CommandError, "bad origin: " << exc.what());
-        }
+        updateZoneInternal(datasrc_clientmgr_internal::LOADZONE, args,
+                           callback);
+    }
 
-        if (args->get("origin")->getType() != data::Element::string) {
-            isc_throw(CommandError,
-                      "loadZone argument 'origin' value not a string");
-        }
-        if (args->contains("class")) {
-            if (args->get("class")->getType() != data::Element::string) {
-                isc_throw(CommandError,
-                          "loadZone argument 'class' value not a string");
-            }
-            // Also check if it is a valid class
-            try {
-                dns::RRClass(args->get("class")->stringValue());
-            } catch (const isc::Exception& exc) {
-                isc_throw(CommandError, "bad class: " << exc.what());
-            }
-        }
-
-        // Note: we could do some more advanced checks here,
-        // e.g. check if the zone is known at all in the configuration.
-        // For now these are skipped, but one obvious way to
-        // implement it would be to factor out the code from
-        // the start of doLoadZone(), and call it here too
-
-        sendCommand(datasrc_clientmgr_internal::LOADZONE, args, callback);
+    void updateZone(const data::ConstElementPtr& args) {
+        updateZoneInternal(datasrc_clientmgr_internal::UPDATEZONE, args,
+                           datasrc_clientmgr_internal::FinishedCallback());
     }
 
     void segmentInfoUpdate(const data::ConstElementPtr& args,
@@ -425,7 +398,6 @@ public:
             }
         }
 
-
         sendCommand(datasrc_clientmgr_internal::SEGMENT_INFO_UPDATE, args,
                     callback);
     }
@@ -436,6 +408,72 @@ private:
     // specialized class for tests so that the tests can inspect the last
     // state of the class.
     void cleanup() {}
+
+    // Common handler for LOADZONE and UPDATEZONE.
+    void updateZoneInternal(datasrc_clientmgr_internal::CommandID command,
+                            const data::ConstElementPtr& args,
+                            const datasrc_clientmgr_internal::FinishedCallback&
+                            callback)
+    {
+        const std::string& command_str =
+            (command == datasrc_clientmgr_internal::LOADZONE) ?
+            "loadZone" : "updateZone";
+
+        if (!args) {
+            isc_throw(CommandError, command_str + " argument empty");
+        }
+
+        if (args->getType() != isc::data::Element::map) {
+            isc_throw(CommandError, command_str + " argument not a map");
+        }
+        if (!args->contains("origin")) {
+            isc_throw(CommandError,
+                      command_str + " argument has no 'origin' value");
+        }
+        // Also check if it really is a valid name
+        try {
+            dns::Name(args->get("origin")->stringValue());
+        } catch (const isc::Exception& exc) {
+            isc_throw(CommandError, "bad origin: " << exc.what());
+        }
+
+        if (args->get("origin")->getType() != data::Element::string) {
+            isc_throw(CommandError,
+                      "loadZone argument 'origin' value not a string");
+        }
+        if (args->contains("class")) {
+            if (args->get("class")->getType() != data::Element::string) {
+                isc_throw(CommandError,
+                          "loadZone argument 'class' value not a string");
+            }
+            // Also check if it is a valid class
+            try {
+                dns::RRClass(args->get("class")->stringValue());
+            } catch (const isc::Exception& exc) {
+                isc_throw(CommandError, "bad class: " << exc.what());
+            }
+        }
+        // If "datasource" is provided as a parameter, it must be a string.
+        // For UPDATEZONE, datasource must be specified.
+        if (args->contains("datasource")) {
+            if (args->get("datasource")->getType() !=
+                isc::data::Element::string)
+            {
+                isc_throw(CommandError,
+                          "invalid type for datasource (must be string)");
+            }
+        } else if (command == datasrc_clientmgr_internal::UPDATEZONE) {
+                isc_throw(CommandError, "missing datasource for UPDATEZONE");
+        }
+
+        // Note: we could do some more advanced checks here,
+        // e.g. check if the zone is known at all in the configuration.
+        // For now these are skipped, but one obvious way to
+        // implement it would be to factor out the code from
+        // the start of doUpdateZone(), and call it here too
+
+        sendCommand(command, args, callback);
+    }
 
     // same as cleanup(), for reconfigure().
     void reconfigureHook() {}
@@ -664,10 +702,13 @@ private:
         }
     }
 
-    void doLoadZone(const isc::data::ConstElementPtr& arg);
+    void doUpdateZone(datasrc_clientmgr_internal::CommandID command,
+                      const isc::data::ConstElementPtr& arg);
     boost::shared_ptr<datasrc::memory::ZoneWriter> getZoneWriter(
+        datasrc_clientmgr_internal::CommandID command,
         datasrc::ConfigurableClientList& client_list,
-        const dns::RRClass& rrclass, const dns::Name& origin);
+        const std::string& datasrc_name, const dns::RRClass& rrclass,
+        const dns::Name& origin);
 
     // The following are shared with the manager
     std::list<Command>* command_queue_;
@@ -763,7 +804,8 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::handleCommand(
     }
 
     const boost::array<const char*, NUM_COMMANDS> command_desc = {
-        {"NOOP", "RECONFIGURE", "LOADZONE", "SEGMENT_INFO_UPDATE", "SHUTDOWN"}
+        {"NOOP", "RECONFIGURE", "LOADZONE", "UPDATEZONE", "SEGMENT_INFO_UPDATE",
+         "SHUTDOWN"}
     };
     LOG_DEBUG(auth_logger, DBGLVL_TRACE_BASIC,
               AUTH_DATASRC_CLIENTS_BUILDER_COMMAND).arg(command_desc.at(cid));
@@ -772,7 +814,8 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::handleCommand(
         doReconfigure(command.params);
         break;
     case LOADZONE:
-        doLoadZone(command.params);
+    case UPDATEZONE:            // need test
+        doUpdateZone(command.id, command.params);
         break;
     case SEGMENT_INFO_UPDATE:
         doSegmentUpdate(command.params);
@@ -790,7 +833,8 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::handleCommand(
 
 template <typename MutexType, typename CondVarType>
 void
-DataSrcClientsBuilderBase<MutexType, CondVarType>::doLoadZone(
+DataSrcClientsBuilderBase<MutexType, CondVarType>::doUpdateZone(
+    datasrc_clientmgr_internal::CommandID command,
     const isc::data::ConstElementPtr& arg)
 {
     // We assume some basic level validation as this method can only be
@@ -818,13 +862,17 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::doLoadZone(
                   "/" << rrclass << ": not configured for the class");
     }
 
+    const isc::data::ConstElementPtr datasrc_name_elem = arg->get("datasource");
+    const std::string& datasrc_name = datasrc_name_elem ?
+        datasrc_name_elem->stringValue() : "";
+
     boost::shared_ptr<datasrc::ConfigurableClientList> client_list =
         found->second;
     assert(client_list);
 
     try {
         boost::shared_ptr<datasrc::memory::ZoneWriter> zwriter =
-            getZoneWriter(*client_list, rrclass, origin);
+            getZoneWriter(command, *client_list, datasrc_name, rrclass, origin);
         if (!zwriter) {
             return;
         }
@@ -853,13 +901,15 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::doLoadZone(
     }
 }
 
-// A dedicated subroutine of doLoadZone().  Separated just for keeping the
+// A dedicated subroutine of doUpdateZone().  Separated just for keeping the
 // main method concise.
 template <typename MutexType, typename CondVarType>
 boost::shared_ptr<datasrc::memory::ZoneWriter>
 DataSrcClientsBuilderBase<MutexType, CondVarType>::getZoneWriter(
+    datasrc_clientmgr_internal::CommandID command,
     datasrc::ConfigurableClientList& client_list,
-    const dns::RRClass& rrclass, const dns::Name& origin)
+    const std::string& datasrc_name, const dns::RRClass& rrclass,
+    const dns::Name& origin)
 {
     // getCachedZoneWriter() could get access to an underlying data source
     // that can cause a race condition with the main thread using that data
@@ -867,7 +917,8 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::getZoneWriter(
     datasrc::ConfigurableClientList::ZoneWriterPair writerpair;
     {
         typename MutexType::Locker locker(*map_mutex_);
-        writerpair = client_list.getCachedZoneWriter(origin, false);
+        writerpair = client_list.getCachedZoneWriter(origin, false,
+                                                     datasrc_name);
     }
 
     switch (writerpair.first) {
@@ -884,6 +935,9 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::getZoneWriter(
             .arg(origin).arg(rrclass);
         break;                  // return NULL below
     case datasrc::ConfigurableClientList::CACHE_NOT_WRITABLE:
+        if (command == UPDATEZONE) {
+            break;
+        }
         // This is an internal error. Auth server should skip reloading zones
         // on non writable caches.
         isc_throw(InternalCommandError, "failed to load zone " << origin

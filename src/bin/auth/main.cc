@@ -226,6 +226,10 @@ main(int argc, char* argv[]) {
         isc::server_common::initKeyring(*config_session);
         auth_server->setTSIGKeyRing(&isc::server_common::keyring);
 
+        config_session->subscribeNotification(
+            "ZoneUpdateListener",
+            boost::bind(&AuthSrv::zoneUpdated, auth_server, _1, _2));
+
         // Start the data source configuration.  We pass first_time and
         // config_session for the hack described in datasrcConfigHandler.
         bool first_time = true;

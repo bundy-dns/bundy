@@ -941,6 +941,24 @@ hasMappedSegment(auth::DataSrcClientsMgr& mgr) {
 }
 
 void
+AuthSrv::zoneUpdated(const std::string& event_name,
+                     const ConstElementPtr& params)
+{
+    if (event_name == "zone_updated") {
+        LOG_DEBUG(auth_logger, DBG_AUTH_OPS, AUTH_RECEIVED_ZONE_UPDATED);
+        try {
+            impl_->datasrc_clients_mgr_.updateZone(params);
+        } catch (const isc::Exception& ex) {
+            // notify handler seems to assume exception free, so we catch
+            // almost everything and log it.
+            LOG_ERROR(auth_logger, AUTH_ZONE_UPDATE_FAIL).arg(ex.what());
+        }
+    } else {
+        LOG_ERROR(auth_logger, AUTH_ZONE_UPDATE_UNKNOWN).arg(event_name);
+    }
+}
+
+void
 AuthSrv::listsReconfigured() {
     const bool has_remote = hasMappedSegment(impl_->datasrc_clients_mgr_);
     if (has_remote && !impl_->readers_group_subscribed_) {
