@@ -1101,7 +1101,7 @@ class TestDDNSSession(unittest.TestCase):
         num_rrsets = len(self.__req_message.get_section(SECTION_PREREQUISITE))
         self.assertEqual(2, num_rrsets)
 
-    def check_session_msg(self, result, expect_recv=2):
+    def check_session_msg(self, result, expect_recv=1):
         '''Check post update communication with other modules.'''
         # iff the update succeeds, b10-ddns should tell interested other
         # modules the information about the update zone.  Eventually this should
@@ -1110,20 +1110,17 @@ class TestDDNSSession(unittest.TestCase):
         # {'zone_updated': {'datasource': <data_source_name>,
         #                   'origin': <updated_zone_name>,
         #                   'class': <updated_zone_class>}}
-        # Until it's completed, we'll also notify specific modules, which are
-        # xfrout and auth: for xfrout, the message format should be:
+        # Until it's completed, we'll also notify specific modules, which is
+        # xfrout: for xfrout, the message format should be:
         # {'command': ['notify', {'zone_name': <updated_zone_name>,
         #                         'zone_class', <updated_zone_class>}]}
-        # for auth, it should be:
-        # {'command': ['loadzone', {'origin': <updated_zone_name>,
-        #                           'class', <updated_zone_class>}]}
         # and expect an answer by calling group_recvmsg().
         #
         # expect_recv indicates the expected number of calls to
         # group_recvmsg(), which is normally 2, but can be 0 if send fails;
         # if the message is to be sent
         if result == UPDATE_SUCCESS:
-            expected_sentmsg = 3
+            expected_sentmsg = 2
             self.assertEqual(expected_sentmsg,
                              len(self.__cc_session._sent_msg))
             self.assertEqual(expect_recv, self.__cc_session._recvmsg_called)
@@ -1136,16 +1133,6 @@ class TestDDNSSession(unittest.TestCase):
             self.assertEqual(TEST_ZONE_NAME.to_text(), sent_cmd[1]['origin'])
             self.assertEqual(TEST_RRCLASS.to_text(), sent_cmd[1]['class'])
             self.assertEqual('testsrc', sent_cmd[1]['datasource'])
-            msg_cnt += 1
-            sent_msg, sent_group = self.__cc_session._sent_msg[msg_cnt]
-            sent_cmd = sent_msg['command']
-            self.assertEqual('Auth', sent_group)
-            self.assertEqual('loadzone', sent_cmd[0])
-            self.assertEqual(2, len(sent_cmd[1]))
-            self.assertEqual(TEST_ZONE_NAME.to_text(),
-                             sent_cmd[1]['origin'])
-            self.assertEqual(TEST_RRCLASS.to_text(),
-                             sent_cmd[1]['class'])
             msg_cnt += 1
             sent_msg, sent_group = self.__cc_session._sent_msg[msg_cnt]
             sent_cmd = sent_msg['command']

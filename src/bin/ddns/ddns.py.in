@@ -460,7 +460,6 @@ class DDNSServer:
                             { 'datasource': datasrc_name,
                               'origin': str(zname),
                               'class': str(zclass) })
-            self.__notify_auth(zname, zclass)
             self.__notify_xfrout(zname, zclass)
         return ret
 
@@ -521,12 +520,6 @@ class DDNSServer:
             logger.error(DDNS_STOP_FORWARDER_FAIL, ex)
         except RPCError as e:
             logger.error(DDNS_STOP_FORWARDER_ERROR, e)
-
-    def __notify_auth(self, zname, zclass):
-        '''Notify auth of the update, if necessary.'''
-        self.__notify_update(AUTH_MODULE_NAME, AUTH_LOADZONE_COMMAND,
-                             auth_loadzone_params(zname, zclass), zname,
-                             zclass)
 
     def __notify_xfrout(self, zname, zclass):
         '''Notify xfrout of the update.'''
