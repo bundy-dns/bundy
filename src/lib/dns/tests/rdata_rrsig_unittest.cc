@@ -53,7 +53,7 @@ const uint8_t wiredata_rrsig[] = {
     0x4b, 0x82, 0xfb, 0x29,
     // key tag = 8496 (0x2130)
     0x21, 0x30,
-    // signer's name (bundy.org.)
+    // signer's name (isc.org.)
     // 3     i     s     c     3     o     r     g     0
     0x03, 0x69, 0x73, 0x63, 0x03, 0x6f, 0x72, 0x67, 0x00,
     // signature data follows
@@ -79,7 +79,7 @@ const uint8_t wiredata_rrsig[] = {
 class Rdata_RRSIG_Test : public RdataTest {
 protected:
     Rdata_RRSIG_Test() :
-        rrsig_txt("A 5 4 43200 20100223214617 20100222214617 8496 bundy.org. "
+        rrsig_txt("A 5 4 43200 20100223214617 20100222214617 8496 isc.org. "
                   "evxhlGx13mpKLVkKsjpGzycS5twtIoxOmlN14w9t5AgzGBmz"
                   "diGdLIrFabqr72af2rUq+UDBKMWXujwZTZUTws32sVldDPk/"
                   "NbuacJM25fQXfv5mO3Af7TOoow3AjMaVG9icjCW0V55WcWQU"
@@ -144,7 +144,7 @@ TEST_F(Rdata_RRSIG_Test, fromText) {
 
     // Space in signature data is OK
     checkFromText_None(
-              "A 5 4 43200 20100223214617 20100222214617 8496 bundy.org. "
+              "A 5 4 43200 20100223214617 20100222214617 8496 isc.org. "
               "evxhlGx13mpKLVkKsjpGzycS5twtIoxOmlN14w9t5AgzGBmz "
               "diGdLIrFabqr72af2rUq+UDBKMWXujwZTZUTws32sVldDPk/ "
               "NbuacJM25fQXfv5mO3Af7TOoow3AjMaVG9icjCW0V55WcWQU "
@@ -152,7 +152,7 @@ TEST_F(Rdata_RRSIG_Test, fromText) {
 
     // Multi-line signature data is OK, if enclosed in parentheses
     checkFromText_None(
-              "A 5 4 43200 20100223214617 20100222214617 8496 bundy.org. "
+              "A 5 4 43200 20100223214617 20100222214617 8496 isc.org. "
               "( evxhlGx13mpKLVkKsjpGzycS5twtIoxOmlN14w9t5AgzGBmz\n"
               "diGdLIrFabqr72af2rUq+UDBKMWXujwZTZUTws32sVldDPk/\n"
               "NbuacJM25fQXfv5mO3Af7TOoow3AjMaVG9icjCW0V55WcWQU\n"
@@ -162,12 +162,12 @@ TEST_F(Rdata_RRSIG_Test, fromText) {
     // to fail, but the lexer constructor must be able to continue
     // parsing from it.
     checkFromText_BadString(
-              "A 5 4 43200 20100223214617 20100222214617 8496 bundy.org. "
+              "A 5 4 43200 20100223214617 20100222214617 8496 isc.org. "
               "evxhlGx13mpKLVkKsjpGzycS5twtIoxOmlN14w9t5AgzGBmz"
               "diGdLIrFabqr72af2rUq+UDBKMWXujwZTZUTws32sVldDPk/"
               "NbuacJM25fQXfv5mO3Af7TOoow3AjMaVG9icjCW0V55WcWQU"
               "f49t+sXKPzbipN9g+s1ZPiIyofc= ; comment\n"
-              "A 5 4 43200 20100223214617 20100222214617 8496 bundy.org. "
+              "A 5 4 43200 20100223214617 20100222214617 8496 isc.org. "
               "evxhlGx13mpKLVkKsjpGzycS5twtIoxOmlN14w9t5AgzGBmz"
               "diGdLIrFabqr72af2rUq+UDBKMWXujwZTZUTws32sVldDPk/"
               "NbuacJM25fQXfv5mO3Af7TOoow3AjMaVG9icjCW0V55WcWQU"
@@ -355,7 +355,7 @@ TEST_F(Rdata_RRSIG_Test, toWireBuffer) {
 
 TEST_F(Rdata_RRSIG_Test, createFromWire) {
     const string rrsig_txt2(
-        "A 5 2 43200 20100327070149 20100225070149 2658 bundy.org. "
+        "A 5 2 43200 20100327070149 20100225070149 2658 isc.org. "
         "HkJk/xZTvzePU8NENl/ley8bbUumhk1hXciyqhLnz1VQFzkDooej6neX"
         "ZgWZzQKeTKPOYWrnYtdZW4PnPQFeUl3orgLev7F8J6FZlDn0y/J/ThR5"
         "m36Mo2/Gdxjj8lJ/IjPVkdpKyBpcnYND8KEIma5MyNCNeyO1UkfPQZGHNSQ=");

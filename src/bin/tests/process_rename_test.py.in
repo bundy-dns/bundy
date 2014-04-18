@@ -58,7 +58,7 @@ class TestRename(unittest.TestCase):
         # Script name regular expression
         scripts = re.compile(r'((\w|[-.0-9])+)')
         # Line with the call
-        fun = re.compile(r'^\s*isc\.util\.process\.rename\s*\(.*\)\s*(|#.*)$',
+        fun = re.compile(r'^\s*bundy\.util\.process\.rename\s*\(.*\)\s*(|#.*)$',
             re.MULTILINE)
 
         # Find all Makefile and extract names of scripts

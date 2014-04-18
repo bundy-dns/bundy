@@ -40,7 +40,7 @@ class Rdata_NSEC_Test : public RdataTest {
     // there's nothing to specialize
 };
 
-const char* const nsec_txt = "www2.bundy.org. CNAME RRSIG NSEC";
+const char* const nsec_txt = "www2.isc.org. CNAME RRSIG NSEC";
 
 TEST_F(Rdata_NSEC_Test, toText_NSEC) {
     const generic::NSEC rdata_nsec(nsec_txt);
@@ -48,9 +48,9 @@ TEST_F(Rdata_NSEC_Test, toText_NSEC) {
 }
 
 TEST_F(Rdata_NSEC_Test, badText_NSEC) {
-    EXPECT_THROW(generic::NSEC rdata_nsec("www.bundy.org. BIFF POW SPOON"),
+    EXPECT_THROW(generic::NSEC rdata_nsec("www.isc.org. BIFF POW SPOON"),
                  InvalidRdataText);
-    EXPECT_THROW(generic::NSEC rdata_nsec("www.bundy.org."),
+    EXPECT_THROW(generic::NSEC rdata_nsec("www.isc.org."),
                  InvalidRdataText);
 }
 
@@ -111,7 +111,7 @@ TEST_F(Rdata_NSEC_Test, assign) {
 TEST_F(Rdata_NSEC_Test, getNextName) {
     // The implementation is quite trivial, so we simply check it's actually
     // defined and does work as intended in a simple case.
-    EXPECT_EQ(Name("www2.bundy.org"), generic::NSEC((nsec_txt)).getNextName());
+    EXPECT_EQ(Name("www2.isc.org"), generic::NSEC((nsec_txt)).getNextName());
 }
 
 TEST_F(Rdata_NSEC_Test, compare) {
