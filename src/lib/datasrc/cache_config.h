@@ -21,7 +21,7 @@
 #include <dns/name.h>
 #include <dns/dns_fwd.h>
 #include <cc/data.h>
-#include <datasrc/memory/load_action.h>
+#include <datasrc/memory/loader_creator.h>
 #include <datasrc/memory/zone_data.h>
 #include <datasrc/memory/zone_data_loader.h>
 
