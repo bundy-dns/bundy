@@ -24,6 +24,8 @@
 
 #include <cc/data.h>
 
+#include <boost/bind.hpp>
+
 #include <string>
 
 namespace bundy {
@@ -41,7 +43,8 @@ loadZoneIntoTable(ZoneTableSegment& zt_sgmt, const dns::Name& zname,
             "{\"cache-enable\": true,"
             " \"params\": {\"" + zname.toText() + "\": \"" + zone_file +
             "\"}}"), true);
-    memory::ZoneWriter writer(zt_sgmt, cache_conf.getLoadAction(zclass, zname),
+    memory::ZoneWriter writer(zt_sgmt,
+                              cache_conf.getLoaderCreator(zclass, zname),
                               zname, zclass, load_error_ok);
     writer.load();
     writer.install();
@@ -49,23 +52,16 @@ loadZoneIntoTable(ZoneTableSegment& zt_sgmt, const dns::Name& zname,
 }
 
 namespace {
-class DataSourceLoader {
-public:
-    DataSourceLoader(const dns::RRClass& rrclass, const dns::Name& name,
-                     const DataSourceClient& datasrc_client) :
-        rrclass_(rrclass),
-        name_(name),
-        datasrc_client_(datasrc_client)
-    {}
-    memory::ZoneData* operator()(util::MemorySegment& segment) {
-        return (memory::ZoneDataLoader(segment, rrclass_, name_,
-                                       datasrc_client_).load());
-    }
-private:
-    const dns::RRClass rrclass_;
-    const dns::Name name_;
-    const DataSourceClient& datasrc_client_;
-};
+memory::ZoneDataLoader*
+createLoaderFromDataSource(util::MemorySegment& segment,
+                           const dns::RRClass& rrclass,
+                           const dns::Name& name,
+                           const DataSourceClient* datasrc_client,
+                           memory::ZoneData* old_data)
+{
+    return (new memory::ZoneDataLoader(segment, rrclass, name,
+                                       *datasrc_client, old_data));
+}
 }
 
 void
@@ -73,8 +69,9 @@ loadZoneIntoTable(ZoneTableSegment& zt_sgmt, const dns::Name& zname,
                   const dns::RRClass& zclass,
                   const DataSourceClient& datasrc_client)
 {
-    memory::ZoneWriter writer(zt_sgmt, DataSourceLoader(zclass, zname,
-                                                        datasrc_client),
+    memory::ZoneWriter writer(zt_sgmt,
+                              boost::bind(createLoaderFromDataSource, _1,
+                                          zclass, zname, &datasrc_client, _2),
                               zname, zclass, false);
     writer.load();
     writer.install();

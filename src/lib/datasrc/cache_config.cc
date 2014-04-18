@@ -123,39 +123,42 @@ namespace {
 // We can't use the loadZoneData function directly in boost::bind, since
 // it is overloaded and the compiler can't choose the correct version
 // reliably and fails. So we simply wrap it into an unique name.
-memory::ZoneData*
-loadZoneDataFromFile(util::MemorySegment& segment, const dns::RRClass& rrclass,
-                     const dns::Name& name, const std::string& filename)
+memory::ZoneDataLoader*
+createLoaderFromFile(util::MemorySegment& segment, const dns::RRClass& rrclass,
+                     const dns::Name& name, const std::string& filename,
+                     memory::ZoneData* old_data)
 {
-    return (memory::ZoneDataLoader(segment, rrclass, name, filename).load());
+    return (new memory::ZoneDataLoader(segment, rrclass, name, filename,
+                                       old_data));
 }
 
-memory::ZoneData*
-loadZoneDataFromDataSource(util::MemorySegment& segment,
+memory::ZoneDataLoader*
+createLoaderFromDataSource(util::MemorySegment& segment,
                            const dns::RRClass& rrclass,
                            const dns::Name& name,
-                           const DataSourceClient* datasrc_client)
+                           const DataSourceClient* datasrc_client,
+                           memory::ZoneData* old_data)
 {
-    return (memory::ZoneDataLoader(segment, rrclass, name,
-                                   *datasrc_client).load());
+    return (new memory::ZoneDataLoader(segment, rrclass, name,
+                                       *datasrc_client, old_data));
 }
 
 } // unnamed namespace
 
-memory::LoadAction
-CacheConfig::getLoadAction(const dns::RRClass& rrclass,
-                           const dns::Name& zone_name) const
+memory::ZoneDataLoaderCreator
+CacheConfig::getLoaderCreator(const dns::RRClass& rrclass,
+                              const dns::Name& zone_name) const
 {
     // First, check if the specified zone is configured to be cached.
     Zones::const_iterator found = zone_config_.find(zone_name);
     if (found == zone_config_.end()) {
-        return (memory::LoadAction());
+        return (memory::ZoneDataLoaderCreator());
     }
 
     if (!found->second.empty()) {
         // This is "MasterFiles" data source.
-        return (boost::bind(loadZoneDataFromFile, _1, rrclass, zone_name,
-                            found->second));
+        return (boost::bind(createLoaderFromFile, _1, rrclass, zone_name,
+                            found->second, _2));
     }
 
     // Otherwise there must be a "source" data source (ensured by constructor)
@@ -169,14 +172,14 @@ CacheConfig::getLoadAction(const dns::RRClass& rrclass,
         // This shouldn't happen for a compliant implementation of
         // DataSourceClient, but we'll protect ourselves from buggy
         // implementations.
-        bundy_throw(Unexpected, "getting LoadAction for " << zone_name
+        bundy_throw(Unexpected, "getting loader creator for " << zone_name
                   << "/" << rrclass << " resulted in Null zone iterator");
     }
 
     // Wrap the iterator into the correct functor (which keeps it alive as
     // long as it is needed).
-    return (boost::bind(loadZoneDataFromDataSource, _1, rrclass, zone_name,
-                        datasrc_client_));
+    return (boost::bind(createLoaderFromDataSource, _1, rrclass, zone_name,
+                        datasrc_client_, _2));
 }
 
 } // namespace internal
