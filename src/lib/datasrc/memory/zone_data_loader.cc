@@ -19,6 +19,7 @@
 #include <datasrc/memory/segment_object_holder.h>
 #include <datasrc/memory/util_internal.h>
 #include <datasrc/memory/rrset_collection.h>
+#include <datasrc/client.h>
 
 #include <dns/master_loader.h>
 #include <dns/rrcollator.h>
@@ -218,19 +219,43 @@ public:
                        const dns::Name& zone_name,
                        boost::function<void(LoadCallback)> rrset_installer) :
         mem_sgmt_(mem_sgmt), rrclass_(rrclass), zone_name_(zone_name),
-        rrset_installer_(rrset_installer)
+        rrset_installer_(rrset_installer), datasrc_client_(NULL)
     {}
+
+    ZoneDataLoaderImpl(util::MemorySegment& mem_sgmt,
+                       const dns::RRClass& rrclass,
+                       const dns::Name& zone_name,
+                       const DataSourceClient& datasrc_client) :
+        mem_sgmt_(mem_sgmt), rrclass_(rrclass), zone_name_(zone_name),
+        datasrc_client_(&datasrc_client)
+    {}
+
     ZoneData* doLoad();
 
 private:
+    ZoneData* doLoadCommon();
+
     util::MemorySegment& mem_sgmt_;
     const dns::RRClass rrclass_;
     const dns::Name zone_name_;
     boost::function<void(LoadCallback)> rrset_installer_;
+    const DataSourceClient* const datasrc_client_;
 };
 
 ZoneData*
 ZoneDataLoader::ZoneDataLoaderImpl::doLoad() {
+    ZoneIteratorPtr iterator;
+    if (datasrc_client_) {
+        iterator =  datasrc_client_->getIterator(zone_name_);
+        /* TODO: compare the iterator's SOA and in-memory SOA */
+        rrset_installer_ =  boost::bind(generateRRsetFromIterator,
+                                        iterator.get(), _1);
+    }
+    return (doLoadCommon());
+}
+
+ZoneData*
+ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon() {
     while (true) { // Try as long as it takes to load and grow the segment
         bool created = false;
         try {
@@ -279,7 +304,7 @@ ZoneDataLoader::ZoneDataLoader(util::MemorySegment& mem_sgmt,
                                const dns::RRClass& rrclass,
                                const dns::Name& zone_name,
                                const std::string& zone_file) :
-    impl_(NULL)                 // defer after logging to avoid leak
+    impl_(NULL)                 // defer until logging to avoid leak
 {
     LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_MEM_LOAD_FROM_FILE).
         arg(zone_name).arg(rrclass).arg(zone_file);
@@ -293,15 +318,14 @@ ZoneDataLoader::ZoneDataLoader(util::MemorySegment& mem_sgmt,
 ZoneDataLoader::ZoneDataLoader(util::MemorySegment& mem_sgmt,
                                const dns::RRClass& rrclass,
                                const dns::Name& zone_name,
-                               ZoneIterator& iterator) :
+                               const DataSourceClient& datasrc_client) :
     impl_(NULL)
 {
     LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_MEM_LOAD_FROM_DATASRC).
-        arg(zone_name).arg(rrclass);
+        arg(zone_name).arg(rrclass).arg(datasrc_client.getDataSourceName());
 
     impl_ = new ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name,
-                                   boost::bind(generateRRsetFromIterator,
-                                               &iterator, _1));
+                                   datasrc_client);
 }
 
 ZoneDataLoader::~ZoneDataLoader() {

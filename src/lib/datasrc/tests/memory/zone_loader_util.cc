@@ -49,31 +49,32 @@ loadZoneIntoTable(ZoneTableSegment& zt_sgmt, const dns::Name& zname,
 }
 
 namespace {
-// borrowed from CacheConfig's internal
-class IteratorLoader {
+class DataSourceLoader {
 public:
-    IteratorLoader(const dns::RRClass& rrclass, const dns::Name& name,
-                   ZoneIterator& iterator) :
+    DataSourceLoader(const dns::RRClass& rrclass, const dns::Name& name,
+                     const DataSourceClient& datasrc_client) :
         rrclass_(rrclass),
         name_(name),
-        iterator_(iterator)
+        datasrc_client_(datasrc_client)
     {}
     memory::ZoneData* operator()(util::MemorySegment& segment) {
         return (memory::ZoneDataLoader(segment, rrclass_, name_,
-                                       iterator_).load());
+                                       datasrc_client_).load());
     }
 private:
     const dns::RRClass rrclass_;
     const dns::Name name_;
-    ZoneIterator& iterator_;
+    const DataSourceClient& datasrc_client_;
 };
 }
 
 void
 loadZoneIntoTable(ZoneTableSegment& zt_sgmt, const dns::Name& zname,
-                  const dns::RRClass& zclass, ZoneIterator& iterator)
+                  const dns::RRClass& zclass,
+                  const DataSourceClient& datasrc_client)
 {
-    memory::ZoneWriter writer(zt_sgmt, IteratorLoader(zclass, zname, iterator),
+    memory::ZoneWriter writer(zt_sgmt, DataSourceLoader(zclass, zname,
+                                                        datasrc_client),
                               zname, zclass, false);
     writer.load();
     writer.install();
