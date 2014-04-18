@@ -15,7 +15,7 @@
 #ifndef MEM_ZONE_WRITER_H
 #define MEM_ZONE_WRITER_H
 
-#include <datasrc/memory/load_action.h>
+#include <datasrc/memory/loader_creator.h>
 
 #include <boost/noncopyable.hpp>
 

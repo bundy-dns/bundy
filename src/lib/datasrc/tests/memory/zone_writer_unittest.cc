@@ -18,7 +18,7 @@
 #include <datasrc/memory/zone_table_segment_local.h>
 #include <datasrc/memory/zone_data.h>
 #include <datasrc/memory/zone_data_loader.h>
-#include <datasrc/memory/load_action.h>
+#include <datasrc/memory/loader_creator.h>
 #include <datasrc/memory/zone_table.h>
 #include <datasrc/exceptions.h>
 #include <datasrc/result.h>

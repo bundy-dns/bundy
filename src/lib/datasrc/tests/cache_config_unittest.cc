@@ -14,7 +14,7 @@
 
 #include <datasrc/cache_config.h>
 #include <datasrc/exceptions.h>
-#include <datasrc/memory/load_action.h>
+#include <datasrc/memory/loader_creator.h>
 #include <datasrc/memory/zone_data.h>
 #include <datasrc/tests/mock_client.h>
 
