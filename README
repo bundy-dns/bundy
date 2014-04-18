@@ -1,77 +1,86 @@
 
-This is the source for the BIND 10 suite.
+This is the 1.2.0 version release of BIND 10.  Corresponding with
+this release, ISC has concluded its development work on the BIND
+10 code base and it will be maintained and hosted by an outside
+group.  ISC will continue to develop BIND 9 and its DHCP software.
 
-BIND is the popular implementation of a DNS server, developer
-interfaces, and DNS tools. BIND 10 is a rewrite of BIND 9 and ISC
-DHCP. BIND 10 is written in C++ and Python and provides a modular
-environment for serving, maintaining, and developing DNS and DHCP.
+BIND 10 provides an authoritative DNS server (with in-memory and
+SQLite3 backends), DNSSEC support, dynamic DNS, zone transfers.
+Supplementary components are included for statistics collection
+and reporting and remote configuration and control are included,
+as is an experimental recursive nameserver with support for
+forwarding. The continuation of this project is known as Bundy and
+hosted at http://bundy-dns.de/.  The source will be available via
+a public shared Git revision control hosting service with some past
+contributors managing the project outside of ISC's guidance. Its
+ticketing system and content collaboration will not be hosted by
+ISC.
 
-This release includes the bind10 master process, b10-msgq message
-bus, b10-cmdctl remote control daemon, b10-cfgmgr configuration
-manager, b10-stats statistics collection and reporting daemon, and
-b10-stats-httpd for HTTP access to XML-formatted stats.
+Since the June 2013 1.1.0 release, the new DNS highlights include
+incoming zone transfer statistics, support for CAA and TLSA resource
+records, and the zone loader now supports the zone file $GENERATE
+directive.  Note that the b10-xfrin "use_ixfr" configuration item
+is deprecated and a new configuration "zones/request_ixfr" may be
+used to replace it.  Also use "database_file" under the "data_sources"
+module for b10-xfrin inbound transfers and use b10-loadzone -e
+option to create an empty zone prior to the first transfer.
 
-For DNS services, it provides the b10-auth authoritative DNS server
-(with SQLite3 and in-memory backends), b10-xfrin IXFR/AXFR inbound
-service, b10-xfrout outgoing IXFR/AXFR service, b10-zonemgr secondary
-manager, libdns++ library for C++ with a python wrapper, and many
-tests and example programs. (It also includes an experimental proof
-of concept recursive or forwarding DNS server, b10-resolver.)
+The suite also provides DHCPv4 and DHCPv6 servers, a dynamic DNS
+component, a DHCP performance testing program, and a C++ library
+for DHCP.  ISC is continuing with the development of these components
+in a new project, Kea.  The versions of these components in the BIND
+10 release correspond to Kea 0.8.
 
-BIND 10 also provides experimental DHCPv4 and DHCPv6 servers,
-b10-dhcp4 and b10-dhcp6, a dynamic DNS update module, b10-dhcp-ddns,
-a portable DHCP library, libdhcp++, and a DHCP benchmarking tool,
-perfdhcp.  In this release of BIND 10, the DHCPv4 and DHCPv6 servers
-must be considered experimental.  Limitations and known issues with
-this DHCP release can be found at http://bind10.isc.org/wiki/KeaKnownIssues
+Since the June 2013 release, Kea has introduced many new DHCP
+features including support for relayed DHCPv6 traffic, the dynamic
+DNS updates module, a Hooks framework for customizing and extending
+DHCP behavior, Client FQDN Option, DHCPv4 Host Name option, Prefix
+Delegation (IA_PD and IAPREFIX options), Vendor Class option,
+support for sending back client-id, client classification at the
+basic level, ability to respond to directly-connected clients which
+do not have IP addresses, interface detection for FreeBSD, NetBSD,
+OpenBSD, Mac OS X and Solaris 11, Rebind message support for the
+DHCPv6 server, an experimental PostgreSQL database backend for
+leases, and CSV file storage for in-memory leases.
 
-NOTE: The API/ABI provided by libraries in BIND 10 may change in future
-point releases. So please do not assume currently that any code that you
-compile for a particular version of a BIND 10 library will work in
-future versions of the library. We aim to stabilize the public API/ABI
-interface of BIND 10 libraries in future releases.
+For information about the Kea project, please visit http://kea.isc.org/.
+If you have any questions or comments about working with the DHCP
+code, you may post them to the Kea DHCP Mailing List
+https://lists.isc.org/mailman/listinfo/kea-users.
 
-Documentation is included with the source. See doc/guide/bind10-guide.txt
-(or bind10-guide.html) for installation instructions.  The
-documentation is also available via the BIND 10 website at
-http://bind10.isc.org/
+For the full commit history, please see the ChangeLog and the git
+Log.  This release doesn't introduce any code changes since last
+week's release candidate.
 
-The latest released source tar file may be downloaded from:
+The bind10-1.2.0 source may be downloaded from:
 
-        ftp://ftp.isc.org/isc/bind10/
+  ftp://ftp.isc.org/isc/bind10/1.2.0/bind10-1.2.0.tar.gz
 
-Users and developers are encouraged to participate on the BIND 10
-mailing lists:
+A PGP signature of the distribution is at
 
-        https://lists.isc.org/mailman/listinfo/bind10-users
-        https://lists.isc.org/mailman/listinfo/bind10-dev
+  ftp://ftp.isc.org/isc/bind10/1.2.0/bind10-1.2.0.tar.gz.sha512.asc
 
-Bugs may be reported as tickets via the developers website:
+The signature was generated with the ISC code signing key which is
+available at https://www.isc.org/about/openpgp
 
-        http://bind10.isc.org/
+Installation details are documented in the Guide.  In addition,
+installation suggestions for various operating systems are available
+via our wiki http://bind10.isc.org/wiki/InstallStartPage.  (Please
+note that there are build regressions on Solaris platforms for the
+DNS code.)  The ./configure options --disable-dns and --disable-dhcp
+may be used to provide an optional DHCP- or DNS-only build and
+installation.
 
-Simple build and installation instructions:
+BIND 10 was a sponsored development project, and would not be possible
+without the generous support of the past sponsors:  AFNIC, Afilias,
+CIRA, CNNIC, CZ.NIC, DENIC eG, Google, IIS.SE, JPRS, Nominet, .nz Registry
+Services, RIPE NCC, Registro.br, SIDN, and Technical Center of Internet.
+Support for the new DHCPv4 and DHCPv6 components is provided by
+Comcast.
 
-  ./configure
-  make
-  make install
+As the release engineer for the past 34 development snapshots and
+release versions, I'd like to thank the many contributors, sponsors,
+and developers for their assistance with this project.
 
-If building from Git repository, run:
-
-  autoreconf --install
-
-before running ./configure
-
-See the Guide for detailed installation directions at
-doc/guide/bind10-guide.txt.
-
-For operating system specific tips see the wiki at:
-
-       http://bind10.isc.org/wiki/SystemSpecificNotes
-
-Please see the wiki and the doc/ directory for various documentation.
-
-The BIND 10 suite is started by running "bind10". Note that the default
-configuration does not start any DNS or DHCP services.  Please see the
-Guide for information on how to configure these services to be started
-automatically.
+Jeremy C. Reed
+ISC Release Engineering

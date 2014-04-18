@@ -29,7 +29,7 @@ CSVRow::CSVRow(const size_t cols, const char separator)
 CSVRow::CSVRow(const std::string& text, const char separator)
     : separator_(1, separator) {
     // Parsing is exception safe, so this will not throw.
-    parse(text.c_str());
+    parse(text);
 }
 
 void
@@ -80,8 +80,7 @@ CSVRow::checkIndex(const size_t at) const {
 }
 
 CSVFile::CSVFile(const std::string& filename)
-    : filename_(filename), fs_(), cols_(0),
-      read_msg_() {
+    : filename_(filename), fs_(), cols_(0), read_msg_() {
 }
 
 CSVFile::~CSVFile() {
@@ -171,7 +170,7 @@ CSVFile::checkStreamStatusAndReset(const std::string& operation) const {
     }
 }
 
-std::ifstream::pos_type
+std::streampos
 CSVFile::size() const {
     std::ifstream fs(filename_.c_str());
     bool ok = fs.good();
@@ -256,7 +255,7 @@ CSVFile::next(CSVRow& row, const bool skip_validation) {
 void
 CSVFile::open() {
     // If file doesn't exist or is empty, we have to create our own file.
-    if (size() == 0) {
+    if (size() == static_cast<std::streampos>(0)) {
         recreate();
 
     } else {
