@@ -23,6 +23,8 @@
 
 namespace bundy {
 namespace datasrc {
+class DataSourceClient;
+
 namespace memory {
 
 /// \brief Zone is invalid exception.
@@ -49,7 +51,7 @@ public:
                    const dns::Name& zone_name,
                    const std::string& zone_file);
 
-    /// \brief Constructor for loading using data source zone iterator.
+    /// \brief Constructor for loading from a given data source.
     ///
     /// \param mem_sgmt The memory segment.
     /// \param rrclass The RRClass.
@@ -58,7 +60,7 @@ public:
     ZoneDataLoader(util::MemorySegment& mem_sgmt,
                    const dns::RRClass& rrclass,
                    const dns::Name& zone_name,
-                   ZoneIterator& iterator);
+                   const DataSourceClient& datasrc_client);
 
     /// Destructor.
     ~ZoneDataLoader();

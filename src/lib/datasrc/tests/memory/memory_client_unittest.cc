@@ -166,6 +166,35 @@ public:
     }
 };
 
+class MockDataSourceClient : public DataSourceClient {
+public:
+    MockDataSourceClient(ZoneIteratorPtr iterator) :
+        DataSourceClient("test"), iterator_(iterator)
+    {}
+
+    virtual FindResult findZone(const bundy::dns::Name&) const {
+        bundy_throw(bundy::NotImplemented, "Not implemented");
+    }
+
+    virtual ZoneIteratorPtr getIterator(const bundy::dns::Name&, bool) const {
+        return (iterator_);
+    }
+
+    virtual ZoneUpdaterPtr getUpdater(const bundy::dns::Name&,
+                                      bool, bool) const
+    {
+        bundy_throw(bundy::NotImplemented, "Not implemented");
+    }
+
+    virtual std::pair<ZoneJournalReader::Result, ZoneJournalReaderPtr>
+    getJournalReader(const bundy::dns::Name&, uint32_t, uint32_t) const {
+        bundy_throw(bundy::NotImplemented, "Not implemented");
+    }
+
+private:
+    const ZoneIteratorPtr iterator_;
+};
+
 class MemoryClientTest : public ::testing::Test {
 protected:
     MemoryClientTest() : zclass_(RRClass::IN()),
@@ -245,7 +274,8 @@ TEST_F(MemoryClientTest, load) {
 
 TEST_F(MemoryClientTest, loadFromIterator) {
     loadZoneIntoTable(*ztable_segment_, Name("example.org"), zclass_,
-                      *MockIterator::makeIterator(rrset_data));
+                      MockDataSourceClient(
+                          MockIterator::makeIterator(rrset_data)));
 
     ZoneIteratorPtr iterator(client_->getIterator(Name("example.org")));
 
@@ -283,17 +313,20 @@ TEST_F(MemoryClientTest, loadFromIterator) {
     // RRset should not fail. It is acceptable to load RRs of the same
     // type again.
     loadZoneIntoTable(*ztable_segment_, Name("example.org"), zclass_,
-                      *MockIterator::makeIterator(rrset_data_separated));
+                      MockDataSourceClient(
+                          MockIterator::makeIterator(rrset_data_separated)));
 
     // Similar to the previous case, but with separated RRSIGs.
     loadZoneIntoTable(*ztable_segment_, Name("example.org"), zclass_,
-                      *MockIterator::makeIterator(rrset_data_sigseparated));
+                      MockDataSourceClient(
+                          MockIterator::makeIterator(rrset_data_sigseparated)));
 
     // Emulating bogus iterator implementation that passes empty RRSIGs.
     EXPECT_THROW(loadZoneIntoTable(*ztable_segment_, Name("example.org"),
                                    zclass_,
-                                   *MockIterator::makeIterator(rrset_data,
-                                                               true)),
+                                   MockDataSourceClient(
+                                       MockIterator::makeIterator(rrset_data,
+                                                                  true))),
                  bundy::Unexpected);
 }
 
@@ -653,8 +686,9 @@ TEST_F(MemoryClientTest, loadRRSIGsRdataMixedCoveredTypes) {
 
     EXPECT_THROW(loadZoneIntoTable(*ztable_segment_, Name("example.org"),
                                    zclass_,
-                                   *MockVectorIterator::makeIterator(
-                                       rrsets_vec)),
+                                   MockDataSourceClient(
+                                       MockVectorIterator::makeIterator(
+                                           rrsets_vec))),
                  ZoneDataUpdater::AddError);
     // Teardown checks for memory segment leaks
 }
@@ -804,8 +838,9 @@ TEST_F(MemoryClientTest, addEmptyRRsetThrows) {
 
     EXPECT_THROW(loadZoneIntoTable(*ztable_segment_, Name("example.org"),
                                    zclass_,
-                                   *MockVectorIterator::makeIterator(
-                                       rrsets_vec)),
+                                   MockDataSourceClient(
+                                       MockVectorIterator::makeIterator(
+                                           rrsets_vec))),
                  ZoneDataUpdater::AddError);
     // Teardown checks for memory segment leaks
 }

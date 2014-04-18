@@ -120,34 +120,6 @@ CacheConfig::CacheConfig(const std::string& datasrc_type,
 }
 
 namespace {
-
-// We would like to use boost::bind for this. However, the loadZoneData takes
-// a reference, while we have a shared pointer to the iterator -- and we need
-// to keep it alive as long as the ZoneWriter is alive. Therefore we can't
-// really just dereference it and pass it, since it would get destroyed once
-// the getCachedZoneWriter would end. This class holds the shared pointer
-// alive, otherwise is mostly simple.
-//
-// It might be doable with nested boost::bind, but it would probably look
-// more awkward and complicated than this.
-class IteratorLoader {
-public:
-    IteratorLoader(const dns::RRClass& rrclass, const dns::Name& name,
-                   const ZoneIteratorPtr& iterator) :
-        rrclass_(rrclass),
-        name_(name),
-        iterator_(iterator)
-    {}
-    memory::ZoneData* operator()(util::MemorySegment& segment) {
-        return (memory::ZoneDataLoader(segment, rrclass_, name_,
-                                       *iterator_).load());
-    }
-private:
-    const dns::RRClass rrclass_;
-    const dns::Name name_;
-    ZoneIteratorPtr iterator_;
-};
-
 // We can't use the loadZoneData function directly in boost::bind, since
 // it is overloaded and the compiler can't choose the correct version
 // reliably and fails. So we simply wrap it into an unique name.
@@ -156,6 +128,16 @@ loadZoneDataFromFile(util::MemorySegment& segment, const dns::RRClass& rrclass,
                      const dns::Name& name, const std::string& filename)
 {
     return (memory::ZoneDataLoader(segment, rrclass, name, filename).load());
+}
+
+memory::ZoneData*
+loadZoneDataFromDataSource(util::MemorySegment& segment,
+                           const dns::RRClass& rrclass,
+                           const dns::Name& name,
+                           const DataSourceClient* datasrc_client)
+{
+    return (memory::ZoneDataLoader(segment, rrclass, name,
+                                   *datasrc_client).load());
 }
 
 } // unnamed namespace
@@ -193,7 +175,8 @@ CacheConfig::getLoadAction(const dns::RRClass& rrclass,
 
     // Wrap the iterator into the correct functor (which keeps it alive as
     // long as it is needed).
-    return (IteratorLoader(rrclass, zone_name, iterator));
+    return (boost::bind(loadZoneDataFromDataSource, _1, rrclass, zone_name,
+                        datasrc_client_));
 }
 
 } // namespace internal
