@@ -25,10 +25,10 @@ class AuthSrv;
 
 /// An exception that is thrown if an error occurs while configuring an
 /// \c AuthSrv object.
-class AuthConfigError : public isc::Exception {
+class AuthConfigError : public bundy::Exception {
 public:
     AuthConfigError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// The abstract base class that represents a single configuration identifier
@@ -105,7 +105,7 @@ public:
     /// configuration value is normally syntactically validated, but the
     /// \c build() implementation must also expect invalid input.  If it
     /// detects an error it may throw an exception of a derived class
-    /// of \c isc::Exception.
+    /// of \c bundy::Exception.
     ///
     /// Preparing a configuration value will often require resource
     /// allocation.  If it fails, it may throw a corresponding standard
@@ -117,7 +117,7 @@ public:
     ///
     /// \param config_value The configuration value for the identifier
     /// corresponding to the derived class.
-    virtual void build(isc::data::ConstElementPtr config_value) = 0;
+    virtual void build(bundy::data::ConstElementPtr config_value) = 0;
 
     /// Apply the prepared configuration value to the server.
     ///
@@ -162,7 +162,7 @@ public:
 /// \param server The \c AuthSrv object to be configured.
 /// \param config_set A JSON style configuration to apply to \c server.
 void configureAuthServer(AuthSrv& server,
-                         isc::data::ConstElementPtr config_set);
+                         bundy::data::ConstElementPtr config_set);
 
 /// Create a new \c AuthConfigParser object for a given configuration
 /// identifier.

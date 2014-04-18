@@ -32,14 +32,14 @@
 #include <iostream>
 #include <queue>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief Exception thrown when DHCID computation failed.
-class DhcidComputeError : public isc::Exception {
+class DhcidComputeError : public bundy::Exception {
 public:
     DhcidComputeError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief DHCPv4 server service.
@@ -489,7 +489,7 @@ protected:
     /// @brief Creates the NameChangeRequest and adds to the queue for
     /// processing.
     ///
-    /// This creates the @c isc::dhcp_ddns::NameChangeRequest; emits a
+    /// This creates the @c bundy::dhcp_ddns::NameChangeRequest; emits a
     /// the debug message which indicates whether the request being added is
     /// to remove DNS entry or add a new entry; and then sends the request
     /// to the D2ClientMgr for transmission to bundy-dhcp-ddns.
@@ -497,7 +497,7 @@ protected:
     /// @param chg_type A type of the NameChangeRequest (ADD or REMOVE).
     /// @param lease A lease for which the NameChangeRequest is created and
     /// queued.
-    void queueNameChangeRequest(const isc::dhcp_ddns::NameChangeType chg_type,
+    void queueNameChangeRequest(const bundy::dhcp_ddns::NameChangeType chg_type,
                                 const Lease4Ptr& lease);
 
     /// @brief Attempts to renew received addresses
@@ -624,13 +624,13 @@ protected:
     /// @param lease A pointer to the structure describing a lease.
     /// @return An object encapsulating DHCID to be used for DNS updates.
     /// @throw DhcidComputeError If the computation of the DHCID failed.
-    static isc::dhcp_ddns::D2Dhcid computeDhcid(const Lease4Ptr& lease);
+    static bundy::dhcp_ddns::D2Dhcid computeDhcid(const Lease4Ptr& lease);
 
     /// @brief Selects a subnet for a given client's packet.
     ///
     /// @param question client's message
     /// @return selected subnet (or NULL if no suitable subnet was found)
-    isc::dhcp::Subnet4Ptr selectSubnet(const Pkt4Ptr& question) const;
+    bundy::dhcp::Subnet4Ptr selectSubnet(const Pkt4Ptr& question) const;
 
     /// indicates if shutdown is in progress. Setting it to true will
     /// initiate server shutdown procedure.
@@ -658,14 +658,14 @@ protected:
     /// @return An offset to the first byte after last parsed option.
     size_t unpackOptions(const OptionBuffer& buf,
                          const std::string& option_space,
-                         isc::dhcp::OptionCollection& options);
+                         bundy::dhcp::OptionCollection& options);
 
     /// @brief Assigns incoming packet to zero or more classes.
     ///
     /// @note For now, the client classification is very simple. It just uses
     /// content of the vendor-class-identifier option as a class. The resulting
-    /// class will be stored in packet (see @ref isc::dhcp::Pkt4::classes_ and
-    /// @ref isc::dhcp::Pkt4::inClass).
+    /// class will be stored in packet (see @ref bundy::dhcp::Pkt4::classes_ and
+    /// @ref bundy::dhcp::Pkt4::inClass).
     ///
     /// @param pkt packet to be classified
     void classifyPacket(const Pkt4Ptr& pkt);
@@ -689,7 +689,7 @@ private:
 
     /// @brief Implements the error handler for socket open failure.
     ///
-    /// This callback function is installed on the @c isc::dhcp::IfaceMgr
+    /// This callback function is installed on the @c bundy::dhcp::IfaceMgr
     /// when IPv4 sockets are being open. When socket fails to open for
     /// any reason, this function is called. It simply logs the error message.
     ///
@@ -711,7 +711,7 @@ private:
     int hook_index_pkt4_send_;
 };
 
-}; // namespace isc::dhcp
-}; // namespace isc
+}; // namespace bundy::dhcp
+}; // namespace bundy
 
 #endif // DHCP4_SRV_H

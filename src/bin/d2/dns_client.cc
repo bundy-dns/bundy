@@ -17,7 +17,7 @@
 #include <dns/messagerenderer.h>
 #include <limits>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 namespace {
@@ -29,10 +29,10 @@ const size_t DEFAULT_BUFFER_SIZE = 128;
 
 }
 
-using namespace isc::util;
-using namespace isc::asiolink;
-using namespace isc::asiodns;
-using namespace isc::dns;
+using namespace bundy::util;
+using namespace bundy::asiolink;
+using namespace bundy::asiodns;
+using namespace bundy::dns;
 
 // This class provides the implementation for the DNSClient. This allows for
 // the separation of the DNSClient interface from the implementation details.
@@ -45,7 +45,7 @@ public:
     // A buffer holding response from a DNS.
     util::OutputBufferPtr in_buf_;
     // A caller-supplied object which will hold the parsed response from DNS.
-    // The response object is (or descends from) isc::dns::Message and is
+    // The response object is (or descends from) bundy::dns::Message and is
     // populated using Message::fromWire().  This method may only be called
     // once in the lifetime of a Message instance.  Therefore, response_ is a
     // pointer reference thus allowing this class to replace the object
@@ -93,13 +93,13 @@ DNSClientImpl::DNSClientImpl(D2UpdateMessagePtr& response_placeholder,
     // Response should be an empty pointer. It gets populated by the
     // operator() method.
     if (response_) {
-        isc_throw(isc::BadValue, "Response buffer pointer should be null");
+        bundy_throw(bundy::BadValue, "Response buffer pointer should be null");
     }
 
     // @todo Currently we only support UDP. The support for TCP is planned for
     // the future release.
     if (proto_ == DNSClient::TCP) {
-        isc_throw(isc::NotImplemented, "TCP is currently not supported as a"
+        bundy_throw(bundy::NotImplemented, "TCP is currently not supported as a"
                   << " Transport protocol for DNS Updates; please use UDP");
     }
 
@@ -115,7 +115,7 @@ DNSClientImpl::DNSClientImpl(D2UpdateMessagePtr& response_placeholder,
     // be caught here.
     if (proto_ != DNSClient::TCP) {
         if (proto_ != DNSClient::UDP) {
-            isc_throw(isc::NotImplemented, "invalid transport protocol type '"
+            bundy_throw(bundy::NotImplemented, "invalid transport protocol type '"
                       << proto_ << "' specified for DNS Updates");
         }
     }
@@ -142,7 +142,7 @@ DNSClientImpl::operator()(asiodns::IOFetch::Result result) {
         try {
             response_->fromWire(response_buf);
 
-        } catch (const isc::Exception& ex) {
+        } catch (const bundy::Exception& ex) {
             status = DNSClient::INVALID_RESPONSE;
             LOG_DEBUG(dctl_logger, DBGLVL_TRACE_DETAIL,
                       DHCP_DDNS_INVALID_RESPONSE).arg(ex.what());
@@ -234,7 +234,7 @@ DNSClient::doUpdate(asiolink::IOService&,
                     D2UpdateMessage&,
                     const unsigned int,
                     const dns::TSIGKey&) {
-    isc_throw(isc::NotImplemented, "TSIG is currently not supported for"
+    bundy_throw(bundy::NotImplemented, "TSIG is currently not supported for"
               "DNS Update message");
 }
 
@@ -248,7 +248,7 @@ DNSClient::doUpdate(asiolink::IOService& io_service,
     // signed integers for timeout. If we want to avoid overflows we need to
     // respect this limitation here.
     if (wait > getMaxTimeout()) {
-        isc_throw(isc::BadValue, "A timeout value for DNS Update request must"
+        bundy_throw(bundy::BadValue, "A timeout value for DNS Update request must"
                   " not exceed " << getMaxTimeout()
                   << ". Provided timeout value is '" << wait << "'");
     }
@@ -258,5 +258,5 @@ DNSClient::doUpdate(asiolink::IOService& io_service,
 
 
 } // namespace d2
-} // namespace isc
+} // namespace bundy
 

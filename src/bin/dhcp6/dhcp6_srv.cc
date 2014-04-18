@@ -57,12 +57,12 @@
 #include <fstream>
 #include <sstream>
 
-using namespace isc;
-using namespace isc::asiolink;
-using namespace isc::dhcp_ddns;
-using namespace isc::dhcp;
-using namespace isc::hooks;
-using namespace isc::util;
+using namespace bundy;
+using namespace bundy::asiolink;
+using namespace bundy::dhcp_ddns;
+using namespace bundy::dhcp;
+using namespace bundy::hooks;
+using namespace bundy::util;
 using namespace std;
 
 namespace {
@@ -99,7 +99,7 @@ Dhcp6Hooks Hooks;
 
 }; // anonymous namespace
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 const std::string Dhcpv6Srv::VENDOR_CLASS_PREFIX("VENDOR_CLASS_");
@@ -108,7 +108,7 @@ const std::string Dhcpv6Srv::VENDOR_CLASS_PREFIX("VENDOR_CLASS_");
 ///
 /// Server must store its duid in persistent storage that must not change
 /// between restarts. This is name of the file that is created in dataDir
-/// (see isc::dhcp::CfgMgr::getDataDir()). It is a text file that uses
+/// (see bundy::dhcp::CfgMgr::getDataDir()). It is a text file that uses
 /// double digit hex values separated by colons format, e.g.
 /// 01:ff:02:03:06:80:90:ab:cd:ef. Server will create it during first
 /// run and then use it afterwards.
@@ -134,7 +134,7 @@ Dhcpv6Srv::Dhcpv6Srv(uint16_t port)
             // Create error handler. This handler will be called every time
             // the socket opening operation fails. We use this handler to
             // log a warning.
-            isc::dhcp::IfaceMgrErrorMsgCallback error_handler =
+            bundy::dhcp::IfaceMgrErrorMsgCallback error_handler =
                 boost::bind(&Dhcpv6Srv::ifaceMgrSocket6ErrorHandler, _1);
             IfaceMgr::instance().openSockets6(port_, error_handler);
         }
@@ -408,7 +408,7 @@ bool Dhcpv6Srv::run() {
                 .arg(query->getRemoteAddr().toText())
                 .arg(e.what());
 
-        } catch (const isc::Exception& e) {
+        } catch (const bundy::Exception& e) {
 
             // Catch-all exception (at least for ones based on the isc
             // Exception class, which covers more or less all that
@@ -552,7 +552,7 @@ bool Dhcpv6Srv::loadServerID(const std::string& file_name) {
 
     // Decode the hex string and store it in bin (which happens
     // to be OptionBuffer format)
-    isc::util::encode::decodeHex(hex_string, bin);
+    bundy::util::encode::decodeHex(hex_string, bin);
 
     // Now create server-id option
     serverid_.reset(new Option(Option::V6, D6O_SERVERID, bin));
@@ -813,14 +813,14 @@ Dhcpv6Srv::sanityCheck(const Pkt6Ptr& pkt, RequirementLevel clientid,
     switch (clientid) {
     case MANDATORY:
         if (client_ids.size() != 1) {
-            isc_throw(RFCViolation, "Exactly 1 client-id option expected in "
+            bundy_throw(RFCViolation, "Exactly 1 client-id option expected in "
                       << pkt->getName() << ", but " << client_ids.size()
                       << " received");
         }
         break;
     case OPTIONAL:
         if (client_ids.size() > 1) {
-            isc_throw(RFCViolation, "Too many (" << client_ids.size()
+            bundy_throw(RFCViolation, "Too many (" << client_ids.size()
                       << ") client-id options received in " << pkt->getName());
         }
         break;
@@ -834,14 +834,14 @@ Dhcpv6Srv::sanityCheck(const Pkt6Ptr& pkt, RequirementLevel clientid,
     switch (serverid) {
     case FORBIDDEN:
         if (!server_ids.empty()) {
-            isc_throw(RFCViolation, "Server-id option was not expected, but "
+            bundy_throw(RFCViolation, "Server-id option was not expected, but "
                       << server_ids.size() << " received in " << pkt->getName());
         }
         break;
 
     case MANDATORY:
         if (server_ids.size() != 1) {
-            isc_throw(RFCViolation, "Invalid number of server-id options received ("
+            bundy_throw(RFCViolation, "Invalid number of server-id options received ("
                       << server_ids.size() << "), exactly 1 expected in message "
                       << pkt->getName());
         }
@@ -849,7 +849,7 @@ Dhcpv6Srv::sanityCheck(const Pkt6Ptr& pkt, RequirementLevel clientid,
 
     case OPTIONAL:
         if (server_ids.size() > 1) {
-            isc_throw(RFCViolation, "Too many (" << server_ids.size()
+            bundy_throw(RFCViolation, "Too many (" << server_ids.size()
                       << ") server-id options received in " << pkt->getName());
         }
     }
@@ -969,7 +969,7 @@ Dhcpv6Srv::assignLeases(const Pkt6Ptr& question, Pkt6Ptr& answer) {
     } else {
         LOG_DEBUG(dhcp6_logger, DBG_DHCP6_BASIC, DHCP6_CLIENTID_MISSING);
         // Let's drop the message. This client is not sane.
-        isc_throw(RFCViolation, "Mandatory client-id is missing in received message");
+        bundy_throw(RFCViolation, "Mandatory client-id is missing in received message");
     }
 
     // Now that we have all information about the client, let's iterate over all
@@ -1046,7 +1046,7 @@ Dhcpv6Srv::createNameChangeRequests(const Pkt6Ptr& answer) {
     // holds the Client Identifier. It is a programming error if supplied
     // message is NULL.
     if (!answer) {
-        isc_throw(isc::Unexpected, "an instance of the object"
+        bundy_throw(bundy::Unexpected, "an instance of the object"
                   << " encapsulating server's message must not be"
                   << " NULL when creating DNS NameChangeRequest");
     }
@@ -1077,7 +1077,7 @@ Dhcpv6Srv::createNameChangeRequests(const Pkt6Ptr& answer) {
     // Unexpected if it is missing as it is a programming error.
     OptionPtr opt_duid = answer->getOption(D6O_CLIENTID);
     if (!opt_duid) {
-        isc_throw(isc::Unexpected,
+        bundy_throw(bundy::Unexpected,
                   "client identifier is required when creating a new"
                   " DNS NameChangeRequest");
     }
@@ -1092,7 +1092,7 @@ Dhcpv6Srv::createNameChangeRequests(const Pkt6Ptr& answer) {
     // However, it will be faster if we used a pointer name_data.
     std::vector<uint8_t> buf_vec(name_data, name_data + name_buf.getLength());
     // Compute DHCID from Client Identifier and FQDN.
-    isc::dhcp_ddns::D2Dhcid dhcid(*duid, buf_vec);
+    bundy::dhcp_ddns::D2Dhcid dhcid(*duid, buf_vec);
 
     // Get all IAs from the answer. For each IA, holding an address we will
     // create a corresponding NameChangeRequest.
@@ -1113,7 +1113,7 @@ Dhcpv6Srv::createNameChangeRequests(const Pkt6Ptr& answer) {
         // holds a fully qualified domain-name already (not partial).
         // Get the IP address from the lease.
         NameChangeRequestPtr ncr;
-        ncr.reset(new NameChangeRequest(isc::dhcp_ddns::CHG_ADD,
+        ncr.reset(new NameChangeRequest(bundy::dhcp_ddns::CHG_ADD,
                                         do_fwd, do_rev,
                                         opt_fqdn->getDomainName(),
                                         iaaddr->getAddress().toText(),
@@ -1167,15 +1167,15 @@ Dhcpv6Srv::createRemovalNameChangeRequest(const Lease6Ptr& lease) {
     // Let's be on the safe side and make sure it is non-NULL and throw
     // an exception if it is NULL.
     if (!lease->duid_) {
-        isc_throw(isc::Unexpected, "DUID must be set when creating"
+        bundy_throw(bundy::Unexpected, "DUID must be set when creating"
                   << " NameChangeRequest for DNS records removal for "
                   << lease->addr_);
 
     }
-    isc::dhcp_ddns::D2Dhcid dhcid(*lease->duid_, hostname_wire);
+    bundy::dhcp_ddns::D2Dhcid dhcid(*lease->duid_, hostname_wire);
     // Create a NameChangeRequest to remove the entry.
     NameChangeRequestPtr ncr;
-    ncr.reset(new NameChangeRequest(isc::dhcp_ddns::CHG_REMOVE,
+    ncr.reset(new NameChangeRequest(bundy::dhcp_ddns::CHG_REMOVE,
                                     lease->fqdn_fwd_, lease->fqdn_rev_,
                                     lease->hostname_,
                                     lease->addr_.toText(),
@@ -1654,7 +1654,7 @@ Dhcpv6Srv::extendIA_PD(const Subnet6Ptr& subnet, const DuidPtr& duid,
         // here should propagate to the main loop and cause the message to
         // be discarded.
         } else {
-            isc_throw(DHCPv6DiscardMessageError, "no subnet found for the"
+            bundy_throw(DHCPv6DiscardMessageError, "no subnet found for the"
                       " client sending Rebind to extend lifetime of the"
                       " prefix (DUID=" << duid->toText() << ", IAID="
                       << ia->getIAID());
@@ -1690,7 +1690,7 @@ Dhcpv6Srv::extendIA_PD(const Subnet6Ptr& subnet, const DuidPtr& duid,
         // here should propagate to the main loop and cause the message to
         // be discarded.
         } else {
-            isc_throw(DHCPv6DiscardMessageError, "no binding found for the"
+            bundy_throw(DHCPv6DiscardMessageError, "no binding found for the"
                       " DUID=" << duid->toText() << ", IAID="
                       << ia->getIAID() << ", subnet="
                       << subnet->toText() << " when processing a Rebind"
@@ -2362,7 +2362,7 @@ Dhcpv6Srv::openActiveSockets(const uint16_t port) {
          iface != ifaces.end(); ++iface) {
         Iface* iface_ptr = IfaceMgr::instance().getIface(iface->getName());
         if (iface_ptr == NULL) {
-            isc_throw(isc::Unexpected, "Interface Manager returned NULL"
+            bundy_throw(bundy::Unexpected, "Interface Manager returned NULL"
                       << " instance of the interface when DHCPv6 server was"
                       << " trying to reopen sockets after reconfiguration");
         }
@@ -2394,7 +2394,7 @@ Dhcpv6Srv::openActiveSockets(const uint16_t port) {
     // sockets are marked active or inactive.
     // @todo Optimization: we should not reopen all sockets but rather select
     // those that have been affected by the new configuration.
-    isc::dhcp::IfaceMgrErrorMsgCallback error_handler =
+    bundy::dhcp::IfaceMgrErrorMsgCallback error_handler =
         boost::bind(&Dhcpv6Srv::ifaceMgrSocket6ErrorHandler, _1);
     if (!IfaceMgr::instance().openSockets6(port, error_handler)) {
         LOG_WARN(dhcp6_logger, DHCP6_NO_SOCKETS_OPEN);
@@ -2404,7 +2404,7 @@ Dhcpv6Srv::openActiveSockets(const uint16_t port) {
 size_t
 Dhcpv6Srv::unpackOptions(const OptionBuffer& buf,
                          const std::string& option_space,
-                         isc::dhcp::OptionCollection& options,
+                         bundy::dhcp::OptionCollection& options,
                          size_t* relay_msg_offset,
                          size_t* relay_msg_len) {
     size_t offset = 0;
@@ -2432,10 +2432,10 @@ Dhcpv6Srv::unpackOptions(const OptionBuffer& buf,
         // At this point, from the while condition, we know that there
         // are at least 4 bytes available following offset in the
         // buffer.
-        uint16_t opt_type = isc::util::readUint16(&buf[offset], 2);
+        uint16_t opt_type = bundy::util::readUint16(&buf[offset], 2);
         offset += 2;
 
-        uint16_t opt_len = isc::util::readUint16(&buf[offset], 2);
+        uint16_t opt_len = bundy::util::readUint16(&buf[offset], 2);
         offset += 2;
 
         if (offset + opt_len > length) {
@@ -2464,7 +2464,7 @@ Dhcpv6Srv::unpackOptions(const OptionBuffer& buf,
         OptionPtr opt;
         if (num_defs > 1) {
             // Multiple options of the same code are not supported right now!
-            isc_throw(isc::Unexpected, "Internal error: multiple option definitions"
+            bundy_throw(bundy::Unexpected, "Internal error: multiple option definitions"
                       " for option type " << opt_type << " returned. Currently it is not"
                       " supported to initialize multiple option definitions"
                       " for the same option code. This will be supported once"
@@ -2534,7 +2534,7 @@ void Dhcpv6Srv::classifyPacket(const Pkt6Ptr& pkt) {
 void
 Dhcpv6Srv::generateFqdn(const Pkt6Ptr& answer) {
     if (!answer) {
-        isc_throw(isc::Unexpected, "an instance of the object encapsulating"
+        bundy_throw(bundy::Unexpected, "an instance of the object encapsulating"
                   " a message must not be NULL when generating FQDN");
     }
 
@@ -2577,7 +2577,7 @@ Dhcpv6Srv::generateFqdn(const Pkt6Ptr& answer) {
                 LeaseMgrFactory::instance().updateLease6(lease);
 
             } else {
-                isc_throw(isc::Unexpected, "there is no lease in the database "
+                bundy_throw(bundy::Unexpected, "there is no lease in the database "
                           " for address " << addr << ", so as it is impossible"
                           " to update FQDN data. This is a programmatic error"
                           " as the given address is now being handed to the"

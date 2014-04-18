@@ -19,7 +19,7 @@
 
 #include <boost/function.hpp>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 namespace master_lexer_internal {
@@ -140,7 +140,7 @@ protected:
 
 } // namespace master_lexer_internal
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 #endif  // MASTER_LEXER_STATE_H
 
 // Local Variables:

@@ -20,7 +20,7 @@
 #include <stdint.h>
 #include <exceptions/exceptions.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 class Name;
 class LabelSequence;
@@ -38,11 +38,11 @@ class NSEC3PARAM;
 /// A specific exception class is used so that the caller can selectively
 /// catch this exception, e.g., while loading a zone, and handle it
 /// accordingly.
-class UnknownNSEC3HashAlgorithm : public isc::Exception {
+class UnknownNSEC3HashAlgorithm : public bundy::Exception {
 public:
     UnknownNSEC3HashAlgorithm(const char* file, size_t line,
                               const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// \brief A calculator of NSEC3 hashes.

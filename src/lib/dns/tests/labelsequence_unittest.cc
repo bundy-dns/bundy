@@ -29,7 +29,7 @@
 #include <utility>
 #include <set>
 
-using namespace isc::dns;
+using namespace bundy::dns;
 using namespace std;
 
 // XXX: this is defined as class static constants, but some compilers
@@ -41,7 +41,7 @@ namespace {
 // Common check that two labelsequences are equal
 void check_equal(const LabelSequence& ls1, const LabelSequence& ls2) {
     NameComparisonResult result = ls1.compare(ls2);
-    EXPECT_EQ(isc::dns::NameComparisonResult::EQUAL,
+    EXPECT_EQ(bundy::dns::NameComparisonResult::EQUAL,
               result.getRelation()) << ls1.toText() << " != " << ls2.toText();
     EXPECT_EQ(0, result.getOrder()) << ls1.toText() << " != " << ls2.toText();
     EXPECT_EQ(ls1.getLabelCount(), result.getCommonLabels());
@@ -49,7 +49,7 @@ void check_equal(const LabelSequence& ls1, const LabelSequence& ls2) {
 
 // Common check for general comparison of two labelsequences
 void check_compare(const LabelSequence& ls1, const LabelSequence& ls2,
-                   isc::dns::NameComparisonResult::NameRelation relation,
+                   bundy::dns::NameComparisonResult::NameRelation relation,
                    size_t common_labels, bool check_order, int order=0) {
     NameComparisonResult result = ls1.compare(ls2);
     EXPECT_EQ(relation, result.getRelation());
@@ -195,21 +195,21 @@ TEST_F(LabelSequenceTest, operatorEqual) {
 TEST_F(LabelSequenceTest, compare) {
     // "example.org." and "example.org.", case sensitive
     NameComparisonResult result = ls1.compare(ls3, true);
-    EXPECT_EQ(isc::dns::NameComparisonResult::EQUAL,
+    EXPECT_EQ(bundy::dns::NameComparisonResult::EQUAL,
               result.getRelation());
     EXPECT_EQ(0, result.getOrder());
     EXPECT_EQ(3, result.getCommonLabels());
 
     // "example.org." and "example.ORG.", case sensitive
     result = ls3.compare(ls5, true);
-    EXPECT_EQ(isc::dns::NameComparisonResult::COMMONANCESTOR,
+    EXPECT_EQ(bundy::dns::NameComparisonResult::COMMONANCESTOR,
               result.getRelation());
     EXPECT_LT(0, result.getOrder());
     EXPECT_EQ(1, result.getCommonLabels());
 
     // "example.org." and "example.ORG.", case in-sensitive
     result = ls3.compare(ls5);
-    EXPECT_EQ(isc::dns::NameComparisonResult::EQUAL,
+    EXPECT_EQ(bundy::dns::NameComparisonResult::EQUAL,
               result.getRelation());
     EXPECT_EQ(0, result.getOrder());
     EXPECT_EQ(3, result.getCommonLabels());
@@ -221,7 +221,7 @@ TEST_F(LabelSequenceTest, compare) {
 
     // "a.example.org." and "b.example.org.", case in-sensitive
     result = lsa.compare(lsb);
-    EXPECT_EQ(isc::dns::NameComparisonResult::COMMONANCESTOR,
+    EXPECT_EQ(bundy::dns::NameComparisonResult::COMMONANCESTOR,
               result.getRelation());
     EXPECT_GT(0, result.getOrder());
     EXPECT_EQ(3, result.getCommonLabels());
@@ -229,7 +229,7 @@ TEST_F(LabelSequenceTest, compare) {
     // "example.org." and "b.example.org.", case in-sensitive
     lsa.stripLeft(1);
     result = lsa.compare(lsb);
-    EXPECT_EQ(isc::dns::NameComparisonResult::SUPERDOMAIN,
+    EXPECT_EQ(bundy::dns::NameComparisonResult::SUPERDOMAIN,
               result.getRelation());
     EXPECT_GT(0, result.getOrder());
     EXPECT_EQ(3, result.getCommonLabels());
@@ -241,13 +241,13 @@ TEST_F(LabelSequenceTest, compare) {
     // in-sensitive; the absolute one is always smaller.
     lsb.stripRight(1);
     result = lsc.compare(lsb);
-    EXPECT_EQ(isc::dns::NameComparisonResult::NONE, result.getRelation());
+    EXPECT_EQ(bundy::dns::NameComparisonResult::NONE, result.getRelation());
     EXPECT_GT(0, result.getOrder());
     EXPECT_EQ(0, result.getCommonLabels());
 
     // "g.f.e.d.c.example.org." and "example.org.", case in-sensitive
     result = lsc.compare(ls1);
-    EXPECT_EQ(isc::dns::NameComparisonResult::SUBDOMAIN,
+    EXPECT_EQ(bundy::dns::NameComparisonResult::SUBDOMAIN,
               result.getRelation());
     EXPECT_LT(0, result.getOrder());
     EXPECT_EQ(3, result.getCommonLabels());
@@ -255,7 +255,7 @@ TEST_F(LabelSequenceTest, compare) {
     // "e.d.c.example.org." and "example.org.", case in-sensitive
     lsc.stripLeft(2);
     result = lsc.compare(ls1);
-    EXPECT_EQ(isc::dns::NameComparisonResult::SUBDOMAIN,
+    EXPECT_EQ(bundy::dns::NameComparisonResult::SUBDOMAIN,
               result.getRelation());
     EXPECT_LT(0, result.getOrder());
     EXPECT_EQ(3, result.getCommonLabels());
@@ -263,7 +263,7 @@ TEST_F(LabelSequenceTest, compare) {
     // "example.org." and "example.org.", case in-sensitive
     lsc.stripLeft(3);
     result = lsc.compare(ls1);
-    EXPECT_EQ(isc::dns::NameComparisonResult::EQUAL,
+    EXPECT_EQ(bundy::dns::NameComparisonResult::EQUAL,
               result.getRelation());
     EXPECT_EQ(0, result.getOrder());
     EXPECT_EQ(3, result.getCommonLabels());
@@ -271,77 +271,77 @@ TEST_F(LabelSequenceTest, compare) {
     // "." and "example.org.", case in-sensitive
     lsc.stripLeft(2);
     result = lsc.compare(ls1);
-    EXPECT_EQ(isc::dns::NameComparisonResult::SUPERDOMAIN,
+    EXPECT_EQ(bundy::dns::NameComparisonResult::SUPERDOMAIN,
               result.getRelation());
     EXPECT_GT(0, result.getOrder());
     EXPECT_EQ(1, result.getCommonLabels());
 
-    Name nd("a.b.c.isc.example.org");
+    Name nd("a.b.c.bundy.example.org");
     LabelSequence lsd(nd);
-    Name ne("w.x.y.isc.EXAMPLE.org");
+    Name ne("w.x.y.bundy.EXAMPLE.org");
     LabelSequence lse(ne);
 
-    // "a.b.c.isc.example.org." and "w.x.y.isc.EXAMPLE.org.",
+    // "a.b.c.bundy.example.org." and "w.x.y.bundy.EXAMPLE.org.",
     // case sensitive
     result = lsd.compare(lse, true);
-    EXPECT_EQ(isc::dns::NameComparisonResult::COMMONANCESTOR,
+    EXPECT_EQ(bundy::dns::NameComparisonResult::COMMONANCESTOR,
               result.getRelation());
     EXPECT_LT(0, result.getOrder());
     EXPECT_EQ(2, result.getCommonLabels());
 
-    // "a.b.c.isc.example.org." and "w.x.y.isc.EXAMPLE.org.",
+    // "a.b.c.bundy.example.org." and "w.x.y.bundy.EXAMPLE.org.",
     // case in-sensitive
     result = lsd.compare(lse);
-    EXPECT_EQ(isc::dns::NameComparisonResult::COMMONANCESTOR,
+    EXPECT_EQ(bundy::dns::NameComparisonResult::COMMONANCESTOR,
               result.getRelation());
     EXPECT_GT(0, result.getOrder());
     EXPECT_EQ(4, result.getCommonLabels());
 
-    // "isc.example.org." and "isc.EXAMPLE.org.", case sensitive
+    // "bundy.example.org." and "bundy.EXAMPLE.org.", case sensitive
     lsd.stripLeft(3);
     lse.stripLeft(3);
     result = lsd.compare(lse, true);
-    EXPECT_EQ(isc::dns::NameComparisonResult::COMMONANCESTOR,
+    EXPECT_EQ(bundy::dns::NameComparisonResult::COMMONANCESTOR,
               result.getRelation());
     EXPECT_LT(0, result.getOrder());
     EXPECT_EQ(2, result.getCommonLabels());
 
-    // "isc.example.org." and "isc.EXAMPLE.org.", case in-sensitive
+    // "bundy.example.org." and "bundy.EXAMPLE.org.", case in-sensitive
     result = lsd.compare(lse);
-    EXPECT_EQ(isc::dns::NameComparisonResult::EQUAL,
+    EXPECT_EQ(bundy::dns::NameComparisonResult::EQUAL,
               result.getRelation());
     EXPECT_EQ(0, result.getOrder());
     EXPECT_EQ(4, result.getCommonLabels());
 
-    Name nf("a.b.c.isc.example.org");
+    Name nf("a.b.c.bundy.example.org");
     LabelSequence lsf(nf);
-    Name ng("w.x.y.isc.EXAMPLE.org");
+    Name ng("w.x.y.bundy.EXAMPLE.org");
     LabelSequence lsg(ng);
 
-    // lsf: "a.b.c.isc.example.org."
-    // lsg: "w.x.y.isc.EXAMPLE.org" (not absolute), case in-sensitive.
+    // lsf: "a.b.c.bundy.example.org."
+    // lsg: "w.x.y.bundy.EXAMPLE.org" (not absolute), case in-sensitive.
     // the absolute one is always smaller.
     lsg.stripRight(1);
     result = lsg.compare(lsf);  // lsg > lsf
-    EXPECT_EQ(isc::dns::NameComparisonResult::NONE, result.getRelation());
+    EXPECT_EQ(bundy::dns::NameComparisonResult::NONE, result.getRelation());
     EXPECT_LT(0, result.getOrder());
     EXPECT_EQ(0, result.getCommonLabels());
 
-    // "a.b.c.isc.example.org" (not absolute) and
-    // "w.x.y.isc.EXAMPLE.org" (not absolute), case in-sensitive
+    // "a.b.c.bundy.example.org" (not absolute) and
+    // "w.x.y.bundy.EXAMPLE.org" (not absolute), case in-sensitive
     lsf.stripRight(1);
     result = lsg.compare(lsf);
-    EXPECT_EQ(isc::dns::NameComparisonResult::COMMONANCESTOR,
+    EXPECT_EQ(bundy::dns::NameComparisonResult::COMMONANCESTOR,
               result.getRelation());
     EXPECT_LT(0, result.getOrder());
     EXPECT_EQ(3, result.getCommonLabels());
 
-    // "a.b.c.isc.example" (not absolute) and
-    // "w.x.y.isc.EXAMPLE" (not absolute), case in-sensitive
+    // "a.b.c.bundy.example" (not absolute) and
+    // "w.x.y.bundy.EXAMPLE" (not absolute), case in-sensitive
     lsf.stripRight(1);
     lsg.stripRight(1);
     result = lsg.compare(lsf);
-    EXPECT_EQ(isc::dns::NameComparisonResult::COMMONANCESTOR,
+    EXPECT_EQ(bundy::dns::NameComparisonResult::COMMONANCESTOR,
               result.getRelation());
     EXPECT_LT(0, result.getOrder());
     EXPECT_EQ(2, result.getCommonLabels());
@@ -352,7 +352,7 @@ TEST_F(LabelSequenceTest, compare) {
     lsf.stripRight(2);
     lsg.stripRight(2);
     result = lsf.compare(lsg);
-    EXPECT_EQ(isc::dns::NameComparisonResult::NONE, result.getRelation());
+    EXPECT_EQ(bundy::dns::NameComparisonResult::NONE, result.getRelation());
     EXPECT_GT(0, result.getOrder());
     EXPECT_EQ(0, result.getCommonLabels());
 
@@ -361,7 +361,7 @@ TEST_F(LabelSequenceTest, compare) {
     LabelSequence lsf2(nf2);
     lsf2.stripRight(1);
     result = lsf.compare(lsf2);
-    EXPECT_EQ(isc::dns::NameComparisonResult::NONE, result.getRelation());
+    EXPECT_EQ(bundy::dns::NameComparisonResult::NONE, result.getRelation());
     EXPECT_GT(0, result.getOrder());
     EXPECT_EQ(0, result.getCommonLabels());
 
@@ -375,7 +375,7 @@ TEST_F(LabelSequenceTest, compare) {
     lsh.stripRight(1);
     lsi.stripRight(1);
     result = lsh.compare(lsi);
-    EXPECT_EQ(isc::dns::NameComparisonResult::COMMONANCESTOR,
+    EXPECT_EQ(bundy::dns::NameComparisonResult::COMMONANCESTOR,
               result.getRelation());
     EXPECT_GT(0, result.getOrder());
     EXPECT_EQ(1, result.getCommonLabels());
@@ -386,7 +386,7 @@ TEST_F(LabelSequenceTest, compare) {
     lsh.stripRight(1);
     lsi.stripRight(1);
     result = lsh.compare(lsi);
-    EXPECT_EQ(isc::dns::NameComparisonResult::NONE, result.getRelation());
+    EXPECT_EQ(bundy::dns::NameComparisonResult::NONE, result.getRelation());
     EXPECT_GT(0, result.getOrder());
     EXPECT_EQ(0, result.getCommonLabels());
 
@@ -400,7 +400,7 @@ TEST_F(LabelSequenceTest, compare) {
     lsj.stripRight(1);
     lsk.stripRight(1);
     result = lsj.compare(lsk);
-    EXPECT_EQ(isc::dns::NameComparisonResult::EQUAL,
+    EXPECT_EQ(bundy::dns::NameComparisonResult::EQUAL,
               result.getRelation());
     EXPECT_EQ(0, result.getOrder());
     EXPECT_EQ(2, result.getCommonLabels());
@@ -410,7 +410,7 @@ TEST_F(LabelSequenceTest, compare) {
     lsj.stripRight(1);
     lsk.stripRight(1);
     result = lsj.compare(lsk);
-    EXPECT_EQ(isc::dns::NameComparisonResult::EQUAL,
+    EXPECT_EQ(bundy::dns::NameComparisonResult::EQUAL,
               result.getRelation());
     EXPECT_EQ(0, result.getOrder());
     EXPECT_EQ(1, result.getCommonLabels());
@@ -490,16 +490,16 @@ TEST_F(LabelSequenceTest, stripRight) {
 }
 
 TEST_F(LabelSequenceTest, stripOutOfRange) {
-    EXPECT_THROW(ls1.stripLeft(100), isc::OutOfRange);
-    EXPECT_THROW(ls1.stripLeft(5), isc::OutOfRange);
-    EXPECT_THROW(ls1.stripLeft(4), isc::OutOfRange);
-    EXPECT_THROW(ls1.stripLeft(3), isc::OutOfRange);
+    EXPECT_THROW(ls1.stripLeft(100), bundy::OutOfRange);
+    EXPECT_THROW(ls1.stripLeft(5), bundy::OutOfRange);
+    EXPECT_THROW(ls1.stripLeft(4), bundy::OutOfRange);
+    EXPECT_THROW(ls1.stripLeft(3), bundy::OutOfRange);
     getDataCheck("\007example\003org\000", 13, ls1);
 
-    EXPECT_THROW(ls1.stripRight(100), isc::OutOfRange);
-    EXPECT_THROW(ls1.stripRight(5), isc::OutOfRange);
-    EXPECT_THROW(ls1.stripRight(4), isc::OutOfRange);
-    EXPECT_THROW(ls1.stripRight(3), isc::OutOfRange);
+    EXPECT_THROW(ls1.stripRight(100), bundy::OutOfRange);
+    EXPECT_THROW(ls1.stripRight(5), bundy::OutOfRange);
+    EXPECT_THROW(ls1.stripRight(4), bundy::OutOfRange);
+    EXPECT_THROW(ls1.stripRight(3), bundy::OutOfRange);
     getDataCheck("\007example\003org\000", 13, ls1);
 }
 
@@ -586,7 +586,7 @@ TEST_F(LabelSequenceTest, toText) {
     EXPECT_EQ("foo.example.org", ls8.toText());
 
     EXPECT_EQ(".", ls7.toText());
-    EXPECT_THROW(ls7.stripLeft(1), isc::OutOfRange);
+    EXPECT_THROW(ls7.stripLeft(1), bundy::OutOfRange);
 
     Name n_long1("012345678901234567890123456789"
                  "012345678901234567890123456789012."
@@ -660,7 +660,7 @@ const char* const cn_servers[] = {
 const char* const ca_servers[] = {
     "k.ca-servers.ca", "e.ca-servers.ca", "a.ca-servers.ca", "z.ca-servers.ca",
     "tld.isc-sns.net", "c.ca-servers.ca", "j.ca-servers.ca", "l.ca-servers.ca",
-    "sns-pb.isc.org", "f.ca-servers.ca", NULL
+    "sns-pb.bundy.org", "f.ca-servers.ca", NULL
 };
 
 // A helper function used in the getHash test below.
@@ -792,7 +792,7 @@ TEST_F(LabelSequenceTest, serialize) {
         expected_data7.push_back(i * 2); // each label has length and 1 byte
     }
     // Copy wire data of the name
-    isc::util::OutputBuffer ob(0);
+    bundy::util::OutputBuffer ob(0);
     n_maxlabel.toWire(ob);
     expected_data7.insert(expected_data7.end(),
                           static_cast<const uint8_t*>(ob.getData()),
@@ -828,11 +828,11 @@ TEST_F(LabelSequenceTest, serialize) {
         // end of buffer would be the first byte of offsets: invalid.
         EXPECT_THROW(LabelSequence(bp + serialized_len).
                      serialize(bp + 2, serialized_len),
-                     isc::BadValue);
+                     bundy::BadValue);
         // begin of buffer would be the last byte of ndata: invalid.
         EXPECT_THROW(LabelSequence(bp + serialized_len).
                      serialize(bp + (2 * serialized_len) - 1, serialized_len),
-                     isc::BadValue);
+                     bundy::BadValue);
         // A boundary safe case: buffer is placed after the sequence data.
         // should cause no disruption.
         LabelSequence(bp + serialized_len).
@@ -845,7 +845,7 @@ TEST_F(LabelSequenceTest, serialize) {
     }
 
     EXPECT_THROW(ls1.serialize(labels_buf, ls1.getSerializedLength() - 1),
-                 isc::BadValue);
+                 bundy::BadValue);
 }
 
 #ifdef ENABLE_DEBUG
@@ -853,29 +853,29 @@ TEST_F(LabelSequenceTest, serialize) {
 // These checks are enabled only in debug mode in the LabelSequence
 // class.
 TEST_F(LabelSequenceTest, badDeserialize) {
-    EXPECT_THROW(LabelSequence(NULL), isc::BadValue);
+    EXPECT_THROW(LabelSequence(NULL), bundy::BadValue);
     const uint8_t zero_offsets[] = { 0 };
-    EXPECT_THROW(LabelSequence ls(zero_offsets), isc::BadValue);
+    EXPECT_THROW(LabelSequence ls(zero_offsets), bundy::BadValue);
     const uint8_t toomany_offsets[] = { Name::MAX_LABELS + 1 };
-    EXPECT_THROW(LabelSequence ls(toomany_offsets), isc::BadValue);
+    EXPECT_THROW(LabelSequence ls(toomany_offsets), bundy::BadValue);
 
     // (second) offset does not match actual label length
     const uint8_t offsets_wrongoffset[] = { 2, 0, 64, 1 };
-    EXPECT_THROW(LabelSequence ls(offsets_wrongoffset), isc::BadValue);
+    EXPECT_THROW(LabelSequence ls(offsets_wrongoffset), bundy::BadValue);
 
     // offset matches, but exceeds MAX_LABEL_LEN
     const uint8_t offsets_toolonglabel[] = { 2, 0, 64, 64 };
-    EXPECT_THROW(LabelSequence ls(offsets_toolonglabel), isc::BadValue);
+    EXPECT_THROW(LabelSequence ls(offsets_toolonglabel), bundy::BadValue);
 
     // Inconsistent data: an offset is lower than the previous offset
     const uint8_t offsets_lower[] = { 3, // # of offsets
                                       0, 2, 1, // offsets
                                       1, 'a', 1, 'b', 0};
-    EXPECT_THROW(LabelSequence ls(offsets_lower), isc::BadValue);
+    EXPECT_THROW(LabelSequence ls(offsets_lower), bundy::BadValue);
 
     // Inconsistent data: an offset is equal to the previous offset
     const uint8_t offsets_noincrease[] = { 2, 0, 0, 0, 0 };
-    EXPECT_THROW(LabelSequence ls(offsets_noincrease), isc::BadValue);
+    EXPECT_THROW(LabelSequence ls(offsets_noincrease), bundy::BadValue);
 }
 
 #endif
@@ -903,13 +903,13 @@ void stripLeftCheck(LabelSequence ls1, LabelSequence ls2, LabelSequence ls3) {
         check_equal(ls2, ls3);
 
         ls1.stripLeft(1);
-        check_compare(ls1, ls2, isc::dns::NameComparisonResult::SUPERDOMAIN,
+        check_compare(ls1, ls2, bundy::dns::NameComparisonResult::SUPERDOMAIN,
                       ls1.getLabelCount(), true, -1);
         check_equal(ls2, ls3);
 
         ls2.stripLeft(1);
         check_equal(ls1, ls2);
-        check_compare(ls2, ls3, isc::dns::NameComparisonResult::SUPERDOMAIN,
+        check_compare(ls2, ls3, bundy::dns::NameComparisonResult::SUPERDOMAIN,
                       ls1.getLabelCount(), true, -1);
 
         ls3.stripLeft(1);
@@ -924,13 +924,13 @@ void stripRightCheck(LabelSequence ls1, LabelSequence ls2, LabelSequence ls3) {
         check_equal(ls2, ls3);
 
         ls1.stripRight(1);
-        check_compare(ls1, ls2, isc::dns::NameComparisonResult::NONE, 0,
+        check_compare(ls1, ls2, bundy::dns::NameComparisonResult::NONE, 0,
                       false);
         check_equal(ls2, ls3);
 
         ls2.stripRight(1);
         check_equal(ls1, ls2);
-        check_compare(ls2, ls3, isc::dns::NameComparisonResult::NONE, 0,
+        check_compare(ls2, ls3, bundy::dns::NameComparisonResult::NONE, 0,
                       false);
 
         ls3.stripRight(1);
@@ -1038,7 +1038,7 @@ TEST_F(ExtendableLabelSequenceTest, extend) {
 
     LabelSequence els(ls2, buf);
 
-    check_compare(ls1, els, isc::dns::NameComparisonResult::COMMONANCESTOR, 1,
+    check_compare(ls1, els, bundy::dns::NameComparisonResult::COMMONANCESTOR, 1,
                   true, -4);
     els.extend(ls3, buf);
     EXPECT_TRUE(els.isAbsolute());
@@ -1056,7 +1056,7 @@ TEST_F(ExtendableLabelSequenceTest, extend) {
     // Extending again should make it different
     els.extend(ls3, buf);
     EXPECT_TRUE(els.isAbsolute());
-    check_compare(ls1, els, isc::dns::NameComparisonResult::COMMONANCESTOR, 2,
+    check_compare(ls1, els, bundy::dns::NameComparisonResult::COMMONANCESTOR, 2,
                   true, 4);
 
     // Extending with a non-absolute name should make it non-absolute as well
@@ -1145,7 +1145,7 @@ TEST_F(ExtendableLabelSequenceTest, extendWithRoot) {
     els.extend(LabelSequence(Name(".")), buf);
     EXPECT_TRUE(els.isAbsolute());
     check_equal(ls1, els);
-    check_compare(ls2, els, isc::dns::NameComparisonResult::NONE, 0, true, 3);
+    check_compare(ls2, els, bundy::dns::NameComparisonResult::NONE, 0, true, 3);
 }
 
 // Check possible failure modes of extend()
@@ -1155,7 +1155,7 @@ TEST_F(ExtendableLabelSequenceTest, extendBadData) {
     LabelSequence els(ls1, buf);
 
     // try use with unrelated labelsequence
-    EXPECT_THROW(ls1.extend(ls1, buf), isc::BadValue);
+    EXPECT_THROW(ls1.extend(ls1, buf), bundy::BadValue);
 
     // Create a long name, but so that we can still extend once
     Name longlabel("1234567890123456789012345678901234567890"
@@ -1181,7 +1181,7 @@ TEST_F(ExtendableLabelSequenceTest, extendBadData) {
     check_equal(full_ls, els);
 
     // But now, even the shortest extension should fail
-    EXPECT_THROW(els.extend(LabelSequence(Name("1")), buf), isc::BadValue);
+    EXPECT_THROW(els.extend(LabelSequence(Name("1")), buf), bundy::BadValue);
 
     // Check it hasn't been changed
     EXPECT_TRUE(els.isAbsolute());
@@ -1206,7 +1206,7 @@ TEST_F(ExtendableLabelSequenceTest, extendBadData) {
     EXPECT_TRUE(els.isAbsolute());
     check_equal(full_ls2, els);
 
-    EXPECT_THROW(els.extend(short_ls, buf), isc::BadValue);
+    EXPECT_THROW(els.extend(short_ls, buf), bundy::BadValue);
 
     EXPECT_TRUE(els.isAbsolute());
     check_equal(full_ls2, els);

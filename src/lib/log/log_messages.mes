@@ -20,7 +20,7 @@
 # the chicken-and-egg situation where we need the files to build the message
 # compiler, yet we need the compiler to build the files.
 
-$NAMESPACE isc::log
+$NAMESPACE bundy::log
 
 % LOG_BAD_DESTINATION unrecognized log destination: %1
 A logger destination value was given that was not recognized. The

@@ -15,12 +15,12 @@
 #ifndef VERSION_H
 #define VERSION_H
 
-namespace isc {
+namespace bundy {
 namespace badpacket {
 
 static const char* BADPACKET_VERSION = "1.0-1";
 
 } // namespace badpacket
-} // namespace isc
+} // namespace bundy
 
 #endif // VERSION_H

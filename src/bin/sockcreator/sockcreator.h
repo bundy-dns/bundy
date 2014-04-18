@@ -28,17 +28,17 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-namespace isc {
+namespace bundy {
 namespace socket_creator {
 
 // Exception classes - the base class exception SocketCreatorError is caught
 // by main() and holds an exit code returned to the environment.  The code
 // depends on the exact exception raised.
-class SocketCreatorError : public isc::Exception {
+class SocketCreatorError : public bundy::Exception {
 public:
     SocketCreatorError(const char* file, size_t line, const char* what,
                        int exit_code) :
-        isc::Exception(file, line, what), exit_code_(exit_code) {}
+        bundy::Exception(file, line, what), exit_code_(exit_code) {}
 
     int getExitCode() const {
         return (exit_code_);
@@ -133,10 +133,10 @@ typedef int (*send_fd_t)(const int, const int);
 /// \param close_fun The close function used to close sockets, coming from
 ///        unistd.h. It can be overriden in tests.
 ///
-/// \exception isc::socket_creator::ReadError Error reading from input
-/// \exception isc::socket_creator::WriteError Error writing to output
-/// \exception isc::socket_creator::ProtocolError Unrecognised command received
-/// \exception isc::socket_creator::InternalError Other error
+/// \exception bundy::socket_creator::ReadError Error reading from input
+/// \exception bundy::socket_creator::WriteError Error writing to output
+/// \exception bundy::socket_creator::ProtocolError Unrecognised command received
+/// \exception bundy::socket_creator::InternalError Other error
 void
 run(const int input_fd, const int output_fd, get_sock_t get_sock_fun,
     send_fd_t send_fd_fun, close_t close_fun);

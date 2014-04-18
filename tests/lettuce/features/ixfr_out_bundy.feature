@@ -1,7 +1,7 @@
 Feature: IXFR out
     Tests for IXFR-out, specific for BUNDY behaviour.
     These are (part of) the tests as described on
-    http://bundy.isc.org/wiki/IxfrSystemTests
+    http://bundy.bundy.org/wiki/IxfrSystemTests
 
     # A lot of these tests test specific UDP behaviour.
     #

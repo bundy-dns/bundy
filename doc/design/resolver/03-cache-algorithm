@@ -45,7 +45,7 @@ through controlled simulation.
 
 As a data point for these values, see a previous experimental results
 of mine:
-https://lists.isc.org/pipermail/bundy-dev/2012-July/003628.html
+https://lists.bundy.org/pipermail/bundy-dev/2012-July/003628.html
 
 Looking at the "ideal" server implementation (no protocol overhead)
 with the set up 90% and 85% cache hit rate with 1 recursion on cache
@@ -72,7 +72,7 @@ Of course, these experimental results are too simplified.  First, in
 these experiments we assumed only one external query is needed on
 cache miss.  In general it can be more; however, it may not actually
 be too optimistic either: in my another research result:
-http://bundy.isc.org/wiki/ResolverPerformanceResearch
+http://bundy.bundy.org/wiki/ResolverPerformanceResearch
 In the more detailed analysis using real query sample and tracing what
 an actual resolver would do, it looked we'd need about 1.44 to 1.63
 external queries per cache miss in average.

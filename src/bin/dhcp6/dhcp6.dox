@@ -17,9 +17,9 @@
 
  BUNDY offers DHCPv6 server implementation. It is implemented as
  bundy-dhcp6 component. Its primary code is located in
- isc::dhcp::Dhcpv6Srv class. It uses \ref libdhcp extensively,
- especially lib::dhcp::Pkt6, isc::dhcp::Option and
- isc::dhcp::IfaceMgr classes. Currently this code offers skeleton
+ bundy::dhcp::Dhcpv6Srv class. It uses \ref libdhcp extensively,
+ especially lib::dhcp::Pkt6, bundy::dhcp::Option and
+ bundy::dhcp::IfaceMgr classes. Currently this code offers skeleton
  functionality, i.e. it is able to receive and process incoming
  requests and trasmit responses. However, it does not have database
  management, so it returns only one, hardcoded lease to whoever asks
@@ -40,12 +40,12 @@
 
  bundy-dhcp6 component uses BUNDY cfgmgr for commands and configuration. During
  initial configuration (See \ref
- isc::dhcp::ControlledDhcpv6Srv::establishSession()), the configuration handler
- callback is installed (see isc::dhcp::ControlledDhcpv6Srv::dhcp6ConfigHandler().
+ bundy::dhcp::ControlledDhcpv6Srv::establishSession()), the configuration handler
+ callback is installed (see bundy::dhcp::ControlledDhcpv6Srv::dhcp6ConfigHandler().
  It is called every time there is a new configuration. In particular, it is
  called every time during daemon start process. It contains a
- isc::data::ConstElementPtr to a new configuration.  This simple handler calls
- \ref isc::dhcp::configureDhcp6Server() method that processes received configuration.
+ bundy::data::ConstElementPtr to a new configuration.  This simple handler calls
+ \ref bundy::dhcp::configureDhcp6Server() method that processes received configuration.
 
  This method iterates over list of received configuration elements and creates a
  list of parsers for each received entry. Parser is an object that is derived
@@ -106,8 +106,8 @@ to the client. The implementation of this feature is planned for the future rele
 
 The bundy-dhcp-ddns process is responsible for the actual communication with the DNS
 server, i.e. to send DNS Update messages. The bundy-dhcp6 module is responsible
-for generating so called @ref isc::dhcp_ddns::NameChangeRequest and sending it to the
-bundy-dhcp-ddns module. The @ref isc::dhcp_ddns::NameChangeRequest object represents changes to the
+for generating so called @ref bundy::dhcp_ddns::NameChangeRequest and sending it to the
+bundy-dhcp-ddns module. The @ref bundy::dhcp_ddns::NameChangeRequest object represents changes to the
 DNS bindings, related to acquisition, renewal or release of the lease. The bundy-dhcp6
 module implements the simple FIFO queue of the NameChangeRequest objects. The module
 logic, which processes the incoming DHCPv6 Client FQDN Options puts these requests
@@ -174,12 +174,12 @@ formats and set option values. A number of options formats have been defined
 for standard options in libdhcp++. However, the formats for vendor specific
 options are dynamically configured by the server's administrator and thus can't
 be stored in libdhcp++. Such option formats are stored in the
-@c isc::dhcp::CfgMgr. The libdhcp++ provides functions for recursive parsing
+@c bundy::dhcp::CfgMgr. The libdhcp++ provides functions for recursive parsing
 of options which may be encapsulated by other options up to the any level of
 encapsulation but these functions are unaware of the option formats defined
-in the @c isc::dhcp::CfgMgr because they belong to a different library.
-Therefore, the generic functions @c isc::dhcp::LibDHCP::unpackOptions4 and
-@c isc::dhcp::LibDHCP::unpackOptions6 are only useful to parse standard
+in the @c bundy::dhcp::CfgMgr because they belong to a different library.
+Therefore, the generic functions @c bundy::dhcp::LibDHCP::unpackOptions4 and
+@c bundy::dhcp::LibDHCP::unpackOptions6 are only useful to parse standard
 options which definitions are provided in the libdhcp++. In order to overcome
 this problem a callback mechanism has been implemented in @c Option and @c Pkt6
 classes. By installing a callback function on the instance of the @c Pkt6 the
@@ -197,7 +197,7 @@ Kea DHCPv6 server currently supports simplified client classification. It is cal
 of the vendor class (16) option. More flexible classification is planned, but there
 are no specific development dates agreed.
 
-For each incoming packet, @ref isc::dhcp::Dhcpv6Srv::classifyPacket() method is
+For each incoming packet, @ref bundy::dhcp::Dhcpv6Srv::classifyPacket() method is
 called.  It attempts to extract content of the vendor class option and interprets
 as a name of the class. Although the RFC3315 says that the vendor class may
 contain more than one chunk of data, the existing code handles only one data
@@ -210,16 +210,16 @@ In principle any given packet can belong to zero or more classes. As the current
 classifier is very modest, there's only one way to assign a class (based on vendor class
 option), the ability to assign more than one class to a packet is not yet exercised.
 Neverthless, there is such a possibility and it will be used in a near future. To
-check whether a packet belongs to given class, isc::dhcp::Pkt6::inClass method should
+check whether a packet belongs to given class, bundy::dhcp::Pkt6::inClass method should
 be used.
 
 Currently there is no class behaviour coded in DHCPv6, hence no v6 equivalent of
-@ref isc::dhcp::Dhcpv4Srv::classSpecificProcessing. Should any need for such a code arise,
+@ref bundy::dhcp::Dhcpv4Srv::classSpecificProcessing. Should any need for such a code arise,
 it will be conducted in an external hooks library.
 
 It is possible to define class restrictions in subnet, so a given subnet is only
-accessible to clients that belong to a given class. That is implemented as isc::dhcp::Pkt6::classes_
-being passed in isc::dhcp::Dhcpv6Srv::selectSubnet() to isc::dhcp::CfgMgr::getSubnet6().
+accessible to clients that belong to a given class. That is implemented as bundy::dhcp::Pkt6::classes_
+being passed in bundy::dhcp::Dhcpv6Srv::selectSubnet() to bundy::dhcp::CfgMgr::getSubnet6().
 Currently this capability is usable, but the number of scenarios it supports is
 limited.
 

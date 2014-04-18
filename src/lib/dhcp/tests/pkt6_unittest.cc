@@ -37,9 +37,9 @@
 #include <arpa/inet.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::asiolink;
-using namespace isc::dhcp;
+using namespace bundy;
+using namespace bundy::asiolink;
+using namespace bundy::dhcp;
 using boost::scoped_ptr;
 
 namespace {
@@ -78,7 +78,7 @@ public:
     /// @return An offset to the first byte after last parsed option.
     size_t execute(const OptionBuffer& buf,
                    const std::string& option_space,
-                   isc::dhcp::OptionCollection& options,
+                   bundy::dhcp::OptionCollection& options,
                    size_t* relay_msg_offset,
                    size_t* relay_msg_len) {
         // Set the executed_ member to true to allow verification that the
@@ -263,7 +263,7 @@ Pkt6* capture2() {
 
     // Decode the hex string and store it in bin (which happens
     // to be OptionBuffer format)
-    isc::util::encode::decodeHex(hex_string, bin);
+    bundy::util::encode::decodeHex(hex_string, bin);
 
     Pkt6* pkt = new Pkt6(&bin[0], bin.size());
     pkt->setRemotePort(547);

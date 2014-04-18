@@ -24,7 +24,7 @@
 
 #include <boost/lexical_cast.hpp>
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 /// \brief Message Exception
@@ -33,7 +33,7 @@ namespace log {
 /// code and its arguments to be encapsulated in an exception and thrown
 /// up the stack.
 
-class MessageException : public isc::Exception {
+class MessageException : public bundy::Exception {
 public:
 
     /// \brief Constructor
@@ -45,7 +45,7 @@ public:
     /// \param lineno Line number on which error occurred (if > 0).
     MessageException(const char* file, size_t line, const char* what,
                      MessageID id, int lineno)
-        : isc::Exception(file, line, what), id_(id), lineno_(lineno)
+        : bundy::Exception(file, line, what), id_(id), lineno_(lineno)
     {
         if (lineno_ > 0) {
             args_.push_back(boost::lexical_cast<std::string>(lineno));
@@ -62,7 +62,7 @@ public:
     /// \param lineno Line number on which error occurred (if > 0).
     MessageException(const char* file, size_t line, const char* what,
                      MessageID id, const std::string& arg1, int lineno)
-        : isc::Exception(file, line, what), id_(id), lineno_(lineno)
+        : bundy::Exception(file, line, what), id_(id), lineno_(lineno)
     {
         if (lineno > 0) {
             args_.push_back(boost::lexical_cast<std::string>(lineno));
@@ -82,7 +82,7 @@ public:
     MessageException(const char* file, size_t line, const char *what,
                      MessageID id, const std::string& arg1,
                      const std::string& arg2, int lineno)
-        : isc::Exception(file, line, what), id_(id), lineno_(lineno)
+        : bundy::Exception(file, line, what), id_(id), lineno_(lineno)
     {
         if (lineno > 0) {
             args_.push_back(boost::lexical_cast<std::string>(lineno));
@@ -115,6 +115,6 @@ private:
 };
 
 } // namespace log
-} // namespace isc
+} // namespace bundy
 
 #endif // MESSAGE_EXCEPTION_H

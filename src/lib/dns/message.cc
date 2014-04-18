@@ -45,10 +45,10 @@
 
 using namespace std;
 using boost::lexical_cast;
-using namespace isc::dns::rdata;
-using namespace isc::util;
+using namespace bundy::dns::rdata;
+using namespace bundy::util;
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 namespace {
@@ -234,15 +234,15 @@ struct RenderSection {
 void
 MessageImpl::toWire(AbstractMessageRenderer& renderer, TSIGContext* tsig_ctx) {
     if (mode_ != Message::RENDER) {
-        isc_throw(InvalidMessageOperation,
+        bundy_throw(InvalidMessageOperation,
                   "Message rendering attempted in non render mode");
     }
     if (rcode_ == NULL) {
-        isc_throw(InvalidMessageOperation,
+        bundy_throw(InvalidMessageOperation,
                   "Message rendering attempted without Rcode set");
     }
     if (opcode_ == NULL) {
-        isc_throw(InvalidMessageOperation,
+        bundy_throw(InvalidMessageOperation,
                   "Message rendering attempted without Opcode set");
     }
 
@@ -263,7 +263,7 @@ MessageImpl::toWire(AbstractMessageRenderer& renderer, TSIGContext* tsig_ctx) {
 
     if (tsig_len > 0) {
         if (tsig_len > orig_msg_len_limit) {
-            isc_throw(InvalidParameter, "Failed to render DNS message: "
+            bundy_throw(InvalidParameter, "Failed to render DNS message: "
                       "too small limit for a TSIG (" <<
                       orig_msg_len_limit << ")");
         }
@@ -274,7 +274,7 @@ MessageImpl::toWire(AbstractMessageRenderer& renderer, TSIGContext* tsig_ctx) {
 
     // reserve room for the header
     if (renderer.getLengthLimit() < HEADERLEN) {
-        isc_throw(InvalidParameter, "Failed to render DNS message: "
+        bundy_throw(InvalidParameter, "Failed to render DNS message: "
                   "too small limit for a Header");
     }
     renderer.skip(HEADERLEN);
@@ -376,7 +376,7 @@ MessageImpl::toWire(AbstractMessageRenderer& renderer, TSIGContext* tsig_ctx) {
             tsig_ctx->sign(qid_, renderer.getData(),
                            renderer.getLength())->toWire(renderer);
         if (tsig_count != 1) {
-            isc_throw(Unexpected, "Failed to render a TSIG RR");
+            bundy_throw(Unexpected, "Failed to render a TSIG RR");
         }
 
         // update the ARCOUNT for the TSIG RR.  Note that for a sane DNS
@@ -396,7 +396,7 @@ Message::~Message() {
 bool
 Message::getHeaderFlag(const HeaderFlag flag) const {
     if (flag == 0 || (flag & ~HEADERFLAG_MASK) != 0) {
-        isc_throw(InvalidParameter,
+        bundy_throw(InvalidParameter,
                   "Message::getHeaderFlag:: Invalid flag is specified: " <<
                   flag);
     }
@@ -406,11 +406,11 @@ Message::getHeaderFlag(const HeaderFlag flag) const {
 void
 Message::setHeaderFlag(const HeaderFlag flag, const bool on) {
     if (impl_->mode_ != Message::RENDER) {
-        isc_throw(InvalidMessageOperation,
+        bundy_throw(InvalidMessageOperation,
                   "setHeaderFlag performed in non-render mode");
     }
     if (flag == 0 || (flag & ~HEADERFLAG_MASK) != 0) {
-        isc_throw(InvalidParameter,
+        bundy_throw(InvalidParameter,
                   "Message::getHeaderFlag:: Invalid flag is specified: " <<
                   flag);
     }
@@ -429,7 +429,7 @@ Message::getQid() const {
 void
 Message::setQid(qid_t qid) {
     if (impl_->mode_ != Message::RENDER) {
-        isc_throw(InvalidMessageOperation,
+        bundy_throw(InvalidMessageOperation,
                   "setQid performed in non-render mode");
     }
     impl_->qid_ = qid;
@@ -438,7 +438,7 @@ Message::setQid(qid_t qid) {
 const Rcode&
 Message::getRcode() const {
     if (impl_->rcode_ == NULL) {
-        isc_throw(InvalidMessageOperation, "getRcode attempted before set");
+        bundy_throw(InvalidMessageOperation, "getRcode attempted before set");
     }
     return (*impl_->rcode_);
 }
@@ -446,7 +446,7 @@ Message::getRcode() const {
 void
 Message::setRcode(const Rcode& rcode) {
     if (impl_->mode_ != Message::RENDER) {
-        isc_throw(InvalidMessageOperation,
+        bundy_throw(InvalidMessageOperation,
                   "setRcode performed in non-render mode");
     }
     impl_->setRcode(rcode);
@@ -455,7 +455,7 @@ Message::setRcode(const Rcode& rcode) {
 const Opcode&
 Message::getOpcode() const {
     if (impl_->opcode_ == NULL) {
-        isc_throw(InvalidMessageOperation, "getOpcode attempted before set");
+        bundy_throw(InvalidMessageOperation, "getOpcode attempted before set");
     }
     return (*impl_->opcode_);
 }
@@ -463,7 +463,7 @@ Message::getOpcode() const {
 void
 Message::setOpcode(const Opcode& opcode) {
     if (impl_->mode_ != Message::RENDER) {
-        isc_throw(InvalidMessageOperation,
+        bundy_throw(InvalidMessageOperation,
                   "setOpcode performed in non-render mode");
     }
     impl_->setOpcode(opcode);
@@ -477,7 +477,7 @@ Message::getEDNS() const {
 void
 Message::setEDNS(ConstEDNSPtr edns) {
     if (impl_->mode_ != Message::RENDER) {
-        isc_throw(InvalidMessageOperation,
+        bundy_throw(InvalidMessageOperation,
                   "setEDNS performed in non-render mode");
     }
     impl_->edns_ = edns;
@@ -486,7 +486,7 @@ Message::setEDNS(ConstEDNSPtr edns) {
 const TSIGRecord*
 Message::getTSIGRecord() const {
     if (impl_->mode_ != Message::PARSE) {
-        isc_throw(InvalidMessageOperation,
+        bundy_throw(InvalidMessageOperation,
                   "getTSIGRecord performed in non-parse mode");
     }
 
@@ -496,7 +496,7 @@ Message::getTSIGRecord() const {
 unsigned int
 Message::getRRCount(const Section section) const {
     if (static_cast<int>(section) >= MessageImpl::NUM_SECTIONS) {
-        isc_throw(OutOfRange, "Invalid message section: " << section);
+        bundy_throw(OutOfRange, "Invalid message section: " << section);
     }
     return (impl_->counts_[section]);
 }
@@ -504,15 +504,15 @@ Message::getRRCount(const Section section) const {
 void
 Message::addRRset(const Section section, RRsetPtr rrset) {
     if (!rrset) {
-        isc_throw(InvalidParameter,
+        bundy_throw(InvalidParameter,
                   "NULL RRset is given to Message::addRRset");
     }
     if (impl_->mode_ != Message::RENDER) {
-        isc_throw(InvalidMessageOperation,
+        bundy_throw(InvalidMessageOperation,
                   "addRRset performed in non-render mode");
     }
     if (static_cast<int>(section) >= MessageImpl::NUM_SECTIONS) {
-        isc_throw(OutOfRange, "Invalid message section: " << section);
+        bundy_throw(OutOfRange, "Invalid message section: " << section);
     }
 
     impl_->rrsets_[section].push_back(rrset);
@@ -525,7 +525,7 @@ Message::hasRRset(const Section section, const Name& name,
                   const RRClass& rrclass, const RRType& rrtype) const
 {
     if (static_cast<int>(section) >= MessageImpl::NUM_SECTIONS) {
-        isc_throw(OutOfRange, "Invalid message section: " << section);
+        bundy_throw(OutOfRange, "Invalid message section: " << section);
     }
 
     BOOST_FOREACH(ConstRRsetPtr r, impl_->rrsets_[section]) {
@@ -548,7 +548,7 @@ Message::hasRRset(const Section section, const RRsetPtr& rrset) const {
 bool
 Message::removeRRset(const Section section, RRsetIterator& iterator) {
     if (static_cast<int>(section) >= MessageImpl::NUM_SECTIONS) {
-        isc_throw(OutOfRange, "Invalid message section: " << section);
+        bundy_throw(OutOfRange, "Invalid message section: " << section);
     }
 
     bool removed = false;
@@ -573,11 +573,11 @@ Message::removeRRset(const Section section, RRsetIterator& iterator) {
 void
 Message::clearSection(const Section section) {
     if (impl_->mode_ != Message::RENDER) {
-        isc_throw(InvalidMessageOperation,
+        bundy_throw(InvalidMessageOperation,
                   "clearSection performed in non-render mode");
     }
     if (static_cast<int>(section) >= MessageImpl::NUM_SECTIONS) {
-        isc_throw(OutOfRange, "Invalid message section: " << section);
+        bundy_throw(OutOfRange, "Invalid message section: " << section);
     }
     if (section == Message::SECTION_QUESTION) {
         impl_->questions_.clear();
@@ -590,7 +590,7 @@ Message::clearSection(const Section section) {
 void
 Message::addQuestion(const QuestionPtr question) {
     if (impl_->mode_ != Message::RENDER) {
-        isc_throw(InvalidMessageOperation,
+        bundy_throw(InvalidMessageOperation,
                   "addQuestion performed in non-render mode");
     }
 
@@ -611,7 +611,7 @@ Message::toWire(AbstractMessageRenderer& renderer, TSIGContext* tsig_ctx) {
 void
 Message::parseHeader(InputBuffer& buffer) {
     if (impl_->mode_ != Message::PARSE) {
-        isc_throw(InvalidMessageOperation,
+        bundy_throw(InvalidMessageOperation,
                   "Message parse attempted in non parse mode");
     }
 
@@ -620,7 +620,7 @@ Message::parseHeader(InputBuffer& buffer) {
     }
 
     if ((buffer.getLength() - buffer.getPosition()) < HEADERLEN) {
-        isc_throw(MessageTooShort, "Malformed DNS message (short length): "
+        bundy_throw(MessageTooShort, "Malformed DNS message (short length): "
                   << buffer.getLength() - buffer.getPosition());
     }
 
@@ -640,7 +640,7 @@ Message::parseHeader(InputBuffer& buffer) {
 void
 Message::fromWire(InputBuffer& buffer, ParseOptions options) {
     if (impl_->mode_ != Message::PARSE) {
-        isc_throw(InvalidMessageOperation,
+        bundy_throw(InvalidMessageOperation,
                   "Message parse attempted in non parse mode");
     }
 
@@ -670,7 +670,7 @@ MessageImpl::parseQuestion(InputBuffer& buffer) {
 
         if ((buffer.getLength() - buffer.getPosition()) <
             2 * sizeof(uint16_t)) {
-            isc_throw(DNSMessageFORMERR, "Question section too short: " <<
+            bundy_throw(DNSMessageFORMERR, "Question section too short: " <<
                       (buffer.getLength() - buffer.getPosition()) << " bytes");
         }
         const RRType rrtype(buffer.readUint16());
@@ -747,7 +747,7 @@ MessageImpl::parseSection(const Message::Section section,
         // buffer must store at least RR TYPE, RR CLASS, TTL, and RDLEN.
         if ((buffer.getLength() - buffer.getPosition()) <
             3 * sizeof(uint16_t) + sizeof(uint32_t)) {
-            isc_throw(DNSMessageFORMERR, sectiontext[section] <<
+            bundy_throw(DNSMessageFORMERR, sectiontext[section] <<
                       " section too short: " <<
                       (buffer.getLength() - buffer.getPosition()) << " bytes");
         }
@@ -828,11 +828,11 @@ MessageImpl::addEDNS(Message::Section section,  const Name& name,
                      const RRTTL& ttl, const Rdata& rdata)
 {
     if (section != Message::SECTION_ADDITIONAL) {
-        isc_throw(DNSMessageFORMERR,
+        bundy_throw(DNSMessageFORMERR,
                   "EDNS OPT RR found in an invalid section");
     }
     if (edns_) {
-        isc_throw(DNSMessageFORMERR, "multiple EDNS OPT RR found");
+        bundy_throw(DNSMessageFORMERR, "multiple EDNS OPT RR found");
     }
 
     uint8_t extended_rcode;
@@ -848,14 +848,14 @@ MessageImpl::addTSIG(Message::Section section, unsigned int count,
                      const RRTTL& ttl, const Rdata& rdata)
 {
     if (section != Message::SECTION_ADDITIONAL) {
-        isc_throw(DNSMessageFORMERR,
+        bundy_throw(DNSMessageFORMERR,
                   "TSIG RR found in an invalid section");
     }
     if (count != counts_[section] - 1) {
-        isc_throw(DNSMessageFORMERR, "TSIG RR is not the last record");
+        bundy_throw(DNSMessageFORMERR, "TSIG RR is not the last record");
     }
     if (tsig_rr_) {
-        isc_throw(DNSMessageFORMERR, "multiple TSIG RRs found");
+        bundy_throw(DNSMessageFORMERR, "multiple TSIG RRs found");
     }
     tsig_rr_ = ConstTSIGRecordPtr(new TSIGRecord(name, rrclass,
                                                  ttl, rdata,
@@ -885,11 +885,11 @@ struct SectionFormatter {
 string
 Message::toText() const {
     if (impl_->rcode_ == NULL) {
-        isc_throw(InvalidMessageOperation,
+        bundy_throw(InvalidMessageOperation,
                   "Message::toText() attempted without Rcode set");
     }
     if (impl_->opcode_ == NULL) {
-        isc_throw(InvalidMessageOperation,
+        bundy_throw(InvalidMessageOperation,
                   "Message::toText() attempted without Opcode set");
     }
 
@@ -990,7 +990,7 @@ Message::clear(Mode mode) {
 void
 Message::appendSection(const Section section, const Message& source) {
     if (static_cast<int>(section) >= MessageImpl::NUM_SECTIONS) {
-        isc_throw(OutOfRange, "Invalid message section: " << section);
+        bundy_throw(OutOfRange, "Invalid message section: " << section);
     }
 
     if (section == SECTION_QUESTION) {
@@ -1011,7 +1011,7 @@ Message::appendSection(const Section section, const Message& source) {
 void
 Message::makeResponse() {
     if (impl_->mode_ != Message::PARSE) {
-        isc_throw(InvalidMessageOperation,
+        bundy_throw(InvalidMessageOperation,
                   "makeResponse() is performed in non-parse mode");
     }
 
@@ -1136,10 +1136,10 @@ Message::endQuestion() const {
 const SectionIterator<RRsetPtr>
 Message::beginSection(const Section section) const {
     if (static_cast<int>(section) >= MessageImpl::NUM_SECTIONS) {
-        isc_throw(OutOfRange, "Invalid message section: " << section);
+        bundy_throw(OutOfRange, "Invalid message section: " << section);
     }
     if (section == SECTION_QUESTION) {
-        isc_throw(InvalidMessageSection,
+        bundy_throw(InvalidMessageSection,
                   "RRset iterator is requested for question");
     }
 
@@ -1149,10 +1149,10 @@ Message::beginSection(const Section section) const {
 const SectionIterator<RRsetPtr>
 Message::endSection(const Section section) const {
     if (static_cast<int>(section) >= MessageImpl::NUM_SECTIONS) {
-        isc_throw(OutOfRange, "Invalid message section: " << section);
+        bundy_throw(OutOfRange, "Invalid message section: " << section);
     }
     if (section == SECTION_QUESTION) {
-        isc_throw(InvalidMessageSection,
+        bundy_throw(InvalidMessageSection,
                   "RRset iterator is requested for question");
     }
 
@@ -1164,4 +1164,4 @@ operator<<(ostream& os, const Message& message) {
     return (os << message.toText());
 }
 } // end of namespace dns
-} // end of namespace isc
+} // end of namespace bundy

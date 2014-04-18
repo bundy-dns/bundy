@@ -18,7 +18,7 @@
 
 #include <boost/foreach.hpp>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 namespace {
@@ -88,7 +88,7 @@ bool
 D2CfgMgr::matchForward(const std::string& fqdn, DdnsDomainPtr& domain) {
     if (fqdn.empty()) {
         // This is a programmatic error and should not happen.
-        isc_throw(D2CfgError, "matchForward passed an empty fqdn");
+        bundy_throw(D2CfgError, "matchForward passed an empty fqdn");
     }
 
     // Fetch the forward manager from the D2 context.
@@ -114,23 +114,23 @@ D2CfgMgr::reverseIpAddress(const std::string& address) {
     try {
         // Convert string address into an IOAddress and invoke the
         // appropriate reverse method.
-        isc::asiolink::IOAddress ioaddr(address);
+        bundy::asiolink::IOAddress ioaddr(address);
         if (ioaddr.isV4()) {
             return (reverseV4Address(ioaddr));
         }
 
         return (reverseV6Address(ioaddr));
 
-    } catch (const isc::Exception& ex) {
-        isc_throw(D2CfgError, "D2CfgMgr cannot reverse address: "
+    } catch (const bundy::Exception& ex) {
+        bundy_throw(D2CfgError, "D2CfgMgr cannot reverse address: "
                                << address << " : " << ex.what());
     }
 }
 
 std::string
-D2CfgMgr::reverseV4Address(const isc::asiolink::IOAddress& ioaddr) {
+D2CfgMgr::reverseV4Address(const bundy::asiolink::IOAddress& ioaddr) {
     if (!ioaddr.isV4()) {
-        isc_throw(D2CfgError, "D2CfgMgr address is not IPv4 address :"
+        bundy_throw(D2CfgError, "D2CfgMgr address is not IPv4 address :"
                   << ioaddr);
     }
 
@@ -158,14 +158,14 @@ D2CfgMgr::reverseV4Address(const isc::asiolink::IOAddress& ioaddr) {
 }
 
 std::string
-D2CfgMgr::reverseV6Address(const isc::asiolink::IOAddress& ioaddr) {
+D2CfgMgr::reverseV6Address(const bundy::asiolink::IOAddress& ioaddr) {
     if (!ioaddr.isV6()) {
-        isc_throw(D2CfgError, "D2Cfg address is not IPv6 address: " << ioaddr);
+        bundy_throw(D2CfgError, "D2Cfg address is not IPv6 address: " << ioaddr);
     }
 
     // Turn the address into a string of digits.
     const ByteAddress bytes = ioaddr.toBytes();
-    const std::string digits = isc::util::encode::encodeHex(bytes);
+    const std::string digits = bundy::util::encode::encodeHex(bytes);
 
     // Walk backwards through string outputting each digits and a dot.
     std::ostringstream stream;
@@ -188,19 +188,19 @@ D2CfgMgr::reverseV6Address(const isc::asiolink::IOAddress& ioaddr) {
 }
 
 
-isc::dhcp::ParserPtr
+bundy::dhcp::ParserPtr
 D2CfgMgr::createConfigParser(const std::string& config_id) {
     // Get D2 specific context.
     D2CfgContextPtr context = getD2CfgContext();
 
     // Create parser instance based on element_id.
-    isc::dhcp::DhcpConfigParser* parser = NULL;
+    bundy::dhcp::DhcpConfigParser* parser = NULL;
     if ((config_id == "interface")  ||
         (config_id == "ip_address")) {
-        parser = new isc::dhcp::StringParser(config_id,
+        parser = new bundy::dhcp::StringParser(config_id,
                                              context->getStringStorage());
     } else if (config_id == "port") {
-        parser = new isc::dhcp::Uint32Parser(config_id,
+        parser = new bundy::dhcp::Uint32Parser(config_id,
                                              context->getUint32Storage());
     } else if (config_id ==  "forward_ddns") {
         parser = new DdnsDomainListMgrParser("forward_mgr",
@@ -213,13 +213,13 @@ D2CfgMgr::createConfigParser(const std::string& config_id) {
     } else if (config_id ==  "tsig_keys") {
         parser = new TSIGKeyInfoListParser("tsig_key_list", context->getKeys());
     } else {
-        isc_throw(NotImplemented,
+        bundy_throw(NotImplemented,
                   "parser error: D2CfgMgr parameter not supported: "
                   << config_id);
     }
 
-    return (isc::dhcp::ParserPtr(parser));
+    return (bundy::dhcp::ParserPtr(parser));
 }
 
-}; // end of isc::dhcp namespace
-}; // end of isc namespace
+}; // end of bundy::dhcp namespace
+}; // end of bundy namespace

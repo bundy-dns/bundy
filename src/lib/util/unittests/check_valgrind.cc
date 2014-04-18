@@ -14,7 +14,7 @@
 
 #include <config.h>
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace unittests {
 
@@ -38,4 +38,4 @@ runningOnValgrind() {
 
 } // end of namespace unittests
 } // end of namespace util
-} // end of namespace isc
+} // end of namespace bundy

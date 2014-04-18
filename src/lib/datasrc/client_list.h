@@ -29,7 +29,7 @@
 #include <boost/scoped_ptr.hpp>
 #include <boost/noncopyable.hpp>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 
 class ZoneFinder;
@@ -115,10 +115,10 @@ public:
     ///     directly manage the segments. Other normal applications should
     ///     treat them as opaque identifiers.
     ///
-    /// \throw isc::InvalidOperation if called and state is SEGMENT_UNUSED.
+    /// \throw bundy::InvalidOperation if called and state is SEGMENT_UNUSED.
     const std::string& getSegmentType() const {
         if (getSegmentState() == SEGMENT_UNUSED) {
-            isc_throw(isc::InvalidOperation,
+            bundy_throw(bundy::InvalidOperation,
                       "No segment used, no type therefore.");
         }
         return (type_);
@@ -329,7 +329,7 @@ public:
     /// \brief Constructor
     ///
     /// \param rrclass For which class the list should work.
-    ConfigurableClientList(const isc::dns::RRClass& rrclass);
+    ConfigurableClientList(const bundy::dns::RRClass& rrclass);
 
     /// \brief Exception thrown when there's an error in configuration.
     class ConfigurationError : public Exception {
@@ -364,14 +364,14 @@ public:
     /// \throw NotImplemented if the auto-detection of list of zones is
     ///     needed.
     /// \throw Whatever is propagated from within the data source.
-    void configure(const isc::data::ConstElementPtr& configuration,
+    void configure(const bundy::data::ConstElementPtr& configuration,
                    bool allow_cache);
 
     /// \brief Returns the currently active configuration.
     ///
     /// In case configure was not called yet, it returns an empty
     /// list, which corresponds to the default content.
-    const isc::data::ConstElementPtr& getConfiguration() const {
+    const bundy::data::ConstElementPtr& getConfiguration() const {
         return (configuration_);
     }
 
@@ -389,7 +389,7 @@ public:
     bool resetMemorySegment
         (const std::string& datasrc_name,
          memory::ZoneTableSegment::MemorySegmentOpenMode mode,
-         isc::data::ConstElementPtr config_params);
+         bundy::data::ConstElementPtr config_params);
 
     /// \brief Convenience type shortcut
     typedef boost::shared_ptr<memory::ZoneWriter> ZoneWriterPtr;
@@ -565,10 +565,10 @@ private:
     /// to reuse it.
     void findInternal(MutableResult& result, const dns::Name& name,
                       bool want_exact_match, bool want_finder) const;
-    const isc::dns::RRClass rrclass_;
+    const bundy::dns::RRClass rrclass_;
 
     /// \brief Currently active configuration.
-    isc::data::ConstElementPtr configuration_;
+    bundy::data::ConstElementPtr configuration_;
 
     /// \brief The last set value of allow_cache.
     bool allow_cache_;
@@ -584,10 +584,10 @@ protected:
 
 /// \brief Shortcut typedef for maps of client_lists.
 typedef boost::shared_ptr<std::map<
-    isc::dns::RRClass, boost::shared_ptr<ConfigurableClientList> > >
+    bundy::dns::RRClass, boost::shared_ptr<ConfigurableClientList> > >
         ClientListMapPtr;
 
 } // namespace datasrc
-} // namespace isc
+} // namespace bundy
 
 #endif // DATASRC_CONTAINER_H

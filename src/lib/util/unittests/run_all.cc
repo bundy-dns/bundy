@@ -21,7 +21,7 @@
 #include <exceptions/exceptions.h>
 #include <util/unittests/run_all.h>
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace unittests {
 
@@ -63,11 +63,11 @@ run_all() {
     if (catch_exception) {
         try {
             ret = RUN_ALL_TESTS();
-        } catch (const isc::Exception& ex) {
+        } catch (const bundy::Exception& ex) {
             // Could output more information with typeid(), but there is no
             // guarantee that all compilers will support it without an explicit
             // flag on the command line.
-            std::cerr << "*** Exception derived from isc::exception thrown:\n"
+            std::cerr << "*** Exception derived from bundy::exception thrown:\n"
                       << "    file: " << ex.getFile() << "\n"
                       << "    line: " << ex.getLine() << "\n"
                       << "    what: " << ex.what() << std::endl;
@@ -92,4 +92,4 @@ run_all() {
 
 } // namespace unittests
 } // namespace util
-} // namespace isc
+} // namespace bundy

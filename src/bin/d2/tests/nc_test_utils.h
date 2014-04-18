@@ -23,7 +23,7 @@
 #include <asio/socket_base.hpp>
 #include <gtest/gtest.h>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 extern const char* TEST_DNS_SERVER_IP;
@@ -366,7 +366,7 @@ extern void addDomainServer(DdnsDomainPtr& domain, const std::string& name,
 /// @param len size (in bytes) of data
 extern std::string toHexText(const uint8_t* data, size_t len);
 
-}; // namespace isc::d2
-}; // namespace isc
+}; // namespace bundy::d2
+}; // namespace bundy
 
 #endif

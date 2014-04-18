@@ -22,9 +22,9 @@
 #include <sstream>
 
 using namespace std;
-using namespace isc::asiolink;
+using namespace bundy::asiolink;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 Pkt6::RelayInfo::RelayInfo()
@@ -131,7 +131,7 @@ OptionPtr Pkt6::getAnyRelayOption(uint16_t opt_type, RelaySearchOrder order) {
 
 OptionPtr Pkt6::getRelayOption(uint16_t opt_type, uint8_t relay_level) {
     if (relay_level >= relay_info_.size()) {
-        isc_throw(OutOfRange, "This message was relayed " << relay_info_.size() << " time(s)."
+        bundy_throw(OutOfRange, "This message was relayed " << relay_info_.size() << " time(s)."
                   << " There is no info about " << relay_level + 1 << " relay.");
     }
 
@@ -192,7 +192,7 @@ Pkt6::pack() {
         packTCP();
         break;
     default:
-        isc_throw(BadValue, "Invalid protocol specified (non-TCP, non-UDP)");
+        bundy_throw(BadValue, "Invalid protocol specified (non-TCP, non-UDP)");
     }
 }
 
@@ -220,9 +220,9 @@ Pkt6::packUDP() {
                 buffer_out_.writeUint8(relay->msg_type_);
                 buffer_out_.writeUint8(relay->hop_count_);
                 buffer_out_.writeData(&(relay->linkaddr_.toBytes()[0]),
-                                     isc::asiolink::V6ADDRESS_LEN);
+                                     bundy::asiolink::V6ADDRESS_LEN);
                 buffer_out_.writeData(&relay->peeraddr_.toBytes()[0],
-                                     isc::asiolink::V6ADDRESS_LEN);
+                                     bundy::asiolink::V6ADDRESS_LEN);
 
                 // store every option in this relay scope. Usually that will be
                 // only interface-id, but occasionally other options may be
@@ -257,14 +257,14 @@ Pkt6::packUDP() {
     }
     catch (const Exception& e) {
        // An exception is thrown and message will be written to Logger
-       isc_throw(InvalidOperation, e.what());
+       bundy_throw(InvalidOperation, e.what());
     }
 }
 
 void
 Pkt6::packTCP() {
     /// TODO Implement this function.
-    isc_throw(NotImplemented, "DHCPv6 over TCP (bulk leasequery and failover)"
+    bundy_throw(NotImplemented, "DHCPv6 over TCP (bulk leasequery and failover)"
               "not implemented yet.");
 }
 
@@ -276,7 +276,7 @@ Pkt6::unpack() {
     case TCP:
         return unpackTCP();
     default:
-        isc_throw(BadValue, "Invalid protocol specified (non-TCP, non-UDP)");
+        bundy_throw(BadValue, "Invalid protocol specified (non-TCP, non-UDP)");
     }
     return (false); // never happens
 }
@@ -365,9 +365,9 @@ Pkt6::unpackRelayMsg() {
         relay.msg_type_ = data_[offset++];
         relay.hop_count_ = data_[offset++];
         relay.linkaddr_ = IOAddress::fromBytes(AF_INET6, &data_[offset]);
-        offset += isc::asiolink::V6ADDRESS_LEN;
+        offset += bundy::asiolink::V6ADDRESS_LEN;
         relay.peeraddr_ = IOAddress::fromBytes(AF_INET6, &data_[offset]);
-        offset += isc::asiolink::V6ADDRESS_LEN;
+        offset += bundy::asiolink::V6ADDRESS_LEN;
         bufsize -= DHCPV6_RELAY_HDR_LEN; // 34 bytes (1+1+16+16)
 
         try {
@@ -390,7 +390,7 @@ Pkt6::unpackRelayMsg() {
             //relay.remote_id_ = options->getOption(D6O_REMOTE_ID);
 
             if (relay_msg_offset == 0 || relay_msg_len == 0) {
-                isc_throw(BadValue, "Mandatory relay-msg option missing");
+                bundy_throw(BadValue, "Mandatory relay-msg option missing");
             }
 
             // store relay information parsed so far
@@ -400,7 +400,7 @@ Pkt6::unpackRelayMsg() {
 
             if (relay_msg_len >= bufsize) {
                 // length of the relay_msg option extends beyond end of the message
-                isc_throw(Unexpected, "Relay-msg option is truncated.");
+                bundy_throw(Unexpected, "Relay-msg option is truncated.");
                 return false;
             }
             uint8_t inner_type = data_[offset + relay_msg_offset];
@@ -436,7 +436,7 @@ Pkt6::unpackRelayMsg() {
 void
 Pkt6::addRelayInfo(const RelayInfo& relay) {
     if (relay_info_.size() > 32) {
-        isc_throw(BadValue, "Massage cannot be encapsulated more than 32 times");
+        bundy_throw(BadValue, "Massage cannot be encapsulated more than 32 times");
     }
 
     /// @todo: Implement type checks here (e.g. we could receive relay-forw in relay-repl)
@@ -445,7 +445,7 @@ Pkt6::addRelayInfo(const RelayInfo& relay) {
 
 bool
 Pkt6::unpackTCP() {
-    isc_throw(Unexpected, "DHCPv6 over TCP (bulk leasequery and failover) "
+    bundy_throw(Unexpected, "DHCPv6 over TCP (bulk leasequery and failover) "
               "not implemented yet.");
 }
 
@@ -458,7 +458,7 @@ Pkt6::toText() {
         << "]:" << remote_port_ << endl;
     tmp << "msgtype=" << static_cast<int>(msg_type_) << ", transid=0x" <<
         hex << transid_ << dec << endl;
-    for (isc::dhcp::OptionCollection::iterator opt=options_.begin();
+    for (bundy::dhcp::OptionCollection::iterator opt=options_.begin();
          opt != options_.end();
          ++opt) {
         tmp << opt->second->toText() << std::endl;
@@ -468,16 +468,16 @@ Pkt6::toText() {
 
 OptionPtr
 Pkt6::getOption(uint16_t opt_type) {
-    isc::dhcp::OptionCollection::const_iterator x = options_.find(opt_type);
+    bundy::dhcp::OptionCollection::const_iterator x = options_.find(opt_type);
     if (x!=options_.end()) {
         return (*x).second;
     }
     return OptionPtr(); // NULL
 }
 
-isc::dhcp::OptionCollection
+bundy::dhcp::OptionCollection
 Pkt6::getOptions(uint16_t opt_type) {
-    isc::dhcp::OptionCollection found;
+    bundy::dhcp::OptionCollection found;
 
     for (OptionCollection::const_iterator x = options_.begin();
          x != options_.end(); ++x) {
@@ -495,7 +495,7 @@ Pkt6::addOption(const OptionPtr& opt) {
 
 bool
 Pkt6::delOption(uint16_t type) {
-    isc::dhcp::OptionCollection::iterator x = options_.find(type);
+    bundy::dhcp::OptionCollection::iterator x = options_.find(type);
     if (x!=options_.end()) {
         options_.erase(x);
         return (true); // delete successful
@@ -598,5 +598,5 @@ Pkt6::addClass(const std::string& client_class) {
     }
 }
 
-} // end of isc::dhcp namespace
-} // end of isc namespace
+} // end of bundy::dhcp namespace
+} // end of bundy namespace

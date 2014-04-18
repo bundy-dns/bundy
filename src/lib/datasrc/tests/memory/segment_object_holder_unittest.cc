@@ -25,9 +25,9 @@
 
 #include <gtest/gtest.h>
 
-using namespace isc::util;
-using namespace isc::datasrc::memory;
-using namespace isc::datasrc::memory::detail;
+using namespace bundy::util;
+using namespace bundy::datasrc::memory;
+using namespace bundy::datasrc::memory::detail;
 
 namespace {
 const int TEST_ARG_VAL = 42;    // arbitrary chosen magic number
@@ -108,7 +108,7 @@ allocateUntilGrows(MemorySegment& segment, size_t& current_size) {
 // SegmentGrown exception and the thing moves address
 TEST(SegmentObjectHolderTest, grow) {
     MemorySegmentMapped segment(mapped_file,
-                                isc::util::MemorySegmentMapped::CREATE_ONLY);
+                                bundy::util::MemorySegmentMapped::CREATE_ONLY);
     // Allocate a bit of memory, to get a unique address
     void* mark = segment.allocate(1);
     segment.setNamedAddress("mark", mark);

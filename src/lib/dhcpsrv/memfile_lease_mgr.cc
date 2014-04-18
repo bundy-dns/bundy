@@ -19,7 +19,7 @@
 
 #include <iostream>
 
-using namespace isc::dhcp;
+using namespace bundy::dhcp;
 
 Memfile_LeaseMgr::Memfile_LeaseMgr(const ParameterMap& parameters)
     : LeaseMgr(parameters) {
@@ -104,7 +104,7 @@ Memfile_LeaseMgr::addLease(const Lease6Ptr& lease) {
 }
 
 Lease4Ptr
-Memfile_LeaseMgr::getLease4(const isc::asiolink::IOAddress& addr) const {
+Memfile_LeaseMgr::getLease4(const bundy::asiolink::IOAddress& addr) const {
     LOG_DEBUG(dhcpsrv_logger, DHCPSRV_DBG_TRACE_DETAIL,
               DHCPSRV_MEMFILE_GET_ADDR4).arg(addr.toText());
 
@@ -236,7 +236,7 @@ Memfile_LeaseMgr::getLease4(const ClientId& client_id,
 
 Lease6Ptr
 Memfile_LeaseMgr::getLease6(Lease::Type /* not used yet */,
-                            const isc::asiolink::IOAddress& addr) const {
+                            const bundy::asiolink::IOAddress& addr) const {
     LOG_DEBUG(dhcpsrv_logger, DHCPSRV_DBG_TRACE_DETAIL,
               DHCPSRV_MEMFILE_GET_ADDR6).arg(addr.toText());
 
@@ -295,7 +295,7 @@ Memfile_LeaseMgr::updateLease4(const Lease4Ptr& lease) {
 
     Lease4Storage::iterator lease_it = storage4_.find(lease->addr_);
     if (lease_it == storage4_.end()) {
-        isc_throw(NoSuchLease, "failed to update the lease with address "
+        bundy_throw(NoSuchLease, "failed to update the lease with address "
                   << lease->addr_ << " - no such lease");
     }
 
@@ -316,7 +316,7 @@ Memfile_LeaseMgr::updateLease6(const Lease6Ptr& lease) {
 
     Lease6Storage::iterator lease_it = storage6_.find(lease->addr_);
     if (lease_it == storage6_.end()) {
-        isc_throw(NoSuchLease, "failed to update the lease with address "
+        bundy_throw(NoSuchLease, "failed to update the lease with address "
                   << lease->addr_ << " - no such lease");
     }
 
@@ -331,7 +331,7 @@ Memfile_LeaseMgr::updateLease6(const Lease6Ptr& lease) {
 }
 
 bool
-Memfile_LeaseMgr::deleteLease(const isc::asiolink::IOAddress& addr) {
+Memfile_LeaseMgr::deleteLease(const bundy::asiolink::IOAddress& addr) {
     LOG_DEBUG(dhcpsrv_logger, DHCPSRV_DBG_TRACE_DETAIL,
               DHCPSRV_MEMFILE_DELETE_ADDR).arg(addr.toText());
     if (addr.isV4()) {
@@ -441,7 +441,7 @@ Memfile_LeaseMgr::initLeaseFilePath(Universe u) {
         return ("");
 
     } else if (persist_val != "true") {
-        isc_throw(isc::BadValue, "invalid value 'persist="
+        bundy_throw(bundy::BadValue, "invalid value 'persist="
                   << persist_val << "'");
     }
 
@@ -476,7 +476,7 @@ Memfile_LeaseMgr::load4() {
         /// continue parsing but that would require some error counters to
         /// prevent endless loops. That is enhancement for later time.
         if (!lease_file4_->next(lease)) {
-            isc_throw(DbOperationError, "Failed to parse the DHCPv6 lease in"
+            bundy_throw(DbOperationError, "Failed to parse the DHCPv6 lease in"
                       " the lease file: " << lease_file4_->getReadMsg());
         }
         // If we got the lease, we update the internal container holding
@@ -537,7 +537,7 @@ Memfile_LeaseMgr::load6() {
         /// continue parsing but that would require some error counters to
         /// prevent endless loops. That is enhancement for later time.
         if (!lease_file6_->next(lease)) {
-            isc_throw(DbOperationError, "Failed to parse the DHCPv6 lease in"
+            bundy_throw(DbOperationError, "Failed to parse the DHCPv6 lease in"
                       " the lease file: " << lease_file6_->getReadMsg());
         }
         // If we got the lease, we update the internal container holding

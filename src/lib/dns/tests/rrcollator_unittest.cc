@@ -31,8 +31,8 @@
 #include <vector>
 
 using std::vector;
-using namespace isc::dns;
-using namespace isc::dns::rdata;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
 
 namespace {
 
@@ -42,7 +42,7 @@ void
 addRRset(const RRsetPtr& rrset, vector<ConstRRsetPtr>* to_append,
          const bool* do_throw) {
     if (*do_throw) {
-        isc_throw(isc::Unexpected, "faked failure");
+        bundy_throw(bundy::Unexpected, "faked failure");
     }
     to_append->push_back(rrset);
 }
@@ -188,7 +188,7 @@ TEST_F(RRCollatorTest, throwFromCallback) {
     // it throws.  The added TXT RR will be effectively lost.
     throw_from_callback_ = true;
     EXPECT_THROW(rr_callback_(origin_, rrclass_, RRType::TXT(), rrttl_,
-                              txt_rdata_), isc::Unexpected);
+                              txt_rdata_), bundy::Unexpected);
 
     // We'll only see the A RR.
     throw_from_callback_ = false;

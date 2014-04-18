@@ -34,10 +34,10 @@
 #include "address_request_callback.h"
 #include "nsas_log.h"
 
-using namespace isc::dns;
+using namespace bundy::dns;
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 
 // Constructor.
@@ -46,15 +46,15 @@ namespace nsas {
 // hash table, on the assumption that three elements is the longest linear
 // search we want to do when looking up names in the hash table.
 NameserverAddressStore::NameserverAddressStore(
-    boost::shared_ptr<isc::resolve::ResolverInterface> resolver,
+    boost::shared_ptr<bundy::resolve::ResolverInterface> resolver,
     uint32_t zonehashsize, uint32_t nshashsize) :
     zone_hash_(new HashTable<ZoneEntry>(new NsasEntryCompare<ZoneEntry>,
         zonehashsize)),
     nameserver_hash_(new HashTable<NameserverEntry>(
         new NsasEntryCompare<NameserverEntry>, nshashsize)),
-    zone_lru_(new isc::util::LruList<ZoneEntry>((3 * zonehashsize),
+    zone_lru_(new bundy::util::LruList<ZoneEntry>((3 * zonehashsize),
         new HashDeleter<ZoneEntry>(*zone_hash_))),
-    nameserver_lru_(new isc::util::LruList<NameserverEntry>((3 * nshashsize),
+    nameserver_lru_(new bundy::util::LruList<NameserverEntry>((3 * nshashsize),
         new HashDeleter<NameserverEntry>(*nameserver_hash_))),
     resolver_(resolver.get())
 { }
@@ -69,10 +69,10 @@ namespace {
  */
 boost::shared_ptr<ZoneEntry>
 newZone(
-    isc::resolve::ResolverInterface* resolver,
+    bundy::resolve::ResolverInterface* resolver,
     const string* zone, const RRClass* class_code,
     const boost::shared_ptr<HashTable<NameserverEntry> >* ns_hash,
-    const boost::shared_ptr<isc::util::LruList<NameserverEntry> >* ns_lru)
+    const boost::shared_ptr<bundy::util::LruList<NameserverEntry> >* ns_lru)
 {
     boost::shared_ptr<ZoneEntry> result(new ZoneEntry(resolver, *zone, *class_code,
         *ns_hash, *ns_lru));
@@ -117,4 +117,4 @@ NameserverAddressStore::cancel(const string& zone,
 }
 
 } // namespace nsas
-} // namespace isc
+} // namespace bundy

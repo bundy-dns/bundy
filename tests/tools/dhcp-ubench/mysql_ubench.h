@@ -29,7 +29,7 @@ public:
     /// to run MySQL engine on the same host as benchmark. Thus hostname
     /// is likely to be "localhost". Make sure that the selected database
     /// is already created and that it follows expected schema. See mysql.schema
-    /// and isc-dhcp-perf-guide.html for details.
+    /// and bundy-dhcp-perf-guide.html for details.
     ///
     /// Synchronous operation means using InnDB, async is MyISAM.
     ///

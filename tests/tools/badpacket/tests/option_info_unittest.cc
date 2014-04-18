@@ -18,7 +18,7 @@
 
 #include "../option_info.h"
 
-using namespace isc::badpacket;
+using namespace bundy::badpacket;
 
 
 // Test fixture class

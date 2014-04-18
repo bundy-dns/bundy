@@ -37,9 +37,9 @@
 #include <unistd.h>
 
 using std::vector;
-using namespace isc::bench;
-using namespace isc::datasrc::memory;
-using namespace isc::dns;
+using namespace bundy::bench;
+using namespace bundy::datasrc::memory;
+using namespace bundy::dns;
 
 namespace {
 // A simple benchmark just repeating rendering a given set of RRsets.
@@ -130,7 +130,7 @@ setRRset(vector<ConstRRsetPtr>* rrsets, ConstRRsetPtr rrset) {
 }
 
 void
-buildZone(isc::util::MemorySegmentLocal& mem_sgmt,
+buildZone(bundy::util::MemorySegmentLocal& mem_sgmt,
           ZoneData* zone_data, const vector<ConstRRsetPtr>& rrsets,
           vector<ConstRRsetPtr>& rrsets_build)
 {
@@ -199,7 +199,7 @@ main(int argc, char* argv[]) {
     // the same set of RRsets as TreeNodeRRsets in separate vectors.
     // This code below is not 100% exception safe (for simplicity), but at
     // least it shouldn't leak memory in normal cases.
-    isc::util::MemorySegmentLocal mem_sgmt;
+    bundy::util::MemorySegmentLocal mem_sgmt;
     ZoneData* zone_data = ZoneData::create(mem_sgmt, Name::ROOT_NAME());
     vector<ConstRRsetPtr> delegation_treenode_rrsets;
     buildZone(mem_sgmt, zone_data, delegation_rrsets,
@@ -210,7 +210,7 @@ main(int argc, char* argv[]) {
 
     // The benchmark test uses a message renderer.  Create it now and keep
     // using it throughout the test.
-    isc::util::OutputBuffer buffer(4096); // 4096 should be sufficiently large
+    bundy::util::OutputBuffer buffer(4096); // 4096 should be sufficiently large
     MessageRenderer renderer;
     renderer.setBuffer(&buffer);
 

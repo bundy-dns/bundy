@@ -28,8 +28,8 @@
 #include <string>
 #include <time.h>
 
-using namespace isc;
-using namespace isc::dhcp;
+using namespace bundy;
+using namespace bundy::dhcp;
 using namespace std;
 
 namespace {
@@ -169,7 +169,7 @@ TaggedStatement tagged_statements[] = {
 
 };
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief Auxiliary PostgreSQL exchange class
@@ -207,7 +207,7 @@ protected:
         try  {
             return (boost::lexical_cast<time_t>(db_time_val));
         } catch (const std::exception& ex) {
-            isc_throw(BadValue, "Database time value is invalid: "
+            bundy_throw(BadValue, "Database time value is invalid: "
                                 << db_time_val);
         }
     }
@@ -228,7 +228,7 @@ protected:
         case 'f':
             return (false);
         default:
-            isc_throw(BadValue, "Received " << value[0] << " as boolean. The "
+            bundy_throw(BadValue, "Received " << value[0] << " as boolean. The "
                       " only accepted values are 't', 'f' or ''");
         }
     }
@@ -280,7 +280,7 @@ public:
         // empty vector
         if (!lease_->hwaddr_.empty()) {
             if (lease->hwaddr_.size() > HWAddr::MAX_HWADDR_LEN) {
-                isc_throw(DbOperationError,
+                bundy_throw(DbOperationError,
                           "Hardware address length : "
                           << lease->hwaddr_.size()
                           << " exceeds maximum allowed of: "
@@ -475,7 +475,7 @@ public:
         istringstream tmp;
 
         addr6_ = addr6_str;
-        isc::asiolink::IOAddress addr(addr6_);
+        bundy::asiolink::IOAddress addr(addr6_);
 
         memcpy(duid_buffer_, duid_str, duid_length_);
 
@@ -527,7 +527,7 @@ public:
             break;
 
         default:
-            isc_throw(BadValue, "invalid lease type returned (" <<
+            bundy_throw(BadValue, "invalid lease type returned (" <<
                       lease_type_ << ") for lease with address " <<
                       addr6_ << ". Only 0, 1, or 2 are allowed.");
         }
@@ -605,7 +605,7 @@ void PgSqlLeaseMgr::prepareStatements() {
 
         if(PQresultStatus(r) != PGRES_COMMAND_OK) {
             PQclear(r);
-            isc_throw(DbOperationError,
+            bundy_throw(DbOperationError,
                       "unable to prepare PostgreSQL statement: "
                       << tagged_statements[i].text << ", reason: "
                       << PQerrorMessage(conn_));
@@ -651,12 +651,12 @@ PgSqlLeaseMgr::openDatabase() {
         dbconnparameters += " dbname = '" + sname + "'";
     } catch(...) {
         // No database name.  Throw a "NoDatabaseName" exception
-        isc_throw(NoDatabaseName, "must specify a name for the database");
+        bundy_throw(NoDatabaseName, "must specify a name for the database");
     }
 
     conn_ = PQconnectdb(dbconnparameters.c_str());
     if (conn_ == NULL) {
-        isc_throw(DbOpenError, "could not allocate connection object");
+        bundy_throw(DbOpenError, "could not allocate connection object");
     }
 
     if (PQstatus(conn_) != CONNECTION_OK) {
@@ -665,7 +665,7 @@ PgSqlLeaseMgr::openDatabase() {
         std::string error_message = PQerrorMessage(conn_);
         PQfinish(conn_);
         conn_ = NULL;
-        isc_throw(DbOpenError, error_message);
+        bundy_throw(DbOpenError, error_message);
     }
 }
 
@@ -695,7 +695,7 @@ PgSqlLeaseMgr::addLeaseCommon(StatementIndex stindex,
             return (false);
         }
 
-        isc_throw(DbOperationError, "unable to INSERT for " <<
+        bundy_throw(DbOperationError, "unable to INSERT for " <<
                   statements_[stindex].stmt_name << ", reason: " <<
                   errorMsg);
     }
@@ -746,7 +746,7 @@ void PgSqlLeaseMgr::getLeaseCollection(StatementIndex stindex,
     int lines = PQntuples(r);
     if (single && lines > 1) {
         PQclear(r);
-        isc_throw(MultipleRecords, "multiple records were found in the "
+        bundy_throw(MultipleRecords, "multiple records were found in the "
                       "database where only one was expected for query "
                       << statements_[stindex].stmt_name);
     }
@@ -797,7 +797,7 @@ PgSqlLeaseMgr::getLease(StatementIndex stindex, BindParams & params,
 }
 
 Lease4Ptr
-PgSqlLeaseMgr::getLease4(const isc::asiolink::IOAddress& addr) const {
+PgSqlLeaseMgr::getLease4(const bundy::asiolink::IOAddress& addr) const {
     LOG_DEBUG(dhcpsrv_logger, DHCPSRV_DBG_TRACE_DETAIL,
               DHCPSRV_PGSQL_GET_ADDR4).arg(addr.toText());
 
@@ -909,13 +909,13 @@ PgSqlLeaseMgr::getLease4(const ClientId&, const HWAddr&, SubnetID) const {
     /// searches for the lease using HW address or client identifier.
     /// It never uses both parameters in the same time. We need to
     /// consider if this function is needed at all.
-    isc_throw(NotImplemented, "The PgSqlLeaseMgr::getLease4 function was"
+    bundy_throw(NotImplemented, "The PgSqlLeaseMgr::getLease4 function was"
               " called, but it is not implemented");
 }
 
 Lease6Ptr
 PgSqlLeaseMgr::getLease6(Lease::Type lease_type,
-                         const isc::asiolink::IOAddress& addr) const {
+                         const bundy::asiolink::IOAddress& addr) const {
     LOG_DEBUG(dhcpsrv_logger, DHCPSRV_DBG_TRACE_DETAIL, DHCPSRV_PGSQL_GET_ADDR6)
               .arg(addr.toText()).arg(lease_type);
 
@@ -1034,13 +1034,13 @@ PgSqlLeaseMgr::updateLeaseCommon(StatementIndex stindex, BindParams & params,
 
     // If no rows affected, lease doesn't exist.
     if (affected_rows == 0) {
-        isc_throw(NoSuchLease, "unable to update lease for address " <<
+        bundy_throw(NoSuchLease, "unable to update lease for address " <<
                   lease->addr_.toText() << " as it does not exist");
     }
 
     // Should not happen - primary key constraint should only have selected
     // one row.
-    isc_throw(DbOperationError, "apparently updated more than one lease "
+    bundy_throw(DbOperationError, "apparently updated more than one lease "
                   "that had the address " << lease->addr_.toText());
 }
 
@@ -1098,7 +1098,7 @@ PgSqlLeaseMgr::deleteLeaseCommon(StatementIndex stindex, BindParams & params) {
 }
 
 bool
-PgSqlLeaseMgr::deleteLease(const isc::asiolink::IOAddress& addr) {
+PgSqlLeaseMgr::deleteLease(const bundy::asiolink::IOAddress& addr) {
     LOG_DEBUG(dhcpsrv_logger, DHCPSRV_DBG_TRACE_DETAIL,
               DHCPSRV_PGSQL_DELETE_ADDR).arg(addr.toText());
 
@@ -1133,7 +1133,7 @@ PgSqlLeaseMgr::checkStatementError(PGresult* r, StatementIndex index) const {
     if (s != PGRES_COMMAND_OK && s != PGRES_TUPLES_OK) {
         PQclear(r);
 
-        isc_throw(DbOperationError, "Statement exec faild:" << " for: " <<
+        bundy_throw(DbOperationError, "Statement exec faild:" << " for: " <<
                   statements_[index].stmt_name << ", reason: " <<
                   PQerrorMessage(conn_));
     }
@@ -1190,7 +1190,7 @@ PgSqlLeaseMgr::commit() {
     LOG_DEBUG(dhcpsrv_logger, DHCPSRV_DBG_TRACE_DETAIL, DHCPSRV_PGSQL_COMMIT);
     PGresult * r = PQexec(conn_, "COMMIT");
     if (PQresultStatus(r) != PGRES_COMMAND_OK) {
-        isc_throw(DbOperationError, "commit failed: " << PQerrorMessage(conn_));
+        bundy_throw(DbOperationError, "commit failed: " << PQerrorMessage(conn_));
     }
 
     PQclear(r);
@@ -1201,12 +1201,12 @@ PgSqlLeaseMgr::rollback() {
     LOG_DEBUG(dhcpsrv_logger, DHCPSRV_DBG_TRACE_DETAIL, DHCPSRV_PGSQL_ROLLBACK);
     PGresult * r = PQexec(conn_, "ROLLBACK");
     if (PQresultStatus(r) != PGRES_COMMAND_OK) {
-        isc_throw(DbOperationError, "rollback failed: "
+        bundy_throw(DbOperationError, "rollback failed: "
                                     << PQerrorMessage(conn_));
     }
 
     PQclear(r);
 }
 
-}; // end of isc::dhcp namespace
-}; // end of isc namespace
+}; // end of bundy::dhcp namespace
+}; // end of bundy namespace

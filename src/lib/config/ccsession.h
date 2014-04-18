@@ -26,14 +26,14 @@
 #include <list>
 #include <boost/function.hpp>
 
-namespace isc {
+namespace bundy {
 namespace config {
 
 ///
 /// \brief Creates a standard config/command level success answer message
 ///        (i.e. of the form { "result": [ 0 ] }
 /// \return Standard command/config success answer message
-isc::data::ConstElementPtr createAnswer();
+bundy::data::ConstElementPtr createAnswer();
 
 ///
 /// \brief Creates a standard config/command level answer message
@@ -45,8 +45,8 @@ isc::data::ConstElementPtr createAnswer();
 ///            Element type. For rcode == 1, this argument is mandatory,
 ///            and must be a StringElement containing an error description
 /// \return Standard command/config answer message
-isc::data::ConstElementPtr createAnswer(const int rcode,
-                                        isc::data::ConstElementPtr arg);
+bundy::data::ConstElementPtr createAnswer(const int rcode,
+                                        bundy::data::ConstElementPtr arg);
 
 ///
 /// \brief Creates a standard config/command level answer message
@@ -55,7 +55,7 @@ isc::data::ConstElementPtr createAnswer(const int rcode,
 /// \param rcode The return code (0 for success)
 /// \param arg A string to put into the StringElement argument
 /// \return Standard command/config answer message
-isc::data::ConstElementPtr createAnswer(const int rcode,
+bundy::data::ConstElementPtr createAnswer(const int rcode,
                                         const std::string& arg);
 
 ///
@@ -67,8 +67,8 @@ isc::data::ConstElementPtr createAnswer(const int rcode,
 /// \return The optional argument in the message, or an empty ElementPtr
 ///         if there was no argument. If rcode != 0, this contains a
 ///         StringElement with the error description.
-isc::data::ConstElementPtr parseAnswer(int &rcode,
-                                       isc::data::ConstElementPtr msg);
+bundy::data::ConstElementPtr parseAnswer(int &rcode,
+                                       bundy::data::ConstElementPtr msg);
 
 ///
 /// \brief Creates a standard config/command command message with no
@@ -76,7 +76,7 @@ isc::data::ConstElementPtr parseAnswer(int &rcode,
 /// 
 /// \param command The command string
 /// \return The created message
-isc::data::ConstElementPtr createCommand(const std::string& command);
+bundy::data::ConstElementPtr createCommand(const std::string& command);
 
 ///
 /// \brief Creates a standard config/command command message with the
@@ -86,8 +86,8 @@ isc::data::ConstElementPtr createCommand(const std::string& command);
 /// \param arg The optional argument for the command. This can be of 
 ///        any Element type, but it should conform to the .spec file.
 /// \return The created message
-isc::data::ConstElementPtr createCommand(const std::string& command,
-                                         isc::data::ConstElementPtr arg);
+bundy::data::ConstElementPtr createCommand(const std::string& command,
+                                         bundy::data::ConstElementPtr arg);
 
 ///
 /// \brief Parses the given command into a string containing the actual
@@ -123,8 +123,8 @@ isc::data::ConstElementPtr createCommand(const std::string& command,
 /// \param command The command message containing the command (as made
 ///        by createCommand()
 /// \return The command name
-std::string parseCommand(isc::data::ConstElementPtr& arg,
-                         isc::data::ConstElementPtr command);
+std::string parseCommand(bundy::data::ConstElementPtr& arg,
+                         bundy::data::ConstElementPtr command);
 
 
 ///
@@ -132,19 +132,19 @@ std::string parseCommand(isc::data::ConstElementPtr& arg,
 /// is there is a problem with one of the messages
 ///
 // todo: include types and called function in the exception
-class CCSessionError : public isc::Exception {
+class CCSessionError : public bundy::Exception {
 public:
     CCSessionError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 ///
 /// \brief This exception is thrown if the constructor fails
 ///
-class CCSessionInitError : public isc::Exception {
+class CCSessionInitError : public bundy::Exception {
 public:
     CCSessionInitError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// \brief Exception thrown when there's a problem with the remote call.
@@ -171,7 +171,7 @@ private:
 class RPCRecipientMissing: public RPCError {
 public:
     RPCRecipientMissing(const char* file, size_t line, const char* what) :
-        RPCError(file, line, what, isc::cc::CC_REPLY_NO_RECPT)
+        RPCError(file, line, what, bundy::cc::CC_REPLY_NO_RECPT)
     {}
 };
 
@@ -214,12 +214,12 @@ public:
      * module. Defaults to true.
      */
     ModuleCCSession(const std::string& spec_file_name,
-                    isc::cc::AbstractSession& session,
-                    isc::data::ConstElementPtr(*config_handler)(
-                        isc::data::ConstElementPtr new_config) = NULL,
-                    isc::data::ConstElementPtr(*command_handler)(
+                    bundy::cc::AbstractSession& session,
+                    bundy::data::ConstElementPtr(*config_handler)(
+                        bundy::data::ConstElementPtr new_config) = NULL,
+                    bundy::data::ConstElementPtr(*command_handler)(
                         const std::string& command,
-                        isc::data::ConstElementPtr args) = NULL,
+                        bundy::data::ConstElementPtr args) = NULL,
                     bool start_immediately = true,
                     bool handle_logging = true
                     );
@@ -269,8 +269,8 @@ public:
      * 100000 zones, where the whole list is passed every time a single
      * thing changes)
      */
-    void setConfigHandler(isc::data::ConstElementPtr(*config_handler)(
-                              isc::data::ConstElementPtr new_config))
+    void setConfigHandler(bundy::data::ConstElementPtr(*config_handler)(
+                              bundy::data::ConstElementPtr new_config))
     {
         config_handler_ = config_handler;
     }
@@ -285,9 +285,9 @@ public:
      *
      * This protocol is very likely to change.
      */
-    void setCommandHandler(isc::data::ConstElementPtr(*command_handler)(
+    void setCommandHandler(bundy::data::ConstElementPtr(*command_handler)(
                                const std::string& command,
-                               isc::data::ConstElementPtr args))
+                               bundy::data::ConstElementPtr args))
     {
         command_handler_ = command_handler;
     }
@@ -326,7 +326,7 @@ public:
      *         file
      */
     typedef boost::function<void(const std::string&,
-                                 isc::data::ConstElementPtr,
+                                 bundy::data::ConstElementPtr,
                                  const ConfigData&)> RemoteHandler;
     std::string addRemoteConfig(const std::string& spec_name,
                                 RemoteHandler handler = RemoteHandler(),
@@ -352,42 +352,42 @@ public:
      * \param identifier The identifier of the config value
      * \return The configuration setting at the given identifier
      */
-    isc::data::ConstElementPtr getRemoteConfigValue(
+    bundy::data::ConstElementPtr getRemoteConfigValue(
         const std::string& module_name,
         const std::string& identifier) const;
 
     /**
      * Send a message to the underlying CC session.
-     * This has the same interface as isc::cc::Session::group_sendmsg()
+     * This has the same interface as bundy::cc::Session::group_sendmsg()
      *
-     * \param msg see isc::cc::Session::group_sendmsg()
-     * \param group see isc::cc::Session::group_sendmsg()
-     * \param instance see isc::cc::Session::group_sendmsg()
-     * \param to see isc::cc::Session::group_sendmsg()
-     * \param want_answer see isc::cc::Session::group_sendmsg()
-     * \return see isc::cc::Session::group_sendmsg()
+     * \param msg see bundy::cc::Session::group_sendmsg()
+     * \param group see bundy::cc::Session::group_sendmsg()
+     * \param instance see bundy::cc::Session::group_sendmsg()
+     * \param to see bundy::cc::Session::group_sendmsg()
+     * \param want_answer see bundy::cc::Session::group_sendmsg()
+     * \return see bundy::cc::Session::group_sendmsg()
      */
-    int groupSendMsg(isc::data::ConstElementPtr msg,
+    int groupSendMsg(bundy::data::ConstElementPtr msg,
                      std::string group,
-                     std::string instance = isc::cc::CC_INSTANCE_WILDCARD,
-                     std::string to = isc::cc::CC_TO_WILDCARD,
+                     std::string instance = bundy::cc::CC_INSTANCE_WILDCARD,
+                     std::string to = bundy::cc::CC_TO_WILDCARD,
                      bool want_answer = false) {
         return (session_.group_sendmsg(msg, group, instance, to, want_answer));
     };
 
     /// \brief Receive a message from the underlying CC session.
-    /// This has the same interface as isc::cc::Session::group_recvmsg()
+    /// This has the same interface as bundy::cc::Session::group_recvmsg()
     ///
     /// NOTE: until #2804 is resolved this method wouldn't work except in
     /// very limited cases; don't try to use it until then.
     ///
-    /// \param envelope see isc::cc::Session::group_recvmsg()
-    /// \param msg see isc::cc::Session::group_recvmsg()
-    /// \param nonblock see isc::cc::Session::group_recvmsg()
-    /// \param seq see isc::cc::Session::group_recvmsg()
-    /// \return see isc::cc::Session::group_recvmsg()
-    bool groupRecvMsg(isc::data::ConstElementPtr& envelope,
-                      isc::data::ConstElementPtr& msg,
+    /// \param envelope see bundy::cc::Session::group_recvmsg()
+    /// \param msg see bundy::cc::Session::group_recvmsg()
+    /// \param nonblock see bundy::cc::Session::group_recvmsg()
+    /// \param seq see bundy::cc::Session::group_recvmsg()
+    /// \return see bundy::cc::Session::group_recvmsg()
+    bool groupRecvMsg(bundy::data::ConstElementPtr& envelope,
+                      bundy::data::ConstElementPtr& msg,
                       bool nonblock = true,
                       int seq = -1) {
         return (session_.group_recvmsg(envelope, msg, nonblock, seq));
@@ -415,15 +415,15 @@ public:
     /// \throw RPCRecipientMissing if the recipient doesn't exist.
     /// \throw CCSessionError if some lower-level error happens (eg.
     ///     the response was malformed).
-    isc::data::ConstElementPtr rpcCall(const std::string& command,
+    bundy::data::ConstElementPtr rpcCall(const std::string& command,
                                        const std::string& group,
                                        const std::string& instance =
-                                           isc::cc::CC_INSTANCE_WILDCARD,
+                                           bundy::cc::CC_INSTANCE_WILDCARD,
                                        const std::string& to =
-                                           isc::cc::CC_TO_WILDCARD,
-                                       const isc::data::ConstElementPtr&
+                                           bundy::cc::CC_TO_WILDCARD,
+                                       const bundy::data::ConstElementPtr&
                                            params =
-                                           isc::data::ConstElementPtr());
+                                           bundy::data::ConstElementPtr());
 
     /// \brief Send a notification to subscribed users
     ///
@@ -447,8 +447,8 @@ public:
     ///     map.
     void notify(const std::string& notification_group,
                 const std::string& name,
-                const isc::data::ConstElementPtr& params =
-                    isc::data::ConstElementPtr());
+                const bundy::data::ConstElementPtr& params =
+                    bundy::data::ConstElementPtr());
 
     /// \brief Convenience version of rpcCall
     ///
@@ -456,13 +456,13 @@ public:
     /// that the instance and to parameters are at their default. This
     /// allows to sending a command with parameters to a named module
     /// without long typing of the parameters.
-    isc::data::ConstElementPtr rpcCall(const std::string& command,
+    bundy::data::ConstElementPtr rpcCall(const std::string& command,
                                        const std::string& group,
-                                       const isc::data::ConstElementPtr&
+                                       const bundy::data::ConstElementPtr&
                                            params)
     {
-        return rpcCall(command, group, isc::cc::CC_INSTANCE_WILDCARD,
-                       isc::cc::CC_TO_WILDCARD, params);
+        return rpcCall(command, group, bundy::cc::CC_INSTANCE_WILDCARD,
+                       bundy::cc::CC_TO_WILDCARD, params);
     }
 
     /// \brief Forward declaration of internal data structure.
@@ -494,8 +494,8 @@ public:
     /// application. However, the ModuleCCSession internals will be in
     /// well-defined state after the call (both the callback and the message
     /// will be removed from the queues as already called).
-    typedef boost::function3<void, const isc::data::ConstElementPtr&,
-                             const isc::data::ConstElementPtr&,
+    typedef boost::function3<void, const bundy::data::ConstElementPtr&,
+                             const bundy::data::ConstElementPtr&,
                              const AsyncRecvRequestID&>
         AsyncRecvCallback;
 
@@ -630,14 +630,14 @@ public:
     ///
     /// Wrapper around the CCSession::subscribe.
     void subscribe(const std::string& group) {
-        session_.subscribe(group, isc::cc::CC_INSTANCE_WILDCARD);
+        session_.subscribe(group, bundy::cc::CC_INSTANCE_WILDCARD);
     }
 
     /// \brief Unsubscribe from a group.
     ///
     /// Wrapper around the CCSession::unsubscribe.
     void unsubscribe(const std::string& group) {
-        session_.unsubscribe(group, isc::cc::CC_INSTANCE_WILDCARD);
+        session_.unsubscribe(group, bundy::cc::CC_INSTANCE_WILDCARD);
     }
 
     /// \brief Callback type for unhandled commands
@@ -650,7 +650,7 @@ public:
     /// - The module it was aimed for (may be empty).
     /// - The parameters of the command.
     typedef boost::function<void (const std::string&, const std::string&,
-                                  const isc::data::ConstElementPtr&)>
+                                  const bundy::data::ConstElementPtr&)>
         UnhandledCallback;
 
     /// \brief Register a callback for messages sent to foreign modules.
@@ -693,34 +693,34 @@ private:
 
     bool started_;
     std::string module_name_;
-    isc::cc::AbstractSession& session_;
+    bundy::cc::AbstractSession& session_;
     ModuleSpec module_specification_;
     AsyncRecvRequests async_recv_requests_;
     SubscribedNotifications notifications_;
 
-    isc::data::ConstElementPtr handleConfigUpdate(
-        isc::data::ConstElementPtr new_config);
+    bundy::data::ConstElementPtr handleConfigUpdate(
+        bundy::data::ConstElementPtr new_config);
 
-    isc::data::ConstElementPtr checkConfigUpdateCommand(
+    bundy::data::ConstElementPtr checkConfigUpdateCommand(
         const std::string& target_module,
-        isc::data::ConstElementPtr arg);
+        bundy::data::ConstElementPtr arg);
 
-    isc::data::ConstElementPtr checkModuleCommand(
+    bundy::data::ConstElementPtr checkModuleCommand(
         const std::string& cmd_str,
         const std::string& target_module,
-        isc::data::ConstElementPtr arg) const;
+        bundy::data::ConstElementPtr arg) const;
 
-    isc::data::ConstElementPtr(*config_handler_)(
-        isc::data::ConstElementPtr new_config);
-    isc::data::ConstElementPtr(*command_handler_)(
+    bundy::data::ConstElementPtr(*config_handler_)(
+        bundy::data::ConstElementPtr new_config);
+    bundy::data::ConstElementPtr(*command_handler_)(
         const std::string& command,
-        isc::data::ConstElementPtr args);
+        bundy::data::ConstElementPtr args);
 
     std::map<std::string, ConfigData> remote_module_configs_;
     std::map<std::string, RemoteHandler> remote_module_handlers_;
 
     void updateRemoteConfig(const std::string& module_name,
-                            isc::data::ConstElementPtr new_config);
+                            bundy::data::ConstElementPtr new_config);
 
     ModuleSpec fetchRemoteSpec(const std::string& module, bool is_filename);
 
@@ -743,7 +743,7 @@ private:
 ///                    module.
 void
 default_logconfig_handler(const std::string& module_name,
-                          isc::data::ConstElementPtr new_config,
+                          bundy::data::ConstElementPtr new_config,
                           const ConfigData& config_data);
 
 
@@ -775,12 +775,12 @@ default_logconfig_handler(const std::string& module_name,
 /// \param loggers the original 'loggers' config list
 /// \return ListElement containing only loggers relevant for this
 ///         module, where * is replaced by the root logger name
-isc::data::ConstElementPtr
-getRelatedLoggers(isc::data::ConstElementPtr loggers);
+bundy::data::ConstElementPtr
+getRelatedLoggers(bundy::data::ConstElementPtr loggers);
 
 } // namespace config
 
-} // namespace isc
+} // namespace bundy
 #endif // CCSESSION_H
 
 // Local Variables:

@@ -19,7 +19,7 @@
 #include <log/macros.h>
 #include <dhcp4/dhcp4_messages.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// \brief DHCP4 Logging
@@ -54,9 +54,9 @@ const int DBG_DHCP4_DETAIL_DATA = DBGLVL_TRACE_DETAIL_DATA;
 /// a logger in each file, but we would want to define a common name to avoid
 /// spelling mistakes, so it is just one small step from there to define a
 /// module-common logger.
-extern isc::log::Logger dhcp4_logger;
+extern bundy::log::Logger dhcp4_logger;
 
 } // namespace dhcp4
-} // namespace isc
+} // namespace bundy
 
 #endif // DHCP4_LOG_H

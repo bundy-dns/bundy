@@ -18,10 +18,10 @@
 #include <dns/opcode.h>
 #include <dns/question.h>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
-using namespace isc::dns;
+using namespace bundy::dns;
 
 D2UpdateMessage::D2UpdateMessage(const Direction direction)
     : message_(direction == INBOUND ?
@@ -101,7 +101,7 @@ void
 D2UpdateMessage::addRRset(const UpdateMsgSection section,
                           const dns::RRsetPtr& rrset) {
     if (section == SECTION_ZONE) {
-        isc_throw(isc::BadValue, "unable to add RRset to the Zone section"
+        bundy_throw(bundy::BadValue, "unable to add RRset to the Zone section"
                   " of the DNS Update message, use setZone instead");
     }
     message_.addRRset(ddnsToDnsSection(section), rrset);
@@ -113,20 +113,20 @@ D2UpdateMessage::toWire(AbstractMessageRenderer& renderer) {
     // that this message will be sent as a request to the DNS.
     // Therefore, we expect that this message is a REQUEST.
     if (getQRFlag() != REQUEST) {
-        isc_throw(InvalidQRFlag, "QR flag must be cleared for the outgoing"
+        bundy_throw(InvalidQRFlag, "QR flag must be cleared for the outgoing"
                   " DNS Update message");
     }
     // According to RFC2136, the ZONE section may contain exactly one
     // record.
     if (getRRCount(SECTION_ZONE) != 1) {
-        isc_throw(InvalidZoneSection, "Zone section of the DNS Update message"
+        bundy_throw(InvalidZoneSection, "Zone section of the DNS Update message"
                   " must comprise exactly one record (RFC2136, section 2.3)");
     }
     message_.toWire(renderer);
 }
 
 void
-D2UpdateMessage::fromWire(isc::util::InputBuffer& buffer) {
+D2UpdateMessage::fromWire(bundy::util::InputBuffer& buffer) {
     // First, use the underlying dns::Message implementation to get the
     // contents of the DNS response message. Note that it may or may
     // not be the message that we are interested in, but needs to be
@@ -182,7 +182,7 @@ D2UpdateMessage::ddnsToDnsSection(const UpdateMsgSection section) {
     default:
         ;
     }
-    isc_throw(dns::InvalidMessageSection,
+    bundy_throw(dns::InvalidMessageSection,
               "unknown message section " << section);
 }
 
@@ -194,14 +194,14 @@ D2UpdateMessage::validateResponse() const {
     // stop further processing, because it is likely that the message was
     // directed to someone else.
     if (message_.getOpcode() != Opcode::UPDATE()) {
-        isc_throw(NotUpdateMessage, "received message is not a DDNS update,"
+        bundy_throw(NotUpdateMessage, "received message is not a DDNS update,"
                   << " received message code is "
                   << message_.getOpcode().getCode());
     }
     // Received message should have QR flag set, which indicates that it is
     // a RESPONSE.
     if (getQRFlag() == REQUEST) {
-        isc_throw(InvalidQRFlag, "received message should have QR flag set,"
+        bundy_throw(InvalidQRFlag, "received message should have QR flag set,"
                   " to indicate that it is a RESPONSE message; the QR"
                   << " flag in received message is unset");
     }
@@ -210,12 +210,12 @@ D2UpdateMessage::validateResponse() const {
     // response message may contain 1 record at most. It may also contain no
     // records if a server chooses not to copy Zone section.
     if (getRRCount(SECTION_ZONE) > 1) {
-        isc_throw(InvalidZoneSection, "received message contains "
+        bundy_throw(InvalidZoneSection, "received message contains "
                   << getRRCount(SECTION_ZONE) << " Zone records,"
                   << " it should contain at most 1 record");
     }
 }
 
 } // namespace d2
-} // namespace isc
+} // namespace bundy
 

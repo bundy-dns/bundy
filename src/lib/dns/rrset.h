@@ -25,7 +25,7 @@
 #include <dns/rdata.h>
 #include <dns/rrtype.h>
 
-namespace isc {
+namespace bundy {
 namespace util {
 class OututBuffer;
 }
@@ -36,10 +36,10 @@ namespace dns {
 /// \brief A standard DNS module exception that is thrown if an RRset object
 /// does not contain any RDATA where required.
 ///
-class EmptyRRset : public isc::dns::Exception {
+class EmptyRRset : public bundy::dns::Exception {
 public:
     EmptyRRset(const char* file, size_t line, const char* what) :
-        isc::dns::Exception(file, line, what) {}
+        bundy::dns::Exception(file, line, what) {}
 };
 
 // forward declarations
@@ -332,7 +332,7 @@ public:
     ///
     /// \param buffer An output buffer to store the wire data.
     /// \return The number of RRs rendered.
-    virtual unsigned int toWire(isc::util::OutputBuffer& buffer) const = 0;
+    virtual unsigned int toWire(bundy::util::OutputBuffer& buffer) const = 0;
     //@}
 
     ///
@@ -742,7 +742,7 @@ public:
     ///
     /// This method simply uses the default implementation.
     /// See \c AbstractRRset::toWire(OutputBuffer&)const.
-    virtual unsigned int toWire(isc::util::OutputBuffer& buffer) const;
+    virtual unsigned int toWire(bundy::util::OutputBuffer& buffer) const;
     //@}
 
     ///
@@ -813,32 +813,32 @@ public:
     }
 
     virtual void addRRsig(const rdata::ConstRdataPtr&) {
-        isc_throw(NotImplemented,
+        bundy_throw(NotImplemented,
                   "BasicRRset does not implement the addRRsig() method");
     }
 
     virtual void addRRsig(const rdata::RdataPtr&) {
-        isc_throw(NotImplemented,
+        bundy_throw(NotImplemented,
                   "BasicRRset does not implement the addRRsig() method");
     }
 
     virtual void addRRsig(const AbstractRRset&) {
-        isc_throw(NotImplemented,
+        bundy_throw(NotImplemented,
                   "BasicRRset does not implement the addRRsig() method");
     }
 
     virtual void addRRsig(const ConstRRsetPtr&) {
-        isc_throw(NotImplemented,
+        bundy_throw(NotImplemented,
                   "BasicRRset does not implement the addRRsig() method");
     }
 
     virtual void addRRsig(const RRsetPtr&) {
-        isc_throw(NotImplemented,
+        bundy_throw(NotImplemented,
                   "BasicRRset does not implement the addRRsig() method");
     }
 
     virtual void removeRRsig() {
-        isc_throw(NotImplemented,
+        bundy_throw(NotImplemented,
                   "BasicRRset does not implement the removeRRsig() method");
     }
     //@}
@@ -874,7 +874,7 @@ public:
     /// \brief Render the RRset in the wire format without any compression.
     ///
     /// See \c AbstractRRset::toWire(OutputBuffer&)const.
-    virtual unsigned int toWire(isc::util::OutputBuffer& buffer) const;
+    virtual unsigned int toWire(bundy::util::OutputBuffer& buffer) const;
 
     /// \brief Updates the owner name of the \c RRset, including RRSIGs if any
     virtual void setTTL(const RRTTL& ttl) {
@@ -957,7 +957,7 @@ private:
 /// parameter \c os after the insertion operation.
 std::ostream& operator<<(std::ostream& os, const AbstractRRset& rrset);
 } // end of namespace dns
-} // end of namespace isc
+} // end of namespace bundy
 #endif  // RRSET_H
 
 // Local Variables: 

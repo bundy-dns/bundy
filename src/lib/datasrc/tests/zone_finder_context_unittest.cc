@@ -43,14 +43,14 @@
 
 using namespace std;
 
-using namespace isc::data;
-using namespace isc::util;
-using namespace isc::dns;
-using namespace isc::datasrc;
-using isc::data::Element;
-using isc::datasrc::memory::InMemoryClient;
-using isc::datasrc::memory::ZoneTableSegment;
-using namespace isc::testutils;
+using namespace bundy::data;
+using namespace bundy::util;
+using namespace bundy::dns;
+using namespace bundy::datasrc;
+using bundy::data::Element;
+using bundy::datasrc::memory::InMemoryClient;
+using bundy::datasrc::memory::ZoneTableSegment;
+using namespace bundy::testutils;
 
 namespace {
 

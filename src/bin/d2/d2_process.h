@@ -19,7 +19,7 @@
 #include <d2/d2_queue_mgr.h>
 #include <d2/d2_update_mgr.h>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 /// @brief DHCP-DDNS Application Process
@@ -139,8 +139,8 @@ public:
     /// @return an Element that contains the results of argument processing,
     /// consisting of an integer status value (0 means successful,
     /// non-zero means failure), and a string explanation of the outcome.
-    virtual isc::data::ConstElementPtr
-        shutdown(isc::data::ConstElementPtr args);
+    virtual bundy::data::ConstElementPtr
+        shutdown(bundy::data::ConstElementPtr args);
 
     /// @brief Processes the given configuration.
     ///
@@ -164,7 +164,7 @@ public:
     /// @return an Element that contains the results of configuration composed
     /// of an integer status value (0 means successful, non-zero means failure),
     /// and a string explanation of the outcome.
-    virtual isc::data::ConstElementPtr configure(isc::data::ConstElementPtr
+    virtual bundy::data::ConstElementPtr configure(bundy::data::ConstElementPtr
                                                  config_set);
 
     /// @brief Processes the given command.
@@ -179,8 +179,8 @@ public:
     /// @return an Element that contains the results of command composed
     /// of an integer status value (0 means successful, non-zero means failure),
     /// and a string explanation of the outcome.
-    virtual isc::data::ConstElementPtr command(const std::string& command,
-                                               isc::data::ConstElementPtr args);
+    virtual bundy::data::ConstElementPtr command(const std::string& command,
+                                               bundy::data::ConstElementPtr args);
     /// @brief Destructor
     virtual ~D2Process();
 
@@ -327,7 +327,7 @@ private:
 /// @brief Defines a shared pointer to D2Process.
 typedef boost::shared_ptr<D2Process> D2ProcessPtr;
 
-}; // namespace isc::d2
-}; // namespace isc
+}; // namespace bundy::d2
+}; // namespace bundy
 
 #endif

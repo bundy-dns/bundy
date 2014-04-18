@@ -25,9 +25,9 @@
 #include <vector>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dhcp_ddns;
-using namespace isc::d2;
+using namespace bundy;
+using namespace bundy::dhcp_ddns;
+using namespace bundy::d2;
 
 namespace {
 
@@ -83,14 +83,14 @@ TEST(D2QueueMgrBasicTest, construction1) {
     // Verify that constructing with null IOServicePtr is not allowed.
     EXPECT_THROW((D2QueueMgr(io_service)), D2QueueMgrError);
 
-    io_service.reset(new isc::asiolink::IOService());
+    io_service.reset(new bundy::asiolink::IOService());
     // Verify that constructing with max queue size of zero is not allowed.
     EXPECT_THROW(D2QueueMgr(io_service, 0), D2QueueMgrError);
 }
 
 /// @brief Tests default construction works.
 TEST(D2QueueMgrBasicTest, construction2) {
-    IOServicePtr io_service(new isc::asiolink::IOService());
+    IOServicePtr io_service(new bundy::asiolink::IOService());
 
     // Verify that valid constructor works.
     D2QueueMgrPtr queue_mgr;
@@ -101,7 +101,7 @@ TEST(D2QueueMgrBasicTest, construction2) {
 
 /// @brief Tests construction with custom queue size works properly
 TEST(D2QueueMgrBasicTest, construction3) {
-    IOServicePtr io_service(new isc::asiolink::IOService());
+    IOServicePtr io_service(new bundy::asiolink::IOService());
 
     // Verify that custom queue size constructor works.
     D2QueueMgrPtr queue_mgr;
@@ -118,7 +118,7 @@ TEST(D2QueueMgrBasicTest, construction3) {
 /// 4. Peek returns the first entry on the queue without altering queue content
 /// 5. Dequeue removes the first entry on the queue
 TEST(D2QueueMgrBasicTest, basicQueue) {
-    IOServicePtr io_service(new isc::asiolink::IOService());
+    IOServicePtr io_service(new bundy::asiolink::IOService());
 
     // Construct the manager with max queue size set to number of messages
     // we'll use.
@@ -212,16 +212,16 @@ class QueueMgrUDPTest : public virtual ::testing::Test,
 public:
     IOServicePtr io_service_;
     NameChangeSenderPtr   sender_;
-    isc::asiolink::IntervalTimer test_timer_;
+    bundy::asiolink::IntervalTimer test_timer_;
     D2QueueMgrPtr queue_mgr_;
 
     NameChangeSender::Result send_result_;
     std::vector<NameChangeRequestPtr> sent_ncrs_;
     std::vector<NameChangeRequestPtr> received_ncrs_;
 
-    QueueMgrUDPTest() : io_service_(new isc::asiolink::IOService()),
+    QueueMgrUDPTest() : io_service_(new bundy::asiolink::IOService()),
         test_timer_(*io_service_) {
-        isc::asiolink::IOAddress addr(TEST_ADDRESS);
+        bundy::asiolink::IOAddress addr(TEST_ADDRESS);
         // Create our sender instance. Note that reuse_address is true.
         sender_.reset(new NameChangeUDPSender(addr, SENDER_PORT,
                                               addr, LISTENER_PORT,
@@ -278,7 +278,7 @@ TEST_F (QueueMgrUDPTest, stateModel) {
     EXPECT_THROW(queue_mgr_->startListening(), D2QueueMgrError);
 
     // Verify that initializing the listener moves us to INITTED state.
-    isc::asiolink::IOAddress addr(TEST_ADDRESS);
+    bundy::asiolink::IOAddress addr(TEST_ADDRESS);
     EXPECT_NO_THROW(queue_mgr_->initUDPListener(addr, LISTENER_PORT,
                                               FMT_JSON, true));
     EXPECT_EQ(D2QueueMgr::INITTED, queue_mgr_->getMgrState());
@@ -351,7 +351,7 @@ TEST_F (QueueMgrUDPTest, liveFeed) {
     EXPECT_THROW(queue_mgr_->setMaxQueueSize(0), D2QueueMgrError);
     EXPECT_EQ(VALID_MSG_CNT, queue_mgr_->getMaxQueueSize());
 
-    isc::asiolink::IOAddress addr(TEST_ADDRESS);
+    bundy::asiolink::IOAddress addr(TEST_ADDRESS);
     ASSERT_NO_THROW(queue_mgr_->initUDPListener(addr, LISTENER_PORT,
                                               FMT_JSON, true));
     ASSERT_EQ(D2QueueMgr::INITTED, queue_mgr_->getMgrState());

@@ -19,13 +19,13 @@
 
 #include <util/buffer.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief Packet handling class using Linux Packet Filtering
 ///
 /// This class provides methods to send and recive DHCPv4 messages using raw
-/// sockets and Linux Packet Filtering. It is used by @c isc::dhcp::IfaceMgr
+/// sockets and Linux Packet Filtering. It is used by @c bundy::dhcp::IfaceMgr
 /// to send DHCPv4 messages to the hosts which don't have an IPv4 address
 /// assigned yet.
 class PktFilterLPF : public PktFilter {
@@ -50,7 +50,7 @@ public:
     ///
     /// @return A structure describing a primary and fallback socket.
     virtual SocketInfo openSocket(const Iface& iface,
-                                  const isc::asiolink::IOAddress& addr,
+                                  const bundy::asiolink::IOAddress& addr,
                                   const uint16_t port,
                                   const bool receive_bcast,
                                   const bool send_bcast);
@@ -60,7 +60,7 @@ public:
     /// @param iface interface
     /// @param socket_info structure holding socket information
     ///
-    /// @throw isc::NotImplemented always
+    /// @throw bundy::NotImplemented always
     /// @return Received packet
     virtual Pkt4Ptr receive(const Iface& iface, const SocketInfo& socket_info);
 
@@ -70,14 +70,14 @@ public:
     /// @param sockfd socket descriptor
     /// @param pkt packet to be sent
     ///
-    /// @throw isc::NotImplemented always
+    /// @throw bundy::NotImplemented always
     /// @return result of sending a packet. It is 0 if successful.
     virtual int send(const Iface& iface, uint16_t sockfd,
                      const Pkt4Ptr& pkt);
 
 };
 
-} // namespace isc::dhcp
-} // namespace isc
+} // namespace bundy::dhcp
+} // namespace bundy
 
 #endif // PKT_FILTER_LPF_H

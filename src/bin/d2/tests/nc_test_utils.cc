@@ -22,10 +22,10 @@
 #include <gtest/gtest.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::d2;
+using namespace bundy;
+using namespace bundy::d2;
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 const char* TEST_DNS_SERVER_IP = "127.0.0.1";
@@ -44,7 +44,7 @@ FauxServer::FauxServer(asiolink::IOService& io_service,
                                                    asio::ip::udp::v4()));
     server_socket_->set_option(asio::socket_base::reuse_address(true));
 
-    isc::asiolink::UDPEndpoint endpoint(address_, port_);
+    bundy::asiolink::UDPEndpoint endpoint(address_, port_);
     server_socket_->bind(endpoint.getASIOEndpoint());
 }
 
@@ -56,7 +56,7 @@ FauxServer::FauxServer(asiolink::IOService& io_service,
     server_socket_.reset(new asio::ip::udp::socket(io_service_.get_io_service(),
                                                    asio::ip::udp::v4()));
     server_socket_->set_option(asio::socket_base::reuse_address(true));
-    isc::asiolink::UDPEndpoint endpoint(address_, port_);
+    bundy::asiolink::UDPEndpoint endpoint(address_, port_);
     server_socket_->bind(endpoint.getASIOEndpoint());
 }
 
@@ -164,7 +164,7 @@ FauxServer::requestHandler(const asio::error_code& error,
 //********************** TimedIO class ***********************
 
 TimedIO::TimedIO()
-    : io_service_(new isc::asiolink::IOService()),
+    : io_service_(new bundy::asiolink::IOService()),
      timer_(*io_service_), run_time_(0) {
 }
 
@@ -712,5 +712,5 @@ std::string toHexText(const uint8_t* data, size_t len) {
     return (stream.str());
 }
 
-}; // namespace isc::d2
-}; // namespace isc
+}; // namespace bundy::d2
+}; // namespace bundy

@@ -19,19 +19,19 @@
 
 #include <sstream>
 
-using namespace isc::asiolink;
+using namespace bundy::asiolink;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 // This is an initial value of subnet-id. See comments in subnet.h for details.
 SubnetID Subnet::static_id_ = 1;
 
-Subnet::Subnet(const isc::asiolink::IOAddress& prefix, uint8_t len,
+Subnet::Subnet(const bundy::asiolink::IOAddress& prefix, uint8_t len,
                const Triplet<uint32_t>& t1,
                const Triplet<uint32_t>& t2,
                const Triplet<uint32_t>& valid_lifetime,
-               const isc::dhcp::Subnet::RelayInfo& relay,
+               const bundy::dhcp::Subnet::RelayInfo& relay,
                const SubnetID id)
     :id_(id == 0 ? generateNextID() : id), prefix_(prefix), prefix_len_(len),
      t1_(t1), t2_(t2), valid_(valid_lifetime),
@@ -41,17 +41,17 @@ Subnet::Subnet(const isc::asiolink::IOAddress& prefix, uint8_t len,
       {
     if ((prefix.isV6() && len > 128) ||
         (prefix.isV4() && len > 32)) {
-        isc_throw(BadValue,
+        bundy_throw(BadValue,
                   "Invalid prefix length specified for subnet: " << len);
     }
 }
 
-Subnet::RelayInfo::RelayInfo(const isc::asiolink::IOAddress& addr)
+Subnet::RelayInfo::RelayInfo(const bundy::asiolink::IOAddress& addr)
     :addr_(addr) {
 }
 
 bool
-Subnet::inRange(const isc::asiolink::IOAddress& addr) const {
+Subnet::inRange(const bundy::asiolink::IOAddress& addr) const {
     IOAddress first = firstAddrInPrefix(prefix_, prefix_len_);
     IOAddress last = lastAddrInPrefix(prefix_, prefix_len_);
 
@@ -63,7 +63,7 @@ Subnet::addOption(const OptionPtr& option, bool persistent,
                   const std::string& option_space) {
     // Check that the option space name is valid.
     if (!OptionSpace::validateName(option_space)) {
-        isc_throw(isc::BadValue, "invalid option space name: '"
+        bundy_throw(bundy::BadValue, "invalid option space name: '"
                   << option_space << "'");
     }
     validateOption(option);
@@ -73,12 +73,12 @@ Subnet::addOption(const OptionPtr& option, bool persistent,
 }
 
 void
-Subnet::setRelayInfo(const isc::dhcp::Subnet::RelayInfo& relay) {
+Subnet::setRelayInfo(const bundy::dhcp::Subnet::RelayInfo& relay) {
     relay_ = relay;
 }
 
 bool
-Subnet::clientSupported(const isc::dhcp::ClientClasses& classes) const {
+Subnet::clientSupported(const bundy::dhcp::ClientClasses& classes) const {
     if (white_list_.empty()) {
         return (true); // There is no class defined for this subnet, so we do
                        // support everyone.
@@ -95,7 +95,7 @@ Subnet::clientSupported(const isc::dhcp::ClientClasses& classes) const {
 }
 
 void
-Subnet::allowClientClass(const isc::dhcp::ClientClass& class_name) {
+Subnet::allowClientClass(const bundy::dhcp::ClientClass& class_name) {
     white_list_.insert(class_name);
 }
 
@@ -157,7 +157,7 @@ void Subnet::delVendorOptions() {
     vendor_option_spaces_.clearItems();
 }
 
-isc::asiolink::IOAddress Subnet::getLastAllocated(Lease::Type type) const {
+bundy::asiolink::IOAddress Subnet::getLastAllocated(Lease::Type type) const {
     // check if the type is valid (and throw if it isn't)
     checkType(type);
 
@@ -170,12 +170,12 @@ isc::asiolink::IOAddress Subnet::getLastAllocated(Lease::Type type) const {
     case Lease::TYPE_PD:
         return last_allocated_pd_;
     default:
-        isc_throw(BadValue, "Pool type " << type << " not supported");
+        bundy_throw(BadValue, "Pool type " << type << " not supported");
     }
 }
 
 void Subnet::setLastAllocated(Lease::Type type,
-                              const isc::asiolink::IOAddress& addr) {
+                              const bundy::asiolink::IOAddress& addr) {
 
     // check if the type is valid (and throw if it isn't)
     checkType(type);
@@ -192,7 +192,7 @@ void Subnet::setLastAllocated(Lease::Type type,
         last_allocated_pd_ = addr;
         return;
     default:
-        isc_throw(BadValue, "Pool type " << type << " not supported");
+        bundy_throw(BadValue, "Pool type " << type << " not supported");
     }
 }
 
@@ -205,11 +205,11 @@ Subnet::toText() const {
 
 void Subnet4::checkType(Lease::Type type) const {
     if (type != Lease::TYPE_V4) {
-        isc_throw(BadValue, "Only TYPE_V4 is allowed for Subnet4");
+        bundy_throw(BadValue, "Only TYPE_V4 is allowed for Subnet4");
     }
 }
 
-Subnet4::Subnet4(const isc::asiolink::IOAddress& prefix, uint8_t length,
+Subnet4::Subnet4(const bundy::asiolink::IOAddress& prefix, uint8_t length,
                  const Triplet<uint32_t>& t1,
                  const Triplet<uint32_t>& t2,
                  const Triplet<uint32_t>& valid_lifetime,
@@ -217,20 +217,20 @@ Subnet4::Subnet4(const isc::asiolink::IOAddress& prefix, uint8_t length,
 :Subnet(prefix, length, t1, t2, valid_lifetime,
         RelayInfo(IOAddress("0.0.0.0")), id), siaddr_(IOAddress("0.0.0.0")) {
     if (!prefix.isV4()) {
-        isc_throw(BadValue, "Non IPv4 prefix " << prefix.toText()
+        bundy_throw(BadValue, "Non IPv4 prefix " << prefix.toText()
                   << " specified in subnet4");
     }
 }
 
-void Subnet4::setSiaddr(const isc::asiolink::IOAddress& siaddr) {
+void Subnet4::setSiaddr(const bundy::asiolink::IOAddress& siaddr) {
     if (!siaddr.isV4()) {
-        isc_throw(BadValue, "Can't set siaddr to non-IPv4 address "
+        bundy_throw(BadValue, "Can't set siaddr to non-IPv4 address "
                   << siaddr);
     }
     siaddr_ = siaddr;
 }
 
-isc::asiolink::IOAddress Subnet4::getSiaddr() const {
+bundy::asiolink::IOAddress Subnet4::getSiaddr() const {
     return (siaddr_);
 }
 
@@ -247,7 +247,7 @@ const PoolCollection& Subnet::getPools(Lease::Type type) const {
     case Lease::TYPE_PD:
         return (pools_pd_);
     default:
-        isc_throw(BadValue, "Unsupported pool type: "
+        bundy_throw(BadValue, "Unsupported pool type: "
                   << static_cast<int>(type));
     }
 }
@@ -265,12 +265,12 @@ PoolCollection& Subnet::getPoolsWritable(Lease::Type type) {
     case Lease::TYPE_PD:
         return (pools_pd_);
     default:
-        isc_throw(BadValue, "Invalid pool type specified: "
+        bundy_throw(BadValue, "Invalid pool type specified: "
                   << static_cast<int>(type));
     }
 }
 
-const PoolPtr Subnet::getPool(Lease::Type type, const isc::asiolink::IOAddress& hint,
+const PoolPtr Subnet::getPool(Lease::Type type, const bundy::asiolink::IOAddress& hint,
                         bool anypool /* true */) const {
     // check if the type is valid (and throw if it isn't)
     checkType(type);
@@ -301,7 +301,7 @@ Subnet::addPool(const PoolPtr& pool) {
     IOAddress last_addr = pool->getLastAddress();
 
     if (!inRange(first_addr) || !inRange(last_addr)) {
-        isc_throw(BadValue, "Pool (" << first_addr << "-" << last_addr
+        bundy_throw(BadValue, "Pool (" << first_addr << "-" << last_addr
                   << " does not belong in this (" << prefix_ << "/"
                   << static_cast<int>(prefix_len_) << ") subnet");
     }
@@ -333,16 +333,16 @@ Subnet::getIface() const {
 void
 Subnet4::validateOption(const OptionPtr& option) const {
     if (!option) {
-        isc_throw(isc::BadValue,
+        bundy_throw(bundy::BadValue,
                   "option configured for subnet must not be NULL");
     } else if (option->getUniverse() != Option::V4) {
-        isc_throw(isc::BadValue,
+        bundy_throw(bundy::BadValue,
                   "expected V4 option to be added to the subnet");
     }
 }
 
 bool
-Subnet::inPool(Lease::Type type, const isc::asiolink::IOAddress& addr) const {
+Subnet::inPool(Lease::Type type, const bundy::asiolink::IOAddress& addr) const {
 
     // Let's start with checking if it even belongs to that subnet.
     if (!inRange(addr)) {
@@ -361,7 +361,7 @@ Subnet::inPool(Lease::Type type, const isc::asiolink::IOAddress& addr) const {
     return (false);
 }
 
-Subnet6::Subnet6(const isc::asiolink::IOAddress& prefix, uint8_t length,
+Subnet6::Subnet6(const bundy::asiolink::IOAddress& prefix, uint8_t length,
                  const Triplet<uint32_t>& t1,
                  const Triplet<uint32_t>& t2,
                  const Triplet<uint32_t>& preferred_lifetime,
@@ -370,7 +370,7 @@ Subnet6::Subnet6(const isc::asiolink::IOAddress& prefix, uint8_t length,
 :Subnet(prefix, length, t1, t2, valid_lifetime, RelayInfo(IOAddress("::")), id),
      preferred_(preferred_lifetime) {
     if (!prefix.isV6()) {
-        isc_throw(BadValue, "Non IPv6 prefix " << prefix
+        bundy_throw(BadValue, "Non IPv6 prefix " << prefix
                   << " specified in subnet6");
     }
 }
@@ -378,7 +378,7 @@ Subnet6::Subnet6(const isc::asiolink::IOAddress& prefix, uint8_t length,
 void Subnet6::checkType(Lease::Type type) const {
     if ( (type != Lease::TYPE_NA) && (type != Lease::TYPE_TA) &&
          (type != Lease::TYPE_PD)) {
-        isc_throw(BadValue, "Invalid Pool type: " << Lease::typeToText(type)
+        bundy_throw(BadValue, "Invalid Pool type: " << Lease::typeToText(type)
                   << "(" << static_cast<int>(type)
                   << "), must be TYPE_NA, TYPE_TA or TYPE_PD for Subnet6");
     }
@@ -387,13 +387,13 @@ void Subnet6::checkType(Lease::Type type) const {
 void
 Subnet6::validateOption(const OptionPtr& option) const {
     if (!option) {
-        isc_throw(isc::BadValue,
+        bundy_throw(bundy::BadValue,
                   "option configured for subnet must not be NULL");
     } else if (option->getUniverse() != Option::V6) {
-        isc_throw(isc::BadValue,
+        bundy_throw(bundy::BadValue,
                   "expected V6 option to be added to the subnet");
     }
 }
 
-} // end of isc::dhcp namespace
-} // end of isc namespace
+} // end of bundy::dhcp namespace
+} // end of bundy namespace

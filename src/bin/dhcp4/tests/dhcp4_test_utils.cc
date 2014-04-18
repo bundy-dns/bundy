@@ -30,10 +30,10 @@
 #include <dhcpsrv/lease_mgr_factory.h>
 
 using namespace std;
-using namespace isc::asiolink;
-using namespace isc::data;
+using namespace bundy::asiolink;
+using namespace bundy::data;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 namespace test {
 
@@ -569,6 +569,6 @@ Dhcpv4SrvTest::configure(const std::string& config) {
 }
 
 
-}; // end of isc::dhcp::test namespace
-}; // end of isc::dhcp namespace
-}; // end of isc namespace
+}; // end of bundy::dhcp::test namespace
+}; // end of bundy::dhcp namespace
+}; // end of bundy namespace

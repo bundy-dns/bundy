@@ -25,7 +25,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-using namespace isc::util::io;
+using namespace bundy::util::io;
 
 namespace {
 
@@ -34,7 +34,7 @@ void no_handler(int) { }
 
 };
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace unittests {
 

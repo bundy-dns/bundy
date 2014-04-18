@@ -23,7 +23,7 @@
 
 #include <dns/rdata.h>
 
-namespace isc {
+namespace bundy {
 namespace util {
 class OutputBuffer;
 }
@@ -158,7 +158,7 @@ public:
     /// The version number parameter can be omitted, in which case the highest
     /// supported version in this implementation will be assumed.
     /// When specified, if it is larger than the highest supported version,
-    /// an exception of class \c isc::InvalidParameter will be thrown.
+    /// an exception of class \c bundy::InvalidParameter will be thrown.
     ///
     /// This constructor throws no other exception.
     ///
@@ -193,7 +193,7 @@ public:
     /// \c name must be the root name ("."); otherwise, an exception of
     /// class \c DNSMessageFORMERR will be thrown.
     /// \c rrtype must specify the OPT RR type; otherwise, an exception of
-    /// class \c isc::InvalidParameter will be thrown.
+    /// class \c bundy::InvalidParameter will be thrown.
     /// The ENDS version number is extracted from \c rrttl.  If it is larger
     /// than the higher supported version, an exception of class
     /// \c DNSMessageBADVERS will be thrown.  Note that this is different from
@@ -323,7 +323,7 @@ public:
     /// except it renders the OPT RR in an \c OutputBuffer and therefore
     /// does not care about message size limit.
     /// As a consequence it always returns 1.
-    unsigned int toWire(isc::util::OutputBuffer& buffer,
+    unsigned int toWire(bundy::util::OutputBuffer& buffer,
                         const uint8_t extended_rcode) const;
 
     /// \brief Convert the EDNS to a string.

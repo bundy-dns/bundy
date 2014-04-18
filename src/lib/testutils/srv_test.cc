@@ -29,11 +29,11 @@
 
 #include <boost/scoped_ptr.hpp>
 
-using namespace isc::dns;
-using namespace isc::util;
-using namespace isc::asiolink;
+using namespace bundy::dns;
+using namespace bundy::util;
+using namespace bundy::asiolink;
 
-namespace isc {
+namespace bundy {
 namespace testutils {
 const char* const DEFAULT_REMOTE_ADDRESS = "192.0.2.1";
 const uint16_t DEFAULT_REMOTE_PORT = 53210;
@@ -89,18 +89,18 @@ SrvTestBase::unsupportedRequest() {
     for (unsigned int i = 0; i < 16; ++i) {
         // set Opcode to 'i', which iterators over all possible codes except
         // the standard opcodes we support.
-        if (i == isc::dns::Opcode::QUERY().getCode() ||
-            i == isc::dns::Opcode::NOTIFY().getCode() ||
-            i == isc::dns::Opcode::UPDATE().getCode()) {
+        if (i == bundy::dns::Opcode::QUERY().getCode() ||
+            i == bundy::dns::Opcode::NOTIFY().getCode() ||
+            i == bundy::dns::Opcode::UPDATE().getCode()) {
             continue;
         }
         createDataFromFile("simplequery_fromWire.wire");
         data[2] = ((i << 3) & 0xff);
 
-        parse_message->clear(isc::dns::Message::PARSE);
+        parse_message->clear(bundy::dns::Message::PARSE);
         processMessage();
         EXPECT_TRUE(dnsserv.hasAnswer());
-        headerCheck(*parse_message, default_qid, isc::dns::Rcode::NOTIMP(), i,
+        headerCheck(*parse_message, default_qid, bundy::dns::Rcode::NOTIMP(), i,
                     QR_FLAG, 0, 0, 0, 0);
     }
 }
@@ -111,17 +111,17 @@ SrvTestBase::multiQuestion() {
     createDataFromFile("multiquestion_fromWire.wire");
     processMessage();
     EXPECT_TRUE(dnsserv.hasAnswer());
-    headerCheck(*parse_message, default_qid, isc::dns::Rcode::FORMERR(),
+    headerCheck(*parse_message, default_qid, bundy::dns::Rcode::FORMERR(),
                 opcode.getCode(), QR_FLAG, 2, 0, 0, 0);
 
-    isc::dns::QuestionIterator qit = parse_message->beginQuestion();
-    EXPECT_EQ(isc::dns::Name("example.com"), (*qit)->getName());
-    EXPECT_EQ(isc::dns::RRClass::IN(), (*qit)->getClass());
-    EXPECT_EQ(isc::dns::RRType::A(), (*qit)->getType());
+    bundy::dns::QuestionIterator qit = parse_message->beginQuestion();
+    EXPECT_EQ(bundy::dns::Name("example.com"), (*qit)->getName());
+    EXPECT_EQ(bundy::dns::RRClass::IN(), (*qit)->getClass());
+    EXPECT_EQ(bundy::dns::RRType::A(), (*qit)->getType());
     ++qit;
-    EXPECT_EQ(isc::dns::Name("example.com"), (*qit)->getName());
-    EXPECT_EQ(isc::dns::RRClass::IN(), (*qit)->getClass());
-    EXPECT_EQ(isc::dns::RRType::AAAA(), (*qit)->getType());
+    EXPECT_EQ(bundy::dns::Name("example.com"), (*qit)->getName());
+    EXPECT_EQ(bundy::dns::RRClass::IN(), (*qit)->getClass());
+    EXPECT_EQ(bundy::dns::RRType::AAAA(), (*qit)->getType());
     ++qit;
     EXPECT_TRUE(qit == parse_message->endQuestion());
 }
@@ -164,7 +164,7 @@ SrvTestBase::shortQuestion() {
     EXPECT_TRUE(dnsserv.hasAnswer());
     // Since the query's question is broken, the question section of the
     // response should be empty.
-    headerCheck(*parse_message, default_qid, isc::dns::Rcode::FORMERR(),
+    headerCheck(*parse_message, default_qid, bundy::dns::Rcode::FORMERR(),
                 opcode.getCode(), QR_FLAG, 0, 0, 0, 0);
 }
 
@@ -177,13 +177,13 @@ SrvTestBase::shortAnswer() {
 
     // This is a bogus query, but question section is valid.  So the response
     // should copy the question section.
-    headerCheck(*parse_message, default_qid, isc::dns::Rcode::FORMERR(),
+    headerCheck(*parse_message, default_qid, bundy::dns::Rcode::FORMERR(),
                 opcode.getCode(), QR_FLAG, 1, 0, 0, 0);
 
-    isc::dns::QuestionIterator qit = parse_message->beginQuestion();
-    EXPECT_EQ(isc::dns::Name("example.com"), (*qit)->getName());
-    EXPECT_EQ(isc::dns::RRClass::IN(), (*qit)->getClass());
-    EXPECT_EQ(isc::dns::RRType::A(), (*qit)->getType());
+    bundy::dns::QuestionIterator qit = parse_message->beginQuestion();
+    EXPECT_EQ(bundy::dns::Name("example.com"), (*qit)->getName());
+    EXPECT_EQ(bundy::dns::RRClass::IN(), (*qit)->getClass());
+    EXPECT_EQ(bundy::dns::RRType::A(), (*qit)->getType());
     ++qit;
     EXPECT_TRUE(qit == parse_message->endQuestion());
 }
@@ -199,16 +199,16 @@ SrvTestBase::ednsBadVers() {
     // it will be added automatically at the render time.
     // Note that the DNSSEC DO bit is cleared even if this bit in the query
     // is set.  This is a limitation of the current implementation.
-    headerCheck(*parse_message, default_qid, isc::dns::Rcode::BADVERS(),
+    headerCheck(*parse_message, default_qid, bundy::dns::Rcode::BADVERS(),
                 opcode.getCode(), QR_FLAG, 1, 0, 0, 1);
     EXPECT_FALSE(parse_message->getEDNS()); // EDNS isn't added at this point
 
     InputBuffer ib(response_obuffer->getData(),
                              response_obuffer->getLength());
-    isc::dns::Message parsed(isc::dns::Message::PARSE);
+    bundy::dns::Message parsed(bundy::dns::Message::PARSE);
     parsed.fromWire(ib);
-    EXPECT_EQ(isc::dns::Rcode::BADVERS(), parsed.getRcode());
-    isc::dns::ConstEDNSPtr edns(parsed.getEDNS());
+    EXPECT_EQ(bundy::dns::Rcode::BADVERS(), parsed.getRcode());
+    bundy::dns::ConstEDNSPtr edns(parsed.getEDNS());
     ASSERT_TRUE(edns);
     EXPECT_FALSE(edns->getDNSSECAwareness());
 }
@@ -217,17 +217,17 @@ void
 SrvTestBase::axfrOverUDP() {
     // AXFR over UDP is invalid and should result in FORMERR.
     UnitTestUtil::createRequestMessage(request_message, opcode, default_qid,
-                                       isc::dns::Name("example.com"),
-                                       isc::dns::RRClass::IN(),
-                                       isc::dns::RRType::AXFR());
+                                       bundy::dns::Name("example.com"),
+                                       bundy::dns::RRClass::IN(),
+                                       bundy::dns::RRType::AXFR());
     createRequestPacket(request_message, IPPROTO_UDP);
     processMessage();
     EXPECT_TRUE(dnsserv.hasAnswer());
-    headerCheck(*parse_message, default_qid, isc::dns::Rcode::FORMERR(),
+    headerCheck(*parse_message, default_qid, bundy::dns::Rcode::FORMERR(),
                 opcode.getCode(), QR_FLAG, 1, 0, 0, 0);
 }
 } // end of namespace testutils
-} // end of namespace isc
+} // end of namespace bundy
 
 
 // Local Variables:

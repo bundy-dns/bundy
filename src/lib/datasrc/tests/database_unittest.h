@@ -30,7 +30,7 @@
 #include <string>
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace test {
 
@@ -271,7 +271,7 @@ void enableNSEC3Generic(DatabaseAccessor& accessor);
 
 } // namespace test
 } // namespace datasrc
-} // namespace isc
+} // namespace bundy
 
 // Local Variables:
 // mode: c++

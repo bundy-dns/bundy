@@ -33,16 +33,16 @@
 #include <vector>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::datasrc;
-using namespace isc::dns::rdata;
+using namespace bundy::dns;
+using namespace bundy::datasrc;
+using namespace bundy::dns::rdata;
 
-namespace isc {
+namespace bundy {
 namespace auth {
 
 void
-Query::ResponseCreator::addRRset(isc::dns::Message& message,
-                                 const isc::dns::Message::Section section,
+Query::ResponseCreator::addRRset(bundy::dns::Message& message,
+                                 const bundy::dns::Message::Section section,
                                  const ConstRRsetPtr& rrset)
 {
     /// Is this RRset already in the list of RRsets added to the message?
@@ -93,7 +93,7 @@ Query::addSOA(ZoneFinder& finder) {
     ZoneFinderContextPtr soa_ctx = finder.findAtOrigin(RRType::SOA(), true,
                                                        dnssec_opt_);
     if (soa_ctx->code != ZoneFinder::SUCCESS) {
-        isc_throw(NoSOA, "There's no SOA record in zone " <<
+        bundy_throw(NoSOA, "There's no SOA record in zone " <<
             finder.getOrigin().toText());
     } else {
         authorities_.push_back(soa_ctx->rrset);
@@ -111,7 +111,7 @@ Query::addSOA(ZoneFinder& finder) {
 void
 Query::addNXDOMAINProofByNSEC(ZoneFinder& finder, ConstRRsetPtr nsec) {
     if (nsec->getRdataCount() == 0) {
-        isc_throw(BadNSEC, "NSEC for NXDOMAIN is empty");
+        bundy_throw(BadNSEC, "NSEC for NXDOMAIN is empty");
     }
 
     // Add the NSEC proving NXDOMAIN to the authority section.
@@ -143,7 +143,7 @@ Query::addNXDOMAINProofByNSEC(ZoneFinder& finder, ConstRRsetPtr nsec) {
         finder.find(wildname, RRType::NSEC(), dnssec_opt_);
     if (fcontext->code != ZoneFinder::NXDOMAIN || !fcontext->rrset ||
         fcontext->rrset->getRdataCount() == 0) {
-        isc_throw(BadNSEC, "Unexpected result for wildcard NXDOMAIN proof");
+        bundy_throw(BadNSEC, "Unexpected result for wildcard NXDOMAIN proof");
     }
 
     // Add the (no-) wildcard proof.  This can be the same NSEC we already
@@ -163,7 +163,7 @@ Query::addClosestEncloserProof(ZoneFinder& finder, const Name& name,
     // closest_proof.  We don't explicitly check such case; addRRset() will
     // throw an exception, and it will be converted to SERVFAIL at the caller.
     if (!exact_ok && !result.next_proof) {
-        isc_throw(BadNSEC3, "Matching NSEC3 found for a non existent name: "
+        bundy_throw(BadNSEC3, "Matching NSEC3 found for a non existent name: "
                   << qname_);
     }
 
@@ -183,7 +183,7 @@ Query::addNSEC3ForName(ZoneFinder& finder, const Name& name, bool match) {
     // See the comment for addClosestEncloserProof().  We don't check a
     // totally bogus case where closest_proof is NULL here.
     if (match != result.matched) {
-        isc_throw(BadNSEC3, "Unexpected "
+        bundy_throw(BadNSEC3, "Unexpected "
                   << (result.matched ? "matching" : "covering")
                   << " NSEC3 found for " << name);
     }
@@ -219,7 +219,7 @@ Query::addWildcardProof(ZoneFinder& finder,
                         dnssec_opt_ | ZoneFinder::NO_WILDCARD);
         if (fcontext->code != ZoneFinder::NXDOMAIN || !fcontext->rrset ||
             fcontext->rrset->getRdataCount() == 0) {
-            isc_throw(BadNSEC,
+            bundy_throw(BadNSEC,
                       "Unexpected NSEC result for wildcard proof");
         }
         authorities_.push_back(fcontext->rrset);
@@ -239,7 +239,7 @@ Query::addWildcardNXRRSETProof(ZoneFinder& finder, ConstRRsetPtr nsec) {
     // There should be one NSEC RR which was found in the zone to prove
     // that there is not matched <QNAME,QTYPE> via wildcard expansion.
     if (nsec->getRdataCount() == 0) {
-        isc_throw(BadNSEC, "NSEC for WILDCARD_NXRRSET is empty");
+        bundy_throw(BadNSEC, "NSEC for WILDCARD_NXRRSET is empty");
     }
 
     ConstZoneFinderContextPtr fcontext =
@@ -247,7 +247,7 @@ Query::addWildcardNXRRSETProof(ZoneFinder& finder, ConstRRsetPtr nsec) {
                     dnssec_opt_ | ZoneFinder::NO_WILDCARD);
     if (fcontext->code != ZoneFinder::NXDOMAIN || !fcontext->rrset ||
         fcontext->rrset->getRdataCount() == 0) {
-        isc_throw(BadNSEC, "Unexpected result for no match QNAME proof");
+        bundy_throw(BadNSEC, "Unexpected result for no match QNAME proof");
     }
 
     authorities_.push_back(fcontext->rrset);
@@ -270,7 +270,7 @@ Query::addDS(ZoneFinder& finder, const Name& dname) {
         // We know this domain should exist, so the result must be NXRRSET.
         // If not, the zone is broken, so we'll return SERVFAIL by triggering
         // an exception.
-        isc_throw(BadDS, "Unexpected result for DS lookup for delegation");
+        bundy_throw(BadDS, "Unexpected result for DS lookup for delegation");
     }
 }
 
@@ -317,7 +317,7 @@ Query::addAuthAdditional(ZoneFinder& finder,
 
     // zone origin name should have NS records
     if (ns_context->code != ZoneFinder::SUCCESS) {
-        isc_throw(NoApexNS, "There's no apex NS records in zone " <<
+        bundy_throw(NoApexNS, "There's no apex NS records in zone " <<
                   finder.getOrigin().toText());
     }
     authorities_.push_back(ns_context->rrset);
@@ -342,8 +342,8 @@ findZone(const ClientList& list, const Name& qname, RRType qtype) {
 
 void
 Query::process(datasrc::ClientList& client_list,
-               const isc::dns::Name& qname, const isc::dns::RRType& qtype,
-               isc::dns::Message& response, bool dnssec)
+               const bundy::dns::Name& qname, const bundy::dns::RRType& qtype,
+               bundy::dns::Message& response, bool dnssec)
 {
     // Set up the cleaner object so internal pointers and vectors are
     // always reset after scope leaves this method
@@ -360,7 +360,7 @@ Query::process(datasrc::ClientList& client_list,
     // REFUSED.  In short, this is to be compatible with BIND 9, but the
     // background discussion is not that simple.  See the relevant topic
     // at the BUNDY developers' ML:
-    // https://lists.isc.org/mailman/htdig/bundy-dev/2010-December/001633.html
+    // https://lists.bundy.org/mailman/htdig/bundy-dev/2010-December/001633.html
     if (result.dsrc_client_ == NULL) {
         // If we tried to find a "parent zone" for a DS query and failed,
         // we may still have authority at the child side.  If we do, the query
@@ -535,7 +535,7 @@ Query::process(datasrc::ClientList& client_list,
             // This is basically a bug of the data source implementation,
             // but could also happen in the middle of development where
             // we try to add a new result code.
-            isc_throw(isc::NotImplemented, "Unknown result code");
+            bundy_throw(bundy::NotImplemented, "Unknown result code");
             break;
     }
 
@@ -544,16 +544,16 @@ Query::process(datasrc::ClientList& client_list,
 
 void
 Query::initialize(datasrc::ClientList& client_list,
-                  const isc::dns::Name& qname, const isc::dns::RRType& qtype,
-                  isc::dns::Message& response, bool dnssec)
+                  const bundy::dns::Name& qname, const bundy::dns::RRType& qtype,
+                  bundy::dns::Message& response, bool dnssec)
 {
     client_list_ = &client_list;
     qname_ = &qname;
     qtype_ = &qtype;
     response_ = &response;
     dnssec_ = dnssec;
-    dnssec_opt_ = (dnssec ? isc::datasrc::ZoneFinder::FIND_DNSSEC :
-                   isc::datasrc::ZoneFinder::FIND_DEFAULT);
+    dnssec_opt_ = (dnssec ? bundy::datasrc::ZoneFinder::FIND_DNSSEC :
+                   bundy::datasrc::ZoneFinder::FIND_DEFAULT);
 }
 
 void

@@ -15,7 +15,7 @@
 #ifndef DATASRC_CONFIG_H
 #define DATASRC_CONFIG_H 1
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 
 /// \brief Default directory to find the loadable data source libraries
@@ -27,6 +27,6 @@ namespace datasrc {
 const char* const BACKEND_LIBRARY_PATH = "@@PKGLIBDIR@@/";
 
 } // end namespace datasrc
-} // end namespace isc
+} // end namespace bundy
 
 #endif // DATASRC_CONFIG_H

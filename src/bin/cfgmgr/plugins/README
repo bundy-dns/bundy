@@ -11,7 +11,7 @@ Each plugin is a python file installed into the
 
 The entrypoint of a plugin is function called `load()`. It should return a
 tuple, first value should be the module specification (usually instance of
-`isc.config.module_spec.ModuleSpec`, loaded by `module_spec_from_file()`).
+`bundy.config.module_spec.ModuleSpec`, loaded by `module_spec_from_file()`).
 
 The second value is a callable object. It will be called whenever the
 configuration of module needs to be checked. The only parameter will be the new
@@ -22,7 +22,7 @@ graceful rejection, but a failure of the module.
 
 So, this is how a plugin could look like:
 
-  from isc.config.module_spec import module_spec_from_file
+  from bundy.config.module_spec import module_spec_from_file
 
   def check(config):
       if config['bogosity'] > 1:

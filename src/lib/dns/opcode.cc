@@ -21,7 +21,7 @@
 
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace {
 const char *opcodetext[] = {
@@ -49,7 +49,7 @@ const uint8_t MAX_OPCODE = 15;
 
 Opcode::Opcode(const uint8_t code) : code_(static_cast<CodeValue>(code)) {
     if (code > MAX_OPCODE) {
-        isc_throw(OutOfRange,
+        bundy_throw(OutOfRange,
                   "DNS Opcode is too large to construct: " << code);
     }
 }

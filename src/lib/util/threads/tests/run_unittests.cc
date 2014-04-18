@@ -21,5 +21,5 @@ main(int argc, char* argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
 
     setenv("BUNDY_LOCKFILE_DIR_FROM_BUILD", TEST_DATA_TOPBUILDDIR, 1);
-    return (isc::util::unittests::run_all());
+    return (bundy::util::unittests::run_all());
 }

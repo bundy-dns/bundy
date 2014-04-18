@@ -23,13 +23,13 @@
 #include <string>
 #include <boost/bind.hpp>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 
 namespace {
 
 void
-logError(const isc::dns::Name& name, const isc::dns::RRClass& rrclass,
+logError(const bundy::dns::Name& name, const bundy::dns::RRClass& rrclass,
          bool* ok, const std::string& source, size_t line,
          const std::string& reason)
 {
@@ -41,7 +41,7 @@ logError(const isc::dns::Name& name, const isc::dns::RRClass& rrclass,
 }
 
 void
-logWarning(const isc::dns::Name& name, const isc::dns::RRClass& rrclass,
+logWarning(const bundy::dns::Name& name, const bundy::dns::RRClass& rrclass,
          const std::string& source, size_t line, const std::string& reason)
 {
     LOG_WARN(logger, DATASRC_MASTER_LOAD_WARN).arg(source).arg(line).
@@ -49,32 +49,32 @@ logWarning(const isc::dns::Name& name, const isc::dns::RRClass& rrclass,
 }
 
 void
-addRR(const isc::dns::Name& name, const isc::dns::RRClass& rrclass,
-      const isc::dns::RRType& type, const isc::dns::RRTTL& ttl,
-      const isc::dns::rdata::RdataPtr& data, ZoneUpdater* updater)
+addRR(const bundy::dns::Name& name, const bundy::dns::RRClass& rrclass,
+      const bundy::dns::RRType& type, const bundy::dns::RRTTL& ttl,
+      const bundy::dns::rdata::RdataPtr& data, ZoneUpdater* updater)
 {
     // We get description of one RR. The updater takes RRset, so we
     // wrap it up and push there. It should collate the RRsets of the
     // same name and type together, since the addRRset should "merge".
-    isc::dns::BasicRRset rrset(name, rrclass, type, ttl);
+    bundy::dns::BasicRRset rrset(name, rrclass, type, ttl);
     rrset.addRdata(data);
     updater->addRRset(rrset);
 }
 
 }
 
-isc::dns::MasterLoaderCallbacks
-createMasterLoaderCallbacks(const isc::dns::Name& name,
-                            const isc::dns::RRClass& rrclass, bool* ok)
+bundy::dns::MasterLoaderCallbacks
+createMasterLoaderCallbacks(const bundy::dns::Name& name,
+                            const bundy::dns::RRClass& rrclass, bool* ok)
 {
-    return (isc::dns::MasterLoaderCallbacks(boost::bind(&logError, name,
+    return (bundy::dns::MasterLoaderCallbacks(boost::bind(&logError, name,
                                                         rrclass, ok, _1, _2,
                                                         _3),
                                             boost::bind(&logWarning, name,
                                                         rrclass, _1, _2, _3)));
 }
 
-isc::dns::AddRRCallback
+bundy::dns::AddRRCallback
 createMasterLoaderAddCallback(ZoneUpdater& updater) {
     return (boost::bind(addRR, _1, _2, _3, _4, _5, &updater));
 }

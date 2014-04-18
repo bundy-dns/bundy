@@ -22,7 +22,7 @@
 
 namespace {
 
-using namespace isc::util;
+using namespace bundy::util;
 
 // This test checks that the single data row is parsed.
 TEST(CSVRow, parse) {

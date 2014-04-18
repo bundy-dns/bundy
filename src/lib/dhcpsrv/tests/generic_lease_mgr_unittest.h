@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 namespace test {
 
@@ -249,7 +249,7 @@ public:
     std::vector<std::string>  straddress4_;
 
     /// @brief IOAddress forms of IPv4 addresses
-    std::vector<isc::asiolink::IOAddress> ioaddress4_;
+    std::vector<bundy::asiolink::IOAddress> ioaddress4_;
 
     /// @brief String forms of IPv6 addresses
     std::vector<std::string>  straddress6_;
@@ -258,7 +258,7 @@ public:
     std::vector<Lease::Type> leasetype6_;
 
     /// @brief IOAddress forms of IPv6 addresses
-    std::vector<isc::asiolink::IOAddress> ioaddress6_;
+    std::vector<bundy::asiolink::IOAddress> ioaddress6_;
 
     /// @brief Pointer to the lease manager
     LeaseMgr* lmptr_;
@@ -266,6 +266,6 @@ public:
 
 }; // namespace test
 }; // namespace dhcp
-}; // namespace isc
+}; // namespace bundy
 
 #endif

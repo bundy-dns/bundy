@@ -28,9 +28,9 @@
 #include "@cppclass@_python.h"
 
 using namespace std;
-using namespace isc::util::python;
-using namespace isc::@MODULE@;
-using namespace isc::@MODULE@::python;
+using namespace bundy::util::python;
+using namespace bundy::@MODULE@;
+using namespace bundy::@MODULE@::python;
 
 //
 // @CPPCLASS@
@@ -117,7 +117,7 @@ PyObject*
 }
 
 @REMOVE_THIS_ON_RELEASE@
-// This is quite specific isc.dns.  For other wrappers this should probably
+// This is quite specific bundy.dns.  For other wrappers this should probably
 // be removed.
 PyObject* @CPPCLASS@_toWire(PyObject* self, PyObject* args) {
 }
@@ -175,7 +175,7 @@ PyMethodDef @CPPCLASS@_methods[] = {
       @CPPCLASS@_toText_doc },
 
     @REMOVE_THIS_ON_RELEASE@
-    // This is quite specific isc.dns.  For other wrappers this should probably
+    // This is quite specific bundy.dns.  For other wrappers this should probably
     // be removed:
     { "to_wire", @CPPCLASS@_toWire, METH_VARARGS,
       @CPPCLASS@_toWire_doc },
@@ -183,7 +183,7 @@ PyMethodDef @CPPCLASS@_methods[] = {
 };
 } // end of unnamed namespace
 
-namespace isc {
+namespace bundy {
 namespace @MODULE@ {
 namespace python {
 // This defines the complete type for reflection in python and
@@ -288,4 +288,4 @@ create@CPPCLASS@Object(const @CPPCLASS@& source) {
 }
 } // namespace python
 } // namespace @MODULE@
-} // namespace isc
+} // namespace bundy

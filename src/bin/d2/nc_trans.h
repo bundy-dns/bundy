@@ -27,19 +27,19 @@
 #include <boost/shared_ptr.hpp>
 #include <map>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 /// @brief Thrown if the transaction encounters a general error.
-class NameChangeTransactionError : public isc::Exception {
+class NameChangeTransactionError : public bundy::Exception {
 public:
     NameChangeTransactionError(const char* file, size_t line,
                                const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Defines the type used as the unique key for transactions.
-typedef isc::dhcp_ddns::D2Dhcid TransactionKey;
+typedef bundy::dhcp_ddns::D2Dhcid TransactionKey;
 
 /// @brief Embodies the "life-cycle" required to carry out a DDNS update.
 ///
@@ -575,6 +575,6 @@ private:
 /// @brief Defines a pointer to a NameChangeTransaction.
 typedef boost::shared_ptr<NameChangeTransaction> NameChangeTransactionPtr;
 
-} // namespace isc::d2
-} // namespace isc
+} // namespace bundy::d2
+} // namespace bundy
 #endif

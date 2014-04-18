@@ -33,12 +33,12 @@
 #include <time.h>
 
 using namespace std;
-using namespace isc::util;
-using namespace isc::util::encode;
-using namespace isc::dns::rdata::generic::detail::nsec;
-using isc::dns::rdata::generic::detail::createNameFromLexer;
+using namespace bundy::util;
+using namespace bundy::util::encode;
+using namespace bundy::dns::rdata::generic::detail::nsec;
+using bundy::dns::rdata::generic::detail::createNameFromLexer;
 
-// BEGIN_ISC_NAMESPACE
+// BEGIN_BUNDY_NAMESPACE
 // BEGIN_RDATA_NAMESPACE
 
 struct NSECImpl {
@@ -87,11 +87,11 @@ NSEC::NSEC(const std::string& nsec_str) :
         impl_ = new NSECImpl(origin_name, typebits);
 
         if (lexer.getNextToken().getType() != MasterToken::END_OF_FILE) {
-            isc_throw(InvalidRdataText,
+            bundy_throw(InvalidRdataText,
                       "Extra input text for NSEC: " << nsec_str);
         }
     } catch (const MasterLexer::LexerError& ex) {
-        isc_throw(InvalidRdataText,
+        bundy_throw(InvalidRdataText,
                   "Failed to construct NSEC from '" << nsec_str << "': "
                   << ex.what());
     }
@@ -103,7 +103,7 @@ NSEC::NSEC(InputBuffer& buffer, size_t rdata_len) {
 
     // rdata_len must be sufficiently large to hold non empty bitmap.
     if (rdata_len <= buffer.getPosition() - pos) {
-        isc_throw(DNSMessageFORMERR,
+        bundy_throw(DNSMessageFORMERR,
                   "NSEC RDATA from wire too short: " << rdata_len << "bytes");
     }
     rdata_len -= (buffer.getPosition() - pos);
@@ -219,4 +219,4 @@ NSEC::compare(const Rdata& other) const {
 }
 
 // END_RDATA_NAMESPACE
-// END_ISC_NAMESPACE
+// END_BUNDY_NAMESPACE

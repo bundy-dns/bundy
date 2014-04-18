@@ -17,7 +17,7 @@
 
 #include <Python.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 class Opcode;
 
@@ -56,7 +56,7 @@ const Opcode& PyOpcode_ToOpcode(const PyObject* opcode_obj);
 
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 #endif // PYTHON_OPCODE_H
 
 // Local Variables:

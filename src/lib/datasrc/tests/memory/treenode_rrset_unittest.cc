@@ -33,12 +33,12 @@
 
 using std::vector;
 using std::string;
-using namespace isc::dns;
-using namespace isc::dns::rdata;
-using namespace isc::datasrc::memory;
-using namespace isc::testutils;
-using isc::util::unittests::matchWireData;
-using isc::util::OutputBuffer;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
+using namespace bundy::datasrc::memory;
+using namespace bundy::testutils;
+using bundy::util::unittests::matchWireData;
+using bundy::util::OutputBuffer;
 
 namespace {
 
@@ -120,7 +120,7 @@ protected:
 
     const RRClass rrclass_;
     const Name origin_name_, www_name_, wildcard_name_, match_name_;
-    isc::util::MemorySegmentLocal mem_sgmt_;
+    bundy::util::MemorySegmentLocal mem_sgmt_;
     RdataEncoder encoder_;
     MessageRenderer renderer_, renderer_expected_;
     ConstRRsetPtr ns_rrset_, a_rrset_, aaaa_rrset_, dname_rrset_,
@@ -377,7 +377,7 @@ TEST_F(TreeNodeRRsetTest, toWire) {
         EXPECT_THROW(
             checkToWireResult(expected_buffer, actual_buffer, rrset,
                               www_name_, a_rrset_, a_rrsig_rrset_, true),
-            isc::Unexpected);
+            bundy::Unexpected);
     }
 
     {
@@ -691,17 +691,17 @@ TEST_F(TreeNodeRRsetTest, unexpectedMethods) {
 
     TreeNodeRRset rrset(rrclass_, www_node_, a_rdataset_, true);
 
-    EXPECT_THROW(rrset.setTTL(RRTTL(0)), isc::Unexpected);
+    EXPECT_THROW(rrset.setTTL(RRTTL(0)), bundy::Unexpected);
     EXPECT_THROW(rrset.addRdata(createRdata(RRType::A(), rrclass_, "0.0.0.0")),
-                 isc::Unexpected);
-    EXPECT_THROW(rrset.addRdata("0.0.0.0"), isc::Unexpected);
+                 bundy::Unexpected);
+    EXPECT_THROW(rrset.addRdata("0.0.0.0"), bundy::Unexpected);
     RdataPtr sig_rdata = createRdata(
         RRType::RRSIG(), rrclass_,
         "A 5 2 3600 20120814220826 20120715220826 5300 example.com. FAKE");
-    EXPECT_THROW(rrset.addRRsig(sig_rdata), isc::Unexpected);
-    EXPECT_THROW(rrset.addRRsig(*a_rrsig_rrset_), isc::Unexpected);
-    EXPECT_THROW(rrset.addRRsig(a_rrsig_rrset_), isc::Unexpected);
-    EXPECT_THROW(rrset.addRRsig(RRsetPtr()), isc::Unexpected);
-    EXPECT_THROW(rrset.removeRRsig(), isc::Unexpected);
+    EXPECT_THROW(rrset.addRRsig(sig_rdata), bundy::Unexpected);
+    EXPECT_THROW(rrset.addRRsig(*a_rrsig_rrset_), bundy::Unexpected);
+    EXPECT_THROW(rrset.addRRsig(a_rrsig_rrset_), bundy::Unexpected);
+    EXPECT_THROW(rrset.addRRsig(RRsetPtr()), bundy::Unexpected);
+    EXPECT_THROW(rrset.removeRRsig(), bundy::Unexpected);
 }
 }

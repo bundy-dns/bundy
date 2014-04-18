@@ -23,7 +23,7 @@
 #include <stdint.h>
 #include <asiolink/io_address.h>
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 
 class AddressEntry {
@@ -96,7 +96,7 @@ private:
 };
 
 }   // namespace dns
-}   // namespace isc
+}   // namespace bundy
 
 
 #endif // ADDRESS_ENTRY_H

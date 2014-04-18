@@ -23,11 +23,11 @@
 #include "cache_entry_key.h"
 #include "logger.h"
 
-namespace isc {
+namespace bundy {
 namespace cache {
 
-using namespace isc::nsas;
-using namespace isc::dns;
+using namespace bundy::nsas;
+using namespace bundy::dns;
 using namespace std;
 using namespace MessageUtility;
 
@@ -52,9 +52,9 @@ MessageCache::~MessageCache() {
 }
 
 bool
-MessageCache::lookup(const isc::dns::Name& qname,
-                     const isc::dns::RRType& qtype,
-                     isc::dns::Message& response)
+MessageCache::lookup(const bundy::dns::Name& qname,
+                     const bundy::dns::RRType& qtype,
+                     bundy::dns::Message& response)
 {
     std::string entry_name = genCacheEntryName(qname, qtype);
     HashKey entry_key = HashKey(entry_name, RRClass(message_class_));
@@ -118,5 +118,5 @@ MessageCache::update(const Message& msg) {
 }
 
 } // namespace cache
-} // namespace isc
+} // namespace bundy
 

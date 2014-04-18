@@ -20,7 +20,7 @@
 #include <dhcp/pkt_filter.h>
 #include <gtest/gtest.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 namespace test {
 
@@ -84,7 +84,7 @@ public:
     std::string ifname_;   ///< Loopback interface name.
     uint16_t ifindex_;     ///< Loopback interface index.
     uint16_t port_;        ///< A port number used for the test.
-    isc::dhcp::SocketInfo sock_info_; ///< A structure holding socket info.
+    bundy::dhcp::SocketInfo sock_info_; ///< A structure holding socket info.
     int send_msg_sock_;    ///< Holds a descriptor of the socket used by
                            ///< sendMessage function.
     Pkt6Ptr test_message_; ///< A DHCPv6 message used by tests.
@@ -93,7 +93,7 @@ public:
 
 /// @brief A stub implementation of the PktFilter6 class.
 ///
-/// This class implements abstract methods of the @c isc::dhcp::PktFilter class.
+/// This class implements abstract methods of the @c bundy::dhcp::PktFilter class.
 /// The methods of this class mimic operations on sockets, but they neither
 /// open actual sockets, nor perform any send nor receive operations on them.
 class PktFilter6Stub : public PktFilter6 {
@@ -124,7 +124,7 @@ public:
     ///
     /// @return A structure describing a primary and fallback socket.
     virtual SocketInfo openSocket(const Iface& iface,
-                                  const isc::asiolink::IOAddress& addr,
+                                  const bundy::asiolink::IOAddress& addr,
                                   const uint16_t port,
                                   const bool join_multicast);
 
@@ -153,8 +153,8 @@ public:
 
 };
 
-}; // end of isc::dhcp::test namespace
-}; // end of isc::dhcp namespace
-}; // end of isc namespace
+}; // end of bundy::dhcp::test namespace
+}; // end of bundy::dhcp namespace
+}; // end of bundy namespace
 
 #endif // PKT_FILTER6_TEST_UTILS_H

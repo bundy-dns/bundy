@@ -21,9 +21,9 @@
 
 #include <boost/bind.hpp>
 
-using namespace isc;
+using namespace bundy;
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 void
@@ -38,7 +38,7 @@ RRsetCollection::addRRset(RRsetPtr rrset) {
                             rrset->getName());
     CollectionMap::const_iterator it = rrsets_.find(key);
     if (it != rrsets_.end()) {
-        isc_throw(InvalidParameter,
+        bundy_throw(InvalidParameter,
                   "RRset for " << rrset->getName() << "/" << rrset->getClass()
                   << " with type " << rrset->getType() << " already exists");
     }
@@ -48,8 +48,8 @@ RRsetCollection::addRRset(RRsetPtr rrset) {
 
 template<typename T>
 void
-RRsetCollection::constructHelper(T source, const isc::dns::Name& origin,
-                                 const isc::dns::RRClass& rrclass)
+RRsetCollection::constructHelper(T source, const bundy::dns::Name& origin,
+                                 const bundy::dns::RRClass& rrclass)
 {
     RRCollator collator(boost::bind(&RRsetCollection::addRRset, this, _1));
     MasterLoaderCallbacks callbacks
@@ -125,4 +125,4 @@ RRsetCollection::getEnd() {
 }
 
 } // end of namespace dns
-} // end of namespace isc
+} // end of namespace bundy

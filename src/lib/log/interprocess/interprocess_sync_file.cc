@@ -25,7 +25,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-namespace isc {
+namespace bundy {
 namespace log {
 namespace interprocess {
 
@@ -70,7 +70,7 @@ InterprocessSyncFile::do_lock(int cmd, short l_type) {
         umask(mode);
 
         if (fd_ == -1) {
-            isc_throw(InterprocessSyncFileError,
+            bundy_throw(InterprocessSyncFileError,
                       "Unable to use interprocess sync lockfile ("
                       << std::strerror(errno) << "): " << lockfile_path);
         }
@@ -131,4 +131,4 @@ InterprocessSyncFile::unlock() {
 
 } // namespace interprocess
 } // namespace log
-} // namespace isc
+} // namespace bundy

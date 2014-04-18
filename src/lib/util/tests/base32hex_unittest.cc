@@ -26,8 +26,8 @@
 #include <gtest/gtest.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::util::encode;
+using namespace bundy;
+using namespace bundy::util::encode;
 
 namespace {
 

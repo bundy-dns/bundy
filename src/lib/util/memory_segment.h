@@ -21,7 +21,7 @@
 
 #include <stdlib.h>
 
-namespace isc {
+namespace bundy {
 namespace util {
 
 /// \brief Exception that can be thrown when constructing a MemorySegment
@@ -29,7 +29,7 @@ namespace util {
 class MemorySegmentOpenError : public Exception {
 public:
     MemorySegmentOpenError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// \brief Exception that is thrown, when allocating space in a MemorySegment
@@ -39,7 +39,7 @@ public:
 class MemorySegmentGrown : public Exception {
 public:
     MemorySegmentGrown(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// \brief General error that can be thrown by a MemorySegment
@@ -47,7 +47,7 @@ public:
 class MemorySegmentError : public Exception {
 public:
     MemorySegmentError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// \brief Memory Segment Class
@@ -127,7 +127,7 @@ public:
 
     /// \brief Free/release a segment of memory.
     ///
-    /// This method may throw <code>isc::OutOfRange</code> if \c size is
+    /// This method may throw <code>bundy::OutOfRange</code> if \c size is
     /// not equal to the originally allocated size. \c size could be
     /// used by some implementations such as a slice allocator, where
     /// freeing memory also requires the size to be specified. We also
@@ -172,7 +172,7 @@ public:
     /// may be different between these two processes).
     ///
     /// Some names are reserved for internal use by this class. If such
-    /// a name is passed to this method, an \c isc::InvalidParameter
+    /// a name is passed to this method, an \c bundy::InvalidParameter
     /// exception will be thrown. See \c validateName() method for details.
     ///
     /// \c addr must be 0 (NULL) or an address that belongs to this segment.
@@ -246,7 +246,7 @@ public:
     /// associated with the given name is found, it returns NULL.
     ///
     /// Some names are reserved for internal use by this class. If such
-    /// a name is passed to this method, an \c isc::InvalidParameter
+    /// a name is passed to this method, an \c bundy::InvalidParameter
     /// exception will be thrown. See \c validateName() method for details.
     ///
     /// This method should generally be considered exception free, but there
@@ -279,7 +279,7 @@ public:
     /// this method returns false; otherwise it returns true.
     ///
     /// Some names are reserved for internal use by this class. If such
-    /// a name is passed to this method, an \c isc::InvalidParameter
+    /// a name is passed to this method, an \c bundy::InvalidParameter
     /// exception will be thrown. See \c validateName() method for details.
     ///
     /// See \c getNamedAddress() about exception consideration.
@@ -310,11 +310,11 @@ private:
     /// an underscore ('_').
     static void validateName(const char* name) {
         if (!name) {
-            isc_throw(InvalidParameter, "NULL is invalid for a name.");
+            bundy_throw(InvalidParameter, "NULL is invalid for a name.");
         } else if (*name == '\0') {
-            isc_throw(InvalidParameter, "Empty names are invalid.");
+            bundy_throw(InvalidParameter, "Empty names are invalid.");
         } else if (*name == '_') {
-            isc_throw(InvalidParameter,
+            bundy_throw(InvalidParameter,
                       "Names beginning with '_' are reserved for "
                       "internal use only.");
         }
@@ -332,7 +332,7 @@ protected:
 };
 
 } // namespace util
-} // namespace isc
+} // namespace bundy
 
 #endif // MEMORY_SEGMENT_H
 

@@ -40,11 +40,11 @@
 #include <time.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::asiolink;
-using namespace isc::hooks;
-using namespace isc::dhcp;
-using namespace isc::dhcp::test;
+using namespace bundy;
+using namespace bundy::asiolink;
+using namespace bundy::hooks;
+using namespace bundy::dhcp;
+using namespace bundy::dhcp::test;
 
 namespace {
 
@@ -156,7 +156,7 @@ public:
     /// @return Lease6 pointer (or NULL if collection was empty)
     Lease6Ptr expectOneLease(const Lease6Collection& col) {
         if (col.size() > 1) {
-            isc_throw(MultipleRecords, "More than one lease found in collection");
+            bundy_throw(MultipleRecords, "More than one lease found in collection");
         }
         if (col.empty()) {
             return (Lease6Ptr());

@@ -29,9 +29,9 @@
 #include <dns/tests/unittest_util.h>
 
 using namespace std;
-using namespace isc::dns;
+using namespace bundy::dns;
 
-using isc::UnitTestUtil;
+using bundy::UnitTestUtil;
 
 namespace {
 class UnitTestUtilConfig {
@@ -133,8 +133,8 @@ UnitTestUtil::readWireData(const string& datastr,
 
 ::testing::AssertionResult
 UnitTestUtil::matchName(const char*, const char*,
-                        const isc::dns::Name& name1,
-                        const isc::dns::Name& name2)
+                        const bundy::dns::Name& name1,
+                        const bundy::dns::Name& name2)
 {
     ::testing::Message msg;
 

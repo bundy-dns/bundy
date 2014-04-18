@@ -23,7 +23,7 @@
 /// This utility provides convenient helper functions for unit tests using
 /// wire (binary) data.
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace unittests {
 

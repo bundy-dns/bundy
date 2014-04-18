@@ -23,7 +23,7 @@
 
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 D2ClientMgr::D2ClientMgr() : d2_client_config_(new D2ClientConfig()),
@@ -52,7 +52,7 @@ D2ClientMgr::suspendUpdates() {
 void
 D2ClientMgr::setD2ClientConfig(D2ClientConfigPtr& new_config) {
     if (!new_config) {
-        isc_throw(D2ClientError,
+        bundy_throw(D2ClientError,
                   "D2ClientMgr cannot set DHCP-DDNS configuration to NULL.");
     }
 
@@ -72,7 +72,7 @@ D2ClientMgr::setD2ClientConfig(D2ClientConfigPtr& new_config) {
                 /// side ip and port?  We should certainly be able to
                 /// configure a maximum queue size.  These were overlooked
                 /// but are covered in Trac# 3328.
-                isc::asiolink::IOAddress any_addr("0.0.0.0");
+                bundy::asiolink::IOAddress any_addr("0.0.0.0");
                 uint32_t any_port = 0;
                 uint32_t queue_max = 1024;
 
@@ -87,7 +87,7 @@ D2ClientMgr::setD2ClientConfig(D2ClientConfigPtr& new_config) {
                 }
             default:
                 // In theory you can't get here.
-                isc_throw(D2ClientError, "Invalid sender Protocol: "
+                bundy_throw(D2ClientError, "Invalid sender Protocol: "
                           << new_config->getNcrProtocol());
                 break;
             }
@@ -170,7 +170,7 @@ D2ClientMgr::analyzeFqdn(const bool client_s, const bool client_n,
 
     default:
         // RFCs declare this an invalid combination.
-        isc_throw(isc::BadValue,
+        bundy_throw(bundy::BadValue,
                   "Invalid client FQDN - N and S cannot both be 1");
         break;
     }
@@ -218,17 +218,17 @@ D2ClientMgr::startSender(D2ClientErrorHandler error_handler) {
 
 void
 D2ClientMgr::startSender(D2ClientErrorHandler error_handler,
-                         isc::asiolink::IOService& io_service) {
+                         bundy::asiolink::IOService& io_service) {
     if (amSending()) {
         return;
     }
 
     if (!name_change_sender_)  {
-        isc_throw(D2ClientError, "D2ClientMgr::startSender sender is null");
+        bundy_throw(D2ClientError, "D2ClientMgr::startSender sender is null");
     }
 
     if (!error_handler) {
-        isc_throw(D2ClientError, "D2ClientMgr::startSender handler is null");
+        bundy_throw(D2ClientError, "D2ClientMgr::startSender handler is null");
     }
 
     // Set the error handler.
@@ -270,7 +270,7 @@ void
 D2ClientMgr::sendRequest(dhcp_ddns::NameChangeRequestPtr& ncr) {
     if (!amSending()) {
         // This is programmatic error so bust them for it.
-        isc_throw(D2ClientError, "D2ClientMgr::sendRequest not in send mode");
+        bundy_throw(D2ClientError, "D2ClientMgr::sendRequest not in send mode");
     }
 
     try {
@@ -303,7 +303,7 @@ D2ClientMgr::invokeClientErrorHandler(const dhcp_ddns::NameChangeSender::
 size_t
 D2ClientMgr::getQueueSize() const {
     if (!name_change_sender_) {
-        isc_throw(D2ClientError, "D2ClientMgr::getQueueSize sender is null");
+        bundy_throw(D2ClientError, "D2ClientMgr::getQueueSize sender is null");
     }
 
     return(name_change_sender_->getQueueSize());
@@ -312,7 +312,7 @@ D2ClientMgr::getQueueSize() const {
 size_t
 D2ClientMgr::getQueueMaxSize() const {
     if (!name_change_sender_) {
-        isc_throw(D2ClientError, "D2ClientMgr::getQueueMaxSize sender is null");
+        bundy_throw(D2ClientError, "D2ClientMgr::getQueueMaxSize sender is null");
     }
 
     return(name_change_sender_->getQueueMaxSize());
@@ -323,7 +323,7 @@ D2ClientMgr::getQueueMaxSize() const {
 const dhcp_ddns::NameChangeRequestPtr&
 D2ClientMgr::peekAt(const size_t index) const {
     if (!name_change_sender_) {
-        isc_throw(D2ClientError, "D2ClientMgr::peekAt sender is null");
+        bundy_throw(D2ClientError, "D2ClientMgr::peekAt sender is null");
     }
 
     return (name_change_sender_->peekAt(index));
@@ -332,7 +332,7 @@ D2ClientMgr::peekAt(const size_t index) const {
 void
 D2ClientMgr::clearQueue() {
     if (!name_change_sender_) {
-        isc_throw(D2ClientError, "D2ClientMgr::clearQueue sender is null");
+        bundy_throw(D2ClientError, "D2ClientMgr::clearQueue sender is null");
     }
 
     name_change_sender_->clearSendQueue();
@@ -352,7 +352,7 @@ D2ClientMgr::operator()(const dhcp_ddns::NameChangeSender::Result result,
 int
 D2ClientMgr::getSelectFd() {
     if (!amSending()) {
-        isc_throw (D2ClientError, "D2ClientMgr::getSelectFd "
+        bundy_throw (D2ClientError, "D2ClientMgr::getSelectFd "
                    " not in send mode");
     }
 
@@ -363,7 +363,7 @@ void
 D2ClientMgr::runReadyIO() {
     if (!name_change_sender_) {
         // This should never happen.
-        isc_throw(D2ClientError, "D2ClientMgr::runReadyIO"
+        bundy_throw(D2ClientError, "D2ClientMgr::runReadyIO"
                   " name_change_sender is null");
     }
 
@@ -372,4 +372,4 @@ D2ClientMgr::runReadyIO() {
 
 };  // namespace dhcp
 
-};  // namespace isc
+};  // namespace bundy

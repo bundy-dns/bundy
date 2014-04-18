@@ -38,10 +38,10 @@
 #include <netdb.h>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::data;
-using namespace isc::auth::statistics;
-using namespace isc::auth::unittest;
+using namespace bundy::dns;
+using namespace bundy::data;
+using namespace bundy::auth::statistics;
+using namespace bundy::auth::unittest;
 
 namespace {
 
@@ -70,9 +70,9 @@ TEST_F(CountersTest, invalidParameterForSetRequestIPVersion) {
     EXPECT_NO_THROW(msgattrs.setRequestIPVersion(AF_INET));
     EXPECT_NO_THROW(msgattrs.setRequestIPVersion(AF_INET6));
 
-    // It should throw isc::InvalidParameter if the parameter is not AF_INET
+    // It should throw bundy::InvalidParameter if the parameter is not AF_INET
     // nor AF_INET6.
-    EXPECT_THROW(msgattrs.setRequestIPVersion(AF_UNIX), isc::InvalidParameter);
+    EXPECT_THROW(msgattrs.setRequestIPVersion(AF_UNIX), bundy::InvalidParameter);
 }
 
 TEST_F(CountersTest, invalidParameterForSetRequestTransportProtocol) {
@@ -82,10 +82,10 @@ TEST_F(CountersTest, invalidParameterForSetRequestTransportProtocol) {
     EXPECT_NO_THROW(msgattrs.setRequestTransportProtocol(IPPROTO_UDP));
     EXPECT_NO_THROW(msgattrs.setRequestTransportProtocol(IPPROTO_TCP));
 
-    // It should throw isc::InvalidParameter if the parameter is not
+    // It should throw bundy::InvalidParameter if the parameter is not
     // IPPROTO_UDP nor IPPROTO_TCP.
     EXPECT_THROW(msgattrs.setRequestTransportProtocol(IPPROTO_IP),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 TEST_F(CountersTest, invalidOperationForGetRequestOpCode) {
@@ -113,9 +113,9 @@ TEST_F(CountersTest, invalidParameterForSetRequestTSIG) {
     EXPECT_NO_THROW(msgattrs.setRequestTSIG(true, false));
     EXPECT_NO_THROW(msgattrs.setRequestTSIG(true, true));
 
-    // It should throw isc::InvalidParameter if a message is not signed but
+    // It should throw bundy::InvalidParameter if a message is not signed but
     // badsig is true
-    EXPECT_THROW(msgattrs.setRequestTSIG(false, true), isc::InvalidParameter);
+    EXPECT_THROW(msgattrs.setRequestTSIG(false, true), bundy::InvalidParameter);
 }
 
 TEST_F(CountersTest, incrementResponse) {

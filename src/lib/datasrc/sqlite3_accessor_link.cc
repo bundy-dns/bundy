@@ -24,10 +24,10 @@
 #include <string>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::data;
+using namespace bundy::dns;
+using namespace bundy::data;
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 
 namespace {
@@ -79,10 +79,10 @@ checkConfig(ConstElementPtr config, ElementPtr errors) {
 
 DataSourceClient *
 createInstance(const std::string& datasrc_name,
-               isc::data::ConstElementPtr config, std::string& error)
+               bundy::data::ConstElementPtr config, std::string& error)
 {
     // Initialize the logging dictionary
-    isc::log::MessageInitializer::loadDictionary(true);
+    bundy::log::MessageInitializer::loadDictionary(true);
 
     ElementPtr errors(Element::createList());
     if (!checkConfig(config, errors)) {
@@ -94,7 +94,7 @@ createInstance(const std::string& datasrc_name,
     try {
         boost::shared_ptr<DatabaseAccessor> sqlite3_accessor(
             new SQLite3Accessor(dbfile, "IN")); // XXX: avoid hardcode RR class
-        return (new DatabaseClient(datasrc_name, isc::dns::RRClass::IN(),
+        return (new DatabaseClient(datasrc_name, bundy::dns::RRClass::IN(),
                                    sqlite3_accessor));
     } catch (const std::exception& exc) {
         error = std::string("Error creating SQLite3 datasource: ") +
@@ -112,4 +112,4 @@ void destroyInstance(DataSourceClient* instance) {
 }
 
 } // end of namespace datasrc
-} // end of namespace isc
+} // end of namespace bundy

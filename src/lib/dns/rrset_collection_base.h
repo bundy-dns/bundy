@@ -22,7 +22,7 @@
 
 #include <iterator>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 /// \brief Error during RRsetCollectionBase find() operation
@@ -96,9 +96,9 @@ public:
     /// \param rrtype The type of the RRset to search for.
     /// \param rrclass The class of the RRset to search for.
     /// \return The RRset if found, \c NULL otherwise.
-    virtual isc::dns::ConstRRsetPtr find
-        (const isc::dns::Name& name, const isc::dns::RRClass& rrclass,
-         const isc::dns::RRType& rrtype)
+    virtual bundy::dns::ConstRRsetPtr find
+        (const bundy::dns::Name& name, const bundy::dns::RRClass& rrclass,
+         const bundy::dns::RRType& rrtype)
         const = 0;
 
     /// \brief Destructor
@@ -124,7 +124,7 @@ protected:
 
         /// \brief Returns the \c AbstractRRset currently pointed to by
         /// the iterator.
-        virtual const isc::dns::AbstractRRset& getValue() = 0;
+        virtual const bundy::dns::AbstractRRset& getValue() = 0;
 
         /// \brief Returns an \c IterPtr wrapping an Iter pointing to
         /// the next \c AbstractRRset in sequence in the collection.
@@ -145,14 +145,14 @@ protected:
     /// \brief Returns an \c IterPtr wrapping an Iter pointing to the
     /// beginning of the collection.
     ///
-    /// \throw isc::dns::RRsetCollectionError if using the iterator
+    /// \throw bundy::dns::RRsetCollectionError if using the iterator
     /// results in some underlying datasrc error.
     virtual IterPtr getBeginning() = 0;
 
     /// \brief Returns an \c IterPtr wrapping an Iter pointing past the
     /// end of the collection.
     ///
-    /// \throw isc::dns::RRsetCollectionError if using the iterator
+    /// \throw bundy::dns::RRsetCollectionError if using the iterator
     /// results in some underlying datasrc error.
     virtual IterPtr getEnd() = 0;
 
@@ -162,7 +162,7 @@ public:
     /// It behaves like a \c std::iterator forward iterator, so please
     /// see its documentation for usage.
     class Iterator : std::iterator<std::forward_iterator_tag,
-                                   const isc::dns::AbstractRRset>
+                                   const bundy::dns::AbstractRRset>
     {
     public:
         explicit Iterator(IterPtr iter) :
@@ -212,7 +212,7 @@ public:
 typedef boost::shared_ptr<RRsetCollectionBase> RRsetCollectionPtr;
 
 } // end of namespace dns
-} // end of namespace isc
+} // end of namespace bundy
 
 #endif  // RRSET_COLLECTION_BASE_H
 

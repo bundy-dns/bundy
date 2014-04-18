@@ -35,7 +35,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
-namespace isc {
+namespace bundy {
 namespace auth {
 namespace statistics {
 
@@ -62,7 +62,7 @@ private:
     // request attributes
     int req_address_family_;        // IP version
     int req_transport_protocol_;    // Transport layer protocol
-    boost::optional<isc::dns::Opcode> req_opcode_;  // OpCode
+    boost::optional<bundy::dns::Opcode> req_opcode_;  // OpCode
     enum BitAttributes {
         REQ_WITH_EDNS_0,            // request with EDNS ver.0
         REQ_WITH_DNSSEC_OK,         // DNSSEC OK (DO) bit is set in request
@@ -87,7 +87,7 @@ public:
     /// \return opcode of the request wrapped with boost::optional; it's
     ///         converted to false if Opcode hasn't been set.
     /// \throw None
-    const boost::optional<isc::dns::Opcode>& getRequestOpCode() const {
+    const boost::optional<bundy::dns::Opcode>& getRequestOpCode() const {
         return (req_opcode_);
     }
 
@@ -95,7 +95,7 @@ public:
     ///
     /// \param opcode Opcode of the request
     /// \throw None
-    void setRequestOpCode(const isc::dns::Opcode& opcode) {
+    void setRequestOpCode(const bundy::dns::Opcode& opcode) {
         req_opcode_ = opcode;
     }
 
@@ -113,7 +113,7 @@ public:
     /// \throw None
     void setRequestIPVersion(const int address_family) {
         if (address_family != AF_INET && address_family != AF_INET6) {
-            isc_throw(isc::InvalidParameter, "Unknown address family");
+            bundy_throw(bundy::InvalidParameter, "Unknown address family");
         }
         req_address_family_ = address_family;
     }
@@ -135,7 +135,7 @@ public:
         if (transport_protocol != IPPROTO_UDP &&
             transport_protocol != IPPROTO_TCP)
         {
-            isc_throw(isc::InvalidParameter, "Unknown transport protocol");
+            bundy_throw(bundy::InvalidParameter, "Unknown transport protocol");
         }
         req_transport_protocol_ = transport_protocol;
     }
@@ -209,11 +209,11 @@ public:
     /// \param signed_tsig true if the request is signed with TSIG
     /// \param badsig true if the signature of the request is bad; it must not
     //                be true unless signed_tsig is true
-    /// \throw isc::InvalidParameter if badsig is true though the request is
+    /// \throw bundy::InvalidParameter if badsig is true though the request is
     ///                              not signed
     void setRequestTSIG(const bool signed_tsig, const bool badsig) {
         if (!signed_tsig && badsig) {
-            isc_throw(isc::InvalidParameter, "Message is not signed but badsig"
+            bundy_throw(bundy::InvalidParameter, "Message is not signed but badsig"
                                              " is true");
         }
         bit_attributes_[REQ_TSIG_SIGNED] = signed_tsig;
@@ -274,12 +274,12 @@ public:
 class Counters : boost::noncopyable {
 private:
     // counter for DNS message attributes
-    isc::statistics::Counter server_msg_counter_;
+    bundy::statistics::Counter server_msg_counter_;
     void incRequest(const MessageAttributes& msgattrs);
     void incResponse(const MessageAttributes& msgattrs,
-                     const isc::dns::Message& response);
+                     const bundy::dns::Message& response);
 public:
-    /// \brief A type of statistics item tree in isc::data::MapElement.
+    /// \brief A type of statistics item tree in bundy::data::MapElement.
     /// \verbatim
     ///        {
     ///          zone_name => {
@@ -291,7 +291,7 @@ public:
     ///        item_name is a string seperated by '.'.
     ///        item_value is an integer.
     /// \endverbatim
-    typedef isc::data::ConstElementPtr ConstItemTreePtr;
+    typedef bundy::data::ConstElementPtr ConstItemTreePtr;
 
     /// \brief The constructor.
     ///
@@ -304,9 +304,9 @@ public:
     /// \param msgattrs DNS message attributes.
     /// \param response DNS response message.
     /// \param done DNS response was sent to the client.
-    /// \throw isc::Unexpected Internal condition check failed.
+    /// \throw bundy::Unexpected Internal condition check failed.
     void inc(const MessageAttributes& msgattrs,
-             const isc::dns::Message& response, const bool done);
+             const bundy::dns::Message& response, const bool done);
 
     /// \brief Get statistics counters.
     ///
@@ -320,7 +320,7 @@ public:
 
 } // namespace statistics
 } // namespace auth
-} // namespace isc
+} // namespace bundy
 
 #endif // STATISTICS_H
 

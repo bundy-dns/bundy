@@ -25,10 +25,10 @@
 #include <log4cplus/nullappender.h>
 #include <log4cplus/spi/loggingevent.h>
 
-using namespace isc::log;
-using namespace isc::log::internal;
+using namespace bundy::log;
+using namespace bundy::log::internal;
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 /// \brief Specialized test class

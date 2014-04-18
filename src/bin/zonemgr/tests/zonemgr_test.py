@@ -20,9 +20,9 @@ import unittest
 import os
 import tempfile
 from zonemgr import *
-from isc.testutils.ccsession_mock import MockModuleCCSession
-from isc.notify import notify_out
-from isc.datasrc import ZoneFinder
+from bundy.testutils.ccsession_mock import MockModuleCCSession
+from bundy.notify import notify_out
+from bundy.datasrc import ZoneFinder
 
 ZONE_NAME_CLASS1_IN = ("example.net.", "IN")
 ZONE_NAME_CLASS1_CH = ("example.net.", "CH")
@@ -40,9 +40,9 @@ RELOAD_JITTER = 0.75
 class ZonemgrTestException(Exception):
     pass
 
-class FakeCCSession(isc.config.ConfigData, MockModuleCCSession):
+class FakeCCSession(bundy.config.ConfigData, MockModuleCCSession):
     def __init__(self):
-        module_spec = isc.config.module_spec_from_file(SPECFILE_LOCATION)
+        module_spec = bundy.config.module_spec_from_file(SPECFILE_LOCATION)
         ConfigData.__init__(self, module_spec)
         MockModuleCCSession.__init__(self)
         # For inspection
@@ -65,7 +65,7 @@ class MockDataSourceClient():
 
     def find_zone(self, zone_name):
         '''Mock version of DataSourceClient.find_zone().'''
-        return (isc.datasrc.DataSourceClient.SUCCESS, self)
+        return (bundy.datasrc.DataSourceClient.SUCCESS, self)
 
     def find(self, name, rrtype, options=ZoneFinder.FIND_DEFAULT):
         '''Mock version of ZoneFinder.find().'''
@@ -740,5 +740,5 @@ class TestZonemgr(unittest.TestCase):
         self.assertEqual([b" "], self.zonemgr._master_socket.sent_data)
 
 if __name__== "__main__":
-    isc.log.resetUnitTestRootLogger()
+    bundy.log.resetUnitTestRootLogger()
     unittest.main()

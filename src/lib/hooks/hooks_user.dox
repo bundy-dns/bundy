@@ -211,7 +211,7 @@ extern std::fstream interesting;
 #include <hooks/hooks.h>
 #include "library_common.h"
 
-using namespace isc::hooks;
+using namespace bundy::hooks;
 
 // "Interesting clients" log file handle definition.
 std::fstream interesting;
@@ -458,7 +458,7 @@ do this in one callout, for this example we'll use two:
 
 - pkt4_receive - a callout on this hook is invoked when a packet has been
 received and has been parsed.  It is passed a single argument, "query4"
-which is an isc::dhcp::Pkt4 object (representing a DHCP v4 packet).
+which is an bundy::dhcp::Pkt4 object (representing a DHCP v4 packet).
 We will do the classification here.
 
 - pkt4_send - called when a response is just about to be sent back to
@@ -482,8 +482,8 @@ hardware address) is:
 
 #include <string>
 
-using namespace isc::dhcp;
-using namespace isc::hooks;
+using namespace bundy::dhcp;
+using namespace bundy::hooks;
 using namespace std;
 
 extern "C" {
@@ -535,8 +535,8 @@ write this information to the log file:
 
 #include <string>
 
-using namespace isc::dhcp;
-using namespace isc::hooks;
+using namespace bundy::dhcp;
+using namespace bundy::hooks;
 using namespace std;
 
 extern "C" {
@@ -1049,7 +1049,7 @@ one in BUNDY and one in your library.
 To run successfully, your library needs to perform run-time initialization
 of the BUNDY code in your library (something performed by BUNDY
 in the case of shared libraries).  To do this, call the function
-isc::hooks::hooksStaticLinkInit() as the first statement of the load()
+bundy::hooks::hooksStaticLinkInit() as the first statement of the load()
 function. (If your library does not include a load() function, you need
 to add one.) For example:
 
@@ -1063,7 +1063,7 @@ int version() {
 }
 
 int load() {
-    isc::hooks::hooksStaticLinkInit();
+    bundy::hooks::hooksStaticLinkInit();
         :
 }
 

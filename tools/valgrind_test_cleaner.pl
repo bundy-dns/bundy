@@ -41,7 +41,7 @@ sub addToBlock(_) {
 	push @$block, $line;
 	return unless $line =~ /^==\d+==\s+(at|by) 0x[0-9A-F]+: (.*) \(.+:\d+\)$/;
 	$_ = $2;
-	return $blockOK = 1 if /^isc::/;
+	return $blockOK = 1 if /^bundy::/;
 	return $blockOK = 1 if /^asiolink:/;
 	return if /^main \(/;
 	return if /^testing::/;

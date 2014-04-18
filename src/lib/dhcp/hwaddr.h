@@ -21,7 +21,7 @@
 #include <dhcp/dhcp4.h>
 #include <boost/shared_ptr.hpp>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief Hardware type that represents information from DHCPv4 packet
@@ -95,7 +95,7 @@ public:
 /// @brief Shared pointer to a hardware address structure
 typedef boost::shared_ptr<HWAddr> HWAddrPtr;
 
-}; // end of isc::dhcp namespace
-}; // end of isc namespace
+}; // end of bundy::dhcp namespace
+}; // end of bundy namespace
 
 #endif // HWADDR_H

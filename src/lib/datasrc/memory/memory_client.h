@@ -26,7 +26,7 @@
 
 #include <string>
 
-namespace isc {
+namespace bundy {
 
 namespace dns {
 class Name;
@@ -66,11 +66,11 @@ public:
     /// It never throws an exception otherwise.
     InMemoryClient(const std::string& datasrc_name,
                    boost::shared_ptr<ZoneTableSegment> ztable_segment,
-                   isc::dns::RRClass rrclass);
+                   bundy::dns::RRClass rrclass);
     //@}
 
     /// \brief Returns the class of the data source client.
-    virtual isc::dns::RRClass getClass() const;
+    virtual bundy::dns::RRClass getClass() const;
 
     /// Return the number of zones stored in the client.
     ///
@@ -83,8 +83,8 @@ public:
     ///
     /// This derived version of the method never throws an exception.
     /// For other details see \c DataSourceClient::findZone().
-    virtual isc::datasrc::DataSourceClient::FindResult
-    findZone(const isc::dns::Name& name) const;
+    virtual bundy::datasrc::DataSourceClient::FindResult
+    findZone(const bundy::dns::Name& name) const;
 
     /// Returns a \c ZoneData in the result that best matches the given
     /// name.
@@ -93,11 +93,11 @@ public:
     /// used in other code.
     ///
     /// \throws none
-    const ZoneData* findZoneData(const isc::dns::Name& name);
+    const ZoneData* findZoneData(const bundy::dns::Name& name);
 
     /// \brief Implementation of the getIterator method
-    virtual isc::datasrc::ZoneIteratorPtr
-    getIterator(const isc::dns::Name& name, bool separate_rrs = false) const;
+    virtual bundy::datasrc::ZoneIteratorPtr
+    getIterator(const bundy::dns::Name& name, bool separate_rrs = false) const;
 
     /// In-memory data source doesn't write back persistently, so this
     /// derived method will result in a NotImplemented exception.
@@ -107,22 +107,22 @@ public:
     /// implemented we may also want to allow the user of the in-memory client
     /// to update via its updater (this may or may not be a good idea and
     /// is subject to further discussions).
-    virtual ZoneUpdaterPtr getUpdater(const isc::dns::Name& name,
+    virtual ZoneUpdaterPtr getUpdater(const bundy::dns::Name& name,
                                       bool replace, bool journaling = false)
         const;
 
     virtual std::pair<ZoneJournalReader::Result, ZoneJournalReaderPtr>
-    getJournalReader(const isc::dns::Name& zone, uint32_t begin_serial,
+    getJournalReader(const bundy::dns::Name& zone, uint32_t begin_serial,
                      uint32_t end_serial) const;
 
 private:
     boost::shared_ptr<ZoneTableSegment> ztable_segment_;
-    const isc::dns::RRClass rrclass_;
+    const bundy::dns::RRClass rrclass_;
 };
 
 } // namespace memory
 } // namespace datasrc
-} // namespace isc
+} // namespace bundy
 
 #endif // DATASRC_MEMORY_CLIENT_H
 

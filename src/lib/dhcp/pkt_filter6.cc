@@ -14,7 +14,7 @@
 
 #include <dhcp/pkt_filter6.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 bool
@@ -40,5 +40,5 @@ PktFilter6::joinMulticast(int sock, const std::string& ifname,
 }
 
 
-} // end of isc::dhcp namespace
-} // end of isc namespace
+} // end of bundy::dhcp namespace
+} // end of bundy namespace

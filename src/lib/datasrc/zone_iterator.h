@@ -21,7 +21,7 @@
 
 #include <datasrc/zone.h>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 
 /**
@@ -59,7 +59,7 @@ public:
      * \return Pointer to the next RRset or NULL pointer when the iteration
      *     gets to the end of the zone.
      */
-    virtual isc::dns::ConstRRsetPtr getNextRRset() = 0;
+    virtual bundy::dns::ConstRRsetPtr getNextRRset() = 0;
 
     /**
      * \brief Return the SOA record of the zone in the iterator context.
@@ -93,7 +93,7 @@ public:
      * \return A shared pointer to an SOA RRset that would be returned
      * from the iteration.  It will be NULL if the zone doesn't have an SOA.
      */
-    virtual isc::dns::ConstRRsetPtr getSOA() const = 0;
+    virtual bundy::dns::ConstRRsetPtr getSOA() const = 0;
 };
 
 }

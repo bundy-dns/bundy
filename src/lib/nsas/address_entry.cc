@@ -37,7 +37,7 @@
 
 #include "address_entry.h"
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 const uint32_t AddressEntry::UNREACHABLE = UINT32_MAX;
 }

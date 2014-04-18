@@ -21,8 +21,8 @@
 #include "exceptions/exceptions.h"
 
 using namespace std;
-using namespace isc;
-using namespace isc::badpacket;
+using namespace bundy;
+using namespace bundy::badpacket;
 
 
 /// \brief Test Fixture Class
@@ -120,7 +120,7 @@ public:
         argv[1] = optflag;
         argv[2] = optval;
         int argc = 3;
-        EXPECT_THROW(parse(argc, const_cast<char**>(argv)), isc::BadValue);
+        EXPECT_THROW(parse(argc, const_cast<char**>(argv)), bundy::BadValue);
     }
 
     /// \brief Check one-bit field

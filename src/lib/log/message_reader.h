@@ -22,7 +22,7 @@
 #include <log/message_dictionary.h>
 #include <log/message_types.h>
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 /// \brief Read Message File
@@ -210,6 +210,6 @@ private:
 };
 
 } // namespace log
-} // namespace isc
+} // namespace bundy
 
 #endif // MESSAGE_READER_H

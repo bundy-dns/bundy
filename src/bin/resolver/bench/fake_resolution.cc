@@ -22,7 +22,7 @@
 #include <algorithm>
 #include <stdlib.h> // not cstdlib, which doesn't officially have random()
 
-namespace isc {
+namespace bundy {
 namespace resolver {
 namespace bench {
 

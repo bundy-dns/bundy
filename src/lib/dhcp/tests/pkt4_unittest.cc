@@ -34,10 +34,10 @@
 #include <arpa/inet.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::asiolink;
-using namespace isc::dhcp;
-using namespace isc::util;
+using namespace bundy;
+using namespace bundy::asiolink;
+using namespace bundy::dhcp;
+using namespace bundy::util;
 // Don't import the entire boost namespace.  It will unexpectedly hide uint8_t
 // for some systems.
 using boost::scoped_ptr;
@@ -74,7 +74,7 @@ public:
     /// @return An offset to the first byte after last parsed option.
     size_t execute(const OptionBuffer& buf,
                    const std::string& option_space,
-                   isc::dhcp::OptionCollection& options) {
+                   bundy::dhcp::OptionCollection& options) {
         // Set the executed_ member to true to allow verification that the
         // callback has been actually called.
         executed_ = true;
@@ -811,14 +811,14 @@ TEST_F(Pkt4Test, isRelayed) {
     EXPECT_FALSE(pkt.isRelayed());
     // Set giaddr but leave hops = 0. This should result in exception.
     pkt.setGiaddr(IOAddress("10.0.0.1"));
-    EXPECT_THROW(pkt.isRelayed(), isc::BadValue);
+    EXPECT_THROW(pkt.isRelayed(), bundy::BadValue);
     // Set hops. Now both hops and giaddr is set. The message is relayed.
     pkt.setHops(10);
     EXPECT_TRUE(pkt.isRelayed());
     // Set giaddr to 0. For hops being set to non-zero value the function
     // should throw an exception.
     pkt.setGiaddr(IOAddress("0.0.0.0"));
-    EXPECT_THROW(pkt.isRelayed(), isc::BadValue);
+    EXPECT_THROW(pkt.isRelayed(), bundy::BadValue);
 }
 
 // Tests whether a packet can be assigned to a class and later

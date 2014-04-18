@@ -18,7 +18,7 @@
 #include <stdint.h>
 #include "exceptions/exceptions.h"
 
-namespace isc {
+namespace bundy {
 namespace badpacket {
 
 /// \brief Option Information
@@ -162,13 +162,13 @@ public:
     /// \param index An index value.
     static void checkIndex(int i) {
         if ((i < 0) || (i >= SIZE)) {
-            isc_throw(isc::OutOfRange, "option index must be in the range "
+            bundy_throw(bundy::OutOfRange, "option index must be in the range "
                       "0 to " << SIZE);
         }
     }
 };
 
 } // namespace badpacket
-} // namespace isc
+} // namespace bundy
 
 #endif // OPTION_INFO_H

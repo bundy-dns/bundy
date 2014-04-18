@@ -30,10 +30,10 @@
 #include "messagerenderer_python.h"
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::dns::python;
-using namespace isc::util;
-using namespace isc::util::python;
+using namespace bundy::dns;
+using namespace bundy::dns::python;
+using namespace bundy::util;
+using namespace bundy::util::python;
 
 namespace {
 
@@ -46,7 +46,7 @@ namespace {
 // rrset is destroyed later
 class s_RRset : public PyObject {
 public:
-    isc::dns::RRsetPtr cppobj;
+    bundy::dns::RRsetPtr cppobj;
 };
 
 int RRset_init(s_RRset* self, PyObject* args);
@@ -323,7 +323,7 @@ RRset_getRdata(PyObject* po_self, PyObject*) {
                                                   self->cppobj->getClass(),
                                                   it->getCurrent()))).get())
                 == -1) {
-                isc_throw(PyCPPWrapperException, "PyList_Append failed, "
+                bundy_throw(PyCPPWrapperException, "PyList_Append failed, "
                           "probably due to short memory");
             }
         }
@@ -348,7 +348,7 @@ RRset_removeRRsig(PyObject* self, PyObject*) {
 
 } // end of unnamed namespace
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace python {
 
@@ -429,23 +429,23 @@ createRRsetObject(const AbstractRRset& source) {
 
     // RRsets are noncopyable, so as a workaround we recreate a new one
     // and copy over all content
-    RRsetPtr new_rrset = isc::dns::RRsetPtr(
-        new isc::dns::RRset(source.getName(), source.getClass(),
+    RRsetPtr new_rrset = bundy::dns::RRsetPtr(
+        new bundy::dns::RRset(source.getName(), source.getClass(),
                             source.getType(), source.getTTL()));
 
-    isc::dns::RdataIteratorPtr rdata_it(source.getRdataIterator());
+    bundy::dns::RdataIteratorPtr rdata_it(source.getRdataIterator());
     for (rdata_it->first(); !rdata_it->isLast(); rdata_it->next()) {
         new_rrset->addRdata(rdata_it->getCurrent());
     }
 
-    isc::dns::RRsetPtr sigs = source.getRRsig();
+    bundy::dns::RRsetPtr sigs = source.getRRsig();
     if (sigs) {
         new_rrset->addRRsig(sigs);
     }
     s_RRset* py_rrset =
         static_cast<s_RRset*>(rrset_type.tp_alloc(&rrset_type, 0));
     if (py_rrset == NULL) {
-        isc_throw(PyCPPWrapperException, "Unexpected NULL C++ object, "
+        bundy_throw(PyCPPWrapperException, "Unexpected NULL C++ object, "
                   "probably due to short memory");
     }
     py_rrset->cppobj = new_rrset;
@@ -455,7 +455,7 @@ createRRsetObject(const AbstractRRset& source) {
 bool
 PyRRset_Check(PyObject* obj) {
     if (obj == NULL) {
-        isc_throw(PyCPPWrapperException, "obj argument NULL in typecheck");
+        bundy_throw(PyCPPWrapperException, "obj argument NULL in typecheck");
     }
     return (PyObject_TypeCheck(obj, &rrset_type));
 }
@@ -469,7 +469,7 @@ PyRRset_ToRRset(PyObject* rrset_obj) {
 RRsetPtr
 PyRRset_ToRRsetPtr(PyObject* rrset_obj) {
     if (rrset_obj == NULL) {
-        isc_throw(PyCPPWrapperException,
+        bundy_throw(PyCPPWrapperException,
                   "obj argument NULL in RRset PyObject conversion");
     }
     s_RRset* rrset = static_cast<s_RRset*>(rrset_obj);
@@ -479,4 +479,4 @@ PyRRset_ToRRsetPtr(PyObject* rrset_obj) {
 
 } // end python namespace
 } // end dns namespace
-} // end isc namespace
+} // end bundy namespace

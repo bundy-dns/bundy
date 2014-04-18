@@ -36,11 +36,11 @@
 #include <cryptolink/crypto_hmac.h>
 
 using namespace std;
-using namespace isc::util;
-using namespace isc::cryptolink;
-using namespace isc::dns::rdata;
+using namespace bundy::util;
+using namespace bundy::cryptolink;
+using namespace bundy::dns::rdata;
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace {
 typedef boost::shared_ptr<HMAC> HMACPtr;
@@ -79,7 +79,7 @@ struct TSIGContext::TSIGContextImpl {
                                 key_.getSecret(), key_.getSecretLength(),
                                 key_.getAlgorithm()),
                             deleteHMAC);
-            } catch (const isc::Exception&) {
+            } catch (const bundy::Exception&) {
                 return;
             }
             digest_len_ = hmac_->getOutputLength();
@@ -338,12 +338,12 @@ TSIGContext::sign(const uint16_t qid, const void* const data,
                   const size_t data_len)
 {
     if (impl_->state_ == VERIFIED_RESPONSE) {
-        isc_throw(TSIGContextError,
+        bundy_throw(TSIGContextError,
                   "TSIG sign attempt after verifying a response");
     }
 
     if (data == NULL || data_len == 0) {
-        isc_throw(InvalidParameter, "TSIG sign error: empty data is given");
+        bundy_throw(InvalidParameter, "TSIG sign error: empty data is given");
     }
 
     TSIGError error(TSIGError::NOERROR());
@@ -422,7 +422,7 @@ TSIGContext::verify(const TSIGRecord* const record, const void* const data,
                     const size_t data_len)
 {
     if (impl_->state_ == SENT_RESPONSE) {
-        isc_throw(TSIGContextError,
+        bundy_throw(TSIGContextError,
                   "TSIG verify attempt after sending a response");
     }
 
@@ -448,11 +448,11 @@ TSIGContext::verify(const TSIGRecord* const record, const void* const data,
 
     // Reject some obviously invalid data
     if (data_len < MESSAGE_HEADER_LEN + record->getLength()) {
-        isc_throw(InvalidParameter,
+        bundy_throw(InvalidParameter,
                   "TSIG verify: data length is invalid: " << data_len);
     }
     if (data == NULL) {
-        isc_throw(InvalidParameter, "TSIG verify: empty data is invalid");
+        bundy_throw(InvalidParameter, "TSIG verify: empty data is invalid");
     }
 
     // This message is signed and we won't throw any more.
@@ -548,7 +548,7 @@ TSIGContext::verify(const TSIGRecord* const record, const void* const data,
 bool
 TSIGContext::lastHadSignature() const {
     if (impl_->last_sig_dist_ == -1) {
-        isc_throw(TSIGContextError, "No message was verified yet");
+        bundy_throw(TSIGContextError, "No message was verified yet");
     }
     return (impl_->last_sig_dist_ == 0);
 }
@@ -565,4 +565,4 @@ TSIGContext::update(const void* const data, size_t len) {
 }
 
 } // namespace dns
-} // namespace isc
+} // namespace bundy

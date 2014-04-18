@@ -8,7 +8,7 @@ bundy_ddnsdir = $(pkgdatadir)
 bundy_ddns_DATA = ddns.spec
 
 nodist_pylogmessage_PYTHON = $(PYTHON_LOGMSGPKG_DIR)/work/ddns_messages.py
-pylogmessagedir = $(pyexecdir)/isc/log_messages/
+pylogmessagedir = $(pyexecdir)/bundy/log_messages/
 
 CLEANFILES = bundy-ddns ddns.pyc
 CLEANFILES += $(PYTHON_LOGMSGPKG_DIR)/work/ddns_messages.py

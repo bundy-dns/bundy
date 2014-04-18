@@ -20,12 +20,12 @@
 
 #include <datasrc/memory/zone_data.h>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 
-/// \brief In-memory derivation of \c isc::dns::RRsetCollectionBase.
-class RRsetCollection : public isc::dns::RRsetCollectionBase {
+/// \brief In-memory derivation of \c bundy::dns::RRsetCollectionBase.
+class RRsetCollection : public bundy::dns::RRsetCollectionBase {
 public:
     /// \brief Constructor.
     ///
@@ -35,7 +35,7 @@ public:
     ///
     /// \param zone_data The ZoneData to wrap around.
     /// \param rrclass The RRClass of the records in the zone.
-    RRsetCollection(ZoneData& zone_data, const isc::dns::RRClass& rrclass) :
+    RRsetCollection(ZoneData& zone_data, const bundy::dns::RRClass& rrclass) :
         zone_data_(zone_data),
         rrclass_(rrclass)
     {}
@@ -49,34 +49,34 @@ public:
     /// given \c name, \c rrclass and \c rrtype.  If no matching RRset
     /// is found, \c NULL is returned.
     ///
-    /// \throw isc::dns::RRsetCollectionError if \c find() results in
+    /// \throw bundy::dns::RRsetCollectionError if \c find() results in
     /// some underlying error.
     ///
     /// \param name The name of the RRset to search for.
     /// \param rrclass The class of the RRset to search for.
     /// \param rrtype The type of the RRset to search for.
     /// \returns The RRset if found, \c NULL otherwise.
-    virtual isc::dns::ConstRRsetPtr find(const isc::dns::Name& name,
-                                         const isc::dns::RRClass& rrclass,
-                                         const isc::dns::RRType& rrtype) const;
+    virtual bundy::dns::ConstRRsetPtr find(const bundy::dns::Name& name,
+                                         const bundy::dns::RRClass& rrclass,
+                                         const bundy::dns::RRType& rrtype) const;
 
 protected:
     virtual RRsetCollectionBase::IterPtr getBeginning() {
-        isc_throw(NotImplemented, "This method is not implemented.");
+        bundy_throw(NotImplemented, "This method is not implemented.");
     }
 
     virtual RRsetCollectionBase::IterPtr getEnd() {
-        isc_throw(NotImplemented, "This method is not implemented.");
+        bundy_throw(NotImplemented, "This method is not implemented.");
     }
 
 private:
     ZoneData& zone_data_;
-    isc::dns::RRClass rrclass_;
+    bundy::dns::RRClass rrclass_;
 };
 
 } // end of namespace memory
 } // end of namespace datasrc
-} // end of namespace isc
+} // end of namespace bundy
 
 #endif  // RRSET_COLLECTION_DATASRC_MEMORY_H
 

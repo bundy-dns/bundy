@@ -20,7 +20,7 @@
 #include <stdint.h>
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 
 /// \brief Hash Key
@@ -51,7 +51,7 @@ struct HashKey {
     /// \param the_keylen Length of the byte array
     /// \param the_class_code Class of this entry
     HashKey(const char* the_key, uint32_t the_keylen,
-        const isc::dns::RRClass& the_class_code) :
+        const bundy::dns::RRClass& the_class_code) :
         key(the_key),
         keylen(the_keylen),
         class_code(the_class_code)
@@ -64,7 +64,7 @@ struct HashKey {
     /// \param the_key Name to use as the key for the hash
     /// \param the_class_code Class of this entry
     HashKey(const std::string& the_key,
-        const isc::dns::RRClass& the_class_code) :
+        const bundy::dns::RRClass& the_class_code) :
         key(the_key.c_str()),
         keylen(the_key.size()),
         class_code(the_class_code)
@@ -83,14 +83,14 @@ struct HashKey {
     /// \param other Hash key to compare against.
     ///
     /// \return true if the two hash key objects are the same.
-    bool operator==(const isc::nsas::HashKey& other);
+    bool operator==(const bundy::nsas::HashKey& other);
 
     const char* key;        ///< Pointer to the start of the key string
     uint32_t    keylen;     ///< Length of the key string
-    isc::dns::RRClass class_code; ///< Class associated with the key
+    bundy::dns::RRClass class_code; ///< Class associated with the key
 };
 
 } // namespace nsas
-} // namespace isc
+} // namespace bundy
 
 #endif // HASH_KEY_H

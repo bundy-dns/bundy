@@ -21,7 +21,7 @@
 #include <cstring>
 #include <stdint.h>
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace test {
 

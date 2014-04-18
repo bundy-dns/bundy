@@ -26,9 +26,9 @@
 #include <sstream>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dhcp;
-using namespace isc::asiolink;
+using namespace bundy;
+using namespace bundy::dhcp;
+using namespace bundy::asiolink;
 
 using boost::scoped_ptr;
 
@@ -152,13 +152,13 @@ TEST(HWAddrTest, fromText) {
     // HWAddr should not allow multiple consecutive colons.
     EXPECT_THROW(
        hwaddr.reset(new HWAddr(HWAddr::fromText("00::01:00:bc:0d:67"))),
-       isc::BadValue
+       bundy::BadValue
     );
 
     // There should be no more than two digits per byte of the HW addr.
     EXPECT_THROW(
        hwaddr.reset(new HWAddr(HWAddr::fromText("00:01:00A:bc:0d:67"))),
-       isc::BadValue
+       bundy::BadValue
     );
 
 }

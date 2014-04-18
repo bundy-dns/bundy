@@ -1,6 +1,6 @@
 namespace {
 // Modifications
-//   - libdns++ => isc.dns, libdatasrc => isc.datasrc
+//   - libdns++ => bundy.dns, libdatasrc => bundy.datasrc
 //   - note about the direct construction.
 //   - add note about iteration
 const char* const RRsetCollectionBase_doc = "\
@@ -15,8 +15,8 @@ maybe class) and a way to iterate over all RRsets.\n\
 \n\
     Note: in the initial version, iteration is not yet supported.\n\
 \n\
-See RRsetCollection for a simple isc.dns implementation. Other modules\n\
-such as isc.datasrc will have another implementation.\n\
+See RRsetCollection for a simple bundy.dns implementation. Other modules\n\
+such as bundy.datasrc will have another implementation.\n\
 \n\
 This base class cannot be directly instantiated.  Such an attempt will\n\
 result in a TypeError exception.\n\
@@ -28,7 +28,7 @@ result in a TypeError exception.\n\
 //   - NULL => None
 //   - added types of params
 const char* const RRsetCollectionBase_find_doc = "\
-find(name, rrclass, rrtype) -> isc.dns.RRset\n\
+find(name, rrclass, rrtype) -> bundy.dns.RRset\n\
 \n\
 Find a matching RRset in the collection.\n\
 \n\
@@ -72,22 +72,22 @@ Exceptions:\n\
              specific error.\n\
 \n\
 Parameters:\n\
-  name       (isc.dns.Name) The name of the RRset to search for.\n\
-  rrtype     (isc.dns.RRType) The type of the RRset to search for.\n\
-  rrclass    (isc.dns.RRClass) The class of the RRset to search for.\n\
+  name       (bundy.dns.Name) The name of the RRset to search for.\n\
+  rrtype     (bundy.dns.RRType) The type of the RRset to search for.\n\
+  rrclass    (bundy.dns.RRClass) The class of the RRset to search for.\n\
 \n\
 Return Value(s): The RRset if found, None otherwise.\n\
 ";
 
 
 // Modifications
-//   - libdns++ => isc.dns
+//   - libdns++ => bundy.dns
 //   - remove STL
 //   - MasterLoaderError => IscException
 //   - added types of params
 //  - input_stream => input, stream => bytes
 const char* const RRsetCollection_doc = "\
-Derived class implementation of RRsetCollectionBase for isc.dns module.\n\
+Derived class implementation of RRsetCollectionBase for bundy.dns module.\n\
 \n\
 RRsetCollection()\n\
 \n\
@@ -111,8 +111,8 @@ RRsetCollection(filename, origin, rrclass)\n\
       filename   (str) Name of a file containing a collection of RRs in the\n\
                  master file format (which may or may not form a valid\n\
                  zone).\n\
-      origin     (isc.dns.Name) The zone origin.\n\
-      rrclass    (isc.dns.RRClass) The zone class.\n\
+      origin     (bundy.dns.Name) The zone origin.\n\
+      rrclass    (bundy.dns.RRClass) The zone class.\n\
 \n\
 RRsetCollection(input, origin, rrclass)\n\
 \n\
@@ -126,8 +126,8 @@ RRsetCollection(input, origin, rrclass)\n\
 \n\
     Parameters:\n\
       input      (bytes) Textual representation of the zone.\n\
-      origin     (isc.dns.Name) The zone origin.\n\
-      rrclass    (isc.dns.RRClass) The zone class.\n\
+      origin     (bundy.dns.Name) The zone origin.\n\
+      rrclass    (bundy.dns.RRClass) The zone class.\n\
 \n\
 ";
 
@@ -151,7 +151,7 @@ class, type and name already exists.\n\
 // Modifications
 //   - ConstRRset => RRset
 const char* const RRsetCollection_find_doc = "\
-find(name, rrclass, rrtype) -> isc.dns.RRset\n\
+find(name, rrclass, rrtype) -> bundy.dns.RRset\n\
 \n\
 Find a matching RRset in the collection.\n\
 \n\

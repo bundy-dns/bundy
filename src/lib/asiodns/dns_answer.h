@@ -19,7 +19,7 @@
 #include <util/buffer.h>
 #include <dns/message.h>
 
-namespace isc {
+namespace bundy {
 namespace asiodns {
 
 /// \brief The \c DNSAnswer class is an abstract base class for a DNS
@@ -67,11 +67,11 @@ public:
     /// building
     /// \param buffer Intermediate data results are put here
     virtual void operator()(const asiolink::IOMessage& io_message,
-                            isc::dns::MessagePtr query_message,
-                            isc::dns::MessagePtr answer_message,
-                            isc::util::OutputBufferPtr buffer) const = 0;
+                            bundy::dns::MessagePtr query_message,
+                            bundy::dns::MessagePtr answer_message,
+                            bundy::util::OutputBufferPtr buffer) const = 0;
 };
 
 }      // namespace asiodns
-}      // namespace isc
+}      // namespace bundy
 #endif // ASIOLINK_DNS_ANSWER_H

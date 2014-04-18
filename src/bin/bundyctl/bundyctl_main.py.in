@@ -25,10 +25,10 @@ from bundyctl.bindcmd import *
 from bundyctl import command_sets
 import pprint
 from optparse import OptionParser, OptionValueError
-import isc.util.process
-import isc.util.traceback_handler
+import bundy.util.process
+import bundy.util.traceback_handler
 
-isc.util.process.rename()
+bundy.util.process.rename()
 
 # This is the version that gets displayed to the user.
 # The VERSION string consists of the module name, the module version
@@ -164,4 +164,4 @@ def main():
     sys.exit(result)
 
 if __name__ == '__main__':
-    isc.util.traceback_handler.traceback_handler(main)
+    bundy.util.traceback_handler.traceback_handler(main)

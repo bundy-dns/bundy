@@ -37,8 +37,8 @@
 #include <dns/message.h>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::util;
+using namespace bundy::dns;
+using namespace bundy::util;
 
 namespace {
 char* dns_type = NULL;    // not set, so A, AAAA, MX

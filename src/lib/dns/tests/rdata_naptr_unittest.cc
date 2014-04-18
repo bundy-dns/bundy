@@ -27,12 +27,12 @@
 #include <util/unittests/wiredata.h>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::util;
-using namespace isc::dns::rdata;
-using namespace isc::dns::rdata::generic;
-using isc::UnitTestUtil;
-using isc::util::unittests::matchWireData;
+using namespace bundy::dns;
+using namespace bundy::util;
+using namespace bundy::dns::rdata;
+using namespace bundy::dns::rdata::generic;
+using bundy::UnitTestUtil;
+using bundy::util::unittests::matchWireData;
 
 namespace {
 class Rdata_NAPTR_Test : public RdataTest {
@@ -139,7 +139,7 @@ TEST_F(Rdata_NAPTR_Test, createFromWireTooLongDataLen) {
     0x61,0x6d,0x70,0x6c,0x65,0x03,0x63,0x6f,0x6d,0x00,0xff,0xff,0xff,0xff};
     InputBuffer input_buffer(naptr_rdata_long, sizeof(naptr_rdata_long));
     EXPECT_THROW(NAPTR naptr(input_buffer, sizeof(naptr_rdata_long)),
-                 isc::dns::DNSMessageFORMERR);
+                 bundy::dns::DNSMessageFORMERR);
 }
 
 TEST_F(Rdata_NAPTR_Test, createFromWireTooShortDataLen) {
@@ -148,7 +148,7 @@ TEST_F(Rdata_NAPTR_Test, createFromWireTooShortDataLen) {
         // Just use existing correct buffer but set rdata_len too low
         InputBuffer input_buffer(naptr_rdata, sizeof(naptr_rdata));
         EXPECT_THROW(NAPTR naptr(input_buffer, i),
-                     isc::dns::DNSMessageFORMERR);
+                     bundy::dns::DNSMessageFORMERR);
     }
 }
 

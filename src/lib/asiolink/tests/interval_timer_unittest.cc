@@ -26,7 +26,7 @@ const boost::posix_time::time_duration TIMER_MARGIN_MSEC =
     boost::posix_time::milliseconds(50);
 }
 
-using namespace isc::asiolink;
+using namespace bundy::asiolink;
 
 // This fixture is for testing IntervalTimer. Some callback functors are
 // registered as callback function of the timer to test if they are called
@@ -148,10 +148,10 @@ TEST_F(IntervalTimerTest, invalidArgumentToIntervalTimer) {
     IntervalTimer itimer(io_service_);
     // expect throw if call back function is empty
     EXPECT_THROW(itimer.setup(IntervalTimer::Callback(), 1),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     // expect throw if interval is not greater than 0
-    EXPECT_THROW(itimer.setup(TimerCallBack(this), 0), isc::BadValue);
-    EXPECT_THROW(itimer.setup(TimerCallBack(this), -1), isc::BadValue);
+    EXPECT_THROW(itimer.setup(TimerCallBack(this), 0), bundy::BadValue);
+    EXPECT_THROW(itimer.setup(TimerCallBack(this), -1), bundy::BadValue);
 }
 
 TEST_F(IntervalTimerTest, startIntervalTimer) {

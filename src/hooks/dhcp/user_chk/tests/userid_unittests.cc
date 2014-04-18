@@ -29,12 +29,12 @@ namespace {
 TEST(UserIdTest, invalidConstructors) {
     // Verify that constructor does not allow empty id vector.
     std::vector<uint8_t> empty_bytes;
-    ASSERT_THROW(UserId(UserId::HW_ADDRESS, empty_bytes), isc::BadValue);
-    ASSERT_THROW(UserId(UserId::DUID, empty_bytes), isc::BadValue);
+    ASSERT_THROW(UserId(UserId::HW_ADDRESS, empty_bytes), bundy::BadValue);
+    ASSERT_THROW(UserId(UserId::DUID, empty_bytes), bundy::BadValue);
 
     // Verify that constructor does not allow empty id string.
-    ASSERT_THROW(UserId(UserId::HW_ADDRESS, ""), isc::BadValue);
-    ASSERT_THROW(UserId(UserId::DUID, ""), isc::BadValue);
+    ASSERT_THROW(UserId(UserId::HW_ADDRESS, ""), bundy::BadValue);
+    ASSERT_THROW(UserId(UserId::DUID, ""), bundy::BadValue);
 }
 
 /// @brief Test making and using HW_ADDRESS type UserIds

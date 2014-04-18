@@ -12,7 +12,7 @@ location of BUNDY header files and library objects.
 
 You can use the configure.ac and Makefile.am files with macros under
 the "m4" subdirectory as a template for your own project.  The key is
-to call the AX_ISC_BUNDY function (as the sample configure.ac does)
+to call the AX_BUNDY_BUNDY function (as the sample configure.ac does)
 from your configure.ac.  Then it will check the availability of
 necessary stuff and set some corresponding AC variables.  You can then
 use the resulting variables in your Makefile.in or Makefile.am.

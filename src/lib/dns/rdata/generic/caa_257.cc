@@ -29,9 +29,9 @@
 
 using namespace std;
 using boost::lexical_cast;
-using namespace isc::util;
+using namespace bundy::util;
 
-// BEGIN_ISC_NAMESPACE
+// BEGIN_BUNDY_NAMESPACE
 // BEGIN_RDATA_NAMESPACE
 
 struct CAAImpl {
@@ -43,7 +43,7 @@ struct CAAImpl {
         value_(value)
     {
         if ((sizeof(flags) + 1 + tag_.size() + value_.size()) > 65535) {
-            isc_throw(InvalidRdataLength,
+            bundy_throw(InvalidRdataLength,
                       "CAA Value field is too large: " << value_.size());
         }
     }
@@ -59,7 +59,7 @@ CAA::constructFromLexer(MasterLexer& lexer) {
     const uint32_t flags =
         lexer.getNextToken(MasterToken::NUMBER).getNumber();
     if (flags > 255) {
-        isc_throw(InvalidRdataText,
+        bundy_throw(InvalidRdataText,
                   "CAA flags field out of range");
     }
 
@@ -67,9 +67,9 @@ CAA::constructFromLexer(MasterLexer& lexer) {
     const std::string tag =
         lexer.getNextToken(MasterToken::STRING).getString();
     if (tag.empty()) {
-        isc_throw(InvalidRdataText, "CAA tag field is empty");
+        bundy_throw(InvalidRdataText, "CAA tag field is empty");
     } else if (tag.size() > 255) {
-        isc_throw(InvalidRdataText,
+        bundy_throw(InvalidRdataText,
                   "CAA tag field is too large: " << tag.size());
     }
 
@@ -116,11 +116,11 @@ CAA::CAA(const string& caa_str) :
         impl_ptr.reset(constructFromLexer(lexer));
 
         if (lexer.getNextToken().getType() != MasterToken::END_OF_FILE) {
-            isc_throw(InvalidRdataText, "extra input text for CAA: "
+            bundy_throw(InvalidRdataText, "extra input text for CAA: "
                       << caa_str);
         }
     } catch (const MasterLexer::LexerError& ex) {
-        isc_throw(InvalidRdataText, "Failed to construct CAA from '" <<
+        bundy_throw(InvalidRdataText, "Failed to construct CAA from '" <<
                   caa_str << "': " << ex.what());
     }
 
@@ -154,18 +154,18 @@ CAA::CAA(MasterLexer& lexer, const Name*,
 /// field must not be empty.
 CAA::CAA(InputBuffer& buffer, size_t rdata_len) {
     if (rdata_len < 2) {
-        isc_throw(InvalidRdataLength, "CAA record too short");
+        bundy_throw(InvalidRdataLength, "CAA record too short");
     }
 
     const uint8_t flags = buffer.readUint8();
     const uint8_t tag_length = buffer.readUint8();
     rdata_len -= 2;
     if (tag_length == 0) {
-        isc_throw(InvalidRdataText, "CAA tag field is empty");
+        bundy_throw(InvalidRdataText, "CAA tag field is empty");
     }
 
     if (rdata_len < tag_length) {
-        isc_throw(InvalidRdataLength,
+        bundy_throw(InvalidRdataLength,
                   "RDATA is too short for CAA tag field");
     }
 
@@ -187,10 +187,10 @@ CAA::CAA(uint8_t flags, const std::string& tag, const std::string& value) :
     impl_(NULL)
 {
     if (tag.empty()) {
-        isc_throw(isc::InvalidParameter,
+        bundy_throw(bundy::InvalidParameter,
                   "CAA tag field is empty");
     } else if (tag.size() > 255) {
-        isc_throw(isc::InvalidParameter,
+        bundy_throw(bundy::InvalidParameter,
                   "CAA tag field is too large: " << tag.size());
     }
 
@@ -303,4 +303,4 @@ CAA::getValue() const {
 }
 
 // END_RDATA_NAMESPACE
-// END_ISC_NAMESPACE
+// END_BUNDY_NAMESPACE

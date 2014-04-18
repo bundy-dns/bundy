@@ -36,7 +36,7 @@
 using namespace std;
 using namespace boost::archive::iterators;
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace encode {
 
@@ -233,7 +233,7 @@ public:
             if (in_pad_) {
                 return (base_zero_code_);
             } else {
-                isc_throw(BadValue, "Intermediate padding found");
+                bundy_throw(BadValue, "Intermediate padding found");
             }
         } else {
             return (*base_);
@@ -329,7 +329,7 @@ BaseNTransformer<BitsPerChunk, BaseZeroCode, Encoder, Decoder>::decode(
         char ch = *srit;
         if (ch == BASE_PADDING_CHAR) {
             if (++padchars > MAX_PADDING_CHARS) {
-                isc_throw(BadValue, "Too many " << algorithm
+                bundy_throw(BadValue, "Too many " << algorithm
                           << " padding characters: " << input);
             }
         } else if (!(ch > 0 && isspace(ch))) {
@@ -365,7 +365,7 @@ BaseNTransformer<BitsPerChunk, BaseZeroCode, Encoder, Decoder>::decode(
     // 0      7 (bits)
     // The following check rejects this type of invalid encoding.
     if (padbits > BitsPerChunk * (padchars + 1)) {
-        isc_throw(BadValue, "Invalid " << algorithm << "padding: " << input);
+        bundy_throw(BadValue, "Invalid " << algorithm << "padding: " << input);
     }
 
     // convert the number of bits in bytes for convenience.
@@ -389,11 +389,11 @@ BaseNTransformer<BitsPerChunk, BaseZeroCode, Encoder, Decoder>::decode(
         }
     } catch (const clang_unnamed_namespace_workaround::IncompleteBaseInput&) {
         // we unify error handling for incomplete input here.
-        isc_throw(BadValue, "Incomplete input for " << algorithm
+        bundy_throw(BadValue, "Incomplete input for " << algorithm
                   << ": " << input);
     } catch (const dataflow_exception& ex) {
         // convert any boost exceptions into our local one.
-        isc_throw(BadValue, ex.what());
+        bundy_throw(BadValue, ex.what());
     }
 
     // Confirm the original BaseX text is the canonical encoding of the
@@ -402,7 +402,7 @@ BaseNTransformer<BitsPerChunk, BaseZeroCode, Encoder, Decoder>::decode(
     // padding is all zero).
     assert(result.size() >= padbytes);
     if (padbytes > 0 && *(result.end() - padbytes) != 0) {
-            isc_throw(BadValue, "Non 0 bits included in " << algorithm
+            bundy_throw(BadValue, "Non 0 bits included in " << algorithm
                       << " padding: " << input);
     }
 
@@ -475,4 +475,4 @@ decodeHex(const string& input, vector<uint8_t>& result) {
 
 } // namespace encode
 } // namespace util
-} // namespace isc
+} // namespace bundy

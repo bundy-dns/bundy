@@ -15,7 +15,7 @@
 #ifndef DUMMY_WORK_H
 #define DUMMY_WORK_H
 
-namespace isc {
+namespace bundy {
 namespace resolver {
 namespace bench {
 

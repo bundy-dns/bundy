@@ -16,10 +16,10 @@
 
 #include "auth_log.h"
 
-namespace isc {
+namespace bundy {
 namespace auth {
 
-isc::log::Logger auth_logger("auth");
+bundy::log::Logger auth_logger("auth");
 
 const int DBG_AUTH_START = DBGLVL_START_SHUT;
 const int DBG_AUTH_SHUT = DBGLVL_START_SHUT;
@@ -28,5 +28,5 @@ const int DBG_AUTH_DETAIL = DBGLVL_TRACE_BASIC;
 const int DBG_AUTH_MESSAGES = DBGLVL_TRACE_DETAIL_DATA;
 
 } // namespace auth
-} // namespace isc
+} // namespace bundy
 

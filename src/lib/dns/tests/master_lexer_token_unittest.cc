@@ -20,7 +20,7 @@
 
 #include <string>
 
-using namespace isc::dns;
+using namespace bundy::dns;
 
 namespace {
 
@@ -76,12 +76,12 @@ TEST_F(MasterLexerTokenTest, strings) {
               getType());
 
     // getString/StringRegion() aren't allowed for non string(-variant) types
-    EXPECT_THROW(token_eof.getString(), isc::InvalidOperation);
-    EXPECT_THROW(token_eof.getString(strval), isc::InvalidOperation);
-    EXPECT_THROW(token_num.getString(), isc::InvalidOperation);
-    EXPECT_THROW(token_num.getString(strval), isc::InvalidOperation);
-    EXPECT_THROW(token_eof.getStringRegion(), isc::InvalidOperation);
-    EXPECT_THROW(token_num.getStringRegion(), isc::InvalidOperation);
+    EXPECT_THROW(token_eof.getString(), bundy::InvalidOperation);
+    EXPECT_THROW(token_eof.getString(strval), bundy::InvalidOperation);
+    EXPECT_THROW(token_num.getString(), bundy::InvalidOperation);
+    EXPECT_THROW(token_num.getString(strval), bundy::InvalidOperation);
+    EXPECT_THROW(token_eof.getStringRegion(), bundy::InvalidOperation);
+    EXPECT_THROW(token_num.getStringRegion(), bundy::InvalidOperation);
 }
 
 TEST_F(MasterLexerTokenTest, numbers) {
@@ -106,8 +106,8 @@ TEST_F(MasterLexerTokenTest, numbers) {
     EXPECT_EQ(4294967295u, token.getNumber());
 
     // getNumber() isn't allowed for non number types
-    EXPECT_THROW(token_eof.getNumber(), isc::InvalidOperation);
-    EXPECT_THROW(token_str.getNumber(), isc::InvalidOperation);
+    EXPECT_THROW(token_eof.getNumber(), bundy::InvalidOperation);
+    EXPECT_THROW(token_str.getNumber(), bundy::InvalidOperation);
 }
 
 TEST_F(MasterLexerTokenTest, novalues) {
@@ -119,10 +119,10 @@ TEST_F(MasterLexerTokenTest, novalues) {
               MasterToken(MasterToken::INITIAL_WS).getType());
 
     // Special types of tokens cannot have value-based types
-    EXPECT_THROW(MasterToken t(MasterToken::STRING), isc::InvalidParameter);
-    EXPECT_THROW(MasterToken t(MasterToken::QSTRING), isc::InvalidParameter);
-    EXPECT_THROW(MasterToken t(MasterToken::NUMBER), isc::InvalidParameter);
-    EXPECT_THROW(MasterToken t(MasterToken::ERROR), isc::InvalidParameter);
+    EXPECT_THROW(MasterToken t(MasterToken::STRING), bundy::InvalidParameter);
+    EXPECT_THROW(MasterToken t(MasterToken::QSTRING), bundy::InvalidParameter);
+    EXPECT_THROW(MasterToken t(MasterToken::NUMBER), bundy::InvalidParameter);
+    EXPECT_THROW(MasterToken t(MasterToken::ERROR), bundy::InvalidParameter);
 }
 
 TEST_F(MasterLexerTokenTest, errors) {
@@ -147,8 +147,8 @@ TEST_F(MasterLexerTokenTest, errors) {
               MasterToken(MasterToken::UNEXPECTED_QUOTES).getErrorText());
 
     // getErrorCode/Text() isn't allowed for non number types
-    EXPECT_THROW(token_num.getErrorCode(), isc::InvalidOperation);
-    EXPECT_THROW(token_num.getErrorText(), isc::InvalidOperation);
+    EXPECT_THROW(token_num.getErrorCode(), bundy::InvalidOperation);
+    EXPECT_THROW(token_num.getErrorText(), bundy::InvalidOperation);
 
     // Only the pre-defined error code is accepted.  Hardcoding '8' (max code
     // + 1) is intentional; it'd be actually better if we notice it when we
@@ -157,7 +157,7 @@ TEST_F(MasterLexerTokenTest, errors) {
     // Note: if you fix this testcase, you probably want to update the
     // getErrorText() tests above too.
     EXPECT_THROW(MasterToken(MasterToken::ErrorCode(8)),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 
     // Check the coexistence of "from number" and "from error-code"
     // constructors won't cause confusion.

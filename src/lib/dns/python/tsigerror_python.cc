@@ -26,9 +26,9 @@
 #include "tsigerror_python.h"
 
 using namespace std;
-using namespace isc::util::python;
-using namespace isc::dns;
-using namespace isc::dns::python;
+using namespace bundy::util::python;
+using namespace bundy::dns;
+using namespace bundy::dns::python;
 
 // For each class, we need a struct, a helper functions (init, destroy,
 // and static wrappers around the methods we export), a list of methods,
@@ -107,7 +107,7 @@ TSIGError_init(s_TSIGError* self, PyObject* args) {
             self->cppobj = new TSIGError(PyRcode_ToRcode(py_rcode));
             return (0);
         }
-    } catch (const isc::OutOfRange& ex) {
+    } catch (const bundy::OutOfRange& ex) {
         const string ex_what = "Failed to construct TSIGError object: " +
             string(ex.what());
         PyErr_SetString(PyExc_ValueError, ex_what.c_str());
@@ -222,7 +222,7 @@ TSIGError_richcmp(const s_TSIGError* const self,
 }
 } // end of unnamed namespace
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace python {
 // This defines the complete type for reflection in python and
@@ -288,4 +288,4 @@ createTSIGErrorObject(const TSIGError& source) {
 }
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy

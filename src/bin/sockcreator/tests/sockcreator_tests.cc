@@ -31,9 +31,9 @@
 #include <cstring>
 #include <cerrno>
 
-using namespace isc::socket_creator;
-using namespace isc::util::unittests;
-using namespace isc::util::io;
+using namespace bundy::socket_creator;
+using namespace bundy::util::unittests;
+using namespace bundy::util::io;
 
 // The tests check both TCP and UDP sockets on IPv4 and IPv6.
 //
@@ -348,7 +348,7 @@ void runTest(const char* input_data, const size_t input_size,
                             test_close));
     } else {
         EXPECT_THROW(run(input_fd, output_fd, getSockDummy, send_fd,
-                         test_close), isc::socket_creator::SocketCreatorError);
+                         test_close), bundy::socket_creator::SocketCreatorError);
     }
 
     // Close the pipes

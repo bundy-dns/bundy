@@ -23,25 +23,25 @@ import socket
 import threading
 
 sys.path.append('@@PYTHONPATH@@')
-import isc.dns
-import isc.log
-from isc.config import ModuleSpecError, ModuleCCSessionError
-from isc.log_messages.memmgr_messages import *
-from isc.server_common.bundy_server import BUNDYServer, BUNDYServerFatal
-from isc.server_common.datasrc_clients_mgr \
+import bundy.dns
+import bundy.log
+from bundy.config import ModuleSpecError, ModuleCCSessionError
+from bundy.log_messages.memmgr_messages import *
+from bundy.server_common.bundy_server import BUNDYServer, BUNDYServerFatal
+from bundy.server_common.datasrc_clients_mgr \
     import DataSrcClientsMgr, ConfigError
-from isc.memmgr.datasrc_info import DataSrcInfo, SegmentInfo
-from isc.memmgr.builder import MemorySegmentBuilder
-import isc.util.process
-import isc.util.traceback_handler
+from bundy.memmgr.datasrc_info import DataSrcInfo, SegmentInfo
+from bundy.memmgr.builder import MemorySegmentBuilder
+import bundy.util.process
+import bundy.util.traceback_handler
 
 MODULE_NAME = 'memmgr'
 SEGMENT_READER_GROUP = 'SegmentReader'
 
-isc.log.init('bundy-memmgr', buffer=True)
-logger = isc.log.Logger(MODULE_NAME)
+bundy.log.init('bundy-memmgr', buffer=True)
+logger = bundy.log.Logger(MODULE_NAME)
 
-isc.util.process.rename()
+bundy.util.process.rename()
 
 class ConfigError(Exception):
     """An exception class raised for configuration errors of Memmgr."""
@@ -90,7 +90,7 @@ class Memmgr(BUNDYServer):
             try:
                 # TODO: we should eventually handle multiple generations
                 dsrc_info = self._datasrc_info_list[-1]
-                rrclass = isc.dns.RRClass(args['data-source-class'])
+                rrclass = bundy.dns.RRClass(args['data-source-class'])
                 dsrc_name = args['data-source-name']
                 sgmt_info = dsrc_info.segment_info_map[(rrclass, dsrc_name)]
                 reader = args['reader']
@@ -112,7 +112,7 @@ class Memmgr(BUNDYServer):
         elif cmd == 'loadzone':
             return self.__update_zone(cmd, args)
         else:
-            return isc.config.create_answer(1, 'unknown command: ' + cmd)
+            return bundy.config.create_answer(1, 'unknown command: ' + cmd)
 
     def __update_zone(self, cmd, args):
         "Unified helper to load/update zone."
@@ -132,7 +132,7 @@ class Memmgr(BUNDYServer):
             # Note: basically this can only happen for user-invoked command;
             # otherwise it's internal bug.  So we simply say 'loadzone' here.
             logger.error(MEMMGR_LOADZONE_FAIL, str(ex))
-            return isc.config.create_answer(1, 'bad loadzone parameters: '
+            return bundy.config.create_answer(1, 'bad loadzone parameters: '
                                             + str(ex))
         sgmt_info.add_event(('load', zone_name, dsrc_info, rrclass, dsrc_name))
         bcmd = sgmt_info.start_update()
@@ -140,7 +140,7 @@ class Memmgr(BUNDYServer):
             self._cmd_to_builder(bcmd)
         if cmd == 'loadzone':
             logger.info(MEMMGR_LOADZONE, zone_name, rrclass, dsrc_name)
-            return isc.config.create_answer(0)
+            return bundy.config.create_answer(0)
         else:
             logger.debug(logger.DBGLVL_TRACE_BASIC, MEMMGR_UPDATE_ZONE,
                          zone_name, rrclass, dsrc_name)
@@ -155,11 +155,11 @@ class Memmgr(BUNDYServer):
             not 'origin' in args):
             raise _LoadZoneError('missing parameters')
         try:
-            rrclass = isc.dns.RRClass(args['class'])
-        except isc.dns.InvalidRRClass as ex:
+            rrclass = bundy.dns.RRClass(args['class'])
+        except bundy.dns.InvalidRRClass as ex:
             raise _LoadZoneError('bad class: ' + str(ex))
         try:
-            zone_name = isc.dns.Name(args['origin'])
+            zone_name = bundy.dns.Name(args['origin'])
         except Exception as ex: # there can be many types of error
             raise _LoadZoneError('bad zone origin:' + str(ex))
         dsrc_name = args['datasource']
@@ -180,7 +180,7 @@ class Memmgr(BUNDYServer):
         logger.debug(logger.DBGLVL_TRACE_BASIC, MEMMGR_CONFIG_UPDATE)
 
         # Default answer:
-        answer = isc.config.create_answer(0)
+        answer = bundy.config.create_answer(0)
 
         # If this is the first time, initialize the local attributes with the
         # latest full config data, which consist of the defaults with
@@ -192,7 +192,7 @@ class Memmgr(BUNDYServer):
             self.__update_config(new_config)
         except Exception as ex:
             logger.error(MEMMGR_CONFIG_FAIL, ex)
-            answer = isc.config.create_answer(
+            answer = bundy.config.create_answer(
                 1, 'Memmgr failed to apply configuration updates: ' + str(ex))
 
         return answer
@@ -257,7 +257,7 @@ class Memmgr(BUNDYServer):
         }
         for reader in readers:
             params['reader'] = reader
-            rcmd = isc.config.create_command('segment_info_update', params)
+            rcmd = bundy.config.create_command('segment_info_update', params)
             self.mod_ccsession._session.group_sendmsg(
                 rcmd, SEGMENT_READER_GROUP, to=reader)
             if not sgmt_info in self._segment_readers[reader]:
@@ -471,7 +471,7 @@ class Memmgr(BUNDYServer):
             # at the info level.
             logger.info(MEMMGR_DATASRC_RECONFIGURED, genid)
 
-        except isc.server_common.datasrc_clients_mgr.ConfigError as ex:
+        except bundy.server_common.datasrc_clients_mgr.ConfigError as ex:
             logger.error(MEMMGR_DATASRC_CONFIG_ERROR, ex)
 
     def _init_segments(self, datasrc_info):
@@ -491,4 +491,4 @@ def main():
     sys.exit(mgr.run(MODULE_NAME))
 
 if '__main__' == __name__:
-    isc.util.traceback_handler.traceback_handler(main)
+    bundy.util.traceback_handler.traceback_handler(main)

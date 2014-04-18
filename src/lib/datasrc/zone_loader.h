@@ -23,7 +23,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 // Forward declaration
 class Name;
@@ -83,7 +83,7 @@ public:
     ///     beforehand.
     /// \throw DataSourceError in case of other (possibly low-level) errors,
     ///     such as read-only data source or database error.
-    ZoneLoader(DataSourceClient& destination, const isc::dns::Name& zone_name,
+    ZoneLoader(DataSourceClient& destination, const bundy::dns::Name& zone_name,
                const char* master_file);
 
     /// \brief Constructor from another data source.
@@ -106,7 +106,7 @@ public:
     /// \throw DataSourceError in case the zone does not exist in the source.
     /// \throw DataSourceError in case of other (possibly low-level) errors,
     ///     such as read-only data source or database error.
-    ZoneLoader(DataSourceClient& destination, const isc::dns::Name& zone_name,
+    ZoneLoader(DataSourceClient& destination, const bundy::dns::Name& zone_name,
                DataSourceClient& source);
 
     /// \brief Perform the whole load.
@@ -136,7 +136,7 @@ public:
     /// progress).
     ///
     /// After the last RR is loaded, a sanity check of the zone is performed by
-    /// isc::dns::validateZone. It reports errors and warnings by logging them
+    /// bundy::dns::validateZone. It reports errors and warnings by logging them
     /// directly. If there are any errors, a ZoneContentError exception is
     /// thrown and the load is aborted (preserving the old version of zone, if
     /// any).
@@ -220,7 +220,7 @@ private:
     /// \brief The destination zone updater
     const ZoneUpdaterPtr updater_;
     /// \brief The master loader (for the master file mode)
-    boost::scoped_ptr<isc::dns::MasterLoader> loader_;
+    boost::scoped_ptr<bundy::dns::MasterLoader> loader_;
     /// \brief Indicator if loading was completed
     bool complete_;
     /// \brief Was the loading successful?

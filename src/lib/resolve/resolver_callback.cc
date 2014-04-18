@@ -14,11 +14,11 @@
 
 #include <resolve/resolver_callback.h>
 
-namespace isc {
+namespace bundy {
 namespace resolve {
 
 void
-ResolverCallbackServer::success(const isc::dns::MessagePtr response)
+ResolverCallbackServer::success(const bundy::dns::MessagePtr response)
 {
     // ignore our response here
     (void)response;
@@ -33,4 +33,4 @@ ResolverCallbackServer::failure()
 }
 
 } // namespace resolve
-} // namespace isc
+} // namespace bundy

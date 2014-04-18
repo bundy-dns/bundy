@@ -24,15 +24,15 @@
 #include <sys/socket.h>
 #include <cstdio>
 
-using namespace isc::util::io;
-using namespace isc::util::unittests;
+using namespace bundy::util::io;
+using namespace bundy::util::unittests;
 
 namespace {
 
 // We test that we can transfer a pipe over other pipe
 TEST(FDShare, transfer) {
 
-    if (!isc::util::unittests::runningOnValgrind()) {
+    if (!bundy::util::unittests::runningOnValgrind()) {
         // Get a pipe and fork
         int pipes[2];
         ASSERT_NE(-1, socketpair(AF_UNIX, SOCK_STREAM, 0, pipes));

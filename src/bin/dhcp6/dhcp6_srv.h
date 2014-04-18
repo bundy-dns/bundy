@@ -33,7 +33,7 @@
 #include <iostream>
 #include <queue>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief This exception is thrown when DHCP server hits the error which should
@@ -41,7 +41,7 @@ namespace dhcp {
 class DHCPv6DiscardMessageError : public Exception {
 public:
     DHCPv6DiscardMessageError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief DHCPv6 server service.
@@ -257,7 +257,7 @@ protected:
     ///
     /// @param question client's message
     /// @return selected subnet (or NULL if no suitable subnet was found)
-    isc::dhcp::Subnet6Ptr selectSubnet(const Pkt6Ptr& question);
+    bundy::dhcp::Subnet6Ptr selectSubnet(const Pkt6Ptr& question);
 
     /// @brief Processes IA_NA option (and assigns addresses if necessary).
     ///
@@ -276,10 +276,10 @@ protected:
     /// @param ia pointer to client's IA_NA option (client's request)
     ///
     /// @return IA_NA option (server's response)
-    OptionPtr assignIA_NA(const isc::dhcp::Subnet6Ptr& subnet,
-                          const isc::dhcp::DuidPtr& duid,
-                          const isc::dhcp::Pkt6Ptr& query,
-                          const isc::dhcp::Pkt6Ptr& answer,
+    OptionPtr assignIA_NA(const bundy::dhcp::Subnet6Ptr& subnet,
+                          const bundy::dhcp::DuidPtr& duid,
+                          const bundy::dhcp::Pkt6Ptr& query,
+                          const bundy::dhcp::Pkt6Ptr& answer,
                           Option6IAPtr ia);
 
     /// @brief Processes IA_PD option (and assigns prefixes if necessary).
@@ -462,14 +462,14 @@ protected:
     /// object.
     void processClientFqdn(const Pkt6Ptr& question, const Pkt6Ptr& answer);
 
-    /// @brief Creates a number of @c isc::dhcp_ddns::NameChangeRequest objects
+    /// @brief Creates a number of @c bundy::dhcp_ddns::NameChangeRequest objects
     /// based on the DHCPv6 Client FQDN %Option.
     ///
-    /// The @c isc::dhcp_ddns::NameChangeRequest class encapsulates the request
+    /// The @c bundy::dhcp_ddns::NameChangeRequest class encapsulates the request
     /// from the DHCPv6 server to the DHCP-DDNS module to perform DNS Update.
     /// The FQDN option carries response to the client about DNS updates that
     /// server intents to perform for the DNS client. Based on this, the
-    /// function will create zero or more @c isc::dhcp_ddns::NameChangeRequest
+    /// function will create zero or more @c bundy::dhcp_ddns::NameChangeRequest
     /// objects and store them in the internal queue. Requests created by this
     /// function are only adding or updating DNS records. In order to generate
     /// requests for DNS records removal, use @c createRemovalNameChangeRequest.
@@ -481,12 +481,12 @@ protected:
     /// Client FQDN option, this option is used to create NameChangeRequests.
     void createNameChangeRequests(const Pkt6Ptr& answer);
 
-    /// @brief Creates a @c isc::dhcp_ddns::NameChangeRequest which requests
+    /// @brief Creates a @c bundy::dhcp_ddns::NameChangeRequest which requests
     /// removal of DNS entries for a particular lease.
     ///
     /// This function should be called upon removal of the lease from the lease
     /// database, i.e, when client sent Release or Decline message. It will
-    /// create a single @c isc::dhcp_ddns::NameChangeRequest which removes the
+    /// create a single @c bundy::dhcp_ddns::NameChangeRequest which removes the
     /// existing DNS records for the lease, which server is responsible for.
     /// Note that this function will not remove the entries which server hadn't
     /// added. This is the case, when client performs forward DNS update on its
@@ -527,7 +527,7 @@ protected:
     /// type duid-llt, see RFC3315, section 9.2). If there are no suitable
     /// interfaces present, exception it thrown
     ///
-    /// @throws isc::Unexpected Failed to read DUID file and no suitable
+    /// @throws bundy::Unexpected Failed to read DUID file and no suitable
     ///         interfaces for new DUID generation are detected.
     void generateServerID();
 
@@ -583,7 +583,7 @@ protected:
     /// @return An offset to the first byte after last parsed option.
     size_t unpackOptions(const OptionBuffer& buf,
                          const std::string& option_space,
-                         isc::dhcp::OptionCollection& options,
+                         bundy::dhcp::OptionCollection& options,
                          size_t* relay_msg_offset,
                          size_t* relay_msg_len);
 
@@ -591,8 +591,8 @@ protected:
     ///
     /// @note For now, the client classification is very simple. It just uses
     /// content of the vendor-class-identifier option as a class. The resulting
-    /// class will be stored in packet (see @ref isc::dhcp::Pkt6::classes_ and
-    /// @ref isc::dhcp::Pkt6::inClass).
+    /// class will be stored in packet (see @ref bundy::dhcp::Pkt6::classes_ and
+    /// @ref bundy::dhcp::Pkt6::inClass).
     ///
     /// @param pkt packet to be classified
     void classifyPacket(const Pkt6Ptr& pkt);
@@ -610,7 +610,7 @@ private:
 
     /// @brief Implements the error handler for socket open failure.
     ///
-    /// This callback function is installed on the @c isc::dhcp::IfaceMgr
+    /// This callback function is installed on the @c bundy::dhcp::IfaceMgr
     /// when IPv6 sockets are being open. When socket fails to open for
     /// any reason, this function is called. It simply logs the error message.
     ///
@@ -655,7 +655,7 @@ private:
     /// @param answer Message being sent to a client, which may hold IA_NA
     /// and Client FQDN options to be used to generate name for a client.
     ///
-    /// @throw isc::Unexpected if specified message is NULL. This is treated
+    /// @throw bundy::Unexpected if specified message is NULL. This is treated
     /// as a programmatic error.
     void generateFqdn(const Pkt6Ptr& answer);
 
@@ -677,12 +677,12 @@ protected:
     /// initiate server shutdown procedure.
     volatile bool shutdown_;
 
-    /// Holds a list of @c isc::dhcp_ddns::NameChangeRequest objects, which
+    /// Holds a list of @c bundy::dhcp_ddns::NameChangeRequest objects, which
     /// are waiting for sending to bundy-dhcp-ddns module.
-    std::queue<isc::dhcp_ddns::NameChangeRequest> name_change_reqs_;
+    std::queue<bundy::dhcp_ddns::NameChangeRequest> name_change_reqs_;
 };
 
-}; // namespace isc::dhcp
-}; // namespace isc
+}; // namespace bundy::dhcp
+}; // namespace bundy
 
 #endif // DHCP6_SRV_H

@@ -19,12 +19,12 @@
 #include <dhcp/option.h>
 #include <boost/shared_ptr.hpp>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 class Option6IAAddr;
 
-/// A pointer to the @c isc::dhcp::Option6IAAddr object.
+/// A pointer to the @c bundy::dhcp::Option6IAAddr object.
 typedef boost::shared_ptr<Option6IAAddr> Option6IAAddrPtr;
 
 class Option6IAAddr: public Option {
@@ -41,7 +41,7 @@ public:
     /// @param addr reference to an address
     /// @param preferred address preferred lifetime (in seconds)
     /// @param valid address valid lifetime (in seconds)
-    Option6IAAddr(uint16_t type, const isc::asiolink::IOAddress& addr,
+    Option6IAAddr(uint16_t type, const bundy::asiolink::IOAddress& addr,
                   uint32_t preferred, uint32_t valid);
 
     /// @brief Constructor, used for received options.
@@ -60,7 +60,7 @@ public:
     /// byte after stored option.
     ///
     /// @param buf pointer to a buffer
-    void pack(isc::util::OutputBuffer& buf);
+    void pack(bundy::util::OutputBuffer& buf);
 
     /// @brief Parses received buffer.
     ///
@@ -81,7 +81,7 @@ public:
     /// sets address in this option.
     ///
     /// @param addr address to be sent in this option
-    void setAddress(const isc::asiolink::IOAddress& addr) { addr_ = addr; }
+    void setAddress(const bundy::asiolink::IOAddress& addr) { addr_ = addr; }
 
     /// Sets preferred lifetime (in seconds)
     ///
@@ -98,7 +98,7 @@ public:
     /// Returns  address contained within this option.
     ///
     /// @return address
-    isc::asiolink::IOAddress
+    bundy::asiolink::IOAddress
     getAddress() const { return addr_; }
 
     /// Returns preferred lifetime of an address.
@@ -118,7 +118,7 @@ public:
 
 protected:
     /// contains an IPv6 address
-    isc::asiolink::IOAddress addr_;
+    bundy::asiolink::IOAddress addr_;
 
     /// contains preferred-lifetime timer (in seconds)
     unsigned int preferred_;
@@ -127,7 +127,7 @@ protected:
     unsigned int valid_;
 };
 
-} // isc::dhcp namespace
-} // isc namespace
+} // bundy::dhcp namespace
+} // bundy namespace
 
 #endif // OPTION_IA_H

@@ -28,11 +28,11 @@
 #include <vector>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::dns::rdata;
-using namespace isc::util;
-using isc::UnitTestUtil;
-using isc::util::unittests::matchWireData;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
+using namespace bundy::util;
+using bundy::UnitTestUtil;
+using bundy::util::unittests::matchWireData;
 
 namespace {
 
@@ -141,9 +141,9 @@ TYPED_TEST(NSEC3PARAMLikeTest, fromText) {
 TYPED_TEST(NSEC3PARAMLikeTest, badText) {
     // Bad salt hex
     EXPECT_THROW(this->fromText("1 1 1 SPORK0" + this->getCommonText()),
-                 isc::BadValue);
+                 bundy::BadValue);
     EXPECT_THROW(this->fromText("1 1 1 ADDAFEE" + this->getCommonText()),
-                 isc::BadValue);
+                 bundy::BadValue);
 
     // Space within salt
     EXPECT_THROW(this->fromText("1 1 1 ADDAFE ADDAFEEE" +
@@ -152,7 +152,7 @@ TYPED_TEST(NSEC3PARAMLikeTest, badText) {
 
     // Similar to empty salt, but not really.  This shouldn't cause confusion.
     EXPECT_THROW(this->fromText("1 1 1 --" + this->getCommonText()),
-                 isc::BadValue);
+                 bundy::BadValue);
 
     // Too large algorithm
     EXPECT_THROW(this->fromText("1000000 1 1 ADDAFEEE" + this->getCommonText()),

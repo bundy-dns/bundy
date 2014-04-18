@@ -32,11 +32,11 @@
 #include <string>
 
 using namespace std;
-using namespace isc;
-using namespace isc::config;
-using namespace isc::data;
-using namespace isc::dhcp;
-using namespace isc::hooks;
+using namespace bundy;
+using namespace bundy::config;
+using namespace bundy::data;
+using namespace bundy::dhcp;
+using namespace bundy::hooks;
 
 namespace {
 
@@ -65,7 +65,7 @@ TEST_F(DhcpParserTest, booleanParserTest) {
 
     // Verify that parser does not allow empty for storage.
     BooleanStoragePtr bs;
-    EXPECT_THROW(BooleanParser(name, bs), isc::dhcp::DhcpConfigError);
+    EXPECT_THROW(BooleanParser(name, bs), bundy::dhcp::DhcpConfigError);
 
     // Construct parser for testing.
     BooleanStoragePtr storage(new BooleanStorage());
@@ -73,7 +73,7 @@ TEST_F(DhcpParserTest, booleanParserTest) {
 
     // Verify that parser with rejects a non-boolean element.
     ElementPtr wrong_element = Element::create("I am a string");
-    EXPECT_THROW(parser.build(wrong_element), isc::BadValue);
+    EXPECT_THROW(parser.build(wrong_element), bundy::BadValue);
 
     // Verify that parser will build with a valid true value.
     bool test_value = true;
@@ -111,7 +111,7 @@ TEST_F(DhcpParserTest, stringParserTest) {
 
     // Verify that parser does not allow empty for storage.
     StringStoragePtr bs;
-    EXPECT_THROW(StringParser(name, bs), isc::dhcp::DhcpConfigError);
+    EXPECT_THROW(StringParser(name, bs), bundy::dhcp::DhcpConfigError);
 
     // Construct parser for testing.
     StringStoragePtr storage(new StringStorage());
@@ -154,7 +154,7 @@ TEST_F(DhcpParserTest, uint32ParserTest) {
 
     // Verify that parser does not allow empty for storage.
     Uint32StoragePtr bs;
-    EXPECT_THROW(Uint32Parser(name, bs), isc::dhcp::DhcpConfigError);
+    EXPECT_THROW(Uint32Parser(name, bs), bundy::dhcp::DhcpConfigError);
 
     // Construct parser for testing.
     Uint32StoragePtr storage(new Uint32Storage());
@@ -162,18 +162,18 @@ TEST_F(DhcpParserTest, uint32ParserTest) {
 
     // Verify that parser with rejects a non-interger element.
     ElementPtr wrong_element = Element::create("I am a string");
-    EXPECT_THROW(parser.build(wrong_element), isc::BadValue);
+    EXPECT_THROW(parser.build(wrong_element), bundy::BadValue);
 
     // Verify that parser with rejects a negative value.
     ElementPtr int_element = Element::create(-1);
-    EXPECT_THROW(parser.build(int_element), isc::BadValue);
+    EXPECT_THROW(parser.build(int_element), bundy::BadValue);
 
     // Verify that parser with rejects too large a value provided we are on
     // 64-bit platform.
     if (sizeof(long) > sizeof(uint32_t)) {
         long max = (long)(std::numeric_limits<uint32_t>::max()) + 1;
         int_element->setValue(max);
-        EXPECT_THROW(parser.build(int_element), isc::BadValue);
+        EXPECT_THROW(parser.build(int_element), bundy::BadValue);
     }
 
     // Verify that parser will build with value of zero.
@@ -211,7 +211,7 @@ TEST_F(DhcpParserTest, interfaceListParserTest) {
     const std::string name = "interfaces";
 
     // Verify that parser constructor fails if parameter name isn't "interface"
-    EXPECT_THROW(InterfaceListConfigParser("bogus_name"), isc::BadValue);
+    EXPECT_THROW(InterfaceListConfigParser("bogus_name"), bundy::BadValue);
 
     boost::scoped_ptr<InterfaceListConfigParser>
         parser(new InterfaceListConfigParser(name));
@@ -307,12 +307,12 @@ public:
     /// @param config_set is the set of elements to parse.
     /// @return returns an ConstElementPtr containing the numeric result
     /// code and outcome comment.
-    isc::data::ConstElementPtr parseElementSet(isc::data::ConstElementPtr
+    bundy::data::ConstElementPtr parseElementSet(bundy::data::ConstElementPtr
                                            config_set) {
         // Answer will hold the result.
         ConstElementPtr answer;
         if (!config_set) {
-            answer = isc::config::createAnswer(1,
+            answer = bundy::config::createAnswer(1,
                                  string("Can't parse NULL config"));
             return (answer);
         }
@@ -347,13 +347,13 @@ public:
             }
 
             // Everything was fine. Configuration is successful.
-            answer = isc::config::createAnswer(0, "Configuration committed.");
-        } catch (const isc::Exception& ex) {
-            answer = isc::config::createAnswer(1,
+            answer = bundy::config::createAnswer(0, "Configuration committed.");
+        } catch (const bundy::Exception& ex) {
+            answer = bundy::config::createAnswer(1,
                         string("Configuration parsing failed: ") + ex.what());
 
         } catch (...) {
-            answer = isc::config::createAnswer(1,
+            answer = bundy::config::createAnswer(1,
                                         string("Configuration parsing failed"));
         }
 
@@ -392,7 +392,7 @@ public:
         } else if (config_id.compare("dhcp-ddns") == 0) {
             parser.reset(new D2ClientConfigParser(config_id));
         } else {
-            isc_throw(NotImplemented,
+            bundy_throw(NotImplemented,
                 "Parser error: configuration parameter not supported: "
                 << config_id);
         }
@@ -526,7 +526,7 @@ TEST_F(ParseConfigTest, basicOptionDefTest) {
         "      \"type\": \"ipv4-address\","
         "      \"array\": False,"
         "      \"record-types\": \"\","
-        "      \"space\": \"isc\","
+        "      \"space\": \"bundy\","
         "      \"encapsulate\": \"\""
         "  } ]"
         "}";
@@ -537,7 +537,7 @@ TEST_F(ParseConfigTest, basicOptionDefTest) {
 
 
     // Verify that the option definition can be retrieved.
-    OptionDefinitionPtr def = getOptionDef("isc", 100);
+    OptionDefinitionPtr def = getOptionDef("bundy", 100);
     ASSERT_TRUE(def);
 
     // Verify that the option definition is correct.
@@ -564,12 +564,12 @@ TEST_F(ParseConfigTest, basicOptionDataTest) {
         "      \"type\": \"ipv4-address\","
         "      \"array\": False,"
         "      \"record-types\": \"\","
-        "      \"space\": \"isc\","
+        "      \"space\": \"bundy\","
         "      \"encapsulate\": \"\""
         " } ], "
         " \"option-data\": [ {"
         "    \"name\": \"foo\","
-        "    \"space\": \"isc\","
+        "    \"space\": \"bundy\","
         "    \"code\": 100,"
         "    \"data\": \"192.0.2.0\","
         "    \"csv-format\": True"
@@ -581,7 +581,7 @@ TEST_F(ParseConfigTest, basicOptionDataTest) {
     ASSERT_TRUE(rcode == 0);
 
     // Verify that the option can be retrieved.
-    OptionPtr opt_ptr = getOptionPtr("isc", 100);
+    OptionPtr opt_ptr = getOptionPtr("bundy", 100);
     ASSERT_TRUE(opt_ptr);
 
     // Verify that the option definition is correct.

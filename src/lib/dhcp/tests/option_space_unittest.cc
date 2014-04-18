@@ -18,8 +18,8 @@
 
 #include <gtest/gtest.h>
 
-using namespace isc::dhcp;
-using namespace isc;
+using namespace bundy::dhcp;
+using namespace bundy;
 
 namespace {
 
@@ -27,8 +27,8 @@ namespace {
 // creates an object with members initialized to correct values.
 TEST(OptionSpaceTest, constructor) {
     // Create some option space.
-    OptionSpace space("isc", true);
-    EXPECT_EQ("isc", space.getName());
+    OptionSpace space("bundy", true);
+    EXPECT_EQ("bundy", space.getName());
     EXPECT_TRUE(space.isVendorSpace());
 
     // Create another object with different values
@@ -45,8 +45,8 @@ TEST(OptionSpaceTest, constructor) {
 // The purpose of this test is to verify that the vendor-space flag
 // can be overriden.
 TEST(OptionSpaceTest, setVendorSpace) {
-    OptionSpace space("isc", true);
-    EXPECT_EQ("isc", space.getName());
+    OptionSpace space("bundy", true);
+    EXPECT_EQ("bundy", space.getName());
     EXPECT_TRUE(space.isVendorSpace());
 
     // Override the vendor space flag.
@@ -72,17 +72,17 @@ TEST(OptionSpaceTest, validateName) {
     // allowed
     EXPECT_FALSE(OptionSpace::validateName(""));
     EXPECT_FALSE(OptionSpace::validateName(" "));
-    EXPECT_FALSE(OptionSpace::validateName(" isc "));
-    EXPECT_FALSE(OptionSpace::validateName("isc "));
-    EXPECT_FALSE(OptionSpace::validateName(" isc"));
-    EXPECT_FALSE(OptionSpace::validateName("isc with-space"));
+    EXPECT_FALSE(OptionSpace::validateName(" bundy "));
+    EXPECT_FALSE(OptionSpace::validateName("bundy "));
+    EXPECT_FALSE(OptionSpace::validateName(" bundy"));
+    EXPECT_FALSE(OptionSpace::validateName("bundy with-space"));
 
     // Hyphens and underscores are not allowed at the beginning
     // and at the end of the option space name.
-    EXPECT_FALSE(OptionSpace::validateName("-isc"));
-    EXPECT_FALSE(OptionSpace::validateName("isc-"));
-    EXPECT_FALSE(OptionSpace::validateName("_isc"));
-    EXPECT_FALSE(OptionSpace::validateName("isc_"));
+    EXPECT_FALSE(OptionSpace::validateName("-bundy"));
+    EXPECT_FALSE(OptionSpace::validateName("bundy-"));
+    EXPECT_FALSE(OptionSpace::validateName("_bundy"));
+    EXPECT_FALSE(OptionSpace::validateName("bundy_"));
 
     // Test other special characters
     const char specials[] = { '!', '@', '#', '$', '%', '^', '&', '*', '(', ')',
@@ -119,15 +119,15 @@ TEST(OptionSpace6Test, constructor) {
 
     // Verify that constructors throw an exception when invalid option
     // space name has been specified.
-    EXPECT_THROW(OptionSpace6("isc dhcp"), InvalidOptionSpace);
-    EXPECT_THROW(OptionSpace6("isc%dhcp", 2145), InvalidOptionSpace);
+    EXPECT_THROW(OptionSpace6("bundy dhcp"), InvalidOptionSpace);
+    EXPECT_THROW(OptionSpace6("bundy%dhcp", 2145), InvalidOptionSpace);
 }
 
 // The purpose of this test is to verify an option space can be marked
 // vendor option space and enterprise number can be set.
 TEST(OptionSpace6Test, setVendorSpace) {
-    OptionSpace6 space("isc");
-    EXPECT_EQ("isc", space.getName());
+    OptionSpace6 space("bundy");
+    EXPECT_EQ("bundy", space.getName());
     EXPECT_FALSE(space.isVendorSpace());
 
     // Mark it vendor option space and set enterprise id.

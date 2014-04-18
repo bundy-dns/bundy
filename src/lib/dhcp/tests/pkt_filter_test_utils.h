@@ -20,7 +20,7 @@
 #include <dhcp/pkt_filter.h>
 #include <gtest/gtest.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 namespace test {
 
@@ -84,7 +84,7 @@ public:
     std::string ifname_;   ///< Loopback interface name
     uint16_t ifindex_;     ///< Loopback interface index.
     uint16_t port_;        ///< A port number used for the test.
-    isc::dhcp::SocketInfo sock_info_; ///< A structure holding socket info.
+    bundy::dhcp::SocketInfo sock_info_; ///< A structure holding socket info.
     int send_msg_sock_;    ///< Holds a descriptor of the socket used by
                            ///< sendMessage function.
     Pkt4Ptr test_message_; ///< A DHCPv4 message used by tests.
@@ -93,9 +93,9 @@ public:
 
 /// @brief A stub implementation of the PktFilter class.
 ///
-/// This class implements abstract methods of the @c isc::dhcp::PktFilter
+/// This class implements abstract methods of the @c bundy::dhcp::PktFilter
 /// class. It is used by unit tests, which test protected methods of the
-/// @c isc::dhcp::test::PktFilter class. The implemented abstract methods are
+/// @c bundy::dhcp::test::PktFilter class. The implemented abstract methods are
 /// no-op.
 class PktFilterStub : public PktFilter {
 public:
@@ -128,7 +128,7 @@ public:
     /// @return A SocketInfo structure with the socket descriptor set to 0. The
     /// fallback socket descriptor is set to a negative value.
     virtual SocketInfo openSocket(const Iface& iface,
-                                  const isc::asiolink::IOAddress& addr,
+                                  const bundy::asiolink::IOAddress& addr,
                                   const uint16_t port,
                                   const bool receive_bcast,
                                   const bool send_bcast);
@@ -162,8 +162,8 @@ public:
 };
 
 
-}; // end of isc::dhcp::test namespace
-}; // end of isc::dhcp namespace
-}; // end of isc namespace
+}; // end of bundy::dhcp::test namespace
+}; // end of bundy::dhcp namespace
+}; // end of bundy namespace
 
 #endif // PKT_FILTER_TEST_UTILS_H

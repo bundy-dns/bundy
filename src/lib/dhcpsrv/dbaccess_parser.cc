@@ -24,9 +24,9 @@
 #include <utility>
 
 using namespace std;
-using namespace isc::data;
+using namespace bundy::data;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 
@@ -38,7 +38,7 @@ DbAccessParser::DbAccessParser(const std::string&, const ParserContext& ctx)
 
 // Parse the configuration and check that the various keywords are consistent.
 void
-DbAccessParser::build(isc::data::ConstElementPtr config_value) {
+DbAccessParser::build(bundy::data::ConstElementPtr config_value) {
 
     // To cope with incremental updates, the strategy is:
     // 1. Take a copy of the stored keyword/value pairs.
@@ -73,7 +73,7 @@ DbAccessParser::build(isc::data::ConstElementPtr config_value) {
     // a. Check if the "type" keyword exists and thrown an exception if not.
     StringPairMap::const_iterator type_ptr = values_copy.find("type");
     if (type_ptr == values_copy.end()) {
-        isc_throw(TypeKeywordMissing, "lease database access parameters must "
+        bundy_throw(TypeKeywordMissing, "lease database access parameters must "
                   "include the keyword 'type' to determine type of database "
                   "to be accessed");
     }
@@ -81,7 +81,7 @@ DbAccessParser::build(isc::data::ConstElementPtr config_value) {
     // b. Check if the 'type; keyword known and throw an exception if not.
     string dbtype = type_ptr->second;
     if ((dbtype != "memfile") && (dbtype != "mysql") && (dbtype != "postgresql")) {
-        isc_throw(BadValue, "unknown backend database type: " << dbtype);
+        bundy_throw(BadValue, "unknown backend database type: " << dbtype);
     }
 
     // 5. If all is OK, update the stored keyword/value pairs.  We do this by
@@ -125,5 +125,5 @@ DbAccessParser::commit() {
 }
 
 };  // namespace dhcp
-};  // namespace isc
+};  // namespace bundy
 

@@ -22,7 +22,7 @@
 
 #include <dns/exceptions.h>
 
-namespace isc {
+namespace bundy {
 namespace util {
 class InputBuffer;
 class OutputBuffer;
@@ -282,7 +282,7 @@ public:
     /// \param downcase Whether to convert upper case letters to lower case.
     /// \throw NameParserException or any of its descendants in case the
     ///     input data is invalid.
-    /// \throw isc::InvalidParameter In case name_data is NULL or data_len is
+    /// \throw bundy::InvalidParameter In case name_data is NULL or data_len is
     ///     0.
     /// \throw std::bad_alloc In case allocation fails.
     /// \note This constructor is specially designed for the use of master
@@ -310,7 +310,7 @@ public:
     ///
     /// \param buffer A buffer storing the wire format %data.
     /// \param downcase Whether to convert upper case alphabets to lower case.
-    explicit Name(isc::util::InputBuffer& buffer, bool downcase = false);
+    explicit Name(bundy::util::InputBuffer& buffer, bool downcase = false);
     ///
     /// We use the default copy constructor intentionally.
     //@}
@@ -354,7 +354,7 @@ public:
     uint8_t at(size_t pos) const
     {
         if (pos >= length_) {
-            isc_throw(OutOfRange, "Out of range access in Name::at()");
+            bundy_throw(OutOfRange, "Out of range access in Name::at()");
         }
         return (ndata_[pos]);
     }
@@ -423,7 +423,7 @@ public:
     /// then this method should not throw an exception.
     ///
     /// \param buffer An output buffer to store the wire %data.
-    void toWire(isc::util::OutputBuffer& buffer) const;
+    void toWire(bundy::util::OutputBuffer& buffer) const;
     //@}
 
     ///

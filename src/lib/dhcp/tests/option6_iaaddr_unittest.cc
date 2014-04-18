@@ -28,9 +28,9 @@
 #include <arpa/inet.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dhcp;
-using namespace isc::util;
+using namespace bundy;
+using namespace bundy::dhcp;
+using namespace bundy::util;
 
 namespace {
 class Option6IAAddrTest : public ::testing::Test {
@@ -117,7 +117,7 @@ TEST_F(Option6IAAddrTest, negative) {
                  OutOfRange);
 
     // This option is for IPv6 addresses only
-    EXPECT_THROW(Option6IAAddr(D6O_IAADDR, isc::asiolink::IOAddress("192.0.2.1"),
+    EXPECT_THROW(Option6IAAddr(D6O_IAADDR, bundy::asiolink::IOAddress("192.0.2.1"),
                                1000, 2000), BadValue);
 }
 

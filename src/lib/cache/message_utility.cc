@@ -17,17 +17,17 @@
 #include "message_utility.h"
 #include <dns/rcode.h>
 
-using namespace isc::dns;
+using namespace bundy::dns;
 
-namespace isc {
+namespace bundy {
 namespace cache {
 namespace MessageUtility{
 
 bool
-hasTheRecordInAuthoritySection(const isc::dns::Message& msg,
-                               const isc::dns::RRType& type)
+hasTheRecordInAuthoritySection(const bundy::dns::Message& msg,
+                               const bundy::dns::RRType& type)
 {
-    // isc::dns::Message provide one function hasRRset() should be used to
+    // bundy::dns::Message provide one function hasRRset() should be used to
     // determine whether the given section has an RRset matching the given
     // name and type, but currently it is not const-qualified and cannot be
     // used here
@@ -44,7 +44,7 @@ hasTheRecordInAuthoritySection(const isc::dns::Message& msg,
 }
 
 bool
-isNegativeResponse(const isc::dns::Message& msg) {
+isNegativeResponse(const bundy::dns::Message& msg) {
     if (msg.getRcode() == Rcode::NXDOMAIN()) {
         return (true);
     } else if (msg.getRcode() == Rcode::NOERROR()) {
@@ -64,7 +64,7 @@ isNegativeResponse(const isc::dns::Message& msg) {
 }
 
 bool
-canMessageBeCached(const isc::dns::Message& msg) {
+canMessageBeCached(const bundy::dns::Message& msg) {
     // If the message is a negative response, but no SOA record is found in
     // the authority section, the message cannot be cached
     if (isNegativeResponse(msg) &&
@@ -77,4 +77,4 @@ canMessageBeCached(const isc::dns::Message& msg) {
 
 } // namespace MessageUtility
 } // namespace cache
-} // namespace isc
+} // namespace bundy

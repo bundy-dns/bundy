@@ -25,7 +25,7 @@
 
 #define RESOLVER_MAX_CNAME_CHAIN    16
 
-namespace isc {
+namespace bundy {
 namespace resolve {
 
 /// \brief Classify Server Response
@@ -102,9 +102,9 @@ public:
     /// only time this is likely to be used is in development where we are not
     /// going to fail over to TCP and will want to use what is returned, even
     /// if some of the response was lost.
-    static Category classify(const isc::dns::Question& question,
-            const isc::dns::Message& message, 
-            isc::dns::Name& cname_target, unsigned int& cname_count,
+    static Category classify(const bundy::dns::Question& question,
+            const bundy::dns::Message& message, 
+            bundy::dns::Name& cname_target, unsigned int& cname_count,
             bool tcignore = false);
 
 private:
@@ -144,14 +144,14 @@ private:
     /// the number of CNAMEs followed
     /// \param size Number of elements to check.  See description of \c present
     /// for details.
-    static Category cnameChase(const isc::dns::Name& qname,
-        const isc::dns::RRType& qtype,
-        isc::dns::Name& cname_target, unsigned int& cname_count,
-        std::vector<isc::dns::RRsetPtr>& ansrrset, std::vector<int>& present,
+    static Category cnameChase(const bundy::dns::Name& qname,
+        const bundy::dns::RRType& qtype,
+        bundy::dns::Name& cname_target, unsigned int& cname_count,
+        std::vector<bundy::dns::RRsetPtr>& ansrrset, std::vector<int>& present,
         size_t size);
 };
 
 } // namespace resolve
-} // namespace isc
+} // namespace bundy
 
 #endif // RESPONSE_CLASSIFIER_H

@@ -23,7 +23,7 @@
 #include <dns/rdata.h>
 #include <resolve/resolve.h>
 
-using namespace isc::dns;
+using namespace bundy::dns;
 
 namespace {
 
@@ -97,7 +97,7 @@ TEST_F(ResolveHelperFunctionsTest, makeErrorMessageEmptyMessage) {
     ASSERT_EQ(0, message_a_->getRRCount(Message::SECTION_AUTHORITY));
     ASSERT_EQ(0, message_a_->getRRCount(Message::SECTION_ADDITIONAL));
 
-    isc::resolve::makeErrorMessage(message_a_, Rcode::SERVFAIL());
+    bundy::resolve::makeErrorMessage(message_a_, Rcode::SERVFAIL());
     EXPECT_EQ(Rcode::SERVFAIL(), message_a_->getRcode());
     EXPECT_EQ(1, message_a_->getRRCount(Message::SECTION_QUESTION));
     EXPECT_EQ(0, message_a_->getRRCount(Message::SECTION_ANSWER));
@@ -113,7 +113,7 @@ TEST_F(ResolveHelperFunctionsTest, makeErrorMessageNonEmptyMessage) {
     ASSERT_EQ(2, message_b_->getRRCount(Message::SECTION_AUTHORITY));
     ASSERT_EQ(3, message_b_->getRRCount(Message::SECTION_ADDITIONAL));
 
-    isc::resolve::makeErrorMessage(message_b_, Rcode::FORMERR());
+    bundy::resolve::makeErrorMessage(message_b_, Rcode::FORMERR());
     EXPECT_EQ(Rcode::FORMERR(), message_b_->getRcode());
     EXPECT_EQ(1, message_b_->getRRCount(Message::SECTION_QUESTION));
     EXPECT_EQ(0, message_b_->getRRCount(Message::SECTION_ANSWER));
@@ -141,23 +141,23 @@ compareSections(const Message& message_a, const Message& message_b,
 
 TEST_F(ResolveHelperFunctionsTest, initResponseMessage) {
     Message response_parse(Message::PARSE);
-    EXPECT_THROW(isc::resolve::initResponseMessage(*message_a_,
+    EXPECT_THROW(bundy::resolve::initResponseMessage(*message_a_,
                                                    response_parse),
-                 isc::dns::InvalidMessageOperation);
-    EXPECT_THROW(isc::resolve::initResponseMessage(*question_,
+                 bundy::dns::InvalidMessageOperation);
+    EXPECT_THROW(bundy::resolve::initResponseMessage(*question_,
                                                    response_parse),
-                 isc::dns::InvalidMessageOperation);
+                 bundy::dns::InvalidMessageOperation);
     
     Message response1(Message::RENDER);
-    isc::resolve::initResponseMessage(*message_a_, response1);
+    bundy::resolve::initResponseMessage(*message_a_, response1);
     ASSERT_EQ(message_a_->getOpcode(), response1.getOpcode());
     ASSERT_EQ(message_a_->getQid(), response1.getQid());
-    isc::dns::QuestionIterator qi = response1.beginQuestion();
+    bundy::dns::QuestionIterator qi = response1.beginQuestion();
     ASSERT_EQ(*question_, **qi);
     ASSERT_TRUE(++qi == response1.endQuestion());
 
     Message response2(Message::RENDER);
-    isc::resolve::initResponseMessage(*question_, response2);
+    bundy::resolve::initResponseMessage(*question_, response2);
     ASSERT_EQ(Opcode::QUERY(), response2.getOpcode());
     ASSERT_EQ(0, response2.getQid());
     qi = response2.beginQuestion();
@@ -179,7 +179,7 @@ TEST_F(ResolveHelperFunctionsTest, copyAnswerMessage) {
     ASSERT_EQ(0, message_a_->getRRCount(Message::SECTION_AUTHORITY));
     ASSERT_EQ(0, message_a_->getRRCount(Message::SECTION_ADDITIONAL));
 
-    isc::resolve::copyResponseMessage(*message_b_, message_a_);
+    bundy::resolve::copyResponseMessage(*message_b_, message_a_);
 
     EXPECT_EQ(message_b_->getRcode(), message_a_->getRcode());
     ASSERT_EQ(message_b_->getRRCount(Message::SECTION_ANSWER),

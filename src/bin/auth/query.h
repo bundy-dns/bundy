@@ -23,7 +23,7 @@
 #include <functional>
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 class Message;
 class Name;
@@ -79,7 +79,7 @@ private:
     /// Adds a SOA of the zone into the authority zone of response_.
     /// Can throw NoSOA.
     ///
-    void addSOA(isc::datasrc::ZoneFinder& finder);
+    void addSOA(bundy::datasrc::ZoneFinder& finder);
 
     /// \brief Adds the DS rrset for the given name, if available
     ///
@@ -93,8 +93,8 @@ private:
     ///                  record.
     /// \param finder The ZoneFinder where the delegation was found
     /// \param ds_name The name of the delegation RRset
-    void addDS(isc::datasrc::ZoneFinder& finder,
-               const isc::dns::Name& ds_name);
+    void addDS(bundy::datasrc::ZoneFinder& finder,
+               const bundy::dns::Name& ds_name);
 
     /// \brief Adds NSEC(3) denial proof for the given NXRRset result
     ///
@@ -105,27 +105,27 @@ private:
     /// \param finder The ZoneFinder that was used to search for the missing
     ///               data
     /// \param db_result The ZoneFinder::FindResult returned by find()
-    void addNXRRsetProof(isc::datasrc::ZoneFinder& finder,
-                         const isc::datasrc::ZoneFinder::Context& db_context);
+    void addNXRRsetProof(bundy::datasrc::ZoneFinder& finder,
+                         const bundy::datasrc::ZoneFinder::Context& db_context);
 
     /// Add NSEC RRs that prove an NXDOMAIN result.
     ///
     /// This corresponds to Section 3.1.3.2 of RFC 4035.
-    void addNXDOMAINProofByNSEC(isc::datasrc::ZoneFinder& finder,
-                                isc::dns::ConstRRsetPtr nsec);
+    void addNXDOMAINProofByNSEC(bundy::datasrc::ZoneFinder& finder,
+                                bundy::dns::ConstRRsetPtr nsec);
 
     /// Add NSEC3 RRs that prove an NXDOMAIN result.
     ///
     /// This corresponds to Section 7.2.2 of RFC 5155.
-    void addNXDOMAINProofByNSEC3(isc::datasrc::ZoneFinder& finder);
+    void addNXDOMAINProofByNSEC3(bundy::datasrc::ZoneFinder& finder);
 
     /// Add NSEC or NSEC3 RRs that prove a wildcard answer is the best one.
     ///
     /// This corresponds to Section 3.1.3.3 of RFC 4035 and Section 7.2.6
     /// of RFC5155.
     void addWildcardProof(
-        isc::datasrc::ZoneFinder& finder,
-        const isc::datasrc::ZoneFinder::Context& db_context);
+        bundy::datasrc::ZoneFinder& finder,
+        const bundy::datasrc::ZoneFinder::Context& db_context);
 
     /// \brief Adds one NSEC RR proved no matched QNAME,one NSEC RR proved no
     /// matched <QNAME,QTYPE> through wildcard extension.
@@ -136,8 +136,8 @@ private:
     /// query is to be found.
     /// \param nsec The RRset (NSEC RR) which proved that there is no matched 
     /// <QNAME,QTTYPE>.
-    void addWildcardNXRRSETProof(isc::datasrc::ZoneFinder& finder,
-                                 isc::dns::ConstRRsetPtr nsec);
+    void addWildcardNXRRSETProof(bundy::datasrc::ZoneFinder& finder,
+                                 bundy::dns::ConstRRsetPtr nsec);
 
     /// \brief Look up a zone's NS RRset and their address records for an
     /// authoritative answer, and add them to the additional section.
@@ -157,8 +157,8 @@ private:
     ///
     /// \param finder The \c ZoneFinder through which the NS and additional
     /// data for the query are to be found.
-    void addAuthAdditional(isc::datasrc::ZoneFinder& finder,
-                           std::vector<isc::dns::ConstRRsetPtr>& additionals);
+    void addAuthAdditional(bundy::datasrc::ZoneFinder& finder,
+                           std::vector<bundy::dns::ConstRRsetPtr>& additionals);
 
     /// \brief Process a DS query possible at the child side of zone cut.
     ///
@@ -211,8 +211,8 @@ private:
     /// If \c add_closest is false, it only adds the next proof to the message.
     /// This correspond to the case of "wildcard answer responses" as described
     /// in Section 7.2.6 of RFC5155.
-    uint8_t addClosestEncloserProof(isc::datasrc::ZoneFinder& finder,
-                                    const isc::dns::Name& name, bool exact_ok,
+    uint8_t addClosestEncloserProof(bundy::datasrc::ZoneFinder& finder,
+                                    const bundy::dns::Name& name, bool exact_ok,
                                     bool add_closest = true);
 
     /// \brief Add matching or covering NSEC3 to the response for a give name.
@@ -230,8 +230,8 @@ private:
     /// zone, maybe with incorrect optout NSEC3s; if it must be a covering
     /// NSEC3 but is not, it means a run time collision; or the \c findNSEC3()
     /// implementation is broken for both cases.)
-    void addNSEC3ForName(isc::datasrc::ZoneFinder& finder,
-                         const isc::dns::Name& name, bool match);
+    void addNSEC3ForName(bundy::datasrc::ZoneFinder& finder,
+                         const bundy::dns::Name& name, bool match);
 
     /// Set up the Query object for a new query lookup
     ///
@@ -246,8 +246,8 @@ private:
     /// \param dnssec If the answer should include signatures and NSEC/NSEC3 if
     ///     possible.
     void initialize(datasrc::ClientList& client_list,
-                    const isc::dns::Name& qname, const isc::dns::RRType& qtype,
-                    isc::dns::Message& response, bool dnssec = false);
+                    const bundy::dns::Name& qname, const bundy::dns::RRType& qtype,
+                    bundy::dns::Message& response, bool dnssec = false);
 
     /// \brief Resets any partly built response data, and internal pointers
     ///
@@ -261,10 +261,10 @@ private:
     /// of single calls to process(), the query state is always clean.
     class QueryCleaner {
     public:
-        QueryCleaner(isc::auth::Query& query) : query_(query) {}
+        QueryCleaner(bundy::auth::Query& query) : query_(query) {}
         ~QueryCleaner() { query_.reset(); }
     private:
-        isc::auth::Query& query_;
+        bundy::auth::Query& query_;
     };
 
 protected:
@@ -280,15 +280,15 @@ public:
     ///
     Query() :
         client_list_(NULL), qname_(NULL), qtype_(NULL),
-        dnssec_(false), dnssec_opt_(isc::datasrc::ZoneFinder::FIND_DEFAULT),
+        dnssec_(false), dnssec_opt_(bundy::datasrc::ZoneFinder::FIND_DEFAULT),
         response_(NULL)
     {
         answers_.reserve(RESERVE_RRSETS);
         authorities_.reserve(RESERVE_RRSETS);
         additionals_.reserve(RESERVE_RRSETS);
 
-        a_and_aaaa_.push_back(isc::dns::RRType::A());
-        a_and_aaaa_.push_back(isc::dns::RRType::AAAA());
+        a_and_aaaa_.push_back(bundy::dns::RRType::A());
+        a_and_aaaa_.push_back(bundy::dns::RRType::AAAA());
     }
 
 
@@ -327,8 +327,8 @@ public:
     /// \param dnssec If the answer should include signatures and NSEC/NSEC3 if
     ///     possible.
     void process(datasrc::ClientList& client_list,
-                 const isc::dns::Name& qname, const isc::dns::RRType& qtype,
-                 isc::dns::Message& response, bool dnssec = false);
+                 const bundy::dns::Name& qname, const bundy::dns::RRType& qtype,
+                 bundy::dns::Message& response, bool dnssec = false);
 
     /// \short Bad zone data encountered.
     ///
@@ -336,7 +336,7 @@ public:
     /// way it can't continue. This throws, not sets the Rcode, because such
     /// misconfigured zone should not be present in the data source and
     /// should have been rejected sooner.
-    struct BadZone : public isc::Exception {
+    struct BadZone : public bundy::Exception {
         BadZone(const char* file, size_t line, const char* what) :
             Exception(file, line, what)
         {}
@@ -447,19 +447,19 @@ public:
         /// message. Any RRSIGs attached to the RRsets will be included
         /// when they are rendered.
         void create(
-            isc::dns::Message& message,
-            const std::vector<isc::dns::ConstRRsetPtr>& answers_,
-            const std::vector<isc::dns::ConstRRsetPtr>& authorities_,
-            const std::vector<isc::dns::ConstRRsetPtr>& additionals_);
+            bundy::dns::Message& message,
+            const std::vector<bundy::dns::ConstRRsetPtr>& answers_,
+            const std::vector<bundy::dns::ConstRRsetPtr>& authorities_,
+            const std::vector<bundy::dns::ConstRRsetPtr>& additionals_);
 
     private:
         // \brief RRset comparison functor.
         struct IsSameKind : public std::binary_function<
-                            const isc::dns::AbstractRRset*,
-                            const isc::dns::AbstractRRset*,
+                            const bundy::dns::AbstractRRset*,
+                            const bundy::dns::AbstractRRset*,
                             bool> {
-            bool operator()(const isc::dns::AbstractRRset* r1,
-                            const isc::dns::AbstractRRset* r2) const {
+            bool operator()(const bundy::dns::AbstractRRset* r1,
+                            const bundy::dns::AbstractRRset* r2) const {
                 return (r1->isSameKind(*r2));
             }
         };
@@ -469,37 +469,37 @@ public:
         /// \param message Message to which the RRset is to be added
         /// \param section Section of the message in which the RRset is put
         /// \param rrset Pointer to RRset to be added to the message
-        void addRRset(isc::dns::Message& message,
-                      const isc::dns::Message::Section section,
-                      const isc::dns::ConstRRsetPtr& rrset);
+        void addRRset(bundy::dns::Message& message,
+                      const bundy::dns::Message::Section section,
+                      const bundy::dns::ConstRRsetPtr& rrset);
 
 
     private:
         /// List of RRsets already added to the message
-        std::vector<const isc::dns::AbstractRRset*> added_;
+        std::vector<const bundy::dns::AbstractRRset*> added_;
     };
 
 private:
-    const isc::datasrc::ClientList* client_list_;
-    const isc::dns::Name* qname_;
-    const isc::dns::RRType* qtype_;
+    const bundy::datasrc::ClientList* client_list_;
+    const bundy::dns::Name* qname_;
+    const bundy::dns::RRType* qtype_;
     bool dnssec_;
-    isc::datasrc::ZoneFinder::FindOptions dnssec_opt_;
+    bundy::datasrc::ZoneFinder::FindOptions dnssec_opt_;
     ResponseCreator response_creator_;
 
-    isc::dns::Message* response_;
-    std::vector<isc::dns::ConstRRsetPtr> answers_;
-    std::vector<isc::dns::ConstRRsetPtr> authorities_;
-    std::vector<isc::dns::ConstRRsetPtr> additionals_;
+    bundy::dns::Message* response_;
+    std::vector<bundy::dns::ConstRRsetPtr> answers_;
+    std::vector<bundy::dns::ConstRRsetPtr> authorities_;
+    std::vector<bundy::dns::ConstRRsetPtr> additionals_;
 
 private:
     /// \brief Returns a reference to a pre-initialized vector (see the
     /// \c Query constructor).
-    const std::vector<isc::dns::RRType>& A_AND_AAAA() const {
+    const std::vector<bundy::dns::RRType>& A_AND_AAAA() const {
         return (a_and_aaaa_);
     }
 
-    std::vector<isc::dns::RRType> a_and_aaaa_;
+    std::vector<bundy::dns::RRType> a_and_aaaa_;
 };
 
 }

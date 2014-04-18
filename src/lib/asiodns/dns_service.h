@@ -20,7 +20,7 @@
 #include <asiolink/io_service.h>
 #include <asiolink/simple_callback.h>
 
-namespace isc {
+namespace bundy {
 namespace asiodns {
 
 class DNSLookup;
@@ -158,8 +158,8 @@ public:
     /// \param fd the file descriptor to be used.
     /// \param af the address family of the file descriptor. Must be either
     ///     AF_INET or AF_INET6.
-    /// \throw isc::InvalidParameter if af is neither AF_INET nor AF_INET6.
-    /// \throw isc::asiolink::IOError when a low-level error happens, like the
+    /// \throw bundy::InvalidParameter if af is neither AF_INET nor AF_INET6.
+    /// \throw bundy::asiolink::IOError when a low-level error happens, like the
     ///     fd is not a valid descriptor or it can't be listened on.
     virtual void addServerTCPFromFD(int fd, int af);
 
@@ -177,9 +177,9 @@ public:
     ///     AF_INET or AF_INET6.
     /// \param options Optional properties of the server (see ServerFlag).
     ///
-    /// \throw isc::InvalidParameter if af is neither AF_INET nor AF_INET6,
+    /// \throw bundy::InvalidParameter if af is neither AF_INET nor AF_INET6,
     ///     or the given \c options include an unsupported or invalid value.
-    /// \throw isc::asiolink::IOError when a low-level error happens, like the
+    /// \throw bundy::asiolink::IOError when a low-level error happens, like the
     ///     fd is not a valid descriptor or it can't be listened on.
     virtual void addServerUDPFromFD(int fd, int af,
                                     ServerFlag options = SERVER_DEFAULT);
@@ -207,7 +207,7 @@ private:
 };
 
 } // namespace asiodns
-} // namespace isc
+} // namespace bundy
 #endif // ASIOLINK_DNS_SERVICE_H
 
 // Local Variables:

@@ -23,7 +23,7 @@
 #include <string>
 #include <sys/socket.h>
 
-namespace isc {
+namespace bundy {
 namespace asiolink {
 class LocalSocket::Impl {
 public:
@@ -37,7 +37,7 @@ public:
         // this implementation).
         asio_sock_.local_endpoint(ec_);
         if (ec_) {
-            isc_throw(IOError, "failed to open local socket with FD " << fd
+            bundy_throw(IOError, "failed to open local socket with FD " << fd
                       << " (local endpoint unknown): " << ec_.message());
         }
     }
@@ -53,7 +53,7 @@ LocalSocket::LocalSocket(IOService& io_service, int fd) :
         impl_ = new Impl(io_service, fd);
     } catch (const asio::system_error& error) {
         // Catch and convert any exception from asio's constructor
-        isc_throw(IOError, "failed to open local socket with FD " << fd
+        bundy_throw(IOError, "failed to open local socket with FD " << fd
                   << ": " << error.what());
     }
 }
@@ -99,4 +99,4 @@ LocalSocket::asyncRead(const ReadCallback& callback, void* buf,
 }
 
 } // namespace asiolink
-} // namespace isc
+} // namespace bundy

@@ -27,10 +27,10 @@
 
 using namespace std;
 using boost::lexical_cast;
-using namespace isc::util;
-using namespace isc::util::encode;
+using namespace bundy::util;
+using namespace bundy::util::encode;
 
-// BEGIN_ISC_NAMESPACE
+// BEGIN_BUNDY_NAMESPACE
 // BEGIN_RDATA_NAMESPACE
 
 struct SSHFPImpl {
@@ -53,13 +53,13 @@ SSHFP::constructFromLexer(MasterLexer& lexer) {
     const uint32_t algorithm =
         lexer.getNextToken(MasterToken::NUMBER).getNumber();
     if (algorithm > 255) {
-        isc_throw(InvalidRdataText, "SSHFP algorithm number out of range");
+        bundy_throw(InvalidRdataText, "SSHFP algorithm number out of range");
     }
 
     const uint32_t fingerprint_type =
         lexer.getNextToken(MasterToken::NUMBER).getNumber();
     if (fingerprint_type > 255) {
-        isc_throw(InvalidRdataText, "SSHFP fingerprint type out of range");
+        bundy_throw(InvalidRdataText, "SSHFP fingerprint type out of range");
     }
 
     std::string fingerprint_str;
@@ -82,8 +82,8 @@ SSHFP::constructFromLexer(MasterLexer& lexer) {
     if (fingerprint_str.size() > 0) {
         try {
             decodeHex(fingerprint_str, fingerprint);
-        } catch (const isc::BadValue& e) {
-            isc_throw(InvalidRdataText, "Bad SSHFP fingerprint: " << e.what());
+        } catch (const bundy::BadValue& e) {
+            bundy_throw(InvalidRdataText, "Bad SSHFP fingerprint: " << e.what());
         }
     }
 
@@ -125,11 +125,11 @@ SSHFP::SSHFP(const string& sshfp_str) :
         impl_ptr.reset(constructFromLexer(lexer));
 
         if (lexer.getNextToken().getType() != MasterToken::END_OF_FILE) {
-            isc_throw(InvalidRdataText, "extra input text for SSHFP: "
+            bundy_throw(InvalidRdataText, "extra input text for SSHFP: "
                       << sshfp_str);
         }
     } catch (const MasterLexer::LexerError& ex) {
-        isc_throw(InvalidRdataText, "Failed to construct SSHFP from '" <<
+        bundy_throw(InvalidRdataText, "Failed to construct SSHFP from '" <<
                   sshfp_str << "': " << ex.what());
     }
 
@@ -162,7 +162,7 @@ SSHFP::SSHFP(MasterLexer& lexer, const Name*,
 /// description of the constructor from string).
 SSHFP::SSHFP(InputBuffer& buffer, size_t rdata_len) {
     if (rdata_len < 2) {
-        isc_throw(InvalidRdataLength, "SSHFP record too short");
+        bundy_throw(InvalidRdataLength, "SSHFP record too short");
     }
 
     const uint8_t algorithm = buffer.readUint8();
@@ -185,8 +185,8 @@ SSHFP::SSHFP(uint8_t algorithm, uint8_t fingerprint_type,
     vector<uint8_t> fingerprint;
     try {
         decodeHex(fingerprint_txt, fingerprint);
-    } catch (const isc::BadValue& e) {
-        isc_throw(InvalidRdataText, "Bad SSHFP fingerprint: " << e.what());
+    } catch (const bundy::BadValue& e) {
+        bundy_throw(InvalidRdataText, "Bad SSHFP fingerprint: " << e.what());
     }
 
     impl_ = new SSHFPImpl(algorithm, fingerprint_type, fingerprint);
@@ -303,4 +303,4 @@ SSHFP::getFingerprintLength() const {
 }
 
 // END_RDATA_NAMESPACE
-// END_ISC_NAMESPACE
+// END_BUNDY_NAMESPACE

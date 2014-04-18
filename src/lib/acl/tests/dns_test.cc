@@ -40,12 +40,12 @@
 
 using namespace std;
 using boost::scoped_ptr;
-using namespace isc::dns;
-using namespace isc::dns::rdata;
-using namespace isc::data;
-using namespace isc::acl;
-using namespace isc::acl::dns;
-using isc::acl::LoaderError;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
+using namespace bundy::data;
+using namespace bundy::acl;
+using namespace bundy::acl::dns;
+using bundy::acl::LoaderError;
 
 namespace {
 
@@ -143,21 +143,21 @@ TEST_F(RequestCheckCreatorTest, badCreate) {
     // Invalid type of parameter
     EXPECT_THROW(creator_.create("from", Element::fromJSON("4"),
                                  getRequestLoader()),
-                 isc::data::TypeError);
+                 bundy::data::TypeError);
     EXPECT_THROW(creator_.create("from", Element::fromJSON("[]"),
                                  getRequestLoader()),
-                 isc::data::TypeError);
+                 bundy::data::TypeError);
     EXPECT_THROW(creator_.create("key", Element::fromJSON("1"),
                                  getRequestLoader()),
-                 isc::data::TypeError);
+                 bundy::data::TypeError);
     EXPECT_THROW(creator_.create("key", Element::fromJSON("{}"),
                                  getRequestLoader()),
-                 isc::data::TypeError);
+                 bundy::data::TypeError);
 
     // Syntax error for IPCheck
     EXPECT_THROW(creator_.create("from", Element::fromJSON("\"bad\""),
                                  getRequestLoader()),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 
     // Syntax error for Name (key) Check
     EXPECT_THROW(creator_.create("key", Element::fromJSON("\"bad..name\""),
@@ -266,17 +266,17 @@ TEST_F(RequestCheckTest, checkTSIGKey) {
 // elsewhere
 
 TEST(DNSACL, notLoad) {
-    EXPECT_NO_THROW(getRequestLoader().loadCheck(isc::data::Element::fromJSON(
+    EXPECT_NO_THROW(getRequestLoader().loadCheck(bundy::data::Element::fromJSON(
         "{\"NOT\": {\"from\": \"192.0.2.1\"}}")));
 }
 
 TEST(DNSACL, allLoad) {
-    EXPECT_NO_THROW(getRequestLoader().loadCheck(isc::data::Element::fromJSON(
+    EXPECT_NO_THROW(getRequestLoader().loadCheck(bundy::data::Element::fromJSON(
         "{\"ALL\": [{\"from\": \"192.0.2.1\"}]}")));
 }
 
 TEST(DNSACL, anyLoad) {
-    EXPECT_NO_THROW(getRequestLoader().loadCheck(isc::data::Element::fromJSON(
+    EXPECT_NO_THROW(getRequestLoader().loadCheck(bundy::data::Element::fromJSON(
         "{\"ANY\": [{\"from\": \"192.0.2.1\"}]}")));
 }
 

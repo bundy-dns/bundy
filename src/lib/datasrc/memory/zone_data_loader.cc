@@ -32,10 +32,10 @@
 
 #include <map>
 
-using namespace isc::dns;
-using namespace isc::dns::rdata;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 
@@ -45,7 +45,7 @@ using detail::getCoveredType;
 namespace { // unnamed namespace
 
 // A functor type used for loading.
-typedef boost::function<void(isc::dns::ConstRRsetPtr)> LoadCallback;
+typedef boost::function<void(bundy::dns::ConstRRsetPtr)> LoadCallback;
 
 // A helper internal class for \c loadZoneData().  make it non-copyable
 // to avoid accidental copy.
@@ -69,25 +69,25 @@ typedef boost::function<void(isc::dns::ConstRRsetPtr)> LoadCallback;
 class ZoneDataLoader : boost::noncopyable {
 public:
     ZoneDataLoader(util::MemorySegment& mem_sgmt,
-                   const isc::dns::RRClass& rrclass,
-                   const isc::dns::Name& zone_name, ZoneData& zone_data) :
+                   const bundy::dns::RRClass& rrclass,
+                   const bundy::dns::Name& zone_name, ZoneData& zone_data) :
         updater_(mem_sgmt, rrclass, zone_name, zone_data)
     {}
 
-    void addFromLoad(const isc::dns::ConstRRsetPtr& rrset);
+    void addFromLoad(const bundy::dns::ConstRRsetPtr& rrset);
     void flushNodeRRsets();
 
 private:
-    typedef std::map<isc::dns::RRType, isc::dns::ConstRRsetPtr> NodeRRsets;
+    typedef std::map<bundy::dns::RRType, bundy::dns::ConstRRsetPtr> NodeRRsets;
     typedef NodeRRsets::value_type NodeRRsetsVal;
 
     // A helper to identify the covered type of an RRSIG.
-    const isc::dns::Name& getCurrentName() const;
+    const bundy::dns::Name& getCurrentName() const;
 
 private:
     NodeRRsets node_rrsets_;
     NodeRRsets node_rrsigsets_;
-    std::vector<isc::dns::ConstRRsetPtr> non_consecutive_rrsets_;
+    std::vector<bundy::dns::ConstRRsetPtr> non_consecutive_rrsets_;
     ZoneDataUpdater updater_;
 };
 
@@ -178,7 +178,7 @@ logError(const dns::Name* zone_name, const dns::RRClass* rrclass,
 
 ZoneData*
 loadZoneDataInternal(util::MemorySegment& mem_sgmt,
-                     const isc::dns::RRClass& rrclass,
+                     const bundy::dns::RRClass& rrclass,
                      const Name& zone_name,
                      boost::function<void(LoadCallback)> rrset_installer)
 {
@@ -213,7 +213,7 @@ loadZoneDataInternal(util::MemorySegment& mem_sgmt,
                 callbacks(boost::bind(&logError, &zone_name, &rrclass, _1),
                           boost::bind(&logWarning, &zone_name, &rrclass, _1));
             if (!dns::checkZone(zone_name, rrclass, collection, callbacks)) {
-                isc_throw(ZoneValidationError,
+                bundy_throw(ZoneValidationError,
                           "Errors found when validating zone: "
                           << zone_name << "/" << rrclass);
             }
@@ -244,7 +244,7 @@ masterLoaderWrapper(const char* const filename, const Name& origin,
                           collator.getCallback()).load();
         collator.flush();
     } catch (const dns::MasterLoaderError& e) {
-        isc_throw(ZoneLoaderException, e.what());
+        bundy_throw(ZoneLoaderException, e.what());
     }
 }
 
@@ -261,8 +261,8 @@ generateRRsetFromIterator(ZoneIterator* iterator, LoadCallback callback) {
 
 ZoneData*
 loadZoneData(util::MemorySegment& mem_sgmt,
-             const isc::dns::RRClass& rrclass,
-             const isc::dns::Name& zone_name,
+             const bundy::dns::RRClass& rrclass,
+             const bundy::dns::Name& zone_name,
              const std::string& zone_file)
 {
     LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_MEM_LOAD_FROM_FILE).
@@ -277,8 +277,8 @@ loadZoneData(util::MemorySegment& mem_sgmt,
 
 ZoneData*
 loadZoneData(util::MemorySegment& mem_sgmt,
-             const isc::dns::RRClass& rrclass,
-             const isc::dns::Name& zone_name,
+             const bundy::dns::RRClass& rrclass,
+             const bundy::dns::Name& zone_name,
              ZoneIterator& iterator)
 {
     LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_MEM_LOAD_FROM_DATASRC).
@@ -291,4 +291,4 @@ loadZoneData(util::MemorySegment& mem_sgmt,
 
 } // namespace memory
 } // namespace datasrc
-} // namespace isc
+} // namespace bundy

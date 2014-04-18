@@ -17,7 +17,7 @@
 
 #include <d2/d_controller.h>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 /// @brief Process Controller for D2 Process
@@ -66,7 +66,7 @@ private:
     D2Controller();
 };
 
-}; // namespace isc::d2
-}; // namespace isc
+}; // namespace bundy::d2
+}; // namespace bundy
 
 #endif

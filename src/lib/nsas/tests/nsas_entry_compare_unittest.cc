@@ -25,10 +25,10 @@
 #include "../nsas_entry_compare.h"
 #include "nsas_test.h"
 
-using namespace isc::dns;
+using namespace bundy::dns;
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 
 /// \brief Test Fixture Class
@@ -59,4 +59,4 @@ TEST_F(NsasEntryCompareTest, Compare) {
 }
 
 } // namespace nsas
-} // namespace isc
+} // namespace bundy

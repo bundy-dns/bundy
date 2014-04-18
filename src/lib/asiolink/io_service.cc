@@ -21,7 +21,7 @@
 #include <asio.hpp>
 #include <asiolink/io_service.h>
 
-namespace isc {
+namespace bundy {
 namespace asiolink {
 
 namespace {
@@ -123,4 +123,4 @@ IOService::post(const boost::function<void ()>& callback) {
 }
 
 } // namespace asiolink
-} // namespace isc
+} // namespace bundy

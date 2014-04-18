@@ -23,11 +23,11 @@
 #include <gtest/gtest.h>
 #include <sstream>
 
-using namespace isc;
-using namespace isc::asiolink;
-using namespace isc::dhcp;
-using namespace isc::dhcp::test;
-using namespace isc::util;
+using namespace bundy;
+using namespace bundy::asiolink;
+using namespace bundy::dhcp;
+using namespace bundy::dhcp::test;
+using namespace bundy::util;
 
 namespace {
 
@@ -218,6 +218,6 @@ TEST_F(CSVLeaseFile6Test, recreate) {
 /// lease type, invalid preferred lifetime vs valid lifetime etc. The Lease6
 /// should be extended with the function that validates lease attributes. Once
 /// this is implemented we should provide more tests for malformed leases
-/// in the CSV file. See http://bundy.isc.org/ticket/2405.
+/// in the CSV file. See http://bundy.bundy.org/ticket/2405.
 
 } // end of anonymous namespace

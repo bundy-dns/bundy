@@ -44,10 +44,10 @@
 #include <util/io/sockaddr_util.h>
 
 using namespace std;
-using namespace isc;
+using namespace bundy;
 using boost::scoped_ptr;
-using namespace isc::util::io;
-using namespace isc::util::io::internal;
+using namespace bundy::util::io;
+using namespace bundy::util::io::internal;
 
 namespace {
 
@@ -88,7 +88,7 @@ setNonBlock(int s, bool on) {
         fcntl_flags &= ~O_NONBLOCK;
     }
     if (fcntl(s, F_SETFL, fcntl_flags) == -1) {
-        isc_throw(isc::Unexpected, "fcntl(O_NONBLOCK) failed: " <<
+        bundy_throw(bundy::Unexpected, "fcntl(O_NONBLOCK) failed: " <<
                   strerror(errno));
     }
 }
@@ -104,7 +104,7 @@ setRecvDelay(int s) {
             // Workaround for Solaris: see recursive_query_unittest
             return (MSG_DONTWAIT);
         } else {
-            isc_throw(isc::Unexpected, "set RCVTIMEO failed: " <<
+            bundy_throw(bundy::Unexpected, "set RCVTIMEO failed: " <<
                       strerror(errno));
         }
     }
@@ -137,7 +137,7 @@ public:
         const int error = getaddrinfo(addr_str.c_str(), port_str.c_str(),
                                       &hints, &res);
         if (error != 0) {
-            isc_throw(isc::Unexpected, "getaddrinfo failed for " <<
+            bundy_throw(bundy::Unexpected, "getaddrinfo failed for " <<
                       addr_str << ", " << port_str << ": " <<
                       gai_strerror(error));
         }
@@ -177,20 +177,20 @@ protected:
     // Start an internal "socket session server".
     void startListen() {
         if (listen_fd_ != -1) {
-            isc_throw(isc::Unexpected, "duplicate call to startListen()");
+            bundy_throw(bundy::Unexpected, "duplicate call to startListen()");
         }
         listen_fd_ = socket(AF_UNIX, SOCK_STREAM, 0);
         if (listen_fd_ == -1) {
-            isc_throw(isc::Unexpected, "failed to create UNIX domain socket" <<
+            bundy_throw(bundy::Unexpected, "failed to create UNIX domain socket" <<
                       strerror(errno));
         }
         if (bind(listen_fd_, convertSockAddr(&test_un_), test_un_len_) == -1) {
-            isc_throw(isc::Unexpected, "failed to bind UNIX domain socket" <<
+            bundy_throw(bundy::Unexpected, "failed to bind UNIX domain socket" <<
                       strerror(errno));
         }
         // 10 is an arbitrary choice, should be sufficient for a single test
         if (listen(listen_fd_, 10) == -1) {
-            isc_throw(isc::Unexpected, "failed to listen on UNIX domain socket"
+            bundy_throw(bundy::Unexpected, "failed to listen on UNIX domain socket"
                       << strerror(errno));
         }
     }
@@ -198,12 +198,12 @@ protected:
     int dummyConnect() const {
         const int s = socket(AF_UNIX, SOCK_STREAM, 0);
         if (s == -1) {
-            isc_throw(isc::Unexpected,
+            bundy_throw(bundy::Unexpected,
                       "failed to create a test UNIX domain socket");
         }
         setNonBlock(s, true);
         if (connect(s, convertSockAddr(&test_un_), sizeof(test_un_)) == -1) {
-            isc_throw(isc::Unexpected,
+            bundy_throw(bundy::Unexpected,
                       "failed to connect to the test SocketSessionForwarder");
         }
         return (s);
@@ -218,7 +218,7 @@ protected:
         socklen_t from_len = sizeof(from);
         const int s = accept(listen_fd_, convertSockAddr(&from), &from_len);
         if (s == -1) {
-            isc_throw(isc::Unexpected, "accept failed: " << strerror(errno));
+            bundy_throw(bundy::Unexpected, "accept failed: " << strerror(errno));
         }
         // Make sure the socket is *blocking*.  We may pass large data, through
         // it, and apparently non blocking read could cause some unexpected
@@ -242,22 +242,22 @@ protected:
     {
         int s = socket(family, type, protocol);
         if (s < 0) {
-            isc_throw(isc::Unexpected, "socket(2) failed: " <<
+            bundy_throw(bundy::Unexpected, "socket(2) failed: " <<
                       strerror(errno));
         }
         const int on = 1;
         if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) == -1) {
-            isc_throw(isc::Unexpected, "setsockopt(SO_REUSEADDR) failed: " <<
+            bundy_throw(bundy::Unexpected, "setsockopt(SO_REUSEADDR) failed: " <<
                       strerror(errno));
         }
         if (bind(s, sainfo.first, sainfo.second) < 0) {
             close(s);
-            isc_throw(isc::Unexpected, "bind(2) failed: " <<
+            bundy_throw(bundy::Unexpected, "bind(2) failed: " <<
                       strerror(errno));
         }
         if (do_listen && protocol == IPPROTO_TCP) {
             if (listen(s, 1) == -1) {
-                isc_throw(isc::Unexpected, "listen(2) failed: " <<
+                bundy_throw(bundy::Unexpected, "listen(2) failed: " <<
                           strerror(errno));
             }
         }
@@ -285,18 +285,18 @@ protected:
                            bool push_fd = true,
                            int fd = 0)
     {
-        isc::util::OutputBuffer obuffer(0);
+        bundy::util::OutputBuffer obuffer(0);
         obuffer.clear();
 
         dummy_forwarder_.reset(dummyConnect());
         if (push_fd && send_fd(dummy_forwarder_.fd, fd) != 0) {
-            isc_throw(isc::Unexpected, "Failed to pass FD");
+            bundy_throw(bundy::Unexpected, "Failed to pass FD");
         }
         obuffer.writeUint16(hdrlen);
         if (hdrlen_len > 0) {
             if (send(dummy_forwarder_.fd, obuffer.getData(), hdrlen_len, 0) !=
                 hdrlen_len) {
-                isc_throw(isc::Unexpected,
+                bundy_throw(bundy::Unexpected,
                           "Failed to pass session header len");
             }
         }
@@ -317,7 +317,7 @@ protected:
                      const sockaddr& remote,
                      size_t data_len = sizeof(TEST_DATA))
     {
-        isc::util::OutputBuffer obuffer(0);
+        bundy::util::OutputBuffer obuffer(0);
         obuffer.writeUint32(static_cast<uint32_t>(family));
         obuffer.writeUint32(static_cast<uint32_t>(type));
         obuffer.writeUint32(static_cast<uint32_t>(protocol));
@@ -329,11 +329,11 @@ protected:
         pushSessionHeader(obuffer.getLength());
         if (send(dummy_forwarder_.fd, obuffer.getData(), obuffer.getLength(),
                  0) != obuffer.getLength()) {
-            isc_throw(isc::Unexpected, "Failed to pass session header");
+            bundy_throw(bundy::Unexpected, "Failed to pass session header");
         }
         if (send(dummy_forwarder_.fd, TEST_DATA, sizeof(TEST_DATA), 0) !=
             sizeof(TEST_DATA)) {
-            isc_throw(isc::Unexpected, "Failed to pass session data");
+            bundy_throw(bundy::Unexpected, "Failed to pass session data");
         }
     }
 
@@ -470,7 +470,7 @@ ForwardTest::checkPushAndPop(int family, int type, int protocol,
         socklen_t salen = sizeof(ss);
         server_sock.reset(accept(sock.fd, convertSockAddr(&ss), &salen));
         if (server_sock.fd == -1) {
-            isc_throw(isc::Unexpected, "internal accept failed: " <<
+            bundy_throw(bundy::Unexpected, "internal accept failed: " <<
                       strerror(errno));
         }
         fwd_fd = server_sock.fd;

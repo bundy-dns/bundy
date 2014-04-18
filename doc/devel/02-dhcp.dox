@@ -3,9 +3,9 @@
  *
  * BUNDY offers DHCPv4 server implementation. It is implemented as
  * bundy-dhcp4 component.  Its primary code is located in
- * isc::dhcp::Dhcpv4Srv class. It uses \ref libdhcp extensively,
- * especially isc::dhcp::Pkt4, isc::dhcp::Option and
- * isc::dhcp::IfaceMgr classes. Currently this code offers skeleton
+ * bundy::dhcp::Dhcpv4Srv class. It uses \ref libdhcp extensively,
+ * especially bundy::dhcp::Pkt4, bundy::dhcp::Option and
+ * bundy::dhcp::IfaceMgr classes. Currently this code offers skeleton
  * functionality, i.e. it is able to receive and process incoming
  * requests and trasmit responses. However, it does not have database
  * management, so it returns only one, hardcoded lease to whoever asks
@@ -21,34 +21,34 @@
  *
  * DHCPv4 server component is now integrated with the BUNDY message queue.
  * The integration is performed by establishSession() and disconnectSession()
- * functions in isc::dhcp::ControlledDhcpv4Srv class. main() method defined
- * in the src/bin/dhcp4/main.cc file instantiates isc::dhcp::ControlledDhcpv4Srv
+ * functions in bundy::dhcp::ControlledDhcpv4Srv class. main() method defined
+ * in the src/bin/dhcp4/main.cc file instantiates bundy::dhcp::ControlledDhcpv4Srv
  * class that establishes connection with msgq and install necessary handlers
  * for receiving commands and configuration updates. It is derived from
- * a base isc::dhcp::Dhcpv4Srv class that implements DHCPv4 server functionality,
+ * a base bundy::dhcp::Dhcpv4Srv class that implements DHCPv4 server functionality,
  * without any controlling mechanisms.
  *
  * ControlledDhcpv4Srv instantiates several components to make management
- * session possible. In particular, isc::cc::Session cc_session
+ * session possible. In particular, bundy::cc::Session cc_session
  * object uses ASIO for establishing connection. It registers its socket
- * in isc::asiolink::IOService io_service object. Typically, other components
+ * in bundy::asiolink::IOService io_service object. Typically, other components
  * (e.g. auth or resolver) that use ASIO for their communication, register their
  * other sockets in the
  * same io_service and then just call io_service.run() method that does
  * not return, until one of the callback decides that it is time to shut down
  * the whole component cal calls io_service.stop(). DHCPv4 works in a
  * different way. It does receive messages using select()
- * (see isc::dhcp::IfaceMgr::receive4()), which is incompatible with ASIO.
+ * (see bundy::dhcp::IfaceMgr::receive4()), which is incompatible with ASIO.
  * To solve this problem, socket descriptor is extracted from cc_session
- * object and is passed to IfaceMgr by using isc::dhcp::IfaceMgr::set_session_socket().
+ * object and is passed to IfaceMgr by using bundy::dhcp::IfaceMgr::set_session_socket().
  * IfaceMgr then uses this socket in its select() call. If there is some
  * data to be read, it calls registered callback that is supposed to
  * read and process incoming data.
  *
  * This somewhat complicated approach is needed for a simple reason. In
  * embedded deployments there will be no message queue. Not referring directly
- * to anything related to message queue in isc::dhcp::Dhcpv4Srv and
- * isc::dhcp::IfaceMgr classes brings in two benefits. First, the can
+ * to anything related to message queue in bundy::dhcp::Dhcpv4Srv and
+ * bundy::dhcp::IfaceMgr classes brings in two benefits. First, the can
  * be used with and without message queue. Second benefit is related to the
  * first one: \ref libdhcp is supposed to be simple and robust and not require
  * many dependencies. One notable example of a use case that benefits from

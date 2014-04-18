@@ -16,11 +16,11 @@
 
 #include "config/config_log.h"
 
-namespace isc {
+namespace bundy {
 namespace config {
 
-isc::log::Logger config_logger("config");
+bundy::log::Logger config_logger("config");
 
 } // namespace nsas
-} // namespace isc
+} // namespace bundy
 

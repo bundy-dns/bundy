@@ -18,16 +18,16 @@
 #include <dhcp/tests/pkt_filter_test_utils.h>
 #include <gtest/gtest.h>
 
-using namespace isc::asiolink;
-using namespace isc::dhcp;
-using namespace isc::dhcp::test;
+using namespace bundy::asiolink;
+using namespace bundy::dhcp;
+using namespace bundy::dhcp::test;
 
 namespace {
 
 /// Port number used by tests.
 const uint16_t PORT = 10067;
 
-class PktFilterBaseClassTest : public isc::dhcp::test::PktFilterTest {
+class PktFilterBaseClassTest : public bundy::dhcp::test::PktFilterTest {
 public:
     /// @brief Constructor
     ///
@@ -61,7 +61,7 @@ TEST_F(PktFilterBaseClassTest, openFallbackSocket) {
     int another_sock = -1;
     EXPECT_THROW(another_sock =
                  pkt_filter.openFallbackSocket(IOAddress("127.0.0.1"), PORT),
-                 isc::dhcp::SocketConfigError)
+                 bundy::dhcp::SocketConfigError)
         << "it should be not allowed to open and bind two fallback sockets"
         " to the same address and port. Surprisingly, the socket bound.";
     // Hard to believe we managed to open another socket. But if so, we have

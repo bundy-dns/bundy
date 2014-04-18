@@ -15,7 +15,7 @@
 #ifndef DATASRC_RESULT_H
 #define DATASRC_RESULT_H 1
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace result {
 /// \brief Result codes of various public methods of DataSourceClient.

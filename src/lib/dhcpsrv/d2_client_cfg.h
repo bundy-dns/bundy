@@ -29,13 +29,13 @@
 #include <string>
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 
 /// An exception that is thrown if an error occurs while configuring
 /// the D2 DHCP DDNS client.
-class D2ClientError : public isc::Exception {
+class D2ClientError : public bundy::Exception {
 public:
 
     /// @brief constructor
@@ -44,7 +44,7 @@ public:
     /// @param line line of the file, where exception occurred
     /// @param what text description of the issue that caused exception
     D2ClientError(const char* file, size_t line, const char* what)
-        : isc::Exception(file, line, what) {}
+        : bundy::Exception(file, line, what) {}
 };
 
 /// @brief Acts as a storage vault for D2 client configuration
@@ -93,7 +93,7 @@ public:
     ///
     /// @throw D2ClientError if given an invalid protocol or format.
     D2ClientConfig(const bool enable_updates,
-                   const isc::asiolink::IOAddress& server_ip,
+                   const bundy::asiolink::IOAddress& server_ip,
                    const size_t server_port,
                    const dhcp_ddns::NameChangeProtocol& ncr_protocol,
                    const dhcp_ddns::NameChangeFormat& ncr_format,
@@ -117,7 +117,7 @@ public:
     }
 
     /// @brief Return the IP address of bundy-dhcp-ddns (IPv4 or IPv6).
-    const isc::asiolink::IOAddress& getServerIp() const {
+    const bundy::asiolink::IOAddress& getServerIp() const {
         return(server_ip_);
     }
 
@@ -197,7 +197,7 @@ private:
     bool enable_updates_;
 
     /// @brief IP address of the bundy-dhcp-ddns server (IPv4 or IPv6).
-    isc::asiolink::IOAddress server_ip_;
+    bundy::asiolink::IOAddress server_ip_;
 
     /// @brief IP port of the bundy-dhcp-ddns server.
     size_t server_port_;
@@ -236,7 +236,7 @@ operator<<(std::ostream& os, const D2ClientConfig& config);
 /// @brief Defines a pointer for D2ClientConfig instances.
 typedef boost::shared_ptr<D2ClientConfig> D2ClientConfigPtr;
 
-} // namespace isc
+} // namespace bundy
 } // namespace dhcp
 
 #endif

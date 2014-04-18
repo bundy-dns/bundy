@@ -26,7 +26,7 @@
 
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 // Get the logging severity.  This is defined by the environment variable
@@ -34,11 +34,11 @@ namespace log {
 // of "FATAL".  (Note that the string must be in upper case with no leading
 // of trailing blanks.)  If not present, the default severity passed to the
 // function is returned.
-isc::log::Severity
-b10LoggerSeverity(isc::log::Severity defseverity) {
+bundy::log::Severity
+b10LoggerSeverity(bundy::log::Severity defseverity) {
     const char* sev_char = getenv("BUNDY_LOGGER_SEVERITY");
     if (sev_char) {
-        return (isc::log::getSeverity(sev_char));
+        return (bundy::log::getSeverity(sev_char));
     }
     return (defseverity);
 }
@@ -82,7 +82,7 @@ b10LoggerDbglevel(int defdbglevel) {
 void
 resetUnitTestRootLogger() {
 
-    using namespace isc::log;
+    using namespace bundy::log;
 
     // Constants: not declared static as this is function is expected to be
     // called once only
@@ -101,8 +101,8 @@ resetUnitTestRootLogger() {
 
     // Prepare the objects to define the logging specification
     LoggerSpecification spec(getRootLoggerName(), 
-                             b10LoggerSeverity(isc::log::DEBUG),
-                             b10LoggerDbglevel(isc::log::MAX_DEBUG_LEVEL));
+                             b10LoggerSeverity(bundy::log::DEBUG),
+                             b10LoggerDbglevel(bundy::log::MAX_DEBUG_LEVEL));
     OutputOption option;
 
     // Set up output option according to destination specification
@@ -147,7 +147,7 @@ resetUnitTestRootLogger() {
 
 
 // Logger Run-Time Initialization via Environment Variables
-void initLogger(isc::log::Severity severity, int dbglevel) {
+void initLogger(bundy::log::Severity severity, int dbglevel) {
 
     // Root logger name is defined by the environment variable BUNDY_LOGGER_ROOT.
     // If not present, the name is "bundy".
@@ -164,7 +164,7 @@ void initLogger(isc::log::Severity severity, int dbglevel) {
     setenv("BUNDY_LOCKFILE_DIR_FROM_BUILD", TOP_BUILDDIR, 1);
 
     // Initialize logging
-    initLogger(root, isc::log::DEBUG, isc::log::MAX_DEBUG_LEVEL, localfile);
+    initLogger(root, bundy::log::DEBUG, bundy::log::MAX_DEBUG_LEVEL, localfile);
 
     // Now set reset the output destination of the root logger, overriding
     // the default severity, debug level and destination with those specified
@@ -175,4 +175,4 @@ void initLogger(isc::log::Severity severity, int dbglevel) {
 } 
 
 } // namespace log
-} // namespace isc
+} // namespace bundy

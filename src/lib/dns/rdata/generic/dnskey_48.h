@@ -24,7 +24,7 @@
 
 // BEGIN_HEADER_GUARD
 
-// BEGIN_ISC_NAMESPACE
+// BEGIN_BUNDY_NAMESPACE
 
 // BEGIN_COMMON_DECLARATIONS
 // END_COMMON_DECLARATIONS
@@ -46,7 +46,7 @@ public:
 
     /// \brief Returns the key tag
     ///
-    /// \throw isc::OutOfRange if the key data for RSA/MD5 is too short
+    /// \throw bundy::OutOfRange if the key data for RSA/MD5 is too short
     /// to support tag extraction.
     uint16_t getTag() const;
 
@@ -54,13 +54,13 @@ public:
     uint8_t getAlgorithm() const;
 
 private:
-    DNSKEYImpl* constructFromLexer(isc::dns::MasterLexer& lexer);
+    DNSKEYImpl* constructFromLexer(bundy::dns::MasterLexer& lexer);
 
     DNSKEYImpl* impl_;
 };
 
 // END_RDATA_NAMESPACE
-// END_ISC_NAMESPACE
+// END_BUNDY_NAMESPACE
 // END_HEADER_GUARD
 
 // Local Variables: 

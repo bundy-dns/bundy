@@ -17,7 +17,7 @@
 
 #include <Python.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 class TSIGKey;
 class TSIGKeyRing;
@@ -67,7 +67,7 @@ const TSIGKeyRing& PyTSIGKeyRing_ToTSIGKeyRing(const PyObject* tsigkeyring_obj);
 
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 #endif // PYTHON_TSIGKEY_H
 
 // Local Variables:

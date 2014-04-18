@@ -23,14 +23,14 @@
 
 // Generated if, when updating the logging specification, an unknown
 // destination is encountered.
-class UnknownLoggingDestination : public isc::Exception {
+class UnknownLoggingDestination : public bundy::Exception {
 public:
     UnknownLoggingDestination(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what)
+        bundy::Exception(file, line, what)
     {}
 };
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 class LoggerManagerImpl;
@@ -116,7 +116,7 @@ public:
     ///        the \c process() methods is called. If false, initial logging
     ///        shall go to the default output (i.e. stdout)
     static void init(const std::string& root,
-                    isc::log::Severity severity = isc::log::INFO,
+                    bundy::log::Severity severity = bundy::log::INFO,
                     int dbglevel = 0, const char* file = NULL,
                     bool buffer = false);
 
@@ -138,7 +138,7 @@ public:
     /// \brief Return a process-global mutex that's used for mutual
     /// exclusion among threads of a single process during logging
     /// calls.
-    static isc::util::thread::Mutex& getMutex();
+    static bundy::util::thread::Mutex& getMutex();
 
 private:
     /// \brief Initialize Processing
@@ -166,7 +166,7 @@ private:
 };
 
 } // namespace log
-} // namespace isc
+} // namespace bundy
 
 
 #endif // LOGGER_MANAGER_H

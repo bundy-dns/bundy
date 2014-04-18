@@ -18,7 +18,7 @@
 #include <list>
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief Simple container for option spaces holding various items.
@@ -97,7 +97,7 @@ private:
 };
 
 
-} // end of isc::dhcp namespace
-} // end of isc namespace
+} // end of bundy::dhcp namespace
+} // end of bundy namespace
 
 #endif // OPTION_SPACE_CONTAINER_H

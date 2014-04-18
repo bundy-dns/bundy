@@ -17,10 +17,10 @@
 #include <log/log_dbglevels.h>
 #include <asiodns/asiodns_messages.h>
 
-namespace isc {
+namespace bundy {
 namespace asiodns {
 
-extern isc::log::Logger logger;
+extern bundy::log::Logger logger;
 
 }
 }

@@ -22,10 +22,10 @@
 #include <netinet/in_systm.h>
 #include <netinet/ip.h>
 
-using namespace isc::asiolink;
-using namespace isc::util;
+using namespace bundy::asiolink;
+using namespace bundy::util;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 void
@@ -33,7 +33,7 @@ decodeEthernetHeader(InputBuffer& buf, Pkt4Ptr& pkt) {
     // The size of the buffer to be parsed must not be lower
     // then the size of the Ethernet frame header.
     if (buf.getLength() - buf.getPosition() < ETHERNET_HEADER_LEN) {
-        isc_throw(InvalidPacketHeader, "size of ethernet header in received "
+        bundy_throw(InvalidPacketHeader, "size of ethernet header in received "
                   << "packet is invalid, expected at least "
                   << ETHERNET_HEADER_LEN << " bytes, received "
                   << buf.getLength() - buf.getPosition() << " bytes");
@@ -41,7 +41,7 @@ decodeEthernetHeader(InputBuffer& buf, Pkt4Ptr& pkt) {
     // Packet object must not be NULL. We want to output some values
     // to this object.
     if (!pkt) {
-        isc_throw(BadValue, "NULL packet object provided when parsing ethernet"
+        bundy_throw(BadValue, "NULL packet object provided when parsing ethernet"
                   " frame header");
     }
 
@@ -70,7 +70,7 @@ decodeIpUdpHeader(InputBuffer& buf, Pkt4Ptr& pkt) {
     // The size of the buffer must be at least equal to the minimal size of
     // the IPv4 packet header plus UDP header length.
     if (buf.getLength() - buf.getPosition() < MIN_IP_HEADER_LEN + UDP_HEADER_LEN) {
-        isc_throw(InvalidPacketHeader, "the total size of the IP and UDP headers in "
+        bundy_throw(InvalidPacketHeader, "the total size of the IP and UDP headers in "
                   << "received packet is invalid, expected at least "
                   << MIN_IP_HEADER_LEN + UDP_HEADER_LEN
                   << " bytes, received " << buf.getLength() - buf.getPosition()
@@ -79,7 +79,7 @@ decodeIpUdpHeader(InputBuffer& buf, Pkt4Ptr& pkt) {
 
     // Packet object must not be NULL.
     if (!pkt) {
-        isc_throw(BadValue, "NULL packet object provided when parsing IP and UDP"
+        bundy_throw(BadValue, "NULL packet object provided when parsing IP and UDP"
                   " packet headers");
     }
 
@@ -93,7 +93,7 @@ decodeIpUdpHeader(InputBuffer& buf, Pkt4Ptr& pkt) {
     // IP length is the number of 4 byte chunks that construct IPv4 header.
     // It must not be lower than 5 because first 20 bytes are fixed.
     if (ip_len < 5) {
-        isc_throw(InvalidPacketHeader, "Value of the length of the IP header must not be"
+        bundy_throw(InvalidPacketHeader, "Value of the length of the IP header must not be"
                   << " lower than 5 words. The length of the received header is "
                   << ip_len << ".");
     }
@@ -128,7 +128,7 @@ writeEthernetHeader(const Pkt4Ptr& pkt, OutputBuffer& out_buf) {
             out_buf.writeData(&remote_addr->hwaddr_[0],
                               HWAddr::ETHERNET_HWADDR_LEN);
         } else {
-            isc_throw(BadValue, "invalid size of the remote HW address "
+            bundy_throw(BadValue, "invalid size of the remote HW address "
                       << remote_addr->hwaddr_.size() << " when constructing"
                       << " an ethernet frame header; expected size is"
                       << " " << HWAddr::ETHERNET_HWADDR_LEN);
@@ -149,7 +149,7 @@ writeEthernetHeader(const Pkt4Ptr& pkt, OutputBuffer& out_buf) {
             out_buf.writeData(&local_addr->hwaddr_[0],
                               HWAddr::ETHERNET_HWADDR_LEN);
         } else {
-            isc_throw(BadValue, "invalid size of the local HW address "
+            bundy_throw(BadValue, "invalid size of the local HW address "
                       << local_addr->hwaddr_.size() << " when constructing"
                       << " an ethernet frame header; expected size is"
                       << " " << HWAddr::ETHERNET_HWADDR_LEN);

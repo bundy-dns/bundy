@@ -31,7 +31,7 @@
 #include <string>
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief Defines the type for D2 IO error handler.
@@ -154,7 +154,7 @@ public:
     /// @param server_s [out] S Flag for the server's FQDN
     /// @param server_n [out] N Flag for the server's FQDN
     ///
-    /// @throw isc::BadValue if client_s and client_n are both 1 as this is
+    /// @throw bundy::BadValue if client_s and client_n are both 1 as this is
     /// an invalid combination per RFCs.
     void analyzeFqdn(const bool client_s, const bool client_n, bool& server_s,
                      bool& server_n) const;
@@ -268,7 +268,7 @@ public:
     /// @throw D2ClientError if sender instance is null. Underlying layer
     /// may throw NCRSenderExceptions exceptions.
     void startSender(D2ClientErrorHandler error_handler,
-                     isc::asiolink::IOService& io_service);
+                     bundy::asiolink::IOService& io_service);
 
     /// @brief Enables sending NameChangeRequests to bundy-dhcp-ddns
     ///
@@ -474,7 +474,7 @@ D2ClientMgr::adjustDomainName(const T& fqdn, T& fqdn_resp) {
 typedef boost::shared_ptr<D2ClientMgr> D2ClientMgrPtr;
 
 
-} // namespace isc
+} // namespace bundy
 } // namespace dhcp
 
 #endif

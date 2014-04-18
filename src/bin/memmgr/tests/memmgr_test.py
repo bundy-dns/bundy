@@ -18,20 +18,20 @@ import os
 import re
 import threading
 
-import isc.log
-from isc.dns import RRClass
-import isc.config
-from isc.config import parse_answer
+import bundy.log
+from bundy.dns import RRClass
+import bundy.config
+from bundy.config import parse_answer
 import memmgr
-from isc.memmgr.datasrc_info import SegmentInfo
-from isc.testutils.ccsession_mock import MockModuleCCSession
+from bundy.memmgr.datasrc_info import SegmentInfo
+from bundy.testutils.ccsession_mock import MockModuleCCSession
 
-class MyCCSession(MockModuleCCSession, isc.config.ConfigData):
+class MyCCSession(MockModuleCCSession, bundy.config.ConfigData):
     def __init__(self, specfile, config_handler, command_handler):
         super().__init__()
         specfile = os.environ['BUNDY_FROM_BUILD'] + '/src/bin/memmgr/memmgr.spec'
-        module_spec = isc.config.module_spec_from_file(specfile)
-        isc.config.ConfigData.__init__(self, module_spec)
+        module_spec = bundy.config.module_spec_from_file(specfile)
+        bundy.config.ConfigData.__init__(self, module_spec)
         self.add_remote_params = [] # for inspection
         self.add_remote_exception = None # to raise exception from the method
         self.rpc_call_exception = None
@@ -105,19 +105,19 @@ class MockMemmgr(memmgr.Memmgr):
         self.builder_thread_created = False
 
     def _setup_ccsession(self):
-        orig_cls = isc.config.ModuleCCSession
-        isc.config.ModuleCCSession = MyCCSession
+        orig_cls = bundy.config.ModuleCCSession
+        bundy.config.ModuleCCSession = MyCCSession
         try:
             super()._setup_ccsession()
         finally:
-            isc.config.ModuleCCSession = orig_cls
+            bundy.config.ModuleCCSession = orig_cls
 
     def _create_builder_thread(self):
         self.builder_thread_created = True
 
 class MockDataSrcInfo:
     def __init__(self, sgmt_info):
-        self.segment_info_map = {(isc.dns.RRClass.IN, "name"): sgmt_info}
+        self.segment_info_map = {(bundy.dns.RRClass.IN, "name"): sgmt_info}
 
 # Defined for easier tests with DataSrcClientsMgr.reconfigure(), which
 # only needs get_value() method
@@ -173,7 +173,7 @@ class TestMemmgr(unittest.TestCase):
         (cmd, group, cc) = self.__mgr.mod_ccsession.sendmsg_params[0]
         self.assertEqual('SegmentReader', group)
         self.assertEqual(expected_reader, cc)
-        command, val = isc.config.parse_command(cmd)
+        command, val = bundy.config.parse_command(cmd)
         self.assertEqual('segment_info_update', command)
         self.assertEqual({'data-source-class': 'IN',
                           'data-source-name': 'name',
@@ -257,7 +257,7 @@ class TestMemmgr(unittest.TestCase):
         # _setup_module raises an exception if the initial configuration setup
         # failed
         self.assertIsNone(self.__mgr._config_params) # make sure the expetation
-        self.assertRaises(isc.server_common.bundy_server.BUNDYServerFatal,
+        self.assertRaises(bundy.server_common.bundy_server.BUNDYServerFatal,
                           self.__mgr._setup_module)
 
         # Set _config_params to empty config; enough for the test
@@ -296,19 +296,19 @@ class TestMemmgr(unittest.TestCase):
         # If data source isn't configured it's considered fatal (checking the
         # same scenario with two possible exception types)
         self.__mgr.mod_ccsession.add_remote_exception = \
-            isc.config.ModuleCCSessionError('faked exception')
-        self.assertRaises(isc.server_common.bundy_server.BUNDYServerFatal,
+            bundy.config.ModuleCCSessionError('faked exception')
+        self.assertRaises(bundy.server_common.bundy_server.BUNDYServerFatal,
                           self.__mgr._setup_module)
 
         self.__mgr.mod_ccsession.add_remote_exception = \
-            isc.config.ModuleSpecError('faked exception')
-        self.assertRaises(isc.server_common.bundy_server.BUNDYServerFatal,
+            bundy.config.ModuleSpecError('faked exception')
+        self.assertRaises(bundy.server_common.bundy_server.BUNDYServerFatal,
                           self.__mgr._setup_module)
 
         # Same for getting initial segment readers.
-        self.__mgr.mod_ccsession.rpc_call_exception = isc.config.RPCError(1,
+        self.__mgr.mod_ccsession.rpc_call_exception = bundy.config.RPCError(1,
                                                                           'e')
-        self.assertRaises(isc.server_common.bundy_server.BUNDYServerFatal,
+        self.assertRaises(bundy.server_common.bundy_server.BUNDYServerFatal,
                           self.__mgr._setup_module)
 
     def test_datasrc_config_handler(self):
@@ -336,7 +336,7 @@ class TestMemmgr(unittest.TestCase):
 
             def reconfigure(self, new_config, config_data):
                 if self.__raise_on_reconfig:
-                    raise isc.server_common.datasrc_clients_mgr.ConfigError(
+                    raise bundy.server_common.datasrc_clients_mgr.ConfigError(
                         'test error')
                 # otherwise do nothing
 
@@ -387,7 +387,7 @@ class TestMemmgr(unittest.TestCase):
         self.assertEqual(['reader1', 'reader2'], sgmt_info.added_readers)
 
         # The event was pushed into the segment info
-        command = ('load', None, dsrc_info, isc.dns.RRClass.IN, 'name')
+        command = ('load', None, dsrc_info, bundy.dns.RRClass.IN, 'name')
         self.assertEqual([command], sgmt_info.events)
         self.assertEqual([command], self.__mgr._builder_command_queue)
         del self.__mgr._builder_command_queue[:]
@@ -413,7 +413,7 @@ class TestMemmgr(unittest.TestCase):
         # Extract the reference for the queue. We get a copy of the reference
         # to check it is cleared, not a new empty one installed
         notif_ref = self.__mgr._builder_response_queue
-        notif_ref.append(('load-completed', dsrc_info, isc.dns.RRClass.IN,
+        notif_ref.append(('load-completed', dsrc_info, bundy.dns.RRClass.IN,
                           'name'))
         # Wake up the main thread and let it process the notifications
         self.__mgr._notify_from_builder()
@@ -429,7 +429,7 @@ class TestMemmgr(unittest.TestCase):
         sgmt_info.old_readers.add('reader1')
         self.__mgr._segment_readers['reader1'] = {}
         sgmt_info.complete_update = lambda: None
-        notif_ref.append(('load-completed', dsrc_info, isc.dns.RRClass.IN,
+        notif_ref.append(('load-completed', dsrc_info, bundy.dns.RRClass.IN,
                           'name'))
         self.__mgr._notify_from_builder()
         self.assertEqual([], notif_ref)
@@ -551,8 +551,8 @@ class TestMemmgr(unittest.TestCase):
         self.__mgr._datasrc_info_list.append(dsrc_info)
 
         # Expected builder event for the loadzone parameters
-        expected_event = ('load', isc.dns.Name('zone'), dsrc_info,
-                          isc.dns.RRClass('IN'), 'name')
+        expected_event = ('load', bundy.dns.Name('zone'), dsrc_info,
+                          bundy.dns.RRClass('IN'), 'name')
 
         # If start_update() returns an event, it's passed to the builder.
         ans = handler(cmd, {'datasource': 'name',
@@ -678,5 +678,5 @@ class TestMemmgr(unittest.TestCase):
                                          self.__mgr._zone_update_notification)
 
 if __name__== "__main__":
-    isc.log.resetUnitTestRootLogger()
+    bundy.log.resetUnitTestRootLogger()
     unittest.main()

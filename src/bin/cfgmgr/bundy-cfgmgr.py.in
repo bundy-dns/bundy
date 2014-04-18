@@ -18,21 +18,21 @@
 import sys; sys.path.append ('@@PYTHONPATH@@')
 
 import bundy_config
-from isc.cc import SessionError
-import isc.util.process
+from bundy.cc import SessionError
+import bundy.util.process
 import signal
 import os
 from optparse import OptionParser
 import glob
 import os.path
 import imp
-import isc.log
-isc.log.init("bundy-cfgmgr", buffer=True)
-from isc.config.cfgmgr import ConfigManager, ConfigManagerDataReadError, logger
-from isc.log_messages.cfgmgr_messages import *
-import isc.util.traceback_handler
+import bundy.log
+bundy.log.init("bundy-cfgmgr", buffer=True)
+from bundy.config.cfgmgr import ConfigManager, ConfigManagerDataReadError, logger
+from bundy.log_messages.cfgmgr_messages import *
+import bundy.util.traceback_handler
 
-isc.util.process.rename()
+bundy.util.process.rename()
 
 # Import some paths from our configuration
 DATA_PATH = bundy_config.DATA_PATH
@@ -129,4 +129,4 @@ def main():
     return 0
 
 if __name__ == "__main__":
-    sys.exit(isc.util.traceback_handler.traceback_handler(main))
+    sys.exit(bundy.util.traceback_handler.traceback_handler(main))

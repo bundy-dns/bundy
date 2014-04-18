@@ -19,7 +19,7 @@
 
 #include <cassert>
 
-namespace isc {
+namespace bundy {
 namespace auth {
 namespace datasrc_clientmgr_internal {
 
@@ -32,7 +32,7 @@ std::list<FinishedCallback> FakeDataSrcClientsBuilder::callback_queue_copy;
 TestCondVar* FakeDataSrcClientsBuilder::cond = NULL;
 TestCondVar FakeDataSrcClientsBuilder::cond_copy;
 TestMutex* FakeDataSrcClientsBuilder::queue_mutex = NULL;
-isc::datasrc::ClientListMapPtr*
+bundy::datasrc::ClientListMapPtr*
     FakeDataSrcClientsBuilder::clients_map = NULL;
 TestMutex* FakeDataSrcClientsBuilder::map_mutex = NULL;
 TestMutex FakeDataSrcClientsBuilder::queue_mutex_copy;
@@ -50,11 +50,11 @@ TestDataSrcClientsBuilder::doNoop() {
     case TestMutex::NONE:
         break;                  // no throw
     case TestMutex::EXCLASS:
-        isc_throw(Exception, "test exception");
+        bundy_throw(Exception, "test exception");
     case TestMutex::INTEGER:
         throw 42;
     case TestMutex::INTERNAL:
-        isc_throw(InternalCommandError, "internal error, should be ignored");
+        bundy_throw(InternalCommandError, "internal error, should be ignored");
     }
 }
 } // namespace datasrc_clientmgr_internal
@@ -95,7 +95,7 @@ TestDataSrcClientsMgrBase::reconfigureHook() {
 }
 
 } // namespace auth
-} // namespace isc
+} // namespace bundy
 
 // Local Variables:
 // mode: c++

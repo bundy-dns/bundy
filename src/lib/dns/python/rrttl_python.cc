@@ -25,17 +25,17 @@
 #include "messagerenderer_python.h"
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::dns::python;
-using namespace isc::util;
-using namespace isc::util::python;
+using namespace bundy::dns;
+using namespace bundy::dns::python;
+using namespace bundy::util;
+using namespace bundy::util::python;
 
 namespace {
 // The s_* Class simply covers one instantiation of the object
 class s_RRTTL : public PyObject {
 public:
     s_RRTTL() : cppobj(NULL) {};
-    isc::dns::RRTTL* cppobj;
+    bundy::dns::RRTTL* cppobj;
 };
 
 typedef CPPPyObjectContainer<s_RRTTL, RRTTL> RRTTLContainer;
@@ -221,7 +221,7 @@ RRTTL_richcmp(s_RRTTL* self, s_RRTTL* other, int op) {
 
 } // end anonymous namespace
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace python {
 
@@ -301,7 +301,7 @@ createRRTTLObject(const RRTTL& source) {
 bool
 PyRRTTL_Check(PyObject* obj) {
     if (obj == NULL) {
-        isc_throw(PyCPPWrapperException, "obj argument NULL in typecheck");
+        bundy_throw(PyCPPWrapperException, "obj argument NULL in typecheck");
     }
     return (PyObject_TypeCheck(obj, &rrttl_type));
 }
@@ -309,7 +309,7 @@ PyRRTTL_Check(PyObject* obj) {
 const RRTTL&
 PyRRTTL_ToRRTTL(const PyObject* rrttl_obj) {
     if (rrttl_obj == NULL) {
-        isc_throw(PyCPPWrapperException,
+        bundy_throw(PyCPPWrapperException,
                   "obj argument NULL in RRTTL PyObject conversion");
     }
     const s_RRTTL* rrttl = static_cast<const s_RRTTL*>(rrttl_obj);
@@ -318,4 +318,4 @@ PyRRTTL_ToRRTTL(const PyObject* rrttl_obj) {
 
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy

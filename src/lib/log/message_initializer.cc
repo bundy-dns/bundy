@@ -33,7 +33,7 @@
 namespace {
 
 // Declare the array of pointers to value arrays.
-const char** logger_values[isc::log::MessageInitializer::MAX_MESSAGE_ARRAYS];
+const char** logger_values[bundy::log::MessageInitializer::MAX_MESSAGE_ARRAYS];
 
 // Declare the index used to access the array.  As this needs to be initialized
 // at first used, it is accessed it via a function.
@@ -51,7 +51,7 @@ getNonConstDuplicates() {
 } // end unnamed namespace
 
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 // Constructor.  Add the pointer to the message array to the global array.
@@ -107,4 +107,4 @@ MessageInitializer::clearDuplicates() {
 }
 
 } // namespace log
-} // namespace isc
+} // namespace bundy

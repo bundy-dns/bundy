@@ -22,7 +22,7 @@
  * @short Wrappers around common unix fd manipulation functions.
  */
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace io {
 

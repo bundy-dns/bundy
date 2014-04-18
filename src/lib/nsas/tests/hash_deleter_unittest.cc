@@ -33,10 +33,10 @@
 #include "../nsas_entry_compare.h"
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::util;
+using namespace bundy::dns;
+using namespace bundy::util;
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 
 
@@ -114,4 +114,4 @@ TEST_F(HashDeleterTest, Constructor) {
 }
 
 } // namespace nsas
-} // namespace isc
+} // namespace bundy

@@ -23,7 +23,7 @@
 #include <unistd.h>
 #include "fd_share.h"
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace io {
 
@@ -157,4 +157,4 @@ send_fd(const int sock, const int fd) {
 
 } // End for namespace io
 } // End for namespace util
-} // End for namespace isc
+} // End for namespace bundy

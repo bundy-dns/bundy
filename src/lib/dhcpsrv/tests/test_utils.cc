@@ -18,9 +18,9 @@
 #include <sstream>
 
 using namespace std;
-using namespace isc::asiolink;
+using namespace bundy::asiolink;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 namespace test {
 
@@ -82,4 +82,4 @@ detailCompareLease(const Lease6Ptr& first, const Lease6Ptr& second) {
 
 }; // namespace test
 }; // namespace dhcp
-}; // namespace isc
+}; // namespace bundy

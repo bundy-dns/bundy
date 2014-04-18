@@ -18,7 +18,7 @@
 
 #include <sstream>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 // Common transaction states
@@ -58,21 +58,21 @@ NameChangeTransaction(IOServicePtr& io_service,
     // @todo if io_service is NULL we are multi-threading and should
     // instantiate our own
     if (!io_service_) {
-        isc_throw(NameChangeTransactionError, "IOServicePtr cannot be null");
+        bundy_throw(NameChangeTransactionError, "IOServicePtr cannot be null");
     }
 
     if (!ncr_) {
-        isc_throw(NameChangeTransactionError,
+        bundy_throw(NameChangeTransactionError,
                   "NameChangeRequest cannot be null");
     }
 
     if (ncr_->isForwardChange() && !(forward_domain_)) {
-        isc_throw(NameChangeTransactionError,
+        bundy_throw(NameChangeTransactionError,
                  "Forward change must have a forward domain");
     }
 
     if (ncr_->isReverseChange() && !(reverse_domain_)) {
-        isc_throw(NameChangeTransactionError,
+        bundy_throw(NameChangeTransactionError,
                  "Reverse change must have a reverse domain");
     }
 }
@@ -312,7 +312,7 @@ NameChangeTransaction::setUpdateAttempts(const size_t value) {
 D2UpdateMessagePtr
 NameChangeTransaction::prepNewRequest(DdnsDomainPtr domain) {
     if (!domain) {
-        isc_throw(NameChangeTransactionError,
+        bundy_throw(NameChangeTransactionError,
                   "prepNewRequest - domain cannot be null");
     }
 
@@ -325,7 +325,7 @@ NameChangeTransaction::prepNewRequest(DdnsDomainPtr domain) {
         request->setZone(zone_name, dns::RRClass::IN());
         return (request);
     } catch (const std::exception& ex) {
-        isc_throw(NameChangeTransactionError, "Cannot create new request :"
+        bundy_throw(NameChangeTransactionError, "Cannot create new request :"
                   << ex.what());
     }
 }
@@ -333,7 +333,7 @@ NameChangeTransaction::prepNewRequest(DdnsDomainPtr domain) {
 void
 NameChangeTransaction::addLeaseAddressRdata(dns::RRsetPtr& rrset) {
     if (!rrset) {
-        isc_throw(NameChangeTransactionError,
+        bundy_throw(NameChangeTransactionError,
                   "addLeaseAddressRdata - RRset cannot cannot be null");
     }
 
@@ -347,7 +347,7 @@ NameChangeTransaction::addLeaseAddressRdata(dns::RRsetPtr& rrset) {
         }
         rrset->addRdata(rdata);
     } catch (const std::exception& ex) {
-        isc_throw(NameChangeTransactionError, "Cannot add address rdata: "
+        bundy_throw(NameChangeTransactionError, "Cannot add address rdata: "
                   << ex.what());
     }
 }
@@ -355,7 +355,7 @@ NameChangeTransaction::addLeaseAddressRdata(dns::RRsetPtr& rrset) {
 void
 NameChangeTransaction::addDhcidRdata(dns::RRsetPtr& rrset) {
     if (!rrset) {
-        isc_throw(NameChangeTransactionError,
+        bundy_throw(NameChangeTransactionError,
                   "addDhcidRdata - RRset cannot cannot be null");
     }
 
@@ -366,7 +366,7 @@ NameChangeTransaction::addDhcidRdata(dns::RRsetPtr& rrset) {
                                          DHCID(buffer, ncr_dhcid.size()));
         rrset->addRdata(rdata);
     } catch (const std::exception& ex) {
-        isc_throw(NameChangeTransactionError, "Cannot add DCHID rdata: "
+        bundy_throw(NameChangeTransactionError, "Cannot add DCHID rdata: "
                   << ex.what());
     }
 
@@ -375,7 +375,7 @@ NameChangeTransaction::addDhcidRdata(dns::RRsetPtr& rrset) {
 void
 NameChangeTransaction::addPtrRdata(dns::RRsetPtr& rrset) {
     if (!rrset) {
-        isc_throw(NameChangeTransactionError,
+        bundy_throw(NameChangeTransactionError,
                   "addPtrRdata - RRset cannot cannot be null");
     }
 
@@ -384,7 +384,7 @@ NameChangeTransaction::addPtrRdata(dns::RRsetPtr& rrset) {
                                         PTR(getNcr()->getFqdn()));
         rrset->addRdata(rdata);
     } catch (const std::exception& ex) {
-        isc_throw(NameChangeTransactionError, "Cannot add PTR rdata: "
+        bundy_throw(NameChangeTransactionError, "Cannot add PTR rdata: "
                   << ex.what());
     }
 }
@@ -417,7 +417,7 @@ NameChangeTransaction::getReverseDomain() {
 void
 NameChangeTransaction::initServerSelection(const DdnsDomainPtr& domain) {
     if (!domain) {
-        isc_throw(NameChangeTransactionError,
+        bundy_throw(NameChangeTransactionError,
                   "initServerSelection called with an empty domain");
     }
     current_server_list_ = domain->getServers();
@@ -496,5 +496,5 @@ NameChangeTransaction::getAddressRRType() const {
     return (ncr_->isV4() ?  dns::RRType::A() : dns::RRType::AAAA());
 }
 
-} // namespace isc::d2
-} // namespace isc
+} // namespace bundy::d2
+} // namespace bundy

@@ -22,7 +22,7 @@
 #include <boost/shared_ptr.hpp>
 #include <map>
 
-namespace isc {
+namespace bundy {
 namespace acl {
 
 class AnyOfSpec;
@@ -47,7 +47,7 @@ public:
     /**
      * \brief Constructor.
      *
-     * Should be used with isc_throw if the fourth argument isn't used.
+     * Should be used with bundy_throw if the fourth argument isn't used.
      *
      * \param file The file where the throw happened.
      * \param line Similar as file, just for the line number.
@@ -252,7 +252,7 @@ public:
         for (Strings::const_iterator i(names.begin()); i != names.end();
              ++i) {
             if (creators_.find(*i) != creators_.end()) {
-                isc_throw(LoaderError, "The loader already contains creator "
+                bundy_throw(LoaderError, "The loader already contains creator "
                           "named " << *i);
             }
         }
@@ -287,7 +287,7 @@ public:
             map = description->mapValue();
         }
         catch (const data::TypeError&) {
-            isc_throw_1(LoaderError, "Check description is not a map",
+            bundy_throw_1(LoaderError, "Check description is not a map",
                         description);
         }
         // Call the internal part with extracted map
@@ -316,14 +316,14 @@ public:
                                                   description) const
     {
         if (!description) {
-            isc_throw(isc::InvalidParameter,
+            bundy_throw(bundy::InvalidParameter,
                       "Null description is passed to ACL loader");
         }
 
         // We first check it's a list, so we can use the list reference
         // (the list may be huge)
         if (description->getType() != data::Element::list) {
-            isc_throw_1(LoaderError, "ACL not a list", description);
+            bundy_throw_1(LoaderError, "ACL not a list", description);
         }
         // First create an empty ACL
         const List &list(description->listValue());
@@ -336,12 +336,12 @@ public:
                 map = (*i)->mapValue();
             }
             catch (const data::TypeError&) {
-                isc_throw_1(LoaderError, "ACL element not a map", *i);
+                bundy_throw_1(LoaderError, "ACL element not a map", *i);
             }
             // Create an action for the element
             const Map::const_iterator action(map.find("action"));
             if (action == map.end()) {
-                isc_throw_1(LoaderError, "No action in ACL element", *i);
+                bundy_throw_1(LoaderError, "No action in ACL element", *i);
             }
             const Action acValue(action_loader_(action->second));
             // Now create the check if there's one
@@ -383,7 +383,7 @@ private:
         // Now, do we have any definition? Or is it and abbreviation?
         switch (map.size()) {
             case 0:
-                isc_throw_1(LoaderError, "Check description is empty",
+                bundy_throw_1(LoaderError, "Check description is empty",
                             description);
             case 1: {
                 // Get the first and only item
@@ -392,7 +392,7 @@ private:
                 const typename Creators::const_iterator
                     creatorIt(creators_.find(name));
                 if (creatorIt == creators_.end()) {
-                    isc_throw_1(LoaderError, "No creator for ACL check " <<
+                    bundy_throw_1(LoaderError, "No creator for ACL check " <<
                                 name, description);
                 }
                 if (creatorIt->second->allowListAbbreviation() &&

@@ -26,7 +26,7 @@
 
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 namespace test {
@@ -36,7 +36,7 @@ loadZoneIntoTable(ZoneTableSegment& zt_sgmt, const dns::Name& zname,
                   const dns::RRClass& zclass, const std::string& zone_file,
                   bool load_error_ok)
 {
-    const isc::datasrc::internal::CacheConfig cache_conf(
+    const bundy::datasrc::internal::CacheConfig cache_conf(
         "MasterFiles", NULL, *data::Element::fromJSON(
             "{\"cache-enable\": true,"
             " \"params\": {\"" + zname.toText() + "\": \"" + zone_file +
@@ -82,7 +82,7 @@ loadZoneIntoTable(ZoneTableSegment& zt_sgmt, const dns::Name& zname,
 } // namespace test
 } // namespace memory
 } // namespace datasrc
-} // namespace isc
+} // namespace bundy
 
 // Local Variables:
 // mode: c++

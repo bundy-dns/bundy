@@ -40,7 +40,7 @@
 using namespace std;
 using boost::lexical_cast;
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 // Reset hierarchy of loggers back to default settings.  This removes all
@@ -102,7 +102,7 @@ LoggerManagerImpl::processSpecification(const LoggerSpecification& spec) {
                 // logging destinations, we could be in the situation where
                 // there are no valid appenders.  For this reason, throw an
                 // exception.
-                isc_throw(UnknownLoggingDestination,
+                bundy_throw(UnknownLoggingDestination,
                           "Unknown logging destination, code = " <<
                           i->destination);
             }
@@ -182,7 +182,7 @@ LoggerManagerImpl::createSyslogAppender(log4cplus::Logger& logger,
 
 // One-time initialization of the log4cplus system
 void
-LoggerManagerImpl::init(isc::log::Severity severity, int dbglevel,
+LoggerManagerImpl::init(bundy::log::Severity severity, int dbglevel,
                         bool buffer)
 {
     // Set up basic configurator.  This attaches a ConsoleAppender to the
@@ -202,14 +202,14 @@ LoggerManagerImpl::init(isc::log::Severity severity, int dbglevel,
 // and resets the root logger to output INFO messages to the console.
 // It is principally used in testing.
 void
-LoggerManagerImpl::reset(isc::log::Severity severity, int dbglevel)
+LoggerManagerImpl::reset(bundy::log::Severity severity, int dbglevel)
 {
     // Initialize the root logger
     initRootLogger(severity, dbglevel);
 }
 
 // Initialize the root logger
-void LoggerManagerImpl::initRootLogger(isc::log::Severity severity,
+void LoggerManagerImpl::initRootLogger(bundy::log::Severity severity,
                                        int dbglevel, bool buffer)
 {
     log4cplus::Logger::getDefaultHierarchy().resetConfiguration();
@@ -293,4 +293,4 @@ void LoggerManagerImpl::flushBufferAppenders() {
 }
 
 } // namespace log
-} // namespace isc
+} // namespace bundy

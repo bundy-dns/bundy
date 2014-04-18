@@ -19,7 +19,7 @@
 #include <cassert>
 #include <stdint.h>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 namespace detail {

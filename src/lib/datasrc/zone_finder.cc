@@ -22,10 +22,10 @@
 #include <dns/rdataclass.h>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::dns::rdata;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 
 namespace {
@@ -46,7 +46,7 @@ getMinTTL(ZoneFinder& finder, ConstRRsetPtr rrset) {
     // In a valid zone there is one and only one SOA RR at the origin.
     // Otherwise either zone data or the data source implementation is broken.
     if (!soa_rrset || soa_rrset->getRdataCount() != 1) {
-        isc_throw(DataSourceError, "Zone " << rrset->getName().toText(true)
+        bundy_throw(DataSourceError, "Zone " << rrset->getName().toText(true)
                   << "/" << rrset->getClass().toText() << " is broken: "
                   << (!soa_rrset ? "no SOA" : "empty SOA"));
     }
@@ -118,19 +118,19 @@ ZoneFinder::findAtOrigin(const dns::RRType& type, bool use_minttl,
     return (context);
 }
 
-isc::dns::ConstRRsetPtr
-ZoneFinder::stripRRsigs(isc::dns::ConstRRsetPtr rp,
+bundy::dns::ConstRRsetPtr
+ZoneFinder::stripRRsigs(bundy::dns::ConstRRsetPtr rp,
                         const FindOptions options) {
     if (rp) {
-        isc::dns::ConstRRsetPtr sig_rrset = rp->getRRsig();
+        bundy::dns::ConstRRsetPtr sig_rrset = rp->getRRsig();
         if (sig_rrset &&
             ((options & ZoneFinder::FIND_DNSSEC) == 0)) {
-            isc::dns::RRsetPtr result_base
-                (new isc::dns::RRset(rp->getName(),
+            bundy::dns::RRsetPtr result_base
+                (new bundy::dns::RRset(rp->getName(),
                                      rp->getClass(),
                                      rp->getType(),
                                      rp->getTTL()));
-            for (isc::dns::RdataIteratorPtr i = rp->getRdataIterator();
+            for (bundy::dns::RdataIteratorPtr i = rp->getRdataIterator();
                  !i->isLast();
                  i->next()) {
                 result_base->addRdata(i->getCurrent());

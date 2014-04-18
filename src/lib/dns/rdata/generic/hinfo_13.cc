@@ -22,10 +22,10 @@
 #include <util/buffer.h>
 
 using namespace std;
-using namespace isc::util;
-using namespace isc::dns;
+using namespace bundy::util;
+using namespace bundy::dns;
 
-// BEGIN_ISC_NAMESPACE
+// BEGIN_BUNDY_NAMESPACE
 // BEGIN_RDATA_NAMESPACE
 
 class HINFOImpl {
@@ -40,11 +40,11 @@ public:
             // Should be at end of data now
             if (lexer.getNextToken(MasterToken::QSTRING, true).getType() !=
                 MasterToken::END_OF_FILE) {
-                isc_throw(InvalidRdataText,
+                bundy_throw(InvalidRdataText,
                           "Invalid HINFO text format: too many fields.");
             }
         } catch (const MasterLexer::LexerError& ex) {
-            isc_throw(InvalidRdataText, "Failed to construct HINFO RDATA from "
+            bundy_throw(InvalidRdataText, "Failed to construct HINFO RDATA from "
                                         << hinfo_str << "': " << ex.what());
         }
     }
@@ -53,7 +53,7 @@ public:
         rdata_len -= detail::bufferToCharString(buffer, rdata_len, cpu);
         rdata_len -= detail::bufferToCharString(buffer, rdata_len, os);
         if (rdata_len != 0) {
-            isc_throw(isc::dns::DNSMessageFORMERR, "Error in parsing " <<
+            bundy_throw(bundy::dns::DNSMessageFORMERR, "Error in parsing " <<
                       "HINFO RDATA: bytes left at end: " <<
                       static_cast<int>(rdata_len));
         }
@@ -156,4 +156,4 @@ HINFO::toWireHelper(T& outputer) const {
 }
 
 // END_RDATA_NAMESPACE
-// END_ISC_NAMESPACE
+// END_BUNDY_NAMESPACE

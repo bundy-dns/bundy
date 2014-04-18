@@ -24,7 +24,7 @@
 #include <stdint.h>
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace server_common {
 /**
  * \brief Utilities to configure ports and addresses.
@@ -69,7 +69,7 @@ typedef std::vector<AddressPair> AddressList;
  * \param elemName The name of the element, used to create descriptions for
  *     exceptions.
  * \return Vector of parsed address-port pairs found in the configuration.
- * \throw isc::data::TypeError if something in the configuration is of a wrong
+ * \throw bundy::data::TypeError if something in the configuration is of a wrong
  *     type (string passed to a port, element in the list that isn't hash,
  *     etc).
  * \throw asiolink::IOError if the provided address string can't be parsed.
@@ -78,7 +78,7 @@ typedef std::vector<AddressPair> AddressList;
  * \throw std::bad_alloc when allocation fails.
  */
 AddressList
-parseAddresses(isc::data::ConstElementPtr addresses,
+parseAddresses(bundy::data::ConstElementPtr addresses,
                const std::string& elemName);
 
 /// \brief Changes current listening addresses and ports.
@@ -107,10 +107,10 @@ parseAddresses(isc::data::ConstElementPtr addresses,
 ///        created via \c dns_service.
 ///
 /// \throw asiolink::IOError when initialization or closing of socket fails.
-/// \throw isc::server_common::SocketRequestor::Socket error when the
+/// \throw bundy::server_common::SocketRequestor::Socket error when the
 ///     bundy-init/socket creator doesn't want to give us the socket.
 /// \throw std::bad_alloc when allocation fails.
-/// \throw isc::InvalidOperation when the function is called and the
+/// \throw bundy::InvalidOperation when the function is called and the
 ///     SocketRequestor isn't initialized yet.
 void
 installListenAddresses(const AddressList& new_addresses,

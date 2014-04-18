@@ -25,7 +25,7 @@
 #include <boost/shared_ptr.hpp>
 #include <map>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief Exception to be thrown when invalid option value has been
@@ -33,14 +33,14 @@ namespace dhcp {
 class InvalidOptionValue : public Exception {
 public:
     InvalidOptionValue(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Exception to be thrown when option definition is invalid.
 class MalformedOptionDefinition : public Exception {
 public:
     MalformedOptionDefinition(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Exception to be thrown when the particular option definition
@@ -48,7 +48,7 @@ public:
 class DuplicateOptionDefinition : public Exception {
 public:
     DuplicateOptionDefinition(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Forward declaration to OptionDefinition.
@@ -207,16 +207,16 @@ public:
     ///
     /// @param data_type_name name of the data type for the field.
     ///
-    /// @throw isc::InvalidOperation if option type is not set to RECORD_TYPE.
-    /// @throw isc::BadValue if specified invalid data type.
+    /// @throw bundy::InvalidOperation if option type is not set to RECORD_TYPE.
+    /// @throw bundy::BadValue if specified invalid data type.
     void addRecordField(const std::string& data_type_name);
 
     /// @brief Adds data field to the record.
     ///
     /// @param data_type data type for the field.
     ///
-    /// @throw isc::InvalidOperation if option type is not set to RECORD_TYPE.
-    /// @throw isc::BadValue if specified invalid data type.
+    /// @throw bundy::InvalidOperation if option type is not set to RECORD_TYPE.
+    /// @throw bundy::BadValue if specified invalid data type.
     void addRecordField(const OptionDataType data_type);
 
     /// @brief Return array type indicator.
@@ -350,8 +350,8 @@ public:
     /// @param end end of the option buffer.
     /// @param callback An instance of the function which parses packet options.
     /// If this is set to non NULL value this function will be used instead of
-    /// @c isc::dhcp::LibDHCP::unpackOptions6 and
-    /// isc::dhcp::LibDHCP::unpackOptions4.
+    /// @c bundy::dhcp::LibDHCP::unpackOptions6 and
+    /// bundy::dhcp::LibDHCP::unpackOptions4.
     ///
     /// @return instance of the DHCP option.
     /// @throw InvalidOptionValue if data for the option is invalid.
@@ -375,8 +375,8 @@ public:
     /// @param buf option buffer.
     /// @param callback An instance of the function which parses packet options.
     /// If this is set to non NULL value this function will be used instead of
-    /// @c isc::dhcp::LibDHCP::unpackOptions6 and
-    /// isc::dhcp::LibDHCP::unpackOptions4.
+    /// @c bundy::dhcp::LibDHCP::unpackOptions6 and
+    /// bundy::dhcp::LibDHCP::unpackOptions4.
     ///
     /// @return instance of the DHCP option.
     /// @throw InvalidOptionValue if data for the option is invalid.
@@ -419,7 +419,7 @@ public:
     /// @param end iterator pointing to the end of the buffer with
     /// a list of IPv4 addresses.
     ///
-    /// @throw isc::OutOfRange if length of the provided option buffer
+    /// @throw bundy::OutOfRange if length of the provided option buffer
     /// is not multiple of IPV4 address length.
     static OptionPtr factoryAddrList4(uint16_t type,
                                       OptionBufferConstIter begin,
@@ -433,7 +433,7 @@ public:
     /// @param end iterator pointing to the end of the buffer with
     /// a list of IPv6 addresses.
     ///
-    /// @throw isc::OutOfaRange if length of provided option buffer
+    /// @throw bundy::OutOfaRange if length of provided option buffer
     /// is not multiple of IPV6 address length.
     static OptionPtr factoryAddrList6(uint16_t type,
                                       OptionBufferConstIter begin,
@@ -461,7 +461,7 @@ public:
     /// @param begin iterator pointing to the beginning of the buffer.
     /// @param end iterator pointing to the end of the buffer.
     ///
-    /// @throw isc::OutOfRange if provided option buffer is too short or
+    /// @throw bundy::OutOfRange if provided option buffer is too short or
     /// too long. Expected size is 12 bytes.
     static OptionPtr factoryIA6(uint16_t type,
                                 OptionBufferConstIter begin,
@@ -473,7 +473,7 @@ public:
     /// @param begin iterator pointing to the beginning of the buffer.
     /// @param end iterator pointing to the end of the buffer.
     ///
-    /// @throw isc::OutOfRange if provided option buffer is too short or
+    /// @throw bundy::OutOfRange if provided option buffer is too short or
     /// too long. Expected size is 24 bytes.
     static OptionPtr factoryIAAddr6(uint16_t type,
                                     OptionBufferConstIter begin,
@@ -485,7 +485,7 @@ public:
     /// @param begin iterator pointing to the beginning of the buffer.
     /// @param end iterator pointing to the end of the buffer.
     ///
-    /// @throw isc::OutOfRange if provided option buffer is too short.
+    /// @throw bundy::OutOfRange if provided option buffer is too short.
     /// Expected minimum size is 25 bytes.
     static OptionPtr factoryIAPrefix6(uint16_t type,
                                       OptionBufferConstIter begin,
@@ -502,11 +502,11 @@ public:
     /// @param end iterator pointing to the end of the buffer.
     /// @param callback An instance of the function which parses packet options.
     /// If this is set to non NULL value this function will be used instead of
-    /// @c isc::dhcp::LibDHCP::unpackOptions6 and
-    /// isc::dhcp::LibDHCP::unpackOptions4.
+    /// @c bundy::dhcp::LibDHCP::unpackOptions6 and
+    /// bundy::dhcp::LibDHCP::unpackOptions4.
     /// @tparam T type of the data field (must be one of the uintX_t or intX_t).
     ///
-    /// @throw isc::OutOfRange if provided option buffer length is invalid.
+    /// @throw bundy::OutOfRange if provided option buffer length is invalid.
     template<typename T>
     static OptionPtr factoryInteger(Option::Universe u, uint16_t type,
                                     const std::string& encapsulated_space,
@@ -528,7 +528,7 @@ public:
     /// @param end iterator pointing to the end of the buffer.
     /// @tparam T type of the data field (must be one of the uintX_t or intX_t).
     ///
-    /// @throw isc::OutOfRange if provided option buffer length is invalid.
+    /// @throw bundy::OutOfRange if provided option buffer length is invalid.
     template<typename T>
     static OptionPtr factoryIntegerArray(Option::Universe u,
                                          uint16_t type,
@@ -554,8 +554,8 @@ private:
     /// @param end end of the option buffer.
     /// @param callback An instance of the function which parses packet options.
     /// If this is set to non NULL value this function will be used instead of
-    /// @c isc::dhcp::LibDHCP::unpackOptions6 and
-    /// isc::dhcp::LibDHCP::unpackOptions4.
+    /// @c bundy::dhcp::LibDHCP::unpackOptions6 and
+    /// bundy::dhcp::LibDHCP::unpackOptions4.
     ///
     /// @return An instance of the option having special format or NULL if
     /// such an option can't be created because an option with the given
@@ -600,7 +600,7 @@ private:
     /// @param value_str Input value.
     ///
     /// @return boolean representation of the string specified as the parameter.
-    /// @throw isc::dhcp::BadDataTypeCast if failed to perform the conversion.
+    /// @throw bundy::dhcp::BadDataTypeCast if failed to perform the conversion.
     bool convertToBool(const std::string& value_str) const;
 
     /// @brief Perform lexical cast of the value and validate its range.
@@ -614,7 +614,7 @@ private:
     /// @tparam T target integer type for lexical cast.
     ///
     /// @return Integer value after conversion from the string.
-    /// @throw isc::dhcp::BadDataTypeCast if conversion was not successful.
+    /// @throw bundy::dhcp::BadDataTypeCast if conversion was not successful.
     template<typename T>
     T lexicalCastWithRangeCheck(const std::string& value_str) const;
 
@@ -706,7 +706,7 @@ typedef std::pair<OptionDefContainerTypeIndex::const_iterator,
                   OptionDefContainerTypeIndex::const_iterator> OptionDefContainerTypeRange;
 
 
-} // namespace isc::dhcp
-} // namespace isc
+} // namespace bundy::dhcp
+} // namespace bundy
 
 #endif // OPTION_DEFINITION_H

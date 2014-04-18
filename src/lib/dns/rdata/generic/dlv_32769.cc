@@ -24,11 +24,11 @@
 #include <dns/rdata/generic/detail/ds_like.h>
 
 using namespace std;
-using namespace isc::util;
-using namespace isc::util::encode;
-using namespace isc::dns::rdata::generic::detail;
+using namespace bundy::util;
+using namespace bundy::util::encode;
+using namespace bundy::dns::rdata::generic::detail;
 
-// BEGIN_ISC_NAMESPACE
+// BEGIN_BUNDY_NAMESPACE
 // BEGIN_RDATA_NAMESPACE
 
 /// \brief Constructor from string.
@@ -123,4 +123,4 @@ DLV::getTag() const {
 }
 
 // END_RDATA_NAMESPACE
-// END_ISC_NAMESPACE
+// END_BUNDY_NAMESPACE

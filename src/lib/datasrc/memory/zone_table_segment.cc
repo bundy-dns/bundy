@@ -23,9 +23,9 @@
 
 #include <string>
 
-using namespace isc::dns;
+using namespace bundy::dns;
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 
@@ -41,7 +41,7 @@ ZoneTableSegment::create(const RRClass& rrclass, const std::string& type) {
         return (new ZoneTableSegmentMapped(rrclass));
 #endif
     }
-    isc_throw(UnknownSegmentType, "Zone table segment type not supported: "
+    bundy_throw(UnknownSegmentType, "Zone table segment type not supported: "
               << type);
 }
 
@@ -52,4 +52,4 @@ ZoneTableSegment::destroy(ZoneTableSegment *segment) {
 
 } // namespace memory
 } // namespace datasrc
-} // namespace isc
+} // namespace bundy

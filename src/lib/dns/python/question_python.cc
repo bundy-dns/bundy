@@ -28,16 +28,16 @@
 #include "messagerenderer_python.h"
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::dns::python;
-using namespace isc::util;
-using namespace isc::util::python;
-using namespace isc;
+using namespace bundy::dns;
+using namespace bundy::dns::python;
+using namespace bundy::util;
+using namespace bundy::util::python;
+using namespace bundy;
 
 namespace {
 class s_Question : public PyObject {
 public:
-    isc::dns::QuestionPtr cppobj;
+    bundy::dns::QuestionPtr cppobj;
 };
 
 static int Question_init(s_Question* self, PyObject* args);
@@ -232,7 +232,7 @@ Question_toWire(s_Question* self, PyObject* args) {
 
 } // end of unnamed namespace
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace python {
 
@@ -301,7 +301,7 @@ createQuestionObject(const Question& source) {
 bool
 PyQuestion_Check(PyObject* obj) {
     if (obj == NULL) {
-        isc_throw(PyCPPWrapperException, "obj argument NULL in typecheck");
+        bundy_throw(PyCPPWrapperException, "obj argument NULL in typecheck");
     }
     return (PyObject_TypeCheck(obj, &question_type));
 }
@@ -309,7 +309,7 @@ PyQuestion_Check(PyObject* obj) {
 const Question&
 PyQuestion_ToQuestion(const PyObject* question_obj) {
     if (question_obj == NULL) {
-        isc_throw(PyCPPWrapperException,
+        bundy_throw(PyCPPWrapperException,
                   "obj argument NULL in Question PyObject conversion");
     }
     const s_Question* question = static_cast<const s_Question*>(question_obj);
@@ -318,4 +318,4 @@ PyQuestion_ToQuestion(const PyObject* question_obj) {
 
 } // end python namespace
 } // end dns namespace
-} // end isc namespace
+} // end bundy namespace

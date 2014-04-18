@@ -16,7 +16,7 @@
 #include <dhcp/dhcp6.h>
 #include <dhcp/option_vendor.h>
 
-using namespace isc::dhcp;
+using namespace bundy::dhcp;
 
 OptionVendor::OptionVendor(Option::Universe u, const uint32_t vendor_id)
     :Option(u, u==Option::V4?DHO_VIVSO_SUBOPTIONS:D6O_VENDOR_OPTS), vendor_id_(vendor_id) {
@@ -29,7 +29,7 @@ OptionVendor::OptionVendor(Option::Universe u, OptionBufferConstIter begin,
 }
 
 
-void OptionVendor::pack(isc::util::OutputBuffer& buf) {
+void OptionVendor::pack(bundy::util::OutputBuffer& buf) {
     packHeader(buf);
 
     // Store vendor-id
@@ -50,11 +50,11 @@ void OptionVendor::pack(isc::util::OutputBuffer& buf) {
 void OptionVendor::unpack(OptionBufferConstIter begin,
                           OptionBufferConstIter end) {
     if (distance(begin, end) < sizeof(uint32_t)) {
-        isc_throw(OutOfRange, "Truncated vendor-specific information option"
+        bundy_throw(OutOfRange, "Truncated vendor-specific information option"
                   << ", length=" << distance(begin, end));
     }
 
-    vendor_id_ = isc::util::readUint32(&(*begin), distance(begin, end));
+    vendor_id_ = bundy::util::readUint32(&(*begin), distance(begin, end));
 
     OptionBuffer vendor_buffer(begin +4, end);
 

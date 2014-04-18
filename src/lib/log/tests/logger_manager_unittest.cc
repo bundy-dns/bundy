@@ -39,8 +39,8 @@
 #include <sys/types.h>
 #include <regex.h>
 
-using namespace isc;
-using namespace isc::log;
+using namespace bundy;
+using namespace bundy::log;
 using namespace std;
 
 /// \brief LoggerManager Test
@@ -124,7 +124,7 @@ public:
         // There is still a race condition here, albeit a small one.
         int filenum = mkstemp(tname.get());
         if (filenum == -1) {
-            isc_throw(Exception, "Unable to obtain unique filename");
+            bundy_throw(Exception, "Unable to obtain unique filename");
         }
         close(filenum);
 

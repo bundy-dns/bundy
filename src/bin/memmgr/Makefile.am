@@ -8,7 +8,7 @@ bundy_memmgrdir = $(pkgdatadir)
 bundy_memmgr_DATA = memmgr.spec
 
 nodist_pylogmessage_PYTHON = $(PYTHON_LOGMSGPKG_DIR)/work/memmgr_messages.py
-pylogmessagedir = $(pyexecdir)/isc/log_messages/
+pylogmessagedir = $(pyexecdir)/bundy/log_messages/
 
 CLEANFILES = bundy-memmgr memmgr.pyc
 CLEANFILES += $(PYTHON_LOGMSGPKG_DIR)/work/memmgr_messages.py

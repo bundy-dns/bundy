@@ -1,15 +1,15 @@
-bin_SCRIPTS = isc-sysinfo
+bin_SCRIPTS = bundy-sysinfo
 noinst_SCRIPTS = run_sysinfo.sh
 
-CLEANFILES = isc-sysinfo sysinfo.pyc
+CLEANFILES = bundy-sysinfo sysinfo.pyc
 
 # this is done here since configure.ac AC_OUTPUT doesn't expand exec_prefix
-isc-sysinfo: sysinfo.py
+bundy-sysinfo: sysinfo.py
 	$(SED) -e "s|@@PYTHONPATH@@|@pyexecdir@|" sysinfo.py >$@
 	chmod a+x $@
 
 MAN1_FILES = \
-	isc-sysinfo.xml
+	bundy-sysinfo.xml
 
 man_MANS = \
 	$(MAN1_FILES:.xml=.1)

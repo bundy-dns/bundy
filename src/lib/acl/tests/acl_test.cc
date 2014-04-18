@@ -16,8 +16,8 @@
 
 #include "logcheck.h"
 
-using namespace isc::acl;
-using namespace isc::acl::tests;
+using namespace bundy::acl;
+using namespace bundy::acl::tests;
 
 namespace {
 

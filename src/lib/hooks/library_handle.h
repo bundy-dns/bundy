@@ -17,7 +17,7 @@
 
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace hooks {
 
 // Forward declarations
@@ -65,9 +65,9 @@ public:
     ///        is set as the current index, the registration call is made, and
     ///        the CalloutManager's library index is reset.  Note: although -1
     ///        is a valid argument value for
-    ///        isc::hooks::CalloutManager::setLibraryIndex(), in this class is
+    ///        bundy::hooks::CalloutManager::setLibraryIndex(), in this class is
     ///        is used as a sentinel to indicate that the library index in
-    ///        isc::util::CalloutManager should not be set or reset.
+    ///        bundy::util::CalloutManager should not be set or reset.
     LibraryHandle(CalloutManager* manager, int index = -1)
         : callout_manager_(manager), index_(index)
     {}
@@ -144,6 +144,6 @@ private:
 };
 
 } // namespace util
-} // namespace isc
+} // namespace bundy
 
 #endif // LIBRARY_HANDLE_H

@@ -15,7 +15,7 @@
 #include <exceptions/exceptions.h>
 #include "rate_control.h"
 
-namespace isc {
+namespace bundy {
 namespace perfdhcp {
 
 using namespace boost::posix_time;
@@ -29,11 +29,11 @@ RateControl::RateControl(const int rate, const int aggressivity)
     : send_due_(currentTime()), last_sent_(currentTime()),
       aggressivity_(aggressivity), rate_(rate), late_sent_(false) {
     if (aggressivity_ < 1) {
-        isc_throw(isc::BadValue, "invalid value of aggressivity "
+        bundy_throw(bundy::BadValue, "invalid value of aggressivity "
                   << aggressivity << ", expected value is greater than 0");
     }
     if (rate_ < 0) {
-        isc_throw(isc::BadValue, "invalid value of rate " << rate
+        bundy_throw(bundy::BadValue, "invalid value of rate " << rate
                   << ", expected non-negative value");
     }
 }
@@ -102,7 +102,7 @@ RateControl::updateSendDue() {
     // This is initialized in the class constructor, so if it is not initialized
     // it is a programmatic error.
     if (last_sent_.is_not_a_date_time()) {
-        isc_throw(isc::Unexpected, "timestamp of the last sent packet not"
+        bundy_throw(bundy::Unexpected, "timestamp of the last sent packet not"
                   " initialized");
     }
     // If rate was not specified we will wait just one clock tick to
@@ -127,7 +127,7 @@ RateControl::updateSendDue() {
 void
 RateControl::setAggressivity(const int aggressivity) {
     if (aggressivity < 1) {
-        isc_throw(isc::BadValue, "invalid value of aggressivity "
+        bundy_throw(bundy::BadValue, "invalid value of aggressivity "
                   << aggressivity << ", expected value is greater than 0");
     }
     aggressivity_ = aggressivity;
@@ -136,7 +136,7 @@ RateControl::setAggressivity(const int aggressivity) {
 void
 RateControl::setRate(const int rate) {
     if (rate < 0) {
-        isc_throw(isc::BadValue, "invalid value of rate " << rate
+        bundy_throw(bundy::BadValue, "invalid value of rate " << rate
                   << ", expected non-negative value");
     }
     rate_ = rate;
@@ -155,4 +155,4 @@ RateControl::updateSendTime() {
 }
 
 } // namespace perfdhcp
-} // namespace isc
+} // namespace bundy

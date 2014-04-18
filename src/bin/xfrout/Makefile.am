@@ -8,7 +8,7 @@ bundy_xfroutdir = $(pkgdatadir)
 bundy_xfrout_DATA = xfrout.spec
 
 nodist_pylogmessage_PYTHON = $(PYTHON_LOGMSGPKG_DIR)/work/xfrout_messages.py
-pylogmessagedir = $(pyexecdir)/isc/log_messages/
+pylogmessagedir = $(pyexecdir)/bundy/log_messages/
 
 CLEANFILES = bundy-xfrout xfrout.pyc xfrout.spec
 CLEANFILES += $(PYTHON_LOGMSGPKG_DIR)/work/xfrout_messages.py

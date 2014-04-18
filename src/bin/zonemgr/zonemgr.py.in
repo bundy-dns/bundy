@@ -27,26 +27,26 @@ import sys; sys.path.append ('@@PYTHONPATH@@')
 import os
 import time
 import signal
-import isc
-import isc.dns
+import bundy
+import bundy.dns
 import random
 import threading
 import select
 import socket
 import errno
 from optparse import OptionParser, OptionValueError
-from isc.config.ccsession import *
-import isc.util.process
-import isc.util.traceback_handler
-from isc.log_messages.zonemgr_messages import *
-from isc.notify import notify_out
-from isc.server_common.datasrc_clients_mgr import DataSrcClientsMgr, ConfigError
-from isc.datasrc import DataSourceClient, ZoneFinder
-from isc.dns import *
+from bundy.config.ccsession import *
+import bundy.util.process
+import bundy.util.traceback_handler
+from bundy.log_messages.zonemgr_messages import *
+from bundy.notify import notify_out
+from bundy.server_common.datasrc_clients_mgr import DataSrcClientsMgr, ConfigError
+from bundy.datasrc import DataSourceClient, ZoneFinder
+from bundy.dns import *
 
 # Initialize logging for called modules.
-isc.log.init("bundy-zonemgr", buffer=True)
-logger = isc.log.Logger("zonemgr")
+bundy.log.init("bundy-zonemgr", buffer=True)
+logger = bundy.log.Logger("zonemgr")
 
 # Pending system-wide debug level definitions, the ones we
 # use here are hardcoded for now
@@ -58,7 +58,7 @@ DBG_START_SHUT = logger.DBGLVL_START_SHUT
 DBG_ZONEMGR_COMMAND = logger.DBGLVL_COMMAND
 DBG_ZONEMGR_BASIC = logger.DBGLVL_TRACE_BASIC
 
-isc.util.process.rename()
+bundy.util.process.rename()
 
 # If BUNDY_FROM_BUILD is set in the environment, we use data files
 # from a directory relative to that, otherwise we use the ones
@@ -296,7 +296,7 @@ class ZonemgrRefresh:
                 return None
             else:
                 return zone_soa.get_rdata()[0].to_text()
-        except isc.datasrc.Error as ex:
+        except bundy.datasrc.Error as ex:
             # rare case error. re-raise as ZonemgrException so it'll be logged
             # in command_handler().
             raise ZonemgrException('unexpected failure in datasrc module: ' +
@@ -367,7 +367,7 @@ class ZonemgrRefresh:
             # dare ignore such serious error? It can only be broken link to
             # msgq, we need to terminate then.
             logger.error(ZONEMGR_SEND_FAIL, module_name)
-        except (isc.cc.session.SessionTimeout, isc.config.RPCError):
+        except (bundy.cc.session.SessionTimeout, bundy.config.RPCError):
             pass        # for now we just ignore the failure
 
     def _find_need_do_refresh_zone(self):
@@ -509,7 +509,7 @@ class ZonemgrRefresh:
         """
         try:
             self._datasrc_clients_mgr.reconfigure(new_config, config_data)
-        except isc.server_common.datasrc_clients_mgr.ConfigError as ex:
+        except bundy.server_common.datasrc_clients_mgr.ConfigError as ex:
             logger.error(ZONEMGR_DATASRC_CONFIG_ERROR, ex)
 
     def shutdown(self):
@@ -572,7 +572,7 @@ class ZonemgrRefresh:
 
                     # Convert to Name and back (both to check and to normalize)
                     try:
-                        name = isc.dns.Name(name, True).to_text()
+                        name = bundy.dns.Name(name, True).to_text()
                     # Name() can raise a number of different exceptions, just
                     # catch 'em all.
                     except Exception as isce:
@@ -596,8 +596,8 @@ class ZonemgrRefresh:
                                         'secondary_zones/class')
                     # Convert rr_class to and from RRClass to check its value
                     try:
-                        name_class = (name, isc.dns.RRClass(rr_class).to_text())
-                    except isc.dns.InvalidRRClass:
+                        name_class = (name, bundy.dns.RRClass(rr_class).to_text())
+                    except bundy.dns.InvalidRRClass:
                         raise ZonemgrException("Bad RR class '" +
                                                rr_class +
                                                "' for zone " + name)
@@ -640,7 +640,7 @@ class Zonemgr:
         receiving commands and config data sent from other modules, another
         one (self._cc) is used to send commands to proper modules.
         """
-        self._module_cc = isc.config.ModuleCCSession(SPECFILE_LOCATION,
+        self._module_cc = bundy.config.ModuleCCSession(SPECFILE_LOCATION,
                                                   self.config_handler,
                                                   self.command_handler)
         self._module_cc.add_remote_config(AUTH_SPECFILE_LOCATION)
@@ -818,13 +818,13 @@ def main():
     except KeyboardInterrupt:
         logger.info(ZONEMGR_KEYBOARD_INTERRUPT)
 
-    except isc.cc.session.SessionError as e:
+    except bundy.cc.session.SessionError as e:
         logger.error(ZONEMGR_SESSION_ERROR)
 
-    except isc.cc.session.SessionTimeout as e:
+    except bundy.cc.session.SessionTimeout as e:
         logger.error(ZONEMGR_SESSION_TIMEOUT)
 
-    except isc.config.ModuleCCSessionError as e:
+    except bundy.config.ModuleCCSessionError as e:
         logger.error(ZONEMGR_CCSESSION_ERROR, str(e))
 
     if zonemgrd and zonemgrd.running:
@@ -833,4 +833,4 @@ def main():
     logger.info(ZONEMGR_SHUTDOWN)
 
 if '__main__' == __name__:
-    isc.util.traceback_handler.traceback_handler(main)
+    bundy.util.traceback_handler.traceback_handler(main)

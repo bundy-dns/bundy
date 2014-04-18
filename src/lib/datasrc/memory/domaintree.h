@@ -38,7 +38,7 @@
 #include <algorithm>
 #include <cassert>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 
@@ -212,7 +212,7 @@ public:
     /// using \c LabelSequence.  Until then we keep this interface as a
     /// simplest form of wrapper; it's not efficient, but should be replaced
     /// before we need to worry about that.
-    const isc::dns::Name getName() const {
+    const bundy::dns::Name getName() const {
         return (dns::Name(dns::LabelSequence(getLabelsData()).toText()));
     }
 
@@ -243,8 +243,8 @@ public:
     /// \param buf A data buffer where the label sequence will be built.
     ///            The data in this buffer will be overwritten by this call.
     /// \return A LabelSequence with the absolute name of this node.
-    isc::dns::LabelSequence getAbsoluteLabels(
-        uint8_t buf[isc::dns::LabelSequence::MAX_SERIALIZED_LENGTH]) const;
+    bundy::dns::LabelSequence getAbsoluteLabels(
+        uint8_t buf[bundy::dns::LabelSequence::MAX_SERIALIZED_LENGTH]) const;
 
     /// \brief Return the data stored in this node.
     ///
@@ -313,15 +313,15 @@ public:
     /// the \c on parameter.
     /// Like the \c getFlag() method, \c flag is expected to be one of the
     /// defined \c Flags constants.  If an undefined or unsettable flag is
-    /// specified, \c isc::InvalidParameter exception will be thrown.
+    /// specified, \c bundy::InvalidParameter exception will be thrown.
     ///
-    /// \exception isc::InvalidParameter Unsettable flag is specified
+    /// \exception bundy::InvalidParameter Unsettable flag is specified
     /// \exception None otherwise
     /// \param flag The node flag to be changed.
     /// \param on If \c true, set the flag to on; otherwise set it to off.
     void setFlag(Flags flag, bool on = true) {
         if ((flag & ~SETTABLE_FLAGS) != 0) {
-            isc_throw(isc::InvalidParameter,
+            bundy_throw(bundy::InvalidParameter,
                       "Unsettable DomainTree flag is being set");
         }
         if (on) {
@@ -794,21 +794,21 @@ DomainTreeNode<T>::getUpperNode() const {
 }
 
 template <typename T>
-isc::dns::LabelSequence
+bundy::dns::LabelSequence
 DomainTreeNode<T>::getAbsoluteLabels(
-    uint8_t buf[isc::dns::LabelSequence::MAX_SERIALIZED_LENGTH]) const
+    uint8_t buf[bundy::dns::LabelSequence::MAX_SERIALIZED_LENGTH]) const
 {
     // If the current node already has absolute labels, just return it.
     // This should normally be the case for the origin node if this tree
     // is used to represent a single DNS zone.
-    const isc::dns::LabelSequence cur_labels(getLabels());
+    const bundy::dns::LabelSequence cur_labels(getLabels());
     if (cur_labels.isAbsolute()) {
         return (cur_labels);
     }
 
     // Otherwise, build the absolute sequence traversing the tree of tree
     // toward the top root.
-    isc::dns::LabelSequence result(cur_labels, buf);
+    bundy::dns::LabelSequence result(cur_labels, buf);
     const DomainTreeNode<T>* upper = getUpperNode();
     while (upper != NULL) {
         result.extend(upper->getLabels(), buf);
@@ -893,7 +893,7 @@ DomainTreeNode<T>::predecessor() const {
 ///
 /// - The \c DomainTreeNode that was last compared with the search name, and
 ///   the comparison result at that point in the form of
-///   \c isc::dns::NameComparisonResult.
+///   \c bundy::dns::NameComparisonResult.
 /// - A sequence of nodes that forms a path to the found node.
 ///
 /// The comparison result can be used to handle some rare cases such as
@@ -942,7 +942,7 @@ public:
     DomainTreeNodeChain() : level_count_(0), last_compared_(NULL),
                         // XXX: meaningless initial values:
                         last_comparison_(0, 0,
-                                         isc::dns::NameComparisonResult::EQUAL)
+                                         bundy::dns::NameComparisonResult::EQUAL)
     {
         // To silence cppcheck. We don't really use the values before
         // initialization, but this is cleaner anyway.
@@ -1007,7 +1007,7 @@ public:
     /// non \c NULL value.
     ///
     /// \exception None
-    const isc::dns::NameComparisonResult& getLastComparisonResult() const {
+    const bundy::dns::NameComparisonResult& getLastComparisonResult() const {
         return (last_comparison_);
     }
 
@@ -1024,17 +1024,17 @@ public:
     ///
     /// The chain must not be empty.
     ///
-    /// \exception isc::BadValue the chain is empty.
+    /// \exception bundy::BadValue the chain is empty.
     /// \exception std::bad_alloc memory allocation for the new name fails.
-    isc::dns::Name getAbsoluteName() const {
+    bundy::dns::Name getAbsoluteName() const {
         if (isEmpty()) {
-            isc_throw(isc::BadValue,
+            bundy_throw(bundy::BadValue,
                       "DomainTreeNodeChain::getAbsoluteName is "
                       "called on an empty chain");
         }
 
         const DomainTreeNode<T>* top_node = top();
-        isc::dns::Name absolute_name = top_node->getName();
+        bundy::dns::Name absolute_name = top_node->getName();
         size_t level = level_count_ - 1;
         while (level > 0) {
             top_node = nodes_[level - 1];
@@ -1095,12 +1095,12 @@ private:
     // The max label count for one domain name is Name::MAX_LABELS
     // (128).  Since each node in domaintree stores at least one label,
     // it's also equal to the possible maximum level.
-    const static int RBT_MAX_LEVEL = isc::dns::Name::MAX_LABELS;
+    const static int RBT_MAX_LEVEL = bundy::dns::Name::MAX_LABELS;
 
     size_t level_count_;
     const DomainTreeNode<T>* nodes_[RBT_MAX_LEVEL];
     const DomainTreeNode<T>* last_compared_;
-    isc::dns::NameComparisonResult last_comparison_;
+    bundy::dns::NameComparisonResult last_comparison_;
 };
 
 
@@ -1335,7 +1335,7 @@ private:
     /// variants of find() below
     template <typename TT, typename TTN, typename CBARG>
     static Result findImpl(TT* tree,
-                           const isc::dns::LabelSequence& target_labels_orig,
+                           const bundy::dns::LabelSequence& target_labels_orig,
                            TTN** target,
                            TTN* node,
                            DomainTreeNodeChain<T>& node_path,
@@ -1403,7 +1403,7 @@ public:
     /// entire DomainTree; the \c nextNode() and \c previousNode()
     /// methods take a node chain as a parameter.
     ///
-    /// \exception isc::BadValue node_path is not empty.
+    /// \exception bundy::BadValue node_path is not empty.
     ///
     /// \param target_labels_orig Target to be found
     /// \param node On success (either \c EXACTMATCH or \c PARTIALMATCH)
@@ -1418,7 +1418,7 @@ public:
     /// \return As in the description, but in case of callback returning
     ///     \c true, it returns immediately with the current node.
     template <typename CBARG>
-    Result find(const isc::dns::LabelSequence& target_labels_orig,
+    Result find(const bundy::dns::LabelSequence& target_labels_orig,
                 DomainTreeNode<T>** node,
                 DomainTreeNodeChain<T>& node_path,
                 bool (*callback)(const DomainTreeNode<T>&, CBARG),
@@ -1426,7 +1426,7 @@ public:
 
     /// \brief Find with callback and node chain (const variant)
     template <typename CBARG>
-    Result find(const isc::dns::LabelSequence& target_labels_orig,
+    Result find(const bundy::dns::LabelSequence& target_labels_orig,
                 const DomainTreeNode<T>** node,
                 DomainTreeNodeChain<T>& node_path,
                 bool (*callback)(const DomainTreeNode<T>&, CBARG),
@@ -1435,17 +1435,17 @@ public:
     /// \brief Simple find
     ///
     /// Acts as described in the \ref find section.
-    Result find(const isc::dns::Name& name,
+    Result find(const bundy::dns::Name& name,
                 DomainTreeNode<T>** node) {
-        const isc::dns::LabelSequence ls(name);
+        const bundy::dns::LabelSequence ls(name);
         DomainTreeNodeChain<T> node_path;
         return (find<void*>(ls, node, node_path, NULL, NULL));
     }
 
     /// \brief Simple find (const variant)
-    Result find(const isc::dns::Name& name,
+    Result find(const bundy::dns::Name& name,
                 const DomainTreeNode<T>** node) const {
-        const isc::dns::LabelSequence ls(name);
+        const bundy::dns::LabelSequence ls(name);
         DomainTreeNodeChain<T> node_path;
         return (find<void*>(ls, node, node_path, NULL, NULL));
     }
@@ -1453,42 +1453,42 @@ public:
     /// \brief Simple find, with node_path tracking
     ///
     /// Acts as described in the \ref find section.
-    Result find(const isc::dns::Name& name, DomainTreeNode<T>** node,
+    Result find(const bundy::dns::Name& name, DomainTreeNode<T>** node,
                 DomainTreeNodeChain<T>& node_path)
     {
-        const isc::dns::LabelSequence ls(name);
+        const bundy::dns::LabelSequence ls(name);
         return (find<void*>(ls, node, node_path, NULL, NULL));
     }
 
     /// \brief Simple find, with node_path tracking (const variant)
-    Result find(const isc::dns::Name& name, const DomainTreeNode<T>** node,
+    Result find(const bundy::dns::Name& name, const DomainTreeNode<T>** node,
                 DomainTreeNodeChain<T>& node_path) const
     {
-        const isc::dns::LabelSequence ls(name);
+        const bundy::dns::LabelSequence ls(name);
         return (find<void*>(ls, node, node_path, NULL, NULL));
     }
 
     /// \brief Simple find with callback
     template <typename CBARG>
-    Result find(const isc::dns::Name& name,
+    Result find(const bundy::dns::Name& name,
                 DomainTreeNode<T>** node,
                 DomainTreeNodeChain<T>& node_path,
                 bool (*callback)(const DomainTreeNode<T>&, CBARG),
                 CBARG callback_arg)
     {
-        const isc::dns::LabelSequence ls(name);
+        const bundy::dns::LabelSequence ls(name);
         return (find<CBARG>(ls, node, node_path, callback, callback_arg));
     }
 
     /// \brief Simple find with callback (const variant)
     template <typename CBARG>
-    Result find(const isc::dns::Name& name,
+    Result find(const bundy::dns::Name& name,
                 const DomainTreeNode<T>** node,
                 DomainTreeNodeChain<T>& node_path,
                 bool (*callback)(const DomainTreeNode<T>&, CBARG),
                 CBARG callback_arg) const
     {
-        const isc::dns::LabelSequence ls(name);
+        const bundy::dns::LabelSequence ls(name);
         return (find<CBARG>(ls, node, node_path, callback, callback_arg));
     }
 
@@ -1510,7 +1510,7 @@ public:
     /// it's easy to add logic to check return node and keep invoking \c
     /// nextNode() until the non-empty node is retrieved.
     ///
-    /// \exception isc::BadValue node_path is empty.
+    /// \exception bundy::BadValue node_path is empty.
     ///
     /// \param node_path A node chain that stores all the nodes along
     /// the path from root to node.
@@ -1533,7 +1533,7 @@ public:
     /// logic to check return node and keep invoking \c previousNode() until the
     /// non-empty node is retrieved.
     ///
-    /// \exception isc::BadValue node_path is empty.
+    /// \exception bundy::BadValue node_path is empty.
     ///
     /// \param node_path A node chain that stores all the nodes along the path
     /// from root to node and the result of \c find(). This will get modified.
@@ -1669,7 +1669,7 @@ public:
     ///  - SUCCESS The node was added.
     ///  - ALREADYEXISTS There was already a node of that name, so it was not
     ///     added.
-    Result insert(util::MemorySegment& mem_sgmt, const isc::dns::Name& name,
+    Result insert(util::MemorySegment& mem_sgmt, const bundy::dns::Name& name,
                   DomainTreeNode<T>** inserted_node);
 
     /// \brief Delete a tree node.
@@ -1759,8 +1759,8 @@ private:
     /// semantics even if the tree structure is changed (as long as the node
     /// itself remains valid).
     void nodeFission(util::MemorySegment& mem_sgmt, DomainTreeNode<T>& node,
-                     const isc::dns::LabelSequence& new_prefix,
-                     const isc::dns::LabelSequence& new_suffix);
+                     const bundy::dns::LabelSequence& new_prefix,
+                     const bundy::dns::LabelSequence& new_suffix);
 
     //@}
 
@@ -1829,7 +1829,7 @@ template <typename T>
 template <typename TT, typename TTN, typename CBARG>
 typename DomainTree<T>::Result
 DomainTree<T>::findImpl(TT* tree,
-                        const isc::dns::LabelSequence& target_labels_orig,
+                        const bundy::dns::LabelSequence& target_labels_orig,
                         TTN** target,
                         TTN* node,
                         DomainTreeNodeChain<T>& node_path,
@@ -1837,7 +1837,7 @@ DomainTree<T>::findImpl(TT* tree,
                         CBARG callback_arg)
 {
     if (node_path.isEmpty() ^ target_labels_orig.isAbsolute()) {
-        isc_throw(isc::BadValue,
+        bundy_throw(bundy::BadValue,
                   "DomainTree::find() is given mismatched node chain"
                   " and label sequence");
     }
@@ -1848,23 +1848,23 @@ DomainTree<T>::findImpl(TT* tree,
     while (node != NULL) {
         node_path.last_compared_ = node;
         node_path.last_comparison_ = target_labels.compare(node->getLabels());
-        const isc::dns::NameComparisonResult::NameRelation relation =
+        const bundy::dns::NameComparisonResult::NameRelation relation =
             node_path.last_comparison_.getRelation();
 
-        if (relation == isc::dns::NameComparisonResult::EQUAL) {
+        if (relation == bundy::dns::NameComparisonResult::EQUAL) {
             if (tree->needsReturnEmptyNode_ || !node->isEmpty()) {
                 node_path.push(node);
                 *target = node;
                 ret = EXACTMATCH;
             }
             break;
-        } else if (relation == isc::dns::NameComparisonResult::NONE) {
+        } else if (relation == bundy::dns::NameComparisonResult::NONE) {
             // If the two labels have no hierarchical relationship in terms
             // of matching, we should continue the binary search.
             node = (node_path.last_comparison_.getOrder() < 0) ?
                 node->getLeft() : node->getRight();
         } else {
-            if (relation == isc::dns::NameComparisonResult::SUBDOMAIN) {
+            if (relation == bundy::dns::NameComparisonResult::SUBDOMAIN) {
                 if (tree->needsReturnEmptyNode_ || !node->isEmpty()) {
                     ret = PARTIALMATCH;
                     *target = node;
@@ -1891,14 +1891,14 @@ DomainTree<T>::findImpl(TT* tree,
 template <typename T>
 template <typename CBARG>
 typename DomainTree<T>::Result
-DomainTree<T>::find(const isc::dns::LabelSequence& target_labels_orig,
+DomainTree<T>::find(const bundy::dns::LabelSequence& target_labels_orig,
                     DomainTreeNode<T>** target,
                     DomainTreeNodeChain<T>& node_path,
                     bool (*callback)(const DomainTreeNode<T>&, CBARG),
                     CBARG callback_arg)
 {
     if (!node_path.isEmpty()) {
-        isc_throw(isc::BadValue,
+        bundy_throw(bundy::BadValue,
                   "DomainTree::find() non-const method is given "
                   "non-empty node chain");
     }
@@ -1913,7 +1913,7 @@ DomainTree<T>::find(const isc::dns::LabelSequence& target_labels_orig,
 template <typename T>
 template <typename CBARG>
 typename DomainTree<T>::Result
-DomainTree<T>::find(const isc::dns::LabelSequence& target_labels_orig,
+DomainTree<T>::find(const bundy::dns::LabelSequence& target_labels_orig,
                     const DomainTreeNode<T>** target,
                     DomainTreeNodeChain<T>& node_path,
                     bool (*callback)(const DomainTreeNode<T>&, CBARG),
@@ -1939,7 +1939,7 @@ template <typename T>
 const DomainTreeNode<T>*
 DomainTree<T>::nextNode(DomainTreeNodeChain<T>& node_path) const {
     if (node_path.isEmpty()) {
-        isc_throw(isc::BadValue,
+        bundy_throw(bundy::BadValue,
                   "DomainTree::nextNode is given an empty chain");
     }
 
@@ -1986,7 +1986,7 @@ DomainTree<T>::previousNode(DomainTreeNodeChain<T>& node_path) const {
         return (NULL);
     }
     if (node_path.last_compared_ == NULL) {
-        isc_throw(isc::BadValue,
+        bundy_throw(bundy::BadValue,
                   "DomainTree::previousNode() called before find()");
     }
 
@@ -2152,13 +2152,13 @@ DomainTree<T>::largestNode() const {
 template <typename T>
 typename DomainTree<T>::Result
 DomainTree<T>::insert(util::MemorySegment& mem_sgmt,
-                      const isc::dns::Name& target_name,
+                      const bundy::dns::Name& target_name,
                       DomainTreeNode<T>** new_node)
 {
     DomainTreeNode<T>* parent = NULL;
     DomainTreeNode<T>* current = root_.get();
     DomainTreeNode<T>* up_node = NULL;
-    isc::dns::LabelSequence target_labels(target_name);
+    bundy::dns::LabelSequence target_labels(target_name);
 
     int order = -1;
     // For possible LabelSequence serialization we always store labels data
@@ -2167,20 +2167,20 @@ DomainTree<T>::insert(util::MemorySegment& mem_sgmt,
     while (current != NULL) {
         const dns::LabelSequence current_labels(
             dns::LabelSequence(current->getLabels(), labels_buf));
-        const isc::dns::NameComparisonResult compare_result =
+        const bundy::dns::NameComparisonResult compare_result =
             target_labels.compare(current_labels);
-        const isc::dns::NameComparisonResult::NameRelation relation =
+        const bundy::dns::NameComparisonResult::NameRelation relation =
             compare_result.getRelation();
-        if (relation == isc::dns::NameComparisonResult::EQUAL) {
+        if (relation == bundy::dns::NameComparisonResult::EQUAL) {
             if (new_node != NULL) {
                 *new_node = current;
             }
             return (ALREADYEXISTS);
-        } else if (relation == isc::dns::NameComparisonResult::NONE) {
+        } else if (relation == bundy::dns::NameComparisonResult::NONE) {
             parent = current;
             order = compare_result.getOrder();
             current = order < 0 ? current->getLeft() : current->getRight();
-        } else if (relation == isc::dns::NameComparisonResult::SUBDOMAIN) {
+        } else if (relation == bundy::dns::NameComparisonResult::SUBDOMAIN) {
             // insert sub domain to sub tree
             parent = NULL;
             up_node = current;
@@ -2366,8 +2366,8 @@ template <typename T>
 void
 DomainTree<T>::nodeFission(util::MemorySegment& mem_sgmt,
                            DomainTreeNode<T>& node,
-                           const isc::dns::LabelSequence& new_prefix,
-                           const isc::dns::LabelSequence& new_suffix)
+                           const bundy::dns::LabelSequence& new_prefix,
+                           const bundy::dns::LabelSequence& new_suffix)
 {
     // Create and reset the labels.
     // Once a new node is created, no exception will be thrown until
@@ -3122,7 +3122,7 @@ DomainTree<T>::dumpDotHelper(std::ostream& os,
 
 } // namespace memory
 } // namespace datasrc
-} // namespace isc
+} // namespace bundy
 
 #endif  // DOMAINTREE_H
 

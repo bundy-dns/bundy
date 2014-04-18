@@ -20,7 +20,7 @@
 #include <boost/shared_ptr.hpp>
 #include <dns/rrset.h>
 
-namespace isc {
+namespace bundy {
 namespace cache {
 
 /// \brief Local Zone Data
@@ -42,8 +42,8 @@ public:
     /// \param qtype The query type to look up
     /// \return return the shared_ptr of rrset if it is
     /// found in the local zone, or else, return NULL.
-    isc::dns::RRsetPtr lookup(const isc::dns::Name& qname,
-                              const isc::dns::RRType& qtype);
+    bundy::dns::RRsetPtr lookup(const bundy::dns::Name& qname,
+                              const bundy::dns::RRType& qtype);
 
     /// \brief Update the rrset in the local zone.
     ///
@@ -51,17 +51,17 @@ public:
     /// Otherwise, the existed one will be overwritten.
     ///
     /// \param rrset The rrset to update
-    void update(const isc::dns::AbstractRRset& rrset);
+    void update(const bundy::dns::AbstractRRset& rrset);
 
 private:
-    std::map<std::string, isc::dns::RRsetPtr> rrsets_map_; // RRsets of the zone
+    std::map<std::string, bundy::dns::RRsetPtr> rrsets_map_; // RRsets of the zone
 };
 
 typedef boost::shared_ptr<LocalZoneData> LocalZoneDataPtr;
 typedef boost::shared_ptr<const LocalZoneData> ConstLocalZoneDataPtr;
 
 } // namespace cache
-} // namespace isc
+} // namespace bundy
 
 #endif // LOCAL_ZONE_DATA
 

@@ -37,9 +37,9 @@
 #include <stdexcept>
 
 using namespace std;
-using namespace isc::util::python;
-using namespace isc::dns;
-using namespace isc::dns::python;
+using namespace bundy::util::python;
+using namespace bundy::dns;
+using namespace bundy::dns::python;
 
 // Import pydoc text
 #include "rrset_collection_python_inc.cc"
@@ -158,7 +158,7 @@ PyMethodDef RRsetCollectionBase_methods[] = {
 };
 } // end of unnamed namespace
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace python {
 // Definition of class specific exception(s)
@@ -450,4 +450,4 @@ initModulePart_RRsetCollection(PyObject* mod) {
 
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy

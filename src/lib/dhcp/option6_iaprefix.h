@@ -19,7 +19,7 @@
 #include <dhcp/option6_iaaddr.h>
 #include <dhcp/option.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 
@@ -49,7 +49,7 @@ public:
     /// @param prefix_length length (1-128)
     /// @param preferred address preferred lifetime (in seconds)
     /// @param valid address valid lifetime (in seconds)
-    Option6IAPrefix(uint16_t type, const isc::asiolink::IOAddress& addr,
+    Option6IAPrefix(uint16_t type, const bundy::asiolink::IOAddress& addr,
                     uint8_t prefix_length, uint32_t preferred, uint32_t valid);
 
     /// @brief Constructor, used for received options.
@@ -70,7 +70,7 @@ public:
     /// @throw BadValue if the address is not IPv6
     ///
     /// @param buf pointer to a buffer
-    void pack(isc::util::OutputBuffer& buf);
+    void pack(bundy::util::OutputBuffer& buf);
 
     /// @brief Parses received buffer.
     ///
@@ -92,7 +92,7 @@ public:
     ///
     /// @param prefix prefix to be sent in this option
     /// @param length prefix length
-    void setPrefix(const isc::asiolink::IOAddress& prefix,
+    void setPrefix(const bundy::asiolink::IOAddress& prefix,
                    uint8_t length) { addr_ = prefix; prefix_len_ = length; }
 
     uint8_t getLength() const { return prefix_len_; }
@@ -107,7 +107,7 @@ protected:
 /// @brief Pointer to the @c Option6IAPrefix object.
 typedef boost::shared_ptr<Option6IAPrefix> Option6IAPrefixPtr;
 
-} // isc::dhcp namespace
-} // isc namespace
+} // bundy::dhcp namespace
+} // bundy namespace
 
 #endif // OPTION_IAPREFIX_H

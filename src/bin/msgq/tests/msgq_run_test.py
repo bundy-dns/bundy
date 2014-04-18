@@ -39,9 +39,9 @@ import sys
 import subprocess
 import time
 
-import isc.log
-import isc.cc.session
-from isc.cc.proto_defs import *
+import bundy.log
+import bundy.cc.session
+from bundy.cc.proto_defs import *
 
 # Due to problems with too long path on build bots, we place the socket
 # into the top-level build directory. That is ugly, but works.
@@ -80,8 +80,8 @@ class MsgqRunTest(unittest.TestCase):
             try:
                 # If the msgq is ready, this'll succeed. If not, it'll throw
                 # session error.
-                connection = isc.cc.session.Session(SOCKET_PATH)
-            except isc.cc.session.SessionError:
+                connection = bundy.cc.session.Session(SOCKET_PATH)
+            except bundy.cc.session.SessionError:
                 time.sleep(0.1) # Retry after a short time
         # We have the connection now, that means it works. Close this
         # connection, we won't use it. Each test gets enough new connections
@@ -134,7 +134,7 @@ class MsgqRunTest(unittest.TestCase):
         Create a connection to the daemon and make sure it is properly closed
         at the end of the test.
         """
-        connection = isc.cc.session.Session(SOCKET_PATH)
+        connection = bundy.cc.session.Session(SOCKET_PATH)
         self.__opened_connections.append(connection)
         return connection
 
@@ -345,6 +345,6 @@ class MsgqRunTest(unittest.TestCase):
         self.test_send_direct()
 
 if __name__ == '__main__':
-    isc.log.init("msgq-tests")
-    isc.log.resetUnitTestRootLogger()
+    bundy.log.init("msgq-tests")
+    bundy.log.resetUnitTestRootLogger()
     unittest.main()

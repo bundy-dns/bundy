@@ -24,10 +24,10 @@
 int
 main(int argc, char* argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    isc::UnitTestUtil::addDataPath(TEST_DATA_SRCDIR);
-    isc::UnitTestUtil::addDataPath(TEST_DATA_BUILDDIR);
+    bundy::UnitTestUtil::addDataPath(TEST_DATA_SRCDIR);
+    bundy::UnitTestUtil::addDataPath(TEST_DATA_BUILDDIR);
 
-    isc::log::initLogger();
+    bundy::log::initLogger();
 
-    return (isc::util::unittests::run_all());
+    return (bundy::util::unittests::run_all());
 }

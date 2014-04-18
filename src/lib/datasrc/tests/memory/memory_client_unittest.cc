@@ -48,15 +48,15 @@
 
 #include <new>                  // for bad_alloc
 
-using namespace isc::data;
-using namespace isc::dns;
-using namespace isc::dns::rdata;
-using namespace isc::datasrc;
-using namespace isc::datasrc::memory;
-using namespace isc::testutils;
+using namespace bundy::data;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
+using namespace bundy::datasrc;
+using namespace bundy::datasrc::memory;
+using namespace bundy::testutils;
 using boost::shared_ptr;
 using std::vector;
-using isc::datasrc::memory::test::loadZoneIntoTable;
+using bundy::datasrc::memory::test::loadZoneIntoTable;
 
 namespace {
 
@@ -127,7 +127,7 @@ public:
     }
 
     virtual ConstRRsetPtr getSOA() const {
-        isc_throw(isc::NotImplemented, "Not implemented");
+        bundy_throw(bundy::NotImplemented, "Not implemented");
     }
 
     static ZoneIteratorPtr makeIterator(const char** rrset_data_ptr,
@@ -158,7 +158,7 @@ public:
     }
 
     virtual ConstRRsetPtr getSOA() const {
-        isc_throw(isc::NotImplemented, "Not implemented");
+        bundy_throw(bundy::NotImplemented, "Not implemented");
     }
 
     static ZoneIteratorPtr makeIterator(const vector<ConstRRsetPtr>& rrsets) {
@@ -275,7 +275,7 @@ TEST_F(MemoryClientTest, loadFromIterator) {
     EXPECT_EQ(ConstRRsetPtr(), iterator->getNextRRset());
 
     // Iterating past the end should result in an exception
-    EXPECT_THROW(iterator->getNextRRset(), isc::Unexpected);
+    EXPECT_THROW(iterator->getNextRRset(), bundy::Unexpected);
 
     // NOTE: The rest of the tests is not actually about InMemoryClient
 
@@ -294,7 +294,7 @@ TEST_F(MemoryClientTest, loadFromIterator) {
                                    zclass_,
                                    *MockIterator::makeIterator(rrset_data,
                                                                true)),
-                 isc::Unexpected);
+                 bundy::Unexpected);
 }
 
 TEST_F(MemoryClientTest, loadMemoryAllocationFailures) {
@@ -692,7 +692,7 @@ TEST_F(MemoryClientTest, getIterator) {
     EXPECT_EQ(ConstRRsetPtr(), iterator->getNextRRset());
 
     // Iterating past the end should result in an exception
-    EXPECT_THROW(iterator->getNextRRset(), isc::Unexpected);
+    EXPECT_THROW(iterator->getNextRRset(), bundy::Unexpected);
 }
 
 TEST_F(MemoryClientTest, getIteratorForEmptyZone) {
@@ -816,7 +816,7 @@ TEST_F(MemoryClientTest, findEmptyZone) {
     loadZoneIntoTable(*ztable_segment_, Name("example.org"), zclass_,
                       TEST_DATA_DIR "/no-such-file.zone", true);
 
-    using namespace isc::datasrc::result;
+    using namespace bundy::datasrc::result;
 
     // findZone() returns the match, with NULL zone finder and the result
     // flag indicating it's empty.
@@ -886,13 +886,13 @@ TEST_F(MemoryClientTest, findZoneData) {
 TEST_F(MemoryClientTest, getUpdaterThrowsNotImplemented) {
     // This method is not implemented.
     EXPECT_THROW(client_->getUpdater(Name("."), false, false),
-                 isc::NotImplemented);
+                 bundy::NotImplemented);
 }
 
 TEST_F(MemoryClientTest, getJournalReaderNotImplemented) {
     // This method is not implemented.
     EXPECT_THROW(client_->getJournalReader(Name("."), 0, 0),
-                 isc::NotImplemented);
+                 bundy::NotImplemented);
 }
 
 }

@@ -20,7 +20,7 @@
 #include <xfr/xfrout_client.h>
 
 using namespace std;
-using namespace isc::xfr;
+using namespace bundy::xfr;
 
 namespace {
 

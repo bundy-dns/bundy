@@ -27,10 +27,10 @@
 namespace user_chk {
 
 /// @brief Thrown UserRegistry encounters an error
-class UserRegistryError : public isc::Exception {
+class UserRegistryError : public bundy::Exception {
 public:
     UserRegistryError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what)
+        bundy::Exception(file, line, what)
     {}
 };
 
@@ -80,14 +80,14 @@ public:
     /// @param hwaddr The hardware address for which to search
     ///
     /// @return A pointer to the user if found or an null pointer if not.
-    const UserPtr& findUser(const isc::dhcp::HWAddr& hwaddr) const;
+    const UserPtr& findUser(const bundy::dhcp::HWAddr& hwaddr) const;
 
     /// @brief Finds a user in the registry by DUID
     ///
     /// @param duid The DUID for which to search
     ///
     /// @return A pointer to the user if found or an null pointer if not.
-    const UserPtr& findUser(const isc::dhcp::DUID& duid) const;
+    const UserPtr& findUser(const bundy::dhcp::DUID& duid) const;
 
     /// @brief Updates the registry from its data source.
     ///

@@ -20,7 +20,7 @@
 
 #include <asiolink/io_service.h>
 
-namespace isc {
+namespace bundy {
 namespace asiolink {
 
 class IntervalTimerImpl;
@@ -101,9 +101,9 @@ public:
     /// call back function. In case the timer is canceled, the function
     /// will not be called.
     ///
-    /// \throw isc::InvalidParameter cbfunc is empty
-    /// \throw isc::BadValue interval is less than or equal to 0
-    /// \throw isc::Unexpected internal runtime error
+    /// \throw bundy::InvalidParameter cbfunc is empty
+    /// \throw bundy::BadValue interval is less than or equal to 0
+    /// \throw bundy::Unexpected internal runtime error
     void setup(const Callback& cbfunc, const long interval);
 
     /// Cancel the timer.
@@ -129,5 +129,5 @@ private:
 };
 
 } // namespace asiolink
-} // namespace isc
+} // namespace bundy
 #endif // ASIOLINK_INTERVAL_TIMER_H

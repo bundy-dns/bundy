@@ -32,7 +32,7 @@
 #include <asiolink/io_service.h>
 #include <asiolink/udp_endpoint.h>
 
-namespace isc {
+namespace bundy {
 namespace asiolink {
 
 /// \brief The \c UDPSocket class is a concrete derived class of \c IOAsioSocket
@@ -141,7 +141,7 @@ public:
     virtual bool processReceivedData(const void* staging, size_t length,
                                      size_t& cumulative, size_t& offset,
                                      size_t& expected,
-                                     isc::util::OutputBufferPtr& outbuff);
+                                     bundy::util::OutputBufferPtr& outbuff);
 
     /// \brief Cancel I/O On Socket
     virtual void cancel();
@@ -242,7 +242,7 @@ UDPSocket<C>::asyncSend(const void* data, size_t length,
         socket_.async_send_to(asio::buffer(data, length),
             udp_endpoint->getASIOEndpoint(), callback);
     } else {
-        isc_throw(SocketNotOpen,
+        bundy_throw(SocketNotOpen,
             "attempt to send on a UDP socket that is not open");
     }
 }
@@ -262,7 +262,7 @@ UDPSocket<C>::asyncReceive(void* data, size_t length, size_t offset,
 
         // Ensure we can write into the buffer
         if (offset >= length) {
-            isc_throw(BufferOverflow, "attempt to read into area beyond end of "
+            bundy_throw(BufferOverflow, "attempt to read into area beyond end of "
                                       "UDP receive buffer");
         }
         void* buffer_start = static_cast<void*>(static_cast<uint8_t*>(data) + offset);
@@ -271,7 +271,7 @@ UDPSocket<C>::asyncReceive(void* data, size_t length, size_t offset,
         socket_.async_receive_from(asio::buffer(buffer_start, length - offset),
             udp_endpoint->getASIOEndpoint(), callback);
     } else {
-        isc_throw(SocketNotOpen,
+        bundy_throw(SocketNotOpen,
             "attempt to receive from a UDP socket that is not open");
     }
 }
@@ -283,7 +283,7 @@ template <typename C> bool
 UDPSocket<C>::processReceivedData(const void* staging, size_t length,
                                   size_t& cumulative, size_t& offset,
                                   size_t& expected,
-                                  isc::util::OutputBufferPtr& outbuff)
+                                  bundy::util::OutputBufferPtr& outbuff)
 {
     // Set return values to what we should expect.
     cumulative = length;
@@ -318,6 +318,6 @@ UDPSocket<C>::close() {
 }
 
 } // namespace asiolink
-} // namespace isc
+} // namespace bundy
 
 #endif // UDP_SOCKET_H

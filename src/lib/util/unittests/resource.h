@@ -15,7 +15,7 @@
 #ifndef UTIL_UNITTESTS_RESOURCE_H
 #define UTIL_UNITTESTS_RESOURCE_H 1
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace unittests {
 
@@ -30,7 +30,7 @@ void dontCreateCoreDumps();
 
 } // end of namespace unittests
 } // end of namespace util
-} // end of namespace isc
+} // end of namespace bundy
 
 #endif // UTIL_UNITTESTS_RESOURCE_H
 

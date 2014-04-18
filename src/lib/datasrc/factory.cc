@@ -28,8 +28,8 @@
 #include <cstdlib>
 
 using namespace std;
-using namespace isc::data;
-using namespace isc::datasrc;
+using namespace bundy::data;
+using namespace bundy::datasrc;
 
 namespace {
 // This helper function takes the 'type' string as passed to
@@ -42,11 +42,11 @@ namespace {
 const std::string
 getDataSourceLibFile(const std::string& type) {
     if (type.empty()) {
-        isc_throw(DataSourceLibraryError,
+        bundy_throw(DataSourceLibraryError,
                   "DataSourceClient container called with empty type value");
     }
     if (type == ".so") {
-        isc_throw(DataSourceLibraryError, "DataSourceClient container called "
+        bundy_throw(DataSourceLibraryError, "DataSourceClient container called "
                                           "with bad type or file name");
     }
 
@@ -66,14 +66,14 @@ getDataSourceLibFile(const std::string& type) {
             lib_file = std::string(getenv("BUNDY_FROM_BUILD")) +
                        "/src/lib/datasrc/.libs/" + lib_file;
         } else {
-            lib_file = isc::datasrc::BACKEND_LIBRARY_PATH + lib_file;
+            lib_file = bundy::datasrc::BACKEND_LIBRARY_PATH + lib_file;
         }
     }
     return (lib_file);
 }
 } // end anonymous namespace
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 
 LibraryContainer::LibraryContainer(const std::string& name) {
@@ -83,7 +83,7 @@ LibraryContainer::LibraryContainer(const std::string& name) {
     if (ds_lib_ == NULL) {
         // This may cause the filename to appear twice in the actual
         // error, but the output of dlerror is implementation-dependent
-        isc_throw(DataSourceLibraryOpenError,
+        bundy_throw(DataSourceLibraryOpenError,
                   "dlopen failed for " << name << ": " << dlerror());
     }
 }
@@ -103,7 +103,7 @@ LibraryContainer::getSym(const char* name) {
 
     const char* dlsym_error = dlerror();
     if (dlsym_error != NULL) {
-        isc_throw(DataSourceLibrarySymbolError, dlsym_error);
+        bundy_throw(DataSourceLibrarySymbolError, dlsym_error);
     }
 
     return (sym);
@@ -128,13 +128,13 @@ DataSourceClientContainer::DataSourceClientContainer(
     try {
         instance_ = ds_create(datasrc_name, config, error);
         if (instance_ == NULL) {
-            isc_throw(DataSourceError, error);
+            bundy_throw(DataSourceError, error);
         }
     } catch (const std::exception& exc) {
-        isc_throw(DataSourceError, "Unknown uncaught exception from " + type +
+        bundy_throw(DataSourceError, "Unknown uncaught exception from " + type +
                                    " createInstance: " + exc.what());
     } catch (...) {
-        isc_throw(DataSourceError, "Unknown uncaught exception from " + type);
+        bundy_throw(DataSourceError, "Unknown uncaught exception from " + type);
     }
 }
 
@@ -143,5 +143,5 @@ DataSourceClientContainer::~DataSourceClientContainer() {
 }
 
 } // end namespace datasrc
-} // end namespace isc
+} // end namespace bundy
 

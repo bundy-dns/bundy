@@ -21,7 +21,7 @@
 
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace util {
 
 /// \brief Mapped-file based Memory Segment class.
@@ -259,7 +259,7 @@ private:
 };
 
 } // namespace util
-} // namespace isc
+} // namespace bundy
 
 #endif // MEMORY_SEGMENT_MAPPED_H
 

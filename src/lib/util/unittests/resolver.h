@@ -28,19 +28,19 @@
 #include <resolve/resolver_interface.h>
 #include <gtest/gtest.h>
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace unittests {
 
 /// \brief Put rrset into a message as an answer
-inline static isc::dns::MessagePtr
-createResponseMessage(isc::dns::RRsetPtr answer_rrset)
+inline static bundy::dns::MessagePtr
+createResponseMessage(bundy::dns::RRsetPtr answer_rrset)
 {
-    isc::dns::MessagePtr response(new isc::dns::Message(
-        isc::dns::Message::RENDER));
-    response->setOpcode(isc::dns::Opcode::QUERY());
-    response->setRcode(isc::dns::Rcode::NOERROR());
-    response->addRRset(isc::dns::Message::SECTION_ANSWER, answer_rrset);
+    bundy::dns::MessagePtr response(new bundy::dns::Message(
+        bundy::dns::Message::RENDER));
+    response->setOpcode(bundy::dns::Opcode::QUERY());
+    response->setRcode(bundy::dns::Rcode::NOERROR());
+    response->addRRset(bundy::dns::Message::SECTION_ANSWER, answer_rrset);
     return response;
 }
 
@@ -49,17 +49,17 @@ createResponseMessage(isc::dns::RRsetPtr answer_rrset)
 /// This class pretends to be a resolver. However, it only stores the
 /// requests and can answer them right away by prepared answers. It doesn't
 /// do any real work and is intended for testing purposes.
-class TestResolver : public isc::resolve::ResolverInterface {
+class TestResolver : public bundy::resolve::ResolverInterface {
     private:
         bool checkIndex(size_t index) {
             return (requests.size() > index);
         }
 
-        typedef std::map<isc::dns::Question, isc::dns::RRsetPtr>
+        typedef std::map<bundy::dns::Question, bundy::dns::RRsetPtr>
             PresetAnswers;
         PresetAnswers answers_;
     public:
-        typedef std::pair<isc::dns::QuestionPtr, CallbackPtr> Request;
+        typedef std::pair<bundy::dns::QuestionPtr, CallbackPtr> Request;
         /// \brief List of requests the tested class sent through resolve
         std::vector<Request> requests;
 
@@ -79,7 +79,7 @@ class TestResolver : public isc::resolve::ResolverInterface {
         /// If there's a prepared answer (provided by addPresetAnswer), it
         /// answers it right away. Otherwise it just stores the request in
         /// the requests member so it can be examined later.
-        virtual void resolve(const isc::dns::QuestionPtr& q,
+        virtual void resolve(const bundy::dns::QuestionPtr& q,
                              const CallbackPtr& c)
         {
             PresetAnswers::iterator it(answers_.find(*q));
@@ -99,8 +99,8 @@ class TestResolver : public isc::resolve::ResolverInterface {
         /// Add a preset answer. If shared_ptr() is passed (eg. NULL),
         /// it will generate failure. If the question is not preset,
         /// it goes to requests and you can answer later.
-        void addPresetAnswer(const isc::dns::Question& question,
-            isc::dns::RRsetPtr answer)
+        void addPresetAnswer(const bundy::dns::Question& question,
+            bundy::dns::RRsetPtr answer)
         {
             answers_[question] = answer;
         }
@@ -112,7 +112,7 @@ class TestResolver : public isc::resolve::ResolverInterface {
         class DifferentRequest : public std::exception { };
 
         /// \brief Provides the question of request on given answer
-        isc::dns::QuestionPtr operator[](size_t index) {
+        bundy::dns::QuestionPtr operator[](size_t index) {
             if (index >= requests.size()) {
                 throw NoSuchRequest();
             }
@@ -123,7 +123,7 @@ class TestResolver : public isc::resolve::ResolverInterface {
         /// Sorts them so index1 is A.
         ///
         /// Returns false if there aren't enough elements
-        bool asksIPs(const isc::dns::Name& name, size_t index1,
+        bool asksIPs(const bundy::dns::Name& name, size_t index1,
                      size_t index2)
         {
             size_t max = (index1 < index2) ? index2 : index1;
@@ -132,11 +132,11 @@ class TestResolver : public isc::resolve::ResolverInterface {
             }
             EXPECT_EQ(name, (*this)[index1]->getName());
             EXPECT_EQ(name, (*this)[index2]->getName());
-            EXPECT_EQ(isc::dns::RRClass::IN(), (*this)[index1]->getClass());
-            EXPECT_EQ(isc::dns::RRClass::IN(), (*this)[index2]->getClass());
+            EXPECT_EQ(bundy::dns::RRClass::IN(), (*this)[index1]->getClass());
+            EXPECT_EQ(bundy::dns::RRClass::IN(), (*this)[index2]->getClass());
             // If they are the other way around, swap
-            if ((*this)[index1]->getType() == isc::dns::RRType::AAAA() &&
-                (*this)[index2]->getType() == isc::dns::RRType::A())
+            if ((*this)[index1]->getType() == bundy::dns::RRType::AAAA() &&
+                (*this)[index2]->getType() == bundy::dns::RRType::A())
             {
                 TestResolver::Request tmp((*this).requests[index1]);
                 (*this).requests[index1] =
@@ -144,8 +144,8 @@ class TestResolver : public isc::resolve::ResolverInterface {
                 (*this).requests[index2] = tmp;
             }
             // Check the correct addresses
-            EXPECT_EQ(isc::dns::RRType::A(), (*this)[index1]->getType());
-            EXPECT_EQ(isc::dns::RRType::AAAA(), (*this)[index2]->getType());
+            EXPECT_EQ(bundy::dns::RRType::A(), (*this)[index1]->getType());
+            EXPECT_EQ(bundy::dns::RRType::AAAA(), (*this)[index2]->getType());
             return (true);
         }
 
@@ -153,32 +153,32 @@ class TestResolver : public isc::resolve::ResolverInterface {
         /// Sends a simple answer to a query.
         /// 1) Provide index of a query and the address(es) to pass.
         /// 2) Provide index of query and components of address to pass.
-        void answer(size_t index, isc::dns::RRsetPtr& set) {
+        void answer(size_t index, bundy::dns::RRsetPtr& set) {
             if (index >= requests.size()) {
                 throw NoSuchRequest();
             }
             requests[index].second->success(createResponseMessage(set));
         }
 
-        void answer(size_t index, const isc::dns::Name& name,
-                    const isc::dns::RRType& type,
-                    const isc::dns::rdata::Rdata& rdata, size_t TTL = 100)
+        void answer(size_t index, const bundy::dns::Name& name,
+                    const bundy::dns::RRType& type,
+                    const bundy::dns::rdata::Rdata& rdata, size_t TTL = 100)
         {
-            isc::dns::RRsetPtr set(new isc::dns::RRset(name,
-                                                       isc::dns::RRClass::IN(),
+            bundy::dns::RRsetPtr set(new bundy::dns::RRset(name,
+                                                       bundy::dns::RRClass::IN(),
                                                        type,
-                                                       isc::dns::RRTTL(TTL)));
+                                                       bundy::dns::RRTTL(TTL)));
             set->addRdata(rdata);
             answer(index, set);
         }
         /// \Answer the query at index by list of nameservers
-        void provideNS(size_t index, isc::dns::RRsetPtr nameservers)
+        void provideNS(size_t index, bundy::dns::RRsetPtr nameservers)
         {
             if (index >= requests.size()) {
                 throw NoSuchRequest();
             }
             if (requests[index].first->getName() != nameservers->getName() ||
-                requests[index].first->getType() != isc::dns::RRType::NS())
+                requests[index].first->getType() != bundy::dns::RRType::NS())
             {
                 throw DifferentRequest();
             }

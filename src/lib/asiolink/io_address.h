@@ -28,7 +28,7 @@
 
 #include <exceptions/exceptions.h>
 
-namespace isc {
+namespace bundy {
 namespace asiolink {
 
     /// Defines length of IPv6 address.
@@ -251,5 +251,5 @@ std::ostream&
 operator<<(std::ostream& os, const IOAddress& address);
 
 } // namespace asiolink
-} // namespace isc
+} // namespace bundy
 #endif // IO_ADDRESS_H

@@ -23,8 +23,8 @@
 #include <dns/rrttl.h>
 #include <dns/rrset.h>
 
-using namespace isc::cache;
-using namespace isc::dns;
+using namespace bundy::cache;
+using namespace bundy::dns;
 using namespace std;
 
 namespace {
@@ -48,7 +48,7 @@ TEST_F(GenCacheKeyTest, genCacheEntryKey2) {
 
 class DerivedRRsetEntry: public RRsetEntry {
 public:
-    DerivedRRsetEntry(const isc::dns::RRset& rrset, const RRsetTrustLevel& level) : RRsetEntry(rrset, level) {};
+    DerivedRRsetEntry(const bundy::dns::RRset& rrset, const RRsetTrustLevel& level) : RRsetEntry(rrset, level) {};
 
 };
 

@@ -23,8 +23,8 @@
 #include <gtest/gtest.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::d2;
+using namespace bundy;
+using namespace bundy::d2;
 
 namespace {
 
@@ -86,7 +86,7 @@ public:
     virtual D2UpdateMessagePtr prepNewRequest(DdnsDomainPtr domain) {
         if (simulate_build_request_exception_) {
             simulate_build_request_exception_ = false;
-            isc_throw (NameRemoveTransactionError,
+            bundy_throw (NameRemoveTransactionError,
                        "Simulated build requests exception");
         }
 
@@ -267,7 +267,7 @@ public:
 /// 1. Construction with invalid type of request
 /// 2. Valid construction functions properly
 TEST(NameRemoveTransaction, construction) {
-    IOServicePtr io_service(new isc::asiolink::IOService());
+    IOServicePtr io_service(new bundy::asiolink::IOService());
 
     const char* msg_str =
         "{"
@@ -297,7 +297,7 @@ TEST(NameRemoveTransaction, construction) {
                                        NameRemoveTransactionError);
 
     // Verify that a valid construction attempt works.
-    ncr->setChangeType(isc::dhcp_ddns::CHG_REMOVE);
+    ncr->setChangeType(bundy::dhcp_ddns::CHG_REMOVE);
     EXPECT_NO_THROW(NameRemoveTransaction(io_service, ncr,
                                           forward_domain, reverse_domain));
 }

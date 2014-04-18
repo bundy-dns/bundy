@@ -19,8 +19,8 @@
 # sanity checking of user configuration here, simply by trying to construct
 # all the keys here.
 
-from isc.config.module_spec import module_spec_from_file
-from isc.util.file import path_search
+from bundy.config.module_spec import module_spec_from_file
+from bundy.util.file import path_search
 from pydnspp import TSIGKey, InvalidParameter
 from bundy_config import PLUGIN_PATHS
 spec = module_spec_from_file(path_search('tsig_keys.spec', PLUGIN_PATHS))

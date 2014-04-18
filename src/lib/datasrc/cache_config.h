@@ -27,7 +27,7 @@
 #include <map>
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 class DataSourceClient;
 

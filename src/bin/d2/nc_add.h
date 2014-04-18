@@ -20,15 +20,15 @@
 #include <d2/nc_trans.h>
 #include <dns/rdata.h>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 /// @brief Thrown if the NameAddTransaction encounters a general error.
-class NameAddTransactionError : public isc::Exception {
+class NameAddTransactionError : public bundy::Exception {
 public:
     NameAddTransactionError(const char* file, size_t line,
                                const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Embodies the "life-cycle" required to carry out a DDNS Add update.
@@ -446,6 +446,6 @@ protected:
 /// @brief Defines a pointer to a NameAddTransaction.
 typedef boost::shared_ptr<NameAddTransaction> NameAddTransactionPtr;
 
-} // namespace isc::d2
-} // namespace isc
+} // namespace bundy::d2
+} // namespace bundy
 #endif

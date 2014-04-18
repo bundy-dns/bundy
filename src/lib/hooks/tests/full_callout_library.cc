@@ -42,7 +42,7 @@
 
 #include <fstream>
 
-using namespace isc::hooks;
+using namespace bundy::hooks;
 
 extern "C" {
 

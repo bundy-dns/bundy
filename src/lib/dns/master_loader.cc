@@ -39,7 +39,7 @@ using std::pair;
 using boost::algorithm::iequals;
 using boost::shared_ptr;
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 namespace {
@@ -47,7 +47,7 @@ namespace {
 // An internal exception, used to control the code flow in case of errors.
 // It is thrown during the loading and caught later, not to be propagated
 // outside of the file.
-class InternalException : public isc::Exception {
+class InternalException : public bundy::Exception {
 public:
     InternalException(const char* filename, size_t line, const char* what) :
         Exception(filename, line, what)
@@ -122,7 +122,7 @@ public:
         std::string error;
         if (!lexer_.pushSource(filename.c_str(), &error)) {
             if (initialized_) {
-                isc_throw(InternalException, error.c_str());
+                bundy_throw(InternalException, error.c_str());
             } else {
                 // Top-level file
                 reportError("", 0, error);
@@ -174,7 +174,7 @@ private:
             // and we throw
             ok_ = false;
             complete_ = true;
-            isc_throw(MasterLoaderError, reason.c_str());
+            bundy_throw(MasterLoaderError, reason.c_str());
         }
     }
 
@@ -324,7 +324,7 @@ private:
             (RRClass::createFromText(rrparam_token.getString()));
         if (rrclass) {
             if (*rrclass != zone_class_) {
-                isc_throw(InternalException, "Class mismatch: " << *rrclass <<
+                bundy_throw(InternalException, "Class mismatch: " << *rrclass <<
                           " vs. " << zone_class_);
             }
             rrparam_token = lexer_.getNextToken(MasterToken::STRING);
@@ -467,7 +467,7 @@ private:
             setDefaultTTL(RRTTL(getString()), false);
             eatUntilEOL(true);
         } else {
-            isc_throw(InternalException, "Unknown directive '" <<
+            bundy_throw(InternalException, "Unknown directive '" <<
                       string(directive, directive + length) << "'");
         }
     }
@@ -861,7 +861,7 @@ MasterLoader::MasterLoaderImpl::doGenerate() {
                 complete_ = true;
                 // We don't have the exact error here, but it was
                 // reported by the error callback.
-                isc_throw(MasterLoaderError, "Invalid RR data");
+                bundy_throw(MasterLoaderError, "Invalid RR data");
             }
         }
     }
@@ -886,7 +886,7 @@ MasterLoader::MasterLoaderImpl::handleInitialToken() {
 
         // This means the same name as previous.
         if (last_name_.get() == NULL) {
-            isc_throw(InternalException, "No previous name to use in "
+            bundy_throw(InternalException, "No previous name to use in "
                       "place of initial whitespace");
         } else if (!previous_name_) {
             callbacks_.warning(lexer_.getSourceName(), lexer_.getSourceLine(),
@@ -935,10 +935,10 @@ MasterLoader::MasterLoaderImpl::handleInitialToken() {
         return (initial_token); // empty line
     case MasterToken::ERROR:
         // Error token here.
-        isc_throw(InternalException, initial_token.getErrorText());
+        bundy_throw(InternalException, initial_token.getErrorText());
     default:
         // Some other token (what could that be?)
-        isc_throw(InternalException, "Parser got confused (unexpected "
+        bundy_throw(InternalException, "Parser got confused (unexpected "
                   "token " << initial_token.getType() << ")");
     }
 }
@@ -946,10 +946,10 @@ MasterLoader::MasterLoaderImpl::handleInitialToken() {
 bool
 MasterLoader::MasterLoaderImpl::loadIncremental(size_t count_limit) {
     if (count_limit == 0) {
-        isc_throw(isc::InvalidParameter, "Count limit set to 0");
+        bundy_throw(bundy::InvalidParameter, "Count limit set to 0");
     }
     if (complete_) {
-        isc_throw(isc::InvalidOperation,
+        bundy_throw(bundy::InvalidOperation,
                   "Trying to load when already loaded");
     }
     if (!initialized_) {
@@ -994,10 +994,10 @@ MasterLoader::MasterLoaderImpl::loadIncremental(size_t count_limit) {
                     complete_ = true;
                     // We don't have the exact error here, but it was reported
                     // by the error callback.
-                    isc_throw(MasterLoaderError, "Invalid RR data");
+                    bundy_throw(MasterLoaderError, "Invalid RR data");
                 }
             }
-        } catch (const isc::dns::DNSTextError& e) {
+        } catch (const bundy::dns::DNSTextError& e) {
             reportError(lexer_.getSourceName(), lexer_.getSourceLine(),
                         e.what());
             eatUntilEOL(false);
@@ -1027,7 +1027,7 @@ MasterLoader::MasterLoader(const char* master_file,
                            Options options)
 {
     if (add_callback.empty()) {
-        isc_throw(isc::InvalidParameter, "Empty add RR callback");
+        bundy_throw(bundy::InvalidParameter, "Empty add RR callback");
     }
     impl_ = new MasterLoaderImpl(master_file, zone_origin,
                                  zone_class, callbacks, add_callback, options);
@@ -1041,7 +1041,7 @@ MasterLoader::MasterLoader(std::istream& stream,
                            Options options)
 {
     if (add_callback.empty()) {
-        isc_throw(isc::InvalidParameter, "Empty add RR callback");
+        bundy_throw(bundy::InvalidParameter, "Empty add RR callback");
     }
     auto_ptr<MasterLoaderImpl> impl(new MasterLoaderImpl("", zone_origin,
                                                          zone_class, callbacks,
@@ -1078,4 +1078,4 @@ MasterLoader::getPosition() const {
 }
 
 } // end namespace dns
-} // end namespace isc
+} // end namespace bundy

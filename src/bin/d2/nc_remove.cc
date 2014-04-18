@@ -19,7 +19,7 @@
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 
@@ -37,8 +37,8 @@ NameRemoveTransaction(IOServicePtr& io_service,
                    DdnsDomainPtr& forward_domain,
                    DdnsDomainPtr& reverse_domain)
     : NameChangeTransaction(io_service, ncr, forward_domain, reverse_domain) {
-    if (ncr->getChangeType() != isc::dhcp_ddns::CHG_REMOVE) {
-        isc_throw (NameRemoveTransactionError,
+    if (ncr->getChangeType() != bundy::dhcp_ddns::CHG_REMOVE) {
+        bundy_throw (NameRemoveTransactionError,
                    "NameRemoveTransaction, request type must be CHG_REMOVE");
     }
 }
@@ -144,7 +144,7 @@ NameRemoveTransaction::readyHandler() {
         break;
     default:
         // Event is invalid.
-        isc_throw(NameRemoveTransactionError,
+        bundy_throw(NameRemoveTransactionError,
                   "Wrong event for context: " << getContextStr());
     }
 }
@@ -163,7 +163,7 @@ NameRemoveTransaction::selectingFwdServerHandler() {
         break;
     default:
         // Event is invalid.
-        isc_throw(NameRemoveTransactionError,
+        bundy_throw(NameRemoveTransactionError,
                   "Wrong event for context: " << getContextStr());
     }
 
@@ -277,7 +277,7 @@ NameRemoveTransaction::removingFwdAddrsHandler() {
 
     default:
         // Event is invalid.
-        isc_throw(NameRemoveTransactionError,
+        bundy_throw(NameRemoveTransactionError,
                   "Wrong event for context: " << getContextStr());
     }
 }
@@ -402,7 +402,7 @@ NameRemoveTransaction::removingFwdRRsHandler() {
 
     default:
         // Event is invalid.
-        isc_throw(NameRemoveTransactionError,
+        bundy_throw(NameRemoveTransactionError,
                   "Wrong event for context: " << getContextStr());
     }
 }
@@ -422,7 +422,7 @@ NameRemoveTransaction::selectingRevServerHandler() {
         break;
     default:
         // Event is invalid.
-        isc_throw(NameRemoveTransactionError,
+        bundy_throw(NameRemoveTransactionError,
                   "Wrong event for context: " << getContextStr());
     }
 
@@ -542,7 +542,7 @@ NameRemoveTransaction::removingRevPtrsHandler() {
 
     default:
         // Event is invalid.
-        isc_throw(NameRemoveTransactionError,
+        bundy_throw(NameRemoveTransactionError,
                   "Wrong event for context: " << getContextStr());
     }
 }
@@ -559,7 +559,7 @@ NameRemoveTransaction::processRemoveOkHandler() {
         break;
     default:
         // Event is invalid.
-        isc_throw(NameRemoveTransactionError,
+        bundy_throw(NameRemoveTransactionError,
                   "Wrong event for context: " << getContextStr());
     }
 }
@@ -577,7 +577,7 @@ NameRemoveTransaction::processRemoveFailedHandler() {
         break;
     default:
         // Event is invalid.
-        isc_throw(NameRemoveTransactionError,
+        bundy_throw(NameRemoveTransactionError,
                   "Wrong event for context: " << getContextStr());
     }
 }
@@ -696,5 +696,5 @@ NameRemoveTransaction::buildRemoveRevPtrsRequest() {
     setDnsUpdateRequest(request);
 }
 
-} // namespace isc::d2
-} // namespace isc
+} // namespace bundy::d2
+} // namespace bundy

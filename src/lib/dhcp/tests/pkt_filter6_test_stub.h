@@ -20,15 +20,15 @@
 #include <dhcp/pkt_filter6.h>
 #include <dhcp/pkt6.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 namespace test {
 
 /// @brief A stub implementation of the PktFilter6 class.
 ///
-/// This class implements abstract methods of the @c isc::dhcp::PktFilter6
+/// This class implements abstract methods of the @c bundy::dhcp::PktFilter6
 /// class. It is used by unit tests, which test protected methods of the
-/// @c isc::dhcp::test::PktFilter6 class. The implemented abstract methods are
+/// @c bundy::dhcp::test::PktFilter6 class. The implemented abstract methods are
 /// no-op.
 class PktFilter6TestStub : public PktFilter6 {
 public:
@@ -53,7 +53,7 @@ public:
     /// @return A SocketInfo structure with the socket descriptor set to 0. The
     /// fallback socket descriptor is set to a negative value.
     virtual SocketInfo openSocket(const Iface& iface,
-                                  const isc::asiolink::IOAddress& addr,
+                                  const bundy::asiolink::IOAddress& addr,
                                   const uint16_t port,
                                   const bool join_multicast);
 
@@ -92,8 +92,8 @@ public:
                               const std::string & mcast);
 };
 
-} // namespace isc::dhcp::test
-} // namespace isc::dhcp
-} // namespace isc
+} // namespace bundy::dhcp::test
+} // namespace bundy::dhcp
+} // namespace bundy
 
 #endif // PKT_FILTER6_TEST_STUB_H

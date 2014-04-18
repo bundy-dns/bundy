@@ -31,10 +31,10 @@
 #include <new>                  // for the placement new
 #include <vector>
 
-using namespace isc::dns;
-using namespace isc::dns::rdata;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 

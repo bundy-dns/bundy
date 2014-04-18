@@ -14,10 +14,10 @@
 
 #include <server_common/logger.h>
 
-namespace isc {
+namespace bundy {
 namespace server_common {
 
-isc::log::Logger logger("server_common");
+bundy::log::Logger logger("server_common");
 
 }
 }

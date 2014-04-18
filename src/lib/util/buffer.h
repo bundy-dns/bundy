@@ -25,7 +25,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-namespace isc {
+namespace bundy {
 namespace util {
 
 ///
@@ -35,7 +35,7 @@ namespace util {
 class InvalidBufferPosition : public Exception {
 public:
     InvalidBufferPosition(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 ///\brief The \c InputBuffer class is a buffer abstraction for manipulating
@@ -117,7 +117,7 @@ public:
     /// \brief Set the read position of the buffer to the given value.
     ///
     /// The new position must be in the valid range of the buffer; otherwise
-    /// an exception of class \c isc::dns::InvalidBufferPosition will be thrown.
+    /// an exception of class \c bundy::dns::InvalidBufferPosition will be thrown.
     /// \param position The new position (offset from the beginning of the
     /// buffer).
     void setPosition(size_t position) {
@@ -134,7 +134,7 @@ public:
     /// \brief Read an unsigned 8-bit integer from the buffer and return it.
     ///
     /// If the remaining length of the buffer is smaller than 8-bit, an
-    /// exception of class \c isc::dns::InvalidBufferPosition will be thrown.
+    /// exception of class \c bundy::dns::InvalidBufferPosition will be thrown.
     uint8_t readUint8() {
         if (position_ + sizeof(uint8_t) > len_) {
             throwError("read beyond end of buffer");
@@ -146,7 +146,7 @@ public:
     /// buffer, convert it to host byte order, and return it.
     ///
     /// If the remaining length of the buffer is smaller than 16-bit, an
-    /// exception of class \c isc::dns::InvalidBufferPosition will be thrown.
+    /// exception of class \c bundy::dns::InvalidBufferPosition will be thrown.
     uint16_t readUint16() {
         uint16_t data;
         const uint8_t* cp;
@@ -166,7 +166,7 @@ public:
     /// buffer, convert it to host byte order, and return it.
     ///
     /// If the remaining length of the buffer is smaller than 32-bit, an
-    /// exception of class \c isc::dns::InvalidBufferPosition will be thrown.
+    /// exception of class \c bundy::dns::InvalidBufferPosition will be thrown.
     uint32_t readUint32() {
         uint32_t data;
         const uint8_t* cp;
@@ -189,7 +189,7 @@ public:
     ///
     /// The data is copied as stored in the buffer; no conversion is performed.
     /// If the remaining length of the buffer is smaller than the specified
-    /// length, an exception of class \c isc::dns::InvalidBufferPosition will
+    /// length, an exception of class \c bundy::dns::InvalidBufferPosition will
     /// be thrown.
     void readData(void* data, size_t len) {
         if (position_ + len > len_) {
@@ -225,7 +225,7 @@ private:
     /// operation slower, so we consolidate it here, and let the methods
     /// call this.
     static void throwError(const char* msg) {
-        isc_throw(InvalidBufferPosition, msg);
+        bundy_throw(InvalidBufferPosition, msg);
     }
 
     size_t position_;
@@ -403,14 +403,14 @@ public:
     /// \brief Trim the specified length of data from the end of the buffer.
     ///
     /// The specified length must not exceed the current data size of the
-    /// buffer; otherwise an exception of class \c isc::OutOfRange will
+    /// buffer; otherwise an exception of class \c bundy::OutOfRange will
     /// be thrown.
     ///
     /// \param len The length of data that should be trimmed.
     void trim(size_t len)
     {
         if (len > size_) {
-            isc_throw(OutOfRange, "trimming too large from output buffer");
+            bundy_throw(OutOfRange, "trimming too large from output buffer");
         }
         size_ -= len;
     }
@@ -430,14 +430,14 @@ public:
     /// \brief Write an unsigned 8-bit integer into the buffer.
     ///
     /// The position must be lower than the size of the buffer,
-    /// otherwise an exception of class \c isc::dns::InvalidBufferPosition
+    /// otherwise an exception of class \c bundy::dns::InvalidBufferPosition
     /// will be thrown.
     ///
     /// \param data The 8-bit integer to be written into the buffer.
     /// \param pos The position in the buffer to write the data.
     void writeUint8At(uint8_t data, size_t pos) {
         if (pos + sizeof(data) > size_) {
-            isc_throw(InvalidBufferPosition, "write at invalid position");
+            bundy_throw(InvalidBufferPosition, "write at invalid position");
         }
         buffer_[pos] = data;
     }
@@ -457,7 +457,7 @@ public:
     ///
     /// The buffer must have a sufficient room to store the given data at the
     /// given position, that is, <code>pos + 2 < getLength()</code>;
-    /// otherwise an exception of class \c isc::dns::InvalidBufferPosition will
+    /// otherwise an exception of class \c bundy::dns::InvalidBufferPosition will
     /// be thrown.
     /// Note also that this method never extends the buffer.
     ///
@@ -466,7 +466,7 @@ public:
     void writeUint16At(uint16_t data, size_t pos)
     {
         if (pos + sizeof(data) > size_) {
-            isc_throw(InvalidBufferPosition, "write at invalid position");
+            bundy_throw(InvalidBufferPosition, "write at invalid position");
         }
 
         buffer_[pos] = static_cast<uint8_t>((data & 0xff00U) >> 8);
@@ -536,7 +536,7 @@ typedef boost::shared_ptr<InputBuffer> InputBufferPtr;
 typedef boost::shared_ptr<OutputBuffer> OutputBufferPtr;
 
 } // namespace util
-} // namespace isc
+} // namespace bundy
 #endif  // BUFFER_H
 
 // Local Variables:

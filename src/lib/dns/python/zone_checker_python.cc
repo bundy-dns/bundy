@@ -46,8 +46,8 @@
 #include <stdexcept>
 
 using std::string;
-using isc::util::python::PyObjectContainer;
-using namespace isc::dns;
+using bundy::util::python::PyObjectContainer;
+using namespace bundy::dns;
 
 namespace {
 // This is a template for a common pattern of type mismatch error handling,
@@ -60,13 +60,13 @@ setTypeError(PyObject* pobj, const char* var_name, const char* type_name) {
 }
 }
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace python {
 namespace internal {
 
 // Place the exception class in a named namespace to avoid weird run time
-// failure with clang++.  See isc.log Python wrapper.
+// failure with clang++.  See bundy.log Python wrapper.
 namespace clang_unnamed_namespace_workaround {
 // This is used to abort check_zone() and go back to the top level.
 // We use a separate exception so it won't be caught in the middle.
@@ -121,7 +121,7 @@ public:
                                 "or RRset");
                 throw InternalException();
             }
-        } catch (const isc::util::python::PyCPPWrapperException& ex) {
+        } catch (const bundy::util::python::PyCPPWrapperException& ex) {
             // This normally means the method call fails.  Propagate the
             // already-set Python error to the top level.  Other C++ exceptions
             // are really unexpected, so we also (implicitly) propagate it
@@ -131,10 +131,10 @@ public:
     }
 
     virtual IterPtr getBeginning() {
-        isc_throw(NotImplemented, "iterator support is not yet available");
+        bundy_throw(NotImplemented, "iterator support is not yet available");
     }
     virtual IterPtr getEnd() {
-        isc_throw(NotImplemented, "iterator support is not yet available");
+        bundy_throw(NotImplemented, "iterator support is not yet available");
     }
 
 private:
@@ -226,4 +226,4 @@ pyCheckZone(PyObject*, PyObject* args) {
 } // namespace internal
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy

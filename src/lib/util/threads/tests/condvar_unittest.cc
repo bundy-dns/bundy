@@ -30,7 +30,7 @@
 #include <unistd.h>
 #include <signal.h>
 
-using namespace isc::util::thread;
+using namespace bundy::util::thread;
 
 namespace {
 // Used as a signal handler below.
@@ -85,7 +85,7 @@ ringSignal(CondVar* condvar, Mutex* mutex, int* arg) {
 
 // A simple wait-signal operation on a condition variable.
 TEST_F(CondVarTest, waitAndSignal) {
-    if (!isc::util::unittests::runningOnValgrind()) {
+    if (!bundy::util::unittests::runningOnValgrind()) {
         Mutex::Locker locker(mutex_);
         int shared_var = 0; // let the other thread increment this
         Thread t(boost::bind(&ringSignal, &condvar_, &mutex_, &shared_var));
@@ -151,7 +151,7 @@ TEST_F(CondVarTest,
 ) {
     // We'll destroy a CondVar object while the thread is still waiting
     // on it.  This will trigger an assertion failure.
-    if (!isc::util::unittests::runningOnValgrind()) {
+    if (!bundy::util::unittests::runningOnValgrind()) {
         EXPECT_DEATH_IF_SUPPORTED({
                 CondVar cond;
                 Mutex::Locker locker(mutex_);
@@ -165,7 +165,7 @@ TEST_F(CondVarTest,
 
 TEST_F(CondVarTest, badWait) {
     // In our implementation, wait() requires acquiring the lock beforehand.
-    EXPECT_THROW(condvar_.wait(mutex_), isc::InvalidOperation);
+    EXPECT_THROW(condvar_.wait(mutex_), bundy::InvalidOperation);
 }
 
 #endif // ENABLE_DEBUG

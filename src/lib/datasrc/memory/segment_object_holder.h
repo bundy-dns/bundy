@@ -19,7 +19,7 @@
 #include <string>
 #include <cassert>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 namespace detail {
@@ -65,7 +65,7 @@ public:
             // we throw. But then, we don't get our destructor, so we
             // release the memory right away.
             mem_sgmt_.clearNamedAddress(holder_name_.c_str());
-            isc_throw(isc::util::MemorySegmentGrown,
+            bundy_throw(bundy::util::MemorySegmentGrown,
                       "Segment grown when allocating holder");
         }
     }
@@ -114,7 +114,7 @@ private:
 } // detail
 } // namespace memory
 } // namespace datasrc
-} // namespace isc
+} // namespace bundy
 
 #endif // DATASRC_MEMORY_SEGMENT_OBJECT_HOLDER_H
 

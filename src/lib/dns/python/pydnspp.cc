@@ -62,9 +62,9 @@
 
 #include "zone_checker_python_inc.cc"
 
-using namespace isc::dns;
-using namespace isc::dns::python;
-using namespace isc::util::python;
+using namespace bundy::dns;
+using namespace bundy::dns::python;
+using namespace bundy::util::python;
 
 namespace {
 
@@ -849,7 +849,7 @@ PyMethodDef methods[] = {
 PyModuleDef pydnspp = {
     { PyObject_HEAD_INIT(NULL) NULL, 0, NULL},
     "pydnspp",
-    "Python bindings for the classes in the isc::dns namespace.\n\n"
+    "Python bindings for the classes in the bundy::dns namespace.\n\n"
     "These bindings match the original C++ API as closely as possible, "
     "but are not complete. Some classes are unnecessary (InputBuffer "
     "and OutputBuffer for instance), and others may be necessary, but "

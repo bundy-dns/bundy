@@ -19,9 +19,9 @@
 
 #include <netinet/in.h>
 
-using namespace isc::asiolink;
+using namespace bundy::asiolink;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 PktFilterInet6::PktFilterInet6()
@@ -31,7 +31,7 @@ PktFilterInet6::PktFilterInet6()
 
 SocketInfo
 PktFilterInet6::openSocket(const Iface& iface,
-                           const isc::asiolink::IOAddress& addr,
+                           const bundy::asiolink::IOAddress& addr,
                            const uint16_t port,
                            const bool join_multicast) {
     struct sockaddr_in6 addr6;
@@ -52,7 +52,7 @@ PktFilterInet6::openSocket(const Iface& iface,
     // make a socket
     int sock = socket(AF_INET6, SOCK_DGRAM, 0);
     if (sock < 0) {
-        isc_throw(SocketConfigError, "Failed to create UDP6 socket.");
+        bundy_throw(SocketConfigError, "Failed to create UDP6 socket.");
     }
 
     // Set SO_REUSEADDR option.
@@ -60,12 +60,12 @@ PktFilterInet6::openSocket(const Iface& iface,
     if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR,
                    (char *)&flag, sizeof(flag)) < 0) {
         close(sock);
-        isc_throw(SocketConfigError, "Can't set SO_REUSEADDR option on dhcpv6 socket.");
+        bundy_throw(SocketConfigError, "Can't set SO_REUSEADDR option on dhcpv6 socket.");
     }
 
     if (bind(sock, (struct sockaddr *)&addr6, sizeof(addr6)) < 0) {
         close(sock);
-        isc_throw(SocketConfigError, "Failed to bind socket " << sock << " to " << addr.toText()
+        bundy_throw(SocketConfigError, "Failed to bind socket " << sock << " to " << addr.toText()
                   << "/port=" << port);
     }
 #ifdef IPV6_RECVPKTINFO
@@ -73,14 +73,14 @@ PktFilterInet6::openSocket(const Iface& iface,
     if (setsockopt(sock, IPPROTO_IPV6, IPV6_RECVPKTINFO,
                    &flag, sizeof(flag)) != 0) {
         close(sock);
-        isc_throw(SocketConfigError, "setsockopt: IPV6_RECVPKTINFO failed.");
+        bundy_throw(SocketConfigError, "setsockopt: IPV6_RECVPKTINFO failed.");
     }
 #else
     // RFC2292 - an old way
     if (setsockopt(sock, IPPROTO_IPV6, IPV6_PKTINFO,
                    &flag, sizeof(flag)) != 0) {
         close(sock);
-        isc_throw(SocketConfigError, "setsockopt: IPV6_PKTINFO: failed.");
+        bundy_throw(SocketConfigError, "setsockopt: IPV6_PKTINFO: failed.");
     }
 #endif
 
@@ -90,7 +90,7 @@ PktFilterInet6::openSocket(const Iface& iface,
         !joinMulticast(sock, iface.getName(),
                        std::string(ALL_DHCP_RELAY_AGENTS_AND_SERVERS))) {
         close(sock);
-        isc_throw(SocketConfigError, "Failed to join "
+        bundy_throw(SocketConfigError, "Failed to join "
                   << ALL_DHCP_RELAY_AGENTS_AND_SERVERS
                   << " multicast group.");
     }
@@ -163,10 +163,10 @@ PktFilterInet6::receive(const SocketInfo& socket_info) {
             cmsg = CMSG_NXTHDR(&m, cmsg);
         }
         if (!found_pktinfo) {
-            isc_throw(SocketReadError, "unable to find pktinfo");
+            bundy_throw(SocketReadError, "unable to find pktinfo");
         }
     } else {
-        isc_throw(SocketReadError, "failed to receive data");
+        bundy_throw(SocketReadError, "failed to receive data");
     }
 
     // Let's create a packet.
@@ -174,7 +174,7 @@ PktFilterInet6::receive(const SocketInfo& socket_info) {
     try {
         pkt = Pkt6Ptr(new Pkt6(buf, result));
     } catch (const std::exception& ex) {
-        isc_throw(SocketReadError, "failed to create new packet");
+        bundy_throw(SocketReadError, "failed to create new packet");
     }
 
     pkt->updateTimestamp();
@@ -190,7 +190,7 @@ PktFilterInet6::receive(const SocketInfo& socket_info) {
     if (received) {
         pkt->setIface(received->getName());
     } else {
-        isc_throw(SocketReadError, "received packet over unknown interface"
+        bundy_throw(SocketReadError, "received packet over unknown interface"
                   << "(ifindex=" << pkt->getIndex() << ")");
     }
 
@@ -274,7 +274,7 @@ PktFilterInet6::send(const Iface&, uint16_t sockfd, const Pkt6Ptr& pkt) {
 
     int result = sendmsg(sockfd, &m, 0);
     if  (result < 0) {
-        isc_throw(SocketWriteError, "pkt6 send failed: sendmsg() returned"
+        bundy_throw(SocketWriteError, "pkt6 send failed: sendmsg() returned"
                   " with an error: " << strerror(errno));
     }
 

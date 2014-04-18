@@ -49,11 +49,11 @@
 
 using namespace asio;
 using namespace asio::ip;
-using namespace isc::asiolink;
-using namespace isc::dns;
-using namespace isc::dns::rdata;
-using namespace isc::util;
-using namespace isc::resolve;
+using namespace bundy::asiolink;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
+using namespace bundy::util;
+using namespace bundy::resolve;
 using namespace std;
 
 /// RecursiveQuery Test - 2
@@ -84,7 +84,7 @@ const char* const WWW_EXAMPLE_ORG = "192.0.2.254";
                                               ///< Address of www.example.org
 } //end anonymous namespace
 
-namespace isc {
+namespace bundy {
 namespace asiodns {
 
 // As the test is fairly long and complex, debugging "print" statements have
@@ -92,7 +92,7 @@ namespace asiodns {
 // enable them.
 const bool DEBUG_PRINT = false;
 
-class MockResolver : public isc::resolve::ResolverInterface {
+class MockResolver : public bundy::resolve::ResolverInterface {
 public:
     virtual void resolve(const QuestionPtr& question,
                  const ResolverInterface::CallbackPtr& callback) {
@@ -131,8 +131,8 @@ public:
     QueryStatus     expected_;                  ///< Expected next state
     OutputBufferPtr question_buffer_;           ///< Question we expect to receive
     boost::shared_ptr<MockResolver> resolver_;  ///< Mock resolver
-    isc::nsas::NameserverAddressStore* nsas_;   ///< Nameserver address store
-    isc::cache::ResolverCache cache_;           ///< Resolver cache
+    bundy::nsas::NameserverAddressStore* nsas_;   ///< Nameserver address store
+    bundy::cache::ResolverCache cache_;           ///< Resolver cache
 
     // Data for TCP Server
     size_t          tcp_cumulative_;            ///< Cumulative TCP data received
@@ -165,7 +165,7 @@ public:
         expected_(NONE),
         question_buffer_(new OutputBuffer(BUFFER_SIZE)),
         resolver_(new MockResolver()),
-        nsas_(new isc::nsas::NameserverAddressStore(resolver_)),
+        nsas_(new bundy::nsas::NameserverAddressStore(resolver_)),
         tcp_cumulative_(0),
         tcp_endpoint_(asio::ip::address::from_string(TEST_ADDRESS), TEST_PORT),
         tcp_length_(0),
@@ -196,7 +196,7 @@ public:
     ///
     /// \param msg Message buffer in RENDER mode.
     /// \param qid QID to set the message to
-    void setCommonMessage(isc::dns::Message& msg, uint16_t qid = 0) {
+    void setCommonMessage(bundy::dns::Message& msg, uint16_t qid = 0) {
         msg.setQid(qid);
         msg.setHeaderFlag(Message::HEADERFLAG_QR);
         msg.setOpcode(Opcode::QUERY());
@@ -211,7 +211,7 @@ public:
     /// indicate a referral to fictitious .org nameservers.
     ///
     /// \param msg Message to update with referral information.
-    void setReferralOrg(isc::dns::Message& msg) {
+    void setReferralOrg(bundy::dns::Message& msg) {
         if (debug_) {
             cout << "setReferralOrg(): creating referral to .org nameservers" << endl;
         }
@@ -240,7 +240,7 @@ public:
     /// indicate a referral to fictitious example.org nameservers.
     ///
     /// \param msg Message to update with referral information.
-    void setReferralExampleOrg(isc::dns::Message& msg) {
+    void setReferralExampleOrg(bundy::dns::Message& msg) {
         if (debug_) {
             cout << "setReferralExampleOrg(): creating referral to example.org nameservers" << endl;
         }
@@ -269,7 +269,7 @@ public:
     /// indicate an authoritative answer to www.example.org.
     ///
     /// \param msg Message to update with referral information.
-    void setAnswerWwwExampleOrg(isc::dns::Message& msg) {
+    void setAnswerWwwExampleOrg(bundy::dns::Message& msg) {
         if (debug_) {
             cout << "setAnswerWwwExampleOrg(): creating answer for www.example.org" << endl;
         }
@@ -578,7 +578,7 @@ public:
 /// \brief Resolver Callback Object
 ///
 /// Holds the success and failure callback methods for the resolver
-class ResolverCallback : public isc::resolve::ResolverInterface::Callback {
+class ResolverCallback : public bundy::resolve::ResolverInterface::Callback {
 public:
     /// \brief Constructor
     ResolverCallback(IOService& service) :
@@ -594,7 +594,7 @@ public:
     /// Called if the resolver detects that the call has succeeded.
     ///
     /// \param response Answer to the question.
-    virtual void success(const isc::dns::MessagePtr response) {
+    virtual void success(const bundy::dns::MessagePtr response) {
         if (debug_) {
             cout << "ResolverCallback::success(): answer received" << endl;
             cout << response->toText() << endl;
@@ -697,7 +697,7 @@ TEST_F(RecursiveQueryTest2, Resolve) {
     query.setRttRecorder(recorder);
 
     // Set up callback to receive notification that the query has completed.
-    isc::resolve::ResolverInterface::CallbackPtr
+    bundy::resolve::ResolverInterface::CallbackPtr
         resolver_callback(new ResolverCallback(service_));
 
     // Kick off the resolution process.  We expect the first question to go to
@@ -725,4 +725,4 @@ TEST_F(RecursiveQueryTest2, Resolve) {
 }
 
 } // namespace asiodns
-} // namespace isc
+} // namespace bundy

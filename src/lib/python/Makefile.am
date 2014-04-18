@@ -1,4 +1,4 @@
-SUBDIRS = isc
+SUBDIRS = bundy
 
 nodist_python_PYTHON =	bundy_config.py
 pythondir = $(pyexecdir)

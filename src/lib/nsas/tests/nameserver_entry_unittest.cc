@@ -37,11 +37,11 @@
 
 #include "nsas_test.h"
 
-using namespace isc::nsas;
-using namespace isc::asiolink;
+using namespace bundy::nsas;
+using namespace bundy::asiolink;
 using namespace std;
-using namespace isc::dns;
-using isc::util::unittests::TestResolver;
+using namespace bundy::dns;
+using bundy::util::unittests::TestResolver;
 
 namespace {
 
@@ -72,7 +72,7 @@ private:
     {
         if (set) {
             resolver->requests[index].second->success(
-                isc::util::unittests::createResponseMessage(set));
+                bundy::util::unittests::createResponseMessage(set));
         } else {
             resolver->requests[index].second->failure();
         }

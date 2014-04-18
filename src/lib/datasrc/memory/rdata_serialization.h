@@ -37,9 +37,9 @@
 /// dumped to a file.
 ///
 /// Two main classes are provided: one is
-/// \c isc::datasrc::memory::RdataEncoder, which allows
+/// \c bundy::datasrc::memory::RdataEncoder, which allows
 /// the application to create encoded data for a set of RDATA;
-/// the isc::datasrc::memory::RdataReader provides an interface to iterate
+/// the bundy::datasrc::memory::RdataReader provides an interface to iterate
 /// over encoded set of RDATA for purposes such as data lookups or rendering
 /// the data into the wire format to create a DNS message.
 ///
@@ -48,7 +48,7 @@
 /// each RDATA is considered to consist of one or more generic fields,
 /// and each field is typed as either opaque data or a domain name.
 /// A domain name field has additional attributes
-/// (see \c isc::datasrc::memory::RdataNameAttributes)
+/// (see \c bundy::datasrc::memory::RdataNameAttributes)
 /// so the application can change how the name should be handled in terms
 /// of the DNS protocol (e.g., whether it's subject to name compression).
 ///
@@ -88,7 +88,7 @@
 /// as single-field data we can make the implementation simpler, and probably
 /// make it faster in rendering it into a DNS message.
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 
@@ -117,11 +117,11 @@ public:
 /// of which updates the internal state of the encoder with the encoding
 /// information for the given RDATA or RRSIG RDATA, respectively.
 /// The \c addRdata() is expected to be called with an
-/// \c isc::dns::rdata::Rdata object
+/// \c bundy::dns::rdata::Rdata object
 /// of the specified class and type, and \c addRdata() checks the consistency
 /// for the purpose of encoding (but it's not completely type safe; for
 /// example, it wouldn't distinguish TXT RDATA and HINFO RDATA.
-/// Likewise, an \c isc::dns::rdata::Rdata given to \c addSIGRdata() is
+/// Likewise, an \c bundy::dns::rdata::Rdata given to \c addSIGRdata() is
 /// expected to be of RRSIG, but the method does not check the assumption).
 ///
 /// After passing the complete set of RDATA and their RRSIG, the application
@@ -392,7 +392,7 @@ struct RdataEncodeSpec;
 ///     // maybe do some other thing related to this RDATA
 /// }
 /// if (reader.iterateRdata()) {
-///     isc_throw(Unexpected, "Inconsistent data");
+///     bundy_throw(Unexpected, "Inconsistent data");
 /// }
 /// \endcode
 ///
@@ -525,7 +525,7 @@ public:
         while (true) {
             switch (nextSig()) {
                 case NO_BOUNDARY:
-                    isc_throw(isc::Unexpected, "NO_BOUNDARY inside an RRSig. "
+                    bundy_throw(bundy::Unexpected, "NO_BOUNDARY inside an RRSig. "
                               "Data corruption? Bug inside RdataReader?");
                 case RDATA_BOUNDARY: return (true);
                 case RRSET_BOUNDARY: return (false);
@@ -575,7 +575,7 @@ private:
 
 } // namespace memory
 } // namespace datasrc
-} // namespace isc
+} // namespace bundy
 
 #endif // DATASRC_MEMORY_RDATA_ENCODER_H
 

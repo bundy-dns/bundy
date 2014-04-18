@@ -33,10 +33,10 @@
 #include <string>
 #include <vector>
 
-using namespace isc::dns;
-using namespace isc::dns::rdata;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 
@@ -68,7 +68,7 @@ TreeNodeRRset::getTTL() const {
 
 void
 TreeNodeRRset::setTTL(const RRTTL&) {
-    isc_throw(Unexpected, "unexpected method called on TreeNodeRRset");
+    bundy_throw(Unexpected, "unexpected method called on TreeNodeRRset");
 }
 
 std::string
@@ -256,23 +256,23 @@ TreeNodeRRset::toWire(AbstractMessageRenderer& renderer) const {
 }
 
 unsigned int
-TreeNodeRRset::toWire(isc::util::OutputBuffer&) const {
-    isc_throw(Unexpected, "unexpected method called on TreeNodeRRset");
+TreeNodeRRset::toWire(bundy::util::OutputBuffer&) const {
+    bundy_throw(Unexpected, "unexpected method called on TreeNodeRRset");
 }
 
 void
 TreeNodeRRset::addRdata(rdata::ConstRdataPtr) {
-    isc_throw(Unexpected, "unexpected method called on TreeNodeRRset");
+    bundy_throw(Unexpected, "unexpected method called on TreeNodeRRset");
 }
 
 void
 TreeNodeRRset::addRdata(const rdata::Rdata&) {
-    isc_throw(Unexpected, "unexpected method called on TreeNodeRRset");
+    bundy_throw(Unexpected, "unexpected method called on TreeNodeRRset");
 }
 
 void
 TreeNodeRRset::addRdata(const std::string&) {
-    isc_throw(Unexpected, "unexpected method called on TreeNodeRRset");
+    bundy_throw(Unexpected, "unexpected method called on TreeNodeRRset");
 }
 
 namespace {
@@ -376,32 +376,32 @@ TreeNodeRRset::getRRsig() const {
 
 void
 TreeNodeRRset::addRRsig(const rdata::ConstRdataPtr&) {
-    isc_throw(Unexpected, "unexpected method called on TreeNodeRRset");
+    bundy_throw(Unexpected, "unexpected method called on TreeNodeRRset");
 }
 
 void
 TreeNodeRRset::addRRsig(const rdata::RdataPtr&) {
-    isc_throw(Unexpected, "unexpected method called on TreeNodeRRset");
+    bundy_throw(Unexpected, "unexpected method called on TreeNodeRRset");
 }
 
 void
 TreeNodeRRset::addRRsig(const AbstractRRset&) {
-    isc_throw(Unexpected, "unexpected method called on TreeNodeRRset");
+    bundy_throw(Unexpected, "unexpected method called on TreeNodeRRset");
 }
 
 void
 TreeNodeRRset::addRRsig(const ConstRRsetPtr&) {
-    isc_throw(Unexpected, "unexpected method called on TreeNodeRRset");
+    bundy_throw(Unexpected, "unexpected method called on TreeNodeRRset");
 }
 
 void
 TreeNodeRRset::addRRsig(const RRsetPtr&) {
-    isc_throw(Unexpected, "unexpected method called on TreeNodeRRset");
+    bundy_throw(Unexpected, "unexpected method called on TreeNodeRRset");
 }
 
 void
 TreeNodeRRset::removeRRsig() {
-    isc_throw(Unexpected, "unexpected method called on TreeNodeRRset");
+    bundy_throw(Unexpected, "unexpected method called on TreeNodeRRset");
 }
 
 bool

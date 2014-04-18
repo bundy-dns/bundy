@@ -33,7 +33,7 @@ const char MESSAGE_FLAG = '%';      // Starts each message
 }
 
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 // Read the file.
@@ -48,7 +48,7 @@ MessageReader::readFile(const string& file, MessageReader::Mode mode) {
     // Open the file.
     ifstream infile(file.c_str());
     if (infile.fail()) {
-        isc_throw_4(MessageException, "Failed to open message file",
+        bundy_throw_4(MessageException, "Failed to open message file",
                     LOG_INPUT_OPEN_FAIL, file, strerror(errno), 0);
     }
 
@@ -66,7 +66,7 @@ MessageReader::readFile(const string& file, MessageReader::Mode mode) {
 
     // Why did the loop terminate?
     if (!infile.eof()) {
-        isc_throw_4(MessageException, "Error reading message file",
+        bundy_throw_4(MessageException, "Error reading message file",
                     LOG_READ_ERROR, file, strerror(errno), 0);
     }
     infile.close();
@@ -78,7 +78,7 @@ void
 MessageReader::processLine(const string& line, MessageReader::Mode mode) {
 
     // Get rid of leading and trailing spaces
-    string text = isc::util::str::trim(line);
+    string text = bundy::util::str::trim(line);
 
     if (text.empty()) {
         ;                           // Ignore blank lines
@@ -103,10 +103,10 @@ MessageReader::parseDirective(const std::string& text) {
 
 
     // Break into tokens
-    vector<string> tokens = isc::util::str::tokens(text);
+    vector<string> tokens = bundy::util::str::tokens(text);
 
     // Uppercase directive and branch on valid ones
-    isc::util::str::uppercase(tokens[0]);
+    bundy::util::str::uppercase(tokens[0]);
     if (tokens[0] == string("$PREFIX")) {
         parsePrefix(tokens);
 
@@ -116,7 +116,7 @@ MessageReader::parseDirective(const std::string& text) {
     } else {
 
         // Unrecognised directive
-        isc_throw_3(MessageException, "Unrecognized directive",
+        bundy_throw_3(MessageException, "Unrecognized directive",
                     LOG_UNRECOGNISED_DIRECTIVE, tokens[0],
                     lineno_);
     }
@@ -142,14 +142,14 @@ MessageReader::parsePrefix(const vector<string>& tokens) {
         // and numeric characters (and underscores) and does not start with a
         // digit.
         if (invalidSymbol(prefix_)) {
-            isc_throw_3(MessageException, "Invalid prefix",
+            bundy_throw_3(MessageException, "Invalid prefix",
                         LOG_PREFIX_INVALID_ARG, prefix_, lineno_);
         }
 
     } else {
 
         // Too many arguments
-        isc_throw_2(MessageException, "Too many arguments",
+        bundy_throw_2(MessageException, "Too many arguments",
                     LOG_PREFIX_EXTRA_ARGS, lineno_);
     }
 }
@@ -178,11 +178,11 @@ MessageReader::parseNamespace(const vector<string>& tokens) {
 
     // Check argument count
     if (tokens.size() < 2) {
-        isc_throw_2(MessageException, "No arguments", LOG_NAMESPACE_NO_ARGS,
+        bundy_throw_2(MessageException, "No arguments", LOG_NAMESPACE_NO_ARGS,
                     lineno_);
 
     } else if (tokens.size() > 2) {
-        isc_throw_2(MessageException, "Too many arguments",
+        bundy_throw_2(MessageException, "Too many arguments",
                     LOG_NAMESPACE_EXTRA_ARGS, lineno_);
 
     }
@@ -195,13 +195,13 @@ MessageReader::parseNamespace(const vector<string>& tokens) {
                                       "abcdefghijklmnopqrstuvwxyz"
                                       "0123456789_:";
     if (tokens[1].find_first_not_of(valid_chars) != string::npos) {
-        isc_throw_3(MessageException, "Invalid argument",
+        bundy_throw_3(MessageException, "Invalid argument",
                     LOG_NAMESPACE_INVALID_ARG, tokens[1], lineno_);
     }
 
     // All OK - unless the namespace has already been set.
     if (ns_.size() != 0) {
-        isc_throw_2(MessageException, "Duplicate namespace",
+        bundy_throw_2(MessageException, "Duplicate namespace",
                     LOG_DUPLICATE_NAMESPACE, lineno_);
     }
 
@@ -229,19 +229,19 @@ MessageReader::parseMessage(const std::string& text, MessageReader::Mode mode) {
 
     // A line comprising just the message introducer is not valid.
     if (text.size() == 1) {
-        isc_throw_3(MessageException, "No message ID", LOG_NO_MESSAGE_ID,
+        bundy_throw_3(MessageException, "No message ID", LOG_NO_MESSAGE_ID,
                     text, lineno_);
     }
 
     // Strip off the introducer and any leading space after that.
-    string message_line = isc::util::str::trim(text.substr(1));
+    string message_line = bundy::util::str::trim(text.substr(1));
 
     // Look for the first delimiter.
     size_t first_delim = message_line.find_first_of(delimiters);
     if (first_delim == string::npos) {
 
         // Just a single token in the line - this is not valid
-        isc_throw_3(MessageException, "No message text", LOG_NO_MESSAGE_TEXT,
+        bundy_throw_3(MessageException, "No message text", LOG_NO_MESSAGE_TEXT,
                     message_line, lineno_);
     }
 
@@ -252,11 +252,11 @@ MessageReader::parseMessage(const std::string& text, MessageReader::Mode mode) {
     string ident = prefix_ + message_line.substr(0, first_delim);
     if (prefix_.empty()) {
         if (invalidSymbol(ident)) {
-            isc_throw_3(MessageException, "Invalid message ID",
+            bundy_throw_3(MessageException, "Invalid message ID",
                         LOG_INVALID_MESSAGE_ID, ident, lineno_);
         }
     }
-    isc::util::str::uppercase(ident);
+    bundy::util::str::uppercase(ident);
 
     // Locate the start of the message text
     size_t first_text = message_line.find_first_not_of(delimiters, first_delim);
@@ -265,7 +265,7 @@ MessageReader::parseMessage(const std::string& text, MessageReader::Mode mode) {
         // ?? This happens if there are trailing delimiters, which should not
         // occur as we have stripped trailing spaces off the line.  Just treat
         // this as a single-token error for simplicity's sake.
-        isc_throw_3(MessageException, "No message text", LOG_NO_MESSAGE_TEXT,
+        bundy_throw_3(MessageException, "No message text", LOG_NO_MESSAGE_TEXT,
                     message_line, lineno_);
     }
 
@@ -284,4 +284,4 @@ MessageReader::parseMessage(const std::string& text, MessageReader::Mode mode) {
 }
 
 } // namespace log
-} // namespace isc
+} // namespace bundy

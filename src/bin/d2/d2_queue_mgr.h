@@ -25,7 +25,7 @@
 #include <boost/noncopyable.hpp>
 #include <deque>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 /// @brief Defines a queue of requests.
@@ -33,40 +33,40 @@ namespace d2 {
 typedef std::deque<dhcp_ddns::NameChangeRequestPtr> RequestQueue;
 
 /// @brief Thrown if the queue manager encounters a general error.
-class D2QueueMgrError : public isc::Exception {
+class D2QueueMgrError : public bundy::Exception {
 public:
     D2QueueMgrError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Thrown if the queue manager's receive handler is passed
 /// a failure result.
-class D2QueueMgrReceiveError : public isc::Exception {
+class D2QueueMgrReceiveError : public bundy::Exception {
 public:
     D2QueueMgrReceiveError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 
 /// @brief Thrown if the request queue is full when an enqueue is attempted.
-class D2QueueMgrQueueFull : public isc::Exception {
+class D2QueueMgrQueueFull : public bundy::Exception {
 public:
     D2QueueMgrQueueFull(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Thrown if the request queue empty and a read is attempted.
-class D2QueueMgrQueueEmpty : public isc::Exception {
+class D2QueueMgrQueueEmpty : public bundy::Exception {
 public:
     D2QueueMgrQueueEmpty(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Thrown if a queue index is beyond the end of the queue
-class D2QueueMgrInvalidIndex : public isc::Exception {
+class D2QueueMgrInvalidIndex : public bundy::Exception {
 public:
     D2QueueMgrInvalidIndex(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 
@@ -182,7 +182,7 @@ public:
     /// @param format is the wire format of the inbound requests.
     /// @param reuse_address enables IP address sharing when true
     /// It defaults to false.
-    void initUDPListener(const isc::asiolink::IOAddress& ip_address,
+    void initUDPListener(const bundy::asiolink::IOAddress& ip_address,
                          const uint32_t port,
                          const dhcp_ddns::NameChangeFormat format,
                          const bool reuse_address = false);
@@ -348,7 +348,7 @@ public:
 /// @brief Defines a pointer for manager instances.
 typedef boost::shared_ptr<D2QueueMgr> D2QueueMgrPtr;
 
-} // namespace isc::d2
-} // namespace isc
+} // namespace bundy::d2
+} // namespace bundy
 
 #endif

@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 
 using namespace std;
-using namespace isc::bench;
+using namespace bundy::bench;
 
 namespace {
 // Our "benchmark" simply sleeps for a short period, and reports a faked
@@ -42,7 +42,7 @@ public:
 };
 }
 
-namespace isc {
+namespace bundy {
 namespace bench {
 template <>
 void

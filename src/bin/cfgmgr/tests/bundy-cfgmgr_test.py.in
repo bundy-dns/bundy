@@ -21,7 +21,7 @@ import unittest
 import os
 import sys
 import bundy_config
-from isc.testutils.parse_args import OptsError, TestOptParser
+from bundy.testutils.parse_args import OptsError, TestOptParser
 
 class MyConfigManager:
     def __init__(self, path, filename, session=None, rename_config_file=False):

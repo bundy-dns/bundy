@@ -43,9 +43,9 @@
 #include <log/log_messages.h>
 #include <log/interprocess/interprocess_sync_null.h>
 
-using namespace isc::log;
+using namespace bundy::log;
 using namespace std;
-using isc::log::interprocess::InterprocessSyncNull;
+using bundy::log::interprocess::InterprocessSyncNull;
 
 // Print usage information
 
@@ -225,7 +225,7 @@ int main(int argc, char** argv) {
 
         case 's':   // Severity
             severity = optarg;
-            isc::util::str::uppercase(severity);
+            bundy::util::str::uppercase(severity);
             cur_spec.setSeverity(getSeverity(severity));
             break;
 
@@ -285,11 +285,11 @@ int main(int argc, char** argv) {
     // logger example can be used as a standalone program (which may not
     // have write access to a local state directory to create
     // lockfiles).
-    isc::log::Logger logger_ex(ROOT_NAME);
+    bundy::log::Logger logger_ex(ROOT_NAME);
     logger_ex.setInterprocessSync(new InterprocessSyncNull("logger"));
-    isc::log::Logger logger_alpha("alpha");
+    bundy::log::Logger logger_alpha("alpha");
     logger_alpha.setInterprocessSync(new InterprocessSyncNull("logger"));
-    isc::log::Logger logger_beta("beta");
+    bundy::log::Logger logger_beta("beta");
     logger_beta.setInterprocessSync(new InterprocessSyncNull("logger"));
 
     LOG_FATAL(logger_ex, LOG_WRITE_ERROR).arg("test1").arg("42");

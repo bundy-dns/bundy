@@ -52,11 +52,11 @@ packet processing. Hook points that are not specific to packet processing
  @subsection dhcpv6HooksBuffer6Receive buffer6_receive
 
  - @b Arguments:
-   - name: @b query6, type: isc::dhcp::Pkt6Ptr, direction: <b>in/out</b>
+   - name: @b query6, type: bundy::dhcp::Pkt6Ptr, direction: <b>in/out</b>
 
  - @b Description: This callout is executed when an incoming DHCPv6
    packet is received and the data stored in a buffer. The sole argument -
-   query6 - contains a pointer to an isc::dhcp::Pkt6 object that contains
+   query6 - contains a pointer to an bundy::dhcp::Pkt6 object that contains
    the received information stored in the data_ field. Basic information
    like protocol, source/destination addresses and ports are set, but
    the contents of the buffer have not yet been parsed.  That means that
@@ -78,11 +78,11 @@ packet processing. Hook points that are not specific to packet processing
  @subsection dhcpv6HooksPkt6Receive pkt6_receive
 
  - @b Arguments:
-   - name: @b query6, type: isc::dhcp::Pkt6Ptr, direction: <b>in/out</b>
+   - name: @b query6, type: bundy::dhcp::Pkt6Ptr, direction: <b>in/out</b>
 
  - @b Description: This callout is executed when an incoming DHCPv6
    packet is received and its content is parsed. The sole argument -
-   query6 - contains a pointer to an isc::dhcp::Pkt6 object that contains
+   query6 - contains a pointer to an bundy::dhcp::Pkt6 object that contains
    all information regarding incoming packet, including its source and
    destination addresses, the interface over which it was received, a list
    of all options present within and relay information.  All fields of
@@ -99,9 +99,9 @@ packet processing. Hook points that are not specific to packet processing
 @subsection dhcpv6HooksSubnet6Select subnet6_select
 
  - @b Arguments:
-   - name: @b query6, type: isc::dhcp::Pkt6Ptr, direction: <b>in/out</b>
-   - name: @b subnet6, type: isc::dhcp::Subnet6Ptr, direction: <b>in/out</b>
-   - name: @b subnet6collection, type: const isc::dhcp::Subnet6Collection *, direction: <b>in</b>
+   - name: @b query6, type: bundy::dhcp::Pkt6Ptr, direction: <b>in/out</b>
+   - name: @b subnet6, type: bundy::dhcp::Subnet6Ptr, direction: <b>in/out</b>
+   - name: @b subnet6collection, type: const bundy::dhcp::Subnet6Collection *, direction: <b>in</b>
 
  - @b Description: This callout is executed when a subnet is being
    selected for the incoming packet. All parameters, addresses and
@@ -118,14 +118,14 @@ packet processing. Hook points that are not specific to packet processing
 @subsection dhcpv6HooksLease6Select lease6_select
 
  - @b Arguments:
-   - name: @b subnet6, type: isc::dhcp::Subnet6Ptr, direction: <b>in</b>
+   - name: @b subnet6, type: bundy::dhcp::Subnet6Ptr, direction: <b>in</b>
    - name: @b fake_allocation, type: bool, direction: <b>in</b>
-   - name: @b lease6, type: isc::dhcp::Lease6Ptr, direction: <b>in/out</b>
+   - name: @b lease6, type: bundy::dhcp::Lease6Ptr, direction: <b>in/out</b>
 
  - @b Description: This callout is executed after the server engine
    has selected a lease for client's request but before the lease
    has been inserted into the database. Any modifications made to the
-   isc::dhcp::Lease6 object will be stored in the lease's record in the
+   bundy::dhcp::Lease6 object will be stored in the lease's record in the
    database. The callout should make sure that any modifications are
    sanity checked as the server will use that data as is with no further
    checking.\n\n The server processes lease requests for SOLICIT and
@@ -144,8 +144,8 @@ packet processing. Hook points that are not specific to packet processing
 @subsection dhcpv6HooksLease6Renew lease6_renew
 
  - @b Arguments:
-   - name: @b query6, type: isc::dhcp::PktPtr, direction: <b>in</b>
-   - name: @b lease6, type: isc::dhcp::Lease6Ptr, direction: <b>in/out</b>
+   - name: @b query6, type: bundy::dhcp::PktPtr, direction: <b>in</b>
+   - name: @b lease6, type: bundy::dhcp::Lease6Ptr, direction: <b>in/out</b>
    - name: @b ia_na, type: boost::shared_ptr<Option6IA>, direction: <b>in/out</b>
 
  - @b Description: This callout is executed when the server engine is
@@ -176,8 +176,8 @@ packet processing. Hook points that are not specific to packet processing
 @subsection dhcpv6HooksLease6Release lease6_release
 
  - @b Arguments:
-   - name: @b query6, type: isc::dhcp::PktPtr, direction: <b>in</b>
-   - name: @b lease6, type: isc::dhcp::Lease6Ptr, direction: <b>in/out</b>
+   - name: @b query6, type: bundy::dhcp::PktPtr, direction: <b>in</b>
+   - name: @b lease6, type: bundy::dhcp::Lease6Ptr, direction: <b>in/out</b>
 
  - @b Description: This callout is executed when the server engine is
    about to release an existing lease. The client's request is provided
@@ -194,11 +194,11 @@ packet processing. Hook points that are not specific to packet processing
 @subsection dhcpv6HooksPkt6Send pkt6_send
 
  - @b Arguments:
-   - name: @b response6, type: isc::dhcp::Pkt6Ptr, direction: <b>in/out</b>
+   - name: @b response6, type: bundy::dhcp::Pkt6Ptr, direction: <b>in/out</b>
 
  - @b Description: This callout is executed when server's response
    is about to be send back to the client. The sole argument - response6 -
-   contains a pointer to an isc::dhcp::Pkt6 object that contains the
+   contains a pointer to an bundy::dhcp::Pkt6 object that contains the
    packet, with set source and destination addresses, interface over which
    it will be send, list of all options and relay information.  All fields
    of the Pkt6 object can be modified at this time.  It should be noted that
@@ -217,12 +217,12 @@ packet processing. Hook points that are not specific to packet processing
 @subsection dhcpv6HooksBuffer6Send buffer6_send
 
  - @b Arguments:
-   - name: @b response6, type: isc::dhcp::Pkt6Ptr, direction: <b>in/out</b>
+   - name: @b response6, type: bundy::dhcp::Pkt6Ptr, direction: <b>in/out</b>
 
  - @b Description: This callout is executed when server's response is
    assembled into binary form and is about to be send back to the
    client. The sole argument - response6 - contains a pointer to an
-   isc::dhcp::Pkt6 object that contains the packet, with set source and
+   bundy::dhcp::Pkt6 object that contains the packet, with set source and
    destination addresses, interface over which it will be sent, list of
    all options and relay information. All options are already encoded
    in bufferOut_ field. It doesn't make sense to modify anything but the

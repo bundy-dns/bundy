@@ -18,7 +18,7 @@
 
 using namespace asio;
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 const char* valid_d2_config = "{ "
@@ -60,7 +60,7 @@ void
 DStubProcess::init() {
     if (SimFailure::shouldFailOn(SimFailure::ftProcessInit)) {
         // Simulates a failure to instantiate the process.
-        isc_throw(DProcessBaseError, "DStubProcess simulated init() failure");
+        bundy_throw(DProcessBaseError, "DStubProcess simulated init() failure");
     }
 };
 
@@ -77,47 +77,47 @@ DStubProcess::run() {
         try {
             io_service->run_one();
         } catch (const std::exception& ex) {
-            isc_throw (DProcessBaseError,
+            bundy_throw (DProcessBaseError,
                 std::string("Process run method failed:") + ex.what());
         }
     }
 };
 
-isc::data::ConstElementPtr
-DStubProcess::shutdown(isc::data::ConstElementPtr /* args */) {
+bundy::data::ConstElementPtr
+DStubProcess::shutdown(bundy::data::ConstElementPtr /* args */) {
     if (SimFailure::shouldFailOn(SimFailure::ftProcessShutdown)) {
         // Simulates a failure during shutdown process.
-        isc_throw(DProcessBaseError, "DStubProcess simulated shutdown failure");
+        bundy_throw(DProcessBaseError, "DStubProcess simulated shutdown failure");
     }
 
     setShutdownFlag(true);
     stopIOService();
-    return (isc::config::createAnswer(0, "Shutdown inititiated."));
+    return (bundy::config::createAnswer(0, "Shutdown inititiated."));
 }
 
-isc::data::ConstElementPtr
-DStubProcess::configure(isc::data::ConstElementPtr /*config_set*/) {
+bundy::data::ConstElementPtr
+DStubProcess::configure(bundy::data::ConstElementPtr /*config_set*/) {
     if (SimFailure::shouldFailOn(SimFailure::ftProcessConfigure)) {
         // Simulates a process configure failure.
-        return (isc::config::createAnswer(1,
+        return (bundy::config::createAnswer(1,
                 "Simulated process configuration error."));
     }
 
-    return (isc::config::createAnswer(0, "Configuration accepted."));
+    return (bundy::config::createAnswer(0, "Configuration accepted."));
 }
 
-isc::data::ConstElementPtr
+bundy::data::ConstElementPtr
 DStubProcess::command(const std::string& command,
-                      isc::data::ConstElementPtr /* args */) {
-    isc::data::ConstElementPtr answer;
+                      bundy::data::ConstElementPtr /* args */) {
+    bundy::data::ConstElementPtr answer;
     if (SimFailure::shouldFailOn(SimFailure::ftProcessCommand)) {
         // Simulates a process command execution failure.
-        answer = isc::config::createAnswer(COMMAND_ERROR,
+        answer = bundy::config::createAnswer(COMMAND_ERROR,
                                           "SimFailure::ftProcessCommand");
     } else if (command.compare(stub_proc_command_) == 0) {
-        answer = isc::config::createAnswer(COMMAND_SUCCESS, "Command accepted");
+        answer = bundy::config::createAnswer(COMMAND_SUCCESS, "Command accepted");
     } else {
-        answer = isc::config::createAnswer(COMMAND_INVALID,
+        answer = bundy::config::createAnswer(COMMAND_INVALID,
                                            "Unrecognized command:" + command);
     }
 
@@ -189,18 +189,18 @@ DProcessBase* DStubController::createProcess() {
     return (new DStubProcess(getAppName().c_str(), getIOService()));
 }
 
-isc::data::ConstElementPtr
+bundy::data::ConstElementPtr
 DStubController::customControllerCommand(const std::string& command,
-                                     isc::data::ConstElementPtr /* args */) {
-    isc::data::ConstElementPtr answer;
+                                     bundy::data::ConstElementPtr /* args */) {
+    bundy::data::ConstElementPtr answer;
     if (SimFailure::shouldFailOn(SimFailure::ftControllerCommand)) {
         // Simulates command failing to execute.
-        answer = isc::config::createAnswer(COMMAND_ERROR,
+        answer = bundy::config::createAnswer(COMMAND_ERROR,
                                           "SimFailure::ftControllerCommand");
     } else if (command.compare(stub_ctl_command_) == 0) {
-        answer = isc::config::createAnswer(COMMAND_SUCCESS, "Command accepted");
+        answer = bundy::config::createAnswer(COMMAND_SUCCESS, "Command accepted");
     } else {
-        answer = isc::config::createAnswer(COMMAND_INVALID,
+        answer = bundy::config::createAnswer(COMMAND_INVALID,
                                            "Unrecognized command:" + command);
     }
 
@@ -227,10 +227,10 @@ TestParser::~TestParser(){
 }
 
 void
-TestParser::build(isc::data::ConstElementPtr new_config) {
+TestParser::build(bundy::data::ConstElementPtr new_config) {
     if (SimFailure::shouldFailOn(SimFailure::ftElementBuild)) {
         // Simulates an error during element data parsing.
-        isc_throw (DCfgMgrBaseError, "Simulated build exception");
+        bundy_throw (DCfgMgrBaseError, "Simulated build exception");
     }
 
     value_ = new_config;
@@ -246,7 +246,7 @@ TestParser::commit() {
 
 //************************** DStubContext *************************
 
-DStubContext::DStubContext(): extra_values_(new isc::dhcp::Uint32Storage()) {
+DStubContext::DStubContext(): extra_values_(new bundy::dhcp::Uint32Storage()) {
 }
 
 DStubContext::~DStubContext() {
@@ -257,7 +257,7 @@ DStubContext::getExtraParam(const std::string& name, uint32_t& value) {
     value = extra_values_->getParam(name);
 }
 
-isc::dhcp::Uint32StoragePtr
+bundy::dhcp::Uint32StoragePtr
 DStubContext::getExtraStorage() {
     return (extra_values_);
 }
@@ -268,7 +268,7 @@ DStubContext::clone() {
 }
 
 DStubContext::DStubContext(const DStubContext& rhs): DCfgContextBase(rhs),
-    extra_values_(new isc::dhcp::Uint32Storage(*(rhs.extra_values_))) {
+    extra_values_(new bundy::dhcp::Uint32Storage(*(rhs.extra_values_))) {
 }
 
 //************************** DStubCfgMgr *************************
@@ -280,30 +280,30 @@ DStubCfgMgr::DStubCfgMgr()
 DStubCfgMgr::~DStubCfgMgr() {
 }
 
-isc::dhcp::ParserPtr
+bundy::dhcp::ParserPtr
 DStubCfgMgr::createConfigParser(const std::string& element_id) {
-    isc::dhcp::DhcpConfigParser* parser = NULL;
+    bundy::dhcp::DhcpConfigParser* parser = NULL;
     DStubContextPtr context =
                     boost::dynamic_pointer_cast<DStubContext>(getContext());
 
     if (element_id == "bool_test") {
-        parser = new isc::dhcp::BooleanParser(element_id,
+        parser = new bundy::dhcp::BooleanParser(element_id,
                                               context->getBooleanStorage());
     } else if (element_id == "uint32_test") {
-        parser = new isc::dhcp::Uint32Parser(element_id,
+        parser = new bundy::dhcp::Uint32Parser(element_id,
                                              context->getUint32Storage());
     } else if (element_id == "string_test") {
-        parser = new isc::dhcp::StringParser(element_id,
+        parser = new bundy::dhcp::StringParser(element_id,
                                              context->getStringStorage());
     } else if (element_id == "extra_test") {
-        parser = new isc::dhcp::Uint32Parser(element_id,
+        parser = new bundy::dhcp::Uint32Parser(element_id,
                                              context->getExtraStorage());
     } else {
         // Fail only if SimFailure dictates we should.  This makes it easier
         // to test parse ordering, by permitting a wide range of element ids
         // to "succeed" without specifically supporting them.
         if (SimFailure::shouldFailOn(SimFailure::ftElementUnknown)) {
-            isc_throw(DCfgMgrBaseError, "Configuration parameter not supported: "
+            bundy_throw(DCfgMgrBaseError, "Configuration parameter not supported: "
                       << element_id);
         }
 
@@ -311,9 +311,9 @@ DStubCfgMgr::createConfigParser(const std::string& element_id) {
         parser = new TestParser(element_id);
     }
 
-    return (isc::dhcp::ParserPtr(parser));
+    return (bundy::dhcp::ParserPtr(parser));
 }
 
 
-}; // namespace isc::d2
-}; // namespace isc
+}; // namespace bundy::d2
+}; // namespace bundy

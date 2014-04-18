@@ -22,7 +22,7 @@
 
 #include <cstring>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 LabelSequence::LabelSequence(const void* buf) {
@@ -32,7 +32,7 @@ LabelSequence::LabelSequence(const void* buf) {
     // unsafe. Except for a programming mistake, this case should not
     // happen.
     if (buf == NULL) {
-        isc_throw(BadValue,
+        bundy_throw(BadValue,
                   "Null pointer passed to LabelSequence constructor");
     }
 #endif
@@ -43,7 +43,7 @@ LabelSequence::LabelSequence(const void* buf) {
 
 #ifdef ENABLE_DEBUG
     if (offsets_len == 0 || offsets_len > Name::MAX_LABELS) {
-        isc_throw(BadValue,
+        bundy_throw(BadValue,
                   "Bad offsets len in serialized LabelSequence data: "
                   << static_cast<unsigned int>(offsets_len));
     }
@@ -58,7 +58,7 @@ LabelSequence::LabelSequence(const void* buf) {
     const uint8_t* dp = data_;
     for (size_t cur_offset = 0; cur_offset < offsets_len; ++cur_offset) {
         if (dp - data_ != offsets_[cur_offset] || *dp > Name::MAX_LABELLEN) {
-            isc_throw(BadValue,
+            bundy_throw(BadValue,
                       "Broken offset or name data in serialized "
                       "LabelSequence data");
         }
@@ -120,7 +120,7 @@ void
 LabelSequence::serialize(void* buf, size_t buf_len) const {
     const size_t expected_size = getSerializedLength();
     if (expected_size > buf_len) {
-        isc_throw(BadValue, "buffer too short for LabelSequence::serialize");
+        bundy_throw(BadValue, "buffer too short for LabelSequence::serialize");
     }
 
     const size_t offsets_len = getLabelCount();
@@ -132,7 +132,7 @@ LabelSequence::serialize(void* buf, size_t buf_len) const {
     const size_t ndata_len = getDataLength();
     if (!isOutOfRange(offsets_, offsets_ + offsets_len, bp, buf_len) ||
         !isOutOfRange(data_, data_ + ndata_len, bp, buf_len)) {
-        isc_throw(BadValue, "serialize would break the source sequence");
+        bundy_throw(BadValue, "serialize would break the source sequence");
     }
 
     *bp++ = offsets_len;
@@ -164,8 +164,8 @@ LabelSequence::equals(const LabelSequence& other, bool case_sensitive) const {
     for (size_t i = 0; i < len; ++i) {
         const uint8_t ch = data[i];
         const uint8_t other_ch = other_data[i];
-        if (isc::dns::name::internal::maptolower[ch] !=
-            isc::dns::name::internal::maptolower[other_ch]) {
+        if (bundy::dns::name::internal::maptolower[ch] !=
+            bundy::dns::name::internal::maptolower[other_ch]) {
             return (false);
         }
     }
@@ -211,9 +211,9 @@ LabelSequence::compare(const LabelSequence& other,
                 chdiff = static_cast<int>(label1) - static_cast<int>(label2);
             } else {
                 chdiff = static_cast<int>(
-                    isc::dns::name::internal::maptolower[label1]) -
+                    bundy::dns::name::internal::maptolower[label1]) -
                     static_cast<int>(
-                        isc::dns::name::internal::maptolower[label2]);
+                        bundy::dns::name::internal::maptolower[label2]);
             }
 
             if (chdiff != 0) {
@@ -249,7 +249,7 @@ LabelSequence::compare(const LabelSequence& other,
 void
 LabelSequence::stripLeft(size_t i) {
     if (i >= getLabelCount()) {
-        isc_throw(OutOfRange, "Cannot strip to zero or less labels; " << i <<
+        bundy_throw(OutOfRange, "Cannot strip to zero or less labels; " << i <<
                               " (labelcount: " << getLabelCount() << ")");
     }
     first_label_ += i;
@@ -258,7 +258,7 @@ LabelSequence::stripLeft(size_t i) {
 void
 LabelSequence::stripRight(size_t i) {
     if (i >= getLabelCount()) {
-        isc_throw(OutOfRange, "Cannot strip to zero or less labels; " << i <<
+        bundy_throw(OutOfRange, "Cannot strip to zero or less labels; " << i <<
                               " (labelcount: " << getLabelCount() << ")");
     }
     last_label_ -= i;
@@ -281,7 +281,7 @@ LabelSequence::getHash(bool case_sensitive) const {
     while (length > 0) {
         const uint8_t c = *s++;
         boost::hash_combine(hash_val, case_sensitive ? c :
-                            isc::dns::name::internal::maptolower[c]);
+                            bundy::dns::name::internal::maptolower[c]);
         --length;
     }
     return (hash_val);
@@ -353,7 +353,7 @@ LabelSequence::toText(bool omit_final_dot) const {
                 }
             }
         } else {
-            isc_throw(BadLabelType, "unknown label type in name data");
+            bundy_throw(BadLabelType, "unknown label type in name data");
         }
     }
 
@@ -390,15 +390,15 @@ LabelSequence::extend(const LabelSequence& labels,
 
     // Sanity checks
     if (data_ != buf || offsets_ != &buf[Name::MAX_WIRE]) {
-        isc_throw(BadValue,
+        bundy_throw(BadValue,
                   "extend() called with unrelated buffer");
     }
     if (data_pos + data_len > Name::MAX_WIRE) {
-        isc_throw(BadValue,
+        bundy_throw(BadValue,
                   "extend() would exceed maximum wire length");
     }
     if (label_count + append_label_count > Name::MAX_LABELS) {
-        isc_throw(BadValue,
+        bundy_throw(BadValue,
                   "extend() would exceed maximum number of labels");
     }
 
@@ -421,4 +421,4 @@ operator<<(std::ostream& os, const LabelSequence& label_sequence) {
 }
 
 } // end namespace dns
-} // end namespace isc
+} // end namespace bundy

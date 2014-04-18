@@ -19,7 +19,7 @@
 
 #include <cstddef> // for NULL
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace rdata {
 
@@ -55,6 +55,6 @@ private:
 
 } // namespace rdata
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 
 #endif // DNS_RDATA_PIMPL_HOLDER_H

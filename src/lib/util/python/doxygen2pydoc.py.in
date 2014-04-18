@@ -39,11 +39,11 @@ HOW TO USE IT
 
   This is a bit tricky.  You'll probably need to do manual search.
   For example, to identify the xml file for a C++ class
-  isc::datasrc::memory::ZoneWriter, you might do:
+  bundy::datasrc::memory::ZoneWriter, you might do:
 
   % cd bundy/doc/html/xml
   % grep ZoneWriter *.xml | grep 'kind="class"'
-  index.xml:  <compound refid="d4/d3c/classisc_1_1datasrc_1_1memory_1_1ZoneWriter" kind="class"><name>isc::datasrc::memory::ZoneWriter</name>
+  index.xml:  <compound refid="d4/d3c/classisc_1_1datasrc_1_1memory_1_1ZoneWriter" kind="class"><name>bundy::datasrc::memory::ZoneWriter</name>
 
   In this case the file under the d4/d3c directory (with .xml suffix) would
   be the file you're looking for.
@@ -171,7 +171,7 @@ INTERNAL MEMO (incomplete, and not very unredable yet)
 This simplified utility assumes the following structure:
 ...
   <compounddef ...>
-    <compoundname>isc::dns::TSIGError</compoundname>
+    <compoundname>bundy::dns::TSIGError</compoundname>
     <sectiondef kind="user-defined">
       constructor, destructor
     </sectiondef>

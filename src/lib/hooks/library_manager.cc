@@ -28,7 +28,7 @@
 
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace hooks {
 
 
@@ -39,7 +39,7 @@ LibraryManager::LibraryManager(const std::string& name, int index,
           library_name_(name)
 {
     if (!manager) {
-        isc_throw(NoCalloutManager, "must specify a CalloutManager when "
+        bundy_throw(NoCalloutManager, "must specify a CalloutManager when "
                   "instantiating a LibraryManager object");
     }
 }
@@ -180,7 +180,7 @@ LibraryManager::runLoad() {
         try {
             manager_->setLibraryIndex(index_);
             status = (*pc.loadPtr())(manager_->getLibraryHandle());
-        } catch (const isc::Exception& ex) {
+        } catch (const bundy::Exception& ex) {
             LOG_ERROR(hooks_logger, HOOKS_LOAD_FRAMEWORK_EXCEPTION)
                 .arg(library_name_).arg(ex.what());
             return (false);
@@ -222,7 +222,7 @@ LibraryManager::runUnload() {
         int status = -1;
         try {
             status = (*pc.unloadPtr())();
-        } catch (const isc::Exception& ex) {
+        } catch (const bundy::Exception& ex) {
             LOG_ERROR(hooks_logger, HOOKS_UNLOAD_FRAMEWORK_EXCEPTION)
                 .arg(library_name_).arg(ex.what());
             return (false);
@@ -359,4 +359,4 @@ LibraryManager::validateLibrary(const std::string& name) {
 }
 
 } // namespace hooks
-} // namespace isc
+} // namespace bundy

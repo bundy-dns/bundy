@@ -24,7 +24,7 @@
 
 #include <boost/optional.hpp>
 
-namespace isc {
+namespace bundy {
 namespace util {
 class InputBuffer;
 class OutputBuffer;
@@ -49,10 +49,10 @@ public:
 /// \brief A standard DNS module exception that is thrown if an RRClass object
 /// is being constructed from a incomplete (too short) wire-format data.
 ///
-class IncompleteRRClass : public isc::dns::Exception {
+class IncompleteRRClass : public bundy::dns::Exception {
 public:
     IncompleteRRClass(const char* file, size_t line, const char* what) :
-        isc::dns::Exception(file, line, what) {}
+        bundy::dns::Exception(file, line, what) {}
 };
 
 ///
@@ -137,7 +137,7 @@ public:
     /// an exception of class \c IncompleteRRClass will be thrown.
     ///
     /// \param buffer A buffer storing the wire format data.
-    explicit RRClass(isc::util::InputBuffer& buffer);
+    explicit RRClass(bundy::util::InputBuffer& buffer);
 
     /// A separate factory of RRClass from text.
     ///
@@ -217,7 +217,7 @@ public:
     ///
     /// \param renderer DNS message rendering context that encapsulates the
     /// output buffer in which the RRClass is to be stored.
-    void toWire(isc::util::OutputBuffer& buffer) const;
+    void toWire(bundy::util::OutputBuffer& buffer) const;
     //@}
 
     ///

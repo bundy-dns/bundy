@@ -22,7 +22,7 @@
 #include <dns/rcode.h>
 #include <dns/tsigerror.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace {
 const char* const tsigerror_text[] = {
@@ -34,7 +34,7 @@ const char* const tsigerror_text[] = {
 
 TSIGError::TSIGError(Rcode rcode) : code_(rcode.getCode()) {
     if (code_ > MAX_RCODE_FOR_TSIGERROR) {
-        isc_throw(OutOfRange, "Invalid RCODE for TSIG Error: " << rcode);
+        bundy_throw(OutOfRange, "Invalid RCODE for TSIG Error: " << rcode);
     }
 }
 
@@ -65,4 +65,4 @@ operator<<(std::ostream& os, const TSIGError& error) {
     return (os << error.toText());
 }
 } // namespace dns
-} // namespace isc
+} // namespace bundy

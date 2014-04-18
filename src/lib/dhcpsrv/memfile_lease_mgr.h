@@ -26,7 +26,7 @@
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/composite_key.hpp>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief Concrete implementation of a lease database backend using flat file.
@@ -113,7 +113,7 @@ public:
     /// @param addr An address of the searched lease.
     ///
     /// @return a collection of leases
-    virtual Lease4Ptr getLease4(const isc::asiolink::IOAddress& addr) const;
+    virtual Lease4Ptr getLease4(const bundy::asiolink::IOAddress& addr) const;
 
     /// @brief Returns existing IPv4 leases for specified hardware address.
     ///
@@ -125,7 +125,7 @@ public:
     /// @param hwaddr hardware address of the client
     ///
     /// @return lease collection
-    virtual Lease4Collection getLease4(const isc::dhcp::HWAddr& hwaddr) const;
+    virtual Lease4Collection getLease4(const bundy::dhcp::HWAddr& hwaddr) const;
 
     /// @brief Returns existing IPv4 lease for specified hardware address
     ///        and a subnet
@@ -188,7 +188,7 @@ public:
     ///
     /// @return smart pointer to the lease (or NULL if a lease is not found)
     virtual Lease6Ptr getLease6(Lease::Type type,
-                                const isc::asiolink::IOAddress& addr) const;
+                                const bundy::asiolink::IOAddress& addr) const;
 
     /// @brief Returns existing IPv6 lease for a given DUID+IA combination
     ///
@@ -242,7 +242,7 @@ public:
     ///        IPv6.)
     ///
     /// @return true if deletion was successful, false if no such lease exists
-    virtual bool deleteLease(const isc::asiolink::IOAddress& addr);
+    virtual bool deleteLease(const bundy::asiolink::IOAddress& addr);
 
     /// @brief Return backend type
     ///
@@ -322,7 +322,7 @@ protected:
     /// This method loads all DHCPv4 leases from a file to memory. It removes
     /// existing leases before reading a file.
     ///
-    /// @throw isc::DbOperationError If failed to read a lease from the lease
+    /// @throw bundy::DbOperationError If failed to read a lease from the lease
     /// file.
     void load4();
 
@@ -344,7 +344,7 @@ protected:
     /// This method loads all DHCPv6 leases from a file to memory. It removes
     /// existing leases before reading a file.
     ///
-    /// @throw isc::DbOperationError If failed to read a lease from the lease
+    /// @throw bundy::DbOperationError If failed to read a lease from the lease
     /// file.
     void load6();
 
@@ -390,7 +390,7 @@ protected:
             // This index sorts leases by IPv6 addresses represented as
             // IOAddress objects.
             boost::multi_index::ordered_unique<
-                boost::multi_index::member<Lease, isc::asiolink::IOAddress, &Lease::addr_>
+                boost::multi_index::member<Lease, bundy::asiolink::IOAddress, &Lease::addr_>
             >,
 
             // Specification of the second index starts here.
@@ -425,7 +425,7 @@ protected:
             boost::multi_index::ordered_unique<
                 // The IPv4 address are held in addr_ members that belong to
                 // Lease class.
-                boost::multi_index::member<Lease, isc::asiolink::IOAddress, &Lease::addr_>
+                boost::multi_index::member<Lease, bundy::asiolink::IOAddress, &Lease::addr_>
             >,
 
             // Specification of the second index starts here.
@@ -496,7 +496,7 @@ protected:
 
 };
 
-}; // end of isc::dhcp namespace
-}; // end of isc namespace
+}; // end of bundy::dhcp namespace
+}; // end of bundy namespace
 
 #endif // MEMFILE_LEASE_MGR

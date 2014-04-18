@@ -48,8 +48,8 @@
 #include <exceptions/exceptions.h>
 
 using namespace std;
-using namespace isc::cc;
-using namespace isc::data;
+using namespace bundy::cc;
+using namespace bundy::data;
 
 // some of the asio names conflict with socket API system calls
 // (e.g. write(2)) so we don't import the entire asio namespace.
@@ -68,7 +68,7 @@ setResult(boost::optional<asio::error_code>* result,
 }
 }
 
-namespace isc {
+namespace bundy {
 namespace cc {
 
 class SessionImpl {
@@ -126,11 +126,11 @@ SessionImpl::establish(const char& socket_file) {
         LOG_DEBUG(logger, DBG_TRACE_BASIC, CC_ESTABLISHED);
     } catch(const asio::system_error& se) {
         LOG_FATAL(logger, CC_CONN_ERROR).arg(se.what());
-        isc_throw(SessionError, se.what());
+        bundy_throw(SessionError, se.what());
     }
     if (error_) {
         LOG_FATAL(logger, CC_NO_MSGQ).arg(error_.message());
-        isc_throw(SessionError, "Unable to connect to message queue: " <<
+        bundy_throw(SessionError, "Unable to connect to message queue: " <<
                   error_.message());
     }
 }
@@ -148,7 +148,7 @@ SessionImpl::writeData(const void* data, size_t datalen) {
         asio::write(socket_, asio::buffer(data, datalen));
     } catch (const asio::system_error& asio_ex) {
         LOG_FATAL(logger, CC_WRITE_ERROR).arg(asio_ex.what());
-        isc_throw(SessionError, "ASIO write failed: " << asio_ex.what());
+        bundy_throw(SessionError, "ASIO write failed: " << asio_ex.what());
     }
 }
 
@@ -160,7 +160,7 @@ SessionImpl::readDataLength() {
         readData(&data_length_, sizeof(data_length_));
         if (data_length_ == 0) {
             LOG_ERROR(logger, CC_LENGTH_NOT_READY);
-            isc_throw(SessionError, "ASIO read: data length is not ready");
+            bundy_throw(SessionError, "ASIO read: data length is not ready");
         }
         ret_len = ntohl(data_length_);
     }
@@ -209,11 +209,11 @@ SessionImpl::readData(void* data, size_t datalen) {
         if (*read_result) {
             if (*read_result == asio::error::operation_aborted) {
                 LOG_ERROR(logger, CC_TIMEOUT);
-                isc_throw(SessionTimeout,
+                bundy_throw(SessionTimeout,
                           "Timeout while reading data from cc session");
             } else {
                 LOG_ERROR(logger, CC_READ_ERROR).arg(read_result->message());
-                isc_throw(SessionError,
+                bundy_throw(SessionError,
                           "Error while reading data from cc session: " <<
                           read_result->message());
             }
@@ -222,7 +222,7 @@ SessionImpl::readData(void* data, size_t datalen) {
         // to hide ASIO specific exceptions, we catch them explicitly
         // and convert it to SessionError.
         LOG_FATAL(logger, CC_READ_EXCEPTION).arg(asio_ex.what());
-        isc_throw(SessionError, "ASIO read failed: " << asio_ex.what());
+        bundy_throw(SessionError, "ASIO read failed: " << asio_ex.what());
     }
 }
 
@@ -246,12 +246,12 @@ SessionImpl::internalRead(const asio::error_code& error,
         data_length_ = ntohl(data_length_);
         if (data_length_ == 0) {
             LOG_ERROR(logger, CC_ZERO_LENGTH);
-            isc_throw(SessionError, "Invalid message length (0)");
+            bundy_throw(SessionError, "Invalid message length (0)");
         }
         user_handler_();
     } else {
         LOG_ERROR(logger, CC_ASYNC_READ_FAILED).arg(error.value());
-        isc_throw(SessionError, "asynchronous read failed");
+        bundy_throw(SessionError, "asynchronous read failed");
     }
 }
 
@@ -260,7 +260,7 @@ SessionImpl::getSocketDesc() {
     /// @todo boost 1.42 uses native() method, but it is deprecated
     /// in 1.49 and native_handle() is recommended instead
     if (!socket_.is_open()) {
-        isc_throw(InvalidOperation, "Can't return socket descriptor: no socket opened.");
+        bundy_throw(InvalidOperation, "Can't return socket descriptor: no socket opened.");
     }
     return socket_.native();
 }
@@ -407,7 +407,7 @@ Session::recvmsg(ConstElementPtr& env, ConstElementPtr& msg,
     unsigned short header_length = ntohs(header_length_net);
     if (header_length > length || length < 2) {
         LOG_ERROR(logger, CC_INVALID_LENGTHS).arg(length).arg(header_length);
-        isc_throw(SessionError, "Length parameters invalid: total=" << length
+        bundy_throw(SessionError, "Length parameters invalid: total=" << length
                   << ", header=" << header_length);
     }
 

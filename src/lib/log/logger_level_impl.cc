@@ -28,10 +28,10 @@ using namespace log4cplus;
 using namespace std;
 
 namespace {
-isc::log::Logger logger("log");
+bundy::log::Logger logger("log");
 }
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 // Convert BUNDY level to a log4cplus logging level.
@@ -75,7 +75,7 @@ LoggerLevelImpl::convertFromBindLevel(const Level& level) {
 
         // Can do a table lookup to speed things up.  There is no need to check
         // that the index is out of range.  That the variable is of type
-        // isc::log::Severity ensures that it must be one of the Severity enum
+        // bundy::log::Severity ensures that it must be one of the Severity enum
         // members - conversion of a numeric value to an enum is not permitted.
         return (log4cplus_levels[level.severity]);
     }
@@ -216,4 +216,4 @@ LoggerLevelImpl::init() {
 }
 
 } // namespace log
-} // namespace isc
+} // namespace bundy

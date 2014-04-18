@@ -24,9 +24,9 @@
 #include "cache_test_messagefromfile.h"
 #include "cache_test_sectioncount.h"
 
-using namespace isc::cache;
-using namespace isc;
-using namespace isc::dns;
+using namespace bundy::cache;
+using namespace bundy;
+using namespace bundy::dns;
 using namespace std;
 
 static uint32_t MAX_UINT32 = numeric_limits<uint32_t>::max();
@@ -37,7 +37,7 @@ namespace {
 /// its internals.
 class DerivedMessageEntry: public MessageEntry {
 public:
-    DerivedMessageEntry(const isc::dns::Message& message,
+    DerivedMessageEntry(const bundy::dns::Message& message,
                         const RRsetCachePtr& rrset_cache_,
                         const RRsetCachePtr& negative_soa_cache_):
              MessageEntry(message, rrset_cache_, negative_soa_cache_)

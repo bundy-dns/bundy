@@ -16,7 +16,7 @@
 #include <dhcp/classify.h>
 #include <gtest/gtest.h>
 
-using namespace isc::dhcp;
+using namespace bundy::dhcp;
 
 // Trivial test for now as ClientClass is a std::string.
 TEST(ClassifyTest, ClientClass) {

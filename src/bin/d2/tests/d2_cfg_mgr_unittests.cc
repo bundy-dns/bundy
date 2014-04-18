@@ -22,8 +22,8 @@
 #include <gtest/gtest.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::d2;
+using namespace bundy;
+using namespace bundy::d2;
 
 namespace {
 
@@ -54,7 +54,7 @@ public:
 /// Verifies that the BUNDY DHCP-DDNS configuration specification file
 //  is valid.
 TEST(D2SpecTest, basicSpec) {
-    ASSERT_NO_THROW(isc::config::
+    ASSERT_NO_THROW(bundy::config::
                     moduleSpecFromFile(specfile("dhcp-ddns.spec")));
 }
 
@@ -172,7 +172,7 @@ public:
     TSIGKeyInfoMapPtr keys_;
 
     /// @brief Pointer to the current parser instance.
-    isc::dhcp::ParserPtr parser_;
+    bundy::dhcp::ParserPtr parser_;
 };
 
 /// @brief Test fixture class for testing DnsServerInfo parsing.
@@ -199,7 +199,7 @@ public:
     DnsServerInfoStoragePtr servers_;
 
     /// @brief Pointer to the current parser instance.
-    isc::dhcp::ParserPtr parser_;
+    bundy::dhcp::ParserPtr parser_;
 };
 
 
@@ -242,7 +242,7 @@ public:
     TSIGKeyInfoMapPtr keys_;
 
     /// @brief Pointer to the current parser instance.
-    isc::dhcp::ParserPtr parser_;
+    bundy::dhcp::ParserPtr parser_;
 };
 
 /// @brief Tests the enforcement of data validation when parsing TSIGKeyInfos.
@@ -343,7 +343,7 @@ TEST_F(TSIGKeyInfoTest, invalidTSIGKeyList) {
     ASSERT_TRUE(fromJSON(config));
 
     // Create the list parser.
-    isc::dhcp::ParserPtr parser;
+    bundy::dhcp::ParserPtr parser;
     ASSERT_NO_THROW(parser.reset(new TSIGKeyInfoListParser("test", keys_)));
 
     // Verify that the list builds without errors.
@@ -376,7 +376,7 @@ TEST_F(TSIGKeyInfoTest, duplicateTSIGKey) {
     ASSERT_TRUE(fromJSON(config));
 
     // Create the list parser.
-    isc::dhcp::ParserPtr parser;
+    bundy::dhcp::ParserPtr parser;
     ASSERT_NO_THROW(parser.reset(new TSIGKeyInfoListParser("test", keys_)));
 
     // Verify that the list builds without errors.
@@ -409,7 +409,7 @@ TEST_F(TSIGKeyInfoTest, validTSIGKeyList) {
 
     // Verify that the list builds and commits without errors.
     // Create the list parser.
-    isc::dhcp::ParserPtr parser;
+    bundy::dhcp::ParserPtr parser;
     ASSERT_NO_THROW(parser.reset(new TSIGKeyInfoListParser("test", keys_)));
     ASSERT_NO_THROW(parser->build(config_set_));
     ASSERT_NO_THROW(parser->commit());
@@ -470,7 +470,7 @@ TEST_F(DnsServerInfoTest, invalidEntry) {
     config = "{ \"ip_address\": \"192.168.5.6\" ,"
              "  \"port\": -100 }";
     ASSERT_TRUE(fromJSON(config));
-    EXPECT_THROW (parser_->build(config_set_), isc::BadValue);
+    EXPECT_THROW (parser_->build(config_set_), bundy::BadValue);
 }
 
 
@@ -551,7 +551,7 @@ TEST_F(ConfigParseTest, invalidServerList) {
 
     // Create the server storage and list parser.
     DnsServerInfoStoragePtr servers(new DnsServerInfoStorage());
-    isc::dhcp::ParserPtr parser;
+    bundy::dhcp::ParserPtr parser;
     ASSERT_NO_THROW(parser.reset(new DnsServerInfoListParser("test", servers)));
 
     // Verify that the list builds without errors.
@@ -572,7 +572,7 @@ TEST_F(ConfigParseTest, validServerList) {
 
     // Create the server storage and list parser.
     DnsServerInfoStoragePtr servers(new DnsServerInfoStorage());
-    isc::dhcp::ParserPtr parser;
+    bundy::dhcp::ParserPtr parser;
     ASSERT_NO_THROW(parser.reset(new DnsServerInfoListParser("test", servers)));
 
     // Verfiy that the list builds and commits without error.
@@ -609,7 +609,7 @@ TEST_F(ConfigParseTest, validServerList) {
 TEST_F(DdnsDomainTest, invalidDdnsDomainEntry) {
     // Verify that attempting to construct the parser with null storage fails.
     DdnsDomainMapPtr domains;
-    ASSERT_THROW(isc::dhcp::ParserPtr(
+    ASSERT_THROW(bundy::dhcp::ParserPtr(
                  new DdnsDomainParser("test", domains, keys_)), D2CfgError);
 
     // Create a domain configuration without a name
@@ -625,7 +625,7 @@ TEST_F(DdnsDomainTest, invalidDdnsDomainEntry) {
 
     // Verify that the domain configuration builds but commit fails.
     ASSERT_NO_THROW(parser_->build(config_set_));
-    ASSERT_THROW(parser_->commit(), isc::dhcp::DhcpConfigError);
+    ASSERT_THROW(parser_->commit(), bundy::dhcp::DhcpConfigError);
 
     // Create a domain configuration with an empty server list.
     config = "{ \"name\": \"tmark.org\" , "
@@ -646,7 +646,7 @@ TEST_F(DdnsDomainTest, invalidDdnsDomainEntry) {
     ASSERT_TRUE(fromJSON(config));
 
     // Verify that the domain configuration build fails.
-    ASSERT_THROW(parser_->build(config_set_), isc::BadValue);
+    ASSERT_THROW(parser_->build(config_set_), bundy::BadValue);
 
     // Create a domain configuration without an defined key name
     config = "{ \"name\": \"tmark.org\" , "
@@ -763,7 +763,7 @@ TEST_F(DdnsDomainTest, DdnsDomainListParsing) {
     addKey("d2_key.billcat.net", "algo2", "secret2");
 
     // Create the list parser
-    isc::dhcp::ParserPtr list_parser;
+    bundy::dhcp::ParserPtr list_parser;
     ASSERT_NO_THROW(list_parser.reset(
                     new DdnsDomainListParser("test", domains_, keys_)));
 
@@ -849,7 +849,7 @@ TEST_F(DdnsDomainTest, duplicateDomain) {
     ASSERT_TRUE(fromJSON(config));
 
     // Create the list parser
-    isc::dhcp::ParserPtr list_parser;
+    bundy::dhcp::ParserPtr list_parser;
     ASSERT_NO_THROW(list_parser.reset(
                     new DdnsDomainListParser("test", domains_, keys_)));
 

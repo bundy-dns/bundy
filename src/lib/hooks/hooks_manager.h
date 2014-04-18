@@ -23,7 +23,7 @@
 #include <string>
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace hooks {
 
 // Forward declarations

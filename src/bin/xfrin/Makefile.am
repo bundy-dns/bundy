@@ -8,7 +8,7 @@ bundy_xfrindir = $(pkgdatadir)
 bundy_xfrin_DATA = xfrin.spec
 
 nodist_pylogmessage_PYTHON = $(PYTHON_LOGMSGPKG_DIR)/work/xfrin_messages.py
-pylogmessagedir = $(pyexecdir)/isc/log_messages/
+pylogmessagedir = $(pyexecdir)/bundy/log_messages/
 
 CLEANFILES = bundy-xfrin xfrin.pyc xfrinlog.py
 CLEANFILES += $(PYTHON_LOGMSGPKG_DIR)/work/xfrin_messages.py

@@ -17,7 +17,7 @@
 
 #include <exceptions/exceptions.h>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 
 /// \brief Top level exception related to data source.
@@ -31,7 +31,7 @@ namespace datasrc {
 class DataSourceError : public Exception {
 public:
     DataSourceError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// \brief No such serial number when obtaining difference iterator
@@ -85,7 +85,7 @@ struct ZoneLoaderException : public ZoneException {
 };
 
 } // namespace datasrc
-} // namespace isc
+} // namespace bundy
 
 #endif // DATASRC_EXCEPTIONS
 

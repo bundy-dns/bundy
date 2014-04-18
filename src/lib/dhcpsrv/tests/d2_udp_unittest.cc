@@ -31,8 +31,8 @@
 #include <sys/select.h>
 
 using namespace std;
-using namespace isc::dhcp;
-using namespace isc;
+using namespace bundy::dhcp;
+using namespace bundy;
 
 namespace {
 
@@ -82,7 +82,7 @@ public:
         // Update the configuration with one that is enabled.
         D2ClientConfigPtr new_cfg;
         ASSERT_NO_THROW(new_cfg.reset(new D2ClientConfig(true,
-                                  isc::asiolink::IOAddress(server_address),
+                                  bundy::asiolink::IOAddress(server_address),
                                   server_port,
                                   protocol, dhcp_ddns::FMT_JSON,
                                   true, true, true, true,
@@ -165,7 +165,7 @@ public:
                        dhcp_ddns::NameChangeRequestPtr& /*ncr*/) {
         if (error_handler_throw_) {
             error_handler_throw_ = false;
-            isc_throw(isc::InvalidOperation, "Simulated client handler throw");
+            bundy_throw(bundy::InvalidOperation, "Simulated client handler throw");
         }
 
         ++error_handler_count_;

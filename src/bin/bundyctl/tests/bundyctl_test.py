@@ -15,7 +15,7 @@
 
 
 import unittest
-import isc.cc.data
+import bundy.cc.data
 import os
 import io
 import errno
@@ -28,9 +28,9 @@ import getpass
 import re
 import json
 from optparse import OptionParser
-from isc.config.config_data import ConfigData, MultiConfigData
-from isc.config.module_spec import ModuleSpec
-from isc.testutils.parse_args import TestOptParser, OptsError
+from bundy.config.config_data import ConfigData, MultiConfigData
+from bundy.config.module_spec import ModuleSpec
+from bundy.testutils.parse_args import TestOptParser, OptsError
 from bundyctl_main import set_bundyctl_options
 from bundyctl import cmdparse
 from bundyctl import bindcmd
@@ -193,7 +193,7 @@ class TestCmdSyntax(unittest.TestCase):
         self.no_assert_raise("zone help help='dd' ")
         self.no_assert_raise("zone set allow_update='1.1.1.1' zone_name='cn'")
         self.no_assert_raise("zone set zone_name='cn'")
-        self.my_assert_raise(isc.cc.data.DataTypeError,
+        self.my_assert_raise(bundy.cc.data.DataTypeError,
                              "zone set zone_name ='cn', port='cn'")
         self.no_assert_raise("zone reload_all")
 
@@ -537,18 +537,18 @@ class TestConfigCommands(unittest.TestCase):
         # this should raise a NotFoundError
         cmd_parser = cmdparse.BindCmdParser('config set identifier='
                                             '"foo/bar" value="[]"')
-        self.assertRaises(isc.cc.data.DataNotFoundError,
+        self.assertRaises(bundy.cc.data.DataNotFoundError,
                           self.tool.apply_config_cmd, cmd_parser)
 
         cmd_parser = cmdparse.BindCmdParser('config unset identifier='
                                             '"foo/bar"')
-        self.assertRaises(isc.cc.data.DataNotFoundError,
+        self.assertRaises(bundy.cc.data.DataNotFoundError,
                           self.tool.apply_config_cmd, cmd_parser)
 
         # this should raise a TypeError
         cmd_parser = cmdparse.BindCmdParser('config set identifier='
                                             '"foo/an_int" value="[]"')
-        self.assertRaises(isc.cc.data.DataTypeError,
+        self.assertRaises(bundy.cc.data.DataTypeError,
                           self.tool.apply_config_cmd, cmd_parser)
 
     # this is a very specific one for use with a set of list tests
@@ -580,12 +580,12 @@ class TestConfigCommands(unittest.TestCase):
         # this should raise a TypeError
         cmd_parser = cmdparse.BindCmdParser('config set identifier='
                                             '"foo/a_list" value="a"')
-        self.assertRaises(isc.cc.data.DataTypeError,
+        self.assertRaises(bundy.cc.data.DataTypeError,
                           self.tool.apply_config_cmd, cmd_parser)
 
         cmd_parser = cmdparse.BindCmdParser('config set identifier='
                                             '"foo/a_list" value=[1]')
-        self.assertRaises(isc.cc.data.DataTypeError,
+        self.assertRaises(bundy.cc.data.DataTypeError,
                           self.tool.apply_config_cmd, cmd_parser)
 
     def tearDown(self):

@@ -17,7 +17,7 @@
 
 #include <Python.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 class RRTTL;
 
@@ -59,7 +59,7 @@ const RRTTL& PyRRTTL_ToRRTTL(const PyObject* rrttl_obj);
 
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 #endif // PYTHON_RRTTL_H
 
 // Local Variables:

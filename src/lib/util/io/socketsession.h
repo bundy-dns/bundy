@@ -23,7 +23,7 @@
 
 #include <sys/socket.h>
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace io {
 
@@ -155,7 +155,7 @@ namespace io {
 class SocketSessionError: public Exception {
 public:
     SocketSessionError(const char *file, size_t line, const char *what):
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// The "base" class of \c SocketSessionForwarder

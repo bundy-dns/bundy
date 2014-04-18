@@ -31,9 +31,9 @@
 #include <sstream>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dhcp;
-using namespace isc::util;
+using namespace bundy;
+using namespace bundy::dhcp;
+using namespace bundy::util;
 using boost::scoped_ptr;
 
 namespace {
@@ -61,7 +61,7 @@ public:
         OptionBuffer bin;
         // Decode the hex string and store it in bin (which happens
         // to be OptionBuffer format)
-        isc::util::encode::decodeHex(from_wireshark, bin);
+        bundy::util::encode::decodeHex(from_wireshark, bin);
 
         return (bin);
     }
@@ -100,7 +100,7 @@ public:
         OptionBuffer bin;
         // Decode the hex string and store it in bin (which happens
         // to be OptionBuffer format)
-        isc::util::encode::decodeHex(from_wireshark, bin);
+        bundy::util::encode::decodeHex(from_wireshark, bin);
 
         return (bin);
     }

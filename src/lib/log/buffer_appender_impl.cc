@@ -18,7 +18,7 @@
 #include <boost/scoped_ptr.hpp>
 #include <cstdio>
 
-namespace isc {
+namespace bundy {
 namespace log {
 namespace internal {
 
@@ -79,7 +79,7 @@ BufferAppender::getBufferSize() const {
 void
 BufferAppender::append(const log4cplus::spi::InternalLoggingEvent& event) {
     if (flushed_) {
-        isc_throw(LogBufferAddAfterFlush,
+        bundy_throw(LogBufferAddAfterFlush,
                   "Internal log buffer has been flushed already");
     }
     // get a clone, and put the pointer in a shared_ptr in the list
@@ -94,4 +94,4 @@ BufferAppender::append(const log4cplus::spi::InternalLoggingEvent& event) {
 
 } // end namespace internal
 } // end namespace log
-} // end namespace isc
+} // end namespace bundy

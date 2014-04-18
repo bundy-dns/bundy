@@ -26,7 +26,7 @@ class Logger;
 class Appender;
 }
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 // Forward declarations
@@ -88,7 +88,7 @@ public:
     /// \param buffer If true, all log messages will be buffered until one of
     ///        the \c process() methods is called. If false, initial logging
     ///        shall go to the default output (i.e. stdout)
-    static void init(isc::log::Severity severity = isc::log::INFO,
+    static void init(bundy::log::Severity severity = bundy::log::INFO,
                      int dbglevel = 0, bool buffer = false);
 
     /// \brief Reset logging
@@ -98,7 +98,7 @@ public:
     ///
     /// \param severity Severity to be associated with this logger
     /// \param dbglevel Debug level associated with the root logger
-    static void reset(isc::log::Severity severity = isc::log::INFO,
+    static void reset(bundy::log::Severity severity = bundy::log::INFO,
                       int dbglevel = 0);
 
 private:
@@ -152,7 +152,7 @@ private:
     /// \param buffer If true, all log messages will be buffered until one of
     ///        the \c process() methods is called. If false, initial logging
     ///        shall go to the default output (i.e. stdout)
-    static void initRootLogger(isc::log::Severity severity = isc::log::INFO,
+    static void initRootLogger(bundy::log::Severity severity = bundy::log::INFO,
                                int dbglevel = 0, bool buffer = false);
 
     /// \brief Set layout for console appender
@@ -196,6 +196,6 @@ private:
 };
 
 } // namespace log
-} // namespace isc
+} // namespace bundy
 
 #endif // LOGGER_MANAGER_IMPL_H

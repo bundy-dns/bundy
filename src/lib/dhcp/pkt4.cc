@@ -24,10 +24,10 @@
 #include <sstream>
 
 using namespace std;
-using namespace isc::dhcp;
-using namespace isc::asiolink;
+using namespace bundy::dhcp;
+using namespace bundy::asiolink;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 const IOAddress DEFAULT_ADDRESS("0.0.0.0");
@@ -77,12 +77,12 @@ Pkt4::Pkt4(const uint8_t* data, size_t len)
       giaddr_(DEFAULT_ADDRESS)
 {
     if (len < DHCPV4_PKT_HDR_LEN) {
-        isc_throw(OutOfRange, "Truncated DHCPv4 packet (len=" << len
+        bundy_throw(OutOfRange, "Truncated DHCPv4 packet (len=" << len
                   << ") received, at least " << DHCPV4_PKT_HDR_LEN
                   << " is expected.");
 
     } else if (data == NULL) {
-        isc_throw(InvalidParameter, "data buffer passed to Pkt4 is NULL");
+        bundy_throw(InvalidParameter, "data buffer passed to Pkt4 is NULL");
     }
 
     data_.resize(len);
@@ -106,7 +106,7 @@ Pkt4::len() {
 void
 Pkt4::pack() {
     if (!hwaddr_) {
-        isc_throw(InvalidOperation, "Can't build Pkt4 packet. HWAddr not set.");
+        bundy_throw(InvalidOperation, "Can't build Pkt4 packet. HWAddr not set.");
     }
 
     // Clear the output buffer to make sure that consecutive calls to pack()
@@ -159,7 +159,7 @@ Pkt4::pack() {
          buffer_out_.writeUint8(DHO_END);
      } catch(const Exception& e) {
         // An exception is thrown and message will be written to Logger
-         isc_throw(InvalidOperation, e.what());
+         bundy_throw(InvalidOperation, e.what());
     }
 }
 
@@ -167,10 +167,10 @@ void
 Pkt4::unpack() {
 
     // input buffer (used during message reception)
-    isc::util::InputBuffer buffer_in(&data_[0], data_.size());
+    bundy::util::InputBuffer buffer_in(&data_[0], data_.size());
 
     if (buffer_in.getLength() < DHCPV4_PKT_HDR_LEN) {
-        isc_throw(OutOfRange, "Received truncated DHCPv4 packet (len="
+        bundy_throw(OutOfRange, "Received truncated DHCPv4 packet (len="
                   << buffer_in.getLength() << " received, at least "
                   << DHCPV4_PKT_HDR_LEN << "is expected");
     }
@@ -200,17 +200,17 @@ Pkt4::unpack() {
         // this is *NOT* DHCP packet. It does not have any DHCPv4 options. In
         // particular, it does not have magic cookie, a 4 byte sequence that
         // differentiates between DHCP and BOOTP packets.
-        isc_throw(InvalidOperation, "Received BOOTP packet. BOOTP is not supported.");
+        bundy_throw(InvalidOperation, "Received BOOTP packet. BOOTP is not supported.");
     }
 
     if (buffer_in.getLength() - buffer_in.getPosition() < 4) {
       // there is not enough data to hold magic DHCP cookie
-      isc_throw(Unexpected, "Truncated or no DHCP packet.");
+      bundy_throw(Unexpected, "Truncated or no DHCP packet.");
     }
 
     uint32_t magic = buffer_in.readUint32();
     if (magic != DHCP_OPTIONS_COOKIE) {
-      isc_throw(Unexpected, "Invalid or missing DHCP magic cookie");
+      bundy_throw(Unexpected, "Invalid or missing DHCP magic cookie");
     }
 
     size_t opts_len = buffer_in.getLength() - buffer_in.getPosition();
@@ -237,7 +237,7 @@ Pkt4::unpack() {
 void Pkt4::check() {
     uint8_t msg_type = getType();
     if (msg_type > DHCPLEASEACTIVE) {
-        isc_throw(BadValue, "Invalid DHCP message type received: "
+        bundy_throw(BadValue, "Invalid DHCP message type received: "
                   << static_cast<int>(msg_type));
     }
 }
@@ -245,7 +245,7 @@ void Pkt4::check() {
 uint8_t Pkt4::getType() const {
     OptionPtr generic = getOption(DHO_DHCP_MESSAGE_TYPE);
     if (!generic) {
-        isc_throw(Unexpected, "Missing DHCP Message Type option");
+        bundy_throw(Unexpected, "Missing DHCP Message Type option");
     }
 
     // Check if Message Type is specified as OptionInt<uint8_t>
@@ -284,7 +284,7 @@ Pkt4::toText() {
         << ":" << remote_port_ << ", msgtype=" << static_cast<int>(getType())
         << ", transid=0x" << hex << transid_ << dec << endl;
 
-    for (isc::dhcp::OptionCollection::iterator opt=options_.begin();
+    for (bundy::dhcp::OptionCollection::iterator opt=options_.begin();
          opt != options_.end();
          ++opt) {
         tmp << "  " << opt->second->toText() << std::endl;
@@ -303,7 +303,7 @@ Pkt4::setHWAddr(uint8_t htype, uint8_t hlen,
 void
 Pkt4::setHWAddr(const HWAddrPtr& addr) {
     if (!addr) {
-        isc_throw(BadValue, "Setting DHCPv4 chaddr field to NULL"
+        bundy_throw(BadValue, "Setting DHCPv4 chaddr field to NULL"
                   << " is forbidden");
     }
     hwaddr_ = addr;
@@ -316,11 +316,11 @@ Pkt4::setHWAddrMember(const uint8_t htype, const uint8_t hlen,
     /// @todo Rewrite this once support for client-identifier option
     /// is implemented (ticket 1228?)
     if (hlen > MAX_CHADDR_LEN) {
-        isc_throw(OutOfRange, "Hardware address (len=" << hlen
+        bundy_throw(OutOfRange, "Hardware address (len=" << hlen
                   << " too long. Max " << MAX_CHADDR_LEN << " supported.");
 
     } else if (mac_addr.empty() && (hlen > 0) ) {
-        isc_throw(OutOfRange, "Invalid HW Address specified");
+        bundy_throw(OutOfRange, "Invalid HW Address specified");
     }
 
     hw_addr.reset(new HWAddr(mac_addr, htype));
@@ -335,7 +335,7 @@ Pkt4::setLocalHWAddr(const uint8_t htype, const uint8_t hlen,
 void
 Pkt4::setLocalHWAddr(const HWAddrPtr& addr) {
     if (!addr) {
-        isc_throw(BadValue, "Setting local HW address to NULL is"
+        bundy_throw(BadValue, "Setting local HW address to NULL is"
                   << " forbidden.");
     }
     local_hwaddr_ = addr;
@@ -350,7 +350,7 @@ Pkt4::setRemoteHWAddr(const uint8_t htype, const uint8_t hlen,
 void
 Pkt4::setRemoteHWAddr(const HWAddrPtr& addr) {
     if (!addr) {
-        isc_throw(BadValue, "Setting remote HW address to NULL is"
+        bundy_throw(BadValue, "Setting remote HW address to NULL is"
                   << " forbidden.");
     }
     remote_hwaddr_ = addr;
@@ -359,11 +359,11 @@ Pkt4::setRemoteHWAddr(const HWAddrPtr& addr) {
 void
 Pkt4::setSname(const uint8_t* sname, size_t snameLen /*= MAX_SNAME_LEN*/) {
     if (snameLen > MAX_SNAME_LEN) {
-        isc_throw(OutOfRange, "sname field (len=" << snameLen
+        bundy_throw(OutOfRange, "sname field (len=" << snameLen
                   << ") too long, Max " << MAX_SNAME_LEN << " supported.");
 
     } else if (sname == NULL) {
-        isc_throw(InvalidParameter, "Invalid sname specified");
+        bundy_throw(InvalidParameter, "Invalid sname specified");
     }
 
     std::copy(&sname[0], &sname[snameLen], &sname_[0]);
@@ -375,11 +375,11 @@ Pkt4::setSname(const uint8_t* sname, size_t snameLen /*= MAX_SNAME_LEN*/) {
 void
 Pkt4::setFile(const uint8_t* file, size_t fileLen /*= MAX_FILE_LEN*/) {
     if (fileLen > MAX_FILE_LEN) {
-        isc_throw(OutOfRange, "file field (len=" << fileLen
+        bundy_throw(OutOfRange, "file field (len=" << fileLen
                   << ") too long, Max " << MAX_FILE_LEN << " supported.");
 
     } else if (file == NULL) {
-        isc_throw(InvalidParameter, "Invalid file name specified");
+        bundy_throw(InvalidParameter, "Invalid file name specified");
     }
 
     std::copy(&file[0], &file[fileLen], &file_[0]);
@@ -410,7 +410,7 @@ Pkt4::DHCPTypeToBootpType(uint8_t dhcpType) {
         return (BOOTREPLY);
 
     default:
-        isc_throw(OutOfRange, "Invalid message type: "
+        bundy_throw(OutOfRange, "Invalid message type: "
                   << static_cast<int>(dhcpType) );
     }
 }
@@ -418,7 +418,7 @@ Pkt4::DHCPTypeToBootpType(uint8_t dhcpType) {
 uint8_t
 Pkt4::getHtype() const {
     if (!hwaddr_) {
-        isc_throw(InvalidOperation, "Can't get HType. HWAddr not defined");
+        bundy_throw(InvalidOperation, "Can't get HType. HWAddr not defined");
     }
     return (hwaddr_->htype_);
 }
@@ -426,7 +426,7 @@ Pkt4::getHtype() const {
 uint8_t
 Pkt4::getHlen() const {
     if (!hwaddr_) {
-        isc_throw(InvalidOperation, "Can't get HType. HWAddr not defined");
+        bundy_throw(InvalidOperation, "Can't get HType. HWAddr not defined");
     }
     uint8_t len = hwaddr_->hwaddr_.size();
     return (len <= MAX_CHADDR_LEN ? len : MAX_CHADDR_LEN);
@@ -436,24 +436,24 @@ void
 Pkt4::addOption(boost::shared_ptr<Option> opt) {
     // Check for uniqueness (DHCPv4 options must be unique)
     if (getOption(opt->getType())) {
-        isc_throw(BadValue, "Option " << opt->getType()
+        bundy_throw(BadValue, "Option " << opt->getType()
                   << " already present in this message.");
     }
     options_.insert(pair<int, boost::shared_ptr<Option> >(opt->getType(), opt));
 }
 
-boost::shared_ptr<isc::dhcp::Option>
+boost::shared_ptr<bundy::dhcp::Option>
 Pkt4::getOption(uint8_t type) const {
     OptionCollection::const_iterator x = options_.find(type);
     if (x != options_.end()) {
         return (*x).second;
     }
-    return boost::shared_ptr<isc::dhcp::Option>(); // NULL
+    return boost::shared_ptr<bundy::dhcp::Option>(); // NULL
 }
 
 bool
 Pkt4::delOption(uint8_t type) {
-    isc::dhcp::OptionCollection::iterator x = options_.find(type);
+    bundy::dhcp::OptionCollection::iterator x = options_.find(type);
     if (x != options_.end()) {
         options_.erase(x);
         return (true); // delete successful
@@ -478,24 +478,24 @@ Pkt4::isRelayed() const {
         return (true);
     }
     // In any other case, the packet is considered malformed.
-    isc_throw(isc::BadValue, "invalid combination of giaddr = "
+    bundy_throw(bundy::BadValue, "invalid combination of giaddr = "
               << getGiaddr().toText() << " and hops = "
               << static_cast<int>(getHops()) << ". Valid values"
               " are: (giaddr = 0 and hops = 0) or (giaddr != 0 and"
               "hops != 0)");
 }
 
-bool Pkt4::inClass(const isc::dhcp::ClientClass& client_class) {
+bool Pkt4::inClass(const bundy::dhcp::ClientClass& client_class) {
     return (classes_.find(client_class) != classes_.end());
 }
 
 void
-Pkt4::addClass(const isc::dhcp::ClientClass& client_class) {
+Pkt4::addClass(const bundy::dhcp::ClientClass& client_class) {
     if (classes_.find(client_class) == classes_.end()) {
         classes_.insert(client_class);
     }
 }
 
-} // end of namespace isc::dhcp
+} // end of namespace bundy::dhcp
 
-} // end of namespace isc
+} // end of namespace bundy

@@ -21,7 +21,7 @@
 
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 /// \brief Set of callbacks used in zone checks.
@@ -154,7 +154,7 @@ checkZone(const Name& zone_name, const RRClass& zone_class,
           const ZoneCheckerCallbacks& callbacks);
 
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 #endif  // ZONE_CHECKER_H
 
 // Local Variables:

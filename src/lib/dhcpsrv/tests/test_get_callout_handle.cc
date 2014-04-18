@@ -17,15 +17,15 @@
 
 // Just instantiate the getCalloutHandle function and call it.
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 namespace test {
 
-isc::hooks::CalloutHandlePtr
+bundy::hooks::CalloutHandlePtr
 testGetCalloutHandle(const Pkt6Ptr& pktptr) {
-    return (isc::dhcp::getCalloutHandle(pktptr));
+    return (bundy::dhcp::getCalloutHandle(pktptr));
 }
 
 } // namespace test
 } // namespace dhcp
-} // namespace isc
+} // namespace bundy

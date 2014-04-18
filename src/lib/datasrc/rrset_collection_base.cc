@@ -17,19 +17,19 @@
 #include <datasrc/zone_finder.h>
 #include <exceptions/exceptions.h>
 
-using namespace isc;
-using namespace isc::dns;
+using namespace bundy;
+using namespace bundy::dns;
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 
 ConstRRsetPtr
-isc::datasrc::RRsetCollectionBase::find(const isc::dns::Name& name,
-                                        const isc::dns::RRClass& rrclass,
-                                        const isc::dns::RRType& rrtype) const
+bundy::datasrc::RRsetCollectionBase::find(const bundy::dns::Name& name,
+                                        const bundy::dns::RRClass& rrclass,
+                                        const bundy::dns::RRType& rrtype) const
 {
     if (isDisabled()) {
-        isc_throw(RRsetCollectionError, "This RRsetCollection is disabled.");
+        bundy_throw(RRsetCollectionError, "This RRsetCollection is disabled.");
     }
 
     if (rrclass != rrclass_) {
@@ -62,11 +62,11 @@ isc::datasrc::RRsetCollectionBase::find(const isc::dns::Name& name,
         // propagating the exception.
         return (ConstRRsetPtr());
     } catch (const DataSourceError& e) {
-        isc_throw(RRsetCollectionError,
+        bundy_throw(RRsetCollectionError,
                   "ZoneFinder threw a DataSourceError: "
                       << e.getMessage().c_str());
     }
 }
 
 } // end of namespace datasrc
-} // end of namespace isc
+} // end of namespace bundy

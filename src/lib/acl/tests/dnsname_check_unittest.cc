@@ -18,11 +18,11 @@
 
 #include <acl/dnsname_check.h>
 
-using namespace isc::dns;
-using namespace isc::acl::dns;
+using namespace bundy::dns;
+using namespace bundy::acl::dns;
 
 // Provide a specialization of the DNSNameCheck::matches() method.
-namespace isc  {
+namespace bundy  {
 namespace acl {
 namespace dns {
 template <>
@@ -31,7 +31,7 @@ bool NameCheck<Name>::matches(const Name& name) const {
 }
 } // namespace dns
 } // namespace acl
-} // namespace isc
+} // namespace bundy
 
 namespace {
 TEST(DNSNameCheck, construct) {

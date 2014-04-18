@@ -19,7 +19,7 @@
 
 #include <asio.hpp>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 // Setting to 80% for now. This is an arbitrary choice and should probably
@@ -72,12 +72,12 @@ D2Process::run() {
                 // Pretty sure this amounts to an unexpected stop and we
                 // should bail out now.  Normal shutdowns do not utilize
                 // stopping the IOService.
-                isc_throw(DProcessBaseError,
+                bundy_throw(DProcessBaseError,
                           "Primary IO service stopped unexpectedly");
             }
         } catch (const std::exception& ex) {
             LOG_FATAL(dctl_logger, DHCP_DDNS_FAILED).arg(ex.what());
-            isc_throw (DProcessBaseError,
+            bundy_throw (DProcessBaseError,
                        "Process run method failed: " << ex.what());
         }
     }
@@ -161,8 +161,8 @@ D2Process::canShutdown() const {
     return (all_clear);
 }
 
-isc::data::ConstElementPtr
-D2Process::shutdown(isc::data::ConstElementPtr args) {
+bundy::data::ConstElementPtr
+D2Process::shutdown(bundy::data::ConstElementPtr args) {
     LOG_INFO(dctl_logger, DHCP_DDNS_SHUTDOWN).arg(args ? args->str()
                                                   : "(no args)");
 
@@ -171,7 +171,7 @@ D2Process::shutdown(isc::data::ConstElementPtr args) {
     shutdown_type_ = SD_NORMAL;
 
     if (args) {
-        if ((args->getType() == isc::data::Element::map) &&
+        if ((args->getType() == bundy::data::Element::map) &&
             args->contains("type")) {
             type_str = args->get("type")->stringValue();
 
@@ -183,7 +183,7 @@ D2Process::shutdown(isc::data::ConstElementPtr args) {
                 shutdown_type_ = SD_NOW;
             } else {
                 setShutdownFlag(false);
-                return (isc::config::createAnswer(1, "Invalid Shutdown type: "
+                return (bundy::config::createAnswer(1, "Invalid Shutdown type: "
                                                   + type_str));
             }
         }
@@ -191,19 +191,19 @@ D2Process::shutdown(isc::data::ConstElementPtr args) {
 
     // Set the base class's shutdown flag.
     setShutdownFlag(true);
-    return (isc::config::createAnswer(0, "Shutdown initiated, type is: "
+    return (bundy::config::createAnswer(0, "Shutdown initiated, type is: "
                                       + type_str));
 }
 
-isc::data::ConstElementPtr
-D2Process::configure(isc::data::ConstElementPtr config_set) {
+bundy::data::ConstElementPtr
+D2Process::configure(bundy::data::ConstElementPtr config_set) {
     LOG_DEBUG(dctl_logger, DBGLVL_TRACE_BASIC,
               DHCP_DDNS_CONFIGURE).arg(config_set->str());
 
     int rcode = 0;
-    isc::data::ConstElementPtr comment;
-    isc::data::ConstElementPtr answer = getCfgMgr()->parseConfig(config_set);;
-    comment = isc::config::parseAnswer(rcode, answer);
+    bundy::data::ConstElementPtr comment;
+    bundy::data::ConstElementPtr answer = getCfgMgr()->parseConfig(config_set);;
+    comment = bundy::config::parseAnswer(rcode, answer);
 
     if (rcode) {
         // Non-zero means we got an invalid configuration, take no further
@@ -246,7 +246,7 @@ D2Process::checkQueueStatus() {
                          .arg(reconf_queue_flag_ ? "reconfiguration"
                                                    : "shutdown");
                 queue_mgr_->stopListening();
-            } catch (const isc::Exception& ex) {
+            } catch (const bundy::Exception& ex) {
                 // It is very unlikey that we would experience an error
                 // here, but theoretically possible. 
                 LOG_ERROR(dctl_logger, DHCP_DDNS_QUEUE_MGR_STOP_ERROR)
@@ -266,7 +266,7 @@ D2Process::checkQueueStatus() {
                           .arg(threshold).arg(queue_mgr_->getMaxQueueSize());
                 try {
                     queue_mgr_->startListening();
-                } catch (const isc::Exception& ex) {
+                } catch (const bundy::Exception& ex) {
                     LOG_ERROR(dctl_logger, DHCP_DDNS_QUEUE_MGR_RESUME_ERROR)
                               .arg(ex.what());
                 }
@@ -337,7 +337,7 @@ D2Process::reconfigureQueueMgr() {
         }
 
         getCfgMgr()->getContext()->getParam("port", port);
-        isc::asiolink::IOAddress addr(ip_address);
+        bundy::asiolink::IOAddress addr(ip_address);
 
         // Instantiate the listener.
         queue_mgr_->initUDPListener(addr, port, dhcp_ddns::FMT_JSON, true);
@@ -346,7 +346,7 @@ D2Process::reconfigureQueueMgr() {
         // blocking call that executes quickly.  @todo Should that change then
         // we will have to expand the state model to accommodate this.
         queue_mgr_->startListening();
-    } catch (const isc::Exception& ex) {
+    } catch (const bundy::Exception& ex) {
         // Queue manager failed to initialize and therefore not listening. 
         // This is most likely due to an unavailable IP address or port, 
         // which is a configuration issue.
@@ -354,16 +354,16 @@ D2Process::reconfigureQueueMgr() {
     }
 }
 
-isc::data::ConstElementPtr
+bundy::data::ConstElementPtr
 D2Process::command(const std::string& command, 
-                   isc::data::ConstElementPtr args) {
+                   bundy::data::ConstElementPtr args) {
     // @todo This is the initial implementation.  If and when D2 is extended
     // to support its own commands, this implementation must change. Otherwise
     // it should reject all commands as it does now.
     LOG_DEBUG(dctl_logger, DBGLVL_TRACE_BASIC, DHCP_DDNS_COMMAND)
         .arg(command).arg(args ? args->str() : "(no args)");
 
-    return (isc::config::createAnswer(COMMAND_INVALID, "Unrecognized command: "
+    return (bundy::config::createAnswer(COMMAND_INVALID, "Unrecognized command: "
                                       + command));
 }
 
@@ -397,5 +397,5 @@ const char* D2Process::getShutdownTypeStr(const ShutdownType& type) {
     return (str);
 }
 
-}; // namespace isc::d2
-}; // namespace isc
+}; // namespace bundy::d2
+}; // namespace bundy

@@ -26,8 +26,8 @@
 #include <cctype>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::util;
+using namespace bundy::dns;
+using namespace bundy::util;
 
 namespace {
 
@@ -55,7 +55,7 @@ Unit units[] = {
 
 }
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 namespace {
@@ -174,7 +174,7 @@ parseTTLString(const string& ttlstr, uint32_t& ttlval, string* error_txt) {
 RRTTL::RRTTL(const std::string& ttlstr) {
     string error_txt;
     if (!parseTTLString(ttlstr, ttlval_, &error_txt)) {
-        isc_throw(InvalidRRTTL, error_txt);
+        bundy_throw(InvalidRRTTL, error_txt);
     }
 }
 
@@ -189,7 +189,7 @@ RRTTL::createFromText(const string& ttlstr) {
 
 RRTTL::RRTTL(InputBuffer& buffer) {
     if (buffer.getLength() - buffer.getPosition() < sizeof(uint32_t)) {
-        isc_throw(IncompleteRRTTL, "incomplete wire-format TTL value");
+        bundy_throw(IncompleteRRTTL, "incomplete wire-format TTL value");
     }
     ttlval_ = buffer.readUint32();
 }

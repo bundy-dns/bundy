@@ -27,7 +27,7 @@
 /// Contains a set of functions relating to logging initialization that are
 /// used by the production code.
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 /// \brief Is logging initialized?
@@ -65,11 +65,11 @@ void setLoggingInitialized(bool state = true);
 ///        the \c process() methods is called. If false, initial logging
 ///        shall go to the default output (i.e. stdout)
 void initLogger(const std::string& root,
-                isc::log::Severity severity = isc::log::INFO,
+                bundy::log::Severity severity = bundy::log::INFO,
                 int dbglevel = 0, const char* file = NULL,
                 bool buffer = false);
 
 } // namespace log
-} // namespace isc
+} // namespace bundy
 
 #endif // LOGGER_SUPPORT_H

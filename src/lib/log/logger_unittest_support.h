@@ -25,7 +25,7 @@
 /// the functions defined here allow a limited amount of logging configuration
 /// through the use of environment variables
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 /// \brief Run-Time Initialization for Unit Tests from Environment
@@ -72,8 +72,8 @@ namespace log {
 ///
 /// TODO: Rename. This function overloads the initLogger() function that can
 ///       be used to initialize production programs.  This may lead to confusion.
-void initLogger(isc::log::Severity severity = isc::log::DEBUG,
-                int dbglevel = isc::log::MAX_DEBUG_LEVEL);
+void initLogger(bundy::log::Severity severity = bundy::log::DEBUG,
+                int dbglevel = bundy::log::MAX_DEBUG_LEVEL);
 
 
 /// \brief Obtains logging severity from BUNDY_LOGGER_SEVERITY
@@ -86,7 +86,7 @@ void initLogger(isc::log::Severity severity = isc::log::DEBUG,
 //         defined.
 ///
 /// \return Severity to use for the logging.
-isc::log::Severity b10LoggerSeverity(isc::log::Severity defseverity);
+bundy::log::Severity b10LoggerSeverity(bundy::log::Severity defseverity);
 
 
 /// \brief Obtains logging debug level from BUNDY_LOGGER_DBGLEVEL
@@ -119,7 +119,7 @@ void
 resetUnitTestRootLogger();
 
 } // namespace log
-} // namespace isc
+} // namespace bundy
 
 
 

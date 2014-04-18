@@ -14,13 +14,13 @@
 
 #include "rrset_copy.h"
 
-using namespace isc::dns;
+using namespace bundy::dns;
 
-namespace isc {
+namespace bundy {
 namespace cache {
 
 void
-rrsetCopy(const isc::dns::AbstractRRset& src, isc::dns::AbstractRRset& dst) {
+rrsetCopy(const bundy::dns::AbstractRRset& src, bundy::dns::AbstractRRset& dst) {
     RdataIteratorPtr rdata_itor = src.getRdataIterator();
     rdata_itor->first();
     while(!rdata_itor->isLast()){
@@ -35,4 +35,4 @@ rrsetCopy(const isc::dns::AbstractRRset& src, isc::dns::AbstractRRset& dst) {
 }
 
 } // namespace cache
-} // namespace isc
+} // namespace bundy

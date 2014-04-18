@@ -25,7 +25,7 @@
 
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 namespace internal {
@@ -49,15 +49,15 @@ public:
     /// \param zone_data The ZoneData containing the zone.
     /// \param rrclass The RR class of the zone
     InMemoryZoneFinder(const ZoneData& zone_data,
-                       const isc::dns::RRClass& rrclass) :
+                       const bundy::dns::RRClass& rrclass) :
         zone_data_(zone_data),
         rrclass_(rrclass)
     {}
 
     /// \brief Find an RRset in the datasource
     virtual boost::shared_ptr<ZoneFinder::Context> find(
-        const isc::dns::Name& name,
-        const isc::dns::RRType& type,
+        const bundy::dns::Name& name,
+        const bundy::dns::RRType& type,
         const FindOptions options = FIND_DEFAULT);
 
     /// \brief Search for an RRset of given RR type at the zone origin
@@ -67,7 +67,7 @@ public:
     /// RRsets at the zone origin and (if \c use_minttl is true) extract
     /// the SOA Minimum TTL much more efficiently.
     virtual boost::shared_ptr<ZoneFinder::Context> findAtOrigin(
-        const isc::dns::RRType& type, bool use_minttl,
+        const bundy::dns::RRType& type, bool use_minttl,
         FindOptions options);
 
     /// \brief Version of find that returns all types at once
@@ -76,21 +76,21 @@ public:
     /// all the RRsets are filled into the target parameter instead of being
     /// returned by the result.
     virtual boost::shared_ptr<ZoneFinder::Context> findAll(
-        const isc::dns::Name& name,
-        std::vector<isc::dns::ConstRRsetPtr>& target,
+        const bundy::dns::Name& name,
+        std::vector<bundy::dns::ConstRRsetPtr>& target,
         const FindOptions options = FIND_DEFAULT);
 
     /// Look for NSEC3 for proving (non)existence of given name.
     ///
     /// See documentation in \c Zone.
     virtual FindNSEC3Result
-    findNSEC3(const isc::dns::Name& name, bool recursive);
+    findNSEC3(const bundy::dns::Name& name, bool recursive);
 
     /// \brief Returns the origin of the zone.
-    virtual isc::dns::Name getOrigin() const;
+    virtual bundy::dns::Name getOrigin() const;
 
     /// \brief Returns the RR class of the zone.
-    virtual isc::dns::RRClass getClass() const {
+    virtual bundy::dns::RRClass getClass() const {
         return (rrclass_);
     }
 
@@ -103,19 +103,19 @@ private:
 
     /// Actual implementation for both find() and findAll()
     internal::ZoneFinderResultContext findInternal(
-        const isc::dns::Name& name,
-        const isc::dns::RRType& type,
-        std::vector<isc::dns::ConstRRsetPtr>* target,
+        const bundy::dns::Name& name,
+        const bundy::dns::RRType& type,
+        std::vector<bundy::dns::ConstRRsetPtr>* target,
         const FindOptions options =
         FIND_DEFAULT);
 
     const ZoneData& zone_data_;
-    const isc::dns::RRClass rrclass_;
+    const bundy::dns::RRClass rrclass_;
 };
 
 } // namespace memory
 } // namespace datasrc
-} // namespace isc
+} // namespace bundy
 
 #endif // DATASRC_MEMORY_ZONE_FINDER_H
 

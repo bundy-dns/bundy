@@ -19,7 +19,7 @@
 #include <dns/name.h>
 #include <dns/rrtype.h>
 
-namespace isc {
+namespace bundy {
 namespace cache {
 
 /// \brief Entry Name Generation Functions
@@ -37,7 +37,7 @@ namespace cache {
 /// \param type The RRType to create a text entry for
 /// \return return the entry name.
 const std::string
-genCacheEntryName(const isc::dns::Name& name, const isc::dns::RRType& type);
+genCacheEntryName(const bundy::dns::Name& name, const bundy::dns::RRType& type);
 
 ///
 /// \overload
@@ -48,7 +48,7 @@ const std::string
 genCacheEntryName(const std::string& namestr, const uint16_t type);
 
 } // namespace cache
-} // namespace isc
+} // namespace bundy
 
 #endif // CACHE_ENTRY_KEY_H
 

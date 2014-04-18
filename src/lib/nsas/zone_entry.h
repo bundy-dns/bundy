@@ -34,7 +34,7 @@
 #include "nsas_types.h"
 #include "glue_hints.h"
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 
 class NameserverEntry;
@@ -69,10 +69,10 @@ public:
      * \todo Move to cc file, include the lookup (if NSAS uses resolver for
      *     everything)
      */
-    ZoneEntry(isc::resolve::ResolverInterface* resolver,
-        const std::string& name, const isc::dns::RRClass& class_code,
+    ZoneEntry(bundy::resolve::ResolverInterface* resolver,
+        const std::string& name, const bundy::dns::RRClass& class_code,
         boost::shared_ptr<HashTable<NameserverEntry> > nameserver_table,
-        boost::shared_ptr<isc::util::LruList<NameserverEntry> > nameserver_lru);
+        boost::shared_ptr<bundy::util::LruList<NameserverEntry> > nameserver_lru);
 
     /// \return Name of the zone
     std::string getName() const {
@@ -80,7 +80,7 @@ public:
     }
 
     /// \return Class of zone
-    const isc::dns::RRClass& getClass() const {
+    const bundy::dns::RRClass& getClass() const {
         return class_code_;
     }
 
@@ -132,9 +132,9 @@ protected:
     time_t          expiry_;    ///< Expiry time of this entry, 0 means not set
     //}@
 private:
-    mutable isc::util::locks::recursive_mutex    mutex_;///< Mutex protecting this zone entry
+    mutable bundy::util::locks::recursive_mutex    mutex_;///< Mutex protecting this zone entry
     std::string     name_;      ///< Canonical zone name
-    isc::dns::RRClass        class_code_; ///< Class code
+    bundy::dns::RRClass        class_code_; ///< Class code
     /**
      * \short Process all the callbacks that can be processed
      *
@@ -157,11 +157,11 @@ private:
     void process(AddressFamily family,
         const boost::shared_ptr<NameserverEntry>& nameserver);
     // Resolver we use
-    isc::resolve::ResolverInterface* resolver_;
+    bundy::resolve::ResolverInterface* resolver_;
     // We store the nameserver table and lru, so we can look up when there's
     // update
     boost::shared_ptr<HashTable<NameserverEntry> > nameserver_table_;
-    boost::shared_ptr<isc::util::LruList<NameserverEntry> > nameserver_lru_;
+    boost::shared_ptr<bundy::util::LruList<NameserverEntry> > nameserver_lru_;
     // Resolver callback class, documentation with the class declaration
     class ResolverCallback;
     // It has direct access to us
@@ -182,10 +182,10 @@ private:
     void insertCallback(NameserverPtr nameserver, AddressFamily family);
     // A random generator for this zone entry
     // TODO: A more global one? Per thread one?
-    isc::util::random::WeightedRandomIntegerGenerator address_selector;
+    bundy::util::random::WeightedRandomIntegerGenerator address_selector;
 };
 
 } // namespace nsas
-} // namespace isc
+} // namespace bundy
 
 #endif // ZONE_ENTRY_H

@@ -22,10 +22,10 @@
 #include <util/unittests/wiredata.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dns;
-using namespace isc::util;
-using isc::util::unittests::matchWireData;
+using namespace bundy;
+using namespace bundy::dns;
+using namespace bundy::util;
+using bundy::util::unittests::matchWireData;
 
 namespace {
 class RRTypeTest : public ::testing::Test {

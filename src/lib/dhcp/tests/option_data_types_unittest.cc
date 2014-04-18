@@ -16,8 +16,8 @@
 #include <dhcp/option_data_types.h>
 #include <gtest/gtest.h>
 
-using namespace isc;
-using namespace isc::dhcp;
+using namespace bundy;
+using namespace bundy::dhcp;
 
 namespace {
 
@@ -73,7 +73,7 @@ TEST_F(OptionDataTypesTest, getLabelCount) {
     EXPECT_EQ(3, OptionDataTypeUtil::getLabelCount("example.com."));
     EXPECT_EQ(4, OptionDataTypeUtil::getLabelCount("myhost.example.com"));
     EXPECT_THROW(OptionDataTypeUtil::getLabelCount(".abc."),
-                 isc::dhcp::BadDataTypeCast);
+                 bundy::dhcp::BadDataTypeCast);
 }
 
 // The goal of this test is to verify that an IPv4 address being
@@ -100,7 +100,7 @@ TEST_F(OptionDataTypesTest, readAddress) {
     // long buffer.
     EXPECT_THROW(
         OptionDataTypeUtil::readAddress(buf, AF_INET6),
-        isc::dhcp::BadDataTypeCast
+        bundy::dhcp::BadDataTypeCast
     );
 
     buf.clear();
@@ -116,7 +116,7 @@ TEST_F(OptionDataTypesTest, readAddress) {
     buf.resize(buf.size() - 1);
     EXPECT_THROW(
         OptionDataTypeUtil::readAddress(buf, AF_INET6),
-        isc::dhcp::BadDataTypeCast
+        bundy::dhcp::BadDataTypeCast
     );
 }
 
@@ -203,7 +203,7 @@ TEST_F(OptionDataTypesTest, readBool) {
     buf[0] = 5;
     ASSERT_THROW(
         OptionDataTypeUtil::readBool(buf),
-        isc::dhcp::BadDataTypeCast
+        bundy::dhcp::BadDataTypeCast
     );
 }
 
@@ -246,7 +246,7 @@ TEST_F(OptionDataTypesTest, readInt) {
     // This should result in an exception.
     EXPECT_THROW(
         OptionDataTypeUtil::readInt<uint16_t>(buf),
-        isc::dhcp::BadDataTypeCast
+        bundy::dhcp::BadDataTypeCast
     );
 
     // Clear the buffer for the next check we are going to do.
@@ -264,7 +264,7 @@ TEST_F(OptionDataTypesTest, readInt) {
     // This should result in an exception.
     EXPECT_THROW(
         OptionDataTypeUtil::readInt<uint32_t>(buf),
-        isc::dhcp::BadDataTypeCast
+        bundy::dhcp::BadDataTypeCast
     );
 
     buf.clear();
@@ -291,7 +291,7 @@ TEST_F(OptionDataTypesTest, readInt) {
     // This should result in an exception.
     EXPECT_THROW(
         OptionDataTypeUtil::readInt<int16_t>(buf),
-        isc::dhcp::BadDataTypeCast
+        bundy::dhcp::BadDataTypeCast
     );
 
     // Test int16_t value.
@@ -307,7 +307,7 @@ TEST_F(OptionDataTypesTest, readInt) {
     // This should result in an exception.
     EXPECT_THROW(
         OptionDataTypeUtil::readInt<int32_t>(buf),
-        isc::dhcp::BadDataTypeCast
+        bundy::dhcp::BadDataTypeCast
     );
 
     // Test int32_t value.
@@ -385,14 +385,14 @@ TEST_F(OptionDataTypesTest, readFqdn) {
     buf.resize(5);
     EXPECT_THROW(
         OptionDataTypeUtil::readFqdn(buf),
-        isc::dhcp::BadDataTypeCast
+        bundy::dhcp::BadDataTypeCast
     );
 
     // Another special case: provide an empty buffer.
     buf.clear();
     EXPECT_THROW(
         OptionDataTypeUtil::readFqdn(buf),
-        isc::dhcp::BadDataTypeCast
+        bundy::dhcp::BadDataTypeCast
     );
 }
 
@@ -453,14 +453,14 @@ TEST_F(OptionDataTypesTest, writeFqdn) {
     buf.clear();
     EXPECT_THROW(
         OptionDataTypeUtil::writeFqdn("", buf),
-        isc::dhcp::BadDataTypeCast
+        bundy::dhcp::BadDataTypeCast
     );
 
     // Check another invalid domain name (with repeated dot).
     buf.clear();
     EXPECT_THROW(
         OptionDataTypeUtil::writeFqdn("example..com", buf),
-        isc::dhcp::BadDataTypeCast
+        bundy::dhcp::BadDataTypeCast
     );
 }
 

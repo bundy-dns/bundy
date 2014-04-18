@@ -24,7 +24,7 @@
 #include <string>
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace master_lexer_internal {
 
@@ -184,7 +184,7 @@ private:
 
 } // namespace master_lexer_internal
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 
 #endif  // DNS_INPUTSOURCE_H
 

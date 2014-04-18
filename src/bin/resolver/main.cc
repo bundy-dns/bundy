@@ -61,11 +61,11 @@
 #include <boost/foreach.hpp>
 
 using namespace std;
-using namespace isc::cc;
-using namespace isc::config;
-using namespace isc::data;
-using namespace isc::asiodns;
-using namespace isc::asiolink;
+using namespace bundy::cc;
+using namespace bundy::config;
+using namespace bundy::data;
+using namespace bundy::asiodns;
+using namespace bundy::asiolink;
 
 namespace {
 
@@ -141,9 +141,9 @@ main(int argc, char* argv[]) {
 
     // Until proper logging comes along, initialize the logging with the
     // temporary initLogger() code.  If verbose, we'll use maximum verbosity.
-    isc::log::initLogger(RESOLVER_NAME,
-                         (verbose ? isc::log::DEBUG : isc::log::INFO),
-                         isc::log::MAX_DEBUG_LEVEL, NULL, true);
+    bundy::log::initLogger(RESOLVER_NAME,
+                         (verbose ? bundy::log::DEBUG : bundy::log::INFO),
+                         bundy::log::MAX_DEBUG_LEVEL, NULL, true);
 
     // Print the starting message
     string cmdline = argv[0];
@@ -171,46 +171,46 @@ main(int argc, char* argv[]) {
         DNSLookup* lookup = resolver->getDNSLookupProvider();
         DNSAnswer* answer = resolver->getDNSAnswerProvider();
 
-        isc::nsas::NameserverAddressStore nsas(resolver);
+        bundy::nsas::NameserverAddressStore nsas(resolver);
         resolver->setNameserverAddressStore(nsas);
 
-        isc::cache::ResolverCache cache;
+        bundy::cache::ResolverCache cache;
         resolver->setCache(cache);
 
         // TODO priming query, remove root from direct
         // Fake a priming query result here (TODO2 how to flag non-expiry?)
         // propagation to runningquery. And check for forwarder mode?
-        isc::dns::QuestionPtr root_question(new isc::dns::Question(
-                                            isc::dns::Name("."),
-                                            isc::dns::RRClass::IN(),
-                                            isc::dns::RRType::NS()));
-        isc::dns::RRsetPtr root_ns_rrset(new isc::dns::RRset(isc::dns::Name("."),
-                                         isc::dns::RRClass::IN(),
-                                         isc::dns::RRType::NS(),
-                                         isc::dns::RRTTL(8888)));
-        root_ns_rrset->addRdata(isc::dns::rdata::createRdata(isc::dns::RRType::NS(),
-                                                             isc::dns::RRClass::IN(),
+        bundy::dns::QuestionPtr root_question(new bundy::dns::Question(
+                                            bundy::dns::Name("."),
+                                            bundy::dns::RRClass::IN(),
+                                            bundy::dns::RRType::NS()));
+        bundy::dns::RRsetPtr root_ns_rrset(new bundy::dns::RRset(bundy::dns::Name("."),
+                                         bundy::dns::RRClass::IN(),
+                                         bundy::dns::RRType::NS(),
+                                         bundy::dns::RRTTL(8888)));
+        root_ns_rrset->addRdata(bundy::dns::rdata::createRdata(bundy::dns::RRType::NS(),
+                                                             bundy::dns::RRClass::IN(),
                                                              "l.root-servers.net."));
-        isc::dns::RRsetPtr root_a_rrset(new isc::dns::RRset(isc::dns::Name("l.root-servers.net"),
-                                        isc::dns::RRClass::IN(),
-                                        isc::dns::RRType::A(),
-                                        isc::dns::RRTTL(8888)));
-        root_a_rrset->addRdata(isc::dns::rdata::createRdata(isc::dns::RRType::A(),
-                                                             isc::dns::RRClass::IN(),
+        bundy::dns::RRsetPtr root_a_rrset(new bundy::dns::RRset(bundy::dns::Name("l.root-servers.net"),
+                                        bundy::dns::RRClass::IN(),
+                                        bundy::dns::RRType::A(),
+                                        bundy::dns::RRTTL(8888)));
+        root_a_rrset->addRdata(bundy::dns::rdata::createRdata(bundy::dns::RRType::A(),
+                                                             bundy::dns::RRClass::IN(),
                                                              "199.7.83.42"));
-        isc::dns::RRsetPtr root_aaaa_rrset(new isc::dns::RRset(isc::dns::Name("l.root-servers.net"),
-                                        isc::dns::RRClass::IN(),
-                                        isc::dns::RRType::AAAA(),
-                                        isc::dns::RRTTL(8888)));
-        root_aaaa_rrset->addRdata(isc::dns::rdata::createRdata(isc::dns::RRType::AAAA(),
-                                                             isc::dns::RRClass::IN(),
+        bundy::dns::RRsetPtr root_aaaa_rrset(new bundy::dns::RRset(bundy::dns::Name("l.root-servers.net"),
+                                        bundy::dns::RRClass::IN(),
+                                        bundy::dns::RRType::AAAA(),
+                                        bundy::dns::RRTTL(8888)));
+        root_aaaa_rrset->addRdata(bundy::dns::rdata::createRdata(bundy::dns::RRType::AAAA(),
+                                                             bundy::dns::RRClass::IN(),
                                                              "2001:500:3::42"));
-        isc::dns::MessagePtr priming_result(new isc::dns::Message(isc::dns::Message::RENDER));
-        priming_result->setRcode(isc::dns::Rcode::NOERROR());
+        bundy::dns::MessagePtr priming_result(new bundy::dns::Message(bundy::dns::Message::RENDER));
+        priming_result->setRcode(bundy::dns::Rcode::NOERROR());
         priming_result->addQuestion(root_question);
-        priming_result->addRRset(isc::dns::Message::SECTION_ANSWER, root_ns_rrset);
-        priming_result->addRRset(isc::dns::Message::SECTION_ADDITIONAL, root_a_rrset);
-        priming_result->addRRset(isc::dns::Message::SECTION_ADDITIONAL, root_aaaa_rrset);
+        priming_result->addRRset(bundy::dns::Message::SECTION_ANSWER, root_ns_rrset);
+        priming_result->addRRset(bundy::dns::Message::SECTION_ADDITIONAL, root_a_rrset);
+        priming_result->addRRset(bundy::dns::Message::SECTION_ADDITIONAL, root_aaaa_rrset);
         cache.update(*priming_result);
         cache.update(root_ns_rrset);
         cache.update(root_a_rrset);
@@ -221,7 +221,7 @@ main(int argc, char* argv[]) {
         LOG_DEBUG(resolver_logger, RESOLVER_DBG_INIT, RESOLVER_SERVICE_CREATED);
 
         cc_session = new Session(io_service.get_io_service());
-        isc::server_common::initSocketRequestor(*cc_session, RESOLVER_NAME);
+        bundy::server_common::initSocketRequestor(*cc_session, RESOLVER_NAME);
 
         // We delay starting listening to new commands/config just before we
         // go into the main loop.   See auth/main.cc for the rationale.

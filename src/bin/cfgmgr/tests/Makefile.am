@@ -23,7 +23,7 @@ endif
 	chmod +x $(abs_builddir)/$$pytest ; \
 	TESTDATA_PATH=$(abs_srcdir)/testdata \
 	$(LIBRARY_PATH_PLACEHOLDER) \
-	PYTHONPATH=$(COMMON_PYTHON_PATH):$(abs_top_builddir)/src/bin/cfgmgr:$(abs_top_builddir)/src/lib/python/isc/config \
+	PYTHONPATH=$(COMMON_PYTHON_PATH):$(abs_top_builddir)/src/bin/cfgmgr:$(abs_top_builddir)/src/lib/python/bundy/config \
 	$(PYCOVERAGE_RUN) $(abs_builddir)/$$pytest || exit ; \
 	done
 

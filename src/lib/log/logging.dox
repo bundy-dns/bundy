@@ -108,7 +108,7 @@ levels or define additional ones.
 @subsection logHierarchical Hierarchical Logging System
 
 When a program writes a message to the logging system, it does so using an
-instance of the @ref isc::log::Logger class.  As well as performing the
+instance of the @ref bundy::log::Logger class.  As well as performing the
 write of the message, the logger identifies the source of the message:
 different sources can write to different destinations and can log
 different severities of messages.  For example, the logger associated
@@ -129,7 +129,7 @@ the cache sets its own values for the debug/file attributes.
 
 More information about the logging hierarchy can be found in the section
 on Logging configuration in the <a
-href="http://bundy.isc.org/docs/bundy-guide.html#logging">BUNDY
+href="http://bundy.bundy.org/docs/bundy-guide.html#logging">BUNDY
 Guide</a>.
 
 @subsection logSeparationUseText Separation of Messages Use from Message Text
@@ -201,7 +201,7 @@ An example file could be:
 @code
 # Example message file
 
-$NAMESPACE isc::log
+$NAMESPACE bundy::log
 
 % LOG_UNRECOGNISED_DIRECTIVE line %1: unrecognised directive '%2'
 A line starting with a dollar symbol was found, but the first word on the line
@@ -368,8 +368,8 @@ to produce two files:
 the form:
 @code
 namespace <namespace-name> {
-   extern const isc::log::MessageID LOG_BAD_DESTINATION;
-   extern const isc::log::MessageID LOG_BAD_SEVERITY;
+   extern const bundy::log::MessageID LOG_BAD_DESTINATION;
+   extern const bundy::log::MessageID LOG_BAD_SEVERITY;
       :
 }
 @endcode
@@ -384,8 +384,8 @@ an internal dictionary.
 
 Symbols are defined to be equal to strings equal to the identifier, e.g.
 @code
-extern const isc::log::MessageID LOG_BAD_DESTINATION = "LOG_BAD_DESTINATION";
-extern const isc::log::MessageID LOG_BAD_SEVERITY = "LOG_BAD_SEVERITY";
+extern const bundy::log::MessageID LOG_BAD_DESTINATION = "LOG_BAD_DESTINATION";
+extern const bundy::log::MessageID LOG_BAD_SEVERITY = "LOG_BAD_SEVERITY";
    :
 @endcode
 (The current implementation allows symbols to be compared.  However,
@@ -400,12 +400,12 @@ namespace {
         :
         NULL
     };
-    const isc::log::MessageInitializer initializer(values);
+    const bundy::log::MessageInitializer initializer(values);
 }
 @endcode
 
-The constructor of the @ref isc::log::MessageInitializer object retrieves
-the singleton global @ref isc::log::MessageDictionary object (created
+The constructor of the @ref bundy::log::MessageInitializer object retrieves
+the singleton global @ref bundy::log::MessageDictionary object (created
 using standard methods to avoid the "static initialization fiasco") and
 adds each identifier and associated text to it. These constructors are run
 when the program starts; a check is made as each identifier is added and,
@@ -419,9 +419,9 @@ The appearance of such a message indicates a programming error.
 If the "-p" option is given, the compiler produces a Python module defining
 the messages.  The content of this is of the form:
 @code
-import isc.log
+import bundy.log
     :
-LOG_WRITE_ERROR = isc.log.create_message("LOG_WRITE_ERROR",
+LOG_WRITE_ERROR = bundy.log.create_message("LOG_WRITE_ERROR",
         "error writing to %1 : %2")
 @endcode
 (The definition is output on one line - it is split across two lines in this
@@ -522,7 +522,7 @@ To use logging in a C++ program or module:
 through which the message will be logged.
 
 @code
-isc::log::Logger logger("name");
+bundy::log::Logger logger("name");
 @endcode
 This declaration can be per-function, or it can be declared statically
 in file scope.  The string passed to the constructor is the name of
@@ -560,7 +560,7 @@ to arg() if the logging settings are such that the message is not going
 to be output (e.g. it is a DEBUG message and the logging is set to output
 messages of INFO severity or above).</li>
 
-<li>The main program unit must include a call to isc::log::initLogger()
+<li>The main program unit must include a call to bundy::log::initLogger()
 (described in more detail below) to set the initial logging severity, debug log
 level, and external message file.
 </ol>
@@ -572,7 +572,7 @@ To use logging in a Python module:
 
 <li>Declare a logger through which the message will be logged.
 @code
-isc.log.Logger logger("name")
+bundy.log.Logger logger("name")
 @endcode
 The string passed to the constructor is the name of the logger (it can
 be any string) and is used when configuring it.  Loggers with the same
@@ -585,7 +585,7 @@ logger.error(LOG_WRITE_ERROR, "output.txt")
 The message parameters are included as trailing arguments in the
 logger call.</li>
 
-<li>The main program unit must include a call to isc.log.init() (described
+<li>The main program unit must include a call to bundy.log.init() (described
 in more detail below) to set the to set the logging severity, debug log
 level, and external message file.  The settings remain in effect until
 the logging configuration is read, so are the ones used during program
@@ -600,14 +600,14 @@ LoggingNotInitialized exception.
 
 @subsection logInitializationCpp C++ Initialization
 Logging Initialization is carried out by calling @ref
-isc::log::initLogger().  There are two variants to the call, one for
+bundy::log::initLogger().  There are two variants to the call, one for
 use by production programs and one for use by unit tests.
 
 @subsubsection logInitializationCppVariant1 Variant #1, Used by Production Programs
 The call that should be used by all production programs is:
 @code
-void isc::log::initLogger(const std::string& root,
-                          isc::log::Severity severity = isc::log::INFO,
+void bundy::log::initLogger(const std::string& root,
+                          bundy::log::Severity severity = bundy::log::INFO,
                           int dbglevel = 0, const char* file = NULL,
                           bool buffer = false);
 @endcode
@@ -624,12 +624,12 @@ the configuration database, this is the severity that it used until then.
 The logging severity is one of the enum defined in @ref logger.h, i.e.
 
 @code
-isc::log::DEBUG
-isc::log::INFO
-isc::log::WARN
-isc::log::ERROR
-isc::log::FATAL
-isc::log::NONE
+bundy::log::DEBUG
+bundy::log::INFO
+bundy::log::WARN
+bundy::log::ERROR
+bundy::log::FATAL
+bundy::log::NONE
 @endcode
 
 (The level NONE may be used to disable logging.)
@@ -637,7 +637,7 @@ isc::log::NONE
 
 <dt><code>dbglevel</code></dt>
 <dd>The debug log level is only interpreted when the severity is
-isc::log::DEBUG and is an integer ranging from 0 to 99.  0 should be
+bundy::log::DEBUG and is an integer ranging from 0 to 99.  0 should be
 used for the highest-level debug messages and 99 for the lowest-level
 (and typically more verbose) messages.</dd>
 
@@ -654,16 +654,16 @@ way the program can use logging before even processing its logging
 configuration. As soon as any specification is processed (even an
 empty one), the buffered log messages will be flushed according to
 the specification. Note that if this option is used, the program
-SHOULD call one of the @ref isc::log::LoggerManager::process() calls.
+SHOULD call one of the @ref bundy::log::LoggerManager::process() calls.
 (If you are using the built-in logging configuration handling in @ref
-isc::config::ModuleCCSession, this is automatically handled.) If the
+bundy::config::ModuleCCSession, this is automatically handled.) If the
 program exits before this is done, all log messages are dumped in a raw
 format to stdout (so that no messages get lost).</dd>
 </dl>
 
 @subsubsection logInitializationCppVariant2 Variant #2, Used by Unit Tests
 @code
-void isc::log::initLogger()
+void bundy::log::initLogger()
 @endcode
 This is the call that should be used by unit tests.  In this variant,
 all the options are supplied by environment variables: it should not
@@ -708,7 +708,7 @@ as is - no leading or trailing spaces, and in lower-case.</dd>
 To initialize the logger in a Python program, the "init" method must be
 called:
 @code
-isc.log.init(name, severity, debuglevel, file, buffer)
+bundy.log.init(name, severity, debuglevel, file, buffer)
 @endcode
 
 <dl>

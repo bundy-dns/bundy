@@ -20,7 +20,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 /// @brief The @c D2Zone encapsulates the Zone section in DNS Update message.
@@ -33,10 +33,10 @@ namespace d2 {
 ///
 /// Note, that this @c D2Zone class neither exposes functions to decode messages
 /// from wire format nor to encode to wire format. This is not needed, because
-/// @c isc::d2::D2UpdateMessage class uses @c D2Zone only to return the parsed
+/// @c bundy::d2::D2UpdateMessage class uses @c D2Zone only to return the parsed
 /// Zone information to the caller. Internally, D2UpdateMessage parses and
-/// stores Zone section using @c isc::dns::Question class, and the @c toWire
-/// and @c fromWire functions of the @c isc::dns::Question class are used.
+/// stores Zone section using @c bundy::dns::Question class, and the @c toWire
+/// and @c fromWire functions of the @c bundy::dns::Question class are used.
 class D2Zone {
 public:
     /// @brief Constructor from Name and RRClass.
@@ -112,6 +112,6 @@ typedef boost::shared_ptr<D2Zone> D2ZonePtr;
 std::ostream& operator<<(std::ostream& os, const D2Zone& zone);
 
 } // namespace d2
-} // namespace isc
+} // namespace bundy
 
 #endif // D2_ZONE_H

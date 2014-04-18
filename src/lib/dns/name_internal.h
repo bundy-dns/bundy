@@ -27,7 +27,7 @@
 // we'll keep it semi-private (note also that except for very performance
 // sensitive applications the standard std::tolower() function should be just
 // sufficient).
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace name {
 namespace internal {

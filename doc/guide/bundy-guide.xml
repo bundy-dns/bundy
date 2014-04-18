@@ -45,7 +45,7 @@
         This is the reference guide for BUNDY version &__VERSION__;.
         The most up-to-date version of this document (in PDF, HTML,
         and plain text formats), along with other documents for
-        BUNDY, can be found at <ulink url="http://bundy.isc.org/docs"/>.
+        BUNDY, can be found at <ulink url="http://bundy.bundy.org/docs"/>.
         </para> </abstract>
 
       <releaseinfo>This is the reference guide for BUNDY version
@@ -365,7 +365,7 @@ lib/
   libauth
   libdns
   libexceptions
-  python3.1/site-packages/isc/{cc,config}
+  python3.1/site-packages/bundy/{cc,config}
 sbin/
   bundy
 share/
@@ -414,7 +414,7 @@ var/
         <listitem>
           <simpara>
             Download the BUNDY source tar file from
-            <ulink url="ftp://ftp.isc.org/isc/bundy/"/>.
+            <ulink url="ftp://ftp.bundy.org/bundy/bundy/"/>.
           </simpara>
         </listitem>
 
@@ -648,7 +648,7 @@ as a dependency earlier -->
 
         <para>
           Visit the user-contributed wiki at <ulink
-          url="http://bundy.isc.org/wiki/SystemSpecificNotes" />
+          url="http://bundy.bundy.org/wiki/SystemSpecificNotes" />
           for system-specific installation tips.
         </para>
 
@@ -673,7 +673,7 @@ as a dependency earlier -->
 
         <para>
           The BUNDY releases are available as tar file downloads from
-          <ulink url="ftp://ftp.isc.org/isc/bundy/"/>.
+          <ulink url="ftp://ftp.bundy.org/bundy/bundy/"/>.
           Periodic development snapshots may also be available.
         </para>
   <!-- TODO -->
@@ -706,10 +706,10 @@ as a dependency earlier -->
         </para>
         <para>
           The code can be checked out from
-          <filename>git://git.bundy.isc.org/bundy</filename>;
+          <filename>git://git.bundy.bundy.org/bundy</filename>;
           for example:
 
-        <screen>$ <userinput>git clone git://git.bundy.isc.org/bundy</userinput></screen>
+        <screen>$ <userinput>git clone git://git.bundy.bundy.org/bundy</userinput></screen>
         </para>
 
         <para>
@@ -1049,7 +1049,7 @@ stuff), but those are also directly parseable python structures (and
 
 loosely based on json, tweaked to be directly parseable in python, but a
 subset of that.
-wiki page is http://bundy.isc.org/wiki/DataElementDesign
+wiki page is http://bundy.bundy.org/wiki/DataElementDesign
 
 nope, spec files are written by module developers, and db should be done
 through bundyctl and friends
@@ -1160,7 +1160,7 @@ but that is a single file, maybe this should go back to that format?
     </para>
 -->
 
-<!-- TODO: Please check https://bundy.isc.org/wiki/cmd-ctrld -->
+<!-- TODO: Please check https://bundy.bundy.org/wiki/cmd-ctrld -->
 
 
     <para>
@@ -2554,7 +2554,7 @@ can use various data source backends.
         The second one, <varname>cache-zones</varname>, is a list of zone
         origins to load into in-memory.
 
-<!-- NOT YET:  http://bundy.isc.org/ticket/2240
+<!-- NOT YET:  http://bundy.bundy.org/ticket/2240
  Once the cache is enabled,
         the zones in the data source not listed in
         <varname>cache-zones</varname> will not be loaded and will
@@ -3029,7 +3029,7 @@ what if a NOTIFY is sent?
         reload the corresponding zone into memory from the backend.
       </para>
 <!-- TODO: currently it delays the queries; see
-http://bundy.isc.org/wiki/ScalableZoneLoadDesign#a7.2UpdatingaZone
+http://bundy.bundy.org/wiki/ScalableZoneLoadDesign#a7.2UpdatingaZone
 -->
 
       <para>
@@ -4542,7 +4542,7 @@ Dhcp4/dhcp-ddns/qualifying-suffix	"example.com"	string
 &gt; <userinput>config add Dhcp4/option-def</userinput>
 &gt; <userinput>config set Dhcp4/option-def[0]/name "subopt1"</userinput>
 &gt; <userinput>config set Dhcp4/option-def[0]/code 1</userinput>
-&gt; <userinput>config set Dhcp4/option-def[0]/space "isc"</userinput>
+&gt; <userinput>config set Dhcp4/option-def[0]/space "bundy"</userinput>
 &gt; <userinput>config set Dhcp4/option-def[0]/type "ipv4-address"</userinput>
 &gt; <userinput>config set Dhcp4/option-def[0]/record-types ""</userinput>
 &gt; <userinput>config set Dhcp4/option-def[0]/array false</userinput>
@@ -4552,7 +4552,7 @@ Dhcp4/dhcp-ddns/qualifying-suffix	"example.com"	string
 &gt; <userinput>config add Dhcp4/option-def</userinput>
 &gt; <userinput>config set Dhcp4/option-def[1]/name "subopt2"</userinput>
 &gt; <userinput>config set Dhcp4/option-def[1]/code 2</userinput>
-&gt; <userinput>config set Dhcp4/option-def[1]/space "isc"</userinput>
+&gt; <userinput>config set Dhcp4/option-def[1]/space "bundy"</userinput>
 &gt; <userinput>config set Dhcp4/option-def[1]/type "string"</userinput>
 &gt; <userinput>config set Dhcp4/option-def[1]/record-types ""</userinput>
 &gt; <userinput>config set Dhcp4/option-def[1]/array false</userinput>
@@ -4560,7 +4560,7 @@ Dhcp4/dhcp-ddns/qualifying-suffix	"example.com"	string
 &gt; <userinput>config commit</userinput>
 </screen>
     Note that we have defined the options to belong to a new option space
-    (in this case, "isc").
+    (in this case, "bundy").
     </para>
     <para>
     The next step is to define a regular DHCPv4 option with our desired
@@ -4573,7 +4573,7 @@ Dhcp4/dhcp-ddns/qualifying-suffix	"example.com"	string
 &gt; <userinput>set Dhcp4/option-def[2]/type "empty"</userinput>
 &gt; <userinput>set Dhcp4/option-def[2]/array false</userinput>
 &gt; <userinput>set Dhcp4/option-def[2]/record-types ""</userinput>
-&gt; <userinput>set Dhcp4/option-def[2]/encapsulate "isc"</userinput>
+&gt; <userinput>set Dhcp4/option-def[2]/encapsulate "bundy"</userinput>
 &gt; <userinput>commit</userinput>
 </screen>
     The name of the option space in which the sub-options are defined
@@ -4586,7 +4586,7 @@ Dhcp4/dhcp-ddns/qualifying-suffix	"example.com"	string
 <screen>
 &gt; <userinput>config add Dhcp4/option-data</userinput>
 &gt; <userinput>config set Dhcp4/option-data[0]/name "subopt1"</userinput>
-&gt; <userinput>config set Dhcp4/option-data[0]/space "isc"</userinput>
+&gt; <userinput>config set Dhcp4/option-data[0]/space "bundy"</userinput>
 &gt; <userinput>config set Dhcp4/option-data[0]/code 1</userinput>
 &gt; <userinput>config set Dhcp4/option-data[0]/csv-format true</userinput>
 &gt; <userinput>config set Dhcp4/option-data[0]/data "192.0.2.3"</userinput>
@@ -4594,7 +4594,7 @@ Dhcp4/dhcp-ddns/qualifying-suffix	"example.com"	string
 <userinput></userinput>
 &gt; <userinput>config add Dhcp4/option-data</userinput>
 &gt; <userinput>config set Dhcp4/option-data[1]/name "subopt2"</userinput>
-&gt; <userinput>config set Dhcp4/option-data[1]/space "isc"</userinput>
+&gt; <userinput>config set Dhcp4/option-data[1]/space "bundy"</userinput>
 &gt; <userinput>config set Dhcp4/option-data[1]/code 2</userinput>
 &gt; <userinput>config set Dhcp4/option-data[1]/csv-format true</userinput>
 &gt; <userinput>config set Dhcp4/option-data[1]/data "Hello world"</userinput>
@@ -6012,7 +6012,7 @@ Dhcp6/dhcp-ddns/qualifying-suffix   "example.com"   string
 &gt; <userinput>config add Dhcp6/option-def</userinput>
 &gt; <userinput>config set Dhcp6/option-def[0]/name "subopt1"</userinput>
 &gt; <userinput>config set Dhcp6/option-def[0]/code 1</userinput>
-&gt; <userinput>config set Dhcp6/option-def[0]/space "isc"</userinput>
+&gt; <userinput>config set Dhcp6/option-def[0]/space "bundy"</userinput>
 &gt; <userinput>config set Dhcp6/option-def[0]/type "ipv6-address"</userinput>
 &gt; <userinput>config set Dhcp6/option-def[0]/record-types ""</userinput>
 &gt; <userinput>config set Dhcp6/option-def[0]/array false</userinput>
@@ -6022,7 +6022,7 @@ Dhcp6/dhcp-ddns/qualifying-suffix   "example.com"   string
 &gt; <userinput>config add Dhcp6/option-def</userinput>
 &gt; <userinput>config set Dhcp6/option-def[1]/name "subopt2"</userinput>
 &gt; <userinput>config set Dhcp6/option-def[1]/code 2</userinput>
-&gt; <userinput>config set Dhcp6/option-def[1]/space "isc"</userinput>
+&gt; <userinput>config set Dhcp6/option-def[1]/space "bundy"</userinput>
 &gt; <userinput>config set Dhcp6/option-def[1]/type "string"</userinput>
 &gt; <userinput>config set Dhcp6/option-def[1]/record-types ""</userinput>
 &gt; <userinput>config set Dhcp6/option-def[1]/array false</userinput>
@@ -6030,11 +6030,11 @@ Dhcp6/dhcp-ddns/qualifying-suffix   "example.com"   string
 &gt; <userinput>config commit</userinput>
 </screen>
     Note that we have defined the options to belong to a new option space
-    (in this case, "isc").
+    (in this case, "bundy").
     </para>
     <para>
 The next step is to define a regular DHCPv6 option and specify that it
-should include options from the isc option space:
+should include options from the bundy option space:
 <screen>
 &gt; <userinput>config add Dhcp6/option-def</userinput>
 &gt; <userinput>config set Dhcp6/option-def[2]/name "container"</userinput>
@@ -6043,7 +6043,7 @@ should include options from the isc option space:
 &gt; <userinput>config set Dhcp6/option-def[2]/type "empty"</userinput>
 &gt; <userinput>config set Dhcp6/option-def[2]/array false</userinput>
 &gt; <userinput>config set Dhcp6/option-def[2]/record-types ""</userinput>
-&gt; <userinput>config set Dhcp6/option-def[2]/encapsulate "isc"</userinput>
+&gt; <userinput>config set Dhcp6/option-def[2]/encapsulate "bundy"</userinput>
 &gt; <userinput>config commit</userinput>
 </screen>
     The name of the option space in which the sub-options are defined
@@ -6056,7 +6056,7 @@ should include options from the isc option space:
 <screen>
 &gt; <userinput>config add Dhcp6/option-data</userinput>
 &gt; <userinput>config set Dhcp6/option-data[0]/name "subopt1"</userinput>
-&gt; <userinput>config set Dhcp6/option-data[0]/space "isc"</userinput>
+&gt; <userinput>config set Dhcp6/option-data[0]/space "bundy"</userinput>
 &gt; <userinput>config set Dhcp6/option-data[0]/code 1</userinput>
 &gt; <userinput>config set Dhcp6/option-data[0]/csv-format true</userinput>
 &gt; <userinput>config set Dhcp6/option-data[0]/data "2001:db8::abcd"</userinput>
@@ -6064,7 +6064,7 @@ should include options from the isc option space:
 &gt; <userinput></userinput>
 &gt; <userinput>config add Dhcp6/option-data</userinput>
 &gt; <userinput>config set Dhcp6/option-data[1]/name "subopt2"</userinput>
-&gt; <userinput>config set Dhcp6/option-data[1]/space "isc"</userinput>
+&gt; <userinput>config set Dhcp6/option-data[1]/space "bundy"</userinput>
 &gt; <userinput>config set Dhcp6/option-data[1]/code 2</userinput>
 &gt; <userinput>config set Dhcp6/option-data[1]/csv-format true</userinput>
 &gt; <userinput>config set Dhcp6/option-data[1]/data "Hello world"</userinput>
@@ -8306,7 +8306,7 @@ Logging/loggers[0]/output_options[0]/maxver	8	integer	(modified)
             index into the <ulink
             url="bundy-messages.html"><citetitle>BUNDY Messages
             Manual</citetitle></ulink> (<ulink
-            url="http://bundy.isc.org/docs/bundy-messages.html"
+            url="http://bundy.bundy.org/docs/bundy-messages.html"
             />) from which more information can be obtained.
           </para></listitem>
           </varlistentry>

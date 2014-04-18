@@ -22,7 +22,7 @@
 
 #include <istream>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace unittest {
 

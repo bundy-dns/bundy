@@ -21,8 +21,8 @@
 
 #include <stdint.h>
 
-using namespace isc::dhcp;
-using namespace isc;
+using namespace bundy::dhcp;
+using namespace bundy;
 
 namespace {
 

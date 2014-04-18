@@ -46,12 +46,12 @@
 
 using namespace std;
 
-using isc::data::Element;
-using isc::data::ConstElementPtr;
-using isc::data::ElementPtr;
-using isc::data::JSONError;
+using bundy::data::Element;
+using bundy::data::ConstElementPtr;
+using bundy::data::ElementPtr;
+using bundy::data::JSONError;
 
-namespace isc {
+namespace bundy {
 namespace config {
 
 /// Creates a standard config/command protocol answer message
@@ -59,8 +59,8 @@ ConstElementPtr
 createAnswer() {
     ElementPtr answer = Element::createMap();
     ElementPtr answer_content = Element::createList();
-    answer_content->add(Element::create(isc::cc::CC_REPLY_SUCCESS));
-    answer->set(isc::cc::CC_PAYLOAD_RESULT, answer_content);
+    answer_content->add(Element::create(bundy::cc::CC_REPLY_SUCCESS));
+    answer->set(bundy::cc::CC_PAYLOAD_RESULT, answer_content);
 
     return (answer);
 }
@@ -68,13 +68,13 @@ createAnswer() {
 ConstElementPtr
 createAnswer(const int rcode, ConstElementPtr arg) {
     if (rcode != 0 && (!arg || arg->getType() != Element::string)) {
-        isc_throw(CCSessionError, "Bad or no argument for rcode != 0");
+        bundy_throw(CCSessionError, "Bad or no argument for rcode != 0");
     }
     ElementPtr answer = Element::createMap();
     ElementPtr answer_content = Element::createList();
     answer_content->add(Element::create(rcode));
     answer_content->add(arg);
-    answer->set(isc::cc::CC_PAYLOAD_RESULT, answer_content);
+    answer->set(bundy::cc::CC_PAYLOAD_RESULT, answer_content);
 
     return (answer);
 }
@@ -85,7 +85,7 @@ createAnswer(const int rcode, const std::string& arg) {
     ElementPtr answer_content = Element::createList();
     answer_content->add(Element::create(rcode));
     answer_content->add(Element::create(arg));
-    answer->set(isc::cc::CC_PAYLOAD_RESULT, answer_content);
+    answer->set(bundy::cc::CC_PAYLOAD_RESULT, answer_content);
 
     return (answer);
 }
@@ -94,29 +94,29 @@ ConstElementPtr
 parseAnswer(int &rcode, ConstElementPtr msg) {
     if (msg &&
         msg->getType() == Element::map &&
-        msg->contains(isc::cc::CC_PAYLOAD_RESULT)) {
-        ConstElementPtr result = msg->get(isc::cc::CC_PAYLOAD_RESULT);
+        msg->contains(bundy::cc::CC_PAYLOAD_RESULT)) {
+        ConstElementPtr result = msg->get(bundy::cc::CC_PAYLOAD_RESULT);
         if (result->getType() != Element::list) {
-            isc_throw(CCSessionError, "Result element in answer message is not a list");
+            bundy_throw(CCSessionError, "Result element in answer message is not a list");
         } else if (result->get(0)->getType() != Element::integer) {
-            isc_throw(CCSessionError, "First element of result is not an rcode in answer message");
+            bundy_throw(CCSessionError, "First element of result is not an rcode in answer message");
         }
         rcode = result->get(0)->intValue();
         if (result->size() > 1) {
             if (rcode == 0 || result->get(1)->getType() == Element::string) {
                 return (result->get(1));
             } else {
-                isc_throw(CCSessionError, "Error description in result with rcode != 0 is not a string");
+                bundy_throw(CCSessionError, "Error description in result with rcode != 0 is not a string");
             }
         } else {
             if (rcode == 0) {
                 return (ElementPtr());
             } else {
-                isc_throw(CCSessionError, "Result with rcode != 0 does not have an error description");
+                bundy_throw(CCSessionError, "Result with rcode != 0 does not have an error description");
             }
         }
     } else {
-        isc_throw(CCSessionError, "No result part in answer message");
+        bundy_throw(CCSessionError, "No result part in answer message");
     }
 }
 
@@ -133,7 +133,7 @@ createCommand(const std::string& command, ConstElementPtr arg) {
     if (arg) {
         cmd_parts->add(arg);
     }
-    cmd->set(isc::cc::CC_PAYLOAD_COMMAND, cmd_parts);
+    cmd->set(bundy::cc::CC_PAYLOAD_COMMAND, cmd_parts);
     return (cmd);
 }
 
@@ -141,8 +141,8 @@ std::string
 parseCommand(ConstElementPtr& arg, ConstElementPtr command) {
     if (command &&
         command->getType() == Element::map &&
-        command->contains(isc::cc::CC_PAYLOAD_COMMAND)) {
-        ConstElementPtr cmd = command->get(isc::cc::CC_PAYLOAD_COMMAND);
+        command->contains(bundy::cc::CC_PAYLOAD_COMMAND)) {
+        ConstElementPtr cmd = command->get(bundy::cc::CC_PAYLOAD_COMMAND);
         if (cmd->getType() == Element::list &&
             !cmd->empty() &&
             cmd->get(0)->getType() == Element::string) {
@@ -153,10 +153,10 @@ parseCommand(ConstElementPtr& arg, ConstElementPtr command) {
             }
             return (cmd->get(0)->stringValue());
         } else {
-            isc_throw(CCSessionError, "Command part in command message missing, empty, or not a list");
+            bundy_throw(CCSessionError, "Command part in command message missing, empty, or not a list");
         }
     } else {
-        isc_throw(CCSessionError, "Command Element empty or not a map with \"command\"");
+        bundy_throw(CCSessionError, "Command Element empty or not a map with \"command\"");
     }
 }
 
@@ -212,22 +212,22 @@ b10Prefix(const std::string& instring) {
 // and sets the values thereing to the given OutputOption struct,
 // or defaults values if they are not provided (from config_data).
 void
-readOutputOptionConf(isc::log::OutputOption& output_option,
+readOutputOptionConf(bundy::log::OutputOption& output_option,
                      ConstElementPtr output_option_el,
                      const ConfigData& config_data)
 {
     ConstElementPtr destination_el = getValueOrDefault(output_option_el,
                                     "destination", config_data,
                                     "loggers/output_options/destination");
-    output_option.destination = isc::log::getDestination(destination_el->stringValue());
+    output_option.destination = bundy::log::getDestination(destination_el->stringValue());
     ConstElementPtr output_el = getValueOrDefault(output_option_el,
                                     "output", config_data,
                                     "loggers/output_options/output");
-    if (output_option.destination == isc::log::OutputOption::DEST_CONSOLE) {
-        output_option.stream = isc::log::getStream(output_el->stringValue());
-    } else if (output_option.destination == isc::log::OutputOption::DEST_FILE) {
+    if (output_option.destination == bundy::log::OutputOption::DEST_CONSOLE) {
+        output_option.stream = bundy::log::getStream(output_el->stringValue());
+    } else if (output_option.destination == bundy::log::OutputOption::DEST_FILE) {
         output_option.filename = output_el->stringValue();
-    } else if (output_option.destination == isc::log::OutputOption::DEST_SYSLOG) {
+    } else if (output_option.destination == bundy::log::OutputOption::DEST_SYSLOG) {
         output_option.facility = output_el->stringValue();
     }
     output_option.flush = getValueOrDefault(output_option_el,
@@ -244,7 +244,7 @@ readOutputOptionConf(isc::log::OutputOption& output_option,
 // Reads a full 'loggers' configuration, and adds the loggers therein
 // to the given vector, fills in blanks with defaults from config_data
 void
-readLoggersConf(std::vector<isc::log::LoggerSpecification>& specs,
+readLoggersConf(std::vector<bundy::log::LoggerSpecification>& specs,
                 ConstElementPtr logger,
                 const ConfigData& config_data)
 {
@@ -254,7 +254,7 @@ readLoggersConf(std::vector<isc::log::LoggerSpecification>& specs,
     ConstElementPtr severity_el = getValueOrDefault(logger,
                                       "severity", config_data,
                                       "loggers/severity");
-    isc::log::Severity severity = isc::log::getSeverity(
+    bundy::log::Severity severity = bundy::log::getSeverity(
                                       severity_el->stringValue());
     int dbg_level = getValueOrDefault(logger, "debuglevel",
                                       config_data,
@@ -262,7 +262,7 @@ readLoggersConf(std::vector<isc::log::LoggerSpecification>& specs,
     bool additive = getValueOrDefault(logger, "additive", config_data,
                                       "loggers/additive")->boolValue();
 
-    isc::log::LoggerSpecification logger_spec(
+    bundy::log::LoggerSpecification logger_spec(
         lname, severity, dbg_level, additive
     );
 
@@ -270,7 +270,7 @@ readLoggersConf(std::vector<isc::log::LoggerSpecification>& specs,
         BOOST_FOREACH(ConstElementPtr output_option_el,
                       logger->get("output_options")->listValue()) {
             // create outputoptions
-            isc::log::OutputOption output_option;
+            bundy::log::OutputOption output_option;
             readOutputOptionConf(output_option,
                                  output_option_el,
                                  config_data);
@@ -309,9 +309,9 @@ ConstElementPtr
 getRelatedLoggers(ConstElementPtr loggers) {
     // Keep a list of names for easier lookup later
     std::set<std::string> our_names;
-    const std::string& root_name = isc::log::getRootLoggerName();
+    const std::string& root_name = bundy::log::getRootLoggerName();
 
-    ElementPtr result = isc::data::Element::createList();
+    ElementPtr result = bundy::data::Element::createList();
 
     BOOST_FOREACH(ConstElementPtr cur_logger, loggers->listValue()) {
         // Need to add the bundy- prefix to names ready from the spec file.
@@ -376,7 +376,7 @@ default_logconfig_handler(const std::string& module_name,
                           const ConfigData& config_data) {
     config_data.getModuleSpec().validateConfig(new_config, true);
 
-    std::vector<isc::log::LoggerSpecification> specs;
+    std::vector<bundy::log::LoggerSpecification> specs;
 
     if (new_config->contains("loggers")) {
         ConstElementPtr loggers = getRelatedLoggers(new_config->get("loggers"));
@@ -386,7 +386,7 @@ default_logconfig_handler(const std::string& module_name,
         }
     }
 
-    isc::log::LoggerManager logger_manager;
+    bundy::log::LoggerManager logger_manager;
     logger_manager.process(specs.begin(), specs.end());
 }
 
@@ -400,17 +400,17 @@ ModuleCCSession::readModuleSpecification(const std::string& filename) {
     file.open(filename.c_str());
     if (!file) {
         LOG_ERROR(config_logger, CONFIG_OPEN_FAIL).arg(filename).arg(strerror(errno));
-        isc_throw(CCSessionInitError, strerror(errno));
+        bundy_throw(CCSessionInitError, strerror(errno));
     }
 
     try {
         module_spec = moduleSpecFromFile(file, true);
     } catch (const JSONError& pe) {
         LOG_ERROR(config_logger, CONFIG_JSON_PARSE).arg(filename).arg(pe.what());
-        isc_throw(CCSessionInitError, pe.what());
+        bundy_throw(CCSessionInitError, pe.what());
     } catch (const ModuleSpecError& dde) {
         LOG_ERROR(config_logger, CONFIG_MOD_SPEC_FORMAT).arg(filename).arg(dde.what());
-        isc_throw(CCSessionInitError, dde.what());
+        bundy_throw(CCSessionInitError, dde.what());
     }
     file.close();
     return (module_spec);
@@ -428,11 +428,11 @@ ModuleCCSession::startCheck() {
 
 ModuleCCSession::ModuleCCSession(
     const std::string& spec_file_name,
-    isc::cc::AbstractSession& session,
-    isc::data::ConstElementPtr(*config_handler)(
-        isc::data::ConstElementPtr new_config),
-    isc::data::ConstElementPtr(*command_handler)(
-        const std::string& command, isc::data::ConstElementPtr args),
+    bundy::cc::AbstractSession& session,
+    bundy::data::ConstElementPtr(*config_handler)(
+        bundy::data::ConstElementPtr new_config),
+    bundy::data::ConstElementPtr(*command_handler)(
+        const std::string& command, bundy::data::ConstElementPtr args),
     bool start_immediately,
     bool handle_logging
     ) :
@@ -460,7 +460,7 @@ ModuleCCSession::ModuleCCSession(
     ConstElementPtr err = parseAnswer(rcode, answer);
     if (rcode != 0) {
         LOG_ERROR(config_logger, CONFIG_MOD_SPEC_REJECT).arg(answer->str());
-        isc_throw(CCSessionInitError, answer->str());
+        bundy_throw(CCSessionInitError, answer->str());
     }
 
     setLocalConfig(Element::createMap());
@@ -477,7 +477,7 @@ ModuleCCSession::ModuleCCSession(
             handleConfigUpdate(new_config);
         } else {
             LOG_ERROR(config_logger, CONFIG_GET_FAIL).arg(new_config->str());
-            isc_throw(CCSessionInitError, answer->str());
+            bundy_throw(CCSessionInitError, answer->str());
         }
     }
 
@@ -507,7 +507,7 @@ ModuleCCSession::~ModuleCCSession() {
 void
 ModuleCCSession::start() {
     if (started_) {
-        isc_throw(CCSessionError, "Module CC session already started");
+        bundy_throw(CCSessionError, "Module CC session already started");
     }
 
     // register callback for asynchronous read
@@ -542,7 +542,7 @@ ModuleCCSession::handleConfigUpdate(ConstElementPtr new_config) {
         parseAnswer(rcode, answer);
         if (rcode == 0) {
             ElementPtr local_config = getLocalConfig();
-            isc::data::merge(local_config, diff);
+            bundy::data::merge(local_config, diff);
             setLocalConfig(local_config);
         }
     }
@@ -619,7 +619,7 @@ ModuleCCSession::checkCommand() {
         /* ignore result messages (in case we're out of sync, to prevent
          * pingpongs */
         if (data->getType() != Element::map ||
-            data->contains(isc::cc::CC_PAYLOAD_RESULT)) {
+            data->contains(bundy::cc::CC_PAYLOAD_RESULT)) {
             return (0);
         }
         ConstElementPtr arg;
@@ -627,7 +627,7 @@ ModuleCCSession::checkCommand() {
         try {
             std::string cmd_str = parseCommand(arg, data);
             std::string target_module =
-                routing->get(isc::cc::CC_HEADER_GROUP)->stringValue();
+                routing->get(bundy::cc::CC_HEADER_GROUP)->stringValue();
             if (cmd_str == "config_update") {
                 answer = checkConfigUpdateCommand(target_module, arg);
             } else {
@@ -671,11 +671,11 @@ ModuleCCSession::fetchRemoteSpec(const std::string& module, bool is_filename) {
             ModuleSpec spec = ModuleSpec(spec_data);
             if (module != spec.getModuleName()) {
                 // It's a different module!
-                isc_throw(CCSessionError, "Module name mismatch");
+                bundy_throw(CCSessionError, "Module name mismatch");
             }
             return (spec);
         } else {
-            isc_throw(CCSessionError, "Error getting config for " +
+            bundy_throw(CCSessionError, "Error getting config for " +
                       module + ": " + answer->str());
         }
     }
@@ -705,10 +705,10 @@ ModuleCCSession::addRemoteConfig(const std::string& spec_name,
     if (rcode == 0 && new_config) {
         // Merge the received config into existing local config
         local_config = rmod_config.getLocalConfig();
-        isc::data::merge(local_config, new_config);
+        bundy::data::merge(local_config, new_config);
         rmod_config.setLocalConfig(local_config);
     } else {
-        isc_throw(CCSessionError, "Error getting config for " + module_name + ": " + answer->str());
+        bundy_throw(CCSessionError, "Error getting config for " + module_name + ": " + answer->str());
     }
 
     // all ok, add it
@@ -745,7 +745,7 @@ ModuleCCSession::getRemoteConfigValue(const std::string& module_name,
     if (it != remote_module_configs_.end()) {
         return ((*it).second.getValue(identifier));
     } else {
-        isc_throw(CCSessionError,
+        bundy_throw(CCSessionError,
                   "Remote module " + module_name + " not found.");
     }
 }
@@ -759,7 +759,7 @@ ModuleCCSession::updateRemoteConfig(const std::string& module_name,
     it = remote_module_configs_.find(module_name);
     if (it != remote_module_configs_.end()) {
         ElementPtr rconf = (*it).second.getLocalConfig();
-        isc::data::merge(rconf, new_config);
+        bundy::data::merge(rconf, new_config);
         std::map<std::string, RemoteHandler>::iterator hit =
             remote_module_handlers_.find(module_name);
         if (hit != remote_module_handlers_.end()) {
@@ -844,19 +844,19 @@ bool
 ModuleCCSession::requestMatch(const AsyncRecvRequest& request,
                               const ConstElementPtr& envelope) const
 {
-    if (request.is_reply != envelope->contains(isc::cc::CC_HEADER_REPLY)) {
+    if (request.is_reply != envelope->contains(bundy::cc::CC_HEADER_REPLY)) {
         // Wrong type of message
         return (false);
     }
     if (request.is_reply &&
         (request.seq == -1 ||
-         request.seq == envelope->get(isc::cc::CC_HEADER_REPLY)->intValue())) {
+         request.seq == envelope->get(bundy::cc::CC_HEADER_REPLY)->intValue())) {
         // This is the correct reply
         return (true);
     }
     if (!request.is_reply &&
         (request.recipient.empty() || request.recipient ==
-         envelope->get(isc::cc::CC_HEADER_GROUP)->stringValue())) {
+         envelope->get(bundy::cc::CC_HEADER_GROUP)->stringValue())) {
         // This is the correct command
         return (true);
     }
@@ -882,10 +882,10 @@ ModuleCCSession::rpcCall(const std::string &command, const std::string &group,
     groupRecvMsg(env, answer, true, seq);
     int rcode;
     const ConstElementPtr result(parseAnswer(rcode, answer));
-    if (rcode == isc::cc::CC_REPLY_NO_RECPT) {
-        isc_throw(RPCRecipientMissing, result);
-    } else if (rcode != isc::cc::CC_REPLY_SUCCESS) {
-        isc_throw_1(RPCError, result, rcode);
+    if (rcode == bundy::cc::CC_REPLY_NO_RECPT) {
+        bundy_throw(RPCRecipientMissing, result);
+    } else if (rcode != bundy::cc::CC_REPLY_SUCCESS) {
+        bundy_throw_1(RPCError, result, rcode);
     } else {
         return (result);
     }
@@ -901,10 +901,10 @@ ModuleCCSession::notify(const std::string& group, const std::string& name,
     if (params) {
         notification->add(params);
     }
-    message->set(isc::cc::CC_PAYLOAD_NOTIFICATION, notification);
-    groupSendMsg(message, isc::cc::CC_GROUP_NOTIFICATION_PREFIX + group,
-                 isc::cc::CC_INSTANCE_WILDCARD,
-                 isc::cc::CC_TO_WILDCARD, false);
+    message->set(bundy::cc::CC_PAYLOAD_NOTIFICATION, notification);
+    groupSendMsg(message, bundy::cc::CC_GROUP_NOTIFICATION_PREFIX + group,
+                 bundy::cc::CC_INSTANCE_WILDCARD,
+                 bundy::cc::CC_TO_WILDCARD, false);
 }
 
 ModuleCCSession::NotificationID
@@ -920,7 +920,7 @@ ModuleCCSession::subscribeNotification(const std::string& notification_group,
     if (inserted.second) {
         // It was newly inserted. In that case, we need to subscribe to the
         // group.
-        session_.subscribe(isc::cc::CC_GROUP_NOTIFICATION_PREFIX +
+        session_.subscribe(bundy::cc::CC_GROUP_NOTIFICATION_PREFIX +
                            notification_group);
     }
     // Insert the callback to the chain
@@ -938,7 +938,7 @@ ModuleCCSession::unsubscribeNotification(const NotificationID& notification) {
     callbacks.erase(notification.second);
     // If it became empty, remove it from the map and unsubscribe
     if (callbacks.empty()) {
-        session_.unsubscribe(isc::cc::CC_GROUP_NOTIFICATION_PREFIX +
+        session_.unsubscribe(bundy::cc::CC_GROUP_NOTIFICATION_PREFIX +
                              notification.first->first);
         notifications_.erase(notification.first);
     }
@@ -952,15 +952,15 @@ ModuleCCSession::checkNotification(const data::ConstElementPtr& envelope,
         // If it's not a map, then it's not a notification
         return (false);
     }
-    if (msg->contains(isc::cc::CC_PAYLOAD_NOTIFICATION)) {
+    if (msg->contains(bundy::cc::CC_PAYLOAD_NOTIFICATION)) {
         // There's a notification inside. Extract its parameters.
         const std::string& group =
-            envelope->get(isc::cc::CC_HEADER_GROUP)->stringValue();
+            envelope->get(bundy::cc::CC_HEADER_GROUP)->stringValue();
         const std::string& notification_group =
-            group.substr(std::string(isc::cc::CC_GROUP_NOTIFICATION_PREFIX).
+            group.substr(std::string(bundy::cc::CC_GROUP_NOTIFICATION_PREFIX).
                          size());
         const data::ConstElementPtr& notification =
-            msg->get(isc::cc::CC_PAYLOAD_NOTIFICATION);
+            msg->get(bundy::cc::CC_PAYLOAD_NOTIFICATION);
         // The first one is the event that happened
         const std::string& event = notification->get(0)->stringValue();
         // Any other params are second. But they may be missing

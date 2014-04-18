@@ -32,11 +32,11 @@
 #include <unistd.h>
 
 using boost::scoped_ptr;
-using namespace isc::auth;
-using namespace isc::config;
-using namespace isc::data;
-using namespace isc::datasrc;
-using namespace isc::dns;
+using namespace bundy::auth;
+using namespace bundy::config;
+using namespace bundy::data;
+using namespace bundy::datasrc;
+using namespace bundy::dns;
 using namespace std;
 
 namespace {
@@ -44,12 +44,12 @@ namespace {
 /// on an \c AuthSrv object.
 ///
 /// Currently it's only used internally, since \c execAuthServerCommand()
-/// (which is the only interface to this module) catches all \c isc::
+/// (which is the only interface to this module) catches all \c bundy::
 /// exceptions and converts them.
-class AuthCommandError : public isc::Exception {
+class AuthCommandError : public bundy::Exception {
 public:
     AuthCommandError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// An abstract base class that represents a single command identifier
@@ -104,13 +104,13 @@ public:
     /// value from the command handler called from the corresponding
     /// \c CCSession object.  For a successful completion of the command,
     /// it should suffice to return the return value of
-    /// \c isc::config::createAnswer() with no argument.
+    /// \c bundy::config::createAnswer() with no argument.
     ///
     /// \param server The \c AuthSrv object on which the command is executed.
     /// \param args Command specific argument.
     /// \return Command execution result.
     virtual ConstElementPtr exec(AuthSrv& server,
-                                 isc::data::ConstElementPtr args) = 0;
+                                 bundy::data::ConstElementPtr args) = 0;
 };
 
 // Handle the "shutdown" command. An optional parameter "pid" is used to
@@ -118,7 +118,7 @@ public:
 class ShutdownCommand : public AuthCommand {
 public:
     virtual ConstElementPtr exec(AuthSrv& server,
-                                 isc::data::ConstElementPtr args)
+                                 bundy::data::ConstElementPtr args)
     {
         // Is the pid argument provided?
         if (args && args->contains("pid")) {
@@ -147,7 +147,7 @@ public:
 // Handle the "getstats" command.  The argument is a list.
 class GetStatsCommand : public AuthCommand {
 public:
-    virtual ConstElementPtr exec(AuthSrv& server, isc::data::ConstElementPtr) {
+    virtual ConstElementPtr exec(AuthSrv& server, bundy::data::ConstElementPtr) {
         return (createAnswer(0, server.getStatistics()));
     }
 };
@@ -155,7 +155,7 @@ public:
 class StartDDNSForwarderCommand : public AuthCommand {
 public:
     virtual ConstElementPtr exec(AuthSrv& server,
-                                 isc::data::ConstElementPtr) {
+                                 bundy::data::ConstElementPtr) {
         server.createDDNSForwarder();
         return (createAnswer());
     }
@@ -164,7 +164,7 @@ public:
 class StopDDNSForwarderCommand : public AuthCommand {
 public:
     virtual ConstElementPtr exec(AuthSrv& server,
-                                 isc::data::ConstElementPtr) {
+                                 bundy::data::ConstElementPtr) {
         server.destroyDDNSForwarder();
         return (createAnswer());
     }
@@ -174,7 +174,7 @@ public:
 class LoadZoneCommand : public AuthCommand {
 public:
     virtual ConstElementPtr exec(AuthSrv& server,
-                                 isc::data::ConstElementPtr args)
+                                 bundy::data::ConstElementPtr args)
     {
         server.getDataSrcClientsMgr().loadZone(args);
         return (createAnswer());
@@ -204,7 +204,7 @@ createAuthCommand(const string& command_id) {
         throw runtime_error("throwing for test");
     }
 
-    isc_throw(AuthCommandError, "Unknown command identifier: " << command_id);
+    bundy_throw(AuthCommandError, "Unknown command identifier: " << command_id);
 }
 } // end of unnamed namespace
 
@@ -216,7 +216,7 @@ execAuthServerCommand(AuthSrv& server, const string& command_id,
     try {
         return (scoped_ptr<AuthCommand>(
                     createAuthCommand(command_id))->exec(server, args));
-    } catch (const isc::Exception& ex) {
+    } catch (const bundy::Exception& ex) {
         LOG_ERROR(auth_logger, AUTH_COMMAND_FAILED).arg(command_id)
                                                    .arg(ex.what());
         return (createAnswer(1, ex.what()));

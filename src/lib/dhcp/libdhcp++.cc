@@ -33,8 +33,8 @@
 #include <boost/shared_ptr.hpp>
 
 using namespace std;
-using namespace isc::dhcp;
-using namespace isc::util;
+using namespace bundy::dhcp;
+using namespace bundy::util;
 
 // static array with factories for options
 std::map<unsigned short, Option::Factory*> LibDHCP::v4factories_;
@@ -55,10 +55,10 @@ VendorOptionDefContainers LibDHCP::vendor6_defs_;
 // Those two vendor classes are used for cable modems:
 
 /// DOCSIS3.0 compatible cable modem
-const char* isc::dhcp::DOCSIS3_CLASS_MODEM = "docsis3.0";
+const char* bundy::dhcp::DOCSIS3_CLASS_MODEM = "docsis3.0";
 
 /// DOCSIS3.0 cable modem that has router built-in
-const char* isc::dhcp::DOCSIS3_CLASS_EROUTER = "eRouter1.0";
+const char* bundy::dhcp::DOCSIS3_CLASS_EROUTER = "eRouter1.0";
 
 // Let's keep it in .cc file. Moving it to .h would require including optionDefParams
 // definitions there
@@ -82,7 +82,7 @@ LibDHCP::getOptionDefs(const Option::Universe u) {
         }
         return (v6option_defs_);
     default:
-        isc_throw(isc::BadValue, "invalid universe " << u << " specified");
+        bundy_throw(bundy::BadValue, "invalid universe " << u << " specified");
     }
 }
 
@@ -190,17 +190,17 @@ LibDHCP::optionFactory(Option::Universe u,
     if (u == Option::V4) {
         it = v4factories_.find(type);
         if (it == v4factories_.end()) {
-            isc_throw(BadValue, "factory function not registered "
+            bundy_throw(BadValue, "factory function not registered "
             "for DHCP v4 option type " << type);
         }
     } else if (u == Option::V6) {
         it = v6factories_.find(type);
         if (it == v6factories_.end()) {
-            isc_throw(BadValue, "factory function not registered "
+            bundy_throw(BadValue, "factory function not registered "
                       "for DHCPv6 option type " << type);
         }
     } else {
-        isc_throw(BadValue, "invalid universe specified (expected "
+        bundy_throw(BadValue, "invalid universe specified (expected "
                   "Option::V4 or Option::V6");
     }
     return (it->second(u, type, buf));
@@ -209,7 +209,7 @@ LibDHCP::optionFactory(Option::Universe u,
 
 size_t LibDHCP::unpackOptions6(const OptionBuffer& buf,
                                const std::string& option_space,
-                               isc::dhcp::OptionCollection& options,
+                               bundy::dhcp::OptionCollection& options,
                                size_t* relay_msg_offset /* = 0 */,
                                size_t* relay_msg_len /* = 0 */) {
     size_t offset = 0;
@@ -231,10 +231,10 @@ size_t LibDHCP::unpackOptions6(const OptionBuffer& buf,
     // The buffer being read comprises a set of options, each starting with
     // a two-byte type code and a two-byte length field.
     while (offset + 4 <= length) {
-        uint16_t opt_type = isc::util::readUint16(&buf[offset], 2);
+        uint16_t opt_type = bundy::util::readUint16(&buf[offset], 2);
         offset += 2;
 
-        uint16_t opt_len = isc::util::readUint16(&buf[offset], 2);
+        uint16_t opt_len = bundy::util::readUint16(&buf[offset], 2);
         offset += 2;
 
         if (offset + opt_len > length) {
@@ -280,7 +280,7 @@ size_t LibDHCP::unpackOptions6(const OptionBuffer& buf,
         OptionPtr opt;
         if (num_defs > 1) {
             // Multiple options of the same code are not supported right now!
-            isc_throw(isc::Unexpected, "Internal error: multiple option definitions"
+            bundy_throw(bundy::Unexpected, "Internal error: multiple option definitions"
                       " for option type " << opt_type << " returned. Currently it is not"
                       " supported to initialize multiple option definitions"
                       " for the same option code. This will be supported once"
@@ -312,7 +312,7 @@ size_t LibDHCP::unpackOptions6(const OptionBuffer& buf,
 
 size_t LibDHCP::unpackOptions4(const OptionBuffer& buf,
                                const std::string& option_space,
-                               isc::dhcp::OptionCollection& options) {
+                               bundy::dhcp::OptionCollection& options) {
     size_t offset = 0;
 
     // Get the list of stdandard option definitions.
@@ -345,13 +345,13 @@ size_t LibDHCP::unpackOptions4(const OptionBuffer& buf,
         if (offset + 1 >= buf.size()) {
             // opt_type must be cast to integer so as it is not treated as
             // unsigned char value (a number is presented in error message).
-            isc_throw(OutOfRange, "Attempt to parse truncated option "
+            bundy_throw(OutOfRange, "Attempt to parse truncated option "
                       << static_cast<int>(opt_type));
         }
 
         uint8_t opt_len =  buf[offset++];
         if (offset + opt_len > buf.size()) {
-            isc_throw(OutOfRange, "Option parse failed. Tried to parse "
+            bundy_throw(OutOfRange, "Option parse failed. Tried to parse "
                       << offset + opt_len << " bytes from " << buf.size()
                       << "-byte long buffer.");
         }
@@ -367,7 +367,7 @@ size_t LibDHCP::unpackOptions4(const OptionBuffer& buf,
         OptionPtr opt;
         if (num_defs > 1) {
             // Multiple options of the same code are not supported right now!
-            isc_throw(isc::Unexpected, "Internal error: multiple option definitions"
+            bundy_throw(bundy::Unexpected, "Internal error: multiple option definitions"
                       " for option type " << static_cast<int>(opt_type)
                       << " returned. Currently it is not supported to initialize"
                       << " multiple option definitions for the same option code."
@@ -395,7 +395,7 @@ size_t LibDHCP::unpackOptions4(const OptionBuffer& buf,
 
 size_t LibDHCP::unpackVendorOptions6(const uint32_t vendor_id,
                                      const OptionBuffer& buf,
-                                     isc::dhcp::OptionCollection& options) {
+                                     bundy::dhcp::OptionCollection& options) {
     size_t offset = 0;
     size_t length = buf.size();
 
@@ -413,10 +413,10 @@ size_t LibDHCP::unpackVendorOptions6(const uint32_t vendor_id,
     // The buffer being read comprises a set of options, each starting with
     // a two-byte type code and a two-byte length field.
     while (offset + 4 <= length) {
-        uint16_t opt_type = isc::util::readUint16(&buf[offset], 2);
+        uint16_t opt_type = bundy::util::readUint16(&buf[offset], 2);
         offset += 2;
 
-        uint16_t opt_len = isc::util::readUint16(&buf[offset], 2);
+        uint16_t opt_len = bundy::util::readUint16(&buf[offset], 2);
         offset += 2;
 
         if (offset + opt_len > length) {
@@ -439,7 +439,7 @@ size_t LibDHCP::unpackVendorOptions6(const uint32_t vendor_id,
 
             if (num_defs > 1) {
                 // Multiple options of the same code are not supported right now!
-                isc_throw(isc::Unexpected, "Internal error: multiple option definitions"
+                bundy_throw(bundy::Unexpected, "Internal error: multiple option definitions"
                           " for option type " << opt_type << " returned. Currently it is not"
                           " supported to initialize multiple option definitions"
                           " for the same option code. This will be supported once"
@@ -475,7 +475,7 @@ size_t LibDHCP::unpackVendorOptions6(const uint32_t vendor_id,
 }
 
 size_t LibDHCP::unpackVendorOptions4(const uint32_t vendor_id, const OptionBuffer& buf,
-                                     isc::dhcp::OptionCollection& options) {
+                                     bundy::dhcp::OptionCollection& options) {
     size_t offset = 0;
 
     // Get the list of stdandard option definitions.
@@ -519,13 +519,13 @@ size_t LibDHCP::unpackVendorOptions4(const uint32_t vendor_id, const OptionBuffe
             if (offset + 1 >= buf.size()) {
                 // opt_type must be cast to integer so as it is not treated as
                 // unsigned char value (a number is presented in error message).
-                isc_throw(OutOfRange, "Attempt to parse truncated option "
+                bundy_throw(OutOfRange, "Attempt to parse truncated option "
                           << static_cast<int>(opt_type));
             }
 
             uint8_t opt_len =  buf[offset++];
             if (offset + opt_len > buf.size()) {
-                isc_throw(OutOfRange, "Option parse failed. Tried to parse "
+                bundy_throw(OutOfRange, "Option parse failed. Tried to parse "
                           << offset + opt_len << " bytes from " << buf.size()
                           << "-byte long buffer.");
             }
@@ -544,7 +544,7 @@ size_t LibDHCP::unpackVendorOptions4(const uint32_t vendor_id, const OptionBuffe
 
                 if (num_defs > 1) {
                     // Multiple options of the same code are not supported right now!
-                    isc_throw(isc::Unexpected, "Internal error: multiple option definitions"
+                    bundy_throw(bundy::Unexpected, "Internal error: multiple option definitions"
                               " for option type " << static_cast<int>(opt_type)
                               << " returned. Currently it is not supported to initialize"
                               << " multiple option definitions for the same option code."
@@ -579,7 +579,7 @@ size_t LibDHCP::unpackVendorOptions4(const uint32_t vendor_id, const OptionBuffe
 
 
 void
-LibDHCP::packOptions(isc::util::OutputBuffer& buf,
+LibDHCP::packOptions(bundy::util::OutputBuffer& buf,
                      const OptionCollection& options) {
     for (OptionCollection::const_iterator it = options.begin();
          it != options.end(); ++it) {
@@ -593,7 +593,7 @@ void LibDHCP::OptionFactoryRegister(Option::Universe u,
     switch (u) {
     case Option::V6: {
         if (v6factories_.find(opt_type) != v6factories_.end()) {
-            isc_throw(BadValue, "There is already DHCPv6 factory registered "
+            bundy_throw(BadValue, "There is already DHCPv6 factory registered "
                      << "for option type "  << opt_type);
         }
         v6factories_[opt_type]=factory;
@@ -604,23 +604,23 @@ void LibDHCP::OptionFactoryRegister(Option::Universe u,
         // Option 0 is special (a one octet-long, equal 0) PAD option. It is never
         // instantiated as an Option object, but rather consumed during packet parsing.
         if (opt_type == 0) {
-            isc_throw(BadValue, "Cannot redefine PAD option (code=0)");
+            bundy_throw(BadValue, "Cannot redefine PAD option (code=0)");
         }
         // Option 255 is never instantiated as an option object. It is special
         // (a one-octet equal 255) option that is added at the end of all options
         // during packet assembly. It is also silently consumed during packet parsing.
         if (opt_type > 254) {
-            isc_throw(BadValue, "Too big option type for DHCPv4, only 0-254 allowed.");
+            bundy_throw(BadValue, "Too big option type for DHCPv4, only 0-254 allowed.");
         }
         if (v4factories_.find(opt_type)!=v4factories_.end()) {
-            isc_throw(BadValue, "There is already DHCPv4 factory registered "
+            bundy_throw(BadValue, "There is already DHCPv4 factory registered "
                      << "for option type "  << opt_type);
         }
         v4factories_[opt_type]=factory;
         return;
     }
     default:
-        isc_throw(BadValue, "Invalid universe type specified.");
+        bundy_throw(BadValue, "Invalid universe type specified.");
     }
 
     return;
@@ -655,7 +655,7 @@ void initOptionSpace(OptionDefContainer& defs,
     for (int i = 0; i < params_size; ++i) {
         std::string encapsulates(params[i].encapsulates);
         if (!encapsulates.empty() && params[i].array) {
-            isc_throw(isc::BadValue, "invalid standard option definition: "
+            bundy_throw(bundy::BadValue, "invalid standard option definition: "
                       << "option with code '" << params[i].code
                       << "' may not encapsulate option space '"
                       << encapsulates << "' because the definition"
@@ -688,7 +688,7 @@ void initOptionSpace(OptionDefContainer& defs,
 
         try {
             definition->validate();
-        } catch (const isc::Exception& ex) {
+        } catch (const bundy::Exception& ex) {
             // This is unlikely event that validation fails and may
             // be only caused by programming error. To guarantee the
             // data consistency we clear all option definitions that

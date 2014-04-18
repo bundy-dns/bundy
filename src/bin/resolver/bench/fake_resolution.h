@@ -24,7 +24,7 @@
 #include <utility>
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace resolver {
 namespace bench {
 
@@ -87,10 +87,10 @@ public:
     /// If this returns true, do not call performTask or nextTask any more.
     /// The resolution is done.
     ///
-    /// \throw isc::InvalidOperation if upstream query is still in progress.
+    /// \throw bundy::InvalidOperation if upstream query is still in progress.
     bool done() const {
         if (outstanding_) {
-            isc_throw(isc::InvalidOperation, "Upstream query outstanding");
+            bundy_throw(bundy::InvalidOperation, "Upstream query outstanding");
         }
         return (steps_.empty());
     }
@@ -106,7 +106,7 @@ public:
     /// callback is delayed for some period of time after the method
     /// returns.
     ///
-    /// \throw isc::InvalidOperation if it is called when done() is true, or
+    /// \throw bundy::InvalidOperation if it is called when done() is true, or
     ///     if an upstream query is still in progress (performTask was called
     ///     before and the callback was not called by the query yet).
     void performTask(const StepCallback& callback);
@@ -114,13 +114,13 @@ public:
     ///
     /// Call this to know what kind of task will performTask do next.
     ///
-    /// \throw isc::InvalidOperation if it is called when done() is true, or
+    /// \throw bundy::InvalidOperation if it is called when done() is true, or
     ///     if an upstream query is still in progress (performTask was called
     ///     before and the callback was not called by the query yet).
     Task nextTask() const {
         // Will check for outstanding_ internally too
         if (done()) {
-            isc_throw(isc::InvalidOperation, "We are done, no more tasks");
+            bundy_throw(bundy::InvalidOperation, "We are done, no more tasks");
         }
         return (steps_.back().first);
     }
@@ -133,11 +133,11 @@ public:
     /// You don't have to lock either of the interfaces to do so, this
     /// only switches the data in the query.
     ///
-    /// \throw isc::InvalidOperation if it is called while an upstream query
+    /// \throw bundy::InvalidOperation if it is called while an upstream query
     ///     is in progress.
     void migrateTo(FakeInterface& dst_interface) {
         if (outstanding_) {
-            isc_throw(isc::InvalidOperation,
+            bundy_throw(bundy::InvalidOperation,
                       "Can't migrate in the middle of query");
         }
         interface_ = &dst_interface;

@@ -23,7 +23,7 @@ main(int argc, char* argv[]) {
 
     // See the documentation of the BUNDY_* environment variables in
     // src/lib/log/README for info on how to tweak logging
-    isc::log::initLogger();
+    bundy::log::initLogger();
 
     int result = RUN_ALL_TESTS();
 

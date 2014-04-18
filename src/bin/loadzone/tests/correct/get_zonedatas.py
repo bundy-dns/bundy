@@ -1,4 +1,4 @@
-from isc.datasrc import sqlite3_ds
+from bundy.datasrc import sqlite3_ds
 import sys
 ZONE_FILE = sys.argv[1]
 zonename_set = ["include.", "ttl1.", "ttl2.", "mix1.", "mix2.", "ttlext.", "example.com.", "comment.example.com."]

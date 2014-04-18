@@ -28,10 +28,10 @@
 
 using namespace std;
 using boost::lexical_cast;
-using namespace isc::util;
-using namespace isc::util::encode;
+using namespace bundy::util;
+using namespace bundy::util::encode;
 
-// BEGIN_ISC_NAMESPACE
+// BEGIN_BUNDY_NAMESPACE
 // BEGIN_RDATA_NAMESPACE
 
 struct TLSAImpl {
@@ -56,21 +56,21 @@ TLSA::constructFromLexer(MasterLexer& lexer) {
     const uint32_t certificate_usage =
         lexer.getNextToken(MasterToken::NUMBER).getNumber();
     if (certificate_usage > 255) {
-        isc_throw(InvalidRdataText,
+        bundy_throw(InvalidRdataText,
                   "TLSA certificate usage field out of range");
     }
 
     const uint32_t selector =
         lexer.getNextToken(MasterToken::NUMBER).getNumber();
     if (selector > 255) {
-        isc_throw(InvalidRdataText,
+        bundy_throw(InvalidRdataText,
                   "TLSA selector field out of range");
     }
 
     const uint32_t matching_type =
         lexer.getNextToken(MasterToken::NUMBER).getNumber();
     if (matching_type > 255) {
-        isc_throw(InvalidRdataText,
+        bundy_throw(InvalidRdataText,
                   "TLSA matching type field out of range");
     }
 
@@ -90,14 +90,14 @@ TLSA::constructFromLexer(MasterLexer& lexer) {
     lexer.ungetToken();
 
     if (certificate_assoc_data.empty()) {
-        isc_throw(InvalidRdataText, "Empty TLSA certificate association data");
+        bundy_throw(InvalidRdataText, "Empty TLSA certificate association data");
     }
 
     vector<uint8_t> data;
     try {
         decodeHex(certificate_assoc_data, data);
-    } catch (const isc::BadValue& e) {
-        isc_throw(InvalidRdataText,
+    } catch (const bundy::BadValue& e) {
+        bundy_throw(InvalidRdataText,
                   "Bad TLSA certificate association data: " << e.what());
     }
 
@@ -140,11 +140,11 @@ TLSA::TLSA(const string& tlsa_str) :
         impl_ptr.reset(constructFromLexer(lexer));
 
         if (lexer.getNextToken().getType() != MasterToken::END_OF_FILE) {
-            isc_throw(InvalidRdataText, "extra input text for TLSA: "
+            bundy_throw(InvalidRdataText, "extra input text for TLSA: "
                       << tlsa_str);
         }
     } catch (const MasterLexer::LexerError& ex) {
-        isc_throw(InvalidRdataText, "Failed to construct TLSA from '" <<
+        bundy_throw(InvalidRdataText, "Failed to construct TLSA from '" <<
                   tlsa_str << "': " << ex.what());
     }
 
@@ -178,7 +178,7 @@ TLSA::TLSA(MasterLexer& lexer, const Name*,
 /// to be missing (see the description of the constructor from string).
 TLSA::TLSA(InputBuffer& buffer, size_t rdata_len) {
     if (rdata_len < 3) {
-        isc_throw(InvalidRdataLength, "TLSA record too short");
+        bundy_throw(InvalidRdataLength, "TLSA record too short");
     }
 
     const uint8_t certificate_usage = buffer.readUint8();
@@ -189,7 +189,7 @@ TLSA::TLSA(InputBuffer& buffer, size_t rdata_len) {
     rdata_len -= 3;
 
     if (rdata_len == 0) {
-        isc_throw(InvalidRdataLength,
+        bundy_throw(InvalidRdataLength,
                   "Empty TLSA certificate association data");
     }
 
@@ -204,14 +204,14 @@ TLSA::TLSA(uint8_t certificate_usage, uint8_t selector,
     impl_(NULL)
 {
     if (certificate_assoc_data.empty()) {
-        isc_throw(InvalidRdataText, "Empty TLSA certificate association data");
+        bundy_throw(InvalidRdataText, "Empty TLSA certificate association data");
     }
 
     vector<uint8_t> data;
     try {
         decodeHex(certificate_assoc_data, data);
-    } catch (const isc::BadValue& e) {
-        isc_throw(InvalidRdataText,
+    } catch (const bundy::BadValue& e) {
+        bundy_throw(InvalidRdataText,
                   "Bad TLSA certificate association data: " << e.what());
     }
 
@@ -347,4 +347,4 @@ TLSA::getDataLength() const {
 }
 
 // END_RDATA_NAMESPACE
-// END_ISC_NAMESPACE
+// END_BUNDY_NAMESPACE

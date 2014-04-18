@@ -21,8 +21,8 @@
 #include <dhcpsrv/subnet.h>
 #include <user_chk.h>
 
-using namespace isc::dhcp;
-using namespace isc::hooks;
+using namespace bundy::dhcp;
+using namespace bundy::hooks;
 using namespace user_chk;
 using namespace std;
 
@@ -56,7 +56,7 @@ int subnet4_select(CalloutHandle& handle) {
 
     try {
         // Get subnet collection. If it's empty just bail nothing to do.
-        const isc::dhcp::Subnet4Collection *subnets = NULL;
+        const bundy::dhcp::Subnet4Collection *subnets = NULL;
         handle.getArgument("subnet4collection", subnets);
         if (subnets->empty()) {
             return (0);
@@ -111,7 +111,7 @@ int subnet6_select(CalloutHandle& handle) {
 
     try {
         // Get subnet collection. If it's empty just bail nothing to do.
-        const isc::dhcp::Subnet6Collection *subnets = NULL;
+        const bundy::dhcp::Subnet6Collection *subnets = NULL;
         handle.getArgument("subnet6collection", subnets);
         if (subnets->empty()) {
             return (0);

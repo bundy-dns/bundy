@@ -24,7 +24,7 @@
 #include <vector>
 #include <string.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 HWAddr::HWAddr()
@@ -34,14 +34,14 @@ HWAddr::HWAddr()
 HWAddr::HWAddr(const uint8_t* hwaddr, size_t len, uint8_t htype)
     :hwaddr_(hwaddr, hwaddr + len), htype_(htype) {
     if (len > MAX_HWADDR_LEN) {
-        isc_throw(InvalidParameter, "hwaddr length exceeds MAX_HWADDR_LEN");
+        bundy_throw(InvalidParameter, "hwaddr length exceeds MAX_HWADDR_LEN");
     }
 }
 
 HWAddr::HWAddr(const std::vector<uint8_t>& hwaddr, uint8_t htype)
     :hwaddr_(hwaddr), htype_(htype) {
     if (hwaddr.size() > MAX_HWADDR_LEN) {
-        isc_throw(InvalidParameter,
+        bundy_throw(InvalidParameter,
             "address vector size exceeds MAX_HWADDR_LEN");
     }
 }
@@ -77,7 +77,7 @@ HWAddr::fromText(const std::string& text, const uint8_t htype) {
         // means that two consecutive colons were specified. This is not
         // allowed for hardware address.
         if ((split_text.size() > 1) && split_text[i].empty()) {
-            isc_throw(isc::BadValue, "failed to create hardware address"
+            bundy_throw(bundy::BadValue, "failed to create hardware address"
                       " from text '" << text << "': tokens of the hardware"
                       " address must be separated with a single colon");
 
@@ -85,7 +85,7 @@ HWAddr::fromText(const std::string& text, const uint8_t htype) {
             s << "0";
 
         } else if (split_text[i].size() > 2) {
-            isc_throw(isc::BadValue, "invalid hwaddr '" << text << "'");
+            bundy_throw(bundy::BadValue, "invalid hwaddr '" << text << "'");
         }
         s << split_text[i];
     }
@@ -94,7 +94,7 @@ HWAddr::fromText(const std::string& text, const uint8_t htype) {
     try {
         util::encode::decodeHex(s.str(), binary);
     } catch (const Exception& ex) {
-        isc_throw(isc::BadValue, "failed to create hwaddr from text '"
+        bundy_throw(bundy::BadValue, "failed to create hwaddr from text '"
                   << text << "': " << ex.what());
     }
     return (HWAddr(binary, htype));
@@ -109,5 +109,5 @@ bool HWAddr::operator!=(const HWAddr& other) const {
     return !(*this == other);
 }
 
-}; // end of isc::dhcp namespace
-}; // end of isc namespace
+}; // end of bundy::dhcp namespace
+}; // end of bundy namespace

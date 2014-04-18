@@ -34,9 +34,9 @@
 #include <dns/rdataclass.h>
 
 using namespace std;
-using namespace isc::util;
+using namespace bundy::util;
 
-// BEGIN_ISC_NAMESPACE
+// BEGIN_BUNDY_NAMESPACE
 // BEGIN_RDATA_NAMESPACE
 
 namespace {
@@ -50,15 +50,15 @@ convertToIPv4Addr(const char* src, size_t src_len, uint32_t* dst) {
     // pass std::string.size() or StringRegion::len as src_len, so it should
     // be equal to strlen() unless there's an intermediate nul character.
     if (src_len != strlen(src)) {
-        isc_throw(InvalidRdataText,
+        bundy_throw(InvalidRdataText,
                   "Bad IN/A RDATA text: unexpected nul in string: '"
                   << src << "'");
     }
     const int result = inet_pton(AF_INET, src, dst);
     if (result == 0) {
-        isc_throw(InvalidRdataText, "Bad IN/A RDATA text: '" << src << "'");
+        bundy_throw(InvalidRdataText, "Bad IN/A RDATA text: '" << src << "'");
     } else if (result < 0) {
-        isc_throw(isc::Unexpected,
+        bundy_throw(bundy::Unexpected,
                   "Unexpected failure in parsing IN/A RDATA text: '"
                   << src << "': " << std::strerror(errno));
     }
@@ -128,12 +128,12 @@ A::A(MasterLexer& lexer, const Name*,
 
 A::A(InputBuffer& buffer, size_t rdata_len) {
     if (rdata_len != sizeof(addr_)) {
-        isc_throw(DNSMessageFORMERR,
+        bundy_throw(DNSMessageFORMERR,
                   "IN/A RDATA construction from wire failed: Invalid length: "
                   << rdata_len);
     }
     if (buffer.getLength() - buffer.getPosition() < sizeof(addr_)) {
-        isc_throw(DNSMessageFORMERR,
+        bundy_throw(DNSMessageFORMERR,
                   "IN/A RDATA construction from wire failed: "
                   "insufficient buffer length: "
                   << buffer.getLength() - buffer.getPosition());
@@ -161,7 +161,7 @@ A::toText() const {
     char addr_string[sizeof("255.255.255.255")];
 
     if (inet_ntop(AF_INET, &addr_, addr_string, sizeof(addr_string)) == NULL) {
-        isc_throw(Unexpected,
+        bundy_throw(Unexpected,
                   "Failed to convert IN/A RDATA to textual IPv4 address");
     }
 
@@ -177,4 +177,4 @@ A::compare(const Rdata& other) const {
     return (memcmp(&addr_, &other_a.addr_, sizeof(addr_)));
 }
 // END_RDATA_NAMESPACE
-// END_ISC_NAMESPACE
+// END_BUNDY_NAMESPACE

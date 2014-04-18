@@ -24,8 +24,8 @@
 #include "command_options_helper.h"
 
 using namespace std;
-using namespace isc;
-using namespace isc::perfdhcp;
+using namespace bundy;
+using namespace bundy::perfdhcp;
 using namespace boost::posix_time;
 
 // Verify that default constructor sets lease type to the expected value.
@@ -112,7 +112,7 @@ TEST(LeaseTypeTest, fromCommandLine) {
     EXPECT_TRUE(lease_type.is(CommandOptions::LeaseType::ADDRESS_AND_PREFIX));
 
     EXPECT_THROW(lease_type.fromCommandLine("bogus-parameter"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 
 }
 
@@ -283,11 +283,11 @@ TEST_F(CommandOptionsTest, IpVersion) {
 
     // Negative test cases
     // -4 and -6 must not coexist
-    EXPECT_THROW(process("perfdhcp -4 -6 -l ethx all"), isc::InvalidParameter);
+    EXPECT_THROW(process("perfdhcp -4 -6 -l ethx all"), bundy::InvalidParameter);
     // -6 and -B must not coexist
-    EXPECT_THROW(process("perfdhcp -6 -B -l ethx all"), isc::InvalidParameter);
+    EXPECT_THROW(process("perfdhcp -6 -B -l ethx all"), bundy::InvalidParameter);
     // -c and -4 (default) must not coexist
-    EXPECT_THROW(process("perfdhcp -c -l ethx all"), isc::InvalidParameter);
+    EXPECT_THROW(process("perfdhcp -c -l ethx all"), bundy::InvalidParameter);
 }
 
 TEST_F(CommandOptionsTest, LeaseType) {
@@ -324,16 +324,16 @@ TEST_F(CommandOptionsTest, Rate) {
     // Negative test cases
     // Rate must not be 0
     EXPECT_THROW(process("perfdhcp -4 -r 0 -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     // -r must be specified to use -n, -p and -D
     EXPECT_THROW(process("perfdhcp -6 -t 5 -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(process("perfdhcp -4 -n 150 -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(process("perfdhcp -6 -p 120 -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(process("perfdhcp -4 -D 1400 -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 TEST_F(CommandOptionsTest, RenewRate) {
@@ -349,28 +349,28 @@ TEST_F(CommandOptionsTest, RenewRate) {
     EXPECT_EQ(5, opt.getRenewRate());
     // The renew rate should not be greater than the rate.
     EXPECT_THROW(process("perfdhcp -6 -r 10 -f 11 -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     // The renew-rate of 0 is invalid.
     EXPECT_THROW(process("perfdhcp -6 -r 10 -f 0 -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     // The negative renew-rate is invalid.
     EXPECT_THROW(process("perfdhcp -6 -r 10 -f -5 -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     // If -r<rate> is not specified the -f<renew-rate> should not
     // be accepted.
     EXPECT_THROW(process("perfdhcp -6 -f 10 -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     // Currently the -f<renew-rate> can be specified for IPv6 mode
     // only.
     EXPECT_THROW(process("perfdhcp -4 -r 10 -f 10 -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     // Renew rate should be specified.
     EXPECT_THROW(process("perfdhcp -6 -r 10 -f -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 
     // -f and -i are mutually exclusive
     EXPECT_THROW(process("perfdhcp -6 -r 10 -f 10 -l ethx -i all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 TEST_F(CommandOptionsTest, ReleaseRate) {
@@ -386,28 +386,28 @@ TEST_F(CommandOptionsTest, ReleaseRate) {
     EXPECT_EQ(5, opt.getReleaseRate());
     // The release rate should not be greater than the rate.
     EXPECT_THROW(process("perfdhcp -6 -r 10 -F 11 -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     // The release-rate of 0 is invalid.
     EXPECT_THROW(process("perfdhcp -6 -r 10 -F 0 -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     // The negative rlease-rate is invalid.
     EXPECT_THROW(process("perfdhcp -6 -r 10 -F -5 -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     // If -r<rate> is not specified the -F<release-rate> should not
     // be accepted.
     EXPECT_THROW(process("perfdhcp -6 -F 10 -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     // Currently the -F<release-rate> can be specified for IPv6 mode
     // only.
     EXPECT_THROW(process("perfdhcp -4 -r 10 -F 10 -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     // Release rate should be specified.
     EXPECT_THROW(process("perfdhcp -6 -r 10 -F -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 
     // -F and -i are mutually exclusive
     EXPECT_THROW(process("perfdhcp -6 -r 10 -F 10 -l ethx -i all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 TEST_F(CommandOptionsTest, ReleaseRenew) {
@@ -426,7 +426,7 @@ TEST_F(CommandOptionsTest, ReleaseRenew) {
     // Check that the sum of the release and renew rate is not greater
     // than the rate specified as -r<rate>.
     EXPECT_THROW(process("perfdhcp -6 -F 6 -f 5 -r 10 -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 TEST_F(CommandOptionsTest, ReportDelay) {
@@ -437,11 +437,11 @@ TEST_F(CommandOptionsTest, ReportDelay) {
     // Negative test cases
     // -t must be positive integer
     EXPECT_THROW(process("perfdhcp -r 10 -t -8 -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(process("perfdhcp -r 10 -t 0 -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(process("perfdhcp -r 10 -t s -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 TEST_F(CommandOptionsTest, ClientsNum) {
@@ -454,9 +454,9 @@ TEST_F(CommandOptionsTest, ClientsNum) {
     // Negative test cases
     // Number of clients must be non-negative integer
     EXPECT_THROW(process("perfdhcp -R -5 -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(process("perfdhcp -R gs -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 TEST_F(CommandOptionsTest, Base) {
@@ -501,25 +501,25 @@ TEST_F(CommandOptionsTest, Base) {
     // "t" is invalid character in DUID
     EXPECT_THROW(process("perfdhcp -6 -l ethx -b "
                          "duid=010101010101010101t110111F14 all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     // "3x" is invalid value in MAC address
     EXPECT_THROW(process("perfdhcp -b mac=10::2::3x::4::5::6 -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     // Base is not specified
     EXPECT_THROW(process("perfdhcp -b -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     // Typo: should be mac= instead of mc=
     EXPECT_THROW(process("perfdhcp -l ethx -b mc=00:01:02:03::04:05 all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     // Too short DUID (< 6).
     EXPECT_THROW(process("perfdhcp -l ethx -b duid=00010203 all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     // Odd number of digits.
     EXPECT_THROW(process("perfdhcp -l ethx -b duid=000102030405060 all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     // Too short MAC (!= 6).
     EXPECT_THROW(process("perfdhcp -l ethx -b mac=00:01:02:04 all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 TEST_F(CommandOptionsTest, DropTime) {
@@ -537,9 +537,9 @@ TEST_F(CommandOptionsTest, DropTime) {
     // Negative test cases
     // Drop time must not be negative
     EXPECT_THROW(process("perfdhcp -l ethx -d -2 -d 4.7 all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(process("perfdhcp -l ethx -d -9.1 -d 0 all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 TEST_F(CommandOptionsTest, TimeOffset) {
@@ -550,13 +550,13 @@ TEST_F(CommandOptionsTest, TimeOffset) {
     // Negative test cases
     // Argument -E must be used with -T
     EXPECT_THROW(process("perfdhcp -l ethx -E 3 -i all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     // Value in -E not specified
     EXPECT_THROW(process("perfdhcp -l ethx -T file.x -E -i all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     // Value for -E must not be negative
     EXPECT_THROW(process("perfdhcp -l ethx -E -3 -T file.x all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 TEST_F(CommandOptionsTest, ExchangeMode) {
@@ -567,16 +567,16 @@ TEST_F(CommandOptionsTest, ExchangeMode) {
     // Negative test cases
     // No template file specified
     EXPECT_THROW(process("perfdhcp -i -l ethx -X 3 all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     // Offsets can't be used in simple exchanges (-i)
     EXPECT_THROW(process("perfdhcp -i -l ethx -O 2 -T file.x all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(process("perfdhcp -i -l ethx -E 3 -T file.x all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(process("perfdhcp -i -l ethx -S 1 -T file.x all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(process("perfdhcp -i -l ethx -I 2 -T file.x all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 TEST_F(CommandOptionsTest, Offsets) {
@@ -596,9 +596,9 @@ TEST_F(CommandOptionsTest, Offsets) {
     // Negative test cases
     // IP offset/IA_NA offset must be positive
     EXPECT_THROW(process("perfdhcp -6 -I 0 -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(process("perfdhcp -6 -I -4 -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 
     // TODO - other negative cases
 }
@@ -611,11 +611,11 @@ TEST_F(CommandOptionsTest, LocalPort) {
     // Negative test cases
     // Local port must be between 0..65535
     EXPECT_THROW(process("perfdhcp -l ethx -L -2 all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(process("perfdhcp -l ethx -L all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(process("perfdhcp -l ethx -L 65540 all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 TEST_F(CommandOptionsTest, Preload) {
@@ -626,9 +626,9 @@ TEST_F(CommandOptionsTest, Preload) {
     // Negative test cases
     // Number of preload packages must not be negative integer
     EXPECT_THROW(process("perfdhcp -P -1 -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(process("perfdhcp -P -3 -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 TEST_F(CommandOptionsTest, Seed) {
@@ -644,9 +644,9 @@ TEST_F(CommandOptionsTest, Seed) {
     // Negtaive test cases
     // Seed must be non-negative integer
     EXPECT_THROW(process("perfdhcp -6 -P 2 -s -5 -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(process("perfdhcp -6 -P 2 -s -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 TEST_F(CommandOptionsTest, TemplateFiles) {
@@ -663,11 +663,11 @@ TEST_F(CommandOptionsTest, TemplateFiles) {
     // Negative test cases
     // No template file specified
     EXPECT_THROW(process("perfdhcp -s 12 -T -l ethx all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     // Too many template files specified
     EXPECT_THROW(process("perfdhcp -s 12 -l ethx -T file.x "
                          "-T file.x -T file.x all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 TEST_F(CommandOptionsTest, Wrapped) {
@@ -678,7 +678,7 @@ TEST_F(CommandOptionsTest, Wrapped) {
     // Negative test cases
     // Missing command after -w, expected start/stop
     EXPECT_THROW(process("perfdhcp -B -i -l ethx -w all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 TEST_F(CommandOptionsTest, Diagnostics) {
@@ -689,7 +689,7 @@ TEST_F(CommandOptionsTest, Diagnostics) {
     // Negative test cases
     // No diagnostics string specified
     EXPECT_THROW(process("perfdhcp -l ethx -i -x all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 TEST_F(CommandOptionsTest, Aggressivity) {
@@ -700,11 +700,11 @@ TEST_F(CommandOptionsTest, Aggressivity) {
     // Negative test cases
     // Aggressivity must be non negative integer
     EXPECT_THROW(process("perfdhcp -l ethx -a 0 all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(process("perfdhcp -l ethx -a all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(process("perfdhcp -a -2 -l ethx -a 3 all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 TEST_F(CommandOptionsTest, MaxDrop) {
@@ -727,15 +727,15 @@ TEST_F(CommandOptionsTest, MaxDrop) {
     // Negative test cases
     // Too many -D<value> options
     EXPECT_THROW(process("perfdhcp -D 0% -D 1 -l ethx -r20 -D 3 all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     // Too many -D<value%> options
     EXPECT_THROW(process("perfdhcp -D 99% -D 13% -l ethx -r20 -D 10% all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     // Percentage is out of bounds
     EXPECT_THROW(process("perfdhcp -D101% -D 13% -l ethx -r20 all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(process("perfdhcp -D0% -D 13% -l ethx -r20 all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 TEST_F(CommandOptionsTest, NumRequest) {
@@ -749,12 +749,12 @@ TEST_F(CommandOptionsTest, NumRequest) {
     // Negative test cases
     // Too many -n<value> parameters, expected maximum 2
     EXPECT_THROW(process("perfdhcp -n 1 -n 2 -l ethx -n3 -r 20 all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     // Num request must be positive integer
     EXPECT_THROW(process("perfdhcp -n 1 -n -22 -l ethx -r 10 all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(process("perfdhcp -n 0 -l ethx -r 10 all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 TEST_F(CommandOptionsTest, Period) {
@@ -765,9 +765,9 @@ TEST_F(CommandOptionsTest, Period) {
     // Negative test cases
     // Test period must be positive integer
     EXPECT_THROW(process("perfdhcp -p 0 -l ethx -r 50 all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(process("perfdhcp -p -3 -l ethx -r 50 all"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 TEST_F(CommandOptionsTest, Interface) {
@@ -795,7 +795,7 @@ TEST_F(CommandOptionsTest, Interface) {
 
         // If neither interface nor server is specified then
         // exception is expected to be thrown.
-        EXPECT_THROW(process("perfdhcp -4"), isc::InvalidParameter);
+        EXPECT_THROW(process("perfdhcp -4"), bundy::InvalidParameter);
     }
 }
 

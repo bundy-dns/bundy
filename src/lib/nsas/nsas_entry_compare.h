@@ -18,7 +18,7 @@
 #include "hash_key.h"
 #include "hash_table.h"
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 
 /// \brief Hash Table Comparison Object
@@ -48,6 +48,6 @@ public:
 };
 
 } // namespace nsas
-} // namespace isc
+} // namespace bundy
 
 #endif // NSAS_ENTRY_COMPARE_H

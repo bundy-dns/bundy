@@ -17,8 +17,8 @@
 
 #include <string.h>
 
-using namespace isc;
-using namespace isc::asiolink;
+using namespace bundy;
+using namespace bundy::asiolink;
 
 namespace {
 
@@ -45,10 +45,10 @@ const uint8_t bitMask6[]= { 0, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, 0xff };
 ///
 /// @param prefix IPv6 prefix
 /// @param len prefix length
-isc::asiolink::IOAddress firstAddrInPrefix6(const isc::asiolink::IOAddress& prefix,
+bundy::asiolink::IOAddress firstAddrInPrefix6(const bundy::asiolink::IOAddress& prefix,
                                             uint8_t len) {
     if (len > 128) {
-        isc_throw(isc::BadValue,
+        bundy_throw(bundy::BadValue,
                   "Too large netmask. 0..128 is allowed in IPv6");
     }
 
@@ -82,7 +82,7 @@ isc::asiolink::IOAddress firstAddrInPrefix6(const isc::asiolink::IOAddress& pref
     }
 
     // Finally, let's wrap this into nice and easy IOAddress object.
-    return (isc::asiolink::IOAddress::fromBytes(AF_INET6, packed));
+    return (bundy::asiolink::IOAddress::fromBytes(AF_INET6, packed));
 }
 
 /// @brief calculates the first IPv4 address in a IPv4 prefix
@@ -92,10 +92,10 @@ isc::asiolink::IOAddress firstAddrInPrefix6(const isc::asiolink::IOAddress& pref
 ///
 /// @param prefix IPv4 prefix
 /// @param len netmask length (0-32)
-isc::asiolink::IOAddress firstAddrInPrefix4(const isc::asiolink::IOAddress& prefix,
+bundy::asiolink::IOAddress firstAddrInPrefix4(const bundy::asiolink::IOAddress& prefix,
                                             uint8_t len) {
     if (len > 32) {
-        isc_throw(isc::BadValue, "Too large netmask. 0..32 is allowed in IPv4");
+        bundy_throw(bundy::BadValue, "Too large netmask. 0..32 is allowed in IPv4");
     }
 
     // We don't check that it is a valid IPv4 address and thus has
@@ -112,10 +112,10 @@ isc::asiolink::IOAddress firstAddrInPrefix4(const isc::asiolink::IOAddress& pref
 ///
 /// @param prefix IPv4 prefix that we calculate first address for
 /// @param len netmask length (0-32)
-isc::asiolink::IOAddress lastAddrInPrefix4(const isc::asiolink::IOAddress& prefix,
+bundy::asiolink::IOAddress lastAddrInPrefix4(const bundy::asiolink::IOAddress& prefix,
                                            uint8_t len) {
     if (len > 32) {
-        isc_throw(isc::BadValue, "Too large netmask. 0..32 is allowed in IPv4");
+        bundy_throw(bundy::BadValue, "Too large netmask. 0..32 is allowed in IPv4");
     }
 
     uint32_t addr = prefix;
@@ -129,10 +129,10 @@ isc::asiolink::IOAddress lastAddrInPrefix4(const isc::asiolink::IOAddress& prefi
 ///
 /// @param prefix IPv6 prefix that we calculate first address for
 /// @param len netmask length (0-128)
-isc::asiolink::IOAddress lastAddrInPrefix6(const isc::asiolink::IOAddress& prefix,
+bundy::asiolink::IOAddress lastAddrInPrefix6(const bundy::asiolink::IOAddress& prefix,
                                            uint8_t len) {
     if (len > 128) {
-        isc_throw(isc::BadValue,
+        bundy_throw(bundy::BadValue,
                   "Too large netmask. 0..128 is allowed in IPv6");
     }
 
@@ -165,15 +165,15 @@ isc::asiolink::IOAddress lastAddrInPrefix6(const isc::asiolink::IOAddress& prefi
     }
 
     // Finally, let's wrap this into nice and easy IOAddress object.
-    return (isc::asiolink::IOAddress::fromBytes(AF_INET6, packed));
+    return (bundy::asiolink::IOAddress::fromBytes(AF_INET6, packed));
 }
 
 }; // end of anonymous namespace
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
-isc::asiolink::IOAddress firstAddrInPrefix(const isc::asiolink::IOAddress& prefix,
+bundy::asiolink::IOAddress firstAddrInPrefix(const bundy::asiolink::IOAddress& prefix,
                                            uint8_t len) {
     if (prefix.isV4()) {
         return (firstAddrInPrefix4(prefix, len));
@@ -184,7 +184,7 @@ isc::asiolink::IOAddress firstAddrInPrefix(const isc::asiolink::IOAddress& prefi
     }
 }
 
-isc::asiolink::IOAddress lastAddrInPrefix(const isc::asiolink::IOAddress& prefix,
+bundy::asiolink::IOAddress lastAddrInPrefix(const bundy::asiolink::IOAddress& prefix,
                                            uint8_t len) {
     if (prefix.isV4()) {
         return (lastAddrInPrefix4(prefix, len));
@@ -195,9 +195,9 @@ isc::asiolink::IOAddress lastAddrInPrefix(const isc::asiolink::IOAddress& prefix
     }
 }
 
-isc::asiolink::IOAddress getNetmask4(uint8_t len) {
+bundy::asiolink::IOAddress getNetmask4(uint8_t len) {
     if (len > 32) {
-        isc_throw(BadValue, "Invalid netmask size " << len << ", allowed range "
+        bundy_throw(BadValue, "Invalid netmask size " << len << ", allowed range "
                   "is 0..32");
     }
     uint32_t x = ~bitMask4[len];

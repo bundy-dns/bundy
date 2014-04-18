@@ -8,7 +8,7 @@ bundy_zonemgrdir = $(pkgdatadir)
 bundy_zonemgr_DATA = zonemgr.spec
 
 nodist_pylogmessage_PYTHON = $(PYTHON_LOGMSGPKG_DIR)/work/zonemgr_messages.py
-pylogmessagedir = $(pyexecdir)/isc/log_messages/
+pylogmessagedir = $(pyexecdir)/bundy/log_messages/
 
 CLEANFILES  = bundy-zonemgr zonemgr.pyc zonemgr.spec
 CLEANFILES += $(PYTHON_LOGMSGPKG_DIR)/work/zonemgr_messages.py

@@ -28,8 +28,8 @@
 
 using std::string;
 
-using namespace isc::datasrc;
-using namespace isc::datasrc::test;
+using namespace bundy::datasrc;
+using namespace bundy::datasrc::test;
 
 namespace {
 boost::shared_ptr<DatabaseAccessor>
@@ -41,7 +41,7 @@ createSQLite3Accessor() {
     if (std::system(install_cmd) != 0) {
         // any exception will do, this is failure in test setup, but nice
         // to show the command that fails, and shouldn't be caught
-        isc_throw(isc::Unexpected,
+        bundy_throw(bundy::Unexpected,
                   "Error setting up; command failed: " << install_cmd);
     }
 

@@ -26,15 +26,15 @@ from optparse import OptionParser, OptionValueError
 import errno
 import select
 
-import isc.cc
-import isc.config
-import isc.util.process
-import isc.util.traceback_handler
-import isc.log
-from isc.log_messages.stats_messages import *
+import bundy.cc
+import bundy.config
+import bundy.util.process
+import bundy.util.traceback_handler
+import bundy.log
+from bundy.log_messages.stats_messages import *
 
-isc.log.init("bundy-stats", buffer=True)
-logger = isc.log.Logger("stats")
+bundy.log.init("bundy-stats", buffer=True)
+logger = bundy.log.Logger("stats")
 
 # Some constants for debug levels.
 DBG_STATS_MESSAGING = logger.DBGLVL_COMMAND
@@ -43,7 +43,7 @@ DBG_STATS_MESSAGING = logger.DBGLVL_COMMAND
 _BASETIME = gmtime()
 
 # for setproctitle
-isc.util.process.rename()
+bundy.util.process.rename()
 
 # If BUNDY_FROM_SOURCE is set in the environment, we use data files
 # from a directory relative to that, otherwise we use the ones
@@ -187,7 +187,7 @@ class StatsError(Exception):
     """Exception class for Stats class"""
     pass
 
-class InitSessionTimeout(isc.cc.session.SessionTimeout):
+class InitSessionTimeout(bundy.cc.session.SessionTimeout):
     """SessionTimeout Exception in the session between the stats module and the
     init module"""
     pass
@@ -196,7 +196,7 @@ class Stats:
     """
     Main class of stats module
     """
-    def __init__(self, module_ccsession_class=isc.config.ModuleCCSession):
+    def __init__(self, module_ccsession_class=bundy.config.ModuleCCSession):
         '''Constructor
 
         module_ccsession_class is parameterized so that test can specify
@@ -269,15 +269,15 @@ class Stats:
         # 'show_processes' of Init
         try:
             value = self.mccs.rpc_call('show_processes', 'Init')
-        except isc.config.RPCRecipientMissing:
+        except bundy.config.RPCRecipientMissing:
             # This has been SessionTimeout before, so we keep the original
             # behavior.
             raise
-        except isc.config.RPCError:
+        except bundy.config.RPCError:
             # TODO: Is it OK to just pass? As part of refactoring, preserving
             # the original behaviour.
             value = None
-        except isc.cc.session.SessionTimeout as e:
+        except bundy.cc.session.SessionTimeout as e:
             raise InitSessionTimeout(e)
         modules = []
         if type(value) is list:
@@ -322,7 +322,7 @@ class Stats:
                 continue
             logger.debug(DBG_STATS_MESSAGING, STATS_SEND_STATISTICS_REQUEST,
                          module_name)
-            cmd = isc.config.ccsession.create_command(
+            cmd = bundy.config.ccsession.create_command(
                 "getstats", None) # no argument
             # Not using rpc_call here. We first send a bunch of commands, then
             # collect all the answers. This eliminates some of the round-trip
@@ -348,12 +348,12 @@ class Stats:
             try:
                 answer, env = self.cc_session.group_recvmsg(False, seq)
                 if answer:
-                    rcode, args = isc.config.ccsession.parse_answer(answer)
+                    rcode, args = bundy.config.ccsession.parse_answer(answer)
                     if rcode == 0:
                         _statistics_data.append(
                             (module_name, env['from'], args))
             # skip this module if SessionTimeout raised
-            except isc.cc.session.SessionTimeout:
+            except bundy.cc.session.SessionTimeout:
                 logger.warn(STATS_SKIP_COLLECTING, module_name)
         return _statistics_data
 
@@ -401,7 +401,7 @@ class Stats:
         try:
             answer, env = self.cc_session.group_recvmsg(nonblock)
             self.mccs.check_command_without_recvmsg(answer, env)
-        except isc.cc.session.SessionTimeout:
+        except bundy.cc.session.SessionTimeout:
             pass # waited for poll-interval seconds
         # restore timeout
         self.cc_session.set_timeout(orig_timeout)
@@ -437,19 +437,19 @@ class Stats:
         errors = []
         if not self.mccs.get_module_spec().\
                 validate_config(False, new_config, errors):
-                return isc.config.ccsession.create_answer(
+                return bundy.config.ccsession.create_answer(
                     1, ", ".join(errors))
 
         if 'poll-interval' in new_config \
                 and new_config['poll-interval'] < 0:
-            return isc.config.ccsession.create_answer(
+            return bundy.config.ccsession.create_answer(
                 1, "Negative integer ignored")
 
         self.config.update(new_config)
         if 'poll-interval' in self.config:
             # update next polling timestamp
             self.next_polltime = get_timestamp() + self.get_interval()
-        return isc.config.create_answer(0)
+        return bundy.config.create_answer(0)
 
     def command_handler(self, command, kwargs):
         """
@@ -464,7 +464,7 @@ class Stats:
                 return callback()
         else:
             logger.error(STATS_RECEIVED_UNKNOWN_COMMAND, command)
-            return isc.config.create_answer(1, "Unknown command: '"+str(command)+"'")
+            return bundy.config.create_answer(1, "Unknown command: '"+str(command)+"'")
 
     def update_modules(self):
         """
@@ -475,16 +475,16 @@ class Stats:
         """
         modules = {}
         try:
-            value = self.mccs.rpc_call(isc.config.ccsession. \
+            value = self.mccs.rpc_call(bundy.config.ccsession. \
                                        COMMAND_GET_STATISTICS_SPEC,
                                        'ConfigManager')
-        except isc.config.RPCError as e:
+        except bundy.config.RPCError as e:
             raise StatsError("Updating module spec fails: " + str(e))
         for mod in value:
             spec = { "module_name" : mod }
             if value[mod] and type(value[mod]) is list:
                 spec["statistics"] = value[mod]
-            modules[mod] = isc.config.module_spec.ModuleSpec(spec)
+            modules[mod] = bundy.config.module_spec.ModuleSpec(spec)
         modules[self.module_name] = self.mccs.get_module_spec()
         self.modules = modules
 
@@ -584,7 +584,7 @@ class Stats:
                     # the key string might be a "xx/yy/zz[0]"
                     # type. try it.
                     if _key.find('/') >= 0 or \
-                            isc.cc.data.identifier_has_list_index(_key):
+                            bundy.cc.data.identifier_has_list_index(_key):
                         # remove the last error
                         if errors: errors.pop()
                         # try updata and check validation in adavance
@@ -593,9 +593,9 @@ class Stats:
                             __data[owner] = {}
                         if mid not in __data[owner]:
                             __data[owner][mid] = {}
-                        # use the isc.cc.data.set method
+                        # use the bundy.cc.data.set method
                         try:
-                            isc.cc.data.set(__data[owner][mid], _key, _val)
+                            bundy.cc.data.set(__data[owner][mid], _key, _val)
                             if self.modules[owner].validate_statistics(
                                 False, __data[owner][mid], errors):
                                 _data = __data
@@ -637,7 +637,7 @@ class Stats:
         handle status command
         """
         logger.debug(DBG_STATS_MESSAGING, STATS_RECEIVED_STATUS_COMMAND)
-        return isc.config.create_answer(
+        return bundy.config.create_answer(
             0, "Stats is up. (PID " + str(os.getpid()) + ")")
 
     def command_shutdown(self, pid=None):
@@ -648,7 +648,7 @@ class Stats:
         """
         logger.info(STATS_RECEIVED_SHUTDOWN_COMMAND)
         self.running = False
-        return isc.config.create_answer(0)
+        return bundy.config.create_answer(0)
 
     def command_show(self, owner=None, name=None):
         """
@@ -678,10 +678,10 @@ class Stats:
             raise StatsError("stats spec file is incorrect: "
                              + ", ".join(errors))
         try:
-            return isc.config.create_answer(
+            return bundy.config.create_answer(
                 0, self.get_statistics_data(owner, name))
         except StatsError:
-            return isc.config.create_answer(
+            return bundy.config.create_answer(
                 1, "specified arguments are incorrect: " \
                     + "owner: " + str(owner) + ", name: " + str(name))
 
@@ -709,17 +709,17 @@ class Stats:
         if owner:
             try:
                 if name:
-                    return isc.config.create_answer(0, {owner:[schema_byname[owner][name]]})
+                    return bundy.config.create_answer(0, {owner:[schema_byname[owner][name]]})
                 else:
-                    return isc.config.create_answer(0, {owner:schema[owner]})
+                    return bundy.config.create_answer(0, {owner:schema[owner]})
             except KeyError:
                 pass
         else:
             if name:
-                return isc.config.create_answer(1, "module name is not specified")
+                return bundy.config.create_answer(1, "module name is not specified")
             else:
-                return isc.config.create_answer(0, schema)
-        return isc.config.create_answer(
+                return bundy.config.create_answer(0, schema)
+        return bundy.config.create_answer(
                 1, "specified arguments are incorrect: " \
                     + "owner: " + str(owner) + ", name: " + str(name))
 
@@ -731,13 +731,13 @@ def main():
             help="enable maximum debug logging")
         (options, args) = parser.parse_args()
         if options.verbose:
-            isc.log.init("bundy-stats", "DEBUG", 99, buffer=True)
+            bundy.log.init("bundy-stats", "DEBUG", 99, buffer=True)
         stats = Stats()
         stats.start()
     except OptionValueError as ove:
         logger.fatal(STATS_BAD_OPTION_VALUE, ove)
         sys.exit(1)
-    except isc.cc.session.SessionError as se:
+    except bundy.cc.session.SessionError as se:
         logger.fatal(STATS_CC_SESSION_ERROR, se)
         sys.exit(1)
     except StatsError as se:
@@ -749,4 +749,4 @@ def main():
     logger.info(STATS_EXITING)
 
 if __name__ == "__main__":
-    isc.util.traceback_handler.traceback_handler(main)
+    bundy.util.traceback_handler.traceback_handler(main)

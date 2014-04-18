@@ -23,10 +23,10 @@
 #include "pydnspp_common.h"
 
 
-using namespace isc::dns;
-using namespace isc::dns::python;
-using namespace isc::util;
-using namespace isc::util::python;
+using namespace bundy::dns;
+using namespace bundy::dns::python;
+using namespace bundy::util;
+using namespace bundy::util::python;
 namespace {
 // The s_* Class simply covers one instantiation of the object
 class s_RRClass : public PyObject {
@@ -230,7 +230,7 @@ RRClass_hash(PyObject* pyself) {
 
 } // end anonymous namespace
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace python {
 
@@ -310,7 +310,7 @@ createRRClassObject(const RRClass& source) {
 bool
 PyRRClass_Check(PyObject* obj) {
     if (obj == NULL) {
-        isc_throw(PyCPPWrapperException, "obj argument NULL in typecheck");
+        bundy_throw(PyCPPWrapperException, "obj argument NULL in typecheck");
     }
     return (PyObject_TypeCheck(obj, &rrclass_type));
 }
@@ -318,7 +318,7 @@ PyRRClass_Check(PyObject* obj) {
 const RRClass&
 PyRRClass_ToRRClass(const PyObject* rrclass_obj) {
     if (rrclass_obj == NULL) {
-        isc_throw(PyCPPWrapperException,
+        bundy_throw(PyCPPWrapperException,
                   "obj argument NULL in RRClass PyObject conversion");
     }
     const s_RRClass* rrclass = static_cast<const s_RRClass*>(rrclass_obj);
@@ -327,4 +327,4 @@ PyRRClass_ToRRClass(const PyObject* rrclass_obj) {
 
 } // end namespace python
 } // end namespace dns
-} // end namespace isc
+} // end namespace bundy

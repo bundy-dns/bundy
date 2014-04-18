@@ -24,6 +24,6 @@
 /// Define the logger used to log messages.  We could define it in multiple
 /// modules, but defining in a single module and linking to it saves time and
 /// space.
-extern isc::log::Logger user_chk_logger;
+extern bundy::log::Logger user_chk_logger;
 
 #endif // USER_CHK_LOG_H

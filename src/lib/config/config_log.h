@@ -18,7 +18,7 @@
 #include <log/macros.h>
 #include "config_messages.h"
 
-namespace isc {
+namespace bundy {
 namespace config {
 
 /// \brief Config Logging
@@ -30,12 +30,12 @@ namespace config {
 /// Define the logger used to log messages.  We could define it in multiple
 /// modules, but defining in a single module and linking to it saves time and
 /// space.
-extern isc::log::Logger config_logger;
+extern bundy::log::Logger config_logger;
 
 // Enumerate configuration elements as they are processed.
 const int DBG_CONFIG_PROCESS = DBGLVL_TRACE_BASIC;
 
 } // namespace config
-} // namespace isc
+} // namespace bundy
 
 #endif // CONFIG_LOG_H

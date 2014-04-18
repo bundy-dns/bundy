@@ -7,7 +7,7 @@ pkglibexec_SCRIPTS = bundy-cmdctl
 bin_PROGRAMS = bundy-certgen
 
 nodist_pylogmessage_PYTHON = $(PYTHON_LOGMSGPKG_DIR)/work/cmdctl_messages.py
-pylogmessagedir = $(pyexecdir)/isc/log_messages/
+pylogmessagedir = $(pyexecdir)/bundy/log_messages/
 
 bundy_cmdctldir = $(pkgdatadir)
 

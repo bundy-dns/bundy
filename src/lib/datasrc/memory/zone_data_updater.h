@@ -26,7 +26,7 @@
 
 #include <boost/noncopyable.hpp>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 
@@ -67,8 +67,8 @@ public:
     ///    on the given memory segment. Currently, at most one zone data
     ///    updater may exist on the same memory segment.
     ZoneDataUpdater(util::MemorySegment& mem_sgmt,
-                    const isc::dns::RRClass& rrclass,
-                    const isc::dns::Name& zone_name,
+                    const bundy::dns::RRClass& rrclass,
+                    const bundy::dns::Name& zone_name,
                     ZoneData& zone_data) :
        mem_sgmt_(mem_sgmt),
        rrclass_(rrclass),
@@ -77,7 +77,7 @@ public:
        zone_data_(&zone_data)
     {
         if (mem_sgmt_.getNamedAddress("updater_zone_data").first) {
-            isc_throw(isc::InvalidOperation, "A ZoneDataUpdater already exists"
+            bundy_throw(bundy::InvalidOperation, "A ZoneDataUpdater already exists"
                       " on this memory segment. Destroy it first.");
         }
         if (mem_sgmt_.setNamedAddress("updater_zone_data", zone_data_)) {
@@ -135,7 +135,7 @@ public:
     /// There is one tricky case: Due to a limitation of the current
     /// implementation, it cannot accept an RRSIG for NSEC3 without the covered
     /// NSEC3, unless at least one NSEC3 or NSEC3PARAM has been added.
-    /// In this case an isc::NotImplemented exception will be thrown.  It
+    /// In this case an bundy::NotImplemented exception will be thrown.  It
     /// should be very rare in practice, and hopefully wouldn't be a real
     /// issue.
     ///
@@ -154,8 +154,8 @@ public:
     /// \param rrset The RRset to be added.
     /// \param sig_rrset An associated RRSIG RRset for the \c rrset. It
     ///                  can be empty if there is no RRSIG for the \c rrset.
-    void add(const isc::dns::ConstRRsetPtr& rrset,
-             const isc::dns::ConstRRsetPtr& sig_rrset);
+    void add(const bundy::dns::ConstRRsetPtr& rrset,
+             const bundy::dns::ConstRRsetPtr& sig_rrset);
 
 private:
     // Add the necessary magic for any wildcard contained in 'name'
@@ -171,47 +171,47 @@ private:
     //
     // We also perform the same trick for empty wild card names possibly
     // contained in 'name' (e.g., '*.foo.example' in 'bar.*.foo.example').
-    void addWildcards(const isc::dns::Name& name);
+    void addWildcards(const bundy::dns::Name& name);
 
-    void addInternal(const isc::dns::Name& name,
-                     const isc::dns::RRType& rrtype,
-                     const isc::dns::ConstRRsetPtr& rrset,
-                     const isc::dns::ConstRRsetPtr& rrsig);
+    void addInternal(const bundy::dns::Name& name,
+                     const bundy::dns::RRType& rrtype,
+                     const bundy::dns::ConstRRsetPtr& rrset,
+                     const bundy::dns::ConstRRsetPtr& rrsig);
 
     // Does some checks in context of the data that are already in the
     // zone.  Currently checks for forbidden combinations of RRsets in
     // the same domain (CNAME+anything, DNAME+NS).  If such condition is
     // found, it throws AddError.
-    void contextCheck(const isc::dns::AbstractRRset& rrset,
+    void contextCheck(const bundy::dns::AbstractRRset& rrset,
                       const RdataSet* set) const;
 
     // Validate rrset before adding it to the zone.  If something is wrong
     // it throws an exception.  It doesn't modify the zone, and provides
     // the strong exception guarantee.
-    void validate(const isc::dns::ConstRRsetPtr rrset) const;
+    void validate(const bundy::dns::ConstRRsetPtr rrset) const;
 
-    const isc::dns::NSEC3Hash* getNSEC3Hash();
+    const bundy::dns::NSEC3Hash* getNSEC3Hash();
     template <typename T>
-    void setupNSEC3(const isc::dns::ConstRRsetPtr rrset);
-    void addNSEC3(const isc::dns::Name& name,
-                  const isc::dns::ConstRRsetPtr& rrset,
-                  const isc::dns::ConstRRsetPtr& rrsig);
-    void addRdataSet(const isc::dns::Name& name,
-                     const isc::dns::RRType& rrtype,
-                     const isc::dns::ConstRRsetPtr& rrset,
-                     const isc::dns::ConstRRsetPtr& rrsig);
+    void setupNSEC3(const bundy::dns::ConstRRsetPtr rrset);
+    void addNSEC3(const bundy::dns::Name& name,
+                  const bundy::dns::ConstRRsetPtr& rrset,
+                  const bundy::dns::ConstRRsetPtr& rrsig);
+    void addRdataSet(const bundy::dns::Name& name,
+                     const bundy::dns::RRType& rrtype,
+                     const bundy::dns::ConstRRsetPtr& rrset,
+                     const bundy::dns::ConstRRsetPtr& rrsig);
 
     util::MemorySegment& mem_sgmt_;
-    const isc::dns::RRClass rrclass_;
-    const isc::dns::Name& zone_name_;
+    const bundy::dns::RRClass rrclass_;
+    const bundy::dns::Name& zone_name_;
     RdataEncoder encoder_;
-    const isc::dns::NSEC3Hash* hash_;
+    const bundy::dns::NSEC3Hash* hash_;
     ZoneData* zone_data_;
 };
 
 } // namespace memory
 } // namespace datasrc
-} // namespace isc
+} // namespace bundy
 
 #endif // DATASRC_ZONE_DATA_UPDATER_H
 

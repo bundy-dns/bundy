@@ -32,7 +32,7 @@
 
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 
@@ -184,7 +184,7 @@ public:
 
     /// \brief Specialized version of \c setTTL() for \c TreeNodeRRset.
     ///
-    /// It throws \c isc::Unexpected unconditionally.
+    /// It throws \c bundy::Unexpected unconditionally.
     virtual void setTTL(const dns::RRTTL& ttl);
 
     virtual std::string toText() const;
@@ -193,22 +193,22 @@ public:
 
     /// \brief Specialized version of \c toWire(buffer) for \c TreeNodeRRset.
     ///
-    /// It throws \c isc::Unexpected unconditionally.
+    /// It throws \c bundy::Unexpected unconditionally.
     virtual unsigned int toWire(util::OutputBuffer& buffer) const;
 
     /// \brief Specialized version of \c addRdata() for \c TreeNodeRRset.
     ///
-    /// It throws \c isc::Unexpected unconditionally.
+    /// It throws \c bundy::Unexpected unconditionally.
     virtual void addRdata(dns::rdata::ConstRdataPtr rdata);
 
     /// \brief Specialized version of \c addRdata() for \c TreeNodeRRset.
     ///
-    /// It throws \c isc::Unexpected unconditionally.
+    /// It throws \c bundy::Unexpected unconditionally.
     virtual void addRdata(const dns::rdata::Rdata& rdata);
 
     /// \brief Specialized version of \c addRdata() for \c TreeNodeRRset.
     ///
-    /// It throws \c isc::Unexpected unconditionally.
+    /// It throws \c bundy::Unexpected unconditionally.
     virtual void addRdata(const std::string& rdata_str);
 
     virtual dns::RdataIteratorPtr getRdataIterator() const;
@@ -224,7 +224,7 @@ public:
     /// \name Specialized version of RRsig related methods for
     /// \c TreeNodeRRset.
     ///
-    /// These throw \c isc::Unexpected unconditionally.
+    /// These throw \c bundy::Unexpected unconditionally.
     ////
     //@{
     virtual void addRRsig(const dns::rdata::ConstRdataPtr& rdata);
@@ -287,7 +287,7 @@ typedef boost::shared_ptr<TreeNodeRRset> TreeNodeRRsetPtr;
 
 } // namespace memory
 } // namespace datasrc
-} // namespace isc
+} // namespace bundy
 
 #endif // DATASRC_MEMORY_TREENODE_RRSET_H
 

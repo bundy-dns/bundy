@@ -27,7 +27,7 @@
 #include <string>
 #include <sstream>
 
-using namespace isc::dns;
+using namespace bundy::dns;
 using std::string;
 using std::stringstream;
 using boost::lexical_cast;
@@ -86,7 +86,7 @@ TEST_F(MasterLexerTest, pushStreamFail) {
     ss << "test";
     ss.setstate(std::ios_base::badbit);
 
-    EXPECT_THROW(lexer.pushSource(ss), isc::Unexpected);
+    EXPECT_THROW(lexer.pushSource(ss), bundy::Unexpected);
 }
 
 TEST_F(MasterLexerTest, pushFile) {
@@ -116,7 +116,7 @@ TEST_F(MasterLexerTest, pushFile) {
 }
 
 TEST_F(MasterLexerTest, pushBadFileName) {
-    EXPECT_THROW(lexer.pushSource(NULL), isc::InvalidParameter);
+    EXPECT_THROW(lexer.pushSource(NULL), bundy::InvalidParameter);
 }
 
 TEST_F(MasterLexerTest, pushFileFail) {
@@ -194,12 +194,12 @@ TEST_F(MasterLexerTest, unknownSourceSize) {
 
 TEST_F(MasterLexerTest, invalidPop) {
     // popSource() cannot be called if the sources stack is empty.
-    EXPECT_THROW(lexer.popSource(), isc::InvalidOperation);
+    EXPECT_THROW(lexer.popSource(), bundy::InvalidOperation);
 }
 
 // Test it is not possible to get token when no source is available.
 TEST_F(MasterLexerTest, noSource) {
-    EXPECT_THROW(lexer.getNextToken(), isc::InvalidOperation);
+    EXPECT_THROW(lexer.getNextToken(), bundy::InvalidOperation);
 }
 
 // Test getting some tokens.  It also check basic behavior of getPosition().
@@ -352,13 +352,13 @@ TEST_F(MasterLexerTest, ungetTwice) {
     // Unget the token. It can be done once
     lexer.ungetToken();
     // But not twice
-    EXPECT_THROW(lexer.ungetToken(), isc::InvalidOperation);
+    EXPECT_THROW(lexer.ungetToken(), bundy::InvalidOperation);
 }
 
 // Test we can't unget a token before we get one
 TEST_F(MasterLexerTest, ungetBeforeGet) {
     lexer.pushSource(ss); // Just to eliminate the missing source problem
-    EXPECT_THROW(lexer.ungetToken(), isc::InvalidOperation);
+    EXPECT_THROW(lexer.ungetToken(), bundy::InvalidOperation);
 }
 
 // Test we can't unget a token after a source switch, even when we got
@@ -371,12 +371,12 @@ TEST_F(MasterLexerTest, ungetAfterSwitch) {
     std::stringstream ss2;
     ss2 << "\n\n";
     lexer.pushSource(ss2);
-    EXPECT_THROW(lexer.ungetToken(), isc::InvalidOperation);
+    EXPECT_THROW(lexer.ungetToken(), bundy::InvalidOperation);
     // We can get from the new source
     EXPECT_EQ(MasterToken::END_OF_LINE, lexer.getNextToken().getType());
     // And when we drop the current source, we can't unget again
     lexer.popSource();
-    EXPECT_THROW(lexer.ungetToken(), isc::InvalidOperation);
+    EXPECT_THROW(lexer.ungetToken(), bundy::InvalidOperation);
 }
 
 // Common checks for the case when getNextToken() should result in LexerError
@@ -509,13 +509,13 @@ TEST_F(MasterLexerTest, getNextTokenErrors) {
 
     // Only string/qstring/number can be "expected".
     EXPECT_THROW(lexer.getNextToken(MasterToken::END_OF_LINE),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(lexer.getNextToken(MasterToken::END_OF_FILE),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(lexer.getNextToken(MasterToken::INITIAL_WS),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(lexer.getNextToken(MasterToken::ERROR),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 
     // If it encounters a syntax error, it results in LexerError exception.
     lexerErrorCheck(lexer, MasterToken::STRING, MasterToken::UNBALANCED_PAREN);

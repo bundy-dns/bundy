@@ -17,7 +17,7 @@
 
 #include <asiolink/io_address.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// This code is based on similar code from the Dibbler project. I, Tomasz Mrugalski,
@@ -35,7 +35,7 @@ namespace dhcp {
 /// @param len prefix length
 ///
 /// @return first address from a prefix
-isc::asiolink::IOAddress firstAddrInPrefix(const isc::asiolink::IOAddress& prefix,
+bundy::asiolink::IOAddress firstAddrInPrefix(const bundy::asiolink::IOAddress& prefix,
                                             uint8_t len);
 
 /// @brief returns a last address in a given prefix
@@ -49,13 +49,13 @@ isc::asiolink::IOAddress firstAddrInPrefix(const isc::asiolink::IOAddress& prefi
 /// @param len prefix length
 ///
 /// @return first address from a prefix
-isc::asiolink::IOAddress lastAddrInPrefix(const isc::asiolink::IOAddress& prefix,
+bundy::asiolink::IOAddress lastAddrInPrefix(const bundy::asiolink::IOAddress& prefix,
                                            uint8_t len);
 
 /// @brief generates an IPv4 netmask of specified length
 /// @throw BadValue if len is greater than 32
 /// @return netmask
-isc::asiolink::IOAddress getNetmask4(uint8_t len);
+bundy::asiolink::IOAddress getNetmask4(uint8_t len);
 
 };
 };

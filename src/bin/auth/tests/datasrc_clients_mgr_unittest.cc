@@ -28,11 +28,11 @@
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 
-using namespace isc::dns;
-using namespace isc::data;
-using namespace isc::datasrc;
-using namespace isc::auth;
-using namespace isc::auth::datasrc_clientmgr_internal;
+using namespace bundy::dns;
+using namespace bundy::data;
+using namespace bundy::datasrc;
+using namespace bundy::auth;
+using namespace bundy::auth::datasrc_clientmgr_internal;
 
 namespace {
 void
@@ -137,7 +137,7 @@ TEST(DataSrcClientsMgrTest, reconfigure) {
     // Non-null, but semantically invalid argument.  The manager doesn't do
     // this check, so it should result in the same effect.
     FakeDataSrcClientsBuilder::command_queue->clear();
-    reconfigure_arg = isc::data::Element::create("{ \"foo\": \"bar\" }");
+    reconfigure_arg = bundy::data::Element::create("{ \"foo\": \"bar\" }");
     mgr.reconfigure(reconfigure_arg);
     checkSharedMembers(2, 2, 0, 0, 2, 1);
     const Command& cmd2 = FakeDataSrcClientsBuilder::command_queue->front();
@@ -145,7 +145,7 @@ TEST(DataSrcClientsMgrTest, reconfigure) {
     EXPECT_EQ(reconfigure_arg, cmd2.params);
 
     // Passing NULL argument is immediately rejected
-    EXPECT_THROW(mgr.reconfigure(ConstElementPtr()), isc::InvalidParameter);
+    EXPECT_THROW(mgr.reconfigure(ConstElementPtr()), bundy::InvalidParameter);
     checkSharedMembers(2, 2, 0, 0, 2, 1); // no state change
 }
 
@@ -197,7 +197,7 @@ TEST(DataSrcClientsMgrTest, holder) {
     // Duplicate lock acquisition is prohibited (only test mgr can detect
     // this reliably, so this test may not be that useful)
     TestDataSrcClientsMgr::Holder holder1(mgr);
-    EXPECT_THROW(TestDataSrcClientsMgr::Holder holder2(mgr), isc::Unexpected);
+    EXPECT_THROW(TestDataSrcClientsMgr::Holder holder2(mgr), bundy::Unexpected);
 }
 
 namespace {
@@ -213,8 +213,8 @@ void checkLoadOrUpdateZone(boost::function<void(const ConstElementPtr& args)>
     EXPECT_TRUE(FakeDataSrcClientsBuilder::command_queue->empty());
 
     // mutable, as it's overridden later in the test.
-    isc::data::ElementPtr args =
-        isc::data::Element::fromJSON("{ \"class\": \"IN\","
+    bundy::data::ElementPtr args =
+        bundy::data::Element::fromJSON("{ \"class\": \"IN\","
                                      "  \"origin\": \"example.com\", "
                                      "  \"datasource\": \"testsrc\"}");
     handler(args);
@@ -253,12 +253,12 @@ void checkLoadOrUpdateZone(boost::function<void(const ConstElementPtr& args)>
     EXPECT_EQ(3, FakeDataSrcClientsBuilder::command_queue->size());
 
     // same for empty data and data that is not a map
-    EXPECT_THROW(handler(isc::data::ConstElementPtr()), CommandError);
-    EXPECT_THROW(handler(isc::data::Element::createList()), CommandError);
+    EXPECT_THROW(handler(bundy::data::ConstElementPtr()), CommandError);
+    EXPECT_THROW(handler(bundy::data::Element::createList()), CommandError);
     EXPECT_EQ(3, FakeDataSrcClientsBuilder::command_queue->size());
 
     // "datasource" is provided but not a string
-    EXPECT_THROW(handler(isc::data::Element::fromJSON(
+    EXPECT_THROW(handler(bundy::data::Element::fromJSON(
                              "{ \"origin\": \".\", \"datasource\": 42 }")),
                  CommandError);
 }
@@ -271,7 +271,7 @@ TEST(DataSrcClientsMgrTest, reload) {
 
     // For LOADZONE, datasource can be omitted.
     const size_t orig_qlen = FakeDataSrcClientsBuilder::command_queue->size();
-    mgr.loadZone(isc::data::Element::fromJSON("{ \"origin\": \".\"}"));
+    mgr.loadZone(bundy::data::Element::fromJSON("{ \"origin\": \".\"}"));
     EXPECT_EQ(orig_qlen + 1, FakeDataSrcClientsBuilder::command_queue->size());
 }
 
@@ -281,7 +281,7 @@ TEST(DataSrcClientsMgrTest, updateZone) {
     checkLoadOrUpdateZone(boost::bind(&TestDataSrcClientsMgr::updateZone, &mgr,
                                       _1));
     // UPDATEZONE requires datasource be specified.
-    EXPECT_THROW(mgr.updateZone(isc::data::Element::fromJSON(
+    EXPECT_THROW(mgr.updateZone(bundy::data::Element::fromJSON(
                                     "{ \"origin\": \".\"}")), CommandError);
 }
 
@@ -290,20 +290,20 @@ TEST(DataSrcClientsMgrTest, segmentUpdate) {
     EXPECT_TRUE(FakeDataSrcClientsBuilder::started);
     EXPECT_TRUE(FakeDataSrcClientsBuilder::command_queue->empty());
 
-    isc::data::ElementPtr args =
-        isc::data::Element::fromJSON("{\"data-source-class\": \"IN\","
+    bundy::data::ElementPtr args =
+        bundy::data::Element::fromJSON("{\"data-source-class\": \"IN\","
                                      " \"data-source-name\": \"sqlite3\","
                                      " \"segment-params\": {}}");
     mgr.segmentInfoUpdate(args);
     EXPECT_EQ(1, FakeDataSrcClientsBuilder::command_queue->size());
     // Some invalid inputs
-    EXPECT_THROW(mgr.segmentInfoUpdate(isc::data::Element::fromJSON(
+    EXPECT_THROW(mgr.segmentInfoUpdate(bundy::data::Element::fromJSON(
         "{\"data-source-class\": \"IN\","
         " \"data-source-name\": \"sqlite3\"}")), CommandError);
-    EXPECT_THROW(mgr.segmentInfoUpdate(isc::data::Element::fromJSON(
+    EXPECT_THROW(mgr.segmentInfoUpdate(bundy::data::Element::fromJSON(
         "{\"data-source-name\": \"sqlite3\","
         " \"segment-params\": {}}")), CommandError);
-    EXPECT_THROW(mgr.segmentInfoUpdate(isc::data::Element::fromJSON(
+    EXPECT_THROW(mgr.segmentInfoUpdate(bundy::data::Element::fromJSON(
         "{\"data-source-class\": \"IN\","
         " \"segment-params\": {}}")), CommandError);
     EXPECT_EQ(1, FakeDataSrcClientsBuilder::command_queue->size());
@@ -353,7 +353,7 @@ TEST(DataSrcClientsMgrTest, wakeup) {
 TEST(DataSrcClientsMgrTest, realThread) {
     // Using the non-test definition with a real thread.  Just checking
     // no disruption happens.
-    isc::asiolink::IOService service;
+    bundy::asiolink::IOService service;
     DataSrcClientsMgr mgr(service);
 }
 

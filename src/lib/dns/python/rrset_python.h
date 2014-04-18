@@ -21,7 +21,7 @@
 
 #include <util/python/pycppwrapper_util.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace python {
 
@@ -70,7 +70,7 @@ RRsetPtr PyRRset_ToRRsetPtr(PyObject* rrset_obj);
 
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 #endif // PYTHON_RRSET_H
 
 // Local Variables:

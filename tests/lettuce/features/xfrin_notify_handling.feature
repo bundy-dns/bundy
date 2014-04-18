@@ -319,7 +319,7 @@ Feature: Xfrin incoming notify handling
       | example.org..xfrrej      |            |         1 |         3 |
     # Note: The above rejection counters might sometimes be increased
     # up to 3. See this for details
-    # http://git.bundy.isc.org/~tester/builder/BUNDY-lettuce/20120918210000-MacOS/logs/lettuce.out
+    # http://git.bundy.bundy.org/~tester/builder/BUNDY-lettuce/20120918210000-MacOS/logs/lettuce.out
 
     When I query statistics socket of bundy module Xfrout with cmdctl port 56174
     The statistics counters are 0 in category .Xfrout.socket.unixdomain except for the following items
@@ -438,7 +438,7 @@ Feature: Xfrin incoming notify handling
       | example.org..xfrrej      |            |         1 |         3 |
     # Note: The above rejection counters might sometimes be increased
     # up to 3. See this for details
-    # http://git.bundy.isc.org/~tester/builder/BUNDY-lettuce/20120918210000-MacOS/logs/lettuce.out
+    # http://git.bundy.bundy.org/~tester/builder/BUNDY-lettuce/20120918210000-MacOS/logs/lettuce.out
 
     When I query statistics socket of bundy module Xfrout with cmdctl port 56174
     The statistics counters are 0 in category .Xfrout.socket.unixdomain except for the following items

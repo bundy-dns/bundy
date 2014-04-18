@@ -40,17 +40,17 @@
 #include <string>
 #include <vector>
 
-using namespace isc::dns;
-using namespace isc::dns::rdata;
-using namespace isc::datasrc::memory;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
+using namespace bundy::datasrc::memory;
 
-using isc::util::unittests::matchWireData;
+using bundy::util::unittests::matchWireData;
 using std::string;
 using std::vector;
 
 // A trick to steal some private definitions of the implementation we use here
 
-namespace isc {
+namespace bundy {
 namespace datasrc{
 namespace memory {
 
@@ -283,8 +283,8 @@ public:
         }
     }
 
-    static void decode(const isc::dns::RRClass& rrclass,
-                       const isc::dns::RRType& rrtype,
+    static void decode(const bundy::dns::RRClass& rrclass,
+                       const bundy::dns::RRType& rrtype,
                        size_t rdata_count,
                        size_t rrsig_count,
                        size_t expected_varlen_fields,
@@ -339,8 +339,8 @@ public:
 // Check using callbacks and calling next until the end.
 class CallbackDecoder {
 public:
-    static void decode(const isc::dns::RRClass& rrclass,
-                       const isc::dns::RRType& rrtype,
+    static void decode(const bundy::dns::RRClass& rrclass,
+                       const bundy::dns::RRType& rrtype,
                        size_t rdata_count, size_t sig_count, size_t,
                        const vector<uint8_t>& encoded_data, size_t,
                        MessageRenderer& renderer)
@@ -359,8 +359,8 @@ public:
 // Check using callbacks and calling iterate.
 class IterateDecoder {
 public:
-    static void decode(const isc::dns::RRClass& rrclass,
-                       const isc::dns::RRType& rrtype,
+    static void decode(const bundy::dns::RRClass& rrclass,
+                       const bundy::dns::RRType& rrtype,
                        size_t rdata_count, size_t sig_count, size_t,
                        const vector<uint8_t>& encoded_data, size_t,
                        MessageRenderer& renderer)
@@ -406,8 +406,8 @@ private:
                                (attributes & NAMEATTR_COMPRESSIBLE) != 0);
     }
 public:
-    static void decode(const isc::dns::RRClass& rrclass,
-                       const isc::dns::RRType& rrtype,
+    static void decode(const bundy::dns::RRClass& rrclass,
+                       const bundy::dns::RRType& rrtype,
                        size_t rdata_count, size_t sig_count, size_t,
                        const vector<uint8_t>& encoded_data, size_t,
                        MessageRenderer& renderer)
@@ -438,8 +438,8 @@ public:
 // We also count there's the correct count of Rdatas.
 class SingleIterateDecoder {
 public:
-    static void decode(const isc::dns::RRClass& rrclass,
-                       const isc::dns::RRType& rrtype,
+    static void decode(const bundy::dns::RRClass& rrclass,
+                       const bundy::dns::RRType& rrtype,
                        size_t rdata_count, size_t sig_count, size_t,
                        const vector<uint8_t>& encoded_data, size_t,
                        MessageRenderer& renderer)
@@ -470,8 +470,8 @@ public:
 template<bool start_data, bool start_sig>
 class HybridDecoder {
 public:
-    static void decode(const isc::dns::RRClass& rrclass,
-                       const isc::dns::RRType& rrtype,
+    static void decode(const bundy::dns::RRClass& rrclass,
+                       const bundy::dns::RRType& rrtype,
                        size_t rdata_count, size_t sig_count, size_t,
                        const vector<uint8_t>& encoded_data,
                        size_t encoded_data_len,
@@ -745,7 +745,7 @@ checkLargeData(const in::DHCID* decoded, bool* called, const void* encoded,
     *called = true;
 
     // Reconstruct the Rdata and check it.
-    isc::util::InputBuffer ib(encoded, length);
+    bundy::util::InputBuffer ib(encoded, length);
     const in::DHCID reconstructed(ib, ib.getLength());
     EXPECT_EQ(0, reconstructed.compare(*decoded));
 }
@@ -755,7 +755,7 @@ TEST_F(RdataSerializationTest, encodeLargeRdata) {
     // but we check such a case explicitly.
 
     encoded_data_.resize(65535); // max unsigned 16-bit int
-    isc::util::InputBuffer buffer(&encoded_data_[0], encoded_data_.size());
+    bundy::util::InputBuffer buffer(&encoded_data_[0], encoded_data_.size());
     const in::DHCID large_dhcid(buffer, encoded_data_.size());
 
     encoder_.start(RRClass::IN(), RRType::DHCID());
@@ -794,22 +794,22 @@ TYPED_TEST(RdataEncodeDecodeTest, addRdataMulti) {
 
 TEST_F(RdataSerializationTest, badAddRdata) {
     // Some operations must follow start().
-    EXPECT_THROW(encoder_.addRdata(*a_rdata_), isc::InvalidOperation);
-    EXPECT_THROW(encoder_.getStorageLength(), isc::InvalidOperation);
+    EXPECT_THROW(encoder_.addRdata(*a_rdata_), bundy::InvalidOperation);
+    EXPECT_THROW(encoder_.getStorageLength(), bundy::InvalidOperation);
     // will allocate space of some arbitrary size (256 bytes)
-    EXPECT_THROW(encodeWrapper(256), isc::InvalidOperation);
+    EXPECT_THROW(encodeWrapper(256), bundy::InvalidOperation);
 
     // Bad buffer for encode
     encoder_.start(RRClass::IN(), RRType::A());
     encoder_.addRdata(*a_rdata_);
     const size_t buf_len = encoder_.getStorageLength();
     // NULL buffer for encode
-    EXPECT_THROW(encoder_.encode(NULL, buf_len), isc::BadValue);
+    EXPECT_THROW(encoder_.encode(NULL, buf_len), bundy::BadValue);
     // buffer length is too short (we don't use the wrraper because we don't
     // like to tweak the length arg to encode()).
     encoded_data_.resize(buf_len - 1);
     EXPECT_THROW(encoder_.encode(&encoded_data_[0], buf_len - 1),
-                 isc::BadValue);
+                 bundy::BadValue);
 
     // Some of the following checks confirm that adding an Rdata of the
     // wrong RR type will be rejected.  Several different cases are checked,
@@ -853,7 +853,7 @@ TEST_F(RdataSerializationTest, badAddRdata) {
     // RDATA len exceeds the 16-bit range.  Technically not invalid, but
     // we don't support that (and it's practically useless anyway).
     encoded_data_.resize(65536); // use encoded_data_ for placeholder
-    isc::util::InputBuffer buffer(&encoded_data_[0], encoded_data_.size());
+    bundy::util::InputBuffer buffer(&encoded_data_[0], encoded_data_.size());
     encoder_.start(RRClass::IN(), RRType::DHCID());
     EXPECT_THROW(encoder_.addRdata(in::DHCID(buffer, encoded_data_.size())),
                                    RdataEncodingError);
@@ -861,7 +861,7 @@ TEST_F(RdataSerializationTest, badAddRdata) {
     // RRSIG cannot be used as the main RDATA type (can only be added as
     // a signature for some other type of RDATAs).
     EXPECT_THROW(encoder_.start(RRClass::IN(), RRType::RRSIG()),
-                 isc::BadValue);
+                 bundy::BadValue);
 }
 
 struct MergeTestData {
@@ -1009,10 +1009,10 @@ TEST_F(RdataSerializationTest, mergeRdataFromDuplicate) {
     // assumption and should result in an exception.
     const uint8_t data[] = { 192, 0, 2, 1, 192, 0, 2, 1 };
     EXPECT_THROW(encoder_.start(RRClass::IN(), RRType::A(), data, 2, 0),
-                 isc::Unexpected);
+                 bundy::Unexpected);
 
     // Same for duplicate RRSIG
-    isc::util::OutputBuffer buffer(0);
+    bundy::util::OutputBuffer buffer(0);
     vector<uint8_t> sigdata;
     rrsig_rdata_->toWire(buffer);
     const uint16_t sig_len = buffer.getLength();
@@ -1027,7 +1027,7 @@ TEST_F(RdataSerializationTest, mergeRdataFromDuplicate) {
     sigdata.insert(sigdata.end(), dp, dp + sig_len);
 
     EXPECT_THROW(encoder_.start(RRClass::IN(), RRType::A(), &sigdata[0], 0, 2),
-                 isc::Unexpected);
+                 bundy::Unexpected);
 }
 
 void
@@ -1038,7 +1038,7 @@ checkSigData(const ConstRdataPtr& decoded, bool* called, const void* encoded,
     *called = true;
 
     // Reconstruct the RRSig and check it.
-    isc::util::InputBuffer ib(encoded, length);
+    bundy::util::InputBuffer ib(encoded, length);
     const generic::RRSIG reconstructed(ib, ib.getLength());
     EXPECT_EQ(0, reconstructed.compare(*decoded));
 }
@@ -1063,17 +1063,17 @@ TEST_F(RdataSerializationTest, addSIGRdataOnly) {
 
 TEST_F(RdataSerializationTest, badAddSIGRdata) {
     // try adding SIG before start
-    EXPECT_THROW(encoder_.addSIGRdata(*rrsig_rdata_), isc::InvalidOperation);
+    EXPECT_THROW(encoder_.addSIGRdata(*rrsig_rdata_), bundy::InvalidOperation);
 
     // Very big RRSIG.  This implementation rejects it.
-    isc::util::OutputBuffer ob(0);
+    bundy::util::OutputBuffer ob(0);
     rrsig_rdata_->toWire(ob);
     // append dummy trailing signature to make it too big
     vector<uint8_t> dummy_sig(65536 - ob.getLength());
     ob.writeData(&dummy_sig[0], dummy_sig.size());
     ASSERT_EQ(65536, ob.getLength());
 
-    isc::util::InputBuffer ib(ob.getData(), ob.getLength());
+    bundy::util::InputBuffer ib(ob.getData(), ob.getLength());
     const generic::RRSIG big_sigrdata(ib, ob.getLength());
     encoder_.start(RRClass::IN(), RRType::A());
     EXPECT_THROW(encoder_.addSIGRdata(big_sigrdata), RdataEncodingError);

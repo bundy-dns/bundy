@@ -31,11 +31,11 @@
 #include <dns/rrttl.h>
 
 using namespace std;
-using namespace isc::dns;
+using namespace bundy::dns;
 using namespace rdata;
-using namespace isc::dns::rdata::generic;
-using namespace isc::dns::rdata::in;
-using namespace isc::resolve;
+using namespace bundy::dns::rdata::generic;
+using namespace bundy::dns::rdata::in;
+using namespace bundy::resolve;
 
 
 namespace {
@@ -102,7 +102,7 @@ public:
 
         // The next set of assignments set up the following zone records
         //
-        // example.com           NS     ns0.isc.org
+        // example.com           NS     ns0.bundy.org
         //                       NS     ns0.example.org
         //
         // www.example.com       A      1.2.3.4
@@ -115,7 +115,7 @@ public:
         // www2.example.com      CNAME  www1.example.com
 
         // Set up an imaginary NS RRset for an authority section
-        rrs_in_ns_->addRdata(ConstRdataPtr(new NS(Name("ns0.isc.org"))));
+        rrs_in_ns_->addRdata(ConstRdataPtr(new NS(Name("ns0.bundy.org"))));
         rrs_in_ns_->addRdata(ConstRdataPtr(new NS(Name("ns0.example.org"))));
         
         // And an imaginary SOA

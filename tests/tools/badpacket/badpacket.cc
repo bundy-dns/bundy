@@ -41,11 +41,11 @@
 // - Adding names to the message sections
 // - Adding EDNS0 RR and magling the fields there
 
-using namespace isc::badpacket;
+using namespace bundy::badpacket;
 
 /// \brief Main Program
 int main(int argc, char* argv[]) {
-    isc::log::initLogger("badpacket");
+    bundy::log::initLogger("badpacket");
 
     try {
         // Parse command
@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
         // Send the sequence of messages
         Scan scanner;
         scanner.scan(options);
-    } catch (isc::Exception& e) {
+    } catch (bundy::Exception& e) {
         std::cout << "ERROR: " << e.what() << "\n";
         return 1;
     }

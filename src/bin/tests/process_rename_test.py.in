@@ -17,7 +17,7 @@
 import unittest
 import os
 import os.path
-import isc.util.process
+import bundy.util.process
 import re
 
 class TestRename(unittest.TestCase):
@@ -34,7 +34,7 @@ class TestRename(unittest.TestCase):
             data = ''.join(f.readlines())
         prettyname = 'src' + filename[filename.rfind('../') + 2:]
         self.assertTrue(fun.search(data),
-            "Didn't find a call to isc.util.process.rename in " + prettyname)
+            "Didn't find a call to bundy.util.process.rename in " + prettyname)
 
     def test_calls(self):
         """
@@ -47,7 +47,7 @@ class TestRename(unittest.TestCase):
 
         # Scripts named in this list are not expected to be renamed and
         # should be excluded from the scan.
-        EXCLUDED_SCRIPTS = ['isc-sysinfo', 'bundy']
+        EXCLUDED_SCRIPTS = ['bundy-sysinfo', 'bundy']
 
         # Regexp to find all the *_SCRIPTS = something lines (except for
         # noinst_SCRIPTS, which are scripts for tests), including line

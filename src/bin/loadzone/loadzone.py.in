@@ -20,24 +20,24 @@ sys.path.append('@@PYTHONPATH@@')
 import time
 import signal
 from optparse import OptionParser
-from isc.dns import *
-from isc.datasrc import *
-import isc.util.process
-import isc.util.traceback_handler
-import isc.log
-from isc.log_messages.loadzone_messages import *
+from bundy.dns import *
+from bundy.datasrc import *
+import bundy.util.process
+import bundy.util.traceback_handler
+import bundy.log
+from bundy.log_messages.loadzone_messages import *
 from datetime import timedelta
 
-isc.util.process.rename()
+bundy.util.process.rename()
 
 # These are needed for logger settings
 import bundy_config
 import json
-from isc.config import module_spec_from_file
-from isc.config.ccsession import path_search
+from bundy.config import module_spec_from_file
+from bundy.config.ccsession import path_search
 
-isc.log.init("bundy-loadzone")
-logger = isc.log.Logger("loadzone")
+bundy.log.init("bundy-loadzone")
+logger = bundy.log.Logger("loadzone")
 
 # The default value for the interval of progress report in terms of the
 # number of RRs loaded in that interval.  Arbitrary choice, but intended to
@@ -95,7 +95,7 @@ class LoadZoneRunner:
 
         # system-wide log configuration.  We need to configure logging this
         # way so that the logging policy applies to underlying libraries, too.
-        self.__log_spec = json.dumps(isc.config.module_spec_from_file(
+        self.__log_spec = json.dumps(bundy.config.module_spec_from_file(
                 path_search('logging.spec', bundy_config.PLUGIN_PATHS)).
                                      get_full_spec())
         # "severity" and "debuglevel" are the tunable parameters, which will
@@ -133,7 +133,7 @@ class LoadZoneRunner:
         '''
         self.__log_conf_base['loggers'][0]['severity'] = self._log_severity
         self.__log_conf_base['loggers'][0]['debuglevel'] = self._log_debuglevel
-        isc.log.log_config_update(json.dumps(self.__log_conf_base),
+        bundy.log.log_config_update(json.dumps(self.__log_conf_base),
                                   self.__log_spec)
 
     def _parse_args(self):
@@ -167,7 +167,7 @@ class LoadZoneRunner:
             self._datasrc_config = self._get_datasrc_config(self._datasrc_type)
         try:
             self._zone_class = RRClass(options.zone_class)
-        except isc.dns.InvalidRRClass as ex:
+        except bundy.dns.InvalidRRClass as ex:
             raise BadArgument('Invalid zone class: ' + str(ex))
         if self._zone_class != RRClass.IN:
             raise BadArgument("RR class is not supported: " +
@@ -358,7 +358,7 @@ def main():
     sys.exit(ret)
 
 if '__main__' == __name__:
-    isc.util.traceback_handler.traceback_handler(main)
+    bundy.util.traceback_handler.traceback_handler(main)
 
 ## Local Variables:
 ## mode: python

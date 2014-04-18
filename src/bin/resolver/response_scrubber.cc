@@ -19,13 +19,13 @@
 #include <dns/name.h>
 #include "response_scrubber.h"
 
-using namespace isc::dns;
+using namespace bundy::dns;
 using namespace std;
 
 // Compare addresses etc.
 
 ResponseScrubber::Category ResponseScrubber::addressCheck(
-    const isc::asiolink::IOEndpoint& to, const isc::asiolink::IOEndpoint& from)
+    const bundy::asiolink::IOEndpoint& to, const bundy::asiolink::IOEndpoint& from)
 {
     if (from.getProtocol() == to.getProtocol()) {
         if (from.getAddress() == to.getAddress()) {
@@ -133,7 +133,7 @@ ResponseScrubber::scrubAllSections(Message& message, const Name& bailiwick) {
 // Scrub across sections.
 
 unsigned int
-ResponseScrubber::scrubCrossSections(isc::dns::Message& message) {
+ResponseScrubber::scrubCrossSections(bundy::dns::Message& message) {
 
     // Get a list of the names in the answer section or, failing this, the
     // question section.  Note that pointers to the names within "message" are
@@ -177,8 +177,8 @@ ResponseScrubber::scrubCrossSections(isc::dns::Message& message) {
 // Scrub a message
 
 unsigned int
-ResponseScrubber::scrub(const isc::dns::MessagePtr& message,
-    const isc::dns::Name& bailiwick)
+ResponseScrubber::scrub(const bundy::dns::MessagePtr& message,
+    const bundy::dns::Name& bailiwick)
 {
     unsigned int sections_removed = scrubAllSections(*message, bailiwick);
     sections_removed += scrubCrossSections(*message);

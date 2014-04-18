@@ -21,7 +21,7 @@
 #include <config/ccsession.h>
 #include <dhcp6/dhcp6_srv.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief Controlled version of the DHCPv6 server
@@ -35,7 +35,7 @@ namespace dhcp {
 ///
 /// For detailed explanation or relations between main(), ControlledDhcpv6Srv,
 /// Dhcpv6Srv and other classes, see \ref dhcpv6Session.
-class ControlledDhcpv6Srv : public isc::dhcp::Dhcpv6Srv {
+class ControlledDhcpv6Srv : public bundy::dhcp::Dhcpv6Srv {
 public:
 
     /// @brief Constructor
@@ -70,9 +70,9 @@ public:
     /// @param args Optional parameters
     ///
     /// @return status of the command
-    static isc::data::ConstElementPtr
+    static bundy::data::ConstElementPtr
     execDhcpv6ServerCommand(const std::string& command,
-                            isc::data::ConstElementPtr args);
+                            bundy::data::ConstElementPtr args);
 
 protected:
     /// @brief Static pointer to the sole instance of the DHCP server.
@@ -89,14 +89,14 @@ protected:
     /// @param new_config textual representation of the new configuration
     ///
     /// @return status of the config update
-    static isc::data::ConstElementPtr
-    dhcp6ConfigHandler(isc::data::ConstElementPtr new_config);
+    static bundy::data::ConstElementPtr
+    dhcp6ConfigHandler(bundy::data::ConstElementPtr new_config);
 
     /// @brief A dummy configuration handler that always returns success.
     ///
     /// This configuration handler does not perform configuration
     /// parsing and always returns success. A dummy handler should
-    /// be installed using \ref isc::config::ModuleCCSession ctor
+    /// be installed using \ref bundy::config::ModuleCCSession ctor
     /// to get the initial configuration. This initial configuration
     /// comprises values for only those elements that were modified
     /// the previous session. The \ref dhcp6ConfigHandler can't be
@@ -106,13 +106,13 @@ protected:
     /// that guarantees to return success causes initial configuration
     /// to be stored for the session being created and that it can
     /// be later accessed with
-    /// \ref isc::config::ConfigData::getFullConfig().
+    /// \ref bundy::config::ConfigData::getFullConfig().
     ///
     /// @param new_config new configuration.
     ///
     /// @return success configuration status.
-    static isc::data::ConstElementPtr
-    dhcp6StubConfigHandler(isc::data::ConstElementPtr new_config);
+    static bundy::data::ConstElementPtr
+    dhcp6StubConfigHandler(bundy::data::ConstElementPtr new_config);
 
     /// @brief A callback for handling incoming commands.
     ///
@@ -120,8 +120,8 @@ protected:
     /// @param args parameters of the command
     ///
     /// @return status of the processed command
-    static isc::data::ConstElementPtr
-    dhcp6CommandHandler(const std::string& command, isc::data::ConstElementPtr args);
+    static bundy::data::ConstElementPtr
+    dhcp6CommandHandler(const std::string& command, bundy::data::ConstElementPtr args);
 
     /// @brief Callback that will be called from iface_mgr when command/config arrives.
     ///
@@ -130,16 +130,16 @@ protected:
     static void sessionReader(void);
 
     /// @brief IOService object, used for all ASIO operations.
-    isc::asiolink::IOService io_service_;
+    bundy::asiolink::IOService io_service_;
 
     /// @brief Helper session object that represents raw connection to msgq.
-    isc::cc::Session* cc_session_;
+    bundy::cc::Session* cc_session_;
 
     /// @brief Session that receives configuration and commands
-    isc::config::ModuleCCSession* config_session_;
+    bundy::config::ModuleCCSession* config_session_;
 };
 
-}; // namespace isc::dhcp
-}; // namespace isc
+}; // namespace bundy::dhcp
+}; // namespace bundy
 
 #endif

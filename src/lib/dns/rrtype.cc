@@ -25,22 +25,22 @@
 #include <dns/rrtype.h>
 
 using namespace std;
-using namespace isc::util;
-using isc::dns::RRType;
+using namespace bundy::util;
+using bundy::dns::RRType;
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 RRType::RRType(const std::string& type_str) {
     if (!RRParamRegistry::getRegistry().textToTypeCode(type_str, typecode_)) {
-        isc_throw(InvalidRRType,
+        bundy_throw(InvalidRRType,
                   "Unrecognized RR type string: " + type_str);
     }
 }
 
 RRType::RRType(InputBuffer& buffer) {
     if (buffer.getLength() - buffer.getPosition() < sizeof(uint16_t)) {
-        isc_throw(IncompleteRRType, "incomplete wire-format RR type");
+        bundy_throw(IncompleteRRType, "incomplete wire-format RR type");
     }
     typecode_ = buffer.readUint16();
 }

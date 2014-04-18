@@ -20,7 +20,7 @@
 
 #include <resolve/resolver_interface.h>
 
-namespace isc {
+namespace bundy {
 namespace resolve {
 
 /// \short Standard Callback for sendQuery for DNSServer instances
@@ -37,7 +37,7 @@ public:
         server_(server->clone()) {}
     ~ResolverCallbackServer() { delete server_; };
     
-    void success(const isc::dns::MessagePtr response);
+    void success(const bundy::dns::MessagePtr response);
     void failure();
 
 private:
@@ -45,6 +45,6 @@ private:
 };
 
 } //namespace resolve
-} //namespace isc
+} //namespace bundy
 
 #endif // ISC_RESOLVER_CALLBACK_H_

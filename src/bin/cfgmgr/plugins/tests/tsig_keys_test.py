@@ -20,7 +20,7 @@ sys.path.extend(os.environ["BUNDY_TEST_PLUGIN_DIR"].split(':'))
 
 import tsig_keys
 import unittest
-import isc.config.module_spec
+import bundy.config.module_spec
 
 class TSigKeysTest(unittest.TestCase):
     def test_load(self):
@@ -43,7 +43,7 @@ class TSigKeysTest(unittest.TestCase):
         # But this is unittest, so we check it does what we intend and
         # supplying that's behaving the same but is different is not our
         # intention
-        self.assertTrue(isinstance(spec, isc.config.module_spec.ModuleSpec))
+        self.assertTrue(isinstance(spec, bundy.config.module_spec.ModuleSpec))
         # Correct name
         self.assertEqual("tsig_keys", spec.get_module_name())
         # There are no commands, nobody would handle them anyway
@@ -64,7 +64,7 @@ class TSigKeysTest(unittest.TestCase):
     def test_keys_valid(self):
         """
         Check we accept some valid keys (we don't check all the algorithms,
-        that's the job of isc.dns.TSIGKey).
+        that's the job of bundy.dns.TSIGKey).
         """
         self.assertEqual(None, tsig_keys.check({'keys':
             ['testkey:QklORCAxMCBpcyBjb29sCg==',

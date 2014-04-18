@@ -31,7 +31,7 @@
 
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 class LoggerSpecification {
@@ -47,7 +47,7 @@ public:
     /// \param additive true to cause message logged with this logger to be
     ///        passed to the parent for logging.
     LoggerSpecification(const std::string& name = "",
-                        isc::log::Severity severity = isc::log::INFO,
+                        bundy::log::Severity severity = bundy::log::INFO,
                         int dbglevel = 0, bool additive = false) :
         name_(name), severity_(severity), dbglevel_(dbglevel),
         additive_(additive)
@@ -68,12 +68,12 @@ public:
     /// \brief Set the severity.
     ///
     /// \param severity New severity of the logger.
-    void setSeverity(isc::log::Severity severity) {
+    void setSeverity(bundy::log::Severity severity) {
         severity_ = severity;
     }
 
     /// \return Return logger severity.
-    isc::log::Severity getSeverity() const {
+    bundy::log::Severity getSeverity() const {
         return severity_;
     }
 
@@ -136,7 +136,7 @@ public:
     /// \brief Reset back to defaults.
     void reset() {
         name_ = "";
-        severity_ = isc::log::INFO;
+        severity_ = bundy::log::INFO;
         dbglevel_ = 0;
         additive_ = false;
         options_.clear();
@@ -144,13 +144,13 @@ public:
 
 private:
     std::string                 name_;          ///< Logger name
-    isc::log::Severity          severity_;      ///< Severity for this logger
+    bundy::log::Severity          severity_;      ///< Severity for this logger
     int                         dbglevel_;      ///< Debug level
     bool                        additive_;      ///< Chaining output
     std::vector<OutputOption>   options_;       ///< Logger options
 };
 
 } // namespace log
-} // namespace isc
+} // namespace bundy
 
 #endif // LOGGER_SPECIFICATION_H

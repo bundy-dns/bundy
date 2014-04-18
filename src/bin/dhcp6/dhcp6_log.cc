@@ -16,11 +16,11 @@
 
 #include <dhcp6/dhcp6_log.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
-isc::log::Logger dhcp6_logger("dhcp6");
+bundy::log::Logger dhcp6_logger("dhcp6");
 
 } // namespace dhcp
-} // namespace isc
+} // namespace bundy
 

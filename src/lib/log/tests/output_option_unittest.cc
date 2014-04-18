@@ -18,7 +18,7 @@
 
 #include <log/output_option.h>
 
-using namespace isc::log;
+using namespace bundy::log;
 using namespace std;
 
 // As OutputOption is a struct, the only meaningful test is to check that it

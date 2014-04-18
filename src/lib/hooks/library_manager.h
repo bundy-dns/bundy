@@ -21,7 +21,7 @@
 
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace hooks {
 
 /// @brief No Callout Manager
@@ -31,7 +31,7 @@ namespace hooks {
 class NoCalloutManager : public Exception {
 public:
     NoCalloutManager(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 class CalloutManager;
@@ -226,6 +226,6 @@ private:
 };
 
 } // namespace hooks
-} // namespace isc
+} // namespace bundy
 
 #endif  // LIBRARY_MANAGER_H

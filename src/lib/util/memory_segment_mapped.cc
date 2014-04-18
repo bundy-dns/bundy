@@ -44,7 +44,7 @@ using boost::interprocess::open_read_only;
 using boost::interprocess::open_only;
 using boost::interprocess::offset_ptr;
 
-namespace isc {
+namespace bundy {
 namespace util {
 
 namespace { // unnamed namespace
@@ -221,7 +221,7 @@ private:
 
     void checkReader() {
         if (!lock_->try_lock_sharable()) {
-            isc_throw(MemorySegmentOpenError,
+            bundy_throw(MemorySegmentOpenError,
                       "mapped memory segment can't be opened as read-only "
                       "with a writer process");
         }
@@ -229,7 +229,7 @@ private:
 
     void checkWriter() {
         if (!lock_->try_lock()) {
-            isc_throw(MemorySegmentOpenError,
+            bundy_throw(MemorySegmentOpenError,
                       "mapped memory segment can't be opened as read-write "
                       "with other reader or writer processes");
         }
@@ -244,7 +244,7 @@ MemorySegmentMapped::MemorySegmentMapped(const std::string& filename) :
     try {
         impl_ = new Impl(filename, true);
     } catch (const boost::interprocess::interprocess_exception& ex) {
-        isc_throw(MemorySegmentOpenError,
+        bundy_throw(MemorySegmentOpenError,
                   "failed to open mapped memory segment for " << filename
                   << ": " << ex.what());
     }
@@ -266,11 +266,11 @@ MemorySegmentMapped::MemorySegmentMapped(const std::string& filename,
             impl_ = new Impl(filename, create_only, initial_size);
             break;
         default:
-            isc_throw(InvalidParameter,
+            bundy_throw(InvalidParameter,
                       "invalid open mode for MemorySegmentMapped: " << mode);
         }
     } catch (const boost::interprocess::interprocess_exception& ex) {
-        isc_throw(MemorySegmentOpenError,
+        bundy_throw(MemorySegmentOpenError,
                   "failed to open mapped memory segment for " << filename
                   << ": " << ex.what());
     }
@@ -287,7 +287,7 @@ MemorySegmentMapped::~MemorySegmentMapped() {
 void*
 MemorySegmentMapped::allocate(size_t size) {
     if (impl_->read_only_) {
-        isc_throw(MemorySegmentError, "allocate attempt on read-only segment");
+        bundy_throw(MemorySegmentError, "allocate attempt on read-only segment");
     }
 
     // We explicitly check the free memory size; it appears
@@ -305,7 +305,7 @@ MemorySegmentMapped::allocate(size_t size) {
     do {
         impl_->growSegment();
     } while (impl_->base_sgmt_->get_free_memory() < size);
-    isc_throw(MemorySegmentGrown, "mapped memory segment grown, size: "
+    bundy_throw(MemorySegmentGrown, "mapped memory segment grown, size: "
               << impl_->base_sgmt_->get_size() << ", free size: "
               << impl_->base_sgmt_->get_free_memory());
 }
@@ -313,7 +313,7 @@ MemorySegmentMapped::allocate(size_t size) {
 void
 MemorySegmentMapped::deallocate(void* ptr, size_t) {
     if (impl_->read_only_) {
-        isc_throw(MemorySegmentError,
+        bundy_throw(MemorySegmentError,
                   "deallocate attempt on read-only segment");
     }
 
@@ -356,11 +356,11 @@ MemorySegmentMapped::getNamedAddressImpl(const char* name) const {
 bool
 MemorySegmentMapped::setNamedAddressImpl(const char* name, void* addr) {
     if (impl_->read_only_) {
-        isc_throw(MemorySegmentError, "setNamedAddress on read-only segment");
+        bundy_throw(MemorySegmentError, "setNamedAddress on read-only segment");
     }
 
     if (addr && !impl_->base_sgmt_->belongs_to_segment(addr)) {
-        isc_throw(MemorySegmentError, "address is out of segment: " << addr);
+        bundy_throw(MemorySegmentError, "address is out of segment: " << addr);
     }
 
     // Temporarily save the passed addr into pre-allocated offset_ptr in
@@ -395,7 +395,7 @@ MemorySegmentMapped::setNamedAddressImpl(const char* name, void* addr) {
 bool
 MemorySegmentMapped::clearNamedAddressImpl(const char* name) {
     if (impl_->read_only_) {
-        isc_throw(MemorySegmentError,
+        bundy_throw(MemorySegmentError,
                   "clearNamedAddress on read-only segment");
     }
 
@@ -405,7 +405,7 @@ MemorySegmentMapped::clearNamedAddressImpl(const char* name) {
 void
 MemorySegmentMapped::shrinkToFit() {
     if (impl_->read_only_) {
-        isc_throw(MemorySegmentError, "shrinkToFit on read-only segment");
+        bundy_throw(MemorySegmentError, "shrinkToFit on read-only segment");
     }
 
     // It appears an assertion failure is triggered within Boost if the size
@@ -436,7 +436,7 @@ MemorySegmentMapped::shrinkToFit() {
         impl_->base_sgmt_.reset(
             new BaseSegment(open_only, impl_->filename_.c_str()));
     } catch (const boost::interprocess::interprocess_exception& ex) {
-        isc_throw(MemorySegmentError,
+        bundy_throw(MemorySegmentError,
                   "remap after shrink failed; segment is now unusable");
     }
 }
@@ -463,4 +463,4 @@ MemorySegmentMapped::getCheckSum() const {
 }
 
 } // namespace util
-} // namespace isc
+} // namespace bundy

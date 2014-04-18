@@ -18,7 +18,7 @@
 #include "check.h"
 #include "loader.h"
 
-namespace isc {
+namespace bundy {
 namespace acl {
 
 /// \brief Constants for the AnyOf implementation
@@ -184,7 +184,7 @@ public:
             subexprs = definition->listValue();
         }
         catch (const data::TypeError&) {
-            isc_throw_1(LoaderError, "Logic operator takes list", definition);
+            bundy_throw_1(LoaderError, "Logic operator takes list", definition);
         }
         boost::shared_ptr<LogicOperator<Mode, Context> >
             result(new LogicOperator<Mode, Context>);

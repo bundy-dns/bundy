@@ -17,7 +17,7 @@
 
 #include <dns/rrset.h>
 
-namespace isc {
+namespace bundy {
 namespace cache {
 
 /// \brief RRset Copy Function
@@ -33,10 +33,10 @@ namespace cache {
 ///       we have to do the copy.
 
 void
-rrsetCopy(const isc::dns::AbstractRRset& src, isc::dns::AbstractRRset& dst);
+rrsetCopy(const bundy::dns::AbstractRRset& src, bundy::dns::AbstractRRset& dst);
 
 } // namespace cache
-} // namespace isc
+} // namespace bundy
 
 #endif // RRSET_COPY
 

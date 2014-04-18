@@ -32,9 +32,9 @@
 #include <sys/socket.h> // for AF_INET/AF_INET6
 
 using namespace std;
-using namespace isc::util;
+using namespace bundy::util;
 
-// BEGIN_ISC_NAMESPACE
+// BEGIN_BUNDY_NAMESPACE
 // BEGIN_RDATA_NAMESPACE
 
 namespace {
@@ -42,15 +42,15 @@ void
 convertToIPv6Addr(const char* src, size_t src_len, void* dst) {
     // See a_1.cc for this check.
     if (src_len != strlen(src)) {
-        isc_throw(InvalidRdataText,
+        bundy_throw(InvalidRdataText,
                   "Bad IN/AAAA RDATA text: unexpected nul in string: '"
                   << src << "'");
     }
     const int result = inet_pton(AF_INET6, src, dst);
     if (result == 0) {
-        isc_throw(InvalidRdataText, "Bad IN/AAAA RDATA text: '" << src << "'");
+        bundy_throw(InvalidRdataText, "Bad IN/AAAA RDATA text: '" << src << "'");
     } else if (result < 0) {
-        isc_throw(isc::Unexpected,
+        bundy_throw(bundy::Unexpected,
                   "Unexpected failure in parsing IN/AAAA RDATA text: '"
                   << src << "': " << std::strerror(errno));
     }
@@ -105,12 +105,12 @@ AAAA::AAAA(MasterLexer& lexer, const Name*,
 /// \brief Copy constructor.
 AAAA::AAAA(InputBuffer& buffer, size_t rdata_len) {
     if (rdata_len != sizeof(addr_)) {
-        isc_throw(DNSMessageFORMERR,
+        bundy_throw(DNSMessageFORMERR,
                   "IN/AAAA RDATA construction from wire failed: "
                   "Invalid length: " << rdata_len);
     }
     if (buffer.getLength() - buffer.getPosition() < sizeof(addr_)) {
-        isc_throw(DNSMessageFORMERR,
+        bundy_throw(DNSMessageFORMERR,
                   "IN/AAAA RDATA construction from wire failed: "
                   "insufficient buffer length: "
                   << buffer.getLength() - buffer.getPosition());
@@ -139,7 +139,7 @@ AAAA::toText() const {
 
     if (inet_ntop(AF_INET6, &addr_, addr_string, sizeof(addr_string))
         == NULL) {
-        isc_throw(Unexpected,
+        bundy_throw(Unexpected,
                   "Failed to convert IN/AAAA RDATA to textual IPv6 address");
     }
 
@@ -156,4 +156,4 @@ AAAA::compare(const Rdata& other) const {
 }
 
 // END_RDATA_NAMESPACE
-// END_ISC_NAMESPACE
+// END_BUNDY_NAMESPACE

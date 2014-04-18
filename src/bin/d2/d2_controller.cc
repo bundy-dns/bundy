@@ -18,7 +18,7 @@
 
 #include <stdlib.h>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 /// @brief Defines the application name, this is passed into base class
@@ -64,5 +64,5 @@ D2Controller::D2Controller()
 D2Controller::~D2Controller() {
 }
 
-}; // end namespace isc::d2
-}; // end namespace isc
+}; // end namespace bundy::d2
+}; // end namespace bundy

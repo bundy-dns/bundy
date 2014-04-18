@@ -18,17 +18,17 @@
 #include <string>
 
 
-namespace isc {
+namespace bundy {
 namespace hooks {
 
 // Load the logging message dictionary if not already loaded
 
 void
 hooksStaticLinkInit() {
-    if (!isc::log::isLoggingInitialized()) {
-        isc::log::initLogger(std::string("userlib"));
+    if (!bundy::log::isLoggingInitialized()) {
+        bundy::log::initLogger(std::string("userlib"));
     }
 }
 
 } // namespace hooks
-} // namespace isc
+} // namespace bundy

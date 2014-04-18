@@ -17,7 +17,7 @@
 #include "nameserver_address.h"
 #include "nameserver_entry.h"
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 
 void
@@ -29,4 +29,4 @@ NameserverAddress::updateRTT(uint32_t rtt) const {
 }
 
 } // namespace nsas
-} // namespace isc
+} // namespace bundy

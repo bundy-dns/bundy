@@ -22,7 +22,7 @@
 #include <stdint.h>
 #include <unistd.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief Holds DUID (DHCPv6 Unique Identifier)
@@ -77,7 +77,7 @@ class DUID {
     /// @param text DUID in the hexadecimal format with digits representing
     /// individual bytes separated by colons.
     ///
-    /// @throw isc::BadValue if parsing the DUID failed.
+    /// @throw bundy::BadValue if parsing the DUID failed.
     static DUID fromText(const std::string& text);
 
     /// @brief Returns textual representation of a DUID (e.g. 00:01:02:03:ff)
@@ -104,7 +104,7 @@ class DUID {
     /// @param text DUID in the hexadecimal format with digits representing
     /// individual bytes separated by colons.
     ///
-    /// @throw isc::BadValue if parsing the DUID failed.
+    /// @throw bundy::BadValue if parsing the DUID failed.
     static std::vector<uint8_t> decode(const std::string& text);
 
     /// The actual content of the DUID
@@ -170,8 +170,8 @@ public:
     /// @param text Client identifier in the textual format.
     ///
     /// @return Pointer to the instance of the @c ClientId.
-    /// @throw isc::BadValue if parsing the client identifier failed.
-    /// @throw isc::OutOfRange if the client identifier is truncated.
+    /// @throw bundy::BadValue if parsing the client identifier failed.
+    /// @throw bundy::OutOfRange if the client identifier is truncated.
     static ClientIdPtr fromText(const std::string& text);
 
     /// @brief Compares two client-ids for equality
@@ -181,7 +181,7 @@ public:
     bool operator!=(const ClientId& other) const;
 };
 
-}; // end of isc::dhcp namespace
-}; // end of isc namespace
+}; // end of bundy::dhcp namespace
+}; // end of bundy namespace
 
 #endif /* DUID_H */

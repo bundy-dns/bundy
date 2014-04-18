@@ -15,7 +15,7 @@
 #include <string>
 #include "log/logger_name.h"
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 namespace {
@@ -56,4 +56,4 @@ std::string expandLoggerName(const std::string& name) {
 }
 
 } // namespace log
-} // namespace isc
+} // namespace bundy

@@ -31,11 +31,11 @@
  *
  * If you are a user or system administrator, rather than software engineer,
  * you should read the
- * <a href="http://bundy.isc.org/docs/bundy-guide.html">BUNDY
+ * <a href="http://bundy.bundy.org/docs/bundy-guide.html">BUNDY
  * Guide (Administrator Reference for BUNDY)</a> instead.
  *
  * Regardless of your field of expertise, you are encouraged to visit the
- * <a href="http://bundy.isc.org/">BUNDY webpage (http://bundy.isc.org)</a>
+ * <a href="http://bundy.bundy.org/">BUNDY webpage (http://bundy.bundy.org)</a>
  *
  * @section contrib Contributor's Guide
  * - @subpage contributorGuide
@@ -93,7 +93,7 @@
  * - @subpage SocketSessionUtility
  * - <a href="./doxygen-error.log">Documentation warnings and errors</a>
  *
- * @image html isc-logo.png
+ * @image html bundy-logo.png
  */
 /*
  * @todo: Move the logo to the right (and possibly up). Not sure what

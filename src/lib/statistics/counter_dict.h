@@ -31,12 +31,12 @@
 #include <utility>
 
 
-namespace isc {
+namespace bundy {
 namespace statistics {
 
 class CounterDictionary : boost::noncopyable {
 private:
-    typedef boost::shared_ptr<isc::statistics::Counter> CounterPtr;
+    typedef boost::shared_ptr<bundy::statistics::Counter> CounterPtr;
     typedef std::map<std::string, CounterPtr> DictionaryMap;
     DictionaryMap dictionary_;
     const size_t items_;
@@ -53,13 +53,13 @@ public:
     ///
     /// \param items A number of counter items to hold (greater than 0)
     ///
-    /// \throw isc::InvalidParameter \a items is 0
+    /// \throw bundy::InvalidParameter \a items is 0
     explicit CounterDictionary(const size_t items) :
         items_(items)
     {
         // The number of items must not be 0
         if (items == 0) {
-            isc_throw(isc::InvalidParameter, "Items must not be 0");
+            bundy_throw(bundy::InvalidParameter, "Items must not be 0");
         }
     }
 
@@ -67,12 +67,12 @@ public:
     ///
     /// \param name A key of the element to add
     ///
-    /// \throw isc::InvalidParameter an element which has \a name as key
+    /// \throw bundy::InvalidParameter an element which has \a name as key
     ///                              already exists
     void addElement(const std::string& name) {
         // throw if the element already exists
         if (dictionary_.find(name) != dictionary_.end()) {
-            isc_throw(isc::InvalidParameter,
+            bundy_throw(bundy::InvalidParameter,
                       "Element " << name << " already exists");
         }
         assert(items_ != 0);
@@ -85,14 +85,14 @@ public:
     ///
     /// \param name A key of the element to delete
     ///
-    /// \throw isc::OutOfRange an element which has \a name as key does not
+    /// \throw bundy::OutOfRange an element which has \a name as key does not
     ///                        exist
     void deleteElement(const std::string& name) {
         const size_t result = dictionary_.erase(name);
         if (result != 1) {
             // If an element with specified name does not exist, throw
-            // isc::OutOfRange.
-            isc_throw(isc::OutOfRange,
+            // bundy::OutOfRange.
+            bundy_throw(bundy::OutOfRange,
                       "Element " << name << " does not exist");
         }
     }
@@ -101,7 +101,7 @@ public:
     ///
     /// \param name A key of the element
     ///
-    /// \throw isc::OutOfRange an element which has \a name as key does not
+    /// \throw bundy::OutOfRange an element which has \a name as key does not
     ///                        exist
     Counter& getElement(const std::string& name) {
         DictionaryMap::const_iterator i = dictionary_.find(name);
@@ -110,8 +110,8 @@ public:
             return (*(i->second));
         } else {
             // If an element with specified name does not exist, throw
-            // isc::OutOfRange.
-            isc_throw(isc::OutOfRange,
+            // bundy::OutOfRange.
+            bundy_throw(bundy::OutOfRange,
                       "Element " << name << " does not exist");
         }
     }
@@ -181,6 +181,6 @@ public:
 };
 
 }   // namespace statistics
-}   // namespace isc
+}   // namespace bundy
 
 #endif

@@ -4,7 +4,7 @@ bin_SCRIPTS = bundy-dbutil
 man_MANS = bundy-dbutil.8
 
 nodist_pylogmessage_PYTHON = $(PYTHON_LOGMSGPKG_DIR)/work/dbutil_messages.py
-pylogmessagedir = $(pyexecdir)/isc/log_messages/
+pylogmessagedir = $(pyexecdir)/bundy/log_messages/
 
 EXTRA_DIST = $(man_MANS) bundy-dbutil.xml dbutil_messages.mes
 

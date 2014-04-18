@@ -18,7 +18,7 @@
 #include <dns/name.h>
 #include <util/buffer.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 /// \brief Light-weight Accessor to Name data.
@@ -194,7 +194,7 @@ public:
     /// it will be very difficult to identify the cause.  This method
     /// has minimal level checks to avoid such disruption: If the serialization
     /// would break "this" \c LabelSequence object, it doesn't write anything
-    /// to the given buffer and throw a \c isc::BadValue exception.
+    /// to the given buffer and throw a \c bundy::BadValue exception.
     ///
     /// In general, it should be safe to call this method on a
     /// \c LabelSequence object constructed from a \c Name object or
@@ -227,7 +227,7 @@ public:
     /// to restore it.  Application behavior that assumes the specific
     /// organization of the image is not guaranteed.
     ///
-    /// \throw isc::BadValue buf_len is too short (this method never throws
+    /// \throw bundy::BadValue buf_len is too short (this method never throws
     /// otherwise) or the serialization would override internal data of
     /// of the source LabelSequence.
     ///
@@ -426,7 +426,7 @@ LabelSequence::WILDCARD() {
 }
 
 } // end namespace dns
-} // end namespace isc
+} // end namespace bundy
 
 #endif
 

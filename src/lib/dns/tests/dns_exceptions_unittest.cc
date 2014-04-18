@@ -20,46 +20,46 @@ namespace { // begin unnamed namespace
 
 TEST(DNSExceptionsTest, checkExceptionsHierarchy) {
     EXPECT_NO_THROW({
-        const isc::dns::Exception exception("", 0, "");
-        const isc::Exception& exception_cast =
-          dynamic_cast<const isc::Exception&>(exception);
+        const bundy::dns::Exception exception("", 0, "");
+        const bundy::Exception& exception_cast =
+          dynamic_cast<const bundy::Exception&>(exception);
         // to avoid compiler warning
         exception_cast.what();
     });
 
     EXPECT_NO_THROW({
-        const isc::dns::DNSTextError exception("", 0, "");
-        const isc::dns::Exception& exception_cast =
-          dynamic_cast<const isc::dns::Exception&>(exception);
+        const bundy::dns::DNSTextError exception("", 0, "");
+        const bundy::dns::Exception& exception_cast =
+          dynamic_cast<const bundy::dns::Exception&>(exception);
         // to avoid compiler warning
         exception_cast.what();
     });
 
     EXPECT_NO_THROW({
-        const isc::dns::NameParserException exception("", 0, "");
-        const isc::dns::DNSTextError& exception_cast =
-          dynamic_cast<const isc::dns::DNSTextError&>(exception);
+        const bundy::dns::NameParserException exception("", 0, "");
+        const bundy::dns::DNSTextError& exception_cast =
+          dynamic_cast<const bundy::dns::DNSTextError&>(exception);
         // to avoid compiler warning
         exception_cast.what();
     });
 
     EXPECT_NO_THROW({
-        const isc::dns::DNSMessageFORMERR exception("", 0, "");
-        const isc::dns::DNSProtocolError& exception_cast =
-          dynamic_cast<const isc::dns::DNSProtocolError&>(exception);
-        const isc::dns::Exception& exception_cast2 =
-          dynamic_cast<const isc::dns::Exception&>(exception);
+        const bundy::dns::DNSMessageFORMERR exception("", 0, "");
+        const bundy::dns::DNSProtocolError& exception_cast =
+          dynamic_cast<const bundy::dns::DNSProtocolError&>(exception);
+        const bundy::dns::Exception& exception_cast2 =
+          dynamic_cast<const bundy::dns::Exception&>(exception);
         // to avoid compiler warning
         exception_cast.what();
         exception_cast2.what();
     });
 
     EXPECT_NO_THROW({
-        const isc::dns::DNSMessageBADVERS exception("", 0, "");
-        const isc::dns::DNSProtocolError& exception_cast =
-          dynamic_cast<const isc::dns::DNSProtocolError&>(exception);
-        const isc::dns::Exception& exception_cast2 =
-          dynamic_cast<const isc::dns::Exception&>(exception);
+        const bundy::dns::DNSMessageBADVERS exception("", 0, "");
+        const bundy::dns::DNSProtocolError& exception_cast =
+          dynamic_cast<const bundy::dns::DNSProtocolError&>(exception);
+        const bundy::dns::Exception& exception_cast2 =
+          dynamic_cast<const bundy::dns::Exception&>(exception);
         // to avoid compiler warning
         exception_cast.what();
         exception_cast2.what();

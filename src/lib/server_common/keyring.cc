@@ -15,10 +15,10 @@
 #include <server_common/keyring.h>
 #include <server_common/logger.h>
 
-using namespace isc::dns;
-using namespace isc::data;
+using namespace bundy::dns;
+using namespace bundy::data;
 
-namespace isc {
+namespace bundy {
 namespace server_common {
 
 typedef boost::shared_ptr<TSIGKeyRing> KeyringPtr;
@@ -29,7 +29,7 @@ namespace {
 
 void
 updateKeyring(const std::string&, ConstElementPtr data,
-              const isc::config::ConfigData&) {
+              const bundy::config::ConfigData&) {
     ConstElementPtr list(data->get("keys"));
     KeyringPtr load(new TSIGKeyRing);
     LOG_DEBUG(logger, DBG_TRACE_BASIC, SRVCOMM_KEYS_UPDATE);

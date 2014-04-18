@@ -19,7 +19,7 @@
 #include <fstream>
 #include <sstream>
 
-namespace isc {
+namespace bundy {
 namespace util {
 
 CSVRow::CSVRow(const size_t cols, const char separator)
@@ -73,7 +73,7 @@ std::ostream& operator<<(std::ostream& os, const CSVRow& row) {
 void
 CSVRow::checkIndex(const size_t at) const {
     if (at >= values_.size()) {
-        isc_throw(CSVFileError, "value index '" << at << "' of the CSV row"
+        bundy_throw(CSVFileError, "value index '" << at << "' of the CSV row"
                   " is out of bounds; maximal index is '"
                   << (values_.size() - 1) << "'");
     }
@@ -107,7 +107,7 @@ void
 CSVFile::addColumn(const std::string& col_name) {
     // It is not allowed to add a new column when file is open.
     if (fs_) {
-        isc_throw(CSVFileError, "attempt to add a column '" << col_name
+        bundy_throw(CSVFileError, "attempt to add a column '" << col_name
                   << "' while the file '" << getFilename()
                   << "' is open");
     }
@@ -117,7 +117,7 @@ CSVFile::addColumn(const std::string& col_name) {
 void
 CSVFile::addColumnInternal(const std::string& col_name) {
     if (getColumnIndex(col_name) >= 0) {
-        isc_throw(CSVFileError, "attempt to add duplicate column '"
+        bundy_throw(CSVFileError, "attempt to add duplicate column '"
                   << col_name << "'");
     }
     cols_.push_back(col_name);
@@ -128,7 +128,7 @@ CSVFile::append(const CSVRow& row) const {
     checkStreamStatusAndReset("append");
 
     if (row.getValuesCount() != getColumnCount()) {
-        isc_throw(CSVFileError, "number of values in the CSV row '"
+        bundy_throw(CSVFileError, "number of values in the CSV row '"
                   << row.getValuesCount() << "' doesn't match the number of"
                   " columns in the CSV file '" << getColumnCount() << "'");
     }
@@ -149,7 +149,7 @@ CSVFile::append(const CSVRow& row) const {
     *fs_ << text << std::endl;
     if (!fs_->good()) {
         fs_->clear();
-        isc_throw(CSVFileError, "failed to write CSV row '"
+        bundy_throw(CSVFileError, "failed to write CSV row '"
                   << text << "' to the file '" << filename_ << "'");
     }
 }
@@ -157,12 +157,12 @@ CSVFile::append(const CSVRow& row) const {
 void
 CSVFile::checkStreamStatusAndReset(const std::string& operation) const {
     if (!fs_) {
-        isc_throw(CSVFileError, "NULL stream pointer when performing '"
+        bundy_throw(CSVFileError, "NULL stream pointer when performing '"
                   << operation << "' on file '" << filename_ << "'");
 
     } else if (!fs_->is_open()) {
         fs_->clear();
-        isc_throw(CSVFileError, "closed stream when performing '"
+        bundy_throw(CSVFileError, "closed stream when performing '"
                   << operation << "' on file '" << filename_ << "'");
 
     } else {
@@ -206,7 +206,7 @@ CSVFile::getColumnIndex(const std::string& col_name) const {
 std::string
 CSVFile::getColumnName(const size_t col_index) const {
     if (col_index >= cols_.size()) {
-        isc_throw(isc::OutOfRange, "column index " << col_index << " in the "
+        bundy_throw(bundy::OutOfRange, "column index " << col_index << " in the "
                   " CSV file '" << filename_ << "' is out of range; the CSV"
                   " file has only  " << cols_.size() << " columns ");
     }
@@ -224,7 +224,7 @@ CSVFile::next(CSVRow& row, const bool skip_validation) {
         // Check that stream is "ready" for any IO operations.
         checkStreamStatusAndReset("get next row");
 
-    } catch (isc::Exception& ex) {
+    } catch (bundy::Exception& ex) {
         setReadMsg(ex.what());
         return (false);
     }
@@ -268,27 +268,27 @@ CSVFile::open() {
             // persmissions. Although the file is not open we should call close
             // to reset our internal pointer.
             if (!fs_->is_open()) {
-                isc_throw(CSVFileError, "unable to open '" << filename_ << "'");
+                bundy_throw(CSVFileError, "unable to open '" << filename_ << "'");
             }
             // Make sure we are on the beginning of the file, so as we can parse
             // the header.
             fs_->seekg(0);
             if (!fs_->good()) {
-                isc_throw(CSVFileError, "unable to set read pointer in the file '"
+                bundy_throw(CSVFileError, "unable to set read pointer in the file '"
                           << filename_ << "'");
             }
 
             // Read the header.
             CSVRow header;
             if (!next(header, true)) {
-                isc_throw(CSVFileError, "failed to read and parse header of the"
+                bundy_throw(CSVFileError, "failed to read and parse header of the"
                           " CSV file '" << filename_ << "': "
                           << getReadMsg());
             }
 
             // Check the header against the columns specified for the CSV file.
             if (!validateHeader(header)) {
-                isc_throw(CSVFileError, "invalid header '" << header
+                bundy_throw(CSVFileError, "invalid header '" << header
                           << "' in CSV file '" << filename_ << "'");
             }
 
@@ -311,7 +311,7 @@ CSVFile::recreate() {
     // There is no sense creating a file if we don't specify columns for it.
     if (getColumnCount() == 0) {
         close();
-        isc_throw(CSVFileError, "no columns defined for the newly"
+        bundy_throw(CSVFileError, "no columns defined for the newly"
                   " created CSV file '" << filename_ << "'");
     }
 
@@ -320,7 +320,7 @@ CSVFile::recreate() {
     fs_.reset(new std::fstream(filename_.c_str(), std::fstream::out));
     if (!fs_->is_open()) {
         close();
-        isc_throw(CSVFileError, "unable to open '" << filename_ << "'");
+        bundy_throw(CSVFileError, "unable to open '" << filename_ << "'");
     }
     // Opened successfuly. Write a header to it.
     try {
@@ -332,7 +332,7 @@ CSVFile::recreate() {
 
     } catch (const std::exception& ex) {
         close();
-        isc_throw(CSVFileError, ex.what());
+        bundy_throw(CSVFileError, ex.what());
     }
 
 }
@@ -369,5 +369,5 @@ CSVFile::validateHeader(const CSVRow& header) {
     return (true);
 }
 
-} // end of isc::util namespace
-} // end of isc namespace
+} // end of bundy::util namespace
+} // end of bundy namespace

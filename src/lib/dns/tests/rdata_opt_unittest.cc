@@ -26,11 +26,11 @@
 #include <util/unittests/wiredata.h>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::util;
-using namespace isc::dns::rdata;
-using isc::UnitTestUtil;
-using isc::util::unittests::matchWireData;
+using namespace bundy::dns;
+using namespace bundy::util;
+using namespace bundy::dns::rdata;
+using bundy::UnitTestUtil;
+using bundy::util::unittests::matchWireData;
 
 namespace {
 class Rdata_OPT_Test : public RdataTest {
@@ -117,7 +117,7 @@ TEST_F(Rdata_OPT_Test, toText) {
     const generic::OPT rdata_opt;
 
     EXPECT_THROW(rdata_opt.toText(),
-                 isc::InvalidOperation);
+                 bundy::InvalidOperation);
 }
 
 TEST_F(Rdata_OPT_Test, compare) {
@@ -127,12 +127,12 @@ TEST_F(Rdata_OPT_Test, compare) {
     EXPECT_THROW(rdata_opt.compare(
                   *rdataFactoryFromFile(RRType::OPT(), RRClass::CH(),
                                         "rdata_opt_fromWire1", 2)),
-                 isc::InvalidOperation);
+                 bundy::InvalidOperation);
 
     // comparison attempt between incompatible RR types also results in
-    // isc::InvalidOperation.
+    // bundy::InvalidOperation.
     EXPECT_THROW(rdata_opt.compare(*RdataTest::rdata_nomatch),
-                 isc::InvalidOperation);
+                 bundy::InvalidOperation);
 }
 
 TEST_F(Rdata_OPT_Test, appendPseudoRR) {
@@ -151,7 +151,7 @@ TEST_F(Rdata_OPT_Test, appendPseudoRR) {
     // When option length may overflow RDLEN, append should throw.
     const std::vector<uint8_t> buffer((1 << 16) - 1);
     EXPECT_THROW(rdata_opt.appendPseudoRR(0x0044, &buffer[0], buffer.size()),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 
     const uint8_t rdata_opt_wiredata2[] = {
         // OPTION #1

@@ -22,7 +22,7 @@
 #include <sstream>
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace rdata {
 namespace generic {
@@ -75,7 +75,7 @@ void checkRRTypeBitmaps(const char* const rrtype_name,
 /// type mnemonics are found. Otherwise, it throws an exception if no RR
 /// type mnemonics are found.
 void buildBitmapsFromLexer(const char* const rrtype_name,
-                           isc::dns::MasterLexer& lexer,
+                           bundy::dns::MasterLexer& lexer,
                            std::vector<uint8_t>& typebits,
                            bool allow_empty = false);
 

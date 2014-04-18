@@ -29,7 +29,7 @@
 
 #include <stdint.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace rdata {
 namespace generic {
@@ -40,19 +40,19 @@ namespace {
 int
 decimalToNumber(const char* s, const char* s_end) {
     if (s_end - s < 3) {
-        isc_throw(InvalidRdataText, "Escaped digits too short");
+        bundy_throw(InvalidRdataText, "Escaped digits too short");
     }
 
     const std::string num_str(s, s + 3);
     try {
         const int i = boost::lexical_cast<int>(num_str);
         if (i > 255) {
-            isc_throw(InvalidRdataText, "Escaped digits too large: "
+            bundy_throw(InvalidRdataText, "Escaped digits too large: "
                       << num_str);
         }
         return (i);
     } catch (const boost::bad_lexical_cast&) {
-        isc_throw(InvalidRdataText,
+        bundy_throw(InvalidRdataText,
                   "Invalid form for escaped digits: " << num_str);
     }
 }
@@ -84,10 +84,10 @@ stringToCharString(const MasterToken::StringRegion& str_region,
         result.push_back(c);
     }
     if (escape) {               // terminated by non-escaped '\'
-        isc_throw(InvalidRdataText, "character-string ends with '\\'");
+        bundy_throw(InvalidRdataText, "character-string ends with '\\'");
     }
     if (result.size() > MAX_CHARSTRING_LEN + 1) { // '+ 1' due to the len field
-        isc_throw(CharStringTooLong, "character-string is too long: " <<
+        bundy_throw(CharStringTooLong, "character-string is too long: " <<
                   (result.size() - 1) << "(+1) characters");
     }
     result[0] = result.size() - 1;
@@ -122,7 +122,7 @@ stringToCharStringData(const MasterToken::StringRegion& str_region,
         result.push_back(c);
     }
     if (escape) {               // terminated by non-escaped '\'
-        isc_throw(InvalidRdataText, "character-string ends with '\\'");
+        bundy_throw(InvalidRdataText, "character-string ends with '\\'");
     }
 }
 
@@ -229,20 +229,20 @@ int compareCharStringDatas(const detail::CharStringData& self,
 }
 
 size_t
-bufferToCharString(isc::util::InputBuffer& buffer, size_t rdata_len,
+bufferToCharString(bundy::util::InputBuffer& buffer, size_t rdata_len,
                    CharString& target) {
     if (rdata_len < 1 || buffer.getLength() - buffer.getPosition() < 1) {
-        isc_throw(isc::dns::DNSMessageFORMERR,
+        bundy_throw(bundy::dns::DNSMessageFORMERR,
                   "insufficient data to read character-string length");
     }
     const uint8_t len = buffer.readUint8();
     if (rdata_len < len + 1) {
-        isc_throw(isc::dns::DNSMessageFORMERR,
+        bundy_throw(bundy::dns::DNSMessageFORMERR,
                   "character string length is too large: " <<
                   static_cast<int>(len));
     }
     if (buffer.getLength() - buffer.getPosition() < len) {
-        isc_throw(isc::dns::DNSMessageFORMERR,
+        bundy_throw(bundy::dns::DNSMessageFORMERR,
                   "not enough data in buffer to read character-string of len"
                   << static_cast<int>(len));
     }

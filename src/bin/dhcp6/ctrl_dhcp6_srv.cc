@@ -34,17 +34,17 @@
 #include <string>
 #include <vector>
 
-using namespace isc::asiolink;
-using namespace isc::cc;
-using namespace isc::config;
-using namespace isc::data;
-using namespace isc::dhcp;
-using namespace isc::hooks;
-using namespace isc::log;
-using namespace isc::util;
+using namespace bundy::asiolink;
+using namespace bundy::cc;
+using namespace bundy::config;
+using namespace bundy::data;
+using namespace bundy::dhcp;
+using namespace bundy::hooks;
+using namespace bundy::log;
+using namespace bundy::util;
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 ControlledDhcpv6Srv* ControlledDhcpv6Srv::server_ = NULL;
@@ -61,7 +61,7 @@ ControlledDhcpv6Srv::dhcp6StubConfigHandler(ConstElementPtr) {
     // parse it and always return success. The function that
     // initiates the session must get the configuration on its
     // own using getFullConfig.
-    return (isc::config::createAnswer(0, "Configuration accepted."));
+    return (bundy::config::createAnswer(0, "Configuration accepted."));
 }
 
 ConstElementPtr
@@ -71,7 +71,7 @@ ControlledDhcpv6Srv::dhcp6ConfigHandler(ConstElementPtr new_config) {
         // That should never happen as we install config_handler
         // after we instantiate the server.
         ConstElementPtr answer =
-            isc::config::createAnswer(1, "Configuration rejected,"
+            bundy::config::createAnswer(1, "Configuration rejected,"
                                       " server is during startup/shutdown phase.");
         return (answer);
     }
@@ -99,7 +99,7 @@ ControlledDhcpv6Srv::dhcp6ConfigHandler(ConstElementPtr new_config) {
         merged_config->setValue(full_config->mapValue());
 
         // Merge an existing and new configuration.
-        isc::data::merge(merged_config, new_config);
+        bundy::data::merge(merged_config, new_config);
         LOG_DEBUG(dhcp6_logger, DBG_DHCP6_COMMAND, DHCP6_CONFIG_UPDATE)
             .arg(merged_config->str());
     }
@@ -121,7 +121,7 @@ ControlledDhcpv6Srv::dhcp6ConfigHandler(ConstElementPtr new_config) {
         std::ostringstream err;
         err << "error starting DHCP_DDNS client "
                 " after server reconfiguration: " << ex.what();
-        return (isc::config::createAnswer(1, err.str()));
+        return (bundy::config::createAnswer(1, err.str()));
     }
 
     // Configuration may change active interfaces. Therefore, we have to reopen
@@ -133,7 +133,7 @@ ControlledDhcpv6Srv::dhcp6ConfigHandler(ConstElementPtr new_config) {
     } catch (const std::exception& ex) {
         std::ostringstream err;
         err << "failed to open sockets after server reconfiguration: " << ex.what();
-        answer = isc::config::createAnswer(1, err.str());
+        answer = bundy::config::createAnswer(1, err.str());
     }
     return (answer);
 }
@@ -148,11 +148,11 @@ ControlledDhcpv6Srv::dhcp6CommandHandler(const string& command, ConstElementPtr 
             ControlledDhcpv6Srv::server_->shutdown();
         } else {
             LOG_WARN(dhcp6_logger, DHCP6_NOT_RUNNING);
-            ConstElementPtr answer = isc::config::createAnswer(1,
+            ConstElementPtr answer = bundy::config::createAnswer(1,
                                      "Shutdown failure.");
             return (answer);
         }
-        ConstElementPtr answer = isc::config::createAnswer(0,
+        ConstElementPtr answer = bundy::config::createAnswer(0,
                                  "Shutting down.");
         return (answer);
 
@@ -163,16 +163,16 @@ ControlledDhcpv6Srv::dhcp6CommandHandler(const string& command, ConstElementPtr 
         bool status = HooksManager::loadLibraries(loaded);
         if (!status) {
             LOG_ERROR(dhcp6_logger, DHCP6_HOOKS_LIBS_RELOAD_FAIL);
-            ConstElementPtr answer = isc::config::createAnswer(1,
+            ConstElementPtr answer = bundy::config::createAnswer(1,
                                      "Failed to reload hooks libraries.");
             return (answer);
         }
-        ConstElementPtr answer = isc::config::createAnswer(0,
+        ConstElementPtr answer = bundy::config::createAnswer(0,
                                  "Hooks libraries successfully reloaded.");
         return (answer);
     }
 
-    ConstElementPtr answer = isc::config::createAnswer(1,
+    ConstElementPtr answer = bundy::config::createAnswer(1,
                              "Unrecognized command.");
 
     return (answer);
@@ -279,13 +279,13 @@ ControlledDhcpv6Srv::~ControlledDhcpv6Srv() {
                     // at this stage anyway.
 }
 
-isc::data::ConstElementPtr
+bundy::data::ConstElementPtr
 ControlledDhcpv6Srv::execDhcpv6ServerCommand(const std::string& command_id,
-                                             isc::data::ConstElementPtr args) {
+                                             bundy::data::ConstElementPtr args) {
     try {
         return (dhcp6CommandHandler(command_id, args));
     } catch (const Exception& ex) {
-        ConstElementPtr answer = isc::config::createAnswer(1, ex.what());
+        ConstElementPtr answer = bundy::config::createAnswer(1, ex.what());
         return (answer);
     }
 }

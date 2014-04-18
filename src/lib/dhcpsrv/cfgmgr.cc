@@ -19,10 +19,10 @@
 #include <dhcpsrv/dhcpsrv_log.h>
 #include <string>
 
-using namespace isc::asiolink;
-using namespace isc::util;
+using namespace bundy::asiolink;
+using namespace bundy::util;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 CfgMgr&
@@ -34,12 +34,12 @@ CfgMgr::instance() {
 void
 CfgMgr::addOptionSpace4(const OptionSpacePtr& space) {
     if (!space) {
-        isc_throw(InvalidOptionSpace,
+        bundy_throw(InvalidOptionSpace,
                   "provided option space object is NULL.");
     }
     OptionSpaceCollection::iterator it = spaces4_.find(space->getName());
     if (it != spaces4_.end()) {
-        isc_throw(InvalidOptionSpace, "option space " << space->getName()
+        bundy_throw(InvalidOptionSpace, "option space " << space->getName()
                   << " already added.");
     }
     spaces4_.insert(make_pair(space->getName(), space));
@@ -48,12 +48,12 @@ CfgMgr::addOptionSpace4(const OptionSpacePtr& space) {
 void
 CfgMgr::addOptionSpace6(const OptionSpacePtr& space) {
     if (!space) {
-        isc_throw(InvalidOptionSpace,
+        bundy_throw(InvalidOptionSpace,
                   "provided option space object is NULL.");
     }
     OptionSpaceCollection::iterator it = spaces6_.find(space->getName());
     if (it != spaces6_.end()) {
-        isc_throw(InvalidOptionSpace, "option space " << space->getName()
+        bundy_throw(InvalidOptionSpace, "option space " << space->getName()
                   << " already added.");
     }
     spaces6_.insert(make_pair(space->getName(), space));
@@ -65,14 +65,14 @@ CfgMgr::addOptionDef(const OptionDefinitionPtr& def,
     // @todo we need better validation of the provided option space name here.
     // This will be implemented when #2313 is merged.
     if (option_space.empty()) {
-        isc_throw(BadValue, "option space name must not be empty");
+        bundy_throw(BadValue, "option space name must not be empty");
     } else if (!def) {
         // Option definition must point to a valid object.
-        isc_throw(MalformedOptionDefinition, "option definition must not be NULL");
+        bundy_throw(MalformedOptionDefinition, "option definition must not be NULL");
 
     } else if (getOptionDef(option_space, def->getCode())) {
         // Option definition must not be overriden.
-        isc_throw(DuplicateOptionDefinition, "option definition already added"
+        bundy_throw(DuplicateOptionDefinition, "option definition already added"
                   << " to option space " << option_space);
 
     // We must not override standard (assigned) option for which there is a
@@ -84,7 +84,7 @@ CfgMgr::addOptionDef(const OptionDefinitionPtr& def,
                (option_space == "dhcp6" &&
                 LibDHCP::isStandardOption(Option::V6, def->getCode()) &&
                 LibDHCP::getOptionDef(Option::V6, def->getCode()))) {
-        isc_throw(BadValue, "unable to override definition of option '"
+        bundy_throw(BadValue, "unable to override definition of option '"
                   << def->getCode() << "' in standard option space '"
                   << option_space << "'.");
 
@@ -127,7 +127,7 @@ CfgMgr::getOptionDef(const std::string& option_space,
 
 Subnet6Ptr
 CfgMgr::getSubnet6(const std::string& iface,
-                   const isc::dhcp::ClientClasses& classes) {
+                   const bundy::dhcp::ClientClasses& classes) {
 
     if (!iface.length()) {
         return (Subnet6Ptr());
@@ -153,8 +153,8 @@ CfgMgr::getSubnet6(const std::string& iface,
 }
 
 Subnet6Ptr
-CfgMgr::getSubnet6(const isc::asiolink::IOAddress& hint,
-                   const isc::dhcp::ClientClasses& classes,
+CfgMgr::getSubnet6(const bundy::asiolink::IOAddress& hint,
+                   const bundy::dhcp::ClientClasses& classes,
                    const bool relay) {
 
     // If there is more than one, we need to choose the proper one
@@ -189,7 +189,7 @@ CfgMgr::getSubnet6(const isc::asiolink::IOAddress& hint,
 }
 
 Subnet6Ptr CfgMgr::getSubnet6(OptionPtr iface_id_option,
-                              const isc::dhcp::ClientClasses& classes) {
+                              const bundy::dhcp::ClientClasses& classes) {
     if (!iface_id_option) {
         return (Subnet6Ptr());
     }
@@ -220,7 +220,7 @@ void CfgMgr::addSubnet6(const Subnet6Ptr& subnet) {
     /// other already defined subnet.
     /// @todo: Check that there is no subnet with the same interface-id
     if (isDuplicate(*subnet)) {
-        isc_throw(isc::dhcp::DuplicateSubnetID, "ID of the new IPv6 subnet '"
+        bundy_throw(bundy::dhcp::DuplicateSubnetID, "ID of the new IPv6 subnet '"
                   << subnet->getID() << "' is already in use");
     }
     LOG_DEBUG(dhcpsrv_logger, DHCPSRV_DBG_TRACE, DHCPSRV_CFGMGR_ADD_SUBNET6)
@@ -229,8 +229,8 @@ void CfgMgr::addSubnet6(const Subnet6Ptr& subnet) {
 }
 
 Subnet4Ptr
-CfgMgr::getSubnet4(const isc::asiolink::IOAddress& hint,
-                   const isc::dhcp::ClientClasses& classes,
+CfgMgr::getSubnet4(const bundy::asiolink::IOAddress& hint,
+                   const bundy::dhcp::ClientClasses& classes,
                    bool relay) const {
     // Iterate over existing subnets to find a suitable one for the
     // given address.
@@ -268,11 +268,11 @@ CfgMgr::getSubnet4(const isc::asiolink::IOAddress& hint,
 
 Subnet4Ptr
 CfgMgr::getSubnet4(const std::string& iface_name,
-                   const isc::dhcp::ClientClasses& classes) const {
+                   const bundy::dhcp::ClientClasses& classes) const {
     Iface* iface = IfaceMgr::instance().getIface(iface_name);
     // This should never happen in the real life. Hence we throw an exception.
     if (iface == NULL) {
-        isc_throw(isc::BadValue, "interface " << iface_name <<
+        bundy_throw(bundy::BadValue, "interface " << iface_name <<
                   " doesn't exist and therefore it is impossible"
                   " to find a suitable subnet for its IPv4 address");
     }
@@ -287,7 +287,7 @@ void CfgMgr::addSubnet4(const Subnet4Ptr& subnet) {
     /// @todo: Check that this new subnet does not cross boundaries of any
     /// other already defined subnet.
     if (isDuplicate(*subnet)) {
-        isc_throw(isc::dhcp::DuplicateSubnetID, "ID of the new IPv4 subnet '"
+        bundy_throw(bundy::dhcp::DuplicateSubnetID, "ID of the new IPv4 subnet '"
                   << subnet->getID() << "' is already in use");
     }
     LOG_DEBUG(dhcpsrv_logger, DHCPSRV_DBG_TRACE, DHCPSRV_CFGMGR_ADD_SUBNET4)
@@ -327,14 +327,14 @@ CfgMgr::addActiveIface(const std::string& iface) {
             iface_copy = iface.substr(0,pos);
             unicast_addrs_.insert(make_pair(iface_copy, addr));
         } catch (...) {
-            isc_throw(BadValue, "Can't convert '" << addr_string
+            bundy_throw(BadValue, "Can't convert '" << addr_string
                       << "' into address in interface defition ('"
                       << iface << "')");
         }
     }
 
     if (isIfaceListedActive(iface_copy)) {
-        isc_throw(DuplicateListeningIface,
+        bundy_throw(DuplicateListeningIface,
                   "attempt to add duplicate interface '" << iface_copy << "'"
                   " to the set of interfaces on which server listens");
     }
@@ -408,7 +408,7 @@ CfgMgr::isDuplicate(const Subnet6& subnet) const {
 }
 
 
-const isc::asiolink::IOAddress*
+const bundy::asiolink::IOAddress*
 CfgMgr::getUnicast(const std::string& iface) const {
     UnicastIfacesCollection::const_iterator addr = unicast_addrs_.find(iface);
     if (addr == unicast_addrs_.end()) {
@@ -449,5 +449,5 @@ CfgMgr::CfgMgr()
 CfgMgr::~CfgMgr() {
 }
 
-}; // end of isc::dhcp namespace
-}; // end of isc namespace
+}; // end of bundy::dhcp namespace
+}; // end of bundy namespace

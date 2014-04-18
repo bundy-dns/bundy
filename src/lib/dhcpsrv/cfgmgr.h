@@ -34,7 +34,7 @@
 #include <vector>
 #include <list>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief Exception thrown when the same interface has been specified twice.
@@ -44,7 +44,7 @@ namespace dhcp {
 class DuplicateListeningIface : public Exception {
 public:
     DuplicateListeningIface(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Exception thrown upon attempt to add subnet with an ID that belongs
@@ -52,7 +52,7 @@ public:
 class DuplicateSubnetID : public Exception {
 public:
     DuplicateSubnetID(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Configuration Manager
@@ -105,11 +105,11 @@ public:
     /// @param def option definition to be added.
     /// @param option_space name of the option space to add definition to.
     ///
-    /// @throw isc::dhcp::DuplicateOptionDefinition when the particular
+    /// @throw bundy::dhcp::DuplicateOptionDefinition when the particular
     /// option definition already exists.
-    /// @throw isc::dhcp::MalformedOptionDefinition when the pointer to
+    /// @throw bundy::dhcp::MalformedOptionDefinition when the pointer to
     /// an option definition is NULL.
-    /// @throw isc::BadValue when the option space name is empty or
+    /// @throw bundy::BadValue when the option space name is empty or
     /// when trying to override the standard option (in dhcp4 or dhcp6
     /// option space).
     void addOptionDef(const OptionDefinitionPtr& def,
@@ -139,7 +139,7 @@ public:
     ///
     /// @param space option space to be added.
     ///
-    /// @throw isc::dhcp::InvalidOptionSpace invalid option space
+    /// @throw bundy::dhcp::InvalidOptionSpace invalid option space
     /// has been specified.
     void addOptionSpace4(const OptionSpacePtr& space);
 
@@ -147,7 +147,7 @@ public:
     ///
     /// @param space option space to be added.
     ///
-    /// @throw isc::dhcp::InvalidOptionSpace invalid option space
+    /// @throw bundy::dhcp::InvalidOptionSpace invalid option space
     /// has been specified.
     void addOptionSpace6(const OptionSpacePtr& space);
 
@@ -190,8 +190,8 @@ public:
     /// @param relay true if address specified in hint is a relay
     ///
     /// @return a subnet object (or NULL if no suitable match was fount)
-    Subnet6Ptr getSubnet6(const isc::asiolink::IOAddress& hint,
-                          const isc::dhcp::ClientClasses& classes,
+    Subnet6Ptr getSubnet6(const bundy::asiolink::IOAddress& hint,
+                          const bundy::dhcp::ClientClasses& classes,
                           const bool relay = false);
 
     /// @brief get IPv6 subnet by interface name
@@ -208,7 +208,7 @@ public:
     ///
     /// @return a subnet object (or NULL if no suitable match was fount)
     Subnet6Ptr getSubnet6(const std::string& iface_name,
-                          const isc::dhcp::ClientClasses& classes);
+                          const bundy::dhcp::ClientClasses& classes);
 
     /// @brief get IPv6 subnet by interface-id
     ///
@@ -222,7 +222,7 @@ public:
     ///
     /// @return a subnet object
     Subnet6Ptr getSubnet6(OptionPtr interface_id,
-                          const isc::dhcp::ClientClasses& classes);
+                          const bundy::dhcp::ClientClasses& classes);
 
     /// @brief adds an IPv6 subnet
     ///
@@ -290,8 +290,8 @@ public:
     /// @param relay true if address specified in hint is a relay
     ///
     /// @return a subnet object
-    Subnet4Ptr getSubnet4(const isc::asiolink::IOAddress& hint,
-                          const isc::dhcp::ClientClasses& classes,
+    Subnet4Ptr getSubnet4(const bundy::asiolink::IOAddress& hint,
+                          const bundy::dhcp::ClientClasses& classes,
                           bool relay = false) const;
 
     /// @brief Returns a subnet for the specified local interface.
@@ -308,7 +308,7 @@ public:
     /// @return Pointer to the subnet matching interface specified or NULL
     /// pointer if IPv4 address on the interface doesn't match any subnet.
     Subnet4Ptr getSubnet4(const std::string& iface,
-                          const isc::dhcp::ClientClasses& classes) const;
+                          const bundy::dhcp::ClientClasses& classes) const;
 
     /// @brief adds a subnet4
     void addSubnet4(const Subnet4Ptr& subnet);
@@ -378,7 +378,7 @@ public:
     /// the next configuration change.
     ///
     /// @return IOAddress pointer (or NULL if none)
-    const isc::asiolink::IOAddress*
+    const bundy::asiolink::IOAddress*
     getUnicast(const std::string& iface) const;
 
     /// @brief Sets whether server should send back client-id in DHCPv4
@@ -504,7 +504,7 @@ private:
     /// @name a collection of unicast addresses and the interfaces names the
     //        server is supposed to listen on
     //@{
-    typedef std::map<std::string, isc::asiolink::IOAddress> UnicastIfacesCollection;
+    typedef std::map<std::string, bundy::asiolink::IOAddress> UnicastIfacesCollection;
     UnicastIfacesCollection unicast_addrs_;
 
     /// A flag which indicates that server should listen on all available
@@ -518,7 +518,7 @@ private:
     D2ClientMgr d2_client_mgr_;
 };
 
-} // namespace isc::dhcp
-} // namespace isc
+} // namespace bundy::dhcp
+} // namespace bundy
 
 #endif // CFGMGR_H

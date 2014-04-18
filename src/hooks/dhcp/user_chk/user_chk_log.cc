@@ -17,6 +17,6 @@
 
 namespace user_chk {
 
-isc::log::Logger user_chk_logger("user_chk");
+bundy::log::Logger user_chk_logger("user_chk");
 
 } // namespace user_chk

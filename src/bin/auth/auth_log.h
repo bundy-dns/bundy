@@ -18,7 +18,7 @@
 #include <log/macros.h>
 #include <auth/auth_messages.h>
 
-namespace isc {
+namespace bundy {
 namespace auth {
 
 /// \brief Auth Logging
@@ -48,9 +48,9 @@ extern const int DBG_AUTH_MESSAGES;
 /// a logger in each file, but we would want to define a common name to avoid
 /// spelling mistakes, so it is just one small step from there to define a
 /// module-common logger.
-extern isc::log::Logger auth_logger;
+extern bundy::log::Logger auth_logger;
 
 } // namespace nsas
-} // namespace isc
+} // namespace bundy
 
 #endif // AUTH_LOG_H

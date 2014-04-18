@@ -20,7 +20,7 @@
 
 #include <stdint.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief Exception thrown when error occured during parsing packet's headers.
@@ -30,7 +30,7 @@ namespace dhcp {
 class InvalidPacketHeader : public Exception {
 public:
     InvalidPacketHeader(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// Size of the Ethernet frame header.

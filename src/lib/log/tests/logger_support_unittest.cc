@@ -16,7 +16,7 @@
 #include <log/logger_support.h>
 #include <log/log_messages.h>
 
-using namespace isc::log;
+using namespace bundy::log;
 
 class LoggerSupportTest : public ::testing::Test {
 protected:
@@ -71,7 +71,7 @@ TEST_F(LoggerSupportTest, LoggingInitializationCheck) {
     // Flag that it has not been initialized and declare a logger. Any logging
     // operation should then throw.
     setLoggingInitialized(false);
-    isc::log::Logger test_logger("test");
+    bundy::log::Logger test_logger("test");
 
     EXPECT_THROW(test_logger.isDebugEnabled(), LoggingNotInitialized);
     EXPECT_THROW(test_logger.info(LOG_INPUT_OPEN_FAIL), LoggingNotInitialized);

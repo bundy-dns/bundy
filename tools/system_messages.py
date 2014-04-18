@@ -79,7 +79,7 @@ SEC_HEADER="""<?xml version="1.0" encoding="UTF-8"?>
         This is the messages manual for BUNDY version &__VERSION__;.
 	    The most up-to-date version of this document, along with
 	    other documents for BUNDY, can be found at
-        <ulink url="http://bundy.isc.org/docs"/>.
+        <ulink url="http://bundy.bundy.org/docs"/>.
       </para>
     </abstract>
 

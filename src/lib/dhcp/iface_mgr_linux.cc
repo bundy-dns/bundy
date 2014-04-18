@@ -47,10 +47,10 @@
 #include <linux/rtnetlink.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::asiolink;
-using namespace isc::dhcp;
-using namespace isc::util::io::internal;
+using namespace bundy;
+using namespace bundy::asiolink;
+using namespace bundy::dhcp;
+using namespace bundy::util::io::internal;
 
 BOOST_STATIC_ASSERT(IFLA_MAX>=IFA_MAX);
 
@@ -127,38 +127,38 @@ const static size_t RCVBUF_SIZE = 32768;
 
 /// @brief Opens netlink socket and initializes handle structure.
 ///
-/// @throw isc::Unexpected Thrown if socket configuration fails.
+/// @throw bundy::Unexpected Thrown if socket configuration fails.
 void Netlink::rtnl_open_socket() {
 
     fd_ = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
     if (fd_ < 0) {
-        isc_throw(Unexpected, "Failed to create NETLINK socket.");
+        bundy_throw(Unexpected, "Failed to create NETLINK socket.");
     }
 
     if (setsockopt(fd_, SOL_SOCKET, SO_SNDBUF, &SNDBUF_SIZE, sizeof(SNDBUF_SIZE)) < 0) {
-        isc_throw(Unexpected, "Failed to set send buffer in NETLINK socket.");
+        bundy_throw(Unexpected, "Failed to set send buffer in NETLINK socket.");
     }
 
     if (setsockopt(fd_, SOL_SOCKET, SO_RCVBUF, &RCVBUF_SIZE, sizeof(RCVBUF_SIZE)) < 0) {
-        isc_throw(Unexpected, "Failed to set receive buffer in NETLINK socket.");
+        bundy_throw(Unexpected, "Failed to set receive buffer in NETLINK socket.");
     }
 
     local_.nl_family = AF_NETLINK;
     local_.nl_groups = 0;
 
     if (bind(fd_, convertSockAddr(&local_), sizeof(local_)) < 0) {
-        isc_throw(Unexpected, "Failed to bind netlink socket.");
+        bundy_throw(Unexpected, "Failed to bind netlink socket.");
     }
 
     socklen_t addr_len = sizeof(local_);
     if (getsockname(fd_, convertSockAddr(&local_), &addr_len) < 0) {
-        isc_throw(Unexpected, "Getsockname for netlink socket failed.");
+        bundy_throw(Unexpected, "Getsockname for netlink socket failed.");
     }
 
     // just 2 sanity checks and we are done
     if ( (addr_len != sizeof(local_)) ||
          (local_.nl_family != AF_NETLINK) ) {
-        isc_throw(Unexpected, "getsockname() returned unexpected data for netlink socket.");
+        bundy_throw(Unexpected, "getsockname() returned unexpected data for netlink socket.");
     }
 }
 
@@ -215,7 +215,7 @@ void Netlink::rtnl_send_request(int family, int type) {
                          sizeof(nladdr));
 
     if (status<0) {
-        isc_throw(Unexpected, "Failed to send " << sizeof(nladdr)
+        bundy_throw(Unexpected, "Failed to send " << sizeof(nladdr)
                   << " bytes over netlink socket.");
     }
 }
@@ -266,7 +266,7 @@ void Netlink::parse_rtattr(RTattribPtrs& table, struct rtattr* rta, int len)
         rta = RTA_NEXT(rta,len);
     }
     if (len) {
-        isc_throw(Unexpected, "Failed to parse RTATTR in netlink message.");
+        bundy_throw(Unexpected, "Failed to parse RTATTR in netlink message.");
     }
 }
 
@@ -343,12 +343,12 @@ void Netlink::rtnl_process_reply(NetlinkMessages& info) {
             if (errno == EINTR) {
                 continue;
             }
-            isc_throw(Unexpected, "Error " << errno
+            bundy_throw(Unexpected, "Error " << errno
                       << " while processing reply from netlink socket.");
         }
 
         if (status == 0) {
-            isc_throw(Unexpected, "EOF while reading netlink socket.");
+            bundy_throw(Unexpected, "EOF while reading netlink socket.");
         }
 
         nlmsghdr* header = static_cast<nlmsghdr*>(static_cast<void*>(buf));
@@ -374,9 +374,9 @@ void Netlink::rtnl_process_reply(NetlinkMessages& info) {
                 if (header->nlmsg_len < NLMSG_LENGTH(sizeof(struct nlmsgerr))) {
                     // We are really out of luck here. We can't even say what is
                     // wrong as error message is truncated. D'oh.
-                    isc_throw(Unexpected, "Netlink reply read failed.");
+                    bundy_throw(Unexpected, "Netlink reply read failed.");
                 } else {
-                    isc_throw(Unexpected, "Netlink reply read error " << -err->error);
+                    bundy_throw(Unexpected, "Netlink reply read error " << -err->error);
                 }
                 // Never happens we throw before we reach here
                 return;
@@ -388,10 +388,10 @@ void Netlink::rtnl_process_reply(NetlinkMessages& info) {
             header = NLMSG_NEXT(header, status);
         }
         if (msg.msg_flags & MSG_TRUNC) {
-            isc_throw(Unexpected, "Message received over netlink truncated.");
+            bundy_throw(Unexpected, "Message received over netlink truncated.");
         }
         if (status) {
-            isc_throw(Unexpected, "Trailing garbage of " << status << " bytes received over netlink.");
+            bundy_throw(Unexpected, "Trailing garbage of " << status << " bytes received over netlink.");
         }
     }
 }
@@ -411,7 +411,7 @@ void Netlink::release_list(NetlinkMessages& messages) {
 
 } // end of anonymous namespace
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief Detect available interfaces on Linux systems.
@@ -536,7 +536,7 @@ bool IfaceMgr::os_receive4(struct msghdr&, Pkt4Ptr&) {
 
 bool
 IfaceMgr::openMulticastSocket(Iface& iface,
-                              const isc::asiolink::IOAddress& addr,
+                              const bundy::asiolink::IOAddress& addr,
                               const uint16_t port,
                               IfaceMgrErrorMsgCallback error_handler) {
     // This variable will hold a descriptor of the socket bound to
@@ -588,7 +588,7 @@ IfaceMgr::openMulticastSocket(Iface& iface,
     return (true);
 }
 
-} // end of isc::dhcp namespace
-} // end of isc namespace
+} // end of bundy::dhcp namespace
+} // end of bundy namespace
 
 #endif // if defined(LINUX)

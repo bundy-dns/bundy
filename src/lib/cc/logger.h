@@ -25,7 +25,7 @@
 /// and should not be included in any publicly used header, only in local
 /// cc files.
 
-namespace isc {
+namespace bundy {
 namespace cc {
 
 /// Trace basic operation
@@ -36,10 +36,10 @@ const int DBG_TRACE_BASIC = DBGLVL_TRACE_BASIC;
 const int DBG_TRACE_DETAILED = DBGLVL_TRACE_DETAIL;
 
 // Declaration of the logger.
-extern isc::log::Logger logger;
+extern bundy::log::Logger logger;
 
 } // namespace cc
-} // namespace isc
+} // namespace bundy
 
 /// \brief Logger for this library
 

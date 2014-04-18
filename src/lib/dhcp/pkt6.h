@@ -28,7 +28,7 @@
 
 #include <time.h>
 
-namespace isc {
+namespace bundy {
 
 namespace dhcp {
 
@@ -82,15 +82,15 @@ public:
         RelayInfo();
         uint8_t   msg_type_;               ///< message type (RELAY-FORW oro RELAY-REPL)
         uint8_t   hop_count_;              ///< number of traversed relays (up to 32)
-        isc::asiolink::IOAddress linkaddr_;///< fixed field in relay-forw/relay-reply
-        isc::asiolink::IOAddress peeraddr_;///< fixed field in relay-forw/relay-reply
+        bundy::asiolink::IOAddress linkaddr_;///< fixed field in relay-forw/relay-reply
+        bundy::asiolink::IOAddress peeraddr_;///< fixed field in relay-forw/relay-reply
 
         /// @brief length of the relay_msg_len
         /// Used when calculating length during pack/unpack
         uint16_t  relay_msg_len_;
 
         /// options received from a specified relay, except relay-msg option
-        isc::dhcp::OptionCollection options_;
+        bundy::dhcp::OptionCollection options_;
     };
 
     /// Constructor, used in replying to a message
@@ -142,7 +142,7 @@ public:
     /// zero length
     ///
     /// @return reference to output buffer
-    const isc::util::OutputBuffer& getBuffer() const { return (buffer_out_); };
+    const bundy::util::OutputBuffer& getBuffer() const { return (buffer_out_); };
 
     /// @brief Returns protocol of this packet (UDP or TCP).
     ///
@@ -218,7 +218,7 @@ public:
     /// the server). pkt->relay_info_.size() - 1 is the innermost encapsulation
     /// (relay closest to the client).
     ///
-    /// @throw isc::OutOfRange if nesting level has invalid value.
+    /// @throw bundy::OutOfRange if nesting level has invalid value.
     ///
     /// @param option_code code of the requested option
     /// @param nesting_level see description above
@@ -245,7 +245,7 @@ public:
     ///
     /// @param type option type we are looking for
     /// @return instance of option collection with requested options
-    isc::dhcp::OptionCollection getOptions(uint16_t type);
+    bundy::dhcp::OptionCollection getOptions(uint16_t type);
 
     /// Attempts to delete first suboption of requested type
     ///
@@ -262,24 +262,24 @@ public:
     /// @brief Sets remote address.
     ///
     /// @param remote specifies remote address
-    void setRemoteAddr(const isc::asiolink::IOAddress& remote) { remote_addr_ = remote; }
+    void setRemoteAddr(const bundy::asiolink::IOAddress& remote) { remote_addr_ = remote; }
 
     /// @brief Returns remote address
     ///
     /// @return remote address
-    const isc::asiolink::IOAddress& getRemoteAddr() const {
+    const bundy::asiolink::IOAddress& getRemoteAddr() const {
         return (remote_addr_);
     }
 
     /// @brief Sets local address.
     ///
     /// @param local specifies local address
-    void setLocalAddr(const isc::asiolink::IOAddress& local) { local_addr_ = local; }
+    void setLocalAddr(const bundy::asiolink::IOAddress& local) { local_addr_ = local; }
 
     /// @brief Returns local address.
     ///
     /// @return local address
-    const isc::asiolink::IOAddress& getLocalAddr() const {
+    const bundy::asiolink::IOAddress& getLocalAddr() const {
         return (local_addr_);
     }
 
@@ -353,14 +353,14 @@ public:
     /// behavior must be taken into consideration before making
     /// changes to this member such as access scope restriction or
     /// data format change etc.
-    isc::dhcp::OptionCollection options_;
+    bundy::dhcp::OptionCollection options_;
 
     /// @brief Update packet timestamp.
     ///
     /// Updates packet timestamp. This method is invoked
     /// by interface manager just before sending or
     /// just after receiving it.
-    /// @throw isc::Unexpected if timestamp update failed
+    /// @throw bundy::Unexpected if timestamp update failed
     void updateTimestamp();
 
     /// @brief Return textual type of packet.
@@ -551,10 +551,10 @@ protected:
     int ifindex_;
 
     /// local address (dst if receiving packet, src if sending packet)
-    isc::asiolink::IOAddress local_addr_;
+    bundy::asiolink::IOAddress local_addr_;
 
     /// remote address (src if receiving packet, dst if sending packet)
-    isc::asiolink::IOAddress remote_addr_;
+    bundy::asiolink::IOAddress remote_addr_;
 
     /// local TDP or UDP port
     uint16_t local_port_;
@@ -570,7 +570,7 @@ protected:
     /// behavior must be taken into consideration before making
     /// changes to this member such as access scope restriction or
     /// data format change etc.
-    isc::util::OutputBuffer buffer_out_;
+    bundy::util::OutputBuffer buffer_out_;
 
     /// packet timestamp
     boost::posix_time::ptime timestamp_;
@@ -580,8 +580,8 @@ protected:
 
 }; // Pkt6 class
 
-} // isc::dhcp namespace
+} // bundy::dhcp namespace
 
-} // isc namespace
+} // bundy namespace
 
 #endif

@@ -40,17 +40,17 @@
 #include <string>
 #include <vector>
 
-using namespace isc::datasrc;
+using namespace bundy::datasrc;
 using namespace std;
 // don't import the entire boost namespace.  It will unexpectedly hide uint32_t
 // for some systems.
 using boost::dynamic_pointer_cast;
 using boost::lexical_cast;
-using namespace isc::dns;
-using namespace isc::testutils;
-using namespace isc::datasrc::test;
+using namespace bundy::dns;
+using namespace bundy::testutils;
+using namespace bundy::datasrc::test;
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace test {
 /// Single journal entry in the mock database.
@@ -179,32 +179,32 @@ public:
     virtual IteratorContextPtr getRecords(const std::string&, int, bool)
         const
     {
-        isc_throw(isc::NotImplemented,
+        bundy_throw(bundy::NotImplemented,
                   "This database datasource can't be iterated");
     }
 
     virtual IteratorContextPtr getNSEC3Records(const std::string&, int) const {
-        isc_throw(isc::NotImplemented, "This test database datasource won't "
+        bundy_throw(bundy::NotImplemented, "This test database datasource won't "
                   "give you any NSEC3. Ever. Ask someone else.");
     }
 
     virtual IteratorContextPtr getAllRecords(int) const {
-        isc_throw(isc::NotImplemented,
+        bundy_throw(bundy::NotImplemented,
                   "This database datasource can't be iterated");
     }
 
     virtual IteratorContextPtr getDiffs(int, uint32_t, uint32_t) const {
-        isc_throw(isc::NotImplemented,
+        bundy_throw(bundy::NotImplemented,
                   "This database datasource doesn't support diffs");
     }
 
     virtual std::string findPreviousName(int, const std::string&) const {
-        isc_throw(isc::NotImplemented,
+        bundy_throw(bundy::NotImplemented,
                   "This data source doesn't support DNSSEC");
     }
 
     virtual std::string findPreviousNSEC3Hash(int, const std::string&) const {
-        isc_throw(isc::NotImplemented,
+        bundy_throw(bundy::NotImplemented,
                   "This test database knows nothing about NSEC3 nor order");
     }
 
@@ -265,7 +265,7 @@ public:
 
         // Check any attempt of multiple transactions
         if (did_transaction_) {
-            isc_throw(DataSourceError, "MockAccessor::startTransaction() "
+            bundy_throw(DataSourceError, "MockAccessor::startTransaction() "
                       "called multiple times - likely a bug in the test");
         }
 
@@ -315,9 +315,9 @@ private:
             // On these names some exceptions are thrown, to test the robustness
             // of the find() method.
             if (searched_name_ == "dsexception.example.org.") {
-                isc_throw(DataSourceError, "datasource exception on search");
-            } else if (searched_name_ == "iscexception.example.org.") {
-                isc_throw(isc::Exception, "isc exception on search");
+                bundy_throw(DataSourceError, "datasource exception on search");
+            } else if (searched_name_ == "bundyexception.example.org.") {
+                bundy_throw(bundy::Exception, "bundy exception on search");
             } else if (searched_name_ == "basicexception.example.org.") {
                 throw std::exception();
             }
@@ -336,7 +336,7 @@ private:
                      i != cur_records.end(); ++i) {
                     const Name local(i->first);
                     if (local.compare(Name(name)).getRelation() ==
-                        isc::dns::NameComparisonResult::SUBDOMAIN) {
+                        bundy::dns::NameComparisonResult::SUBDOMAIN) {
                         cur_name.insert(cur_name.end(), i->second.begin(),
                                         i->second.end());
                     }
@@ -348,9 +348,9 @@ private:
 
         virtual bool getNext(std::string (&columns)[COLUMN_COUNT]) {
             if (searched_name_ == "dsexception.getnext.example.org.") {
-                isc_throw(DataSourceError, "datasource exception on getnextrecord");
-            } else if (searched_name_ == "iscexception.getnext.example.org.") {
-                isc_throw(isc::Exception, "isc exception on getnextrecord");
+                bundy_throw(DataSourceError, "datasource exception on getnextrecord");
+            } else if (searched_name_ == "bundyexception.getnext.example.org.") {
+                bundy_throw(bundy::Exception, "bundy exception on getnextrecord");
             } else if (searched_name_ ==
                        "basicexception.getnext.example.org.") {
                 throw std::exception();
@@ -501,7 +501,7 @@ public:
         } else if (id == -1) {
             return (IteratorContextPtr(new BadIteratorContext()));
         } else {
-            isc_throw(isc::Unexpected, "Unknown zone ID");
+            bundy_throw(bundy::Unexpected, "Unknown zone ID");
         }
     }
 
@@ -569,7 +569,7 @@ public:
         // has been added, trigger an imaginary unexpected event with an
         // exception.
         if (update_records_->count("throw.example.org.") > 0) {
-            isc_throw(DataSourceError, "unexpected failure in rollback");
+            bundy_throw(DataSourceError, "unexpected failure in rollback");
         }
 
         rollbacked_ = true;
@@ -680,7 +680,7 @@ public:
         const
     {
         if (id == -1) {
-            isc_throw(isc::NotImplemented, "Test not implemented behaviour");
+            bundy_throw(bundy::NotImplemented, "Test not implemented behaviour");
         } else if (id == READONLY_ZONE_ID) {
             // For some specific names we intentionally return broken or
             // unexpected result.
@@ -690,7 +690,7 @@ public:
                 return ("brokenname...example.org.");
             } else if (rname == "org.example.notimplnsec." ||
                        rname == "org.example.wild.here.") {
-                isc_throw(isc::NotImplemented, "Not implemented in this test");
+                bundy_throw(bundy::NotImplemented, "Not implemented in this test");
             }
 
             // For the general case, we search for the first name N in the
@@ -703,14 +703,14 @@ public:
             Domains::const_iterator it(readonly_records_->lower_bound(
                                            Name(rname).reverse().toText()));
             if (it == readonly_records_->begin()) {
-                isc_throw(isc::Unexpected, "Unexpected name");
+                bundy_throw(bundy::Unexpected, "Unexpected name");
             }
             if (it == readonly_records_->end()) {
                 return ((*readonly_records_->rbegin()).first);
             }
             return ((*(--it)).first);
         } else {
-            isc_throw(isc::Unexpected, "Unknown zone ID");
+            bundy_throw(bundy::Unexpected, "Unknown zone ID");
         }
     }
     virtual std::string findPreviousNSEC3Hash(int,
@@ -733,9 +733,9 @@ public:
                                const std::string (&data)[DIFF_PARAM_COUNT])
     {
         if (id == 13) { // The null zone doesn't support journaling
-            isc_throw(isc::NotImplemented, "Test not implemented behaviour");
+            bundy_throw(bundy::NotImplemented, "Test not implemented behaviour");
         } else if (id == -1) { // Bad zone throws
-            isc_throw(DataSourceError, "Test error");
+            bundy_throw(DataSourceError, "Test error");
         } else {
             journal_entries_->push_back(JournalEntry(id, serial, operation,
                                                      data));
@@ -776,7 +776,7 @@ public:
         // Check if we've found the requested range.  If not, throw.
         if (selected_jnl.empty() || selected_jnl.front().serial_ != start ||
             selected_jnl.back().serial_ != end) {
-            isc_throw(NoSuchSerial, "requested diff range is not found");
+            bundy_throw(NoSuchSerial, "requested diff range is not found");
         }
 
         return (IteratorContextPtr(new MockDiffIteratorContext(selected_jnl)));
@@ -942,7 +942,7 @@ public:
 };
 }
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace test {
 
@@ -1346,20 +1346,20 @@ enableNSEC3Generic(DatabaseAccessor& accessor) {
 
 } // namespace test
 } // namespace datasrc
-} // namespace isc
+} // namespace bundy
 
 namespace {
 // This tests the default getRecords behaviour, throwing NotImplemented
 TEST(DatabaseConnectionTest, getRecords) {
     EXPECT_THROW(NopAccessor().getRecords(".", 1, false),
-                 isc::NotImplemented);
+                 bundy::NotImplemented);
 }
 
 // This tests the default getAllRecords behaviour, throwing NotImplemented
 TEST(DatabaseConnectionTest, getAllRecords) {
     // The parameters don't matter
     EXPECT_THROW(NopAccessor().getAllRecords(1),
-                 isc::NotImplemented);
+                 bundy::NotImplemented);
 }
 
 // The following two lines instantiate test cases with concrete accessor
@@ -1415,7 +1415,7 @@ TEST(GenericDatabaseClientTest, noAccessorException) {
     // declaration instead of an instantiation and make the test fail.
     EXPECT_THROW(DatabaseClient dummy("dummy", RRClass::IN(),
                                       boost::shared_ptr<DatabaseAccessor>()),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 // If the zone doesn't exist, exception is thrown
@@ -1437,14 +1437,14 @@ TEST(GenericDatabaseClientTest, notImplementedIterator) {
     EXPECT_THROW(DatabaseClient("test", RRClass::IN(),
                     boost::shared_ptr<DatabaseAccessor>(
                         new NopAccessor())).getIterator(Name("example.org")),
-                 isc::NotImplemented);
+                 bundy::NotImplemented);
 }
 
 // Pretend a bug in the connection and pass NULL as the context
 // Should not crash, but gracefully throw.  Works for the mock accessor only.
 TEST_F(MockDatabaseClientTest, nullIteratorContext) {
     EXPECT_THROW(client_->getIterator(Name("null.example.org")),
-                 isc::Unexpected);
+                 bundy::Unexpected);
 }
 
 // It doesn't crash or anything if the zone is completely empty.
@@ -1453,23 +1453,23 @@ TEST_F(MockDatabaseClientTest, emptyIterator) {
     ZoneIteratorPtr it(client_->getIterator(Name("empty.example.org")));
     EXPECT_EQ(ConstRRsetPtr(), it->getNextRRset());
     // This is past the end, it should throw
-    EXPECT_THROW(it->getNextRRset(), isc::Unexpected);
+    EXPECT_THROW(it->getNextRRset(), bundy::Unexpected);
 }
 
 // checks if the given rrset matches the
 // given name, class, type and rdatas
 void
-checkRRset(isc::dns::ConstRRsetPtr rrset,
-           const isc::dns::Name& name,
-           const isc::dns::RRClass& rrclass,
-           const isc::dns::RRType& rrtype,
-           const isc::dns::RRTTL& rrttl,
+checkRRset(bundy::dns::ConstRRsetPtr rrset,
+           const bundy::dns::Name& name,
+           const bundy::dns::RRClass& rrclass,
+           const bundy::dns::RRType& rrtype,
+           const bundy::dns::RRTTL& rrttl,
            const std::vector<std::string>& rdatas) {
-    isc::dns::RRsetPtr expected_rrset(
-        new isc::dns::RRset(name, rrclass, rrtype, rrttl));
+    bundy::dns::RRsetPtr expected_rrset(
+        new bundy::dns::RRset(name, rrclass, rrtype, rrttl));
     for (unsigned int i = 0; i < rdatas.size(); ++i) {
         expected_rrset->addRdata(
-            isc::dns::rdata::createRdata(rrtype, rrclass,
+            bundy::dns::rdata::createRdata(rrtype, rrclass,
                                          rdatas[i]));
     }
     rrsetCheck(expected_rrset, rrset);
@@ -1584,7 +1584,7 @@ TEST_F(MockDatabaseClientTest, iteratorSeparateRRs) {
 TEST_F(MockDatabaseClientTest, badIterator) {
     // It should not throw, but get the lowest one of them
     ZoneIteratorPtr it(client_->getIterator(Name("bad.example.org")));
-    EXPECT_EQ(it->getNextRRset()->getTTL(), isc::dns::RRTTL(300));
+    EXPECT_EQ(it->getNextRRset()->getTTL(), bundy::dns::RRTTL(300));
 }
 
 TEST_P(DatabaseClientTest, getSOAFromIterator) {
@@ -1679,16 +1679,16 @@ TEST_P(DatabaseClientTest, updateAfterDeleteIterator) {
 }
 
 void
-findTestCommon(ZoneFinder& finder, const isc::dns::Name& name,
-               const isc::dns::RRType& type,
+findTestCommon(ZoneFinder& finder, const bundy::dns::Name& name,
+               const bundy::dns::RRType& type,
                ConstZoneFinderContextPtr actual_result,
-               const isc::dns::RRType& expected_type,
-               const isc::dns::RRTTL& expected_ttl,
+               const bundy::dns::RRType& expected_type,
+               const bundy::dns::RRTTL& expected_ttl,
                ZoneFinder::Result expected_result,
                const std::vector<string>& expected_rdatas,
                const std::vector<string>& expected_sig_rdatas,
                ZoneFinder::FindResultFlags expected_flags,
-               const isc::dns::Name& expected_name,
+               const bundy::dns::Name& expected_name,
                const ZoneFinder::FindOptions options)
 {
     ASSERT_EQ(expected_result, actual_result->code) << name << " " << type;
@@ -1709,10 +1709,10 @@ findTestCommon(ZoneFinder& finder, const isc::dns::Name& name,
                 checkRRset(actual_result->rrset->getRRsig(),
                            expected_name != Name::ROOT_NAME() ?
                            expected_name : name, finder.getClass(),
-                           isc::dns::RRType::RRSIG(), expected_ttl,
+                           bundy::dns::RRType::RRSIG(), expected_ttl,
                            expected_sig_rdatas);
             } else if (expected_sig_rdatas.empty()) {
-                EXPECT_EQ(isc::dns::RRsetPtr(),
+                EXPECT_EQ(bundy::dns::RRsetPtr(),
                           actual_result->rrset->getRRsig()) <<
                     "Unexpected RRSIG: " <<
                     actual_result->rrset->getRRsig()->toText();
@@ -1720,12 +1720,12 @@ findTestCommon(ZoneFinder& finder, const isc::dns::Name& name,
                 ADD_FAILURE() << "Missing RRSIG";
             }
         } else if (actual_result->rrset->getRRsig()) {
-            EXPECT_EQ(isc::dns::RRsetPtr(), actual_result->rrset->getRRsig())
+            EXPECT_EQ(bundy::dns::RRsetPtr(), actual_result->rrset->getRRsig())
                 << "Unexpected RRSIG: "
                 << actual_result->rrset->getRRsig()->toText();
         }
     } else if (expected_rdatas.empty()) {
-        EXPECT_EQ(isc::dns::RRsetPtr(), actual_result->rrset) <<
+        EXPECT_EQ(bundy::dns::RRsetPtr(), actual_result->rrset) <<
             "Unexpected RRset: " << actual_result->rrset->toText();
     } else {
         ADD_FAILURE() << "Missing result";
@@ -1734,16 +1734,16 @@ findTestCommon(ZoneFinder& finder, const isc::dns::Name& name,
 
 void
 doFindTest(ZoneFinder& finder,
-           const isc::dns::Name& name,
-           const isc::dns::RRType& type,
-           const isc::dns::RRType& expected_type,
-           const isc::dns::RRTTL& expected_ttl,
+           const bundy::dns::Name& name,
+           const bundy::dns::RRType& type,
+           const bundy::dns::RRType& expected_type,
+           const bundy::dns::RRTTL& expected_ttl,
            ZoneFinder::Result expected_result,
            const std::vector<std::string>& expected_rdatas,
            const std::vector<std::string>& expected_sig_rdatas,
            ZoneFinder::FindResultFlags expected_flags =
            ZoneFinder::RESULT_DEFAULT,
-           const isc::dns::Name& expected_name = isc::dns::Name::ROOT_NAME(),
+           const bundy::dns::Name& expected_name = bundy::dns::Name::ROOT_NAME(),
            const ZoneFinder::FindOptions options = ZoneFinder::FIND_DEFAULT)
 {
     SCOPED_TRACE("doFindTest " + name.toText() + " " + type.toText());
@@ -1755,18 +1755,18 @@ doFindTest(ZoneFinder& finder,
 
 void
 doFindAtOriginTest(ZoneFinder& finder,
-                   const isc::dns::Name& origin,
-                   const isc::dns::RRType& type,
-                   const isc::dns::RRType& expected_type,
-                   const isc::dns::RRTTL& expected_ttl,
+                   const bundy::dns::Name& origin,
+                   const bundy::dns::RRType& type,
+                   const bundy::dns::RRType& expected_type,
+                   const bundy::dns::RRTTL& expected_ttl,
                    ZoneFinder::Result expected_result,
                    const std::vector<std::string>& expected_rdatas,
                    const std::vector<std::string>& expected_sig_rdatas,
                    bool use_minttl = false,
                    ZoneFinder::FindResultFlags expected_flags =
                    ZoneFinder::RESULT_DEFAULT,
-                   const isc::dns::Name& expected_name =
-                   isc::dns::Name::ROOT_NAME(),
+                   const bundy::dns::Name& expected_name =
+                   bundy::dns::Name::ROOT_NAME(),
                    const ZoneFinder::FindOptions options =
                    ZoneFinder::FIND_DEFAULT)
 {
@@ -1779,12 +1779,12 @@ doFindAtOriginTest(ZoneFinder& finder,
 }
 
 void
-doFindAllTestResult(ZoneFinder& finder, const isc::dns::Name& name,
+doFindAllTestResult(ZoneFinder& finder, const bundy::dns::Name& name,
                     ZoneFinder::Result expected_result,
-                    const isc::dns::RRType& expected_type,
+                    const bundy::dns::RRType& expected_type,
                     std::vector<std::string> expected_rdata,
-                    const isc::dns::Name& expected_name =
-                    isc::dns::Name::ROOT_NAME(),
+                    const bundy::dns::Name& expected_name =
+                    bundy::dns::Name::ROOT_NAME(),
                     const ZoneFinder::FindOptions options =
                     ZoneFinder::FIND_DEFAULT,
                     ZoneFinder::FindResultFlags expected_flags =
@@ -1818,7 +1818,7 @@ doFindAllTestResult(ZoneFinder& finder, const isc::dns::Name& name,
         EXPECT_EQ(expected_rdata[i], rdata[i]);
     }
     EXPECT_TRUE(expected_rdata == rdata);
-    EXPECT_EQ(expected_name == isc::dns::Name::ROOT_NAME() ? name :
+    EXPECT_EQ(expected_name == bundy::dns::Name::ROOT_NAME() ? name :
               expected_name, result->rrset->getName());
 }
 
@@ -1882,7 +1882,7 @@ TEST_P(DatabaseClientTest, find) {
     expected_rdatas_.clear();
     expected_sig_rdatas_.clear();
     expected_rdatas_.push_back("192.0.2.1");
-    doFindTest(*finder, isc::dns::Name("www.example.org."),
+    doFindTest(*finder, bundy::dns::Name("www.example.org."),
                qtype_, qtype_, rrttl_, ZoneFinder::SUCCESS,
                expected_rdatas_, expected_sig_rdatas_);
 
@@ -1890,7 +1890,7 @@ TEST_P(DatabaseClientTest, find) {
     expected_sig_rdatas_.clear();
     expected_rdatas_.push_back("192.0.2.1");
     expected_rdatas_.push_back("192.0.2.2");
-    doFindTest(*finder, isc::dns::Name("www2.example.org."),
+    doFindTest(*finder, bundy::dns::Name("www2.example.org."),
                qtype_, qtype_, rrttl_, ZoneFinder::SUCCESS,
                expected_rdatas_, expected_sig_rdatas_);
 
@@ -1898,37 +1898,37 @@ TEST_P(DatabaseClientTest, find) {
     expected_sig_rdatas_.clear();
     expected_rdatas_.push_back("2001:db8::1");
     expected_rdatas_.push_back("2001:db8::2");
-    doFindTest(*finder, isc::dns::Name("www.example.org."),
-               isc::dns::RRType::AAAA(), isc::dns::RRType::AAAA(),
+    doFindTest(*finder, bundy::dns::Name("www.example.org."),
+               bundy::dns::RRType::AAAA(), bundy::dns::RRType::AAAA(),
                rrttl_, ZoneFinder::SUCCESS,
                expected_rdatas_, expected_sig_rdatas_);
 
     expected_rdatas_.clear();
     expected_sig_rdatas_.clear();
-    doFindTest(*finder, isc::dns::Name("www.example.org."),
-               isc::dns::RRType::TXT(), isc::dns::RRType::TXT(),
+    doFindTest(*finder, bundy::dns::Name("www.example.org."),
+               bundy::dns::RRType::TXT(), bundy::dns::RRType::TXT(),
                rrttl_, ZoneFinder::NXRRSET,
                expected_rdatas_, expected_sig_rdatas_);
 
     expected_rdatas_.clear();
     expected_sig_rdatas_.clear();
     expected_rdatas_.push_back("www.example.org.");
-    doFindTest(*finder, isc::dns::Name("cname.example.org."),
-               qtype_, isc::dns::RRType::CNAME(), rrttl_,
+    doFindTest(*finder, bundy::dns::Name("cname.example.org."),
+               qtype_, bundy::dns::RRType::CNAME(), rrttl_,
                ZoneFinder::CNAME, expected_rdatas_,
                expected_sig_rdatas_);
 
     expected_rdatas_.clear();
     expected_sig_rdatas_.clear();
     expected_rdatas_.push_back("www.example.org.");
-    doFindTest(*finder, isc::dns::Name("cname.example.org."),
-               isc::dns::RRType::CNAME(), isc::dns::RRType::CNAME(),
+    doFindTest(*finder, bundy::dns::Name("cname.example.org."),
+               bundy::dns::RRType::CNAME(), bundy::dns::RRType::CNAME(),
                rrttl_, ZoneFinder::SUCCESS, expected_rdatas_,
                expected_sig_rdatas_);
 
     expected_rdatas_.clear();
     expected_sig_rdatas_.clear();
-    doFindTest(*finder, isc::dns::Name("doesnotexist.example.org."),
+    doFindTest(*finder, bundy::dns::Name("doesnotexist.example.org."),
                qtype_, qtype_, rrttl_, ZoneFinder::NXDOMAIN,
                expected_rdatas_, expected_sig_rdatas_);
 
@@ -1939,7 +1939,7 @@ TEST_P(DatabaseClientTest, find) {
                                    "12345 example.org. FAKEFAKEFAKE");
     expected_sig_rdatas_.push_back("A 5 3 3600 20000101000000 20000201000000 "
                                    "12346 example.org. FAKEFAKEFAKE");
-    doFindTest(*finder, isc::dns::Name("signed1.example.org."),
+    doFindTest(*finder, bundy::dns::Name("signed1.example.org."),
                qtype_, qtype_, rrttl_, ZoneFinder::SUCCESS,
                expected_rdatas_, expected_sig_rdatas_);
 
@@ -1950,15 +1950,15 @@ TEST_P(DatabaseClientTest, find) {
     expected_sig_rdatas_.push_back("AAAA 5 3 3600 20000101000000 "
                                    "20000201000000 12345 example.org. "
                                    "FAKEFAKEFAKE");
-    doFindTest(*finder, isc::dns::Name("signed1.example.org."),
-               isc::dns::RRType::AAAA(), isc::dns::RRType::AAAA(),
+    doFindTest(*finder, bundy::dns::Name("signed1.example.org."),
+               bundy::dns::RRType::AAAA(), bundy::dns::RRType::AAAA(),
                rrttl_, ZoneFinder::SUCCESS, expected_rdatas_,
                expected_sig_rdatas_);
 
     expected_rdatas_.clear();
     expected_sig_rdatas_.clear();
-    doFindTest(*finder, isc::dns::Name("signed1.example.org."),
-               isc::dns::RRType::TXT(), isc::dns::RRType::TXT(), rrttl_,
+    doFindTest(*finder, bundy::dns::Name("signed1.example.org."),
+               bundy::dns::RRType::TXT(), bundy::dns::RRType::TXT(), rrttl_,
                ZoneFinder::NXRRSET, expected_rdatas_, expected_sig_rdatas_);
 
     expected_rdatas_.clear();
@@ -1967,8 +1967,8 @@ TEST_P(DatabaseClientTest, find) {
     expected_sig_rdatas_.push_back("CNAME 5 3 3600 20000101000000 "
                                    "20000201000000 12345 example.org. "
                                    "FAKEFAKEFAKE");
-    doFindTest(*finder, isc::dns::Name("signedcname1.example.org."),
-               qtype_, isc::dns::RRType::CNAME(), rrttl_,
+    doFindTest(*finder, bundy::dns::Name("signedcname1.example.org."),
+               qtype_, bundy::dns::RRType::CNAME(), rrttl_,
                ZoneFinder::CNAME, expected_rdatas_, expected_sig_rdatas_);
 
     expected_rdatas_.clear();
@@ -1978,7 +1978,7 @@ TEST_P(DatabaseClientTest, find) {
                                    "12345 example.org. FAKEFAKEFAKE");
     expected_sig_rdatas_.push_back("A 5 3 3600 20000101000000 20000201000000 "
                                    "12346 example.org. FAKEFAKEFAKE");
-    doFindTest(*finder, isc::dns::Name("signed2.example.org."),
+    doFindTest(*finder, bundy::dns::Name("signed2.example.org."),
                qtype_, qtype_, rrttl_, ZoneFinder::SUCCESS,
                expected_rdatas_, expected_sig_rdatas_);
 
@@ -1989,15 +1989,15 @@ TEST_P(DatabaseClientTest, find) {
     expected_sig_rdatas_.push_back("AAAA 5 3 3600 20000101000000 "
                                    "20000201000000 12345 example.org. "
                                    "FAKEFAKEFAKE");
-    doFindTest(*finder, isc::dns::Name("signed2.example.org."),
-               isc::dns::RRType::AAAA(), isc::dns::RRType::AAAA(),
+    doFindTest(*finder, bundy::dns::Name("signed2.example.org."),
+               bundy::dns::RRType::AAAA(), bundy::dns::RRType::AAAA(),
                rrttl_, ZoneFinder::SUCCESS, expected_rdatas_,
                expected_sig_rdatas_);
 
     expected_rdatas_.clear();
     expected_sig_rdatas_.clear();
-    doFindTest(*finder, isc::dns::Name("signed2.example.org."),
-               isc::dns::RRType::TXT(), isc::dns::RRType::TXT(), rrttl_,
+    doFindTest(*finder, bundy::dns::Name("signed2.example.org."),
+               bundy::dns::RRType::TXT(), bundy::dns::RRType::TXT(), rrttl_,
                ZoneFinder::NXRRSET, expected_rdatas_, expected_sig_rdatas_);
 
     expected_rdatas_.clear();
@@ -2006,8 +2006,8 @@ TEST_P(DatabaseClientTest, find) {
     expected_sig_rdatas_.push_back("CNAME 5 3 3600 20000101000000 "
                                    "20000201000000 12345 example.org. "
                                    "FAKEFAKEFAKE");
-    doFindTest(*finder, isc::dns::Name("signedcname2.example.org."),
-               qtype_, isc::dns::RRType::CNAME(), rrttl_,
+    doFindTest(*finder, bundy::dns::Name("signedcname2.example.org."),
+               qtype_, bundy::dns::RRType::CNAME(), rrttl_,
                ZoneFinder::CNAME, expected_rdatas_, expected_sig_rdatas_);
 
     expected_rdatas_.clear();
@@ -2015,7 +2015,7 @@ TEST_P(DatabaseClientTest, find) {
     expected_rdatas_.push_back("192.0.2.1");
     expected_sig_rdatas_.push_back("A 5 3 3600 20000101000000 20000201000000 "
                                    "12345 example.org. FAKEFAKEFAKE");
-    doFindTest(*finder, isc::dns::Name("acnamesig1.example.org."),
+    doFindTest(*finder, bundy::dns::Name("acnamesig1.example.org."),
                qtype_, qtype_, rrttl_, ZoneFinder::SUCCESS,
                expected_rdatas_, expected_sig_rdatas_);
 
@@ -2024,7 +2024,7 @@ TEST_P(DatabaseClientTest, find) {
     expected_rdatas_.push_back("192.0.2.1");
     expected_sig_rdatas_.push_back("A 5 3 3600 20000101000000 20000201000000 "
                                    "12345 example.org. FAKEFAKEFAKE");
-    doFindTest(*finder, isc::dns::Name("acnamesig2.example.org."),
+    doFindTest(*finder, bundy::dns::Name("acnamesig2.example.org."),
                qtype_, qtype_, rrttl_, ZoneFinder::SUCCESS,
                expected_rdatas_, expected_sig_rdatas_);
 
@@ -2033,7 +2033,7 @@ TEST_P(DatabaseClientTest, find) {
     expected_rdatas_.push_back("192.0.2.1");
     expected_sig_rdatas_.push_back("A 5 3 3600 20000101000000 20000201000000 "
                                    "12345 example.org. FAKEFAKEFAKE");
-    doFindTest(*finder, isc::dns::Name("acnamesig3.example.org."),
+    doFindTest(*finder, bundy::dns::Name("acnamesig3.example.org."),
                qtype_, qtype_, rrttl_, ZoneFinder::SUCCESS,
                expected_rdatas_, expected_sig_rdatas_);
 
@@ -2041,38 +2041,38 @@ TEST_P(DatabaseClientTest, find) {
     expected_sig_rdatas_.clear();
     expected_rdatas_.push_back("192.0.2.1");
     expected_rdatas_.push_back("192.0.2.2");
-    doFindTest(*finder, isc::dns::Name("ttldiff1.example.org."),
-               qtype_, qtype_, isc::dns::RRTTL(360),
+    doFindTest(*finder, bundy::dns::Name("ttldiff1.example.org."),
+               qtype_, qtype_, bundy::dns::RRTTL(360),
                ZoneFinder::SUCCESS, expected_rdatas_, expected_sig_rdatas_);
 
     expected_rdatas_.clear();
     expected_sig_rdatas_.clear();
     expected_rdatas_.push_back("192.0.2.1");
     expected_rdatas_.push_back("192.0.2.2");
-    doFindTest(*finder, isc::dns::Name("ttldiff2.example.org."),
-               qtype_, qtype_, isc::dns::RRTTL(360),
+    doFindTest(*finder, bundy::dns::Name("ttldiff2.example.org."),
+               qtype_, qtype_, bundy::dns::RRTTL(360),
                ZoneFinder::SUCCESS, expected_rdatas_, expected_sig_rdatas_);
 
-    EXPECT_THROW(finder->find(isc::dns::Name("badcname1.example.org."),
+    EXPECT_THROW(finder->find(bundy::dns::Name("badcname1.example.org."),
                                               qtype_,
                                               ZoneFinder::FIND_DEFAULT),
                  DataSourceError);
-    EXPECT_THROW(finder->find(isc::dns::Name("badcname2.example.org."), qtype_,
+    EXPECT_THROW(finder->find(bundy::dns::Name("badcname2.example.org."), qtype_,
                                               ZoneFinder::FIND_DEFAULT),
                  DataSourceError);
-    EXPECT_THROW(finder->find(isc::dns::Name("badcname3.example.org."), qtype_,
+    EXPECT_THROW(finder->find(bundy::dns::Name("badcname3.example.org."), qtype_,
                                               ZoneFinder::FIND_DEFAULT),
                  DataSourceError);
-    EXPECT_THROW(finder->find(isc::dns::Name("badrdata.example.org."), qtype_,
+    EXPECT_THROW(finder->find(bundy::dns::Name("badrdata.example.org."), qtype_,
                                               ZoneFinder::FIND_DEFAULT),
                  DataSourceError);
-    EXPECT_THROW(finder->find(isc::dns::Name("badtype.example.org."), qtype_,
+    EXPECT_THROW(finder->find(bundy::dns::Name("badtype.example.org."), qtype_,
                                               ZoneFinder::FIND_DEFAULT),
                  DataSourceError);
-    EXPECT_THROW(finder->find(isc::dns::Name("badttl.example.org."), qtype_,
+    EXPECT_THROW(finder->find(bundy::dns::Name("badttl.example.org."), qtype_,
                                               ZoneFinder::FIND_DEFAULT),
                  DataSourceError);
-    EXPECT_THROW(finder->find(isc::dns::Name("badsig.example.org."), qtype_,
+    EXPECT_THROW(finder->find(bundy::dns::Name("badsig.example.org."), qtype_,
                                               ZoneFinder::FIND_DEFAULT),
                  DataSourceError);
 
@@ -2081,18 +2081,18 @@ TEST_P(DatabaseClientTest, find) {
         EXPECT_THROW(finder->find(Name("dsexception.example.org."), qtype_,
                                   ZoneFinder::FIND_DEFAULT),
                      DataSourceError);
-        EXPECT_THROW(finder->find(Name("iscexception.example.org."), qtype_,
+        EXPECT_THROW(finder->find(Name("bundyexception.example.org."), qtype_,
                                   ZoneFinder::FIND_DEFAULT),
-                     isc::Exception);
+                     bundy::Exception);
         EXPECT_THROW(finder->find(Name("basicexception.example.org."), qtype_,
                                   ZoneFinder::FIND_DEFAULT),
                      std::exception);
         EXPECT_THROW(finder->find(Name("dsexception.getnext.example.org"),
                                   qtype_, ZoneFinder::FIND_DEFAULT),
                      DataSourceError);
-        EXPECT_THROW(finder->find(Name("iscexception.getnext.example.org."),
+        EXPECT_THROW(finder->find(Name("bundyexception.getnext.example.org."),
                                   qtype_, ZoneFinder::FIND_DEFAULT),
-                     isc::Exception);
+                     bundy::Exception);
         EXPECT_THROW(finder->find(Name("basicexception.getnext.example.org."),
                                   qtype_, ZoneFinder::FIND_DEFAULT),
                      std::exception);
@@ -2106,7 +2106,7 @@ TEST_P(DatabaseClientTest, find) {
     expected_rdatas_.push_back("192.0.2.1");
     expected_sig_rdatas_.push_back("A 5 3 3600 20000101000000 20000201000000 "
                                    "12345 example.org. FAKEFAKEFAKE");
-    doFindTest(*finder, isc::dns::Name("badsigtype.example.org."),
+    doFindTest(*finder, bundy::dns::Name("badsigtype.example.org."),
                qtype_, qtype_, rrttl_, ZoneFinder::SUCCESS,
                expected_rdatas_, expected_sig_rdatas_);
 }
@@ -2289,7 +2289,7 @@ TEST_P(DatabaseClientTest, findDelegation) {
     expected_rdatas_.clear();
     expected_sig_rdatas_.clear();
     expected_rdatas_.push_back("192.0.2.1");
-    doFindTest(*finder, isc::dns::Name("example.org."),
+    doFindTest(*finder, bundy::dns::Name("example.org."),
                qtype_, qtype_,
                rrttl_, ZoneFinder::SUCCESS, expected_rdatas_,
                expected_sig_rdatas_);
@@ -2298,8 +2298,8 @@ TEST_P(DatabaseClientTest, findDelegation) {
     expected_rdatas_.push_back("ns.example.com.");
     expected_sig_rdatas_.push_back("NS 5 3 3600 20000101000000 20000201000000 "
                                   "12345 example.org. FAKEFAKEFAKE");
-    doFindTest(*finder, isc::dns::Name("example.org."),
-               isc::dns::RRType::NS(), isc::dns::RRType::NS(),
+    doFindTest(*finder, bundy::dns::Name("example.org."),
+               bundy::dns::RRType::NS(), bundy::dns::RRType::NS(),
                rrttl_, ZoneFinder::SUCCESS, expected_rdatas_,
                expected_sig_rdatas_);
 
@@ -2311,32 +2311,32 @@ TEST_P(DatabaseClientTest, findDelegation) {
     expected_rdatas_.push_back("ns.delegation.example.org.");
     expected_sig_rdatas_.push_back("NS 5 3 3600 20000101000000 20000201000000 "
                                   "12345 example.org. FAKEFAKEFAKE");
-    doFindTest(*finder, isc::dns::Name("ns.delegation.example.org."),
-               qtype_, isc::dns::RRType::NS(),
+    doFindTest(*finder, bundy::dns::Name("ns.delegation.example.org."),
+               qtype_, bundy::dns::RRType::NS(),
                rrttl_, ZoneFinder::DELEGATION, expected_rdatas_,
                expected_sig_rdatas_, ZoneFinder::RESULT_DEFAULT,
-               isc::dns::Name("delegation.example.org."));
-    doFindTest(*finder, isc::dns::Name("ns.delegation.example.org."),
-               isc::dns::RRType::AAAA(), isc::dns::RRType::NS(),
+               bundy::dns::Name("delegation.example.org."));
+    doFindTest(*finder, bundy::dns::Name("ns.delegation.example.org."),
+               bundy::dns::RRType::AAAA(), bundy::dns::RRType::NS(),
                rrttl_, ZoneFinder::DELEGATION, expected_rdatas_,
                expected_sig_rdatas_, ZoneFinder::RESULT_DEFAULT,
-               isc::dns::Name("delegation.example.org."));
-    doFindTest(*finder, isc::dns::Name("deep.below.delegation.example.org."),
-               isc::dns::RRType::AAAA(), isc::dns::RRType::NS(),
+               bundy::dns::Name("delegation.example.org."));
+    doFindTest(*finder, bundy::dns::Name("deep.below.delegation.example.org."),
+               bundy::dns::RRType::AAAA(), bundy::dns::RRType::NS(),
                rrttl_, ZoneFinder::DELEGATION, expected_rdatas_,
                expected_sig_rdatas_, ZoneFinder::RESULT_DEFAULT,
-               isc::dns::Name("delegation.example.org."));
+               bundy::dns::Name("delegation.example.org."));
 
     // Even when we check directly at the delegation point, we should get
     // the NS
-    doFindTest(*finder, isc::dns::Name("delegation.example.org."),
-               isc::dns::RRType::AAAA(), isc::dns::RRType::NS(),
+    doFindTest(*finder, bundy::dns::Name("delegation.example.org."),
+               bundy::dns::RRType::AAAA(), bundy::dns::RRType::NS(),
                rrttl_, ZoneFinder::DELEGATION, expected_rdatas_,
                expected_sig_rdatas_);
 
     // And when we ask directly for the NS, we should still get delegation
-    doFindTest(*finder, isc::dns::Name("delegation.example.org."),
-               isc::dns::RRType::NS(), isc::dns::RRType::NS(),
+    doFindTest(*finder, bundy::dns::Name("delegation.example.org."),
+               bundy::dns::RRType::NS(), bundy::dns::RRType::NS(),
                rrttl_, ZoneFinder::DELEGATION, expected_rdatas_,
                expected_sig_rdatas_);
 
@@ -2349,31 +2349,31 @@ TEST_P(DatabaseClientTest, findDelegation) {
     expected_sig_rdatas_.push_back("DNAME 5 3 3600 20000101000000 "
                                   "20000201000000 12345 example.org. "
                                   "FAKEFAKEFAKE");
-    doFindTest(*finder, isc::dns::Name("below.dname.example.org."),
-               qtype_, isc::dns::RRType::DNAME(),
+    doFindTest(*finder, bundy::dns::Name("below.dname.example.org."),
+               qtype_, bundy::dns::RRType::DNAME(),
                rrttl_, ZoneFinder::DNAME, expected_rdatas_,
                expected_sig_rdatas_, ZoneFinder::RESULT_DEFAULT,
-               isc::dns::Name("dname.example.org."));
-    doFindTest(*finder, isc::dns::Name("below.dname.example.org."),
-               isc::dns::RRType::AAAA(), isc::dns::RRType::DNAME(),
+               bundy::dns::Name("dname.example.org."));
+    doFindTest(*finder, bundy::dns::Name("below.dname.example.org."),
+               bundy::dns::RRType::AAAA(), bundy::dns::RRType::DNAME(),
                rrttl_, ZoneFinder::DNAME, expected_rdatas_,
                expected_sig_rdatas_, ZoneFinder::RESULT_DEFAULT,
-               isc::dns::Name("dname.example.org."));
+               bundy::dns::Name("dname.example.org."));
     // below.dname.example.org. has an A record
-    doFindTest(*finder, isc::dns::Name("below.dname.example.org."),
-               isc::dns::RRType::A(), isc::dns::RRType::DNAME(),
+    doFindTest(*finder, bundy::dns::Name("below.dname.example.org."),
+               bundy::dns::RRType::A(), bundy::dns::RRType::DNAME(),
                rrttl_, ZoneFinder::DNAME, expected_rdatas_,
                expected_sig_rdatas_, ZoneFinder::RESULT_DEFAULT,
-               isc::dns::Name("dname.example.org."));
-    doFindTest(*finder, isc::dns::Name("really.deep.below.dname.example.org."),
-               isc::dns::RRType::AAAA(), isc::dns::RRType::DNAME(),
+               bundy::dns::Name("dname.example.org."));
+    doFindTest(*finder, bundy::dns::Name("really.deep.below.dname.example.org."),
+               bundy::dns::RRType::AAAA(), bundy::dns::RRType::DNAME(),
                rrttl_, ZoneFinder::DNAME, expected_rdatas_,
                expected_sig_rdatas_, ZoneFinder::RESULT_DEFAULT,
-               isc::dns::Name("dname.example.org."));
+               bundy::dns::Name("dname.example.org."));
 
     // Asking directly for DNAME should give SUCCESS
-    doFindTest(*finder, isc::dns::Name("dname.example.org."),
-               isc::dns::RRType::DNAME(), isc::dns::RRType::DNAME(),
+    doFindTest(*finder, bundy::dns::Name("dname.example.org."),
+               bundy::dns::RRType::DNAME(), bundy::dns::RRType::DNAME(),
                rrttl_, ZoneFinder::SUCCESS, expected_rdatas_,
                expected_sig_rdatas_);
 
@@ -2381,18 +2381,18 @@ TEST_P(DatabaseClientTest, findDelegation) {
     expected_rdatas_.clear();
     expected_rdatas_.push_back("192.0.2.1");
     expected_sig_rdatas_.clear();
-    doFindTest(*finder, isc::dns::Name("dname.example.org."),
+    doFindTest(*finder, bundy::dns::Name("dname.example.org."),
                qtype_, qtype_,
                rrttl_, ZoneFinder::SUCCESS, expected_rdatas_,
                expected_sig_rdatas_);
     expected_rdatas_.clear();
-    doFindTest(*finder, isc::dns::Name("dname.example.org."),
-               isc::dns::RRType::AAAA(), isc::dns::RRType::AAAA(),
+    doFindTest(*finder, bundy::dns::Name("dname.example.org."),
+               bundy::dns::RRType::AAAA(), bundy::dns::RRType::AAAA(),
                rrttl_, ZoneFinder::NXRRSET, expected_rdatas_,
                expected_sig_rdatas_);
 
     // This is broken dname, it contains two targets
-    EXPECT_THROW(finder->find(isc::dns::Name("below.baddname.example.org."),
+    EXPECT_THROW(finder->find(bundy::dns::Name("below.baddname.example.org."),
                               qtype_,
                               ZoneFinder::FIND_DEFAULT),
                  DataSourceError);
@@ -2463,7 +2463,7 @@ TEST_P(DatabaseClientTest, emptyDomain) {
 
     // This domain doesn't exist, but a subdomain of it does.
     // Therefore we should pretend the domain is there, but contains no RRsets
-    doFindTest(*finder, isc::dns::Name("b.example.org."), qtype_,
+    doFindTest(*finder, bundy::dns::Name("b.example.org."), qtype_,
                qtype_, rrttl_, ZoneFinder::NXRRSET,
                expected_rdatas_, expected_sig_rdatas_);
 }
@@ -2475,23 +2475,23 @@ TEST_P(DatabaseClientTest, glueOK) {
 
     expected_rdatas_.clear();
     expected_sig_rdatas_.clear();
-    doFindTest(*finder, isc::dns::Name("ns.delegation.example.org."),
-               isc::dns::RRType::AAAA(), isc::dns::RRType::AAAA(),
+    doFindTest(*finder, bundy::dns::Name("ns.delegation.example.org."),
+               bundy::dns::RRType::AAAA(), bundy::dns::RRType::AAAA(),
                rrttl_, ZoneFinder::NXRRSET, expected_rdatas_,
                expected_sig_rdatas_, ZoneFinder::RESULT_DEFAULT,
-               isc::dns::Name("ns.delegation.example.org."),
+               bundy::dns::Name("ns.delegation.example.org."),
                ZoneFinder::FIND_GLUE_OK);
-    doFindTest(*finder, isc::dns::Name("nothere.delegation.example.org."),
-               isc::dns::RRType::AAAA(), isc::dns::RRType::AAAA(),
+    doFindTest(*finder, bundy::dns::Name("nothere.delegation.example.org."),
+               bundy::dns::RRType::AAAA(), bundy::dns::RRType::AAAA(),
                rrttl_, ZoneFinder::NXDOMAIN, expected_rdatas_,
                expected_sig_rdatas_, ZoneFinder::RESULT_DEFAULT,
-               isc::dns::Name("nothere.delegation.example.org."),
+               bundy::dns::Name("nothere.delegation.example.org."),
                ZoneFinder::FIND_GLUE_OK);
     expected_rdatas_.push_back("192.0.2.1");
-    doFindTest(*finder, isc::dns::Name("ns.delegation.example.org."),
+    doFindTest(*finder, bundy::dns::Name("ns.delegation.example.org."),
                qtype_, qtype_, rrttl_, ZoneFinder::SUCCESS, expected_rdatas_,
                expected_sig_rdatas_, ZoneFinder::RESULT_DEFAULT,
-               isc::dns::Name("ns.delegation.example.org."),
+               bundy::dns::Name("ns.delegation.example.org."),
                ZoneFinder::FIND_GLUE_OK);
     expected_rdatas_.clear();
     expected_rdatas_.push_back("ns.example.com.");
@@ -2502,11 +2502,11 @@ TEST_P(DatabaseClientTest, glueOK) {
                                    "FAKEFAKEFAKE");
     // When we request the NS, it should be SUCCESS, not DELEGATION
     // (different in GLUE_OK)
-    doFindTest(*finder, isc::dns::Name("delegation.example.org."),
-               isc::dns::RRType::NS(), isc::dns::RRType::NS(),
+    doFindTest(*finder, bundy::dns::Name("delegation.example.org."),
+               bundy::dns::RRType::NS(), bundy::dns::RRType::NS(),
                rrttl_, ZoneFinder::SUCCESS, expected_rdatas_,
                expected_sig_rdatas_, ZoneFinder::RESULT_DEFAULT,
-               isc::dns::Name("delegation.example.org."),
+               bundy::dns::Name("delegation.example.org."),
                ZoneFinder::FIND_GLUE_OK);
     expected_rdatas_.clear();
     expected_rdatas_.push_back("dname.example.com.");
@@ -2514,16 +2514,16 @@ TEST_P(DatabaseClientTest, glueOK) {
     expected_sig_rdatas_.push_back("DNAME 5 3 3600 20000101000000 "
                                    "20000201000000 12345 example.org. "
                                    "FAKEFAKEFAKE");
-    doFindTest(*finder, isc::dns::Name("below.dname.example.org."),
-               qtype_, isc::dns::RRType::DNAME(),
+    doFindTest(*finder, bundy::dns::Name("below.dname.example.org."),
+               qtype_, bundy::dns::RRType::DNAME(),
                rrttl_, ZoneFinder::DNAME, expected_rdatas_,
                expected_sig_rdatas_, ZoneFinder::RESULT_DEFAULT,
-               isc::dns::Name("dname.example.org."), ZoneFinder::FIND_GLUE_OK);
-    doFindTest(*finder, isc::dns::Name("below.dname.example.org."),
-               isc::dns::RRType::AAAA(), isc::dns::RRType::DNAME(), rrttl_,
+               bundy::dns::Name("dname.example.org."), ZoneFinder::FIND_GLUE_OK);
+    doFindTest(*finder, bundy::dns::Name("below.dname.example.org."),
+               bundy::dns::RRType::AAAA(), bundy::dns::RRType::DNAME(), rrttl_,
                ZoneFinder::DNAME, expected_rdatas_, expected_sig_rdatas_,
                ZoneFinder::RESULT_DEFAULT,
-               isc::dns::Name("dname.example.org."), ZoneFinder::FIND_GLUE_OK);
+               bundy::dns::Name("dname.example.org."), ZoneFinder::FIND_GLUE_OK);
 }
 
 TEST_P(DatabaseClientTest, wildcard) {
@@ -2535,20 +2535,20 @@ TEST_P(DatabaseClientTest, wildcard) {
     expected_sig_rdatas_.push_back("A 5 3 3600 20000101000000 "
                                    "20000201000000 12345 example.org. "
                                    "FAKEFAKEFAKE");
-    doFindTest(*finder, isc::dns::Name("a.wild.example.org"),
+    doFindTest(*finder, bundy::dns::Name("a.wild.example.org"),
                qtype_, qtype_, rrttl_, ZoneFinder::SUCCESS, expected_rdatas_,
                expected_sig_rdatas_, ZoneFinder::RESULT_WILDCARD);
-    doFindTest(*finder, isc::dns::Name("b.a.wild.example.org"),
+    doFindTest(*finder, bundy::dns::Name("b.a.wild.example.org"),
                qtype_, qtype_, rrttl_, ZoneFinder::SUCCESS, expected_rdatas_,
                expected_sig_rdatas_, ZoneFinder::RESULT_WILDCARD);
     expected_rdatas_.clear();
     expected_sig_rdatas_.clear();
-    doFindTest(*finder, isc::dns::Name("a.wild.example.org"),
-               isc::dns::RRType::AAAA(), isc::dns::RRType::AAAA(), rrttl_,
+    doFindTest(*finder, bundy::dns::Name("a.wild.example.org"),
+               bundy::dns::RRType::AAAA(), bundy::dns::RRType::AAAA(), rrttl_,
                ZoneFinder::NXRRSET, expected_rdatas_, expected_sig_rdatas_,
                ZoneFinder::RESULT_WILDCARD);
-    doFindTest(*finder, isc::dns::Name("b.a.wild.example.org"),
-               isc::dns::RRType::AAAA(), isc::dns::RRType::AAAA(), rrttl_,
+    doFindTest(*finder, bundy::dns::Name("b.a.wild.example.org"),
+               bundy::dns::RRType::AAAA(), bundy::dns::RRType::AAAA(), rrttl_,
                ZoneFinder::NXRRSET, expected_rdatas_, expected_sig_rdatas_,
                ZoneFinder::RESULT_WILDCARD);
 
@@ -2557,56 +2557,56 @@ TEST_P(DatabaseClientTest, wildcard) {
     expected_sig_rdatas_.push_back("A 5 3 3600 20000101000000 "
                                    "20000201000000 12345 example.org. "
                                    "FAKEFAKEFAKE");
-    doFindTest(*finder, isc::dns::Name("*.wild.example.org"),
+    doFindTest(*finder, bundy::dns::Name("*.wild.example.org"),
                qtype_, qtype_, rrttl_, ZoneFinder::SUCCESS,
                expected_rdatas_, expected_sig_rdatas_);
     expected_rdatas_.clear();
     expected_sig_rdatas_.clear();
-    doFindTest(*finder, isc::dns::Name("*.wild.example.org"),
-               isc::dns::RRType::AAAA(), isc::dns::RRType::AAAA(), rrttl_,
+    doFindTest(*finder, bundy::dns::Name("*.wild.example.org"),
+               bundy::dns::RRType::AAAA(), bundy::dns::RRType::AAAA(), rrttl_,
                ZoneFinder::NXRRSET, expected_rdatas_, expected_sig_rdatas_);
     // This is nonsense, but check it doesn't match by some stupid accident
-    doFindTest(*finder, isc::dns::Name("a.*.wild.example.org"),
+    doFindTest(*finder, bundy::dns::Name("a.*.wild.example.org"),
                qtype_, qtype_, rrttl_, ZoneFinder::NXDOMAIN,
                expected_rdatas_, expected_sig_rdatas_);
     // These should be canceled, since it is below a domain which exists
-    doFindTest(*finder, isc::dns::Name("nothing.here.wild.example.org"),
+    doFindTest(*finder, bundy::dns::Name("nothing.here.wild.example.org"),
                qtype_, qtype_, rrttl_, ZoneFinder::NXDOMAIN,
                expected_rdatas_, expected_sig_rdatas_);
-    doFindTest(*finder, isc::dns::Name("cancel.here.wild.example.org"),
+    doFindTest(*finder, bundy::dns::Name("cancel.here.wild.example.org"),
                qtype_, qtype_, rrttl_, ZoneFinder::NXRRSET,
                expected_rdatas_, expected_sig_rdatas_);
-    doFindTest(*finder, isc::dns::Name("below.cancel.here.wild.example.org"),
+    doFindTest(*finder, bundy::dns::Name("below.cancel.here.wild.example.org"),
                qtype_, qtype_, rrttl_, ZoneFinder::NXDOMAIN,
                expected_rdatas_, expected_sig_rdatas_);
     // And this should be just plain empty non-terminal domain, check
     // the wildcard doesn't hurt it
-    doFindTest(*finder, isc::dns::Name("here.wild.example.org"),
+    doFindTest(*finder, bundy::dns::Name("here.wild.example.org"),
                qtype_, qtype_, rrttl_, ZoneFinder::NXRRSET,
                expected_rdatas_, expected_sig_rdatas_);
     // Also make sure that the wildcard doesn't hurt the original data
     // below the wildcard
     expected_rdatas_.push_back("2001:db8::5");
-    doFindTest(*finder, isc::dns::Name("cancel.here.wild.example.org"),
-               isc::dns::RRType::AAAA(), isc::dns::RRType::AAAA(), rrttl_,
+    doFindTest(*finder, bundy::dns::Name("cancel.here.wild.example.org"),
+               bundy::dns::RRType::AAAA(), bundy::dns::RRType::AAAA(), rrttl_,
                ZoneFinder::SUCCESS, expected_rdatas_, expected_sig_rdatas_);
     expected_rdatas_.clear();
 
     // How wildcard go together with delegation
     expected_rdatas_.push_back("ns.example.com.");
-    doFindTest(*finder, isc::dns::Name("below.delegatedwild.example.org"),
-               qtype_, isc::dns::RRType::NS(), rrttl_,
+    doFindTest(*finder, bundy::dns::Name("below.delegatedwild.example.org"),
+               qtype_, bundy::dns::RRType::NS(), rrttl_,
                ZoneFinder::DELEGATION, expected_rdatas_,
                expected_sig_rdatas_, ZoneFinder::RESULT_DEFAULT,
-               isc::dns::Name("delegatedwild.example.org"));
+               bundy::dns::Name("delegatedwild.example.org"));
     // FIXME: This doesn't look logically OK, GLUE_OK should make it
     // transparent, so the match should either work or be canceled, but return
     // NXDOMAIN
-    doFindTest(*finder, isc::dns::Name("below.delegatedwild.example.org"),
-               qtype_, isc::dns::RRType::NS(), rrttl_,
+    doFindTest(*finder, bundy::dns::Name("below.delegatedwild.example.org"),
+               qtype_, bundy::dns::RRType::NS(), rrttl_,
                ZoneFinder::DELEGATION, expected_rdatas_,
                expected_sig_rdatas_, ZoneFinder::RESULT_DEFAULT,
-               isc::dns::Name("delegatedwild.example.org"),
+               bundy::dns::Name("delegatedwild.example.org"),
                ZoneFinder::FIND_GLUE_OK);
 
     expected_rdatas_.clear();
@@ -2618,7 +2618,7 @@ TEST_P(DatabaseClientTest, wildcard) {
         NULL
     };
     for (const char** name = positive_names; *name != NULL; ++ name) {
-        doFindTest(*finder, isc::dns::Name(*name), qtype_, qtype_, rrttl_,
+        doFindTest(*finder, bundy::dns::Name(*name), qtype_, qtype_, rrttl_,
                    ZoneFinder::SUCCESS, expected_rdatas_,
                    expected_sig_rdatas_);
     }
@@ -2636,7 +2636,7 @@ TEST_P(DatabaseClientTest, wildcard) {
     // Unless FIND_DNSSEC is specified, this is no different from other
     // NXRRSET case.
     for (const char** name = negative_names; *name != NULL; ++ name) {
-        doFindTest(*finder, isc::dns::Name(*name), qtype_, qtype_, rrttl_,
+        doFindTest(*finder, bundy::dns::Name(*name), qtype_, qtype_, rrttl_,
                    ZoneFinder::NXRRSET, expected_rdatas_, expected_sig_rdatas_,
                    ZoneFinder::RESULT_WILDCARD);
     }
@@ -2652,7 +2652,7 @@ TEST_P(DatabaseClientTest, wildcard) {
     expected_rdatas_.push_back("wild.*.foo.*.bar.example.org. NSEC");
     expected_sig_rdatas_.clear();
     for (const char** name = negative_dnssec_names; *name != NULL; ++ name) {
-        doFindTest(*finder, isc::dns::Name(*name), qtype_,
+        doFindTest(*finder, bundy::dns::Name(*name), qtype_,
                    RRType::NSEC(), rrttl_, ZoneFinder::NXRRSET,
                    expected_rdatas_, expected_sig_rdatas_,
                    ZoneFinder::RESULT_WILDCARD | ZoneFinder::RESULT_NSEC_SIGNED,
@@ -2663,8 +2663,8 @@ TEST_P(DatabaseClientTest, wildcard) {
     expected_rdatas_.clear();
     expected_rdatas_.push_back("www.example.org.");
     expected_sig_rdatas_.clear();
-    doFindTest(*finder, isc::dns::Name("a.cnamewild.example.org."),
-               isc::dns::RRType::TXT(), isc::dns::RRType::CNAME(), rrttl_,
+    doFindTest(*finder, bundy::dns::Name("a.cnamewild.example.org."),
+               bundy::dns::RRType::TXT(), bundy::dns::RRType::CNAME(), rrttl_,
                ZoneFinder::CNAME, expected_rdatas_, expected_sig_rdatas_,
                ZoneFinder::RESULT_WILDCARD);
 
@@ -2679,8 +2679,8 @@ TEST_P(DatabaseClientTest, wildcard) {
     // Some strange things in the wild node
     expected_rdatas_.clear();
     expected_rdatas_.push_back("ns.example.com.");
-    doFindTest(*finder, isc::dns::Name("a.nswild.example.org."),
-               isc::dns::RRType::TXT(), isc::dns::RRType::NS(), rrttl_,
+    doFindTest(*finder, bundy::dns::Name("a.nswild.example.org."),
+               bundy::dns::RRType::TXT(), bundy::dns::RRType::NS(), rrttl_,
                ZoneFinder::DELEGATION, expected_rdatas_, empty_rdatas_,
                ZoneFinder::RESULT_WILDCARD);
 }
@@ -2696,7 +2696,7 @@ TEST_P(DatabaseClientTest, noWildcard) {
     expected_sig_rdatas_.push_back("NSEC 5 3 3600 20000101000000 "
                                    "20000201000000 12345 example.org. "
                                    "FAKEFAKEFAKE");
-    doFindTest(*finder, isc::dns::Name("a.wild.example.org"),
+    doFindTest(*finder, bundy::dns::Name("a.wild.example.org"),
                RRType::NSEC(), RRType::NSEC(), rrttl_,
                ZoneFinder::NXDOMAIN, expected_rdatas_,
                expected_sig_rdatas_, ZoneFinder::RESULT_NSEC_SIGNED,
@@ -2705,7 +2705,7 @@ TEST_P(DatabaseClientTest, noWildcard) {
 
     // Should be the same without FIND_DNSSEC (but in this case no RRsets
     // will be returned)
-    doFindTest(*finder, isc::dns::Name("a.wild.example.org"),
+    doFindTest(*finder, bundy::dns::Name("a.wild.example.org"),
                RRType::NSEC(), RRType::NSEC(), rrttl_, ZoneFinder::NXDOMAIN,
                empty_rdatas_, empty_rdatas_, ZoneFinder::RESULT_DEFAULT,
                Name::ROOT_NAME(), // name is dummy
@@ -2714,7 +2714,7 @@ TEST_P(DatabaseClientTest, noWildcard) {
     // Same for wildcard empty non terminal.
     expected_rdatas_.clear();
     expected_rdatas_.push_back("brokenns1.example.org. A NSEC");
-    doFindTest(*finder, isc::dns::Name("a.bar.example.org"),
+    doFindTest(*finder, bundy::dns::Name("a.bar.example.org"),
                RRType::NSEC(), RRType::NSEC(), rrttl_,
                ZoneFinder::NXDOMAIN, expected_rdatas_, empty_rdatas_,
                ZoneFinder::RESULT_NSEC_SIGNED,
@@ -2726,7 +2726,7 @@ TEST_P(DatabaseClientTest, noWildcard) {
     // of matching wildcard for isnx.nonterminal.example.org.
     expected_rdatas_.clear();
     expected_rdatas_.push_back("empty.nonterminal.example.org. NSEC");
-    doFindTest(*finder, isc::dns::Name("*.nonterminal.example.org"),
+    doFindTest(*finder, bundy::dns::Name("*.nonterminal.example.org"),
                RRType::NSEC(), RRType::NSEC(), rrttl_,
                ZoneFinder::NXDOMAIN, expected_rdatas_, empty_rdatas_,
                ZoneFinder::RESULT_NSEC_SIGNED, Name("l.example.org"),
@@ -2739,7 +2739,7 @@ TEST_P(DatabaseClientTest, noWildcard) {
     expected_sig_rdatas_.clear();
     expected_sig_rdatas_.push_back("A 5 3 3600 20000101000000 20000201000000 "
                                    "12345 example.org. FAKEFAKEFAKE");
-    doFindTest(*finder, isc::dns::Name("*.wild.example.org"),
+    doFindTest(*finder, bundy::dns::Name("*.wild.example.org"),
                qtype_, qtype_, rrttl_, ZoneFinder::SUCCESS, expected_rdatas_,
                expected_sig_rdatas_, ZoneFinder::RESULT_DEFAULT,
                Name("*.wild.example.org"), ZoneFinder::NO_WILDCARD);
@@ -2754,8 +2754,8 @@ TEST_P(DatabaseClientTest, NXRRSET_NSEC) {
     expected_sig_rdatas_.push_back("NSEC 5 3 3600 20000101000000 "
                                    "20000201000000 12345 example.org. "
                                    "FAKEFAKEFAKE");
-    doFindTest(*finder, isc::dns::Name("www.example.org."),
-               isc::dns::RRType::TXT(), isc::dns::RRType::NSEC(),
+    doFindTest(*finder, bundy::dns::Name("www.example.org."),
+               bundy::dns::RRType::TXT(), bundy::dns::RRType::NSEC(),
                rrttl_, ZoneFinder::NXRRSET, expected_rdatas_,
                expected_sig_rdatas_, ZoneFinder::RESULT_NSEC_SIGNED,
                Name::ROOT_NAME(), ZoneFinder::FIND_DNSSEC);
@@ -2774,8 +2774,8 @@ TEST_P(DatabaseClientTest, wildcardNXRRSET_NSEC) {
                                    "20000201000000 12345 example.org. "
                                    "FAKEFAKEFAKE");
     // Note that the NSEC name should NOT be synthesized.
-    doFindTest(*finder, isc::dns::Name("a.wild.example.org."),
-               isc::dns::RRType::TXT(), isc::dns::RRType::NSEC(), rrttl_,
+    doFindTest(*finder, bundy::dns::Name("a.wild.example.org."),
+               bundy::dns::RRType::TXT(), bundy::dns::RRType::NSEC(), rrttl_,
                ZoneFinder::NXRRSET, expected_rdatas_, expected_sig_rdatas_,
                ZoneFinder::RESULT_WILDCARD | ZoneFinder::RESULT_NSEC_SIGNED,
                Name("*.wild.example.org"), ZoneFinder::FIND_DNSSEC);
@@ -2942,8 +2942,8 @@ TEST_P(DatabaseClientTest, NXDOMAIN_NSEC) {
     expected_sig_rdatas_.push_back("NSEC 5 3 3600 20000101000000 "
                                    "20000201000000 12345 example.org. "
                                    "FAKEFAKEFAKE");
-    doFindTest(*finder, isc::dns::Name("www1.example.org."),
-               isc::dns::RRType::TXT(), isc::dns::RRType::NSEC(),
+    doFindTest(*finder, bundy::dns::Name("www1.example.org."),
+               bundy::dns::RRType::TXT(), bundy::dns::RRType::NSEC(),
                rrttl_, ZoneFinder::NXDOMAIN, expected_rdatas_,
                expected_sig_rdatas_, ZoneFinder::RESULT_NSEC_SIGNED,
                Name("www.example.org."), ZoneFinder::FIND_DNSSEC);
@@ -2951,8 +2951,8 @@ TEST_P(DatabaseClientTest, NXDOMAIN_NSEC) {
     expected_rdatas_.push_back("acnamesig1.example.org. NS A NSEC RRSIG");
     // This tests it works correctly in apex (there was a bug, where a check
     // for NS-alone was there and it would throw).
-    doFindTest(*finder, isc::dns::Name("aa.example.org."),
-               isc::dns::RRType::TXT(), isc::dns::RRType::NSEC(),
+    doFindTest(*finder, bundy::dns::Name("aa.example.org."),
+               bundy::dns::RRType::TXT(), bundy::dns::RRType::NSEC(),
                rrttl_, ZoneFinder::NXDOMAIN, expected_rdatas_,
                expected_sig_rdatas_, ZoneFinder::RESULT_NSEC_SIGNED,
                Name("example.org."), ZoneFinder::FIND_DNSSEC);
@@ -2975,8 +2975,8 @@ TEST_P(DatabaseClientTest, emptyNonterminalNSEC) {
     boost::shared_ptr<DatabaseClient::Finder> finder(getFinder());
 
     expected_rdatas_.push_back("empty.nonterminal.example.org. NSEC");
-    doFindTest(*finder, isc::dns::Name("nonterminal.example.org."),
-               isc::dns::RRType::TXT(), isc::dns::RRType::NSEC(), rrttl_,
+    doFindTest(*finder, bundy::dns::Name("nonterminal.example.org."),
+               bundy::dns::RRType::TXT(), bundy::dns::RRType::NSEC(), rrttl_,
                ZoneFinder::NXRRSET, expected_rdatas_, expected_sig_rdatas_,
                ZoneFinder::RESULT_NSEC_SIGNED, Name("l.example.org."),
                ZoneFinder::FIND_DNSSEC);
@@ -2995,8 +2995,8 @@ TEST_P(DatabaseClientTest, emptyNonterminalNSEC) {
 
 TEST_P(DatabaseClientTest, anyFromFind) {
     // Find will reject answering an ANY query
-    EXPECT_THROW(getFinder()->find(isc::dns::Name("www2.example.org."),
-                                   RRType::ANY()), isc::Unexpected);
+    EXPECT_THROW(getFinder()->find(bundy::dns::Name("www2.example.org."),
+                                   RRType::ANY()), bundy::Unexpected);
 }
 
 TEST_P(DatabaseClientTest, findRRSIGsWithoutDNSSEC) {
@@ -3005,7 +3005,7 @@ TEST_P(DatabaseClientTest, findRRSIGsWithoutDNSSEC) {
 
     boost::shared_ptr<DatabaseClient::Finder> finder(getFinder());
     ConstZoneFinderContextPtr result =
-        finder->find(isc::dns::Name("signed1.example.org."), RRType::RRSIG());
+        finder->find(bundy::dns::Name("signed1.example.org."), RRType::RRSIG());
 
     EXPECT_EQ(ZoneFinder::SUCCESS, result->code);
 
@@ -3036,29 +3036,29 @@ TEST_P(DatabaseClientTest, getAll) {
     // It should act the same on the "failures"
     std::vector<ConstRRsetPtr> target;
     EXPECT_EQ(ZoneFinder::NXDOMAIN,
-              finder->findAll(isc::dns::Name("nothere.example.org."),
+              finder->findAll(bundy::dns::Name("nothere.example.org."),
                               target)->code);
     EXPECT_TRUE(target.empty());
     EXPECT_EQ(ZoneFinder::NXRRSET,
-              finder->findAll(isc::dns::Name("here.wild.example.org."),
+              finder->findAll(bundy::dns::Name("here.wild.example.org."),
                               target)->code);
     expected_rdatas_.push_back("ns.delegation.example.org.");
     expected_rdatas_.push_back("ns.example.com.");
-    doFindAllTestResult(*finder, isc::dns::Name("xx.delegation.example.org."),
+    doFindAllTestResult(*finder, bundy::dns::Name("xx.delegation.example.org."),
                         ZoneFinder::DELEGATION, RRType::NS(), expected_rdatas_,
-                        isc::dns::Name("delegation.example.org."));
+                        bundy::dns::Name("delegation.example.org."));
     expected_rdatas_.clear();
     expected_rdatas_.push_back("www.example.org.");
-    doFindAllTestResult(*finder, isc::dns::Name("cname.example.org"),
+    doFindAllTestResult(*finder, bundy::dns::Name("cname.example.org"),
                         ZoneFinder::CNAME, RRType::CNAME(), expected_rdatas_);
     expected_rdatas_.clear();
     expected_rdatas_.push_back("dname.example.com.");
-    doFindAllTestResult(*finder, isc::dns::Name("a.dname.example.org"),
+    doFindAllTestResult(*finder, bundy::dns::Name("a.dname.example.org"),
                         ZoneFinder::DNAME, RRType::DNAME(), expected_rdatas_,
-                        isc::dns::Name("dname.example.org."));
+                        bundy::dns::Name("dname.example.org."));
     // It should get the data on success
     EXPECT_EQ(ZoneFinder::SUCCESS,
-              finder->findAll(isc::dns::Name("www2.example.org."),
+              finder->findAll(bundy::dns::Name("www2.example.org."),
                               target)->code);
     ASSERT_EQ(2, target.size());
     size_t a_idx(target[1]->getType() == RRType::A());
@@ -3898,7 +3898,7 @@ TEST_F(MockDatabaseClientTest, journalBadSequence) {
     {
         SCOPED_TRACE("Delete A before SOA");
         updater_ = client_->getUpdater(zname_, false, true);
-        EXPECT_THROW(updater_->deleteRRset(*rrset_), isc::BadValue);
+        EXPECT_THROW(updater_->deleteRRset(*rrset_), bundy::BadValue);
         // Make sure the journal is empty now
         checkJournal(expected);
     }
@@ -3906,7 +3906,7 @@ TEST_F(MockDatabaseClientTest, journalBadSequence) {
     {
         SCOPED_TRACE("Add before delete");
         updater_ = client_->getUpdater(zname_, false, true);
-        EXPECT_THROW(updater_->addRRset(*soa_), isc::BadValue);
+        EXPECT_THROW(updater_->addRRset(*soa_), bundy::BadValue);
         // Make sure the journal is empty now
         checkJournal(expected);
     }
@@ -3917,7 +3917,7 @@ TEST_F(MockDatabaseClientTest, journalBadSequence) {
         // So far OK
         EXPECT_NO_THROW(updater_->deleteRRset(*soa_));
         // But we miss the add SOA here
-        EXPECT_THROW(updater_->addRRset(*rrset_), isc::BadValue);
+        EXPECT_THROW(updater_->addRRset(*rrset_), bundy::BadValue);
         // Make sure the journal contains only the first one
         expected.push_back(JournalEntry(WRITABLE_ZONE_ID, 1234,
                                         DatabaseAccessor::DIFF_DELETE,
@@ -3933,7 +3933,7 @@ TEST_F(MockDatabaseClientTest, journalBadSequence) {
         // So far OK
         EXPECT_NO_THROW(updater_->deleteRRset(*soa_));
         // Commit at the wrong time
-        EXPECT_THROW(updater_->commit(), isc::BadValue);
+        EXPECT_THROW(updater_->commit(), bundy::BadValue);
         checkJournal(expected);
     }
 
@@ -3943,7 +3943,7 @@ TEST_F(MockDatabaseClientTest, journalBadSequence) {
         // So far OK
         EXPECT_NO_THROW(updater_->deleteRRset(*soa_));
         // Delete the SOA again
-        EXPECT_THROW(updater_->deleteRRset(*soa_), isc::BadValue);
+        EXPECT_THROW(updater_->deleteRRset(*soa_), bundy::BadValue);
         checkJournal(expected);
     }
 
@@ -3955,7 +3955,7 @@ TEST_F(MockDatabaseClientTest, journalBadSequence) {
         // Still OK
         EXPECT_NO_THROW(updater_->addRRset(*soa_));
         // But this one is added again
-        EXPECT_THROW(updater_->addRRset(*soa_), isc::BadValue);
+        EXPECT_THROW(updater_->addRRset(*soa_), bundy::BadValue);
         expected.push_back(JournalEntry(WRITABLE_ZONE_ID, 1234,
                                         DatabaseAccessor::DIFF_ADD,
                                         "example.org.", "SOA", "3600",
@@ -3970,7 +3970,7 @@ TEST_F(MockDatabaseClientTest, journalBadSequence) {
  * erasing the whole zone.
  */
 TEST_P(DatabaseClientTest, journalOnErase) {
-    EXPECT_THROW(client_->getUpdater(zname_, true, true), isc::BadValue);
+    EXPECT_THROW(client_->getUpdater(zname_, true, true), bundy::BadValue);
 }
 
 /*
@@ -3978,12 +3978,12 @@ TEST_P(DatabaseClientTest, journalOnErase) {
  */
 TEST_F(MockDatabaseClientTest, journalNotImplemented) {
     updater_ = client_->getUpdater(Name("null.example.org"), false, true);
-    EXPECT_THROW(updater_->deleteRRset(*soa_), isc::NotImplemented);
+    EXPECT_THROW(updater_->deleteRRset(*soa_), bundy::NotImplemented);
     soa_.reset(new RRset(zname_, qclass_, RRType::SOA(), rrttl_));
     soa_->addRdata(rdata::createRdata(soa_->getType(), soa_->getClass(),
                                       "ns1.example.org. admin.example.org. "
                                       "1234 3600 1800 2419201 7200"));
-    EXPECT_THROW(updater_->addRRset(*soa_), isc::NotImplemented);
+    EXPECT_THROW(updater_->addRRset(*soa_), bundy::NotImplemented);
 }
 
 /*
@@ -4035,7 +4035,7 @@ TEST_P(DatabaseClientTest, journalReader) {
 
     // Once it reaches the end of the sequence, further read attempt will
     // result in exception.
-    EXPECT_THROW(jnl_reader->getNextDiff(), isc::InvalidOperation);
+    EXPECT_THROW(jnl_reader->getNextDiff(), bundy::InvalidOperation);
 }
 
 TEST_P(DatabaseClientTest, readLargeJournal) {
@@ -4174,7 +4174,7 @@ TEST_P(DatabaseClientTest, createZone) {
 
 TEST_P(DatabaseClientTest, createZoneRollbackOnLocked) {
     const Name new_name("example.com");
-    isc::datasrc::ZoneUpdaterPtr updater = client_->getUpdater(zname_, true);
+    bundy::datasrc::ZoneUpdaterPtr updater = client_->getUpdater(zname_, true);
     allowMoreTransaction(false);
     ASSERT_THROW(client_->createZone(new_name), DataSourceError);
     // createZone started a transaction as well, but since it failed,
@@ -4214,7 +4214,7 @@ TEST_P(DatabaseClientTest, deleteZone) {
 }
 
 TEST_P(DatabaseClientTest, deleteZoneRollbackOnLocked) {
-    isc::datasrc::ZoneUpdaterPtr updater = client_->getUpdater(zname_, true);
+    bundy::datasrc::ZoneUpdaterPtr updater = client_->getUpdater(zname_, true);
 
     // updater locks the DB so deleteZone() will fail.
     allowMoreTransaction(false);
@@ -4244,7 +4244,7 @@ TEST_P(DatabaseClientTest, deleteZoneRollbackOnNotFind) {
 INSTANTIATE_TEST_CASE_P(, RRsetCollectionTest, ::testing::Values(&mock_param));
 
 TEST_P(RRsetCollectionTest, find) {
-    isc::dns::RRsetCollectionBase& collection = updater->getRRsetCollection();
+    bundy::dns::RRsetCollectionBase& collection = updater->getRRsetCollection();
 
     // Test the find() that returns ConstRRsetPtr
     ConstRRsetPtr rrset = collection.find(Name("www.example.org."),
@@ -4300,7 +4300,7 @@ TEST_P(RRsetCollectionTest, find) {
     EXPECT_FALSE(rrset);
 
     // "below.dname.example.org." with type A does not return the record
-    // (see top of file). See \c isc::datasrc::RRsetCollectionBase::find()
+    // (see top of file). See \c bundy::datasrc::RRsetCollectionBase::find()
     // documentation for details.
     rrset = collection.find(Name("below.dname.example.org"), qclass_,
                             RRType::A());
@@ -4335,11 +4335,11 @@ TEST_P(RRsetCollectionTest, find) {
 }
 
 TEST_P(RRsetCollectionTest, iteratorTest) {
-    isc::dns::RRsetCollectionBase& collection = updater->getRRsetCollection();
+    bundy::dns::RRsetCollectionBase& collection = updater->getRRsetCollection();
 
     // Iterators are currently not implemented.
-    EXPECT_THROW(collection.begin(), isc::NotImplemented);
-    EXPECT_THROW(collection.end(), isc::NotImplemented);
+    EXPECT_THROW(collection.begin(), bundy::NotImplemented);
+    EXPECT_THROW(collection.end(), bundy::NotImplemented);
 }
 
 // This inherit the RRsetCollectionTest cases except for the parameterized
@@ -4386,8 +4386,8 @@ TEST_P(RRsetCollectionTest, updateThrows) {
     EXPECT_FALSE(updater->getRRsetCollection().
                  find(Name("www.example.org"), RRClass::IN(), RRType::MX()));
 
-    // addRRset() must throw isc::InvalidOperation here.
-    EXPECT_THROW(updater->addRRset(*rrset_), isc::InvalidOperation);
+    // addRRset() must throw bundy::InvalidOperation here.
+    EXPECT_THROW(updater->addRRset(*rrset_), bundy::InvalidOperation);
 
     // 2. Deletion test
 
@@ -4407,14 +4407,14 @@ TEST_P(RRsetCollectionTest, updateThrows) {
     updater->getRRsetCollection().find(Name("www.example.org"),
                                        RRClass::IN(), RRType::MX());
 
-    // deleteRRset() must throw isc::InvalidOperation here.
-    EXPECT_THROW(updater->deleteRRset(*rrset_), isc::InvalidOperation);
+    // deleteRRset() must throw bundy::InvalidOperation here.
+    EXPECT_THROW(updater->deleteRRset(*rrset_), bundy::InvalidOperation);
 }
 
 // Test that using an RRsetCollection after calling commit() on the
 // ZoneUpdater throws, as the RRsetCollection is disabled.
 TEST_P(RRsetCollectionTest, useAfterCommitThrows) {
-     isc::dns::RRsetCollectionBase& collection =
+     bundy::dns::RRsetCollectionBase& collection =
          updater->getRRsetCollection();
 
      // find() must not throw here.

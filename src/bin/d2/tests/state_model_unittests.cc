@@ -19,8 +19,8 @@
 #include <gtest/gtest.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::d2;
+using namespace bundy;
+using namespace bundy::d2;
 
 namespace {
 
@@ -113,7 +113,7 @@ public:
             break;
         default:
             // its bogus
-            isc_throw(StateModelError, "readyHandler:invalid event: "
+            bundy_throw(StateModelError, "readyHandler:invalid event: "
                       << getContextStr());
         }
     }
@@ -144,7 +144,7 @@ public:
             break;
         default:
             // its bogus
-            isc_throw(StateModelError, "doWorkHandler:invalid event: "
+            bundy_throw(StateModelError, "doWorkHandler:invalid event: "
                       <<  getContextStr());
         }
     }
@@ -160,7 +160,7 @@ public:
             break;
         default:
             // its bogus
-            isc_throw(StateModelError, "doneWorkHandler:invalid event: "
+            bundy_throw(StateModelError, "doneWorkHandler:invalid event: "
                       << getContextStr());
         }
     }

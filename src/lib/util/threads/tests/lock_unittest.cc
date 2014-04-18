@@ -24,7 +24,7 @@
 #include <unistd.h>
 #include <signal.h>
 
-using namespace isc::util::thread;
+using namespace bundy::util::thread;
 
 namespace {
 
@@ -42,7 +42,7 @@ TEST(MutexTest, lockMultiple) {
 
     EXPECT_THROW({
         Mutex::Locker l2(mutex); // Attempt to lock again.
-    }, isc::InvalidOperation);
+    }, bundy::InvalidOperation);
     EXPECT_TRUE(mutex.locked()); // Debug-only build
 
     // block=true explicitly.
@@ -94,7 +94,7 @@ TEST(MutexTest,
      destroyLocked
 #endif
 ) {
-    if (!isc::util::unittests::runningOnValgrind()) {
+    if (!bundy::util::unittests::runningOnValgrind()) {
         EXPECT_DEATH_IF_SUPPORTED({
             Mutex* mutex = new Mutex;
             new Mutex::Locker(*mutex);
@@ -136,7 +136,7 @@ void
 noHandler(int) {}
 
 TEST(MutexTest, swarm) {
-    if (!isc::util::unittests::runningOnValgrind()) {
+    if (!bundy::util::unittests::runningOnValgrind()) {
         // Create a timeout in case something got stuck here
         struct sigaction ignored, original;
         memset(&ignored, 0, sizeof(ignored));

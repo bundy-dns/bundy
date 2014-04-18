@@ -29,14 +29,14 @@
 
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace util {
 
 /// \brief Invalid Iterator
 ///
 /// Thrown if an attempt was made to access the iterator - the pointer into
 /// the LRU list where this element is located - when it is marked as invalid.
-class InvalidLruIterator : public isc::Exception {
+class InvalidLruIterator : public bundy::Exception {
 public:
     InvalidLruIterator(const char* file, size_t line, const char* what) :
         Exception(file, line, what)
@@ -76,7 +76,7 @@ public:
     /// \exception InvalidLruIterator Thrown if the iterator is not valid.
     virtual typename LruList<T>::iterator getLruIterator() const {
         /*if (! valid_) {
-            isc_throw(InvalidLruIterator,
+            bundy_throw(InvalidLruIterator,
                 "pointer of element into LRU list was not valid");
         }*/
         return iterator_;
@@ -425,4 +425,4 @@ TEST_F(LruListTest, Miscellaneous) {
 }
 
 }   // namespace nsas
-}   // namespace isc
+}   // namespace bundy

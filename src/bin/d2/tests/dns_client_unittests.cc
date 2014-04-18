@@ -28,14 +28,14 @@
 #include <nc_test_utils.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::asiolink;
-using namespace isc::asiodns;
-using namespace isc::d2;
+using namespace bundy;
+using namespace bundy::asiolink;
+using namespace bundy::asiodns;
+using namespace bundy::d2;
 
-using namespace isc;
-using namespace isc::dns;
-using namespace isc::util;
+using namespace bundy;
+using namespace bundy::dns;
+using namespace bundy::util;
 using namespace asio;
 using namespace asio::ip;
 
@@ -88,7 +88,7 @@ public:
           expect_response_(true),
           test_timer_(service_),
           received_(0), expected_(0) {
-        asiodns::logger.setSeverity(isc::log::INFO);
+        asiodns::logger.setSeverity(bundy::log::INFO);
         response_.reset();
         dns_client_.reset(new DNSClient(response_, this));
 
@@ -101,7 +101,7 @@ public:
     //
     // Sets the asiodns logging level back to DEBUG.
     virtual ~DNSClientTest() {
-        asiodns::logger.setSeverity(isc::log::DEBUG);
+        asiodns::logger.setSeverity(bundy::log::DEBUG);
     };
 
     // @brief Exchange completion callback.
@@ -200,7 +200,7 @@ public:
         // if caller specified TCP as a preferred protocol. This test will be
         // removed once TCP is supported.
         EXPECT_THROW(DNSClient(response_, NULL, DNSClient::TCP),
-                     isc::NotImplemented);
+                     bundy::NotImplemented);
     }
 
     // This test verifies that it accepted timeout values belong to the range of
@@ -226,10 +226,10 @@ public:
         timeout = DNSClient::getMaxTimeout() + 1;
         EXPECT_THROW(dns_client_->doUpdate(service_, IOAddress(TEST_ADDRESS),
                                            TEST_PORT, message, timeout),
-                     isc::BadValue);
+                     bundy::BadValue);
     }
 
-    // This test verifies that isc::NotImplemented exception is thrown when
+    // This test verifies that bundy::NotImplemented exception is thrown when
     // attempt to send DNS Update message with TSIG is attempted.
     void runTSIGTest() {
         // Create outgoing message. Simply set the required message fields:
@@ -246,7 +246,7 @@ public:
         EXPECT_THROW(dns_client_->doUpdate(service_, IOAddress(TEST_ADDRESS),
                                            TEST_PORT, message, timeout,
                                            tsig_key),
-                     isc::NotImplemented);
+                     bundy::NotImplemented);
     }
 
     // This test verifies the DNSClient behavior when a server does not respond
@@ -267,7 +267,7 @@ public:
         /// instantly. However, it may lead to situations that the message sent
         /// in one test will not be dropped by the kernel by the time, the next
         /// test starts. This will lead to intermittent unit test errors as
-        /// described in the ticket http://bundy.isc.org/ticket/3265.
+        /// described in the ticket http://bundy.bundy.org/ticket/3265.
         /// Increasing the timeout to a non-zero value mitigates this problem.
         /// The proper way to solve this problem is to receive the packet
         /// on our own and drop it. Such a fix will need to be applied not only

@@ -29,9 +29,9 @@
 #include <sstream>
 
 using namespace std;
-using namespace isc::dns;
+using namespace bundy::dns;
 
-namespace isc {
+namespace bundy {
 namespace testutils {
 const unsigned int QR_FLAG = 0x1;
 const unsigned int AA_FLAG = 0x2;
@@ -95,7 +95,7 @@ setRRset(RRsetPtr rrset, RRsetPtr* rrsetp) {
         if (rrset->getType() == RRType::RRSIG()) {
             (*rrsetp)->addRRsig(rrset);
         } else {
-            isc_throw(isc::Unexpected,
+            bundy_throw(bundy::Unexpected,
                       "multiple RRsets are given to textToRRset");
         }
     } else {
@@ -115,8 +115,8 @@ textToRRset(const string& text_rrset, const RRClass& rrclass,
 }
 
 void
-rrsetCheck(isc::dns::ConstRRsetPtr expected_rrset,
-           isc::dns::ConstRRsetPtr actual_rrset)
+rrsetCheck(bundy::dns::ConstRRsetPtr expected_rrset,
+           bundy::dns::ConstRRsetPtr actual_rrset)
 {
     SCOPED_TRACE("Comparing RRsets\n"
                  "  Actual: " + actual_rrset->toText() +
@@ -126,8 +126,8 @@ rrsetCheck(isc::dns::ConstRRsetPtr expected_rrset,
     EXPECT_EQ(expected_rrset->getType(), actual_rrset->getType());
     EXPECT_EQ(expected_rrset->getTTL(), actual_rrset->getTTL());
 
-    isc::dns::RdataIteratorPtr rdata_it = actual_rrset->getRdataIterator();
-    isc::dns::RdataIteratorPtr expected_rdata_it =
+    bundy::dns::RdataIteratorPtr rdata_it = actual_rrset->getRdataIterator();
+    bundy::dns::RdataIteratorPtr expected_rdata_it =
         expected_rrset->getRdataIterator();
     while (!expected_rdata_it->isLast()) {
         EXPECT_FALSE(rdata_it->isLast());
@@ -147,4 +147,4 @@ rrsetCheck(isc::dns::ConstRRsetPtr expected_rrset,
     EXPECT_TRUE(rdata_it->isLast());
 }
 } // end of namespace testutils
-} // end of namespace isc
+} // end of namespace bundy

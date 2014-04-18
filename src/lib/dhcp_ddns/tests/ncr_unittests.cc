@@ -21,9 +21,9 @@
 #include <algorithm>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dhcp_ddns;
-using namespace isc::dhcp;
+using namespace bundy;
+using namespace bundy::dhcp_ddns;
+using namespace bundy::dhcp;
 
 namespace {
 
@@ -220,7 +220,7 @@ TEST(NameChangeRequestTest, constructionTests) {
     EXPECT_TRUE(ncr);
 
     // Verify that full constructor works.
-    uint64_t expiry = isc::util::detail::gettimeWrapper();
+    uint64_t expiry = bundy::util::detail::gettimeWrapper();
     D2Dhcid dhcid("010203040A7F8E3D");
 
     EXPECT_NO_THROW(ncr.reset(new NameChangeRequest(
@@ -413,12 +413,12 @@ TEST_F(DhcidTest, fromClientId) {
     // Make sure that the empty FQDN is not accepted.
     std::vector<uint8_t> empty_wire_fqdn;
     EXPECT_THROW(dhcid.fromClientId(clientid, empty_wire_fqdn),
-                 isc::dhcp_ddns::DhcidRdataComputeError);
+                 bundy::dhcp_ddns::DhcidRdataComputeError);
 
     // Make sure that the empty client identifier is not accepted.
     clientid.clear();
     EXPECT_THROW(dhcid.fromClientId(clientid, wire_fqdn_),
-                 isc::dhcp_ddns::DhcidRdataComputeError);
+                 bundy::dhcp_ddns::DhcidRdataComputeError);
 
 
 }
@@ -446,12 +446,12 @@ TEST_F(DhcidTest, fromHWAddr) {
     // Make sure that the empty FQDN is not accepted.
     std::vector<uint8_t> empty_wire_fqdn;
     EXPECT_THROW(dhcid.fromHWAddr(hwaddr, empty_wire_fqdn),
-                 isc::dhcp_ddns::DhcidRdataComputeError);
+                 bundy::dhcp_ddns::DhcidRdataComputeError);
 
     // Make sure that the NULL HW address is not accepted.
     hwaddr.reset();
     EXPECT_THROW(dhcid.fromHWAddr(hwaddr, wire_fqdn_),
-                 isc::dhcp_ddns::DhcidRdataComputeError);
+                 bundy::dhcp_ddns::DhcidRdataComputeError);
 }
 
 // test operator<< on D2Dhcid
@@ -543,7 +543,7 @@ TEST(NameChangeRequestTest, validMsgChecks) {
     }
 }
 
-/// @brief Tests converting to and from JSON via isc::util buffer classes.
+/// @brief Tests converting to and from JSON via bundy::util buffer classes.
 /// This test verifies that:
 /// 1. A NameChangeRequest can be rendered in JSON written to an OutputBuffer
 /// 2. A InputBuffer containing a valid JSON request rendition can be used
@@ -567,11 +567,11 @@ TEST(NameChangeRequestTest, toFromBufferTest) {
 
     // Verify that we output the request as JSON text to a buffer
     // without error.
-    isc::util::OutputBuffer output_buffer(1024);
+    bundy::util::OutputBuffer output_buffer(1024);
     ASSERT_NO_THROW(ncr->toFormat(FMT_JSON, output_buffer));
 
     // Make an InputBuffer from the OutputBuffer.
-    isc::util::InputBuffer input_buffer(output_buffer.getData(),
+    bundy::util::InputBuffer input_buffer(output_buffer.getData(),
                                         output_buffer.getLength());
 
     // Verify that we can create a new request from the InputBuffer.
@@ -612,7 +612,7 @@ TEST(NameChangeRequestTest, ipAddresses) {
 TEST(NameChangeFormatTest, formatEnumConversion){
     ASSERT_EQ(stringToNcrFormat("JSON"), dhcp_ddns::FMT_JSON);
     ASSERT_EQ(stringToNcrFormat("jSoN"), dhcp_ddns::FMT_JSON);
-    ASSERT_THROW(stringToNcrFormat("bogus"), isc::BadValue);
+    ASSERT_THROW(stringToNcrFormat("bogus"), bundy::BadValue);
 
     ASSERT_EQ(ncrFormatToString(dhcp_ddns::FMT_JSON), "JSON");
 }
@@ -623,7 +623,7 @@ TEST(NameChangeProtocolTest, protocolEnumConversion){
     ASSERT_EQ(stringToNcrProtocol("udP"), dhcp_ddns::NCR_UDP);
     ASSERT_EQ(stringToNcrProtocol("TCP"), dhcp_ddns::NCR_TCP);
     ASSERT_EQ(stringToNcrProtocol("Tcp"), dhcp_ddns::NCR_TCP);
-    ASSERT_THROW(stringToNcrProtocol("bogus"), isc::BadValue);
+    ASSERT_THROW(stringToNcrProtocol("bogus"), bundy::BadValue);
 
     ASSERT_EQ(ncrProtocolToString(dhcp_ddns::NCR_UDP), "UDP");
     ASSERT_EQ(ncrProtocolToString(dhcp_ddns::NCR_TCP), "TCP");

@@ -16,7 +16,7 @@
 #include <hooks/library_manager.h>
 #include <hooks/library_manager_collection.h>
 
-namespace isc {
+namespace bundy {
 namespace hooks {
 
 // Return callout manager for the loaded libraries.  This call is only valid
@@ -35,7 +35,7 @@ LibraryManagerCollection::getCalloutManager() const {
 
     // Only return a pointer if we have a CalloutManager created.
     if (! callout_manager_) {
-        isc_throw(LoadLibrariesNotCalled, "must load hooks libraries before "
+        bundy_throw(LoadLibrariesNotCalled, "must load hooks libraries before "
                   "attempting to retrieve a CalloutManager for them");
     }
 
@@ -126,4 +126,4 @@ LibraryManagerCollection::validateLibraries(
 }
 
 } // namespace hooks
-} // namespace isc
+} // namespace bundy

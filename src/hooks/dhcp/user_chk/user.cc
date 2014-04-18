@@ -32,14 +32,14 @@ const char* UserId::DUID_STR = "DUID";
 UserId::UserId(UserIdType id_type, const std::vector<uint8_t>& id)
     : id_type_(id_type), id_(id) {
     if (id.size() == 0) {
-        isc_throw(isc::BadValue, "UserId id may not be blank");
+        bundy_throw(bundy::BadValue, "UserId id may not be blank");
     }
 }
 
 UserId::UserId(UserIdType id_type, const std::string & id_str) :
     id_type_(id_type) {
     if (id_str.empty()) {
-        isc_throw(isc::BadValue, "UserId id string may not be blank");
+        bundy_throw(bundy::BadValue, "UserId id string may not be blank");
     }
 
     // Convert the id string to vector.
@@ -52,20 +52,20 @@ UserId::UserId(UserIdType id_type, const std::string & id_str) :
                                                 clean_id_str.end(), ':');
     clean_id_str.erase(end_pos, clean_id_str.end());
 
-    isc::util::encode::decodeHex(clean_id_str, addr_bytes);
+    bundy::util::encode::decodeHex(clean_id_str, addr_bytes);
 
     // Attempt to instantiate the appropriate id class to leverage validation.
     switch (id_type) {
         case HW_ADDRESS: {
-            isc::dhcp::HWAddr hwaddr(addr_bytes, isc::dhcp::HTYPE_ETHER);
+            bundy::dhcp::HWAddr hwaddr(addr_bytes, bundy::dhcp::HTYPE_ETHER);
             break;
             }
         case DUID: {
-            isc::dhcp::DUID duid(addr_bytes);
+            bundy::dhcp::DUID duid(addr_bytes);
             break;
             }
         default:
-            isc_throw (isc::BadValue, "Invalid id_type: " << id_type);
+            bundy_throw (bundy::BadValue, "Invalid id_type: " << id_type);
             break;
     }
 
@@ -132,7 +132,7 @@ UserId::lookupTypeStr(UserIdType type) {
             tmp = DUID_STR;
             break;
         default:
-            isc_throw(isc::BadValue, "Invalid UserIdType:" << type);
+            bundy_throw(bundy::BadValue, "Invalid UserIdType:" << type);
             break;
     }
 
@@ -147,7 +147,7 @@ UserId::lookupType(const std::string& type_str) {
         return (DUID);
     }
 
-    isc_throw(isc::BadValue, "Invalid UserIdType string:" << type_str);
+    bundy_throw(bundy::BadValue, "Invalid UserIdType string:" << type_str);
 }
 
 std::ostream&
@@ -185,7 +185,7 @@ User::setProperties(const PropertyMap& properties) {
 
 void User::setProperty(const std::string& name, const std::string& value) {
     if (name.empty()) {
-        isc_throw (isc::BadValue, "User property name cannot be blank");
+        bundy_throw (bundy::BadValue, "User property name cannot be blank");
     }
 
     // Note that if the property exists its value will be updated.

@@ -21,7 +21,7 @@
 #include <dns/name.h>
 #include <dns/rdata.h>
 
-// BEGIN_ISC_NAMESPACE
+// BEGIN_BUNDY_NAMESPACE
 
 // BEGIN_COMMON_DECLARATIONS
 // END_COMMON_DECLARATIONS
@@ -42,8 +42,8 @@ public:
     uint16_t getMXPref() const;
 
 private:
-    void constructFromLexer(isc::dns::MasterLexer& lexer,
-                            const isc::dns::Name* origin);
+    void constructFromLexer(bundy::dns::MasterLexer& lexer,
+                            const bundy::dns::Name* origin);
 
     /// Note: this is a prototype version; we may reconsider
     /// this representation later.
@@ -52,7 +52,7 @@ private:
 };
 
 // END_RDATA_NAMESPACE
-// END_ISC_NAMESPACE
+// END_BUNDY_NAMESPACE
 // END_HEADER_GUARD
 
 // Local Variables: 

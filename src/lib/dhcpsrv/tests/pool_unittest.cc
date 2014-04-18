@@ -24,9 +24,9 @@
 #include <sstream>
 
 using boost::scoped_ptr;
-using namespace isc;
-using namespace isc::dhcp;
-using namespace isc::asiolink;
+using namespace bundy;
+using namespace bundy::dhcp;
+using namespace bundy::asiolink;
 
 namespace {
 

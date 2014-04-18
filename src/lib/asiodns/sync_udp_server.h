@@ -37,7 +37,7 @@
 
 #include <stdint.h>
 
-namespace isc {
+namespace bundy {
 namespace asiodns {
 
 class SyncUDPServer;
@@ -83,9 +83,9 @@ public:
     /// \param lookup the callbackprovider for DNS lookup events (must not be
     ///        NULL)
     ///
-    /// \throw isc::InvalidParameter if af is neither AF_INET nor AF_INET6
-    /// \throw isc::InvalidParameter lookup is NULL
-    /// \throw isc::asiolink::IOError when a low-level error happens, like the
+    /// \throw bundy::InvalidParameter if af is neither AF_INET nor AF_INET6
+    /// \throw bundy::InvalidParameter lookup is NULL
+    /// \throw bundy::asiolink::IOError when a low-level error happens, like the
     ///     fd is not a valid descriptor.
     static SyncUDPServerPtr create(asio::io_service& io_service, const int fd,
                                    const int af, DNSLookup* lookup);
@@ -99,7 +99,7 @@ public:
 
     /// \brief Calls the lookup callback
     virtual void asyncLookup() {
-        isc_throw(Unexpected,
+        bundy_throw(Unexpected,
                   "SyncUDPServer doesn't support asyncLookup by design, use "
                   "UDPServer if you need it.");
     }
@@ -134,7 +134,7 @@ public:
     ///
     /// \return a newly allocated copy of this object
     virtual DNSServer* clone() {
-        isc_throw(Unexpected, "SyncUDPServer can't be cloned.");
+        bundy_throw(Unexpected, "SyncUDPServer can't be cloned.");
     }
 private:
     // Internal state & buffers. We don't use the PIMPL idiom, as this class
@@ -147,11 +147,11 @@ private:
     // The buffer to render the output to and send it.
     // If it was OK to have just a buffer, not the wrapper class,
     // we could reuse the data_
-    isc::util::OutputBufferPtr output_buffer_;
+    bundy::util::OutputBufferPtr output_buffer_;
     // Objects to hold the query message and the answer.  The latter isn't
     // used and only defined as a placeholder as the callback signature
     // requires it.
-    isc::dns::MessagePtr query_, answer_;
+    bundy::dns::MessagePtr query_, answer_;
     // The socket used for the communication
     boost::scoped_ptr<asio::ip::udp::socket> socket_;
     // Wrapper of socket_ in the form of asiolink::IOSocket.
@@ -188,7 +188,7 @@ private:
 };
 
 } // namespace asiodns
-} // namespace isc
+} // namespace bundy
 #endif // SYNC_UDP_SERVER_H
 
 // Local Variables:

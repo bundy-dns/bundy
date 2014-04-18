@@ -18,7 +18,7 @@
 #include <log/log_messages.h>
 #include <log/interprocess/interprocess_sync_null.h>
 
-using namespace isc::log;
+using namespace bundy::log;
 
 namespace {
 void usage() {
@@ -55,11 +55,11 @@ main(int argc, char** argv) {
     // Note, level is INFO, so DEBUG should normally not show
     // up. Unless process is never called (at which point it
     // will end up in the dump at the end).
-    initLogger("buffertest", isc::log::INFO, 0, NULL, true);
+    initLogger("buffertest", bundy::log::INFO, 0, NULL, true);
     Logger logger("log");
     // No need for file interprocess locking in this test
     logger.setInterprocessSync(
-        new isc::log::interprocess::InterprocessSyncNull("logger"));
+        new bundy::log::interprocess::InterprocessSyncNull("logger"));
     LOG_INFO(logger, LOG_BAD_SEVERITY).arg("info");
     LOG_DEBUG(logger, 50, LOG_BAD_DESTINATION).arg("debug-50");
     LOG_INFO(logger, LOG_BAD_SEVERITY).arg("info");

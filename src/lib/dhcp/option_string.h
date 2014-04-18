@@ -21,7 +21,7 @@
 #include <boost/shared_ptr.hpp>
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief Class which represents an option carrying a single string value.
@@ -46,7 +46,7 @@ public:
     /// @param type option code.
     /// @param value a string value to be carried by the option.
     ///
-    /// @throw isc::OutOfRange if provided string is empty.
+    /// @throw bundy::OutOfRange if provided string is empty.
     OptionString(const Option::Universe u, const uint16_t type,
                  const std::string& value);
 
@@ -60,7 +60,7 @@ public:
     /// @param begin iterator pointing to the first byte of the buffer chunk.
     /// @param end iterator pointing to the last byte of the buffer chunk.
     ///
-    /// @throw isc::OutOfRange if provided buffer is truncated.
+    /// @throw bundy::OutOfRange if provided buffer is truncated.
     OptionString(const Option::Universe u, const uint16_t type,
                  OptionBufferConstIter begin, OptionBufferConstIter end);
 
@@ -78,7 +78,7 @@ public:
     ///
     /// @param value string value to be set.
     ///
-    /// @throw isc::OutOfRange if a string value to be set is empty.
+    /// @throw bundy::OutOfRange if a string value to be set is empty.
     void setValue(const std::string& value);
 
     /// @brief Creates on-wire format of the option.
@@ -88,7 +88,7 @@ public:
     /// is moved to the end of stored data.
     ///
     /// @param [out] buf output buffer where the option will be stored.
-    virtual void pack(isc::util::OutputBuffer& buf);
+    virtual void pack(bundy::util::OutputBuffer& buf);
 
     /// @brief Decodes option data from the provided buffer.
     ///
@@ -100,7 +100,7 @@ public:
     /// @param begin the iterator pointing to the option payload.
     /// @param end the iterator pointing to the end of the option payload.
     ///
-    /// @throw isc::OutOfRange if provided buffer is truncated.
+    /// @throw bundy::OutOfRange if provided buffer is truncated.
     virtual void unpack(OptionBufferConstIter begin, OptionBufferConstIter end);
 
 };
@@ -108,7 +108,7 @@ public:
 /// Pointer to the OptionString object.
 typedef boost::shared_ptr<OptionString> OptionStringPtr;
 
-} // namespace isc::dhcp
-} // namespace isc
+} // namespace bundy::dhcp
+} // namespace bundy
 
 #endif // OPTION_STRING_H

@@ -50,7 +50,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-namespace isc {
+namespace bundy {
 namespace auth {
 
 /// \brief An exception that is thrown if initial checks for a command fail
@@ -60,10 +60,10 @@ namespace auth {
 /// public, as opposed to InternalCommandError).
 ///
 /// And example of its use is currently in loadZone().
-class CommandError : public isc::Exception {
+class CommandError : public bundy::Exception {
 public:
     CommandError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 namespace datasrc_clientmgr_internal {
@@ -254,7 +254,7 @@ public:
     /// in practice.
     ///
     /// \throw std::bad_alloc internal memory allocation failure.
-    /// \throw isc::Unexpected general unexpected system errors.
+    /// \throw bundy::Unexpected general unexpected system errors.
     DataSrcClientsMgrBase(asiolink::IOService& service) :
         clients_map_(new ClientListsMap),
         fd_guard_(new FDGuard(this)),
@@ -318,7 +318,7 @@ public:
     /// as long as the caller passes a non NULL value for \c config_arg;
     /// it doesn't validate the argument further.
     ///
-    /// \brief isc::InvalidParameter config_arg is NULL.
+    /// \brief bundy::InvalidParameter config_arg is NULL.
     /// \brief std::bad_alloc
     ///
     /// \param config_arg The new data source configuration.  Must not be NULL.
@@ -330,7 +330,7 @@ public:
                      callback = datasrc_clientmgr_internal::FinishedCallback())
     {
         if (!config_arg) {
-            isc_throw(InvalidParameter, "Invalid null config argument");
+            bundy_throw(InvalidParameter, "Invalid null config argument");
         }
         sendCommand(datasrc_clientmgr_internal::RECONFIGURE, config_arg,
                     callback);
@@ -379,10 +379,10 @@ public:
                            datasrc_clientmgr_internal::FinishedCallback()) {
         // Some minimal validation
         if (!args) {
-            isc_throw(CommandError, "segmentInfoUpdate argument empty");
+            bundy_throw(CommandError, "segmentInfoUpdate argument empty");
         }
-        if (args->getType() != isc::data::Element::map) {
-            isc_throw(CommandError, "segmentInfoUpdate argument not a map");
+        if (args->getType() != bundy::data::Element::map) {
+            bundy_throw(CommandError, "segmentInfoUpdate argument not a map");
         }
         const char* params[] = {
             "data-source-name",
@@ -392,7 +392,7 @@ public:
         };
         for (const char** param = params; *param; ++param) {
             if (!args->contains(*param)) {
-                isc_throw(CommandError,
+                bundy_throw(CommandError,
                           "segmentInfoUpdate argument has no '" << param <<
                           "' value");
             }
@@ -420,50 +420,50 @@ private:
             "loadZone" : "updateZone";
 
         if (!args) {
-            isc_throw(CommandError, command_str + " argument empty");
+            bundy_throw(CommandError, command_str + " argument empty");
         }
 
-        if (args->getType() != isc::data::Element::map) {
-            isc_throw(CommandError, command_str + " argument not a map");
+        if (args->getType() != bundy::data::Element::map) {
+            bundy_throw(CommandError, command_str + " argument not a map");
         }
         if (!args->contains("origin")) {
-            isc_throw(CommandError,
+            bundy_throw(CommandError,
                       command_str + " argument has no 'origin' value");
         }
         // Also check if it really is a valid name
         try {
             dns::Name(args->get("origin")->stringValue());
-        } catch (const isc::Exception& exc) {
-            isc_throw(CommandError, "bad origin: " << exc.what());
+        } catch (const bundy::Exception& exc) {
+            bundy_throw(CommandError, "bad origin: " << exc.what());
         }
 
         if (args->get("origin")->getType() != data::Element::string) {
-            isc_throw(CommandError,
+            bundy_throw(CommandError,
                       "loadZone argument 'origin' value not a string");
         }
         if (args->contains("class")) {
             if (args->get("class")->getType() != data::Element::string) {
-                isc_throw(CommandError,
+                bundy_throw(CommandError,
                           "loadZone argument 'class' value not a string");
             }
             // Also check if it is a valid class
             try {
                 dns::RRClass(args->get("class")->stringValue());
-            } catch (const isc::Exception& exc) {
-                isc_throw(CommandError, "bad class: " << exc.what());
+            } catch (const bundy::Exception& exc) {
+                bundy_throw(CommandError, "bad class: " << exc.what());
             }
         }
         // If "datasource" is provided as a parameter, it must be a string.
         // For UPDATEZONE, datasource must be specified.
         if (args->contains("datasource")) {
             if (args->get("datasource")->getType() !=
-                isc::data::Element::string)
+                bundy::data::Element::string)
             {
-                isc_throw(CommandError,
+                bundy_throw(CommandError,
                           "invalid type for datasource (must be string)");
             }
         } else if (command == datasrc_clientmgr_internal::UPDATEZONE) {
-                isc_throw(CommandError, "missing datasource for UPDATEZONE");
+                bundy_throw(CommandError, "missing datasource for UPDATEZONE");
         }
 
         // Note: we could do some more advanced checks here,
@@ -496,7 +496,7 @@ private:
         int fds[2];
         int result = socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
         if (result != 0) {
-            isc_throw(Unexpected, "Can't create socket pair: " <<
+            bundy_throw(Unexpected, "Can't create socket pair: " <<
                       strerror(errno));
         }
         read_fd_ = fds[0];
@@ -512,7 +512,7 @@ private:
         if (!error.empty()) {
             // Generally, there should be no errors (as we are the other end
             // as well), but check just in case.
-            isc_throw(Unexpected, error);
+            bundy_throw(Unexpected, error);
         }
 
         // Steal the callbacks into local copy.
@@ -549,7 +549,7 @@ private:
 
     BuilderType builder_;
     ThreadType builder_thread_; // for safety this should be placed last
-    isc::asiolink::LocalSocket wakeup_socket_; // For integration of read_fd_
+    bundy::asiolink::LocalSocket wakeup_socket_; // For integration of read_fd_
                                                // to the asio loop
     char buffer[1];   // Buffer for the wakeup socket.
 };
@@ -584,10 +584,10 @@ public:
     /// This exception is expected to be caught within the
     /// \c DataSrcClientsBuilder implementation, but is defined as public
     /// so tests can be checked it.
-    class InternalCommandError : public isc::Exception {
+    class InternalCommandError : public bundy::Exception {
     public:
         InternalCommandError(const char* file, size_t line, const char* what) :
-            isc::Exception(file, line, what) {}
+            bundy::Exception(file, line, what) {}
     };
 
     /// \brief Constructor.
@@ -652,28 +652,28 @@ private:
                 LOG_ERROR(auth_logger,
                     AUTH_DATASRC_CLIENTS_BUILDER_RECONFIGURE_DATASRC_ERROR).
                     arg(ds_error.what());
-            } catch (const isc::Exception& isc_error) {
+            } catch (const bundy::Exception& bundy_error) {
                 LOG_ERROR(auth_logger,
                     AUTH_DATASRC_CLIENTS_BUILDER_RECONFIGURE_ERROR).
-                    arg(isc_error.what());
+                    arg(bundy_error.what());
             }
             // other exceptions are propagated, see
-            // http://bundy.isc.org/ticket/2210#comment:13
+            // http://bundy.bundy.org/ticket/2210#comment:13
 
             // old clients_map_ data is released by leaving scope
         }
     }
 
-    void doSegmentUpdate(const isc::data::ConstElementPtr& arg) {
+    void doSegmentUpdate(const bundy::data::ConstElementPtr& arg) {
         try {
-            const isc::dns::RRClass
+            const bundy::dns::RRClass
                 rrclass(arg->get("data-source-class")->stringValue());
             const std::string&
                 name(arg->get("data-source-name")->stringValue());
-            const isc::data::ConstElementPtr& segment_params =
+            const bundy::data::ConstElementPtr& segment_params =
                 arg->get("segment-params");
             typename MutexType::Locker locker(*map_mutex_);
-            const boost::shared_ptr<isc::datasrc::ConfigurableClientList>&
+            const boost::shared_ptr<bundy::datasrc::ConfigurableClientList>&
                 list = (**clients_map_)[rrclass];
             if (!list) {
                 LOG_FATAL(auth_logger,
@@ -682,19 +682,19 @@ private:
                 std::terminate();
             }
             if (!list->resetMemorySegment(name,
-                    isc::datasrc::memory::ZoneTableSegment::READ_ONLY,
+                    bundy::datasrc::memory::ZoneTableSegment::READ_ONLY,
                     segment_params)) {
                 LOG_FATAL(auth_logger,
                           AUTH_DATASRC_CLIENTS_BUILDER_SEGMENT_NO_DATASRC)
                     .arg(rrclass).arg(name);
                 std::terminate();
             }
-        } catch (const isc::dns::InvalidRRClass& irce) {
+        } catch (const bundy::dns::InvalidRRClass& irce) {
             LOG_FATAL(auth_logger,
                       AUTH_DATASRC_CLIENTS_BUILDER_SEGMENT_BAD_CLASS)
                 .arg(arg->get("data-source-class"));
             std::terminate();
-        } catch (const isc::Exception& e) {
+        } catch (const bundy::Exception& e) {
             LOG_FATAL(auth_logger,
                       AUTH_DATASRC_CLIENTS_BUILDER_SEGMENT_ERROR)
                 .arg(e.what());
@@ -703,7 +703,7 @@ private:
     }
 
     void doUpdateZone(datasrc_clientmgr_internal::CommandID command,
-                      const isc::data::ConstElementPtr& arg);
+                      const bundy::data::ConstElementPtr& arg);
     boost::shared_ptr<datasrc::memory::ZoneWriter> getZoneWriter(
         datasrc_clientmgr_internal::CommandID command,
         datasrc::ConfigurableClientList& client_list,
@@ -800,7 +800,7 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::handleCommand(
     const CommandID cid = command.id;
     if (cid >= NUM_COMMANDS) {
         // This shouldn't happen except for a bug within this file.
-        isc_throw(Unexpected, "internal bug: invalid command, ID: " << cid);
+        bundy_throw(Unexpected, "internal bug: invalid command, ID: " << cid);
     }
 
     const boost::array<const char*, NUM_COMMANDS> command_desc = {
@@ -835,7 +835,7 @@ template <typename MutexType, typename CondVarType>
 void
 DataSrcClientsBuilderBase<MutexType, CondVarType>::doUpdateZone(
     datasrc_clientmgr_internal::CommandID command,
-    const isc::data::ConstElementPtr& arg)
+    const bundy::data::ConstElementPtr& arg)
 {
     // We assume some basic level validation as this method can only be
     // called via the manager in practice.  manager is expected to do the
@@ -851,18 +851,18 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::doUpdateZone(
     // code can be replaced with the original part:
     // assert(arg->get("class"));
     // const dns::RRClass(arg->get("class")->stringValue());
-    isc::data::ConstElementPtr class_elem = arg->get("class");
+    bundy::data::ConstElementPtr class_elem = arg->get("class");
     const dns::RRClass rrclass(class_elem ?
                                 dns::RRClass(class_elem->stringValue()) :
                                 dns::RRClass::IN());
     const dns::Name origin(arg->get("origin")->stringValue());
     ClientListsMap::iterator found = (*clients_map_)->find(rrclass);
     if (found == (*clients_map_)->end()) {
-        isc_throw(InternalCommandError, "failed to load a zone " << origin <<
+        bundy_throw(InternalCommandError, "failed to load a zone " << origin <<
                   "/" << rrclass << ": not configured for the class");
     }
 
-    const isc::data::ConstElementPtr datasrc_name_elem = arg->get("datasource");
+    const bundy::data::ConstElementPtr datasrc_name_elem = arg->get("datasource");
     const std::string& datasrc_name = datasrc_name_elem ?
         datasrc_name_elem->stringValue() : "";
 
@@ -891,11 +891,11 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::doUpdateZone(
         zwriter->cleanup();
     } catch (const InternalCommandError& ex) {
         throw;     // this comes from getZoneWriter.  just let it go through.
-    } catch (const isc::Exception& ex) {
+    } catch (const bundy::Exception& ex) {
         // We catch our internal exceptions (which will be just ignored) and
         // propagated others (which should generally be considered fatal and
         // will make the thread terminate)
-        isc_throw(InternalCommandError, "failed to load a zone " << origin <<
+        bundy_throw(InternalCommandError, "failed to load a zone " << origin <<
                   "/" << rrclass << ": error occurred in reload: " <<
                   ex.what());
     }
@@ -926,7 +926,7 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::getZoneWriter(
         assert(writerpair.second);
         return (writerpair.second);
     case datasrc::ConfigurableClientList::ZONE_NOT_FOUND:
-        isc_throw(InternalCommandError, "failed to load zone " << origin
+        bundy_throw(InternalCommandError, "failed to load zone " << origin
                   << "/" << rrclass << ": not found in any configured "
                   "data source.");
     case datasrc::ConfigurableClientList::ZONE_NOT_CACHED:
@@ -940,17 +940,17 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::getZoneWriter(
         }
         // This is an internal error. Auth server should skip reloading zones
         // on non writable caches.
-        isc_throw(InternalCommandError, "failed to load zone " << origin
+        bundy_throw(InternalCommandError, "failed to load zone " << origin
                   << "/" << rrclass << ": internal failure, in-memory cache "
                   "is not writable");
     case datasrc::ConfigurableClientList::CACHE_DISABLED:
         // This is an internal error. Auth server must have the cache
         // enabled.
-        isc_throw(InternalCommandError, "failed to load zone " << origin
+        bundy_throw(InternalCommandError, "failed to load zone " << origin
                   << "/" << rrclass << ": internal failure, in-memory cache "
                   "is somehow disabled");
     default:                    // other cases can really never happen
-        isc_throw(Unexpected, "Impossible result in getting data source "
+        bundy_throw(Unexpected, "Impossible result in getting data source "
                   "ZoneWriter: " << writerpair.first);
     }
 
@@ -967,7 +967,7 @@ typedef DataSrcClientsMgrBase<
     datasrc_clientmgr_internal::DataSrcClientsBuilder,
     util::thread::Mutex, util::thread::CondVar> DataSrcClientsMgr;
 } // namespace auth
-} // namespace isc
+} // namespace bundy
 
 #endif  // DATASRC_CLIENTS_MGR_H
 

@@ -67,7 +67,7 @@ version() {
 }
 
 int
-load(isc::hooks::LibraryHandle&) {
+load(bundy::hooks::LibraryHandle&) {
     return (appendDigit(LOAD_MARKER_FILE));
 }
 

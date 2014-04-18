@@ -25,7 +25,7 @@
 
 #include <gtest/gtest.h>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 /// @brief Provides a valid DHCP-DDNS configuration for testing basic
@@ -139,7 +139,7 @@ public:
     ///
     /// This sets the instance shutdown flag monitored by run()  and stops 
     /// the IO service.
-    virtual isc::data::ConstElementPtr shutdown(isc::data::ConstElementPtr);
+    virtual bundy::data::ConstElementPtr shutdown(bundy::data::ConstElementPtr);
 
     /// @brief Processes the given configuration.
     ///
@@ -151,7 +151,7 @@ public:
     /// @return an Element that contains the results of configuration composed
     /// of an integer status value (0 means successful, non-zero means failure),
     /// and a string explanation of the outcome.
-    virtual isc::data::ConstElementPtr configure(isc::data::ConstElementPtr
+    virtual bundy::data::ConstElementPtr configure(bundy::data::ConstElementPtr
                                                  config_set);
 
     /// @brief Executes the given command.
@@ -169,8 +169,8 @@ public:
     /// COMMAND_SUCCESS if the command is recognized and executes successfully.
     /// COMMAND_ERROR if the command is recognized but fails to execute.
     /// COMMAND_INVALID if the command is not recognized.
-    virtual isc::data::ConstElementPtr command(const std::string& command,
-                                               isc::data::ConstElementPtr args);
+    virtual bundy::data::ConstElementPtr command(const std::string& command,
+                                               bundy::data::ConstElementPtr args);
 
     // @brief Destructor
     virtual ~DStubProcess();
@@ -245,8 +245,8 @@ protected:
     /// COMMAND_SUCCESS if the command is recognized and executes successfully.
     /// COMMAND_ERROR if the command is recognized but fails to execute.
     /// COMMAND_INVALID if the command is not recognized.
-    virtual isc::data::ConstElementPtr customControllerCommand(
-            const std::string& command, isc::data::ConstElementPtr args);
+    virtual bundy::data::ConstElementPtr customControllerCommand(
+            const std::string& command, bundy::data::ConstElementPtr args);
 
     /// @brief Provides a string of the additional command line options
     /// supported by DStubController.  DStubController supports one
@@ -421,34 +421,34 @@ public:
 
     /// @Wrapper to invoke the Controller's updateConfig method.  Please
     /// refer to DControllerBase::updateConfig for details.
-    isc::data::ConstElementPtr updateConfig(isc::data::ConstElementPtr
+    bundy::data::ConstElementPtr updateConfig(bundy::data::ConstElementPtr
                                             new_config) {
         return (getController()->updateConfig(new_config));
     }
 
     /// @Wrapper to invoke the Controller's executeCommand method.  Please
     /// refer to DControllerBase::executeCommand for details.
-    isc::data::ConstElementPtr executeCommand(const std::string& command,
-                                       isc::data::ConstElementPtr args){
+    bundy::data::ConstElementPtr executeCommand(const std::string& command,
+                                       bundy::data::ConstElementPtr args){
         return (getController()->executeCommand(command, args));
     }
 
     /// @brief Callback that will generate shutdown command via the
     /// command callback function.
     static void genShutdownCallback() {
-        isc::data::ElementPtr arg_set;
+        bundy::data::ElementPtr arg_set;
         DControllerBase::commandHandler(SHUT_DOWN_COMMAND, arg_set);
     }
 
     /// @brief Callback that throws an exception.
     static void genFatalErrorCallback() {
-        isc_throw (DProcessBaseError, "simulated fatal error");
+        bundy_throw (DProcessBaseError, "simulated fatal error");
     }
 };
 
 /// @brief Simple parser derivation for testing the basics of configuration
 /// parsing.
-class TestParser : public isc::dhcp::DhcpConfigParser {
+class TestParser : public bundy::dhcp::DhcpConfigParser {
 public:
 
     /// @brief Constructor
@@ -469,7 +469,7 @@ public:
     /// @throw throws DCfgMgrBaseError if the SimFailure is set to
     /// ftElementBuild. This allows for the simulation of an
     /// exception during the build portion of parsing an element.
-    virtual void build(isc::data::ConstElementPtr new_config);
+    virtual void build(bundy::data::ConstElementPtr new_config);
 
     /// @brief Commits the parsed value to storage.
     ///
@@ -485,7 +485,7 @@ private:
     std::string param_name_;
 
     /// pointer to the parsed value of the parameter
-    isc::data::ConstElementPtr value_;
+    bundy::data::ConstElementPtr value_;
 };
 
 /// @brief Test Derivation of the DCfgContextBase class.
@@ -518,7 +518,7 @@ public:
     /// @brief Fetches the extra storage.
     ///
     /// @return returns a pointer to the extra storage.
-    isc::dhcp::Uint32StoragePtr getExtraStorage();
+    bundy::dhcp::Uint32StoragePtr getExtraStorage();
 
     /// @brief Creates a clone of a DStubContext.
     ///
@@ -534,7 +534,7 @@ private:
     DStubContext& operator=(const DStubContext& rhs);
 
     /// @brief Extra storage for uint32 parameters.
-    isc::dhcp::Uint32StoragePtr extra_values_;
+    bundy::dhcp::Uint32StoragePtr extra_values_;
 };
 
 /// @brief Defines a pointer to DStubContext.
@@ -573,7 +573,7 @@ public:
     ///
     /// @return returns a ParserPtr to the parser instance.
     /// @throw throws DCfgMgrBaseError if SimFailure is ftElementUnknown.
-    virtual isc::dhcp::ParserPtr
+    virtual bundy::dhcp::ParserPtr
     createConfigParser(const std::string& element_id);
 
     /// @brief A list for remembering the element ids in the order they were
@@ -607,8 +607,8 @@ public:
     /// AssertionFailure otherwise.
     ::testing::AssertionResult fromJSON(const std::string& json_text) {
         try  {
-            config_set_ = isc::data::Element::fromJSON(json_text);
-        } catch (const isc::Exception &ex) {
+            config_set_ = bundy::data::Element::fromJSON(json_text);
+        } catch (const bundy::Exception &ex) {
             return (::testing::AssertionFailure(::testing::Message() << 
                                                 "JSON text failed to parse:" 
                                                 << ex.what())); 
@@ -636,11 +636,11 @@ public:
     ///
     /// @return returns AssertionSuccess if there were no parsing errors,
     /// AssertionFailure otherwise.
-    ::testing::AssertionResult checkAnswer(isc::data::ConstElementPtr answer,
+    ::testing::AssertionResult checkAnswer(bundy::data::ConstElementPtr answer,
                                            int should_be) {
         int rcode = 0;
-        isc::data::ConstElementPtr comment;
-        comment = isc::config::parseAnswer(rcode, answer);
+        bundy::data::ConstElementPtr comment;
+        comment = bundy::config::parseAnswer(rcode, answer);
         if (rcode == should_be) {
             return (testing::AssertionSuccess());
         }
@@ -651,17 +651,17 @@ public:
     }
 
     /// @brief Configuration set being tested.
-    isc::data::ElementPtr config_set_;
+    bundy::data::ElementPtr config_set_;
 
     /// @brief Results of most recent element parsing.
-    isc::data::ConstElementPtr answer_;
+    bundy::data::ConstElementPtr answer_;
 };
 
 /// @brief Defines a small but valid DHCP-DDNS compliant configuration for
 /// testing configuration parsing fundamentals.
 extern const char* valid_d2_config;
 
-}; // namespace isc::d2
-}; // namespace isc
+}; // namespace bundy::d2
+}; // namespace bundy
 
 #endif

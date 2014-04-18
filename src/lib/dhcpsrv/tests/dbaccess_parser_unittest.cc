@@ -24,10 +24,10 @@
 #include <string>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dhcp;
-using namespace isc::data;
-using namespace isc::config;
+using namespace bundy;
+using namespace bundy::dhcp;
+using namespace bundy::data;
+using namespace bundy::config;
 
 namespace {
 
@@ -456,7 +456,7 @@ TEST_F(DbAccessParserTest, commit) {
     EXPECT_THROW({
             LeaseMgr& manager = LeaseMgrFactory::instance();
             manager.getType();  // Never executed but satisfies compiler
-            }, isc::dhcp::NoLeaseManager);
+            }, bundy::dhcp::NoLeaseManager);
 
     // Set up the parser to open the memfile database.
     const char* config[] = {"type", "memfile", "persist", "false", NULL};

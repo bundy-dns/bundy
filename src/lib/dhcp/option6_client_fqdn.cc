@@ -20,7 +20,7 @@
 #include <util/strutil.h>
 #include <sstream>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief Implements the logic for the Option6ClientFqdn class.
@@ -38,7 +38,7 @@ public:
     /// Holds flags carried by the option.
     uint8_t flags_;
     /// Holds the pointer to a domain name carried in the option.
-    boost::shared_ptr<isc::dns::Name> domain_name_;
+    boost::shared_ptr<bundy::dns::Name> domain_name_;
     /// Indicates whether domain name is partial or fully qualified.
     Option6ClientFqdn::DomainNameType domain_name_type_;
 
@@ -138,7 +138,7 @@ Option6ClientFqdnImpl(const Option6ClientFqdnImpl& source)
       domain_name_(),
       domain_name_type_(source.domain_name_type_) {
     if (source.domain_name_) {
-        domain_name_.reset(new isc::dns::Name(*source.domain_name_));
+        domain_name_.reset(new bundy::dns::Name(*source.domain_name_));
     }
 }
 
@@ -148,7 +148,7 @@ Option6ClientFqdnImpl&
 // cppcheck-suppress operatorEqToSelf
 Option6ClientFqdnImpl::operator=(const Option6ClientFqdnImpl& source) {
     if (source.domain_name_) {
-        domain_name_.reset(new isc::dns::Name(*source.domain_name_));
+        domain_name_.reset(new bundy::dns::Name(*source.domain_name_));
 
     } else {
         domain_name_.reset();
@@ -173,10 +173,10 @@ setDomainName(const std::string& domain_name,
               const Option6ClientFqdn::DomainNameType name_type) {
     // domain-name must be trimmed. Otherwise, string comprising spaces only
     // would be treated as a fully qualified name.
-    std::string name = isc::util::str::trim(domain_name);
+    std::string name = bundy::util::str::trim(domain_name);
     if (name.empty()) {
         if (name_type == Option6ClientFqdn::FULL) {
-            isc_throw(InvalidOption6FqdnDomainName,
+            bundy_throw(InvalidOption6FqdnDomainName,
                       "fully qualified domain-name must not be empty"
                       << " when setting new domain-name for DHCPv6 Client"
                       << " FQDN Option");
@@ -187,10 +187,10 @@ setDomainName(const std::string& domain_name,
 
     } else {
         try {
-            domain_name_.reset(new isc::dns::Name(name, true));
+            domain_name_.reset(new bundy::dns::Name(name, true));
 
         } catch (const Exception& ex) {
-            isc_throw(InvalidOption6FqdnDomainName, "invalid domain-name value '"
+            bundy_throw(InvalidOption6FqdnDomainName, "invalid domain-name value '"
                       << domain_name << "' when setting new domain-name for"
                       << " DHCPv6 Client FQDN Option");
 
@@ -204,7 +204,7 @@ void
 Option6ClientFqdnImpl::checkFlags(const uint8_t flags, const bool check_mbz) {
     // The Must Be Zero (MBZ) bits must not be set.
     if (check_mbz && ((flags & ~Option6ClientFqdn::FLAG_MASK) != 0)) {
-        isc_throw(InvalidOption6FqdnFlags,
+        bundy_throw(InvalidOption6FqdnFlags,
                   "invalid DHCPv6 Client FQDN Option flags: 0x"
                   << std::hex << static_cast<int>(flags) << std::dec);
     }
@@ -213,7 +213,7 @@ Option6ClientFqdnImpl::checkFlags(const uint8_t flags, const bool check_mbz) {
     // MUST be 0. Checking it here.
     if ((flags & (Option6ClientFqdn::FLAG_N | Option6ClientFqdn::FLAG_S))
         == (Option6ClientFqdn::FLAG_N | Option6ClientFqdn::FLAG_S)) {
-        isc_throw(InvalidOption6FqdnFlags,
+        bundy_throw(InvalidOption6FqdnFlags,
                   "both N and S flag of the DHCPv6 Client FQDN Option are set."
                   << " According to RFC 4704, if the N bit is 1 the S bit"
                   << " MUST be 0");
@@ -227,7 +227,7 @@ Option6ClientFqdnImpl::parseWireData(OptionBufferConstIter first,
     // Buffer must comprise at least one byte with the flags.
     // The domain-name may be empty.
     if (std::distance(first, last) < Option6ClientFqdn::FLAG_FIELD_LEN) {
-        isc_throw(OutOfRange, "DHCPv6 Client FQDN Option ("
+        bundy_throw(OutOfRange, "DHCPv6 Client FQDN Option ("
                   << D6O_CLIENT_FQDN << ") is truncated. Minimal option"
                   << " size is " << Option6ClientFqdn::FLAG_FIELD_LEN
                   << ", got option with size " << std::distance(first, last));
@@ -246,11 +246,11 @@ Option6ClientFqdnImpl::parseWireData(OptionBufferConstIter first,
             OptionBuffer buf(first, last);
             buf.push_back(0);
             // Reset domain name.
-            isc::util::InputBuffer name_buf(&buf[0], buf.size());
+            bundy::util::InputBuffer name_buf(&buf[0], buf.size());
             try {
-                domain_name_.reset(new isc::dns::Name(name_buf, true));
+                domain_name_.reset(new bundy::dns::Name(name_buf, true));
             } catch (const Exception& ex) {
-                isc_throw(InvalidOption6FqdnDomainName, "failed to parse"
+                bundy_throw(InvalidOption6FqdnDomainName, "failed to parse"
                           "partial domain-name from wire format");
             }
             // Terminating zero was missing, so set the domain-name type
@@ -260,12 +260,12 @@ Option6ClientFqdnImpl::parseWireData(OptionBufferConstIter first,
             // We are dealing with fully qualified domain name so there is
             // no need to add terminating zero. Simply pass the buffer to
             // Name object constructor.
-            isc::util::InputBuffer name_buf(&(*first),
+            bundy::util::InputBuffer name_buf(&(*first),
                                             std::distance(first, last));
             try {
-                domain_name_.reset(new isc::dns::Name(name_buf, true));
+                domain_name_.reset(new bundy::dns::Name(name_buf, true));
             } catch (const Exception& ex) {
-                isc_throw(InvalidOption6FqdnDomainName, "failed to parse"
+                bundy_throw(InvalidOption6FqdnDomainName, "failed to parse"
                           "fully qualified domain-name from wire format");
             }
             // Set the domain-type to fully qualified domain name.
@@ -317,7 +317,7 @@ Option6ClientFqdn::getFlag(const uint8_t flag) const {
     // Caller should query for one of the: N, S or O flags. Any other
     // value is invalid.
     if (flag != FLAG_S && flag != FLAG_O && flag != FLAG_N) {
-        isc_throw(InvalidOption6FqdnFlags, "invalid DHCPv6 Client FQDN"
+        bundy_throw(InvalidOption6FqdnFlags, "invalid DHCPv6 Client FQDN"
                   << " Option flag specified, expected N, S or O");
     }
 
@@ -331,7 +331,7 @@ Option6ClientFqdn::setFlag(const uint8_t flag, const bool set_flag) {
     // concurrent bits is discouraged (see header file) but it is not
     // checked here so it will work.
     if (((flag & ~FLAG_MASK) != 0) || (flag == 0)) {
-        isc_throw(InvalidOption6FqdnFlags, "invalid DHCPv6 Client FQDN"
+        bundy_throw(InvalidOption6FqdnFlags, "invalid DHCPv6 Client FQDN"
                   << " Option flag " << std::hex
                   << static_cast<int>(flag) << std::dec
                   << "is being set. Expected: N, S or O");
@@ -368,14 +368,14 @@ Option6ClientFqdn::getDomainName() const {
 }
 
 void
-Option6ClientFqdn::packDomainName(isc::util::OutputBuffer& buf) const {
+Option6ClientFqdn::packDomainName(bundy::util::OutputBuffer& buf) const {
     // There is nothing to do if domain-name is empty.
     if (!impl_->domain_name_) {
         return;
     }
 
     // Domain name, encoded as a set of labels.
-    isc::dns::LabelSequence labels(*impl_->domain_name_);
+    bundy::dns::LabelSequence labels(*impl_->domain_name_);
     if (labels.getDataLength() > 0) {
         size_t read_len = 0;
         const uint8_t* data = labels.getData(&read_len);
@@ -403,7 +403,7 @@ Option6ClientFqdn::getDomainNameType() const {
 }
 
 void
-Option6ClientFqdn::pack(isc::util::OutputBuffer& buf) {
+Option6ClientFqdn::pack(bundy::util::OutputBuffer& buf) {
     // Header = option code and length.
     packHeader(buf);
     // Flags field.
@@ -452,5 +452,5 @@ Option6ClientFqdn::len() {
     return (getHeaderLen() + FLAG_FIELD_LEN + domain_name_length);
 }
 
-} // end of isc::dhcp namespace
-} // end of isc namespace
+} // end of bundy::dhcp namespace
+} // end of bundy namespace

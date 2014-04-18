@@ -24,7 +24,7 @@
 //  is something like "root").  These trivial functions allow the setting and
 // getting of that name by the logger classes.
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 /// \brief Set root logger name

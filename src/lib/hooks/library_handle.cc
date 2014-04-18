@@ -15,7 +15,7 @@
 #include <hooks/callout_manager.h>
 #include <hooks/library_handle.h>
 
-namespace isc {
+namespace bundy {
 namespace hooks {
 
 // Callout manipulation - all deferred to the CalloutManager.
@@ -73,4 +73,4 @@ LibraryHandle::deregisterAllCallouts(const std::string& name) {
 }
 
 } // namespace util
-} // namespace isc
+} // namespace bundy

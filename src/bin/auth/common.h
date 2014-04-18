@@ -22,7 +22,7 @@
 ///
 /// This exception should not be caught except at the highest level of
 /// the application only for terminating the program gracefully, and so
-/// it cannot be a derived class of \c isc::Exception.
+/// it cannot be a derived class of \c bundy::Exception.
 class FatalError : public std::runtime_error {
 public:
     FatalError(const std::string& what) : std::runtime_error(what)

@@ -16,7 +16,7 @@
 
 #include <gtest/gtest.h>
 
-using namespace isc::dns::rdata;
+using namespace bundy::dns::rdata;
 
 namespace {
 

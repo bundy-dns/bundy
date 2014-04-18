@@ -21,7 +21,7 @@
  * \todo This interface is very C-ish. Should we have some kind of exceptions?
  */
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace io {
 
@@ -60,7 +60,7 @@ int send_fd(const int sock, const int fd);
 
 } // End for namespace io
 } // End for namespace util
-} // End for namespace isc
+} // End for namespace bundy
 
 #endif
 

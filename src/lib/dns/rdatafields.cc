@@ -26,12 +26,12 @@
 #include <dns/rdatafields.h>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::dns::rdata;
-using isc::util::OutputBuffer;
-using isc::util::InputBuffer;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
+using bundy::util::OutputBuffer;
+using bundy::util::InputBuffer;
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace rdata {
 
@@ -96,7 +96,7 @@ public:
     }
 
     virtual void clear() {
-        isc_throw(Unexpected, "unexpected clear() for RdataFieldComposer");
+        bundy_throw(Unexpected, "unexpected clear() for RdataFieldComposer");
     }
     bool truncated_;
     size_t length_limit_;
@@ -158,13 +158,13 @@ RdataFields::RdataFields(const void* fields, const unsigned int fields_length,
 {
     if ((fields_ == NULL && nfields_ > 0) ||
         (fields_ != NULL && nfields_ == 0)) {
-        isc_throw(InvalidParameter,
+        bundy_throw(InvalidParameter,
                   "Inconsistent parameters for RdataFields: fields_length ("
                   << fields_length << ") and fields conflict each other");
     }
     if ((data_ == NULL && data_length_ > 0) ||
         (data_ != NULL && data_length_ == 0)) {
-        isc_throw(InvalidParameter,
+        bundy_throw(InvalidParameter,
                   "Inconsistent parameters for RdataFields: data length ("
                   << data_length_ << ") and data conflict each other");
     }
@@ -174,7 +174,7 @@ RdataFields::RdataFields(const void* fields, const unsigned int fields_length,
         total_length += fields_[i].len;
     }
     if (total_length != data_length_) {
-        isc_throw(InvalidParameter,
+        bundy_throw(InvalidParameter,
                   "Inconsistent parameters for RdataFields; "
                   "fields len: " << total_length <<
                   " data len: " << data_length_);
@@ -188,7 +188,7 @@ RdataFields::~RdataFields() {
 RdataFields::FieldSpec
 RdataFields::getFieldSpec(const unsigned int field_id) const {
     if (field_id >= nfields_) {
-        isc_throw(OutOfRange, "Rdata field ID is out of range: " << field_id);
+        bundy_throw(OutOfRange, "Rdata field ID is out of range: " << field_id);
     }
     return (fields_[field_id]);
 }
@@ -219,4 +219,4 @@ RdataFields::toWire(OutputBuffer& buffer) const {
 }
 } // end of namespace rdata
 } // end of namespace dns
-} // end of namespace isc
+} // end of namespace bundy

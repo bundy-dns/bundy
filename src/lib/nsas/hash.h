@@ -22,17 +22,17 @@
 
 #include "hash_key.h"
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 
 /// \brief Too Long Key Length
 ///
 /// Thrown if the expected maximum key length is too long for the data types
 /// declared in the class.
-class KeyLengthTooLong : public isc::Exception {
+class KeyLengthTooLong : public bundy::Exception {
 public:
     KeyLengthTooLong(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what)
+        bundy::Exception(file, line, what)
     {}
 };
 
@@ -120,6 +120,6 @@ private:
 };
 
 } // namspace nsas
-} // namespace isc
+} // namespace bundy
 
 #endif // HASH_H

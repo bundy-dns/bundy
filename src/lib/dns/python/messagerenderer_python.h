@@ -19,7 +19,7 @@
 
 #include <util/buffer.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 class MessageRenderer;
 
@@ -49,7 +49,7 @@ MessageRenderer& PyMessageRenderer_ToMessageRenderer(PyObject* messagerenderer_o
 
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 #endif // PYTHON_MESSAGERENDERER_H
 
 // Local Variables:

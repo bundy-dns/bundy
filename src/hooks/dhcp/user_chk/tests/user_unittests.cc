@@ -71,7 +71,7 @@ TEST(UserTest, properties) {
     EXPECT_TRUE(value.empty());
 
     // Verify that a blank property name is NOT permitted.
-    EXPECT_THROW(user->setProperty("", "blah"), isc::BadValue);
+    EXPECT_THROW(user->setProperty("", "blah"), bundy::BadValue);
 
     // Verify that a blank property value IS permitted.
     EXPECT_NO_THROW(user->setProperty("one", ""));

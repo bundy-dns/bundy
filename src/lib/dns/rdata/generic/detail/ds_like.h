@@ -31,7 +31,7 @@
 #include <dns/rdata.h>
 #include <dns/rdataclass.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace rdata {
 namespace generic {
@@ -80,12 +80,12 @@ public:
             constructFromLexer(lexer);
 
             if (lexer.getNextToken().getType() != MasterToken::END_OF_FILE) {
-                isc_throw(InvalidRdataText,
+                bundy_throw(InvalidRdataText,
                           "Extra input text for " << RRType(typeCode) << ": "
                           << ds_str);
             }
         } catch (const MasterLexer::LexerError& ex) {
-            isc_throw(InvalidRdataText,
+            bundy_throw(InvalidRdataText,
                       "Failed to construct " << RRType(typeCode) << " from '" <<
                       ds_str << "': " << ex.what());
         }
@@ -118,14 +118,14 @@ private:
         const uint32_t tag =
             lexer.getNextToken(MasterToken::NUMBER).getNumber();
         if (tag > 0xffff) {
-            isc_throw(InvalidRdataText,
+            bundy_throw(InvalidRdataText,
                       "Invalid " << RRType(typeCode) << " tag: " << tag);
         }
 
         const uint32_t algorithm =
             lexer.getNextToken(MasterToken::NUMBER).getNumber();
         if (algorithm > 0xff) {
-            isc_throw(InvalidRdataText,
+            bundy_throw(InvalidRdataText,
                       "Invalid " << RRType(typeCode) << " algorithm: "
                       << algorithm);
         }
@@ -133,7 +133,7 @@ private:
         const uint32_t digest_type =
             lexer.getNextToken(MasterToken::NUMBER).getNumber();
         if (digest_type > 0xff) {
-            isc_throw(InvalidRdataText,
+            bundy_throw(InvalidRdataText,
                       "Invalid " << RRType(typeCode) << " digest type: "
                       << digest_type);
         }
@@ -150,7 +150,7 @@ private:
         lexer.ungetToken();
 
         if (digest.size() == 0) {
-            isc_throw(InvalidRdataText,
+            bundy_throw(InvalidRdataText,
                       "Missing " << RRType(typeCode) << " digest");
         }
 
@@ -173,7 +173,7 @@ public:
     /// type.
     DSLikeImpl(InputBuffer& buffer, size_t rdata_len) {
         if (rdata_len < 4) {
-            isc_throw(InvalidRdataLength, RRType(typeCode) << " too short");
+            bundy_throw(InvalidRdataLength, RRType(typeCode) << " too short");
         }
 
         tag_ = buffer.readUint16();

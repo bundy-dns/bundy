@@ -24,7 +24,7 @@
 
 using namespace boost::posix_time;
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 /// @brief Test fixture class for testing DControllerBase class. This class
@@ -187,7 +187,7 @@ TEST_F(DStubControllerTest, launchNormalShutdown) {
 
     // Use an asiolink IntervalTimer and callback to generate the
     // shutdown invocation. (Note IntervalTimer setup is in milliseconds).
-    isc::asiolink::IntervalTimer timer(*getIOService());
+    bundy::asiolink::IntervalTimer timer(*getIOService());
     timer.setup(genShutdownCallback, 2 * 1000);
 
     // Record start time, and invoke launch().
@@ -218,7 +218,7 @@ TEST_F(DStubControllerTest, launchRuntimeError) {
 
     // Use an asiolink IntervalTimer and callback to generate the
     // shutdown invocation. (Note IntervalTimer setup is in milliseconds).
-    isc::asiolink::IntervalTimer timer(*getIOService());
+    bundy::asiolink::IntervalTimer timer(*getIOService());
     timer.setup(genFatalErrorCallback, 2 * 1000);
 
     // Record start time, and invoke launch().
@@ -264,7 +264,7 @@ TEST_F(DStubControllerTest, launchSessionFailure) {
 /// properly.
 TEST_F(DStubControllerTest, configUpdateTests) {
     int rcode = -1;
-    isc::data::ConstElementPtr answer;
+    bundy::data::ConstElementPtr answer;
 
     // Initialize the application process.
     ASSERT_NO_THROW(initProcess());
@@ -273,25 +273,25 @@ TEST_F(DStubControllerTest, configUpdateTests) {
     // Create a configuration set. Content is arbitrary, just needs to be
     // valid JSON.
     std::string config = "{ \"test-value\": 1000 } ";
-    isc::data::ElementPtr config_set = isc::data::Element::fromJSON(config);
+    bundy::data::ElementPtr config_set = bundy::data::Element::fromJSON(config);
 
     // We are not stand-alone, so configuration should be rejected as there is
     // no session.  This is a pretty contrived situation that shouldn't be
     // possible other than the handler being called directly (like this does).
     answer = DControllerBase::configHandler(config_set);
-    isc::config::parseAnswer(rcode, answer);
+    bundy::config::parseAnswer(rcode, answer);
     EXPECT_EQ(1, rcode);
 
     // Verify that in stand alone we get a successful update result.
     setStandAlone(true);
     answer = DControllerBase::configHandler(config_set);
-    isc::config::parseAnswer(rcode, answer);
+    bundy::config::parseAnswer(rcode, answer);
     EXPECT_EQ(0, rcode);
 
     // Verify that an error in process configure method is handled.
     SimFailure::set(SimFailure::ftProcessConfigure);
     answer = DControllerBase::configHandler(config_set);
-    isc::config::parseAnswer(rcode, answer);
+    bundy::config::parseAnswer(rcode, answer);
     EXPECT_EQ(1, rcode);
 }
 
@@ -311,8 +311,8 @@ TEST_F(DStubControllerTest, configUpdateTests) {
 /// 6. That a valid process command that fails returns a d2::COMMAND_ERROR.
 TEST_F(DStubControllerTest, executeCommandTests) {
     int rcode = -1;
-    isc::data::ConstElementPtr answer;
-    isc::data::ElementPtr arg_set;
+    bundy::data::ConstElementPtr answer;
+    bundy::data::ElementPtr arg_set;
 
     // Initialize the application process.
     ASSERT_NO_THROW(initProcess());
@@ -321,26 +321,26 @@ TEST_F(DStubControllerTest, executeCommandTests) {
     // Verify that an unknown command returns an d2::COMMAND_INVALID response.
     std::string bogus_command("bogus");
     answer = DControllerBase::commandHandler(bogus_command, arg_set);
-    isc::config::parseAnswer(rcode, answer);
+    bundy::config::parseAnswer(rcode, answer);
     EXPECT_EQ(COMMAND_INVALID, rcode);
 
     // Verify that shutdown command returns d2::COMMAND_SUCCESS response.
     answer = DControllerBase::commandHandler(SHUT_DOWN_COMMAND, arg_set);
-    isc::config::parseAnswer(rcode, answer);
+    bundy::config::parseAnswer(rcode, answer);
     EXPECT_EQ(COMMAND_SUCCESS, rcode);
 
     // Verify that a valid custom controller command returns
     // d2::COMMAND_SUCCESS response.
     answer = DControllerBase::commandHandler(DStubController::
                                              stub_ctl_command_, arg_set);
-    isc::config::parseAnswer(rcode, answer);
+    bundy::config::parseAnswer(rcode, answer);
     EXPECT_EQ(COMMAND_SUCCESS, rcode);
 
     // Verify that a valid custom process command returns d2::COMMAND_SUCCESS
     // response.
     answer = DControllerBase::commandHandler(DStubProcess::
                                              stub_proc_command_, arg_set);
-    isc::config::parseAnswer(rcode, answer);
+    bundy::config::parseAnswer(rcode, answer);
     EXPECT_EQ(COMMAND_SUCCESS, rcode);
 
     // Verify that a valid custom controller command that fails returns
@@ -348,7 +348,7 @@ TEST_F(DStubControllerTest, executeCommandTests) {
     SimFailure::set(SimFailure::ftControllerCommand);
     answer = DControllerBase::commandHandler(DStubController::
                                              stub_ctl_command_, arg_set);
-    isc::config::parseAnswer(rcode, answer);
+    bundy::config::parseAnswer(rcode, answer);
     EXPECT_EQ(COMMAND_ERROR, rcode);
 
     // Verify that a valid custom process command that fails returns
@@ -356,9 +356,9 @@ TEST_F(DStubControllerTest, executeCommandTests) {
     SimFailure::set(SimFailure::ftProcessCommand);
     answer = DControllerBase::commandHandler(DStubProcess::
                                              stub_proc_command_, arg_set);
-    isc::config::parseAnswer(rcode, answer);
+    bundy::config::parseAnswer(rcode, answer);
     EXPECT_EQ(COMMAND_ERROR, rcode);
 }
 
-}; // end of isc::d2 namespace
-}; // end of isc namespace
+}; // end of bundy::d2 namespace
+}; // end of bundy namespace

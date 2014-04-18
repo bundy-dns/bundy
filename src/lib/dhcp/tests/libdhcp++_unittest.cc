@@ -43,9 +43,9 @@
 #include <arpa/inet.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dhcp;
-using namespace isc::util;
+using namespace bundy;
+using namespace bundy::dhcp;
+using namespace bundy::util;
 
 namespace {
 
@@ -237,7 +237,7 @@ TEST_F(LibDhcpTest, optionFactory) {
     // they can be used to create options instances. Otherwise exception
     // is rised.
     EXPECT_THROW(LibDHCP::optionFactory(Option::V4, DHO_SUBNET_MASK, buf),
-                 isc::BadValue);
+                 bundy::BadValue);
 
     // Let's register some factory functions (two v4 and one v6 function).
     // Registration may trigger exception if function for the specified
@@ -305,7 +305,7 @@ TEST_F(LibDhcpTest, optionFactory) {
 
 TEST_F(LibDhcpTest, packOptions6) {
     OptionBuffer buf(512);
-    isc::dhcp::OptionCollection opts; // list of options
+    bundy::dhcp::OptionCollection opts; // list of options
 
     // generate content for options
     for (int i = 0; i < 64; i++) {
@@ -349,7 +349,7 @@ TEST_F(LibDhcpTest, unpackOptions6) {
     // Option is used as a simple option implementation
     // More advanced uses are validated in tests dedicated for
     // specific derived classes.
-    isc::dhcp::OptionCollection options; // list of options
+    bundy::dhcp::OptionCollection options; // list of options
 
     OptionBuffer buf(512);
     memcpy(&buf[0], v6packed, sizeof(v6packed));
@@ -361,7 +361,7 @@ TEST_F(LibDhcpTest, unpackOptions6) {
 
     EXPECT_EQ(options.size(), 6); // there should be 5 options
 
-    isc::dhcp::OptionCollection::const_iterator x = options.find(1);
+    bundy::dhcp::OptionCollection::const_iterator x = options.find(1);
     ASSERT_FALSE(x == options.end()); // option 1 should exist
     EXPECT_EQ(1, x->second->getType());  // this should be option 1
     ASSERT_EQ(9, x->second->len()); // it should be of length 9
@@ -519,7 +519,7 @@ TEST_F(LibDhcpTest, packOptions4) {
                              OptionBuffer(v4_opts + 43, v4_opts + 52)));
     rai->addOption(vsi);
 
-    isc::dhcp::OptionCollection opts; // list of options
+    bundy::dhcp::OptionCollection opts; // list of options
     // Note that we insert each option under the same option code into
     // the map. This gurantees that options are packed in the same order
     // they were added. Otherwise, options would get sorted by code and
@@ -540,13 +540,13 @@ TEST_F(LibDhcpTest, packOptions4) {
 TEST_F(LibDhcpTest, unpackOptions4) {
 
     vector<uint8_t> v4packed(v4_opts, v4_opts + sizeof(v4_opts));
-    isc::dhcp::OptionCollection options; // list of options
+    bundy::dhcp::OptionCollection options; // list of options
 
     ASSERT_NO_THROW(
         LibDHCP::unpackOptions4(v4packed, "dhcp4", options);
     );
 
-    isc::dhcp::OptionCollection::const_iterator x = options.find(12);
+    bundy::dhcp::OptionCollection::const_iterator x = options.find(12);
     ASSERT_FALSE(x == options.end()); // option 1 should exist
     // Option 12 holds a string so let's cast it to an appropriate type.
     OptionStringPtr option12 = boost::static_pointer_cast<OptionString>(x->second);
@@ -1144,7 +1144,7 @@ TEST_F(LibDhcpTest, stdOptionDefs6) {
 // tests whether v6 vendor-class option can be parsed properly.
 TEST_F(LibDhcpTest, vendorClass6) {
 
-    isc::dhcp::OptionCollection options; // Will store parsed option here
+    bundy::dhcp::OptionCollection options; // Will store parsed option here
 
     // Exported from wireshark: vendor-class option with enterprise-id = 4491
     // and a single data entry containing "eRouter1.0"
@@ -1153,7 +1153,7 @@ TEST_F(LibDhcpTest, vendorClass6) {
 
     // Decode the hex string and store it in bin (which happens
     // to be OptionBuffer format)
-    isc::util::encode::decodeHex(vendor_class_hex, bin);
+    bundy::util::encode::decodeHex(vendor_class_hex, bin);
 
     ASSERT_NO_THROW ({
             LibDHCP::unpackOptions6(bin, "dhcp6", options);

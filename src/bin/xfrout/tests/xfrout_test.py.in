@@ -20,17 +20,17 @@ import unittest
 import os
 import socket
 import fcntl
-from isc.testutils.tsigctx_mock import MockTSIGContext
-from isc.testutils.ccsession_mock import MockModuleCCSession
-from isc.cc.session import *
-import isc.config
-from isc.dns import *
-from isc.testutils.rrset_utils import *
+from bundy.testutils.tsigctx_mock import MockTSIGContext
+from bundy.testutils.ccsession_mock import MockModuleCCSession
+from bundy.cc.session import *
+import bundy.config
+from bundy.dns import *
+from bundy.testutils.rrset_utils import *
 from xfrout import *
 import xfrout
-import isc.log
-import isc.acl.dns
-import isc.server_common.tsig_keyring
+import bundy.log
+import bundy.acl.dns
+import bundy.server_common.tsig_keyring
 
 TESTDATA_SRCDIR = os.getenv("TESTDATASRCDIR")
 TSIG_KEY = TSIGKey("example.com:SFuWd/q99SzF8Yzd1QbB9g==")
@@ -100,8 +100,8 @@ class MockDataSrcClient:
         '''
         self._zone_name = zone_name
         if zone_name == Name('notauth.example.com'):
-            return (isc.datasrc.DataSourceClient.NOTFOUND, None)
-        return (isc.datasrc.DataSourceClient.SUCCESS, self)
+            return (bundy.datasrc.DataSourceClient.NOTFOUND, None)
+        return (bundy.datasrc.DataSourceClient.SUCCESS, self)
 
     def find(self, name, rrtype, options=ZoneFinder.FIND_DEFAULT):
         '''Mock ZoneFinder.find().
@@ -127,7 +127,7 @@ class MockDataSrcClient:
 
     def get_iterator(self, zone_name, adjust_ttl=False):
         if zone_name == Name('notauth.example.com'):
-            raise isc.datasrc.Error('no such zone')
+            raise bundy.datasrc.Error('no such zone')
         self._zone_name = zone_name
         return self
 
@@ -141,16 +141,16 @@ class MockDataSrcClient:
 
     def get_journal_reader(self, zone_name, begin_serial, end_serial):
         if zone_name == Name('notauth2.example.com'):
-            return isc.datasrc.ZoneJournalReader.NO_SUCH_ZONE, None
+            return bundy.datasrc.ZoneJournalReader.NO_SUCH_ZONE, None
         if zone_name == Name('nojournal.example.com'):
-            raise isc.datasrc.NotImplemented('journaling not supported')
+            raise bundy.datasrc.NotImplemented('journaling not supported')
         if begin_serial == IXFR_NG_VERSION:
-            return isc.datasrc.ZoneJournalReader.NO_SUCH_VERSION, None
-        return isc.datasrc.ZoneJournalReader.SUCCESS, self
+            return bundy.datasrc.ZoneJournalReader.NO_SUCH_VERSION, None
+        return bundy.datasrc.ZoneJournalReader.SUCCESS, self
 
-class MyCCSession(isc.config.ConfigData):
+class MyCCSession(bundy.config.ConfigData):
     def __init__(self):
-        module_spec = isc.config.module_spec_from_file(
+        module_spec = bundy.config.module_spec_from_file(
             xfrout.SPECFILE_LOCATION)
         ConfigData.__init__(self, module_spec)
 
@@ -307,7 +307,7 @@ class TestXfroutSessionBase(unittest.TestCase):
                                        (socket.AF_INET, socket.SOCK_STREAM,
                                         ('127.0.0.1', 12345)),
                                        # When not testing ACLs, simply accept
-                                       isc.acl.dns.REQUEST_LOADER.load(
+                                       bundy.acl.dns.REQUEST_LOADER.load(
                                            [{"action": "ACCEPT"}]),
                                        {},
                                        xfrout.Counters(xfrout.SPECFILE_LOCATION))
@@ -430,7 +430,7 @@ class TestXfroutSession(TestXfroutSessionBase):
 
     def check_transfer_acl(self, acl_setter):
         # ACL checks, put some ACL inside
-        acl_setter(isc.acl.dns.REQUEST_LOADER.load([
+        acl_setter(bundy.acl.dns.REQUEST_LOADER.load([
             {
                 "from": "127.0.0.1",
                 "action": "ACCEPT"
@@ -441,7 +441,7 @@ class TestXfroutSession(TestXfroutSessionBase):
             }
         ]))
         # check the 'xfrrej' counter initially
-        self.assertRaises(isc.cc.data.DataNotFoundError,
+        self.assertRaises(bundy.cc.data.DataNotFoundError,
                           self.xfrsess._counters.get, 'zones',
                           TEST_RRCLASS_STR, TEST_ZONE_NAME_STR,
                           'xfrrej')
@@ -476,7 +476,7 @@ class TestXfroutSession(TestXfroutSessionBase):
         self.assertTrue(self.xfrsess._tsig_ctx is not None)
 
         # ACL using TSIG: successful case
-        acl_setter(isc.acl.dns.REQUEST_LOADER.load([
+        acl_setter(bundy.acl.dns.REQUEST_LOADER.load([
             {"key": "example.com", "action": "ACCEPT"}, {"action": "REJECT"}
         ]))
         self.assertEqual(TSIGKeyRing.SUCCESS,
@@ -485,7 +485,7 @@ class TestXfroutSession(TestXfroutSessionBase):
         self.assertEqual(rcode.to_text(), "NOERROR")
 
         # ACL using TSIG: key name doesn't match; should be rejected
-        acl_setter(isc.acl.dns.REQUEST_LOADER.load([
+        acl_setter(bundy.acl.dns.REQUEST_LOADER.load([
             {"key": "example.org", "action": "ACCEPT"}, {"action": "REJECT"}
         ]))
         [rcode, msg] = self.xfrsess._parse_query_message(request_data)
@@ -496,7 +496,7 @@ class TestXfroutSession(TestXfroutSessionBase):
                 'xfrrej'), 2)
 
         # ACL using TSIG: no TSIG; should be rejected
-        acl_setter(isc.acl.dns.REQUEST_LOADER.load([
+        acl_setter(bundy.acl.dns.REQUEST_LOADER.load([
             {"key": "example.org", "action": "ACCEPT"}, {"action": "REJECT"}
         ]))
         [rcode, msg] = self.xfrsess._parse_query_message(self.mdata)
@@ -509,7 +509,7 @@ class TestXfroutSession(TestXfroutSessionBase):
         #
         # ACL using IP + TSIG: both should match
         #
-        acl_setter(isc.acl.dns.REQUEST_LOADER.load([
+        acl_setter(bundy.acl.dns.REQUEST_LOADER.load([
                 {"ALL": [{"key": "example.com"}, {"from": "192.0.2.1"}],
                  "action": "ACCEPT"},
                 {"action": "REJECT"}
@@ -561,7 +561,7 @@ class TestXfroutSession(TestXfroutSessionBase):
             zone_key = ('IN', 'example.com.')
             self.xfrsess._zone_config[zone_key] = {}
             self.xfrsess._zone_config[zone_key]['transfer_acl'] = acl
-            self.xfrsess._acl = isc.acl.dns.REQUEST_LOADER.load([
+            self.xfrsess._acl = bundy.acl.dns.REQUEST_LOADER.load([
                     {"from": "127.0.0.1", "action": "DROP"}])
         self.check_transfer_acl(acl_setter)
 
@@ -572,7 +572,7 @@ class TestXfroutSession(TestXfroutSessionBase):
             zone_key = ('IN', 'example.org.')
             self.xfrsess._zone_config[zone_key] = {}
             self.xfrsess._zone_config[zone_key]['transfer_acl'] = \
-                isc.acl.dns.REQUEST_LOADER.load([
+                bundy.acl.dns.REQUEST_LOADER.load([
                     {"from": "127.0.0.1", "action": "DROP"}])
             self.xfrsess._acl = acl
         self.check_transfer_acl(acl_setter)
@@ -580,7 +580,7 @@ class TestXfroutSession(TestXfroutSessionBase):
     def test_get_transfer_acl(self):
         # set the default ACL.  If there's no specific zone ACL, this one
         # should be used.
-        self.xfrsess._acl = isc.acl.dns.REQUEST_LOADER.load([
+        self.xfrsess._acl = bundy.acl.dns.REQUEST_LOADER.load([
                 {"from": "127.0.0.1", "action": "ACCEPT"}])
         acl = self.xfrsess._get_transfer_acl(Name('example.com'), RRClass.IN)
         self.assertEqual(acl, self.xfrsess._acl)
@@ -588,7 +588,7 @@ class TestXfroutSession(TestXfroutSessionBase):
         # install a per zone config with transfer ACL for example.com.  Then
         # that ACL will be used for example.com; for others the default ACL
         # will still be used.
-        com_acl = isc.acl.dns.REQUEST_LOADER.load([
+        com_acl = bundy.acl.dns.REQUEST_LOADER.load([
                 {"from": "127.0.0.1", "action": "REJECT"}])
         self.xfrsess._zone_config[('IN', 'example.com.')] = {}
         self.xfrsess._zone_config[('IN', 'example.com.')]['transfer_acl'] = \
@@ -912,7 +912,7 @@ class TestXfroutSession(TestXfroutSessionBase):
 
     def test_dns_xfrout_start_datasrc_servfail(self):
         def internal_raise(x, y):
-            raise isc.datasrc.Error('exception for the sake of test')
+            raise bundy.datasrc.Error('exception for the sake of test')
         self.xfrsess.ClientClass = internal_raise
         self.xfrsess.dns_xfrout_start(self.sock, self.mdata)
         self.assertEqual(self.sock.read_msg().get_rcode(), Rcode.SERVFAIL)
@@ -928,7 +928,7 @@ class TestXfroutSession(TestXfroutSessionBase):
             raise Exception
 
         self.xfrsess._reply_xfrout_query = myreply
-        self.assertRaises(isc.cc.data.DataNotFoundError,
+        self.assertRaises(bundy.cc.data.DataNotFoundError,
                           self.xfrsess._counters.get,
                           'socket', 'unixdomain', 'senderr')
         self.xfrsess.dns_xfrout_start(self.sock, self.mdata)
@@ -943,7 +943,7 @@ class TestXfroutSession(TestXfroutSessionBase):
         def myreply(msg, sock):
             self.sock.send(b"success")
 
-        self.assertRaises(isc.cc.data.DataNotFoundError,
+        self.assertRaises(bundy.cc.data.DataNotFoundError,
                           self.xfrsess._counters.get,
                           'zones', TEST_RRCLASS_STR,
                           TEST_ZONE_NAME_STR, 'xfrreqdone')
@@ -1208,7 +1208,7 @@ class TestXfroutSessionWithSQLite3(TestXfroutSessionBase):
             self.assertTrue(rrsets_equal(expected_rr, actual_rr))
 
     def test_axfr_normal_session(self):
-        self.assertRaises(isc.cc.data.DataNotFoundError,
+        self.assertRaises(bundy.cc.data.DataNotFoundError,
                           self.xfrsess._counters.get, 'axfr_running')
         XfroutSession._handle(self.xfrsess)
         response = self.sock.read_msg(Message.PRESERVE_ORDER);
@@ -1216,7 +1216,7 @@ class TestXfroutSessionWithSQLite3(TestXfroutSessionBase):
         self.check_axfr_stream(response)
         self.assertEqual(self.xfrsess._request_type, RRType.AXFR)
         self.assertNotEqual(self.xfrsess._request_type, RRType.IXFR)
-        self.assertRaises(isc.cc.data.DataNotFoundError,
+        self.assertRaises(bundy.cc.data.DataNotFoundError,
                           self.xfrsess._counters.get, 'ixfr_running')
         self.assertEqual(self.xfrsess._counters.get('axfr_running'), 0)
 
@@ -1237,9 +1237,9 @@ class TestXfroutSessionWithSQLite3(TestXfroutSessionBase):
         # two beginning and trailing SOAs.
         self.xfrsess._request_data = \
             self.create_request_data(ixfr=IXFR_OK_VERSION)
-        self.assertRaises(isc.cc.data.DataNotFoundError,
+        self.assertRaises(bundy.cc.data.DataNotFoundError,
                           self.xfrsess._counters.get, 'axfr_running')
-        self.assertRaises(isc.cc.data.DataNotFoundError,
+        self.assertRaises(bundy.cc.data.DataNotFoundError,
                           self.xfrsess._counters.get, 'ixfr_running')
         XfroutSession._handle(self.xfrsess)
         response = self.sock.read_msg(Message.PRESERVE_ORDER)
@@ -1258,7 +1258,7 @@ class TestXfroutSessionWithSQLite3(TestXfroutSessionBase):
             self.assertTrue(rrsets_equal(expected_rr, actual_rr))
         self.assertNotEqual(self.xfrsess._request_type, RRType.AXFR)
         self.assertEqual(self.xfrsess._request_type, RRType.IXFR)
-        self.assertRaises(isc.cc.data.DataNotFoundError,
+        self.assertRaises(bundy.cc.data.DataNotFoundError,
                           self.xfrsess._counters.get, 'axfr_running')
         self.assertEqual(self.xfrsess._counters.get('ixfr_running'), 0)
 
@@ -1315,7 +1315,7 @@ class TestUnixSockServer(unittest.TestCase):
             self.unix._cc.get_remote_config_value = \
                 lambda module, name: ([], True)
             self.unix._cc.remove_remote_config = lambda name: None
-            isc.server_common.tsig_keyring.init_keyring(self.unix._cc)
+            bundy.server_common.tsig_keyring.init_keyring(self.unix._cc)
             # These are not really interesting for the test. These are just
             # handled over, so strings are OK.
             self.unix._guess_remote = lambda sock: "Address"
@@ -1323,7 +1323,7 @@ class TestUnixSockServer(unittest.TestCase):
             self.unix._acl = "acl"
             # This would be the handler class, but we just check it is passed
             # the right parametes, so function is enough for that.
-            keys = isc.server_common.tsig_keyring.get_keyring()
+            keys = bundy.server_common.tsig_keyring.get_keyring()
             def handler(sock, data, server, keyring, address, acl, config,
                         counters):
                 self.assertEqual("sock", sock)
@@ -1337,7 +1337,7 @@ class TestUnixSockServer(unittest.TestCase):
             self.unix.RequestHandlerClass = handler
             self.unix.finish_request("sock", "data")
         finally:
-            isc.server_common.tsig_keyring.deinit_keyring()
+            bundy.server_common.tsig_keyring.deinit_keyring()
 
     def test_guess_remote(self):
         """Test we can guess the remote endpoint when we have only the
@@ -1381,23 +1381,23 @@ class TestUnixSockServer(unittest.TestCase):
         self.assertEqual(recv_msg, send_msg)
 
     def check_default_ACL(self):
-        context = isc.acl.dns.RequestContext(socket.getaddrinfo("127.0.0.1",
+        context = bundy.acl.dns.RequestContext(socket.getaddrinfo("127.0.0.1",
                                              1234, 0, socket.SOCK_DGRAM,
                                              socket.IPPROTO_UDP,
                                              socket.AI_NUMERICHOST)[0][4])
-        self.assertEqual(isc.acl.acl.ACCEPT, self.unix._acl.execute(context))
+        self.assertEqual(bundy.acl.acl.ACCEPT, self.unix._acl.execute(context))
 
     def check_loaded_ACL(self, acl):
-        context = isc.acl.dns.RequestContext(socket.getaddrinfo("127.0.0.1",
+        context = bundy.acl.dns.RequestContext(socket.getaddrinfo("127.0.0.1",
                                              1234, 0, socket.SOCK_DGRAM,
                                              socket.IPPROTO_UDP,
                                              socket.AI_NUMERICHOST)[0][4])
-        self.assertEqual(isc.acl.acl.ACCEPT, acl.execute(context))
-        context = isc.acl.dns.RequestContext(socket.getaddrinfo("192.0.2.1",
+        self.assertEqual(bundy.acl.acl.ACCEPT, acl.execute(context))
+        context = bundy.acl.dns.RequestContext(socket.getaddrinfo("192.0.2.1",
                                              1234, 0, socket.SOCK_DGRAM,
                                              socket.IPPROTO_UDP,
                                              socket.AI_NUMERICHOST)[0][4])
-        self.assertEqual(isc.acl.acl.REJECT, acl.execute(context))
+        self.assertEqual(bundy.acl.acl.REJECT, acl.execute(context))
 
     def test_update_config_data(self):
         self.check_default_ACL()
@@ -1659,7 +1659,7 @@ class TestUnixSockServerForCounter(unittest.TestCase):
         # open
         self.assertEqual(
             self.unix._counters.get('socket', 'unixdomain', 'open'), 1)
-        self.assertRaises(isc.cc.data.DataNotFoundError,
+        self.assertRaises(bundy.cc.data.DataNotFoundError,
                           self.unix._counters.get,
                           'socket', 'unixdomain', 'openfail')
         xfrout.ThreadingUnixStreamServer = DummySocketserverException
@@ -1677,7 +1677,7 @@ class TestUnixSockServerForCounter(unittest.TestCase):
 
     def test_close(self):
         # close
-        self.assertRaises(isc.cc.data.DataNotFoundError,
+        self.assertRaises(bundy.cc.data.DataNotFoundError,
                           self.unix._counters.get,
                           'socket','unixdomain', 'close')
         self.unix.shutdown()
@@ -1686,7 +1686,7 @@ class TestUnixSockServerForCounter(unittest.TestCase):
 
     def test_bindfail(self):
         # bindfail
-        self.assertRaises(isc.cc.data.DataNotFoundError,
+        self.assertRaises(bundy.cc.data.DataNotFoundError,
                           self.unix._counters.get,
                           'socket', 'unixdomain', 'bindfail')
         self.assertRaises(Exception, self.unix.server_bind)
@@ -1695,14 +1695,14 @@ class TestUnixSockServerForCounter(unittest.TestCase):
 
     def test_accept(self):
         # accept
-        self.assertRaises(isc.cc.data.DataNotFoundError,
+        self.assertRaises(bundy.cc.data.DataNotFoundError,
                           self.unix._counters.get,
                           'socket', 'unixdomain', 'accept')
         self.unix.get_request()
         self.assertEqual(
             self.unix._counters.get('socket', 'unixdomain', 'accept'), 1)
         # acceptfail
-        self.assertRaises(isc.cc.data.DataNotFoundError,
+        self.assertRaises(bundy.cc.data.DataNotFoundError,
                           self.unix._counters.get,
                           'socket', 'unixdomain', 'acceptfail')
         xfrout.super = lambda : DummyClassException()
@@ -1713,7 +1713,7 @@ class TestUnixSockServerForCounter(unittest.TestCase):
 
     def test_recverr(self):
         # recverr
-        self.assertRaises(isc.cc.data.DataNotFoundError,
+        self.assertRaises(bundy.cc.data.DataNotFoundError,
                           self.unix._counters.get,
                           'socket', 'unixdomain', 'recverr')
         def raise_socketerror(x,y):
@@ -1770,7 +1770,7 @@ class MyXfroutServer(XfroutServer):
         # Disable the wait for threads
         self._wait_for_threads = lambda : None
         self._cc.get_module_spec = lambda:\
-            isc.config.module_spec_from_file(xfrout.SPECFILE_LOCATION)
+            bundy.config.module_spec_from_file(xfrout.SPECFILE_LOCATION)
         self._counters = xfrout.Counters(xfrout.SPECFILE_LOCATION)
 
 class TestXfroutServer(unittest.TestCase):
@@ -1788,5 +1788,5 @@ class TestXfroutServer(unittest.TestCase):
                 create_answer(0,  {}))
 
 if __name__== "__main__":
-    isc.log.resetUnitTestRootLogger()
+    bundy.log.resetUnitTestRootLogger()
     unittest.main()

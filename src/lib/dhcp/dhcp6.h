@@ -105,7 +105,7 @@ extern const int dhcpv6_type_name_max;
 
 /* DUID type definitions (RFC3315 section 9).
  */
-// see isc::dhcp::DUID::DUIDType enum in dhcp/duid.h
+// see bundy::dhcp::DUID::DUIDType enum in dhcp/duid.h
 // #define DUID_LLT        1
 // #define DUID_EN         2
 // #define DUID_LL         3

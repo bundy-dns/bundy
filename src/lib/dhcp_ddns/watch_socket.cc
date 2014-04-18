@@ -21,7 +21,7 @@
 #include <errno.h>
 #include <sys/select.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp_ddns {
 
 
@@ -34,7 +34,7 @@ WatchSocket::WatchSocket()
     int fds[2];
     if (pipe(fds)) {
         const char* errstr = strerror(errno);
-        isc_throw(WatchSocketError, "Cannot construct pipe: " << errstr);
+        bundy_throw(WatchSocketError, "Cannot construct pipe: " << errstr);
     }
 
     source_ = fds[1];
@@ -42,7 +42,7 @@ WatchSocket::WatchSocket()
 
     if (fcntl(sink_, F_SETFL, O_NONBLOCK)) {
         const char* errstr = strerror(errno);
-        isc_throw(WatchSocketError, "Cannot set sink to non-blocking: "
+        bundy_throw(WatchSocketError, "Cannot set sink to non-blocking: "
                                      << errstr);
     }
 }
@@ -58,7 +58,7 @@ WatchSocket::markReady() {
     // read.
     if (fcntl(sink_, F_GETFL) < 0) {
         closeSocket();
-        isc_throw(WatchSocketError, "WatchSocket markReady failed:"
+        bundy_throw(WatchSocketError, "WatchSocket markReady failed:"
                   " select_fd was closed!");
     }
 
@@ -70,7 +70,7 @@ WatchSocket::markReady() {
             // or testing the fd with select_fd will fail.
             const char* errstr = strerror(errno);
             closeSocket();
-            isc_throw(WatchSocketError, "WatchSocket markReady failed:"
+            bundy_throw(WatchSocketError, "WatchSocket markReady failed:"
                       << " bytes written: " << nbytes << " : " << errstr);
         }
     }
@@ -109,7 +109,7 @@ WatchSocket::clearReady() {
             // or testing the fd with select_fd will fail.
             const char* errstr = strerror(errno);
             closeSocket();
-            isc_throw(WatchSocketError, "WatchSocket clearReady failed:"
+            bundy_throw(WatchSocketError, "WatchSocket clearReady failed:"
                       << " bytes read: " << nbytes << " : "
                       << " value read: " << buf << " error :" <<errstr);
         }
@@ -148,5 +148,5 @@ WatchSocket::getSelectFd() {
     return (sink_);
 }
 
-} // namespace isc::dhcp_ddns
-} // namespace isc
+} // namespace bundy::dhcp_ddns
+} // namespace bundy

@@ -20,9 +20,9 @@
 #include <vector>
 
 using namespace std;
-using namespace isc;
+using namespace bundy;
 
-namespace isc {
+namespace bundy {
 namespace hooks {
 
 // Constructor - register the pre-defined hooks and check that the indexes
@@ -56,7 +56,7 @@ ServerHooks::registerHook(const string& name) {
     if (!result.second) {
         // New element was not inserted because an element with the same name
         // already existed.
-        isc_throw(DuplicateHook, "hook with name " << name <<
+        bundy_throw(DuplicateHook, "hook with name " << name <<
                   " is already registered");
     }
 
@@ -82,7 +82,7 @@ ServerHooks::initialize() {
 
     // Check registration went as expected.
     if ((create != CONTEXT_CREATE) || (destroy != CONTEXT_DESTROY)) {
-        isc_throw(Unexpected, "pre-defined hook indexes are not as expected. "
+        bundy_throw(Unexpected, "pre-defined hook indexes are not as expected. "
                   "context_create: expected = " << CONTEXT_CREATE <<
                   ", actual = " << create <<
                   ". context_destroy: expected = " << CONTEXT_DESTROY <<
@@ -111,7 +111,7 @@ ServerHooks::getName(int index) const {
     // Get iterator to matching element.
     InverseHookCollection::const_iterator i = inverse_hooks_.find(index);
     if (i == inverse_hooks_.end()) {
-        isc_throw(NoSuchHook, "hook index " << index << " is not recognised");
+        bundy_throw(NoSuchHook, "hook index " << index << " is not recognised");
     }
 
     return (i->second);
@@ -125,7 +125,7 @@ ServerHooks::getIndex(const string& name) const {
     // Get iterator to matching element.
     HookCollection::const_iterator i = hooks_.find(name);
     if (i == hooks_.end()) {
-        isc_throw(NoSuchHook, "hook name " << name << " is not recognised");
+        bundy_throw(NoSuchHook, "hook name " << name << " is not recognised");
     }
 
     return (i->second);
@@ -156,4 +156,4 @@ ServerHooks::getServerHooks() {
 
 
 } // namespace util
-} // namespace isc
+} // namespace bundy

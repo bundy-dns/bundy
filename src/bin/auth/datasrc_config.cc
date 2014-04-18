@@ -17,8 +17,8 @@
 
 // This is a trivial specialization for the commonly used version.
 // Defined in .cc to avoid accidental creation of multiple copies.
-isc::datasrc::ClientListMapPtr
-configureDataSource(const isc::data::ConstElementPtr& config) {
+bundy::datasrc::ClientListMapPtr
+configureDataSource(const bundy::data::ConstElementPtr& config) {
     return (configureDataSourceGeneric<
-            isc::datasrc::ConfigurableClientList>(config));
+            bundy::datasrc::ConfigurableClientList>(config));
 }

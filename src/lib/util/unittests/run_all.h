@@ -21,7 +21,7 @@
 
 #include <gtest/gtest.h>
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace unittests {
 
@@ -31,12 +31,12 @@ namespace unittests {
 /// but wraps the call in a try...catch block if the environment variable
 /// BUNDYTEST_CATCH_EXCEPTION is defined, and calls the macro directly if not.
 ///
-/// The catch block catches exceptions of types isc::Exception and
+/// The catch block catches exceptions of types bundy::Exception and
 /// std::exception and prints some information about them to stderr. (In the
-/// case of isc::Exception, this includes the file and line number from which
+/// case of bundy::Exception, this includes the file and line number from which
 /// the exception was raised.)  It then re-throws the exception.
 ///
-/// See: https://lists.isc.org/pipermail/bundy-dev/2011-January/001867.html
+/// See: https://lists.bundy.org/pipermail/bundy-dev/2011-January/001867.html
 /// for some context.
 ///
 /// \return Return value from RUN_ALL_TESTS().
@@ -45,7 +45,7 @@ int run_all();
 
 } // namespace unittests
 } // namespace util
-} // namespace isc
+} // namespace bundy
 
 
 

@@ -19,7 +19,7 @@
 
 #include <util/strutil.h>
 
-namespace isc {
+namespace bundy {
 namespace util {
 
 /// \brief Class to Manipulate Filenames
@@ -69,9 +69,9 @@ public:
     ///
     /// \param name New name to replaced currently stored name
     void setName(const std::string& name) {
-        full_name_ = isc::util::str::trim(name);
+        full_name_ = bundy::util::str::trim(name);
 #ifdef WIN32
-        isc::util::str::normalizeSlash(full_name_);
+        bundy::util::str::normalizeSlash(full_name_);
 #endif
         split(full_name_, directory_, name_, extension_);
     }
@@ -168,6 +168,6 @@ private:
 };
 
 } // namespace util
-} // namespace isc
+} // namespace bundy
 
 #endif // FILENAME_H

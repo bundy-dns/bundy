@@ -29,7 +29,7 @@
 
 #include <algorithm>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 using namespace rdata;
 
@@ -107,4 +107,4 @@ RRCollator::flush() {
 }
 
 } // end namespace dns
-} // end namespace isc
+} // end namespace bundy

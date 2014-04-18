@@ -20,15 +20,15 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 
-using namespace isc::asiolink;
+using namespace bundy::asiolink;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 namespace test {
 
 PktFilter6Test::PktFilter6Test(const uint16_t port)
     : port_(port),
-      sock_info_(isc::asiolink::IOAddress("::1"), port, -1, -1),
+      sock_info_(bundy::asiolink::IOAddress("::1"), port, -1, -1),
       send_msg_sock_(-1) {
     // Initialize ifname_ and ifindex_.
     loInit();
@@ -65,7 +65,7 @@ PktFilter6Test::initTestMessage() {
 
     try {
         test_message_->pack();
-    } catch (const isc::Exception& ex) {
+    } catch (const bundy::Exception& ex) {
         ADD_FAILURE() << "failed to create test message for PktFilter6Test";
     }
 }
@@ -181,7 +181,7 @@ PktFilter6Stub::PktFilter6Stub()
 }
 
 SocketInfo
-PktFilter6Stub::openSocket(const Iface& iface, const isc::asiolink::IOAddress& addr,
+PktFilter6Stub::openSocket(const Iface& iface, const bundy::asiolink::IOAddress& addr,
                            const uint16_t port, const bool) {
     // Check if there is any other socket bound to the specified address
     // and port on this interface.
@@ -189,7 +189,7 @@ PktFilter6Stub::openSocket(const Iface& iface, const isc::asiolink::IOAddress& a
     for (Iface::SocketCollection::const_iterator socket = sockets.begin();
          socket != sockets.end(); ++socket) {
         if ((socket->addr_ == addr) && (socket->port_ == port)) {
-            isc_throw(SocketConfigError, "test socket bind error");
+            bundy_throw(SocketConfigError, "test socket bind error");
         }
     }
     ++open_socket_count_;
@@ -207,6 +207,6 @@ PktFilter6Stub::send(const Iface&, uint16_t, const Pkt6Ptr&) {
 }
 
 
-} // end of isc::dhcp::test namespace
-} // end of isc::dhcp namespace
-} // end of isc namespace
+} // end of bundy::dhcp::test namespace
+} // end of bundy::dhcp namespace
+} // end of bundy namespace

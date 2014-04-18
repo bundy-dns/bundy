@@ -22,14 +22,14 @@
 #include <stdint.h>
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 /// @brief Exception thrown if the configuration manager encounters an error.
-class DCfgMgrBaseError : public isc::Exception {
+class DCfgMgrBaseError : public bundy::Exception {
 public:
     DCfgMgrBaseError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 class DCfgContextBase;
@@ -113,7 +113,7 @@ public:
     /// into parsers.
     ///
     /// @return returns a pointer to the Boolean Storage.
-    isc::dhcp::BooleanStoragePtr getBooleanStorage() {
+    bundy::dhcp::BooleanStoragePtr getBooleanStorage() {
         return (boolean_values_);
     }
 
@@ -121,7 +121,7 @@ public:
     /// into parsers.
     ///
     /// @return returns a pointer to the uint32 Storage.
-    isc::dhcp::Uint32StoragePtr getUint32Storage() {
+    bundy::dhcp::Uint32StoragePtr getUint32Storage() {
         return (uint32_values_);
     }
 
@@ -129,7 +129,7 @@ public:
     /// into parsers.
     ///
     /// @return returns a pointer to the string Storage.
-    isc::dhcp::StringStoragePtr getStringStorage() {
+    bundy::dhcp::StringStoragePtr getStringStorage() {
         return (string_values_);
     }
 
@@ -156,7 +156,7 @@ public:
     ///     }
     ///  :
     ///    // Here's the derivation's additional storage.
-    ///    isc::dhcp::Uint32StoragePtr extra_values_;
+    ///    bundy::dhcp::Uint32StoragePtr extra_values_;
     ///  :
     /// @endcode
     ///
@@ -172,13 +172,13 @@ private:
     DCfgContextBase& operator=(const DCfgContextBase& rhs);
 
     /// @brief Storage for boolean parameters.
-    isc::dhcp::BooleanStoragePtr boolean_values_;
+    bundy::dhcp::BooleanStoragePtr boolean_values_;
 
     /// @brief Storage for uint32 parameters.
-    isc::dhcp::Uint32StoragePtr uint32_values_;
+    bundy::dhcp::Uint32StoragePtr uint32_values_;
 
     /// @brief Storage for string parameters.
-    isc::dhcp::StringStoragePtr string_values_;
+    bundy::dhcp::StringStoragePtr string_values_;
 };
 
 /// @brief Defines an unsorted, list of string Element IDs.
@@ -251,7 +251,7 @@ public:
     /// @return an Element that contains the results of configuration composed
     /// of an integer status value (0 means successful, non-zero means failure),
     /// and a string explanation of the outcome.
-    isc::data::ConstElementPtr parseConfig(isc::data::ConstElementPtr
+    bundy::data::ConstElementPtr parseConfig(bundy::data::ConstElementPtr
                                            config_set);
 
     /// @brief Adds a given element id to the end of the parse order list.
@@ -292,7 +292,7 @@ protected:
     ///
     /// @return returns a ParserPtr to the parser instance.
     /// @throw throws DCfgMgrBaseError if an error occurs.
-    virtual isc::dhcp::ParserPtr
+    virtual bundy::dhcp::ParserPtr
     createConfigParser(const std::string& element_id) = 0;
 
 private:
@@ -309,7 +309,7 @@ private:
     ///
     /// @throw throws DCfgMgrBaseError if an error occurs.
     void buildAndCommit(std::string& element_id,
-                        isc::data::ConstElementPtr value);
+                        bundy::data::ConstElementPtr value);
 
     /// @brief A list of element ids which specifies the element parsing order.
     ///
@@ -325,7 +325,7 @@ private:
 typedef boost::shared_ptr<DCfgMgrBase> DCfgMgrBasePtr;
 
 
-}; // end of isc::d2 namespace
-}; // end of isc namespace
+}; // end of bundy::d2 namespace
+}; // end of bundy namespace
 
 #endif // D_CFG_MGR_H

@@ -17,9 +17,9 @@
 
 BUNDY offers DHCPv4 server implementation. It is implemented as
 bundy-dhcp4 component.  Its primary code is located in
-isc::dhcp::Dhcpv4Srv class. It uses \ref libdhcp extensively,
-especially isc::dhcp::Pkt4, isc::dhcp::Option and
-isc::dhcp::IfaceMgr classes. Currently this code offers skeleton
+bundy::dhcp::Dhcpv4Srv class. It uses \ref libdhcp extensively,
+especially bundy::dhcp::Pkt4, bundy::dhcp::Option and
+bundy::dhcp::IfaceMgr classes. Currently this code offers skeleton
 functionality, i.e. it is able to receive and process incoming
 requests and trasmit responses. However, it does not have database
 management, so it returns only one, hardcoded lease to whoever asks
@@ -33,34 +33,34 @@ assigned is not implemented in IfaceMgr yet.
 
 DHCPv4 server component is now integrated with BUNDY message queue.
 The integration is performed by establishSession() and disconnectSession()
-functions in isc::dhcp::ControlledDhcpv4Srv class. main() method defined
-in the src/bin/dhcp4/main.cc file instantiates isc::dhcp::ControlledDhcpv4Srv
+functions in bundy::dhcp::ControlledDhcpv4Srv class. main() method defined
+in the src/bin/dhcp4/main.cc file instantiates bundy::dhcp::ControlledDhcpv4Srv
 class that establishes connection with msgq and install necessary handlers
 for receiving commands and configuration updates. It is derived from
-a base isc::dhcp::Dhcpv4Srv class that implements DHCPv4 server functionality,
+a base bundy::dhcp::Dhcpv4Srv class that implements DHCPv4 server functionality,
 without any controlling mechanisms.
 
 ControlledDhcpv4Srv instantiates several components to make management
-session possible. In particular, isc::cc::Session cc_session
+session possible. In particular, bundy::cc::Session cc_session
 object uses ASIO for establishing connection. It registers its socket
-in isc::asiolink::IOService io_service object. Typically, other components
+in bundy::asiolink::IOService io_service object. Typically, other components
 (e.g. auth or resolver) that use ASIO for their communication, register their
 other sockets in the
 same io_service and then just call io_service.run() method that does
 not return, until one of the callback decides that it is time to shut down
 the whole component cal calls io_service.stop(). DHCPv4 works in a
 different way. It does receive messages using select()
-(see isc::dhcp::IfaceMgr::receive4()), which is incompatible with ASIO.
+(see bundy::dhcp::IfaceMgr::receive4()), which is incompatible with ASIO.
 To solve this problem, socket descriptor is extracted from cc_session
-object and is passed to IfaceMgr by using isc::dhcp::IfaceMgr::set_session_socket().
+object and is passed to IfaceMgr by using bundy::dhcp::IfaceMgr::set_session_socket().
 IfaceMgr then uses this socket in its select() call. If there is some
 data to be read, it calls registered callback that is supposed to
 read and process incoming data.
 
 This somewhat complicated approach is needed for a simple reason. In
 embedded deployments there will be no message queue. Not referring directly
-to anything related to message queue in isc::dhcp::Dhcpv4Srv and
-isc::dhcp::IfaceMgr classes brings in two benefits. First, the can
+to anything related to message queue in bundy::dhcp::Dhcpv4Srv and
+bundy::dhcp::IfaceMgr classes brings in two benefits. First, the can
 be used with and without message queue. Second benefit is related to the
 first one: \ref libdhcp is supposed to be simple and robust and not require
 many dependencies. One notable example of a use case that benefits from
@@ -101,8 +101,8 @@ client to indicate that this name will be used to perform DNS update.
 
 The bundy-dhcp-ddns process is responsible for the actual communication with the
 DNS, i.e. to send DNS update messages. The bundy-dhcp4 module is responsible for
-generating @ref isc::dhcp_ddns::NameChangeRequest and sending it to
-the bundy-dhcp-ddns module. The @ref isc::dhcp_ddns::NameChangeRequest object
+generating @ref bundy::dhcp_ddns::NameChangeRequest and sending it to
+the bundy-dhcp-ddns module. The @ref bundy::dhcp_ddns::NameChangeRequest object
 represents changes to the DNS bindings, related to acquisition, renewal or
 release of the DHCP lease. The bundy-dhcp4 module implements the simple FIFO queue
 of the NameChangeRequest objects. The module logic, which processes the incoming
@@ -162,7 +162,7 @@ Kea DHCPv4 server currently supports simplified client classification. It is cal
 of the vendor class (60) option. More flexible classification is planned, but there
 are no specific development dates agreed.
 
-For each incoming packet, @ref isc::dhcp::Dhcpv4Srv::classifyPacket() method is called.
+For each incoming packet, @ref bundy::dhcp::Dhcpv4Srv::classifyPacket() method is called.
 It attempts to extract content of the vendor class option and interpret as a name
 of the class. For now, the code has been tested with two classes used in cable modem
 networks: eRouter1.0 and docsis3.0, but any other content of the vendor class option will
@@ -172,7 +172,7 @@ In principle any given packet can belong to zero or more classes. As the current
 classifier is very modest, there's only one way to assign a class (based on vendor class
 option), the ability to assign more than one class to a packet is not yet exercised.
 Neverthless, there is such a possibility and it will be used in a near future. To
-check whether a packet belongs to given class, isc::dhcp::Pkt4::inClass method should
+check whether a packet belongs to given class, bundy::dhcp::Pkt4::inClass method should
 be used.
 
 Currently there is a short code section that alternates packet processing depending on
@@ -183,11 +183,11 @@ library. See ticket #3275. The class specific behavior is:
 - docsis3.0 packets have file field set to the content of the boot-file-name option
 - eRouter1.0 packets have siaddr (next server) field cleared
 
-Aforementioned modifications are conducted in @ref isc::dhcp::Dhcpv4Srv::classSpecificProcessing.
+Aforementioned modifications are conducted in @ref bundy::dhcp::Dhcpv4Srv::classSpecificProcessing.
 
 It is possible to define class restrictions in subnet, so a given subnet is only
-accessible to clients that belong to a given class. That is implemented as isc::dhcp::Pkt4::classes_
-being passed in isc::dhcp::Dhcpv4Srv::selectSubnet() to isc::dhcp::CfgMgr::getSubnet4().
+accessible to clients that belong to a given class. That is implemented as bundy::dhcp::Pkt4::classes_
+being passed in bundy::dhcp::Dhcpv4Srv::selectSubnet() to bundy::dhcp::CfgMgr::getSubnet4().
 Currently this capability is usable, but the number of scenarios it supports is
 limited.
 

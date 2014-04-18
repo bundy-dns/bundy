@@ -37,9 +37,9 @@
 
 using namespace std;
 using namespace boost;
-using namespace isc::dns::rdata;
+using namespace bundy::dns::rdata;
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace {
 void
@@ -53,12 +53,12 @@ callbackWrapper(const RRsetPtr& rrset, MasterLoadCallback callback,
         rrset->getName().compare(*origin);
     if (cmp_result.getRelation() != NameComparisonResult::EQUAL &&
         cmp_result.getRelation() != NameComparisonResult::SUBDOMAIN) {
-        isc_throw(MasterLoadError, "Out-of-zone data for " << *origin
+        bundy_throw(MasterLoadError, "Out-of-zone data for " << *origin
                   << "/" << rrset->getClass() << ": " << rrset->getName());
     }
     if (rrset->getType() == RRType::SOA() &&
         cmp_result.getRelation() != NameComparisonResult::EQUAL) {
-        isc_throw(MasterLoadError, "SOA not at top of zone: "
+        bundy_throw(MasterLoadError, "SOA not at top of zone: "
                   << *rrset);
     }
 
@@ -78,7 +78,7 @@ loadHelper(InputType input, const Name& origin,
     try {
         loader.load();
     } catch (const MasterLoaderError& ex) {
-        isc_throw(MasterLoadError, ex.what());
+        bundy_throw(MasterLoadError, ex.what());
     }
     rr_collator.flush();
 }
@@ -89,7 +89,7 @@ masterLoad(const char* const filename, const Name& origin,
            const RRClass& zone_class, MasterLoadCallback callback)
 {
     if ((filename == NULL) || (*filename == '\0')) {
-        isc_throw(MasterLoadError, "Name of master file must not be null");
+        bundy_throw(MasterLoadError, "Name of master file must not be null");
     }
 
     loadHelper<const char*>(filename, origin, zone_class, callback);
@@ -103,4 +103,4 @@ masterLoad(istream& input, const Name& origin, const RRClass& zone_class,
 }
 
 } // namespace dns
-} // namespace isc
+} // namespace bundy

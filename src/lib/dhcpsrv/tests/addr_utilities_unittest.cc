@@ -26,8 +26,8 @@
 #include <stdlib.h>
 
 using namespace std;
-using namespace isc::dhcp;
-using namespace isc::asiolink;
+using namespace bundy::dhcp;
+using namespace bundy::asiolink;
 
 namespace {
 
@@ -197,7 +197,7 @@ TEST(AddrUtilitiesTest, getNetmask4) {
     EXPECT_EQ("255.255.255.254", getNetmask4(31).toText());
     EXPECT_EQ("255.255.255.255", getNetmask4(32).toText());
 
-    EXPECT_THROW(getNetmask4(33), isc::BadValue);
+    EXPECT_THROW(getNetmask4(33), bundy::BadValue);
 }
 
 }; // end of anonymous namespace

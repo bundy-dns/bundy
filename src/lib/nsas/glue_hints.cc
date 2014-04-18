@@ -24,8 +24,8 @@
 #include <asiolink/io_address.h>
 #include <nsas/nameserver_entry.h>
 
-using namespace isc::dns;
-using namespace isc::nsas;
+using namespace bundy::dns;
+using namespace bundy::nsas;
 
 // This is a simple implementation for finding glue
 //
@@ -58,7 +58,7 @@ namespace {
         const std::string ns_name = rrset->getName().toText();
         RdataIteratorPtr rdi = rrset->getRdataIterator();
         while (!rdi->isLast()) {
-            AddressEntry entry(isc::asiolink::IOAddress(rdi->getCurrent().toText()));
+            AddressEntry entry(bundy::asiolink::IOAddress(rdi->getCurrent().toText()));
             boost::shared_ptr<NameserverEntry> ns_entry(new NameserverEntry(ns_name, rrset->getClass()));
             NameserverAddress ns_address(ns_entry, entry, V4_ONLY);
             addresses.push_back(ns_address);
@@ -67,11 +67,11 @@ namespace {
     }
 }
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 
 GlueHints::GlueHints(const std::string& zone_name,
-                     const isc::dns::Message& delegation_message)
+                     const bundy::dns::Message& delegation_message)
 {
     for (RRsetIterator rssi = delegation_message.beginSection(Message::SECTION_AUTHORITY);
          rssi != delegation_message.endSection(Message::SECTION_AUTHORITY);
@@ -156,7 +156,7 @@ GlueHints::addGlueForRRset(const RRsetPtr rrset, const Message& message)
 {
     RdataIteratorPtr rdi = rrset->getRdataIterator();
     while (!rdi->isLast()) {
-        isc::dns::Name name(dynamic_cast<const rdata::generic::NS&>(
+        bundy::dns::Name name(dynamic_cast<const rdata::generic::NS&>(
                         rdi->getCurrent()).getNSName());
         addGlueForName(name, message);
         rdi->next();
@@ -165,4 +165,4 @@ GlueHints::addGlueForRRset(const RRsetPtr rrset, const Message& message)
 
 
 } // namespace nsas
-} // namespace isc
+} // namespace bundy

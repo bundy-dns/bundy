@@ -17,11 +17,11 @@
 # The name is 'bundylogging' because logging.py is an existing module
 #
 # For a technical background, see
-# http://bundy.isc.org/wiki/LoggingCppApiDesign
+# http://bundy.bundy.org/wiki/LoggingCppApiDesign
 #
 
-from isc.config.module_spec import module_spec_from_file
-from isc.util.file import path_search
+from bundy.config.module_spec import module_spec_from_file
+from bundy.util.file import path_search
 from bundy_config import PLUGIN_PATHS
 spec = module_spec_from_file(path_search('logging.spec', PLUGIN_PATHS))
 

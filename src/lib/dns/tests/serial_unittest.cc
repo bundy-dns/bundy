@@ -16,7 +16,7 @@
 
 #include <dns/serial.h>
 
-using namespace isc::dns;
+using namespace bundy::dns;
 
 class SerialTest : public ::testing::Test {
 public:

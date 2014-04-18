@@ -25,7 +25,7 @@
 #include <boost/noncopyable.hpp>
 #include <boost/interprocess/offset_ptr.hpp>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 class Name;
 class RRClass;
@@ -246,7 +246,7 @@ public:
     ///
     /// \param name A domain name for which the search is performed.
     /// \return A \c FindResult object enclosing the search result (see above).
-    FindResult findZone(const isc::dns::Name& name) const;
+    FindResult findZone(const bundy::dns::Name& name) const;
 
 private:
     const dns::RRClass rrclass_;

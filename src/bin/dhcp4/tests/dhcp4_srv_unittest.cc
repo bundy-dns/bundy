@@ -50,12 +50,12 @@
 #include <arpa/inet.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dhcp;
-using namespace isc::data;
-using namespace isc::asiolink;
-using namespace isc::hooks;
-using namespace isc::dhcp::test;
+using namespace bundy;
+using namespace bundy::dhcp;
+using namespace bundy::data;
+using namespace bundy::asiolink;
+using namespace bundy::hooks;
+using namespace bundy::dhcp::test;
 
 namespace {
 
@@ -366,7 +366,7 @@ TEST_F(Dhcpv4SrvTest, adjustIfaceDataInvalid) {
     // Clear the remote address.
     resp->setRemoteAddr(IOAddress("0.0.0.0"));
 
-    EXPECT_THROW(NakedDhcpv4Srv::adjustIfaceData(req, resp), isc::BadValue);
+    EXPECT_THROW(NakedDhcpv4Srv::adjustIfaceData(req, resp), bundy::BadValue);
 }
 
 // This test verifies that the server identifier option is appended to
@@ -3170,7 +3170,7 @@ TEST_F(Dhcpv4SrvTest, vendorOptionsORO) {
 
     EXPECT_NO_THROW(x = configureDhcp4Server(srv, json));
     ASSERT_TRUE(x);
-    comment_ = isc::config::parseAnswer(rcode_, x);
+    comment_ = bundy::config::parseAnswer(rcode_, x);
     ASSERT_EQ(0, rcode_);
 
     boost::shared_ptr<Pkt4> dis(new Pkt4(DHCPDISCOVER, 1234));
@@ -3268,13 +3268,13 @@ TEST_F(Dhcpv4SrvTest, vendorOptionsDocsisDefinitions) {
     // This should fail (missing option definition)
     EXPECT_NO_THROW(x = configureDhcp4Server(srv, json_bogus));
     ASSERT_TRUE(x);
-    comment_ = isc::config::parseAnswer(rcode_, x);
+    comment_ = bundy::config::parseAnswer(rcode_, x);
     ASSERT_EQ(1, rcode_);
 
     // This should work (option definition present)
     EXPECT_NO_THROW(x = configureDhcp4Server(srv, json_valid));
     ASSERT_TRUE(x);
-    comment_ = isc::config::parseAnswer(rcode_, x);
+    comment_ = bundy::config::parseAnswer(rcode_, x);
     ASSERT_EQ(0, rcode_);
 }
 

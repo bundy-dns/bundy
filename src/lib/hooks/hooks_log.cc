@@ -16,11 +16,11 @@
 
 #include "hooks/hooks_log.h"
 
-namespace isc {
+namespace bundy {
 namespace hooks {
 
-isc::log::Logger hooks_logger("hooks");
+bundy::log::Logger hooks_logger("hooks");
 
 } // namespace hooks
-} // namespace isc
+} // namespace bundy
 

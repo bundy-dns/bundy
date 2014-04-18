@@ -94,7 +94,7 @@ report-cpp-coverage:
 
 report-python-coverage:
 	@if [ $(USE_PYCOVERAGE) = yes ] ; then \
-		$(PYCOVERAGE) html -d $(abs_top_builddir)/coverage-python-html --omit=src/bin/bundy/tests/,src/bin/bundyctl/tests/,src/bin/cfgmgr/tests/,src/bin/cmdctl/tests/,src/bin/loadzone/tests/,src/bin/msgq/tests/,src/bin/stats/tests/,src/bin/tests/,src/bin/xfrin/tests/,src/bin/xfrout/tests/,src/bin/zonemgr/tests/,src/lib/dns/python/tests/,src/lib/dns/tests/,src/lib/python/isc/cc/tests/,src/lib/python/isc/config/tests/,src/lib/python/isc/datasrc/tests/,src/lib/python/isc/log/tests/,src/lib/python/isc/net/tests/,src/lib/python/isc/notify/tests/,src/lib/python/isc/util/tests/ ; \
+		$(PYCOVERAGE) html -d $(abs_top_builddir)/coverage-python-html --omit=src/bin/bundy/tests/,src/bin/bundyctl/tests/,src/bin/cfgmgr/tests/,src/bin/cmdctl/tests/,src/bin/loadzone/tests/,src/bin/msgq/tests/,src/bin/stats/tests/,src/bin/tests/,src/bin/xfrin/tests/,src/bin/xfrout/tests/,src/bin/zonemgr/tests/,src/lib/dns/python/tests/,src/lib/dns/tests/,src/lib/python/bundy/cc/tests/,src/lib/python/bundy/config/tests/,src/lib/python/bundy/datasrc/tests/,src/lib/python/bundy/log/tests/,src/lib/python/bundy/net/tests/,src/lib/python/bundy/notify/tests/,src/lib/python/bundy/util/tests/ ; \
 		echo "Generated Python Code Coverage report in HTML at $(abs_top_builddir)/coverage-python-html" ; \
 	else \
 		echo "Python code coverage not enabled at configuration time." ; \

@@ -29,13 +29,13 @@
 
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 std::string LeaseMgr::getParameter(const std::string& name) const {
     ParameterMap::const_iterator param = parameters_.find(name);
     if (param == parameters_.end()) {
-        isc_throw(BadValue, "Parameter not found");
+        bundy_throw(BadValue, "Parameter not found");
     }
     return (param->second);
 }
@@ -46,7 +46,7 @@ LeaseMgr::getLease6(Lease::Type type, const DUID& duid,
     Lease6Collection col = getLeases6(type, duid, iaid, subnet_id);
 
     if (col.size() > 1) {
-        isc_throw(MultipleRecords, "More than one lease found for type "
+        bundy_throw(MultipleRecords, "More than one lease found for type "
                   << static_cast<int>(type) << ", duid "
                   << duid.toText() << ", iaid " << iaid
                   << " and subnet-id " << subnet_id);
@@ -57,5 +57,5 @@ LeaseMgr::getLease6(Lease::Type type, const DUID& duid,
     return (*col.begin());
 }
 
-} // namespace isc::dhcp
-} // namespace isc
+} // namespace bundy::dhcp
+} // namespace bundy

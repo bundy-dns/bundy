@@ -19,7 +19,7 @@
 
 #include <boost/noncopyable.hpp>
 
-namespace isc {
+namespace bundy {
 
 namespace dns {
 // forward declarations
@@ -118,11 +118,11 @@ public:
     //@}
 protected:
     /// \brief Return the output buffer we render into.
-    const isc::util::OutputBuffer& getBuffer() const { return (*buffer_); }
-    isc::util::OutputBuffer& getBuffer() { return (*buffer_); }
+    const bundy::util::OutputBuffer& getBuffer() const { return (*buffer_); }
+    bundy::util::OutputBuffer& getBuffer() { return (*buffer_); }
 private:
     /// \brief Local (default) buffer to store data.
-    isc::util::OutputBuffer local_buffer_;
+    bundy::util::OutputBuffer local_buffer_;
 
     /// \brief Buffer to store data.
     ///
@@ -133,7 +133,7 @@ private:
     /// It was decided that there's no need to have this in every subclass,
     /// at least not now, and this reduces code size and gives compiler a
     /// better chance to optimise.
-    isc::util::OutputBuffer* buffer_;
+    bundy::util::OutputBuffer* buffer_;
 public:
     ///
     /// \name Getter Methods
@@ -203,15 +203,15 @@ public:
     /// is in use, that is, any data are stored in the buffer.  Also, the
     /// default buffer cannot be "reset"; when NULL is specified a temporary
     /// buffer must have been set beforehand.  If these conditions aren't met
-    /// an isc::InvalidParameter exception will be thrown.  This method is
+    /// an bundy::InvalidParameter exception will be thrown.  This method is
     /// exception free otherwise.
     ///
-    /// \throw isc::InvalidParameter A restrictions of the method usage isn't
+    /// \throw bundy::InvalidParameter A restrictions of the method usage isn't
     /// met.
     ///
     /// \param buffer A pointer to a temporary output buffer or NULL for reset
     /// it.
-    void setBuffer(isc::util::OutputBuffer* buffer);
+    void setBuffer(bundy::util::OutputBuffer* buffer);
 
     /// \brief Mark the renderer to indicate truncation has occurred while
     /// rendering.
@@ -256,7 +256,7 @@ public:
     /// This method is provided for such cases as DNS message truncation.
     ///
     /// The specified length must not exceed the current data size of the
-    /// buffer; otherwise an exception of class \c isc::OutOfRange will
+    /// buffer; otherwise an exception of class \c bundy::OutOfRange will
     /// be thrown.
     ///
     /// \param len The length of data that should be trimmed.
@@ -290,7 +290,7 @@ public:
     ///
     /// The buffer must have a sufficient room to store the given data at the
     /// given position, that is, <code>pos + 2 < getLength()</code>;
-    /// otherwise an exception of class \c isc::dns::InvalidBufferPosition will
+    /// otherwise an exception of class \c bundy::dns::InvalidBufferPosition will
     /// be thrown.
     /// Note also that this method never extends the internal buffer.
     ///
@@ -379,7 +379,7 @@ public:
     /// This implementation does not allow this call in the middle of
     /// rendering (i.e. after at least one name is rendered) due to
     /// restriction specific to the internal implementation.  Such attempts
-    /// will result in an \c isc::InvalidParameter exception.
+    /// will result in an \c bundy::InvalidParameter exception.
     ///
     /// This shouldn't be too restrictive in practice; there's no known
     /// practical case for such a mixed compression policy in a single

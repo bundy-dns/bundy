@@ -22,11 +22,11 @@
 #include "../resolver_cache.h"
 #include "cache_test_messagefromfile.h"
 
-using namespace isc::cache;
-using namespace isc::nsas;
-using namespace isc;
-using namespace isc::dns;
-using namespace isc::util;
+using namespace bundy::cache;
+using namespace bundy::nsas;
+using namespace bundy;
+using namespace bundy::dns;
+using namespace bundy::util;
 using namespace std;
 
 namespace {

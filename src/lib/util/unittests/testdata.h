@@ -23,7 +23,7 @@
  * stored in a file.
  */
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace unittests {
 /// Add a path (directory) that \c openTestData() will search for test data

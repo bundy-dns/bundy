@@ -52,11 +52,11 @@ packet processing. Hook points that are not specific to packet processing
  @subsection dhcpv4HooksBuffer4Receive buffer4_receive
 
  - @b Arguments:
-   - name: @b query4, type: isc::dhcp::Pkt4Ptr, direction: <b>in/out</b>
+   - name: @b query4, type: bundy::dhcp::Pkt4Ptr, direction: <b>in/out</b>
 
  - @b Description: this callout is executed when an incoming DHCPv4
    buffer is received, before its content is parsed. The sole argument
-   - query4 - contains a pointer to an isc::dhcp::Pkt4 object that
+   - query4 - contains a pointer to an bundy::dhcp::Pkt4 object that
    contains raw information regarding incoming packet, including its
    source and destination addresses, interface over which it was
    received, and a raw buffer stored in data_ field. None of the
@@ -67,7 +67,7 @@ packet processing. Hook points that are not specific to packet processing
  - <b>Skip flag action</b>: If any callout sets the skip flag, the server will
    skip the buffer parsing. In such case there is an expectation that
    the callout will parse the buffer and create option objects (see
-   isc::dhcp::Pkt4::addOption()). Otherwise the server will find out
+   bundy::dhcp::Pkt4::addOption()). Otherwise the server will find out
    that some mandatory options are missing (e.g. DHCP Message Type) and
    will drop the packet. If you want to have the capability to drop
    a message, it is better to use skip flag in pkt4_receive callout.
@@ -75,11 +75,11 @@ packet processing. Hook points that are not specific to packet processing
  @subsection dhcpv4HooksPkt4Receive pkt4_receive
 
  - @b Arguments:
-   - name: @b query4, type: isc::dhcp::Pkt4Ptr, direction: <b>in/out</b>
+   - name: @b query4, type: bundy::dhcp::Pkt4Ptr, direction: <b>in/out</b>
 
  - @b Description: this callout is executed when an incoming DHCPv4
    packet is received and its content has been parsed. The sole
-   argument - query4 - contains a pointer to an isc::dhcp::Pkt4 object
+   argument - query4 - contains a pointer to an bundy::dhcp::Pkt4 object
    that contains all information regarding incoming packet, including
    its source and destination addresses, interface over which it was
    received, a list of all options present within and relay
@@ -96,9 +96,9 @@ packet processing. Hook points that are not specific to packet processing
 @subsection dhcpv4HooksSubnet4Select subnet4_select
 
  - @b Arguments:
-   - name: @b query4, type: isc::dhcp::Pkt4Ptr, direction: <b>in/out</b>
-   - name: @b subnet4, type: isc::dhcp::Subnet4Ptr, direction: <b>in/out</b>
-   - name: @b subnet4collection, type: const isc::dhcp::Subnet4Collection *, direction: <b>in</b>
+   - name: @b query4, type: bundy::dhcp::Pkt4Ptr, direction: <b>in/out</b>
+   - name: @b subnet4, type: bundy::dhcp::Subnet4Ptr, direction: <b>in/out</b>
+   - name: @b subnet4collection, type: const bundy::dhcp::Subnet4Collection *, direction: <b>in</b>
 
  - @b Description: this callout is executed when a subnet is being
    selected for the incoming packet. All parameters and addresses
@@ -115,14 +115,14 @@ packet processing. Hook points that are not specific to packet processing
 @subsection dhcpv4HooksLeaseSelect lease4_select
 
  - @b Arguments:
-   - name: @b subnet4, type: isc::dhcp::Subnet4Ptr, direction: <b>in</b>
+   - name: @b subnet4, type: bundy::dhcp::Subnet4Ptr, direction: <b>in</b>
    - name: @b fake_allocation, type: bool, direction: <b>in</b>
-   - name: @b lease4, type: isc::dhcp::Lease4Ptr, direction: <b>in/out</b>
+   - name: @b lease4, type: bundy::dhcp::Lease4Ptr, direction: <b>in/out</b>
 
  - @b Description: this callout is executed after the server engine
    has selected a lease for client's request but before the lease has
    been inserted into the database. Any modifications made to the
-   isc::dhcp::Lease4 object will be stored in the lease's record in
+   bundy::dhcp::Lease4 object will be stored in the lease's record in
    the database. The callout should sanity check all modifications as
    the server will use that data as is with no further checking.\n\n
    The server processes lease requests for DISCOVER and REQUEST in a
@@ -140,10 +140,10 @@ packet processing. Hook points that are not specific to packet processing
 @subsection dhcpv4HooksLeaseRenew lease4_renew
 
  - @b Arguments:
-   - name: @b subnet4, type: isc::dhcp::Subnet4Ptr, direction: <b>in</b>
-   - name: @b clientid, type: isc::dhcp::ClientId, direction: <b>in</b>
-   - name: @b hwaddr, type: isc::dhcp::HWAddr, direction: <b>in</b>
-   - name: @b lease4, type: isc::dhcp::Lease4Ptr, direction: <b>in/out</b>
+   - name: @b subnet4, type: bundy::dhcp::Subnet4Ptr, direction: <b>in</b>
+   - name: @b clientid, type: bundy::dhcp::ClientId, direction: <b>in</b>
+   - name: @b hwaddr, type: bundy::dhcp::HWAddr, direction: <b>in</b>
+   - name: @b lease4, type: bundy::dhcp::Lease4Ptr, direction: <b>in/out</b>
 
  - @b Description: this callout is executed when the server engine
    is about to renew a lease, as a result of receiving REQUEST/Renewing
@@ -159,8 +159,8 @@ packet processing. Hook points that are not specific to packet processing
 @subsection dhcpv4HooksLeaseRelease lease4_release
 
  - @b Arguments:
-   - name: @b query4, type: isc::dhcp::Pkt4Ptr, direction: <b>in</b>
-   - name: @b lease4, type: isc::dhcp::Lease4Ptr, direction: <b>in</b>
+   - name: @b query4, type: bundy::dhcp::Pkt4Ptr, direction: <b>in</b>
+   - name: @b lease4, type: bundy::dhcp::Lease4Ptr, direction: <b>in</b>
 
  - @b Description: this callout is executed when the server engine
    is about to release a lease, as a result of receiving RELEASE packet.
@@ -175,11 +175,11 @@ packet processing. Hook points that are not specific to packet processing
 @subsection dhcpv4HooksPkt4Send pkt4_send
 
  - @b Arguments:
-   - name: @b response4, type: isc::dhcp::Pkt4Ptr, direction: <b>in/out</b>
+   - name: @b response4, type: bundy::dhcp::Pkt4Ptr, direction: <b>in/out</b>
 
  - @b Description: this callout is executed when server's response
    is about to be sent back to the client. The sole argument - response4 -
-   contains a pointer to an isc::dhcp::Pkt4 object that contains the
+   contains a pointer to an bundy::dhcp::Pkt4 object that contains the
    packet, with source and destination addresses set, interface over which
    it will be sent, and a list of all options and relay information.  All fields
    of the Pkt4 object can be modified at this time, except buffer_out_.
@@ -195,14 +195,14 @@ packet processing. Hook points that are not specific to packet processing
 @subsection dhcpv4HooksBuffer4Send buffer4_send
 
  - @b Arguments:
-   - name: @b response4, type: isc::dhcp::Pkt4Ptr, direction: <b>in/out</b>
+   - name: @b response4, type: bundy::dhcp::Pkt4Ptr, direction: <b>in/out</b>
 
  - @b Description: this callout is executed when server's response
    is about to be sent back to the client. The sole argument - response4 -
-   contains a pointer to an isc::dhcp::Pkt4 object that contains the
+   contains a pointer to an bundy::dhcp::Pkt4 object that contains the
    packet, with source and destination addresses set, interface over which
    it will be sent, and a list of all options and relay information. The raw
-   on-wire form is already prepared in buffer_out_ (see isc::dhcp::Pkt4::getBuffer())
+   on-wire form is already prepared in buffer_out_ (see bundy::dhcp::Pkt4::getBuffer())
    It doesn't make any sense to modify packet fields or options content
    at this time, because they were already used to construct on-wire buffer.
 

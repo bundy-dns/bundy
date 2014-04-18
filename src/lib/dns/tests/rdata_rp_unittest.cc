@@ -25,11 +25,11 @@
 #include <util/unittests/wiredata.h>
 
 using namespace std;
-using namespace isc::util;
-using namespace isc::dns;
-using namespace isc::dns::rdata;
-using isc::UnitTestUtil;
-using isc::util::unittests::matchWireData;
+using namespace bundy::util;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
+using bundy::UnitTestUtil;
+using bundy::util::unittests::matchWireData;
 
 namespace {
 class Rdata_RP_Test : public RdataTest {
@@ -44,7 +44,7 @@ protected:
     {}
 
     void checkFromText_None(const string& rdata_str) {
-        checkFromText<generic::RP, isc::Exception, isc::Exception>(
+        checkFromText<generic::RP, bundy::Exception, bundy::Exception>(
             rdata_str, rdata_rp, false, false);
     }
 
@@ -55,7 +55,7 @@ protected:
     }
 
     void checkFromText_BadString(const string& rdata_str) {
-        checkFromText<generic::RP, InvalidRdataText, isc::Exception>(
+        checkFromText<generic::RP, InvalidRdataText, bundy::Exception>(
             rdata_str, rdata_rp, true, false);
     }
 
@@ -71,7 +71,7 @@ protected:
     }
 
     void checkFromText_Origin(const string& rdata_str, const Name* origin) {
-        checkFromText<generic::RP, MissingNameOrigin, isc::Exception>(
+        checkFromText<generic::RP, MissingNameOrigin, bundy::Exception>(
             rdata_str, rdata_rp, true, false, origin);
     }
 

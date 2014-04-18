@@ -28,7 +28,7 @@
 #include <boost/noncopyable.hpp>
 
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 /// @brief DControllerBase launch exit status values.  Upon service shutdown
@@ -36,47 +36,47 @@ namespace d2 {
 /// these values.
 
 /// @brief Exception thrown when the command line is invalid.
-class InvalidUsage : public isc::Exception {
+class InvalidUsage : public bundy::Exception {
 public:
     InvalidUsage(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Exception thrown when the application process fails.
-class ProcessInitError: public isc::Exception {
+class ProcessInitError: public bundy::Exception {
 public:
     ProcessInitError (const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Exception thrown when the session start up fails.
-class SessionStartError: public isc::Exception {
+class SessionStartError: public bundy::Exception {
 public:
     SessionStartError (const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Exception thrown when the application process encounters an
 /// operation in its event loop (i.e. run method).
-class ProcessRunError: public isc::Exception {
+class ProcessRunError: public bundy::Exception {
 public:
     ProcessRunError (const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Exception thrown when the session end fails.
-class SessionEndError: public isc::Exception {
+class SessionEndError: public bundy::Exception {
 public:
     SessionEndError (const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 
 /// @brief Exception thrown when the controller encounters an operational error.
-class DControllerBaseError : public isc::Exception {
+class DControllerBaseError : public bundy::Exception {
 public:
     DControllerBaseError (const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 
@@ -85,10 +85,10 @@ class DControllerBase;
 typedef boost::shared_ptr<DControllerBase> DControllerBasePtr;
 
 /// @brief Defines a shared pointer to a Session.
-typedef boost::shared_ptr<isc::cc::Session> SessionPtr;
+typedef boost::shared_ptr<bundy::cc::Session> SessionPtr;
 
 /// @brief Defines a shared pointer to a ModuleCCSession.
-typedef boost::shared_ptr<isc::config::ModuleCCSession> ModuleCCSessionPtr;
+typedef boost::shared_ptr<bundy::config::ModuleCCSession> ModuleCCSessionPtr;
 
 
 /// @brief Application Controller
@@ -173,7 +173,7 @@ public:
     ///
     /// This configuration handler does not perform configuration
     /// parsing and always returns success. A dummy handler should
-    /// be installed using \ref isc::config::ModuleCCSession ctor
+    /// be installed using \ref bundy::config::ModuleCCSession ctor
     /// to get the initial configuration. This initial configuration
     /// comprises values for only those elements that were modified
     /// the previous session. The D2 configuration parsing can't be
@@ -182,13 +182,13 @@ public:
     /// various configuration values. Installing the dummy handler
     /// that guarantees to return success causes initial configuration
     /// to be stored for the session being created and that it can
-    /// be later accessed with \ref isc::config::ConfigData::getFullConfig.
+    /// be later accessed with \ref bundy::config::ConfigData::getFullConfig.
     ///
     /// @param new_config new configuration.
     ///
     /// @return success configuration status.
-    static isc::data::ConstElementPtr
-    dummyConfigHandler(isc::data::ConstElementPtr new_config);
+    static bundy::data::ConstElementPtr
+    dummyConfigHandler(bundy::data::ConstElementPtr new_config);
 
     /// @brief A callback for handling all incoming configuration updates.
     ///
@@ -199,8 +199,8 @@ public:
     /// @param new_config textual representation of the new configuration
     ///
     /// @return status of the config update
-    static isc::data::ConstElementPtr
-    configHandler(isc::data::ConstElementPtr new_config);
+    static bundy::data::ConstElementPtr
+    configHandler(bundy::data::ConstElementPtr new_config);
 
     /// @brief A callback for handling all incoming commands.
     ///
@@ -213,8 +213,8 @@ public:
     /// arguments exist for a particular command.
     ///
     /// @return status of the processed command
-    static isc::data::ConstElementPtr
-    commandHandler(const std::string& command, isc::data::ConstElementPtr args);
+    static bundy::data::ConstElementPtr
+    commandHandler(const std::string& command, bundy::data::ConstElementPtr args);
 
     /// @brief Instance method invoked by the configuration event handler and
     /// which processes the actual configuration update.  Provides behavioral
@@ -230,8 +230,8 @@ public:
     /// @return returns an Element that contains the results of configuration
     /// update composed of an integer status value (0 means successful,
     /// non-zero means failure), and a string explanation of the outcome.
-    virtual isc::data::ConstElementPtr
-    updateConfig(isc::data::ConstElementPtr new_config);
+    virtual bundy::data::ConstElementPtr
+    updateConfig(bundy::data::ConstElementPtr new_config);
 
 
     /// @brief Instance method invoked by the command event handler and  which
@@ -262,8 +262,8 @@ public:
     ///   failure.
     ///   D2::COMMAND_INVALID - Command is not recognized as valid be either
     ///   the controller or the application process.
-    virtual isc::data::ConstElementPtr
-    executeCommand(const std::string& command, isc::data::ConstElementPtr args);
+    virtual bundy::data::ConstElementPtr
+    executeCommand(const std::string& command, bundy::data::ConstElementPtr args);
 
 protected:
     /// @brief Virtual method that provides derivations the opportunity to
@@ -306,8 +306,8 @@ protected:
     ///   failure.
     ///   D2::COMMAND_INVALID - Command is not recognized as a valid custom
     ///   controller command.
-    virtual isc::data::ConstElementPtr customControllerCommand(
-            const std::string& command, isc::data::ConstElementPtr args);
+    virtual bundy::data::ConstElementPtr customControllerCommand(
+            const std::string& command, bundy::data::ConstElementPtr args);
 
     /// @brief Virtual method which is invoked after the controller successfully
     /// establishes BUNDY connectivity.  It provides an opportunity for the
@@ -500,7 +500,7 @@ private:
     /// @return returns an Element that contains the results of shutdown
     /// command composed of an integer status value (0 means successful,
     /// non-zero means failure), and a string explanation of the outcome.
-    isc::data::ConstElementPtr shutdown(isc::data::ConstElementPtr args);
+    bundy::data::ConstElementPtr shutdown(bundy::data::ConstElementPtr args);
 
     /// @brief Prints the program usage text to std error.
     ///
@@ -551,7 +551,7 @@ private:
 friend class DControllerTest;
 };
 
-}; // namespace isc::d2
-}; // namespace isc
+}; // namespace bundy::d2
+}; // namespace bundy
 
 #endif

@@ -25,13 +25,13 @@
 #include <util/unittests/wiredata.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dns;
-using namespace isc::util;
-using namespace isc::util::encode;
-using namespace isc::dns::rdata;
-using isc::UnitTestUtil;
-using isc::util::unittests::matchWireData;
+using namespace bundy;
+using namespace bundy::dns;
+using namespace bundy::util;
+using namespace bundy::util::encode;
+using namespace bundy::dns::rdata;
+using bundy::UnitTestUtil;
+using bundy::util::unittests::matchWireData;
 
 namespace {
 
@@ -43,7 +43,7 @@ protected:
     {}
 
     void checkFromText_None(const string& rdata_str) {
-        checkFromText<in::DHCID, isc::Exception, isc::Exception>(
+        checkFromText<in::DHCID, bundy::Exception, bundy::Exception>(
             rdata_str, rdata_dhcid, false, false);
     }
 
@@ -60,7 +60,7 @@ protected:
 
     void checkFromText_BadString(const string& rdata_str) {
         checkFromText
-            <in::DHCID, InvalidRdataText, isc::Exception>(
+            <in::DHCID, InvalidRdataText, bundy::Exception>(
                 rdata_str, rdata_dhcid, true, false);
     }
 

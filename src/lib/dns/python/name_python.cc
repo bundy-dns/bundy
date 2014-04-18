@@ -28,10 +28,10 @@
 
 #include <iostream>
 
-using namespace isc::dns;
-using namespace isc::dns::python;
-using namespace isc::util;
-using namespace isc::util::python;
+using namespace bundy::dns;
+using namespace bundy::dns::python;
+using namespace bundy::util;
+using namespace bundy::util::python;
 
 namespace {
 // The s_* Class simply covers one instantiation of the object.
@@ -265,7 +265,7 @@ Name_at(s_Name* self, PyObject* args) {
 
     try {
         return (Py_BuildValue("I", self->cppobj->at(pos)));
-    } catch (const isc::OutOfRange&) {
+    } catch (const bundy::OutOfRange&) {
         PyErr_SetString(PyExc_IndexError,
                         "name index out of range");
         return (NULL);
@@ -386,7 +386,7 @@ Name_split(s_Name* self, PyObject* args) {
             ret->cppobj = NULL;
             try {
                 ret->cppobj = new Name(self->cppobj->split(first, n));
-            } catch (const isc::OutOfRange& oor) {
+            } catch (const bundy::OutOfRange& oor) {
                 PyErr_SetString(PyExc_IndexError, oor.what());
                 ret->cppobj = NULL;
             }
@@ -408,7 +408,7 @@ Name_split(s_Name* self, PyObject* args) {
             ret->cppobj = NULL;
             try {
                 ret->cppobj = new Name(self->cppobj->split(n));
-            } catch (const isc::OutOfRange& oor) {
+            } catch (const bundy::OutOfRange& oor) {
                 PyErr_SetString(PyExc_IndexError, oor.what());
                 ret->cppobj = NULL;
             }
@@ -528,7 +528,7 @@ Name_hash(PyObject* pyself) {
 
 } // end of unnamed namespace
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace python {
 
@@ -674,7 +674,7 @@ createNameObject(const Name& source) {
 bool
 PyName_Check(PyObject* obj) {
     if (obj == NULL) {
-        isc_throw(PyCPPWrapperException, "obj argument NULL in typecheck");
+        bundy_throw(PyCPPWrapperException, "obj argument NULL in typecheck");
     }
     return (PyObject_TypeCheck(obj, &name_type));
 }
@@ -682,7 +682,7 @@ PyName_Check(PyObject* obj) {
 const Name&
 PyName_ToName(const PyObject* name_obj) {
     if (name_obj == NULL) {
-        isc_throw(PyCPPWrapperException,
+        bundy_throw(PyCPPWrapperException,
                   "obj argument NULL in Name PyObject conversion");
     }
     const s_Name* name = static_cast<const s_Name*>(name_obj);
@@ -692,4 +692,4 @@ PyName_ToName(const PyObject* name_obj) {
 
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy

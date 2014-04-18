@@ -22,7 +22,7 @@ a constant and strips the values.
 The purpose is just to save some work with keeping both the source and
 header. The source syntax must be limited already, because it's used to
 generate the python module (by the
-lib/python/isc/util/pythonize_constants.py script).
+lib/python/bundy/util/pythonize_constants.py script).
 '''
 
 import sys

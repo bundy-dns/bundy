@@ -20,7 +20,7 @@
 #include <list>
 #include <stdint.h>
 
-namespace isc {
+namespace bundy {
 namespace perfdhcp {
 
 /// \brief Represents a list of packets with a sequential and random access to
@@ -156,6 +156,6 @@ private:
 };
 
 } // namespace perfdhcp
-} // namespace isc
+} // namespace bundy
 
 #endif // PACKET_STORAGE_H

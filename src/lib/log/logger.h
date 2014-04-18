@@ -25,7 +25,7 @@
 #include <log/message_types.h>
 #include <log/log_formatter.h>
 
-namespace isc {
+namespace bundy {
 namespace log {
 namespace interprocess {
 // Forward declaration to hide implementation details from normal
@@ -95,10 +95,10 @@ class LoggerImpl;   // Forward declaration of the implementation class
 ///
 /// Exception thrown if an attempt is made to access a logging function
 /// if the logging system has not been initialized.
-class LoggingNotInitialized : public isc::Exception {
+class LoggingNotInitialized : public bundy::Exception {
 public:
     LoggingNotInitialized(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what)
+        bundy::Exception(file, line, what)
     {}
 };
 
@@ -106,10 +106,10 @@ public:
 ///
 /// Exception thrown if a bad InterprocessSync object (such as NULL) is
 /// used.
-class BadInterprocessSync : public isc::Exception {
+class BadInterprocessSync : public bundy::Exception {
 public:
     BadInterprocessSync(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what)
+        bundy::Exception(file, line, what)
     {}
 };
 
@@ -162,7 +162,7 @@ public:
     virtual ~Logger();
 
     /// \brief The formatter used to replace placeholders
-    typedef isc::log::Formatter<Logger> Formatter;
+    typedef bundy::log::Formatter<Logger> Formatter;
 
     /// \brief Get Name of Logger
     ///
@@ -178,20 +178,20 @@ public:
     /// \param dbglevel If the severity is DEBUG, this is the debug level.
     /// This can be in the range 1 to 100 and controls the verbosity.  A value
     /// outside these limits is silently coerced to the nearest boundary.
-    virtual void setSeverity(isc::log::Severity severity, int dbglevel = 1);
+    virtual void setSeverity(bundy::log::Severity severity, int dbglevel = 1);
 
     /// \brief Get Severity Level for Logger
     ///
     /// \return The current logging level of this logger.  In most cases though,
     /// the effective logging level is what is required.
-    virtual isc::log::Severity getSeverity();
+    virtual bundy::log::Severity getSeverity();
 
     /// \brief Get Effective Severity Level for Logger
     ///
     /// \return The effective severity level of the logger.  This is the same
     /// as getSeverity() if the logger has a severity level set, but otherwise
     /// is the severity of the parent.
-    virtual isc::log::Severity getEffectiveSeverity();
+    virtual bundy::log::Severity getEffectiveSeverity();
 
     /// \brief Return DEBUG Level
     ///
@@ -266,7 +266,7 @@ public:
     /// synchronizing output of log messages. It should be deletable and
     /// the ownership is transferred to the logger. If NULL is passed,
     /// a BadInterprocessSync exception is thrown.
-    void setInterprocessSync(isc::log::interprocess::InterprocessSync* sync);
+    void setInterprocessSync(bundy::log::interprocess::InterprocessSync* sync);
 
     /// \brief Equality
     ///
@@ -276,7 +276,7 @@ public:
     bool operator==(Logger& other);
 
 private:
-    friend class isc::log::Formatter<Logger>;
+    friend class bundy::log::Formatter<Logger>;
 
     /// \brief Raw output function
     ///
@@ -325,7 +325,7 @@ private:
 };
 
 } // namespace log
-} // namespace isc
+} // namespace bundy
 
 
 #endif // LOGGER_H

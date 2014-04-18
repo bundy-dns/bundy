@@ -20,8 +20,8 @@ const size_t count = 1000; // TODO: We may want to read this from argv.
 
 int main(int, const char**) {
     // Run the naive implementation
-    isc::resolver::bench::NaiveResolver naive_resolver(count);
-    isc::bench::BenchMark<isc::resolver::bench::NaiveResolver>
+    bundy::resolver::bench::NaiveResolver naive_resolver(count);
+    bundy::bench::BenchMark<bundy::resolver::bench::NaiveResolver>
         (1, naive_resolver, true);
     return 0;
 }

@@ -12,7 +12,7 @@
 # OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
 
-$NAMESPACE isc::dhcp
+$NAMESPACE bundy::dhcp
 
 % DHCPSRV_ADDRESS4_ALLOC_ERROR error during attempt to allocate an IPv4 address: %1
 An error occurred during an attempt to allocate an IPv4 address, the

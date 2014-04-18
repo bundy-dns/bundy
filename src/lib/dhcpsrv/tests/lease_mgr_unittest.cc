@@ -28,10 +28,10 @@
 #include <time.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::asiolink;
-using namespace isc::dhcp;
-using namespace isc::dhcp::test;
+using namespace bundy;
+using namespace bundy::asiolink;
+using namespace bundy::dhcp;
+using namespace bundy::dhcp::test;
 
 // This is a concrete implementation of a Lease database.  It does not do
 // anything useful and is used for abstract LeaseMgr class testing.
@@ -73,7 +73,7 @@ public:
     /// @param addr address of the searched lease
     ///
     /// @return smart pointer to the lease (or NULL if a lease is not found)
-    virtual Lease4Ptr getLease4(const isc::asiolink::IOAddress&) const {
+    virtual Lease4Ptr getLease4(const bundy::asiolink::IOAddress&) const {
         return (Lease4Ptr());
     }
 
@@ -146,7 +146,7 @@ public:
     ///
     /// @return smart pointer to the lease (or NULL if a lease is not found)
     virtual Lease6Ptr getLease6(Lease::Type /* not used yet */,
-                                const isc::asiolink::IOAddress&) const {
+                                const bundy::asiolink::IOAddress&) const {
         return (Lease6Ptr());
     }
 
@@ -193,7 +193,7 @@ public:
     ///        a V4 address or a V6 address.)
     ///
     /// @return true if deletion was successful, false if no such lease exists
-    virtual bool deleteLease(const isc::asiolink::IOAddress&) {
+    virtual bool deleteLease(const bundy::asiolink::IOAddress&) {
         return (false);
     }
 

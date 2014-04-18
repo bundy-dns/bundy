@@ -12,7 +12,7 @@
 # OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
 
-$NAMESPACE isc::nsas
+$NAMESPACE bundy::nsas
 
 % NSAS_EMPTY_RESPONSE response to query for %1 returned an empty answer section
 The NSAS (nameserver address store - part of the resolver) made a query

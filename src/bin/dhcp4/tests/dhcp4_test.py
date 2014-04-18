@@ -20,9 +20,9 @@ import sys
 import os
 import signal
 import socket
-from isc.net.addr import IPAddr
+from bundy.net.addr import IPAddr
 import time
-import isc
+import bundy
 import fcntl
 
 class TestDhcpv4Daemon(unittest.TestCase):

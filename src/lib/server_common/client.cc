@@ -22,9 +22,9 @@
 
 #include <server_common/client.h>
 
-using namespace isc::acl;
-using namespace isc::server_common;
-using namespace isc::asiolink;
+using namespace bundy::acl;
+using namespace bundy::server_common;
+using namespace bundy::asiolink;
 
 struct Client::ClientImpl {
     ClientImpl(const IOMessage& request_message) :
@@ -69,6 +69,6 @@ Client::toText() const {
 }
 
 std::ostream&
-isc::server_common::operator<<(std::ostream& os, const Client& client) {
+bundy::server_common::operator<<(std::ostream& os, const Client& client) {
     return (os << client.toText());
 }

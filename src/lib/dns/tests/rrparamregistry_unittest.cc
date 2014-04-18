@@ -30,9 +30,9 @@
 #include <boost/bind.hpp>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::util;
-using namespace isc::dns::rdata;
+using namespace bundy::dns;
+using namespace bundy::util;
+using namespace bundy::dns::rdata;
 
 namespace {
 class RRParamRegistryTest : public ::testing::Test {

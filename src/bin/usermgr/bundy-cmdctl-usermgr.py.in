@@ -28,9 +28,9 @@ import csv
 import getpass
 from optparse import OptionParser, OptionValueError
 import os
-import isc.util.process
+import bundy.util.process
 
-isc.util.process.rename()
+bundy.util.process.rename()
 
 VERSION_STRING = "bundy-cmdctl-usermgr @PACKAGE_VERSION@"
 DEFAULT_FILE = SYSCONFPATH + "/cmdctl-accounts.csv"

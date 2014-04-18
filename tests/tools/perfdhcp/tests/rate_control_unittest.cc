@@ -17,8 +17,8 @@
 #include <gtest/gtest.h>
 
 
-using namespace isc;
-using namespace isc::perfdhcp;
+using namespace bundy;
+using namespace bundy::perfdhcp;
 
 /// \brief A class which exposes protected methods and members of the
 /// RateControl class (under test).
@@ -79,9 +79,9 @@ TEST(RateControl, constructor) {
     EXPECT_FALSE(rc2.isLateSent());
 
     // The 0 value of aggressivity < 1 is not acceptable.
-    EXPECT_THROW(RateControl(3, 0), isc::BadValue);
+    EXPECT_THROW(RateControl(3, 0), bundy::BadValue);
     // The negative value of rate is not acceptable.
-    EXPECT_THROW(RateControl(-1, 3), isc::BadValue);
+    EXPECT_THROW(RateControl(-1, 3), bundy::BadValue);
 }
 
 // Check the aggressivity accessor.
@@ -160,8 +160,8 @@ TEST(RateControl, getOutboundMessageCount) {
 TEST(RateControl, setAggressivity) {
     NakedRateControl rc;
     ASSERT_NO_THROW(rc.setAggressivity(1));
-    EXPECT_THROW(rc.setAggressivity(0), isc::BadValue);
-    EXPECT_THROW(rc.setAggressivity(-1), isc::BadValue);
+    EXPECT_THROW(rc.setAggressivity(0), bundy::BadValue);
+    EXPECT_THROW(rc.setAggressivity(-1), bundy::BadValue);
 }
 
 // Test the rate modifier for valid and invalid rate values.
@@ -169,7 +169,7 @@ TEST(RateControl, setRate) {
     NakedRateControl rc;
     EXPECT_NO_THROW(rc.setRate(1));
     EXPECT_NO_THROW(rc.setRate(0));
-    EXPECT_THROW(rc.setRate(-1), isc::BadValue);
+    EXPECT_THROW(rc.setRate(-1), bundy::BadValue);
 }
 
 // Test the function which calculates the due time to send next set of

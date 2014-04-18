@@ -28,7 +28,7 @@
 #include <csignal>
 #include <cstddef>
 
-namespace isc {
+namespace bundy {
 namespace server_common {
 
 namespace {
@@ -85,44 +85,44 @@ protocolString(SocketRequestor::Protocol protocol) {
 // Creates the cc session message to request a socket.
 // The actual command format is hardcoded, and should match
 // the format as read in bundy-init.py.in
-isc::data::ConstElementPtr
+bundy::data::ConstElementPtr
 createRequestSocketMessage(SocketRequestor::Protocol protocol,
                            const std::string& address, uint16_t port,
                            SocketRequestor::ShareMode share_mode,
                            const std::string& share_name)
 {
-    const isc::data::ElementPtr request = isc::data::Element::createMap();
-    request->set("address", isc::data::Element::create(address));
-    request->set("port", isc::data::Element::create(port));
+    const bundy::data::ElementPtr request = bundy::data::Element::createMap();
+    request->set("address", bundy::data::Element::create(address));
+    request->set("port", bundy::data::Element::create(port));
     if (protocol != SocketRequestor::TCP && protocol != SocketRequestor::UDP) {
-        isc_throw(InvalidParameter, "invalid protocol: " << protocol);
+        bundy_throw(InvalidParameter, "invalid protocol: " << protocol);
     }
     request->set("protocol",
-                 isc::data::Element::create(protocolString(protocol)));
+                 bundy::data::Element::create(protocolString(protocol)));
     switch (share_mode) {
     case SocketRequestor::DONT_SHARE:
-        request->set("share_mode", isc::data::Element::create("NO"));
+        request->set("share_mode", bundy::data::Element::create("NO"));
         break;
     case SocketRequestor::SHARE_SAME:
-        request->set("share_mode", isc::data::Element::create("SAMEAPP"));
+        request->set("share_mode", bundy::data::Element::create("SAMEAPP"));
         break;
     case SocketRequestor::SHARE_ANY:
-        request->set("share_mode", isc::data::Element::create("ANY"));
+        request->set("share_mode", bundy::data::Element::create("ANY"));
         break;
     default:
-        isc_throw(InvalidParameter, "invalid share mode: " << share_mode);
+        bundy_throw(InvalidParameter, "invalid share mode: " << share_mode);
     }
-    request->set("share_name", isc::data::Element::create(share_name));
+    request->set("share_name", bundy::data::Element::create(share_name));
 
-    return (isc::config::createCommand(REQUEST_SOCKET_COMMAND(), request));
+    return (bundy::config::createCommand(REQUEST_SOCKET_COMMAND(), request));
 }
 
-isc::data::ConstElementPtr
+bundy::data::ConstElementPtr
 createReleaseSocketMessage(const std::string& token) {
-    const isc::data::ElementPtr release = isc::data::Element::createMap();
-    release->set("token", isc::data::Element::create(token));
+    const bundy::data::ElementPtr release = bundy::data::Element::createMap();
+    release->set("token", bundy::data::Element::create(token));
 
-    return (isc::config::createCommand(RELEASE_SOCKET_COMMAND(), release));
+    return (bundy::config::createCommand(RELEASE_SOCKET_COMMAND(), release));
 }
 
 // Checks and parses the response receive from Init
@@ -131,27 +131,27 @@ createReleaseSocketMessage(const std::string& token) {
 // If the response was an error response, or does not contain the
 // expected elements, a CCSessionError is raised.
 void
-readRequestSocketAnswer(isc::data::ConstElementPtr recv_msg,
+readRequestSocketAnswer(bundy::data::ConstElementPtr recv_msg,
                         std::string& token, std::string& path)
 {
     int rcode;
-    isc::data::ConstElementPtr answer = isc::config::parseAnswer(rcode,
+    bundy::data::ConstElementPtr answer = bundy::config::parseAnswer(rcode,
                                                                  recv_msg);
     // Translate known rcodes to the corresponding exceptions
     if (rcode == SOCKET_ERROR_CODE) {
-        isc_throw(SocketRequestor::SocketAllocateError, answer->str());
+        bundy_throw(SocketRequestor::SocketAllocateError, answer->str());
     }
     if (rcode == SHARE_ERROR_CODE) {
-        isc_throw(SocketRequestor::ShareError, answer->str());
+        bundy_throw(SocketRequestor::ShareError, answer->str());
     }
     // The unknown exceptions
     if (rcode != 0) {
-        isc_throw(isc::config::CCSessionError,
+        bundy_throw(bundy::config::CCSessionError,
                   "Error response when requesting socket: " << answer->str());
     }
 
     if (!answer || !answer->contains("token") || !answer->contains("path")) {
-        isc_throw(isc::config::CCSessionError,
+        bundy_throw(bundy::config::CCSessionError,
                   "Malformed answer when requesting socket");
     }
     token = answer->get("token")->stringValue();
@@ -177,7 +177,7 @@ createFdShareSocket(const std::string& path) {
     // SocketSessionReceiver and use that.
     const int sock_pass_fd = socket(AF_UNIX, SOCK_STREAM, 0);
     if (sock_pass_fd == -1) {
-        isc_throw(SocketRequestor::SocketError,
+        bundy_throw(SocketRequestor::SocketError,
                   "Unable to open domain socket " << path <<
                   ": " << strerror(errno));
     }
@@ -185,7 +185,7 @@ createFdShareSocket(const std::string& path) {
     sock_pass_addr.sun_family = AF_UNIX;
     if (path.size() >= sizeof(sock_pass_addr.sun_path)) {
         close(sock_pass_fd);
-        isc_throw(SocketRequestor::SocketError,
+        bundy_throw(SocketRequestor::SocketError,
                   "Unable to open domain socket " << path <<
                   ": path too long");
     }
@@ -198,7 +198,7 @@ createFdShareSocket(const std::string& path) {
     if (connect(sock_pass_fd, (const struct sockaddr*)&sock_pass_addr,
                 len) == -1) {
         close(sock_pass_fd);
-        isc_throw(SocketRequestor::SocketError,
+        bundy_throw(SocketRequestor::SocketError,
                   "Unable to open domain socket " << path <<
                   ": " << strerror(errno));
     }
@@ -213,44 +213,44 @@ int
 getSocketFd(const std::string& token, int sock_pass_fd) {
     // Tell bundy-init the socket token.
     const std::string token_data = token + "\n";
-    if (!isc::util::io::write_data(sock_pass_fd, token_data.c_str(),
+    if (!bundy::util::io::write_data(sock_pass_fd, token_data.c_str(),
                                    token_data.size())) {
-        isc_throw(SocketRequestor::SocketError, "Error writing socket token");
+        bundy_throw(SocketRequestor::SocketError, "Error writing socket token");
     }
 
     // Init first sends some data to signal that getting the socket
     // from its cache succeeded
     char status[3];        // We need a space for trailing \0, hence 3
     memset(status, 0, 3);
-    if (isc::util::io::read_data(sock_pass_fd, status, 2) < 2) {
-        isc_throw(SocketRequestor::SocketError,
+    if (bundy::util::io::read_data(sock_pass_fd, status, 2) < 2) {
+        bundy_throw(SocketRequestor::SocketError,
                   "Error reading status code while requesting socket");
     }
     // Actual status value hardcoded by bundy-init atm.
     if (CREATOR_SOCKET_UNAVAILABLE() == status) {
-        isc_throw(SocketRequestor::SocketError,
+        bundy_throw(SocketRequestor::SocketError,
                   "CREATOR_SOCKET_UNAVAILABLE returned");
     } else if (CREATOR_SOCKET_OK() != status) {
-        isc_throw(SocketRequestor::SocketError,
+        bundy_throw(SocketRequestor::SocketError,
                   "Unknown status code returned before recv_fd '" << status <<
                   "'");
     }
 
-    const int passed_sock_fd = isc::util::io::recv_fd(sock_pass_fd);
+    const int passed_sock_fd = bundy::util::io::recv_fd(sock_pass_fd);
 
     // check for error values of passed_sock_fd (see fd_share.h)
     if (passed_sock_fd < 0) {
         switch (passed_sock_fd) {
-        case isc::util::io::FD_SYSTEM_ERROR:
-            isc_throw(SocketRequestor::SocketError,
+        case bundy::util::io::FD_SYSTEM_ERROR:
+            bundy_throw(SocketRequestor::SocketError,
                       "FD_SYSTEM_ERROR while requesting socket");
             break;
-        case isc::util::io::FD_OTHER_ERROR:
-            isc_throw(SocketRequestor::SocketError,
+        case bundy::util::io::FD_OTHER_ERROR:
+            bundy_throw(SocketRequestor::SocketError,
                       "FD_OTHER_ERROR while requesting socket");
             break;
         default:
-            isc_throw(SocketRequestor::SocketError,
+            bundy_throw(SocketRequestor::SocketError,
                       "Unknown error while requesting socket");
         }
     }
@@ -277,7 +277,7 @@ public:
         // module.  Setting a single filter here should be considered a short
         // term workaround.
         if (std::signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
-            isc_throw(Unexpected, "Failed to filter SIGPIPE: " <<
+            bundy_throw(Unexpected, "Failed to filter SIGPIPE: " <<
                       strerror(errno));
         }
         LOG_DEBUG(logger, DBGLVL_TRACE_BASIC, SOCKETREQUESTOR_CREATED).
@@ -294,7 +294,7 @@ public:
                                    uint16_t port, ShareMode share_mode,
                                    const std::string& share_name)
     {
-        const isc::data::ConstElementPtr request_msg =
+        const bundy::data::ConstElementPtr request_msg =
             createRequestSocketMessage(protocol, address, port,
                                        share_mode,
                                        share_name.empty() ? app_name_ :
@@ -305,9 +305,9 @@ public:
 
         // Get the answer from bundy-init.
         // Just do a blocking read, we can't really do much anyway
-        isc::data::ConstElementPtr env, recv_msg;
+        bundy::data::ConstElementPtr env, recv_msg;
         if (!session_.group_recvmsg(env, recv_msg, false, seq)) {
-            isc_throw(isc::config::CCSessionError,
+            bundy_throw(bundy::config::CCSessionError,
                       "Incomplete response when requesting socket");
         }
 
@@ -327,7 +327,7 @@ public:
     }
 
     virtual void releaseSocket(const std::string& token) {
-        const isc::data::ConstElementPtr release_msg =
+        const bundy::data::ConstElementPtr release_msg =
             createReleaseSocketMessage(token);
 
         // Send it to bundy-init
@@ -337,18 +337,18 @@ public:
 
         // Get the answer from bundy-init.
         // Just do a blocking read, we can't really do much anyway
-        isc::data::ConstElementPtr env, recv_msg;
+        bundy::data::ConstElementPtr env, recv_msg;
         if (!session_.group_recvmsg(env, recv_msg, false, seq)) {
-            isc_throw(isc::config::CCSessionError,
+            bundy_throw(bundy::config::CCSessionError,
                       "Incomplete response when sending drop socket command");
         }
 
         // Answer should just be success
         int rcode;
-        isc::data::ConstElementPtr error = isc::config::parseAnswer(rcode,
+        bundy::data::ConstElementPtr error = bundy::config::parseAnswer(rcode,
                                                                     recv_msg);
         if (rcode != 0) {
-            isc_throw(SocketError,
+            bundy_throw(SocketError,
                       "Error requesting release of socket: " << error->str());
         }
     }
@@ -393,7 +393,7 @@ socketRequestor() {
     if (requestor != NULL) {
         return (*requestor);
     } else {
-        isc_throw(InvalidOperation, "The socket requestor is not initialized");
+        bundy_throw(InvalidOperation, "The socket requestor is not initialized");
     }
 }
 
@@ -402,7 +402,7 @@ initSocketRequestor(cc::AbstractSession& session,
                     const std::string& app_name)
 {
     if (requestor != NULL) {
-        isc_throw(InvalidOperation,
+        bundy_throw(InvalidOperation,
                   "The socket requestor was already initialized");
     } else {
         requestor = new SocketRequestorCCSession(session, app_name);
@@ -420,7 +420,7 @@ cleanupSocketRequestor() {
         delete requestor;
         requestor = NULL;
     } else {
-        isc_throw(InvalidOperation, "The socket requestor is not initialized");
+        bundy_throw(InvalidOperation, "The socket requestor is not initialized");
     }
 }
 

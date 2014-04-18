@@ -49,21 +49,21 @@
 /// \throw ConfigurationError if the config element is not in the expected
 ///        format (A map of lists)
 template<class List>
-boost::shared_ptr<std::map<isc::dns::RRClass,
+boost::shared_ptr<std::map<bundy::dns::RRClass,
                            boost::shared_ptr<List> > > // = ListMap below
-configureDataSourceGeneric(const isc::data::ConstElementPtr& config) {
+configureDataSourceGeneric(const bundy::data::ConstElementPtr& config) {
     typedef boost::shared_ptr<List> ListPtr;
-    typedef std::map<std::string, isc::data::ConstElementPtr> Map;
-    typedef std::map<isc::dns::RRClass, ListPtr> ListMap;
+    typedef std::map<std::string, bundy::data::ConstElementPtr> Map;
+    typedef std::map<bundy::dns::RRClass, ListPtr> ListMap;
 
     boost::shared_ptr<ListMap> new_lists(new ListMap);
 
     const Map& map(config->mapValue());
     for (Map::const_iterator it(map.begin()); it != map.end(); ++it) {
-        const isc::dns::RRClass rrclass(it->first);
+        const bundy::dns::RRClass rrclass(it->first);
         ListPtr list(new List(rrclass));
         list->configure(it->second, true);
-        new_lists->insert(std::pair<isc::dns::RRClass, ListPtr>(rrclass,
+        new_lists->insert(std::pair<bundy::dns::RRClass, ListPtr>(rrclass,
                                                                 list));
     }
 
@@ -72,8 +72,8 @@ configureDataSourceGeneric(const isc::data::ConstElementPtr& config) {
 
 /// \brief Concrete version of configureDataSource() for the
 ///     use with authoritative server implementation.
-isc::datasrc::ClientListMapPtr
-configureDataSource(const isc::data::ConstElementPtr& config);
+bundy::datasrc::ClientListMapPtr
+configureDataSource(const bundy::data::ConstElementPtr& config);
 
 #endif  // AUTH_DATASRC_CONFIG_H
 

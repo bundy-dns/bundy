@@ -14,7 +14,7 @@
 
 #include <resolver/bench/dummy_work.h>
 
-namespace isc {
+namespace bundy {
 namespace resolver {
 namespace bench {
 

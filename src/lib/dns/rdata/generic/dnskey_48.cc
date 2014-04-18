@@ -33,10 +33,10 @@
 #include <time.h>
 
 using namespace std;
-using namespace isc::util;
-using namespace isc::util::encode;
+using namespace bundy::util;
+using namespace bundy::util::encode;
 
-// BEGIN_ISC_NAMESPACE
+// BEGIN_BUNDY_NAMESPACE
 // BEGIN_RDATA_NAMESPACE
 
 struct DNSKEYImpl {
@@ -91,11 +91,11 @@ DNSKEY::DNSKEY(const std::string& dnskey_str) :
         impl_ptr.reset(constructFromLexer(lexer));
 
         if (lexer.getNextToken().getType() != MasterToken::END_OF_FILE) {
-            isc_throw(InvalidRdataText,
+            bundy_throw(InvalidRdataText,
                       "Extra input text for DNSKEY: " << dnskey_str);
         }
     } catch (const MasterLexer::LexerError& ex) {
-        isc_throw(InvalidRdataText,
+        bundy_throw(InvalidRdataText,
                   "Failed to construct DNSKEY from '" << dnskey_str << "': "
                   << ex.what());
     }
@@ -114,7 +114,7 @@ DNSKEY::DNSKEY(InputBuffer& buffer, size_t rdata_len) :
     impl_(NULL)
 {
     if (rdata_len < 4) {
-        isc_throw(InvalidRdataLength, "DNSKEY too short: " << rdata_len);
+        bundy_throw(InvalidRdataLength, "DNSKEY too short: " << rdata_len);
     }
 
     const uint16_t flags = buffer.readUint16();
@@ -160,21 +160,21 @@ DNSKEYImpl*
 DNSKEY::constructFromLexer(MasterLexer& lexer) {
     const uint32_t flags = lexer.getNextToken(MasterToken::NUMBER).getNumber();
     if (flags > 0xffff) {
-        isc_throw(InvalidRdataText,
+        bundy_throw(InvalidRdataText,
                   "DNSKEY flags out of range: " << flags);
     }
 
     const uint32_t protocol =
         lexer.getNextToken(MasterToken::NUMBER).getNumber();
     if (protocol > 0xff) {
-        isc_throw(InvalidRdataText,
+        bundy_throw(InvalidRdataText,
                   "DNSKEY protocol out of range: " << protocol);
     }
 
     const uint32_t algorithm =
         lexer.getNextToken(MasterToken::NUMBER).getNumber();
     if (algorithm > 0xff) {
-        isc_throw(InvalidRdataText,
+        bundy_throw(InvalidRdataText,
                   "DNSKEY algorithm out of range: " << algorithm);
     }
 
@@ -286,7 +286,7 @@ DNSKEY::getTag() const {
         // modulus.
         const int len = impl_->keydata_.size();
         if (len < 4) {
-            isc_throw(isc::OutOfRange,
+            bundy_throw(bundy::OutOfRange,
                       "DNSKEY keydata too short for tag extraction");
         }
 
@@ -316,4 +316,4 @@ DNSKEY::getAlgorithm() const {
 }
 
 // END_RDATA_NAMESPACE
-// END_ISC_NAMESPACE
+// END_BUNDY_NAMESPACE

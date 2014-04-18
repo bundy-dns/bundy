@@ -41,8 +41,8 @@ public:
 
         // Set up the server hooks.  ServerHooks is a singleton, so we reset it
         // between each test.
-        isc::hooks::ServerHooks& hooks =
-            isc::hooks::ServerHooks::getServerHooks();
+        bundy::hooks::ServerHooks& hooks =
+            bundy::hooks::ServerHooks::getServerHooks();
         hooks.reset();
         hookpt_one_index_ = hooks.registerHook("hookpt_one");
         hookpt_two_index_ = hooks.registerHook("hookpt_two");
@@ -94,7 +94,7 @@ public:
     ///        intermediate and final.  The arguments are ordered so that they
     ///        appear in the argument list in the order they are used.
     void executeCallCallouts(
-            const boost::shared_ptr<isc::hooks::CalloutManager>& manager,
+            const boost::shared_ptr<bundy::hooks::CalloutManager>& manager,
             int r0, int d1, int r1, int d2, int r2, int d3, int r3) {
         static const char* COMMON_TEXT = " callout returned the wong value";
         static const char* RESULT = "result";
@@ -102,7 +102,7 @@ public:
         int result;
 
         // Set up a callout handle for the calls.
-        isc::hooks::CalloutHandle handle(manager);
+        bundy::hooks::CalloutHandle handle(manager);
 
         // Initialize the argument RESULT.  This simplifies testing by
         // eliminating the generation of an exception when we try the unload
@@ -110,7 +110,7 @@ public:
         handle.setArgument(RESULT, -1);
 
         // Seed the calculation.
-        manager->callCallouts(isc::hooks::ServerHooks::CONTEXT_CREATE, handle);
+        manager->callCallouts(bundy::hooks::ServerHooks::CONTEXT_CREATE, handle);
         handle.getArgument(RESULT, result);
         EXPECT_EQ(r0, result) << "context_create" << COMMON_TEXT;
 

@@ -57,14 +57,14 @@ sys.excepthook = my_except_hook
 
 import os, sqlite3, shutil
 from optparse import OptionParser
-import isc.util.process
-import isc.util.traceback_handler
-import isc.log
-from isc.log_messages.dbutil_messages import *
+import bundy.util.process
+import bundy.util.traceback_handler
+import bundy.log
+from bundy.log_messages.dbutil_messages import *
 
-isc.log.init("bundy-dbutil")
-logger = isc.log.Logger("dbutil")
-isc.util.process.rename()
+bundy.log.init("bundy-dbutil")
+logger = bundy.log.Logger("dbutil")
+bundy.util.process.rename()
 
 TRACE_BASIC = logger.DBGLVL_TRACE_BASIC
 
@@ -573,13 +573,13 @@ def main():
     global logger
 
     if options.verbose:
-        isc.log.init("bundy-dbutil", "DEBUG", 99)
-        logger = isc.log.Logger("dbutil")
+        bundy.log.init("bundy-dbutil", "DEBUG", 99)
+        logger = bundy.log.Logger("dbutil")
     elif options.quiet:
         # We don't use FATAL, so setting the logger to use
         # it should essentially make it silent.
-        isc.log.init("bundy-dbutil", "FATAL")
-        logger = isc.log.Logger("dbutil")
+        bundy.log.init("bundy-dbutil", "FATAL")
+        logger = bundy.log.Logger("dbutil")
 
     db = Database(args[0])
     exit_code = EXIT_SUCCESS
@@ -624,4 +624,4 @@ def main():
     sys.exit(exit_code)
 
 if __name__ == "__main__":
-    isc.util.traceback_handler.traceback_handler(main)
+    bundy.util.traceback_handler.traceback_handler(main)

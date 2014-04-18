@@ -22,7 +22,7 @@
 /// used in libdns++ to help minimize dependency when actual the definition
 /// is not necessary.
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 class EDNS;
@@ -56,7 +56,7 @@ class TSIGKeyRing;
 class TSIGRecord;
 
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 #endif  // DNS_FWD_H
 
 // Local Variables:

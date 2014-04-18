@@ -18,8 +18,8 @@
 
 #include <util/filename.h>
 
-using namespace isc;
-using namespace isc::util;
+using namespace bundy;
+using namespace bundy::util;
 using namespace std;
 
 class FilenameTest : public ::testing::Test {

@@ -21,7 +21,7 @@ namespace asio {
     class io_service;
 }
 
-namespace isc {
+namespace bundy {
 namespace asiolink {
 
 class IOServiceImpl;
@@ -88,5 +88,5 @@ private:
 };
 
 } // namespace asiolink
-} // namespace isc
+} // namespace bundy
 #endif // ASIOLINK_IO_SERVICE_H

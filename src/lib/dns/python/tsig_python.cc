@@ -32,10 +32,10 @@
 #include "tsig_python.h"
 
 using namespace std;
-using namespace isc;
-using namespace isc::util::python;
-using namespace isc::dns;
-using namespace isc::dns::python;
+using namespace bundy;
+using namespace bundy::util::python;
+using namespace bundy::dns;
+using namespace bundy::dns::python;
 
 // For each class, we need a struct, a helper functions (init, destroy,
 // and static wrappers around the methods we export), a list of methods,
@@ -260,7 +260,7 @@ TSIGContext_lastHadSignature(s_TSIGContext* self) {
 }
 } // end of unnamed namespace
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace python {
 // Definition of class specific exception(s)
@@ -329,7 +329,7 @@ PyTypeObject tsigcontext_type = {
 bool
 PyTSIGContext_Check(PyObject* obj) {
     if (obj == NULL) {
-        isc_throw(PyCPPWrapperException, "obj argument NULL in typecheck");
+        bundy_throw(PyCPPWrapperException, "obj argument NULL in typecheck");
     }
     return (PyObject_TypeCheck(obj, &tsigcontext_type));
 }
@@ -337,12 +337,12 @@ PyTSIGContext_Check(PyObject* obj) {
 TSIGContext*
 PyTSIGContext_ToTSIGContext(PyObject* tsigcontext_obj) {
     if (tsigcontext_obj == NULL) {
-        isc_throw(PyCPPWrapperException,
+        bundy_throw(PyCPPWrapperException,
                   "obj argument NULL in TSIGContext PyObject conversion");
     }
 
     if (!PyTSIGContext_Check(tsigcontext_obj)) {
-        isc_throw(TSIGContextError,
+        bundy_throw(TSIGContextError,
                   "obj argument is of wrong type in TSIGContext "
                   "PyObject conversion");
     }
@@ -353,4 +353,4 @@ PyTSIGContext_ToTSIGContext(PyObject* tsigcontext_obj) {
 
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy

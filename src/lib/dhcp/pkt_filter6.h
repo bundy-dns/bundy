@@ -18,7 +18,7 @@
 #include <asiolink/io_address.h>
 #include <dhcp/pkt6.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// Forward declaration to the structure describing a socket.
@@ -95,7 +95,7 @@ public:
     ///
     /// @return A structure describing a primary and fallback socket.
     virtual SocketInfo openSocket(const Iface& iface,
-                                  const isc::asiolink::IOAddress& addr,
+                                  const bundy::asiolink::IOAddress& addr,
                                   const uint16_t port,
                                   const bool join_multicast) = 0;
 
@@ -144,7 +144,7 @@ public:
 /// Pointer to a PktFilter object.
 typedef boost::shared_ptr<PktFilter6> PktFilter6Ptr;
 
-} // namespace isc::dhcp
-} // namespace isc
+} // namespace bundy::dhcp
+} // namespace bundy
 
 #endif // PKT_FILTER6_H

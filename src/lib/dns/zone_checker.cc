@@ -29,7 +29,7 @@
 using boost::lexical_cast;
 using std::string;
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 namespace {
@@ -51,12 +51,12 @@ checkSOA(const Name& zone_name, const RRClass& zone_class,
              rit->next(), ++count) {
             if (dynamic_cast<const rdata::generic::SOA*>(&rit->getCurrent()) ==
                 NULL) {
-                isc_throw(Unexpected, "Zone checker found bad RDATA in SOA");
+                bundy_throw(Unexpected, "Zone checker found bad RDATA in SOA");
             }
         }
         if (count == 0) {
             // this should be an implementation bug, not an operational error.
-            isc_throw(Unexpected, "Zone checker found an empty SOA RRset");
+            bundy_throw(Unexpected, "Zone checker found an empty SOA RRset");
         }
     }
     if (count != 1) {
@@ -103,7 +103,7 @@ checkNSNames(const Name& zone_name, const RRClass& zone_class,
              ConstRRsetPtr ns_rrset, ZoneCheckerCallbacks& callbacks) {
     if (ns_rrset->getRdataCount() == 0) {
         // this should be an implementation bug, not an operational error.
-        isc_throw(Unexpected, "Zone checker found an empty NS RRset");
+        bundy_throw(Unexpected, "Zone checker found an empty NS RRset");
     }
 
     for (RdataIteratorPtr rit = ns_rrset->getRdataIterator();
@@ -112,7 +112,7 @@ checkNSNames(const Name& zone_name, const RRClass& zone_class,
         const rdata::generic::NS* ns_data =
             dynamic_cast<const rdata::generic::NS*>(&rit->getCurrent());
         if (ns_data == NULL) {
-            isc_throw(Unexpected, "Zone checker found bad RDATA in NS");
+            bundy_throw(Unexpected, "Zone checker found bad RDATA in NS");
         }
         const Name& ns_name = ns_data->getNSName();
         const NameComparisonResult::NameRelation reln =
@@ -193,4 +193,4 @@ checkZone(const Name& zone_name, const RRClass& zone_class,
 }
 
 } // end namespace dns
-} // end namespace isc
+} // end namespace bundy

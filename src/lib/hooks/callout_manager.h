@@ -25,7 +25,7 @@
 #include <map>
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace hooks {
 
 /// @brief No such library
@@ -35,7 +35,7 @@ namespace hooks {
 class NoSuchLibrary : public Exception {
 public:
     NoSuchLibrary(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// @brief Callout Manager
@@ -48,7 +48,7 @@ public:
 ///
 /// - The list of server hooks, which is used in two ways.  Firstly, when a
 ///   callout registers or deregisters a hook, it does so by name: the
-///   @ref isc::util::ServerHooks object supplies the names of registered
+///   @ref bundy::util::ServerHooks object supplies the names of registered
 ///   hooks.  Secondly, when the callouts associated with a hook are called by
 ///   the server, the server supplies the index of the relevant hook: this is
 ///   validated by reference to the list of hook.
@@ -87,7 +87,7 @@ public:
 /// Indexes range between 1 and n (where n is the number of the libraries
 /// loaded) and are assigned to libraries based on the order the libraries
 /// presented to the hooks framework for loading (something that occurs in the
-/// isc::util::HooksManager) class.  However, two other indexes are recognised,
+/// bundy::util::HooksManager) class.  However, two other indexes are recognised,
 /// 0 and INT_MAX.  These are used when the server itself registers callouts -
 /// the server is able to register callouts that get called before any
 /// user-library callouts, and ones that get called after user-library callouts.
@@ -132,7 +132,7 @@ public:
     ///
     /// @param num_libraries Number of loaded libraries.
     ///
-    /// @throw isc::BadValue if the number of libraries is less than 0,
+    /// @throw bundy::BadValue if the number of libraries is less than 0,
     CalloutManager(int num_libraries = 0);
 
     /// @brief Register a callout on a hook for the current library
@@ -379,6 +379,6 @@ private:
 };
 
 } // namespace util
-} // namespace isc
+} // namespace bundy
 
 #endif // CALLOUT_MANAGER_H

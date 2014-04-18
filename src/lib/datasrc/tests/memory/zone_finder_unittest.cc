@@ -40,13 +40,13 @@
 #include <string>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::dns::rdata;
-using namespace isc::datasrc;
-using namespace isc::testutils;
-using namespace isc::datasrc::test;
-using namespace isc::datasrc::memory::test;
-using namespace isc::datasrc::memory;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
+using namespace bundy::datasrc;
+using namespace bundy::testutils;
+using namespace bundy::datasrc::test;
+using namespace bundy::datasrc::memory::test;
+using namespace bundy::datasrc::memory;
 
 namespace {
 // Commonly used result codes (Who should write the prefix all the time)

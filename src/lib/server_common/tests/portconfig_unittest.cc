@@ -28,14 +28,14 @@
 
 #include <string>
 
-using namespace isc::server_common::portconfig;
-using namespace isc::server_common;
-using namespace isc::data;
-using namespace isc;
+using namespace bundy::server_common::portconfig;
+using namespace bundy::server_common;
+using namespace bundy::data;
+using namespace bundy;
 using namespace std;
-using namespace isc::asiolink;
-using namespace isc::asiodns;
-using namespace isc::testutils;
+using namespace bundy::asiolink;
+using namespace bundy::asiodns;
+using namespace bundy::testutils;
 using boost::lexical_cast;
 
 namespace {
@@ -150,7 +150,7 @@ struct InstallListenAddresses : public ::testing::Test {
     }
     MockDNSService dnss_;
     AddressList store_;
-    isc::testutils::TestSocketRequestor sock_requestor_;
+    bundy::testutils::TestSocketRequestor sock_requestor_;
     // We should be able to bind to these addresses
     AddressList valid_;
     // But this shouldn't work
@@ -312,13 +312,13 @@ typedef InstallListenAddresses InstallListenAddressesDeathTest;
 // We make the socket requestor throw a "fatal" exception, one where we can't be
 // sure the state between processes is consistent. So we abort in that case.
 TEST_F(InstallListenAddressesDeathTest, inconsistent) {
-    if (!isc::util::unittests::runningOnValgrind()) {
+    if (!bundy::util::unittests::runningOnValgrind()) {
         AddressList deathAddresses;
         deathAddresses.push_back(AddressPair("192.0.2.3", 5288));
         // Make sure it actually kills the application (there should be an abort
         // in this case)
         EXPECT_DEATH({
-            isc::util::unittests::dontCreateCoreDumps();
+            bundy::util::unittests::dontCreateCoreDumps();
 
             try {
               installListenAddresses(deathAddresses, store_, dnss_);
@@ -333,13 +333,13 @@ TEST_F(InstallListenAddressesDeathTest, inconsistent) {
 // If we are unable to tell the bundy-init we closed a socket, we abort, as we
 // are not consistent with bundy-init most probably.
 TEST_F(InstallListenAddressesDeathTest, cantClose) {
-    if (!isc::util::unittests::runningOnValgrind()) {
+    if (!bundy::util::unittests::runningOnValgrind()) {
         installListenAddresses(valid_, store_, dnss_);
         AddressList empty;
         // Instruct it to fail on close
         sock_requestor_.break_release_ = true;
         EXPECT_DEATH({
-            isc::util::unittests::dontCreateCoreDumps();
+            bundy::util::unittests::dontCreateCoreDumps();
 
             try {
               // Setting to empty will close all current sockets.

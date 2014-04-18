@@ -22,10 +22,10 @@
 #include <gtest/gtest.h>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::testutils;
+using namespace bundy::dns;
+using namespace bundy::testutils;
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace test {
 
@@ -85,7 +85,7 @@ public:
         if (found != map_.end()) {
             return (found->second);
         }
-        isc_throw(isc::Unexpected, "unexpected name for NSEC3 test: "
+        bundy_throw(bundy::Unexpected, "unexpected name for NSEC3 test: "
                   << name);
     }
     virtual string calculate(const LabelSequence& ls) const {

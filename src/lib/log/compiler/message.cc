@@ -40,8 +40,8 @@
 #include <boost/foreach.hpp>
 
 using namespace std;
-using namespace isc::log;
-using namespace isc::util;
+using namespace bundy::log;
+using namespace bundy::util;
 
 static const char* VERSION = "1.0-0";
 
@@ -135,7 +135,7 @@ sentinel(Filename& file) {
     string name = file.name();
     string ext = file.extension();
     string sentinel_text = name + "_" + ext.substr(1);
-    isc::util::str::uppercase(sentinel_text);
+    bundy::util::str::uppercase(sentinel_text);
     return (sentinel_text);
 }
 
@@ -216,7 +216,7 @@ splitNamespace(string ns) {
 
     // ... and return the vector of namespace components split on the single
     // colon.
-    return (isc::util::str::tokens(ns, ":"));
+    return (bundy::util::str::tokens(ns, ":"));
 }
 
 
@@ -283,12 +283,12 @@ writePythonFile(const string& file, MessageDictionary& dictionary,
         "# File created from " << message_file.fullName() << " on " <<
             currentTime() << "\n" <<
         "\n" <<
-        "import isc.log\n" <<
+        "import bundy.log\n" <<
         "\n";
 
     vector<string> idents(sortedIdentifiers(dictionary));
     BOOST_FOREACH(const string& ident, idents) {
-        pyfile << ident << " = isc.log.create_message(\"" <<
+        pyfile << ident << " = bundy.log.create_message(\"" <<
             ident << "\", \"" << quoteString(dictionary.getText(ident)) <<
             "\")\n";
     }
@@ -329,7 +329,7 @@ writeHeaderFile(const string& file, const vector<string>& ns_components,
     ofstream hfile(header_file.fullName().c_str());
 
     if (hfile.fail()) {
-        isc_throw_4(MessageException, "Failed to open output file",
+        bundy_throw_4(MessageException, "Failed to open output file",
                     LOG_OPEN_OUTPUT_FAIL, header_file.fullName(),
                     strerror(errno), 0);
     }
@@ -353,7 +353,7 @@ writeHeaderFile(const string& file, const vector<string>& ns_components,
     vector<string> idents = sortedIdentifiers(dictionary);
     for (vector<string>::const_iterator j = idents.begin();
         j != idents.end(); ++j) {
-        hfile << "extern const isc::log::MessageID " << *j << ";\n";
+        hfile << "extern const bundy::log::MessageID " << *j << ";\n";
     }
     hfile << "\n";
 
@@ -364,7 +364,7 @@ writeHeaderFile(const string& file, const vector<string>& ns_components,
 
     // Report errors (if any) and exit
     if (hfile.fail()) {
-        isc_throw_4(MessageException, "Error writing to output file",
+        bundy_throw_4(MessageException, "Error writing to output file",
                     LOG_WRITE_ERROR, header_file.fullName(), strerror(errno),
                     0);
     }
@@ -431,7 +431,7 @@ writeProgramFile(const string& file, const vector<string>& ns_components,
     ofstream ccfile(program_file.fullName().c_str());
 
     if (ccfile.fail()) {
-        isc_throw_4(MessageException, "Error opening output file",
+        bundy_throw_4(MessageException, "Error opening output file",
                     LOG_OPEN_OUTPUT_FAIL, program_file.fullName(),
                     strerror(errno), 0);
     }
@@ -455,7 +455,7 @@ writeProgramFile(const string& file, const vector<string>& ns_components,
     vector<string> idents = sortedIdentifiers(dictionary);
     for (vector<string>::const_iterator j = idents.begin();
         j != idents.end(); ++j) {
-        ccfile << "extern const isc::log::MessageID " << *j <<
+        ccfile << "extern const bundy::log::MessageID " << *j <<
             " = \"" << *j << "\";\n";
     }
     ccfile << "\n";
@@ -483,14 +483,14 @@ writeProgramFile(const string& file, const vector<string>& ns_components,
         "    NULL\n" <<
         "};\n" <<
         "\n" <<
-        "const isc::log::MessageInitializer initializer(values);\n" <<
+        "const bundy::log::MessageInitializer initializer(values);\n" <<
         "\n" <<
         "} // Anonymous namespace\n" <<
         "\n";
 
     // Report errors (if any) and exit
     if (ccfile.fail()) {
-        isc_throw_4(MessageException, "Error writing to output file",
+        bundy_throw_4(MessageException, "Error writing to output file",
                     LOG_WRITE_ERROR, program_file.fullName(), strerror(errno),
                     0);
     }

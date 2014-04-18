@@ -35,12 +35,12 @@
 
 #include <gtest/gtest.h>
 
-using namespace isc::dns;
-using namespace isc::datasrc::memory;
+using namespace bundy::dns;
+using namespace bundy::datasrc::memory;
 #ifdef USE_SHARED_MEMORY
-using isc::util::MemorySegmentMapped;
+using bundy::util::MemorySegmentMapped;
 #endif
-using isc::datasrc::memory::detail::SegmentObjectHolder;
+using bundy::datasrc::memory::detail::SegmentObjectHolder;
 
 namespace {
 
@@ -82,7 +82,7 @@ TEST_F(ZoneDataLoaderTest, zoneMinTTL) {
     zone_data_ = loadZoneData(mem_sgmt_, zclass_, Name("example.org"),
                               TEST_DATA_DIR
                               "/example.org-nsec3-signed.zone");
-    isc::util::InputBuffer b(zone_data_->getMinTTLData(), sizeof(uint32_t));
+    bundy::util::InputBuffer b(zone_data_->getMinTTLData(), sizeof(uint32_t));
     EXPECT_EQ(RRTTL(1200), RRTTL(b));
 }
 
@@ -93,7 +93,7 @@ TEST_F(ZoneDataLoaderTest, zoneMinTTL) {
 TEST(ZoneDataLoaterTest, relocate) {
     const char* const mapped_file = TEST_DATA_BUILDDIR "/test.mapped";
     MemorySegmentMapped segment(mapped_file,
-                                isc::util::MemorySegmentMapped::CREATE_ONLY,
+                                bundy::util::MemorySegmentMapped::CREATE_ONLY,
                                 4096);
     const size_t zone_count = 10000;
     typedef SegmentObjectHolder<ZoneData, RRClass> Holder;

@@ -22,7 +22,7 @@
 #include <string>
 #include <stdint.h>
 
-namespace isc {
+namespace bundy {
 
 namespace cc {
 class AbstractSession;

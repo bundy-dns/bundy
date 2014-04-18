@@ -21,10 +21,10 @@
 #include <string>
 #include <algorithm>
 
-using namespace isc::dns;
+using namespace bundy::dns;
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace cache {
 
 ResolverClassCache::ResolverClassCache(const RRClass& cache_class) :
@@ -69,16 +69,16 @@ ResolverClassCache::getClass() const {
 }
 
 bool
-ResolverClassCache::lookup(const isc::dns::Name& qname,
-                      const isc::dns::RRType& qtype,
-                      isc::dns::Message& response) const
+ResolverClassCache::lookup(const bundy::dns::Name& qname,
+                      const bundy::dns::RRType& qtype,
+                      bundy::dns::Message& response) const
 {
     LOG_DEBUG(logger, DBG_TRACE_DATA, CACHE_RESOLVER_LOOKUP_MSG).
         arg(qname).arg(qtype);
     // message response should has question section already.
     if (response.beginQuestion() == response.endQuestion()) {
         LOG_ERROR(logger, CACHE_RESOLVER_NO_QUESTION).arg(qname).arg(qtype);
-        isc_throw(MessageNoQuestionSection, "Message has no question section");
+        bundy_throw(MessageNoQuestionSection, "Message has no question section");
     }
 
     // First, query in local zone, if the rrset(qname, qtype, qclass) can be
@@ -96,9 +96,9 @@ ResolverClassCache::lookup(const isc::dns::Name& qname,
     return (messages_cache_->lookup(qname, qtype, response));
 }
 
-isc::dns::RRsetPtr
-ResolverClassCache::lookup(const isc::dns::Name& qname,
-               const isc::dns::RRType& qtype) const
+bundy::dns::RRsetPtr
+ResolverClassCache::lookup(const bundy::dns::Name& qname,
+               const bundy::dns::RRType& qtype) const
 {
     LOG_DEBUG(logger, DBG_TRACE_DATA, CACHE_RESOLVER_LOOKUP_RRSET).
         arg(qname).arg(qtype);
@@ -121,7 +121,7 @@ ResolverClassCache::lookup(const isc::dns::Name& qname,
 }
 
 bool
-ResolverClassCache::update(const isc::dns::Message& msg) {
+ResolverClassCache::update(const bundy::dns::Message& msg) {
     LOG_DEBUG(logger, DBG_TRACE_DATA, CACHE_RESOLVER_UPDATE_MSG).
         arg((*msg.beginQuestion())->getName()).
         arg((*msg.beginQuestion())->getType()).
@@ -130,7 +130,7 @@ ResolverClassCache::update(const isc::dns::Message& msg) {
 }
 
 bool
-ResolverClassCache::updateRRsetCache(const isc::dns::ConstRRsetPtr& rrset_ptr,
+ResolverClassCache::updateRRsetCache(const bundy::dns::ConstRRsetPtr& rrset_ptr,
                                 RRsetCachePtr rrset_cache_ptr)
 {
     RRsetTrustLevel level;
@@ -146,7 +146,7 @@ ResolverClassCache::updateRRsetCache(const isc::dns::ConstRRsetPtr& rrset_ptr,
 }
 
 bool
-ResolverClassCache::update(const isc::dns::ConstRRsetPtr& rrset_ptr) {
+ResolverClassCache::update(const bundy::dns::ConstRRsetPtr& rrset_ptr) {
     LOG_DEBUG(logger, DBG_TRACE_DATA, CACHE_RESOLVER_UPDATE_RRSET).
         arg(rrset_ptr->getName()).arg(rrset_ptr->getType()).
         arg(rrset_ptr->getClass());
@@ -179,10 +179,10 @@ ResolverCache::~ResolverCache()
 }
 
 bool
-ResolverCache::lookup(const isc::dns::Name& qname,
-                      const isc::dns::RRType& qtype,
-                      const isc::dns::RRClass& qclass,
-                      isc::dns::Message& response) const
+ResolverCache::lookup(const bundy::dns::Name& qname,
+                      const bundy::dns::RRType& qtype,
+                      const bundy::dns::RRClass& qclass,
+                      bundy::dns::Message& response) const
 {
     ResolverClassCache* cc = getClassCache(qclass);
     if (cc) {
@@ -194,10 +194,10 @@ ResolverCache::lookup(const isc::dns::Name& qname,
     }
 }
 
-isc::dns::RRsetPtr
-ResolverCache::lookup(const isc::dns::Name& qname,
-               const isc::dns::RRType& qtype,
-               const isc::dns::RRClass& qclass) const
+bundy::dns::RRsetPtr
+ResolverCache::lookup(const bundy::dns::Name& qname,
+               const bundy::dns::RRType& qtype,
+               const bundy::dns::RRClass& qclass) const
 {
     ResolverClassCache* cc = getClassCache(qclass);
     if (cc) {
@@ -209,13 +209,13 @@ ResolverCache::lookup(const isc::dns::Name& qname,
     }
 }
 
-isc::dns::RRsetPtr
-ResolverCache::lookupDeepestNS(const isc::dns::Name& qname,
-                               const isc::dns::RRClass& qclass) const
+bundy::dns::RRsetPtr
+ResolverCache::lookupDeepestNS(const bundy::dns::Name& qname,
+                               const bundy::dns::RRClass& qclass) const
 {
     LOG_DEBUG(logger, DBG_TRACE_DATA, CACHE_RESOLVER_DEEPEST).arg(qname).
         arg(qclass);
-    isc::dns::RRType qtype = RRType::NS();
+    bundy::dns::RRType qtype = RRType::NS();
     ResolverClassCache* cc = getClassCache(qclass);
     if (cc) {
         unsigned int count = qname.getLabelCount();
@@ -235,7 +235,7 @@ ResolverCache::lookupDeepestNS(const isc::dns::Name& qname,
 }
 
 bool
-ResolverCache::update(const isc::dns::Message& msg) {
+ResolverCache::update(const bundy::dns::Message& msg) {
     QuestionIterator iter = msg.beginQuestion();
     ResolverClassCache* cc = getClassCache((*iter)->getClass());
     if (cc) {
@@ -249,7 +249,7 @@ ResolverCache::update(const isc::dns::Message& msg) {
 }
 
 bool
-ResolverCache::update(const isc::dns::ConstRRsetPtr& rrset_ptr) {
+ResolverCache::update(const bundy::dns::ConstRRsetPtr& rrset_ptr) {
     ResolverClassCache* cc = getClassCache(rrset_ptr->getClass());
     if (cc) {
         return (cc->update(rrset_ptr));
@@ -262,7 +262,7 @@ ResolverCache::update(const isc::dns::ConstRRsetPtr& rrset_ptr) {
 }
 
 ResolverClassCache*
-ResolverCache::getClassCache(const isc::dns::RRClass& cache_class) const {
+ResolverCache::getClassCache(const bundy::dns::RRClass& cache_class) const {
     for (std::vector<ResolverClassCache*>::size_type i = 0;
          i < class_caches_.size(); ++i) {
         if (class_caches_[i]->getClass() == cache_class) {
@@ -273,5 +273,5 @@ ResolverCache::getClassCache(const isc::dns::RRClass& cache_class) const {
 }
 
 } // namespace cache
-} // namespace isc
+} // namespace bundy
 

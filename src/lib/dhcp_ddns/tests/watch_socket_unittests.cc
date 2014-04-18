@@ -26,8 +26,8 @@
 #endif
 
 using namespace std;
-using namespace isc;
-using namespace isc::dhcp_ddns;
+using namespace bundy;
+using namespace bundy::dhcp_ddns;
 
 namespace {
 

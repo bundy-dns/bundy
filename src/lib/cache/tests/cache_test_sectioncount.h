@@ -26,9 +26,9 @@ namespace {
 ///
 /// \return The number of RRsets in the given section
 int
-sectionRRsetCount(isc::dns::Message& msg, isc::dns::Message::Section section) {
+sectionRRsetCount(bundy::dns::Message& msg, bundy::dns::Message::Section section) {
     int count = 0;
-    for (isc::dns::RRsetIterator rrset_iter = msg.beginSection(section);
+    for (bundy::dns::RRsetIterator rrset_iter = msg.beginSection(section);
          rrset_iter != msg.endSection(section);
          ++rrset_iter) {
         ++count;

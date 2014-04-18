@@ -25,9 +25,9 @@
 #include <dns/rrclass.h>
 
 using namespace std;
-using namespace isc::dns;
+using namespace bundy::dns;
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 
 /// \brief Test Fixture Class
@@ -83,4 +83,4 @@ TEST_F(HashKeyTest, Equality) {
 }
 
 } // namespace nsas
-} // namespace isc
+} // namespace bundy

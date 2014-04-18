@@ -16,15 +16,15 @@
 #include <dhcp/pkt4.h>
 #include <dhcp/tests/pkt_filter_test_utils.h>
 
-using namespace isc::asiolink;
+using namespace bundy::asiolink;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 namespace test {
 
 PktFilterTest::PktFilterTest(const uint16_t port)
     : port_(port),
-      sock_info_(isc::asiolink::IOAddress("127.0.0.1"), port, -1, -1),
+      sock_info_(bundy::asiolink::IOAddress("127.0.0.1"), port, -1, -1),
       send_msg_sock_(-1) {
     // Initialize ifname_ and ifindex_.
     loInit();
@@ -67,7 +67,7 @@ PktFilterTest::initTestMessage() {
 
     try {
         test_message_->pack();
-    } catch (const isc::Exception& ex) {
+    } catch (const bundy::Exception& ex) {
         ADD_FAILURE() << "failed to create test message for PktFilterTest";
     }
 }
@@ -173,7 +173,7 @@ PktFilterStub::isDirectResponseSupported() const {
 
 SocketInfo
 PktFilterStub::openSocket(const Iface&,
-           const isc::asiolink::IOAddress& addr,
+           const bundy::asiolink::IOAddress& addr,
            const uint16_t port, const bool, const bool) {
     return (SocketInfo(addr, port, 0));
 }
@@ -189,6 +189,6 @@ PktFilterStub::send(const Iface&, uint16_t, const Pkt4Ptr&) {
 }
 
 
-} // end of isc::dhcp::test namespace
-} // end of isc::dhcp namespace
-} // end of isc namespace
+} // end of bundy::dhcp::test namespace
+} // end of bundy::dhcp namespace
+} // end of bundy namespace

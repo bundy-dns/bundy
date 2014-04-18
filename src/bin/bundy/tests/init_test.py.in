@@ -30,16 +30,16 @@ import os.path
 import copy
 import signal
 import socket
-from isc.net.addr import IPAddr
+from bundy.net.addr import IPAddr
 import time
-import isc.log
-import isc.config
-import isc.bundy.socket_cache
+import bundy.log
+import bundy.config
+import bundy.bundy.socket_cache
 import errno
 import random
 
-from isc.testutils.parse_args import TestOptParser, OptsError
-from isc.testutils.ccsession_mock import MockModuleCCSession
+from bundy.testutils.parse_args import TestOptParser, OptsError
+from bundy.testutils.ccsession_mock import MockModuleCCSession
 
 class TestProcessInfo(unittest.TestCase):
     def setUp(self):
@@ -303,10 +303,10 @@ class TestCacheCommands(unittest.TestCase):
         check_code(1, self.__socket_args)
         # The special "expected" exceptions
         self.__raise_exception = \
-            isc.bundy.socket_cache.ShareError("Not shared")
+            bundy.bundy.socket_cache.ShareError("Not shared")
         check_code(3, self.__socket_args)
         self.__raise_exception = \
-            isc.bundy.socket_cache.SocketError("Not shared", 13)
+            bundy.bundy.socket_cache.SocketError("Not shared", 13)
         check_code(2, self.__socket_args)
 
     def drop_socket(self, token):
@@ -346,13 +346,13 @@ class TestInit(unittest.TestCase):
         # Save original values that may be tweaked in some tests
         self.__orig_setgid = init.posix.setgid
         self.__orig_setuid = init.posix.setuid
-        self.__orig_logger_class = isc.log.Logger
+        self.__orig_logger_class = bundy.log.Logger
 
     def tearDown(self):
         # Restore original values saved in setUp()
         init.posix.setgid = self.__orig_setgid
         init.posix.setuid = self.__orig_setuid
-        isc.log.Logger = self.__orig_logger_class
+        bundy.log.Logger = self.__orig_logger_class
 
     def test_init(self):
         bundy_init = Init()
@@ -408,7 +408,7 @@ class TestInit(unittest.TestCase):
         # Let initial log output after setuid raise an exception
         init.posix.setgid = self.__setgid
         init.posix.setuid = self.__setuid
-        isc.log.Logger = raising_set_xid
+        bundy.log.Logger = raising_set_xid
         self.assertRaises(init.ChangeUserError,
                           Init(setuid=42, setgid=4200).change_user)
 
@@ -423,7 +423,7 @@ class TestInit(unittest.TestCase):
         creator = Creator()
         init.set_creator(creator)
         self.assertTrue(isinstance(init._socket_cache,
-                        isc.bundy.socket_cache.Cache))
+                        bundy.bundy.socket_cache.Cache))
         self.assertEqual(creator, init._socket_cache._creator)
         self.assertRaises(ValueError, init.set_creator, creator)
 
@@ -490,7 +490,7 @@ class TestInit(unittest.TestCase):
                 (self.msg, self.group) = (msg, group)
             def group_recvmsg(self, nonblock, seq): pass
         class DummyModuleCCSession():
-            module_spec = isc.config.module_spec.ModuleSpec({
+            module_spec = bundy.config.module_spec.ModuleSpec({
                     "module_name": "Init",
                     "statistics": [
                         {
@@ -512,25 +512,25 @@ class TestInit(unittest.TestCase):
         init.ccs = DummyModuleCCSession()
         # a bad command
         self.assertEqual(init.command_handler(-1, None),
-                         isc.config.ccsession.create_answer(1, "bad command"))
+                         bundy.config.ccsession.create_answer(1, "bad command"))
         # "shutdown" command
         self.assertEqual(init.command_handler("shutdown", None),
-                         isc.config.ccsession.create_answer(0))
+                         bundy.config.ccsession.create_answer(0))
         self.assertFalse(init.runnable)
         # "getstats" command
         self.assertEqual(init.command_handler("getstats", None),
-                         isc.config.ccsession.create_answer(0,
+                         bundy.config.ccsession.create_answer(0,
                             { 'boot_time': time.strftime('%Y-%m-%dT%H:%M:%SZ', _BASETIME) }))
         # "ping" command
         self.assertEqual(init.command_handler("ping", None),
-                         isc.config.ccsession.create_answer(0, "pong"))
+                         bundy.config.ccsession.create_answer(0, "pong"))
         # "show_processes" command
         self.assertEqual(init.command_handler("show_processes", None),
-                         isc.config.ccsession.create_answer(0,
+                         bundy.config.ccsession.create_answer(0,
                                                             init.get_processes()))
         # an unknown command
         self.assertEqual(init.command_handler("__UNKNOWN__", None),
-                         isc.config.ccsession.create_answer(1, "Unknown command"))
+                         bundy.config.ccsession.create_answer(1, "Unknown command"))
 
         # Fake the get_token of cache and test the command works
         init._socket_path = '/socket/path'
@@ -615,18 +615,18 @@ class MockInit(Init):
         self.creator = False
         self.get_process_exit_status_called = False
 
-        class MockSockCreator(isc.bundy.component.Component):
+        class MockSockCreator(bundy.bundy.component.Component):
             def __init__(self, process, bundy_init, kind, address=None,
                          params=None):
-                isc.bundy.component.Component.__init__(self, process,
+                bundy.bundy.component.Component.__init__(self, process,
                                                         bundy_init, kind,
                                                         'SockCreator')
                 self._start_func = bundy_init.start_creator
 
-        specials = isc.bundy.special_component.get_specials()
+        specials = bundy.bundy.special_component.get_specials()
         specials['sockcreator'] = MockSockCreator
         self._component_configurator = \
-            isc.bundy.component.Configurator(self, specials)
+            bundy.bundy.component.Configurator(self, specials)
 
     def start_creator(self):
         self.creator = True
@@ -1307,9 +1307,9 @@ class TestInitComponents(unittest.TestCase):
         if self._tmp_sleep is not None:
             time.sleep = self._tmp_sleep
         if self._tmp_module_cc_session is not None:
-            isc.config.ModuleCCSession = self._tmp_module_cc_session
+            bundy.config.ModuleCCSession = self._tmp_module_cc_session
         if self._tmp_cc_session is not None:
-            isc.cc.Session = self._tmp_cc_session
+            bundy.cc.Session = self._tmp_cc_session
 
     def __unary_hook(self, param):
         """
@@ -1707,12 +1707,12 @@ class TestInitComponents(unittest.TestCase):
         cc_sub = None
         class DummySessionAlwaysFails():
             def __init__(self, socket_file):
-                raise isc.cc.session.SessionError('Connection fails')
+                raise bundy.cc.session.SessionError('Connection fails')
             def group_subscribe(self, s):
                 global cc_sub
                 cc_sub = s
 
-        isc.cc.Session = DummySessionAlwaysFails
+        bundy.cc.Session = DummySessionAlwaysFails
 
         with self.assertRaises(init.CChannelConnectError):
             # An exception will be thrown here when it eventually times
@@ -1739,7 +1739,7 @@ class TestInitComponents(unittest.TestCase):
                 global cc_sub
                 cc_sub = s
 
-        isc.cc.Session = DummySession
+        bundy.cc.Session = DummySession
 
         # reset values
         attempts = 0
@@ -1753,7 +1753,7 @@ class TestInitComponents(unittest.TestCase):
         self.assertEqual(cc_socket_file, bundy_init.msgq_socket_file)
         self.assertEqual(cc_sub, 'Init')
 
-        # isc.cc.Session, time.time() and time.sleep() are restored
+        # bundy.cc.Session, time.time() and time.sleep() are restored
         # during tearDown().
 
     def _start_cfgmgr_helper(self, init, data_path, filename, clear_config):
@@ -1790,9 +1790,9 @@ class TestInitComponents(unittest.TestCase):
             def rpc_call(self, command, recipient):
                 self.called += 1
                 if self.called == 1:
-                    raise isc.config.RPCRecipientMissing("Not yet")
+                    raise bundy.config.RPCRecipientMissing("Not yet")
                 elif self.called == 2:
-                    raise isc.config.RPCError(1, "What?")
+                    raise bundy.config.RPCError(1, "What?")
                 else:
                     raise Exception("Called too many times")
 
@@ -1813,7 +1813,7 @@ class TestInitComponents(unittest.TestCase):
 
             def rpc_call(self, command, recipient):
                 self.called += 1
-                raise isc.config.RPCRecipientMissing("Not yet")
+                raise bundy.config.RPCRecipientMissing("Not yet")
 
         b10init = MockInitSimple()
         b10init.wait_time = 1
@@ -1917,8 +1917,8 @@ class TestInitComponents(unittest.TestCase):
             def start(self):
                 self.started = True
         bundy_init = MockInitSimple()
-        self._tmp_module_cc_session = isc.config.ModuleCCSession
-        isc.config.ModuleCCSession = DummySession
+        self._tmp_module_cc_session = bundy.config.ModuleCCSession
+        bundy.config.ModuleCCSession = DummySession
 
         bundy_init.start_ccsession({})
         self.assertEqual(init.SPECFILE_LOCATION, bundy_init.ccs.specfile)
@@ -1928,7 +1928,7 @@ class TestInitComponents(unittest.TestCase):
         self.assertEqual(bundy_init.msgq_socket_file, bundy_init.ccs.socket_file)
         self.assertTrue(bundy_init.ccs.started)
 
-        # isc.config.ModuleCCSession is restored during tearDown().
+        # bundy.config.ModuleCCSession is restored during tearDown().
 
     def test_start_process(self):
         '''Test that processes can be started.'''
@@ -2144,14 +2144,14 @@ class TestInitComponents(unittest.TestCase):
 
         class DummySession():
             def __init__(self, socket_file):
-                raise isc.cc.session.SessionError('This is the expected case.')
+                raise bundy.cc.session.SessionError('This is the expected case.')
 
         class DummySessionSocketExists():
             def __init__(self, socket_file):
                 # simulate that connect passes
                 return
 
-        isc.cc.Session = DummySession
+        bundy.cc.Session = DummySession
 
         # All is well case, where all components are started
         # successfully. We check that the actual call to
@@ -2190,12 +2190,12 @@ class TestInitComponents(unittest.TestCase):
         self.assertTrue(bundy_init.killed)
 
         # Check the case when socket file already exists
-        isc.cc.Session = DummySessionSocketExists
+        bundy.cc.Session = DummySessionSocketExists
         bundy_init = MockInitStartup(False)
         r = bundy_init.startup()
         self.assertIn('already running', r)
 
-        # isc.cc.Session is restored during tearDown().
+        # bundy.cc.Session is restored during tearDown().
 
 class SocketSrvTest(unittest.TestCase):
     """
@@ -2485,5 +2485,5 @@ class TestFunctions(unittest.TestCase):
 if __name__ == '__main__':
     # store os.environ for test_unchanged_environment
     original_os_environ = copy.deepcopy(os.environ)
-    isc.log.resetUnitTestRootLogger()
+    bundy.log.resetUnitTestRootLogger()
     unittest.main()

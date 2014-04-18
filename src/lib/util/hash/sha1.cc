@@ -52,7 +52,7 @@
  */
 #include <util/hash/sha1.h>
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace hash {
 
@@ -489,4 +489,4 @@ SHA1ProcessMessageBlock(SHA1Context *context) {
 
 } // namespace hash
 } // namespace util
-} // namespace isc
+} // namespace bundy

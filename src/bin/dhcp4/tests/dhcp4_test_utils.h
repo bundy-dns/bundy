@@ -34,7 +34,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 namespace test {
 
@@ -64,7 +64,7 @@ public:
 
     /// Does nothing.
     virtual SocketInfo openSocket(const Iface&,
-                                  const isc::asiolink::IOAddress& addr,
+                                  const bundy::asiolink::IOAddress& addr,
                                   const uint16_t port, const bool, const bool) {
         return (SocketInfo(addr, port, 0));
     }
@@ -312,7 +312,7 @@ public:
     /// @param expected_addr expected address
     Lease4Ptr checkLease(const Pkt4Ptr& rsp, const OptionPtr& client_id,
                          const HWAddrPtr&,
-                         const isc::asiolink::IOAddress& expected_addr);
+                         const bundy::asiolink::IOAddress& expected_addr);
 
     /// @brief Checks if server response (OFFER, ACK, NAK) includes proper server-id
     /// @param rsp response packet to be validated
@@ -415,14 +415,14 @@ public:
 
     int rcode_;
 
-    isc::data::ConstElementPtr comment_;
+    bundy::data::ConstElementPtr comment_;
 
     /// @brief Server object under test.
     NakedDhcpv4Srv srv_;
 };
 
-}; // end of isc::dhcp::test namespace
-}; // end of isc::dhcp namespace
-}; // end of isc namespace
+}; // end of bundy::dhcp::test namespace
+}; // end of bundy::dhcp namespace
+}; // end of bundy namespace
 
 #endif // DHCP4_TEST_UTILS_H

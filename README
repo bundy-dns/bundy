@@ -43,10 +43,10 @@ OpenBSD, Mac OS X and Solaris 11, Rebind message support for the
 DHCPv6 server, an experimental PostgreSQL database backend for
 leases, and CSV file storage for in-memory leases.
 
-For information about the Kea project, please visit http://kea.isc.org/.
+For information about the Kea project, please visit http://kea.bundy.org/.
 If you have any questions or comments about working with the DHCP
 code, you may post them to the Kea DHCP Mailing List
-https://lists.isc.org/mailman/listinfo/kea-users.
+https://lists.bundy.org/mailman/listinfo/kea-users.
 
 For the full commit history, please see the ChangeLog and the git
 Log.  This release doesn't introduce any code changes since last
@@ -54,18 +54,18 @@ week's release candidate.
 
 The bundy-1.2.0 source may be downloaded from:
 
-  ftp://ftp.isc.org/isc/bundy/1.2.0/bundy-1.2.0.tar.gz
+  ftp://ftp.bundy.org/bundy/bundy/1.2.0/bundy-1.2.0.tar.gz
 
 A PGP signature of the distribution is at
 
-  ftp://ftp.isc.org/isc/bundy/1.2.0/bundy-1.2.0.tar.gz.sha512.asc
+  ftp://ftp.bundy.org/bundy/bundy/1.2.0/bundy-1.2.0.tar.gz.sha512.asc
 
 The signature was generated with the ISC code signing key which is
-available at https://www.isc.org/about/openpgp
+available at https://www.bundy.org/about/openpgp
 
 Installation details are documented in the Guide.  In addition,
 installation suggestions for various operating systems are available
-via our wiki http://bundy.isc.org/wiki/InstallStartPage.  (Please
+via our wiki http://bundy.bundy.org/wiki/InstallStartPage.  (Please
 note that there are build regressions on Solaris platforms for the
 DNS code.)  The ./configure options --disable-dns and --disable-dhcp
 may be used to provide an optional DHCP- or DNS-only build and

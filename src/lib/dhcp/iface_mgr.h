@@ -30,7 +30,7 @@
 
 #include <list>
 
-namespace isc {
+namespace bundy {
 
 namespace dhcp {
 
@@ -39,14 +39,14 @@ namespace dhcp {
 class IfaceDetectError : public Exception {
 public:
     IfaceDetectError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Exception thrown when it is not allowed to set new Packet Filter.
 class PacketFilterChangeDenied : public Exception {
 public:
     PacketFilterChangeDenied(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief IfaceMgr exception thrown thrown when socket opening
@@ -54,7 +54,7 @@ public:
 class SocketConfigError : public Exception {
 public:
     SocketConfigError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief IfaceMgr exception thrown thrown when error occured during
@@ -62,7 +62,7 @@ public:
 class SocketReadError : public Exception {
 public:
     SocketReadError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief IfaceMgr exception thrown thrown when error occured during
@@ -70,13 +70,13 @@ public:
 class SocketWriteError : public Exception {
 public:
     SocketWriteError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// Holds information about socket.
 struct SocketInfo {
 
-    isc::asiolink::IOAddress addr_; /// bound address
+    bundy::asiolink::IOAddress addr_; /// bound address
     uint16_t port_;   /// socket port
     uint16_t family_; /// IPv4 or IPv6
 
@@ -113,7 +113,7 @@ struct SocketInfo {
     /// @param port A port the socket is bound to.
     /// @param sockfd Socket descriptor.
     /// @param fallbackfd A descriptor of the fallback socket.
-    SocketInfo(const isc::asiolink::IOAddress& addr, const uint16_t port,
+    SocketInfo(const bundy::asiolink::IOAddress& addr, const uint16_t port,
                const int sockfd, const int fallbackfd = -1)
         : addr_(addr), port_(port), family_(addr.getFamily()),
           sockfd_(sockfd), fallbackfd_(fallbackfd) { }
@@ -133,7 +133,7 @@ public:
     static const unsigned int MAX_MAC_LEN = 20;
 
     /// Type that defines list of addresses
-    typedef std::vector<isc::asiolink::IOAddress> AddressCollection;
+    typedef std::vector<bundy::asiolink::IOAddress> AddressCollection;
 
     /// @brief Type that holds a list of socket information.
     ///
@@ -255,7 +255,7 @@ public:
     ///
     /// @return Boolean value which informs whether IPv4 address has been found
     /// for the interface (if true), or not (false).
-    bool getAddress4(isc::asiolink::IOAddress& address) const;
+    bool getAddress4(bundy::asiolink::IOAddress& address) const;
 
     /// @brief Adds an address to an interface.
     ///
@@ -263,7 +263,7 @@ public:
     /// configure address on actual network interface.
     ///
     /// @param addr address to be added
-    void addAddress(const isc::asiolink::IOAddress& addr) {
+    void addAddress(const bundy::asiolink::IOAddress& addr) {
         addrs_.push_back(addr);
     }
 
@@ -276,7 +276,7 @@ public:
     ///
     /// @return true if removal was successful (address was in collection),
     ///         false otherwise
-    bool delAddress(const isc::asiolink::IOAddress& addr);
+    bool delAddress(const bundy::asiolink::IOAddress& addr);
 
     /// @brief Adds socket descriptor to an interface.
     ///
@@ -321,7 +321,7 @@ public:
     ///
     /// @throw BadValue if specified address is already defined on interface
     /// @param addr unicast address to listen on
-    void addUnicast(const isc::asiolink::IOAddress& addr);
+    void addUnicast(const bundy::asiolink::IOAddress& addr);
 
     /// @brief Returns a container of addresses the server should listen on
     ///
@@ -505,7 +505,7 @@ public:
     /// @param pkt a packet to be transmitted
     ///
     /// @return a socket descriptor
-    uint16_t getSocket(const isc::dhcp::Pkt6& pkt);
+    uint16_t getSocket(const bundy::dhcp::Pkt6& pkt);
 
     /// @brief Return most suitable socket for transmitting specified IPv4 packet.
     ///
@@ -518,7 +518,7 @@ public:
     /// @param pkt a packet to be transmitted
     ///
     /// @return A structure describing a socket.
-    SocketInfo getSocket(const isc::dhcp::Pkt4& pkt);
+    SocketInfo getSocket(const bundy::dhcp::Pkt4& pkt);
 
     /// Debugging method that prints out all available interfaces.
     ///
@@ -533,8 +533,8 @@ public:
     ///
     /// @param pkt packet to be sent
     ///
-    /// @throw isc::BadValue if invalid interface specified in the packet.
-    /// @throw isc::dhcp::SocketWriteError if sendmsg() failed to send packet.
+    /// @throw bundy::BadValue if invalid interface specified in the packet.
+    /// @throw bundy::dhcp::SocketWriteError if sendmsg() failed to send packet.
     /// @return true if sending was successful
     bool send(const Pkt6Ptr& pkt);
 
@@ -546,8 +546,8 @@ public:
     ///
     /// @param pkt a packet to be sent
     ///
-    /// @throw isc::BadValue if invalid interface specified in the packet.
-    /// @throw isc::dhcp::SocketWriteError if sendmsg() failed to send packet.
+    /// @throw bundy::BadValue if invalid interface specified in the packet.
+    /// @throw bundy::dhcp::SocketWriteError if sendmsg() failed to send packet.
     /// @return true if sending was successful
     bool send(const Pkt4Ptr& pkt);
 
@@ -565,8 +565,8 @@ public:
     /// @param timeout_usec specifies fractional part of the timeout
     /// (in microseconds)
     ///
-    /// @throw isc::BadValue if timeout_usec is greater than one million
-    /// @throw isc::dhcp::SocketReadError if error occured when receiving a packet.
+    /// @throw bundy::BadValue if timeout_usec is greater than one million
+    /// @throw bundy::dhcp::SocketReadError if error occured when receiving a packet.
     /// @return Pkt6 object representing received packet (or NULL)
     Pkt6Ptr receive6(uint32_t timeout_sec, uint32_t timeout_usec = 0);
 
@@ -580,8 +580,8 @@ public:
     /// @param timeout_usec specifies fractional part of the timeout
     /// (in microseconds)
     ///
-    /// @throw isc::BadValue if timeout_usec is greater than one million
-    /// @throw isc::dhcp::SocketReadError if error occured when receiving a packet.
+    /// @throw bundy::BadValue if timeout_usec is greater than one million
+    /// @throw bundy::dhcp::SocketReadError if error occured when receiving a packet.
     /// @return Pkt4 object representing received packet (or NULL)
     Pkt4Ptr receive4(uint32_t timeout_sec, uint32_t timeout_usec = 0);
 
@@ -604,7 +604,7 @@ public:
     /// @return socket descriptor, if socket creation, binding and multicast
     /// group join were all successful.
     int openSocket(const std::string& ifname,
-                   const isc::asiolink::IOAddress& addr,
+                   const bundy::asiolink::IOAddress& addr,
                    const uint16_t port,
                    const bool receive_bcast = false,
                    const bool send_bcast = false);
@@ -623,8 +623,8 @@ public:
     /// @param family address family (AF_INET or AF_INET6)
     /// @return socket descriptor, if socket creation and binding was
     /// successful.
-    /// @throw isc::Unexpected if failed to create and bind socket.
-    /// @throw isc::BadValue if there is no address on specified interface
+    /// @throw bundy::Unexpected if failed to create and bind socket.
+    /// @throw bundy::BadValue if there is no address on specified interface
     /// that belongs to given family.
     int openSocketFromIface(const std::string& ifname,
                             const uint16_t port,
@@ -641,10 +641,10 @@ public:
     /// @param port UDP port
     /// @return socket descriptor, if socket creation and binding was
     /// successful.
-    /// @throw isc::Unexpected if failed to create and bind socket
-    /// @throw isc::BadValue if specified address is not available on
+    /// @throw bundy::Unexpected if failed to create and bind socket
+    /// @throw bundy::BadValue if specified address is not available on
     /// any interface
-    int openSocketFromAddress(const isc::asiolink::IOAddress& addr,
+    int openSocketFromAddress(const bundy::asiolink::IOAddress& addr,
                               const uint16_t port);
 
     /// @brief Opens UDP/IP socket to be used to connect to remote address
@@ -660,8 +660,8 @@ public:
     /// @param port UDP port
     /// @return socket descriptor, if socket creation and binding was
     /// successful.
-    /// @throw isc::Unexpected if failed to create and bind socket
-    int openSocketFromRemoteAddress(const isc::asiolink::IOAddress& remote_addr,
+    /// @throw bundy::Unexpected if failed to create and bind socket
+    int openSocketFromRemoteAddress(const bundy::asiolink::IOAddress& remote_addr,
                                     const uint16_t port);
 
 
@@ -717,7 +717,7 @@ public:
     /// - interface has an IPv4 address assigned.
     ///
     /// The type of the socket being open depends on the selected Packet Filter
-    /// represented by a class derived from @c isc::dhcp::PktFilter abstract
+    /// represented by a class derived from @c bundy::dhcp::PktFilter abstract
     /// class.
     ///
     /// It is possible to specify whether sockets should be broadcast capable.
@@ -855,8 +855,8 @@ public:
     /// @param packet_filter A pointer to the new packet filter object to be
     /// used by @c IfaceMgr.
     ///
-    /// @throw isc::dhcp::InvalidPacketFilter if specified object is NULL.
-    /// @throw isc::dhcp::PacketFilterChangeDenied if there are open IPv6
+    /// @throw bundy::dhcp::InvalidPacketFilter if specified object is NULL.
+    /// @throw bundy::dhcp::PacketFilterChangeDenied if there are open IPv6
     /// sockets.
     void setPacketFilter(const PktFilter6Ptr& packet_filter);
 
@@ -903,7 +903,7 @@ public:
     /// @param addr Address of the socket being searched.
     ///
     /// @return true if there is a socket bound to the specified address.
-    bool hasOpenSocket(const isc::asiolink::IOAddress& addr) const;
+    bool hasOpenSocket(const bundy::asiolink::IOAddress& addr) const;
 
     // don't use private, we need derived classes in tests
 protected:
@@ -929,7 +929,7 @@ protected:
     /// @param send_bcast configure socket to send broadcast messages.
     ///
     /// @return socket descriptor
-    int openSocket4(Iface& iface, const isc::asiolink::IOAddress& addr,
+    int openSocket4(Iface& iface, const bundy::asiolink::IOAddress& addr,
                     const uint16_t port, const bool receive_bcast = false,
                     const bool send_bcast = false);
 
@@ -947,7 +947,7 @@ protected:
     /// group.
     ///
     /// @return socket descriptor
-    int openSocket6(Iface& iface, const isc::asiolink::IOAddress& addr,
+    int openSocket6(Iface& iface, const bundy::asiolink::IOAddress& addr,
                     uint16_t port, const bool join_multicast);
 
     /// @brief Stub implementation of network interface detection.
@@ -1012,9 +1012,9 @@ private:
     /// @param remote_addr remote address to connect to
     /// @param port port to be used
     /// @return local address to be used to connect to remote address
-    /// @throw isc::Unexpected if unable to identify local address
-    isc::asiolink::IOAddress
-    getLocalAddress(const isc::asiolink::IOAddress& remote_addr,
+    /// @throw bundy::Unexpected if unable to identify local address
+    bundy::asiolink::IOAddress
+    getLocalAddress(const bundy::asiolink::IOAddress& remote_addr,
                     const uint16_t port);
 
 
@@ -1037,7 +1037,7 @@ private:
     /// error occurs during opening a socket, or NULL if exception should
     /// be thrown upon error.
     bool openMulticastSocket(Iface& iface,
-                             const isc::asiolink::IOAddress& addr,
+                             const bundy::asiolink::IOAddress& addr,
                              const uint16_t port,
                              IfaceMgrErrorMsgCallback error_handler = NULL);
 
@@ -1061,7 +1061,7 @@ private:
     SocketCallbackInfoContainer callbacks_;
 };
 
-}; // namespace isc::dhcp
-}; // namespace isc
+}; // namespace bundy::dhcp
+}; // namespace bundy
 
 #endif // IFACE_MGR_H

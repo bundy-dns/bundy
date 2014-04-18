@@ -34,7 +34,7 @@
 #include "nsas_entry.h"
 #include "nameserver_address.h"
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 
 class NameserverAddress;
@@ -46,7 +46,7 @@ class NameserverAddress;
 class InconsistentOwnerNames : public Exception {
 public:
     InconsistentOwnerNames(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what)
+        bundy::Exception(file, line, what)
     {}
 };
 
@@ -56,7 +56,7 @@ public:
 class RTTIsZero : public Exception {
 public:
     RTTIsZero(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what)
+        bundy::Exception(file, line, what)
     {}
 };
 
@@ -67,7 +67,7 @@ public:
 class InconsistentClass : public Exception {
 public:
     InconsistentClass(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what)
+        bundy::Exception(file, line, what)
     {}
 };
 
@@ -101,7 +101,7 @@ public:
     /// \param name Name of the nameserver,
     /// \param class_code class of the nameserver
     NameserverEntry(const std::string& name,
-        const isc::dns::RRClass& class_code) :
+        const bundy::dns::RRClass& class_code) :
         name_(name),
         classCode_(class_code),
         expiration_(0)
@@ -190,7 +190,7 @@ public:
     }
 
     /// \return Class of RRset
-    const isc::dns::RRClass& getClass() const {
+    const bundy::dns::RRClass& getClass() const {
         return classCode_;
     }
 
@@ -241,14 +241,14 @@ public:
      *     even when there are addresses, if there are no addresses for this
      *     family.
      */
-    void askIP(isc::resolve::ResolverInterface* resolver,
+    void askIP(bundy::resolve::ResolverInterface* resolver,
         boost::shared_ptr<Callback> callback, AddressFamily family);
     //@}
 
 private:
-    mutable isc::util::locks::recursive_mutex    mutex_;///< Mutex protecting this object
+    mutable bundy::util::locks::recursive_mutex    mutex_;///< Mutex protecting this object
     std::string     name_;              ///< Canonical name of the nameserver
-    isc::dns::RRClass classCode_;       ///< Class of the nameserver
+    bundy::dns::RRClass classCode_;       ///< Class of the nameserver
     /**
      * \short Address lists.
      *
@@ -273,11 +273,11 @@ private:
     /// \short Private version that does the actual asking of one address type
     ///
     /// Call unlocked.
-    void askIP(isc::resolve::ResolverInterface* resolver,
-        const isc::dns::RRType&, AddressFamily);
+    void askIP(bundy::resolve::ResolverInterface* resolver,
+        const bundy::dns::RRType&, AddressFamily);
 };
 
 }   // namespace dns
-}   // namespace isc
+}   // namespace bundy
 
 #endif // NAMESERVER_ENTRY_H

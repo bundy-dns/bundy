@@ -35,11 +35,11 @@
 #include <new>                  // for bad_alloc
 #include <string>
 
-using namespace isc::dns;
-using namespace isc::dns::rdata;
-using namespace isc::datasrc::memory;
-using namespace isc::datasrc::memory::test;
-using namespace isc::testutils;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
+using namespace bundy::datasrc::memory;
+using namespace bundy::datasrc::memory::test;
+using namespace bundy::testutils;
 
 namespace {
 
@@ -265,7 +265,7 @@ TEST_F(ZoneDataTest, isSigned) {
 // data (32 bits)
 RRTTL
 createRRTTL(const void* ttl_data) {
-    isc::util::InputBuffer b(ttl_data, sizeof(uint32_t));
+    bundy::util::InputBuffer b(ttl_data, sizeof(uint32_t));
     return (RRTTL(b));
 }
 

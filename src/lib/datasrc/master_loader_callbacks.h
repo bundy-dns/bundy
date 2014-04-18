@@ -17,7 +17,7 @@
 
 #include <dns/master_loader_callbacks.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 class Name;
 class RRClass;
@@ -37,9 +37,9 @@ class ZoneUpdater;
 ///     the loading, it is set to false. Otherwise, it is untouched.
 /// \return Set of callbacks to be passed to the master loader.
 /// \throw std::bad_alloc when allocation fails.
-isc::dns::MasterLoaderCallbacks
-createMasterLoaderCallbacks(const isc::dns::Name& name,
-                            const isc::dns::RRClass& rrclass, bool* ok);
+bundy::dns::MasterLoaderCallbacks
+createMasterLoaderCallbacks(const bundy::dns::Name& name,
+                            const bundy::dns::RRClass& rrclass, bool* ok);
 
 /// \brief Create a callback for MasterLoader to add RRsets.
 ///
@@ -58,7 +58,7 @@ createMasterLoaderCallbacks(const isc::dns::Name& name,
 /// \param updater The zone updater to use.
 /// \return The callback to be passed to MasterLoader.
 /// \throw std::bad_alloc when allocation fails.
-isc::dns::AddRRCallback
+bundy::dns::AddRRCallback
 createMasterLoaderAddCallback(ZoneUpdater& updater);
 
 }

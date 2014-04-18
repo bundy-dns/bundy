@@ -21,7 +21,7 @@
 #include <log4cplus/spi/loggingevent.h>
 #include <boost/shared_ptr.hpp>
 
-namespace isc {
+namespace bundy {
 namespace log {
 namespace internal {
 
@@ -31,10 +31,10 @@ namespace internal {
 /// is called after the log buffer has been flushed; the buffer
 /// is only supposed to be used once (until the first time a
 /// logger specification is processed)
-class LogBufferAddAfterFlush : public isc::Exception {
+class LogBufferAddAfterFlush : public bundy::Exception {
 public:
     LogBufferAddAfterFlush(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what)
+        bundy::Exception(file, line, what)
     {}
 };
 
@@ -112,7 +112,7 @@ private:
 
 } // end namespace internal
 } // end namespace log
-} // end namespace isc
+} // end namespace bundy
 
 #endif // LOG_BUFFER_H
 

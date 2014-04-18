@@ -21,7 +21,7 @@
 
 #include <iostream>
 
-using namespace isc::d2;
+using namespace bundy::d2;
 using namespace std;
 
 /// This file contains entry point (main() function) for standard DHCP-DDNS
@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
     try  {
         // 'false' value disables test mode.
         controller->launch(argc, argv, false);
-    } catch (const isc::Exception& ex) {
+    } catch (const bundy::Exception& ex) {
         std::cerr << "Service failed:" << ex.what() << std::endl;
         ret = EXIT_FAILURE;
     }

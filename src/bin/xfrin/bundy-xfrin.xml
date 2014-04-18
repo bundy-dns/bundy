@@ -75,7 +75,7 @@ in separate zonemgr process.
       and care should be taken to enable IXFR.
       See the BUNDY Guide for more details.
     </para>
-<!-- TODO: http://bundy.isc.org/ticket/1279 -->
+<!-- TODO: http://bundy.bundy.org/ticket/1279 -->
 
     <para>
       This daemon communicates with BUNDY over a

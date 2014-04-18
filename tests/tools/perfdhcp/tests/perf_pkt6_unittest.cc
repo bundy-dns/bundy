@@ -26,9 +26,9 @@
 #include "../perf_pkt6.h"
 
 using namespace std;
-using namespace isc;
-using namespace isc::dhcp;
-using namespace isc::perfdhcp;
+using namespace bundy;
+using namespace bundy::dhcp;
+using namespace bundy::perfdhcp;
 
 typedef PerfPkt6::LocalizedOptionPtr LocalizedOptionPtr;
 

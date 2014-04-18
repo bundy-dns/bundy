@@ -31,7 +31,7 @@
 #include <dhcpsrv/triplet.h>
 #include <dhcpsrv/lease.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief a base class for Subnet4 and Subnet6
@@ -178,17 +178,17 @@ public:
         /// @brief default and the only constructor
         ///
         /// @param addr an IP address of the relay (may be :: or 0.0.0.0)
-        RelayInfo(const isc::asiolink::IOAddress& addr);
+        RelayInfo(const bundy::asiolink::IOAddress& addr);
 
         /// @brief IP address of the relay
-        isc::asiolink::IOAddress addr_;
+        bundy::asiolink::IOAddress addr_;
     };
 
     /// Pointer to the RelayInfo structure
     typedef boost::shared_ptr<Subnet::RelayInfo> RelayInfoPtr;
 
     /// @brief checks if specified address is in range
-    bool inRange(const isc::asiolink::IOAddress& addr) const;
+    bool inRange(const bundy::asiolink::IOAddress& addr) const;
 
     /// @brief Add new option instance to the collection.
     ///
@@ -197,7 +197,7 @@ public:
     /// requested it or not.
     /// @param option_space name of the option space to add an option to.
     ///
-    /// @throw isc::BadValue if invalid option provided.
+    /// @throw bundy::BadValue if invalid option provided.
     void addOption(const OptionPtr& option, bool persistent,
                    const std::string& option_space);
 
@@ -230,7 +230,7 @@ public:
     /// @param addr this address will be checked if it belongs to any pools in
     ///        that subnet
     /// @return true if the address is in any of the pools
-    bool inPool(Lease::Type type, const isc::asiolink::IOAddress& addr) const;
+    bool inPool(Lease::Type type, const bundy::asiolink::IOAddress& addr) const;
 
     /// @brief Return valid-lifetime for addresses in that prefix
     Triplet<uint32_t> getValid() const {
@@ -295,7 +295,7 @@ public:
     ///
     /// @param type lease type to be returned
     /// @return address/prefix that was last tried from this pool
-    isc::asiolink::IOAddress getLastAllocated(Lease::Type type) const;
+    bundy::asiolink::IOAddress getLastAllocated(Lease::Type type) const;
 
     /// @brief sets the last address that was tried from this pool
     ///
@@ -308,7 +308,7 @@ public:
     /// @param addr address/prefix to that was tried last
     /// @param type lease type to be set
     void setLastAllocated(Lease::Type type,
-                          const isc::asiolink::IOAddress& addr);
+                          const bundy::asiolink::IOAddress& addr);
 
     /// @brief Returns unique ID for that subnet
     /// @return unique ID for that subnet
@@ -317,7 +317,7 @@ public:
     /// @brief Returns subnet parameters (prefix and prefix length)
     ///
     /// @return (prefix, prefix length) pair
-    std::pair<isc::asiolink::IOAddress, uint8_t> get() const {
+    std::pair<bundy::asiolink::IOAddress, uint8_t> get() const {
         return (std::make_pair(prefix_, prefix_len_));
     }
 
@@ -346,7 +346,7 @@ public:
     /// @param anypool other pool may be returned as well, not only the one
     ///        that addr belongs to
     /// @return found pool (or NULL)
-    const PoolPtr getPool(Lease::Type type, const isc::asiolink::IOAddress& addr,
+    const PoolPtr getPool(Lease::Type type, const bundy::asiolink::IOAddress& addr,
                           bool anypool = true) const;
 
     /// @brief Returns a pool without any address specified
@@ -361,7 +361,7 @@ public:
     ///
     /// It must be implemented in derived classes (should return :: for Subnet6
     /// and 0.0.0.0 for Subnet4)
-    virtual isc::asiolink::IOAddress default_pool() const = 0;
+    virtual bundy::asiolink::IOAddress default_pool() const = 0;
 
     /// @brief Returns all pools (const variant)
     ///
@@ -415,7 +415,7 @@ public:
     /// be extended in the future.
     ///
     /// @param relay structure that contains relay information
-    void setRelayInfo(const isc::dhcp::Subnet::RelayInfo& relay);
+    void setRelayInfo(const bundy::dhcp::Subnet::RelayInfo& relay);
 
 
     /// @brief Returns const reference to relay information
@@ -424,7 +424,7 @@ public:
     /// returned it is valid.
     ///
     /// @return const reference to the relay information
-    const isc::dhcp::Subnet::RelayInfo& getRelayInfo() {
+    const bundy::dhcp::Subnet::RelayInfo& getRelayInfo() {
         return (relay_);
     }
 
@@ -445,7 +445,7 @@ public:
     /// @param client_classes list of all classes the client belongs to
     /// @return true if client can be supported, false otherwise
     bool
-    clientSupported(const isc::dhcp::ClientClasses& client_classes) const;
+    clientSupported(const bundy::dhcp::ClientClasses& client_classes) const;
 
     /// @brief adds class class_name to the list of supported classes
     ///
@@ -453,7 +453,7 @@ public:
     ///
     /// @param class_name client class to be supported by this subnet
     void
-    allowClientClass(const isc::dhcp::ClientClass& class_name);
+    allowClientClass(const bundy::dhcp::ClientClass& class_name);
 
 protected:
     /// @brief Returns all pools (non-const variant)
@@ -482,11 +482,11 @@ protected:
     /// @param relay optional relay information (currently with address only)
     /// @param id arbitraty subnet id, value of 0 triggers autogeneration
     /// of subnet id
-    Subnet(const isc::asiolink::IOAddress& prefix, uint8_t len,
+    Subnet(const bundy::asiolink::IOAddress& prefix, uint8_t len,
            const Triplet<uint32_t>& t1,
            const Triplet<uint32_t>& t2,
            const Triplet<uint32_t>& valid_lifetime,
-           const isc::dhcp::Subnet::RelayInfo& relay,
+           const bundy::dhcp::Subnet::RelayInfo& relay,
            const SubnetID id);
 
     /// @brief virtual destructor
@@ -547,7 +547,7 @@ protected:
     PoolCollection pools_pd_;
 
     /// @brief a prefix of the subnet
-    isc::asiolink::IOAddress prefix_;
+    bundy::asiolink::IOAddress prefix_;
 
     /// @brief a prefix length of the subnet
     uint8_t prefix_len_;
@@ -570,17 +570,17 @@ protected:
     /// removing a pool, restarting or changing allocation algorithms. For
     /// that purpose it should be only considered a help that should not be
     /// fully trusted.
-    isc::asiolink::IOAddress last_allocated_ia_;
+    bundy::asiolink::IOAddress last_allocated_ia_;
 
     /// @brief last allocated temporary address
     ///
     /// See @ref last_allocated_ia_ for details.
-    isc::asiolink::IOAddress last_allocated_ta_;
+    bundy::asiolink::IOAddress last_allocated_ta_;
 
     /// @brief last allocated IPv6 prefix
     ///
     /// See @ref last_allocated_ia_ for details.
-    isc::asiolink::IOAddress last_allocated_pd_;
+    bundy::asiolink::IOAddress last_allocated_pd_;
 
     /// @brief Name of the network interface (if connected directly)
     std::string iface_;
@@ -642,7 +642,7 @@ public:
     /// @param valid_lifetime preferred lifetime of leases (in seconds)
     /// @param id arbitraty subnet id, default value of 0 triggers
     /// autogeneration of subnet id
-    Subnet4(const isc::asiolink::IOAddress& prefix, uint8_t length,
+    Subnet4(const bundy::asiolink::IOAddress& prefix, uint8_t length,
             const Triplet<uint32_t>& t1,
             const Triplet<uint32_t>& t2,
             const Triplet<uint32_t>& valid_lifetime,
@@ -653,12 +653,12 @@ public:
     /// Will be used for siaddr field (the next server) that typically is used
     /// as TFTP server. If not specified, the default value of 0.0.0.0 is
     /// used.
-    void setSiaddr(const isc::asiolink::IOAddress& siaddr);
+    void setSiaddr(const bundy::asiolink::IOAddress& siaddr);
 
     /// @brief Returns siaddr for this subnet
     ///
     /// @return siaddr value
-    isc::asiolink::IOAddress getSiaddr() const;
+    bundy::asiolink::IOAddress getSiaddr() const;
 
 protected:
 
@@ -666,13 +666,13 @@ protected:
     ///
     /// @param option option to be validated.
     ///
-    /// @throw isc::BadValue if provided option is invalid.
+    /// @throw bundy::BadValue if provided option is invalid.
     virtual void validateOption(const OptionPtr& option) const;
 
     /// @brief Returns default address for pool selection
     /// @return ANY IPv4 address
-    virtual isc::asiolink::IOAddress default_pool() const {
-        return (isc::asiolink::IOAddress("0.0.0.0"));
+    virtual bundy::asiolink::IOAddress default_pool() const {
+        return (bundy::asiolink::IOAddress("0.0.0.0"));
     }
 
     /// @brief Checks if used pool type is valid
@@ -684,7 +684,7 @@ protected:
     virtual void checkType(Lease::Type type) const;
 
     /// @brief siaddr value for this subnet
-    isc::asiolink::IOAddress siaddr_;
+    bundy::asiolink::IOAddress siaddr_;
 };
 
 /// @brief A pointer to a Subnet4 object
@@ -712,7 +712,7 @@ public:
     /// @param valid_lifetime preferred lifetime of leases (in seconds)
     /// @param id arbitraty subnet id, default value of 0 triggers
     /// autogeneration of subnet id
-    Subnet6(const isc::asiolink::IOAddress& prefix, uint8_t length,
+    Subnet6(const bundy::asiolink::IOAddress& prefix, uint8_t length,
             const Triplet<uint32_t>& t1,
             const Triplet<uint32_t>& t2,
             const Triplet<uint32_t>& preferred_lifetime,
@@ -745,13 +745,13 @@ protected:
     ///
     /// @param option option to be validated.
     ///
-    /// @throw isc::BadValue if provided option is invalid.
+    /// @throw bundy::BadValue if provided option is invalid.
     virtual void validateOption(const OptionPtr& option) const;
 
     /// @brief Returns default address for pool selection
     /// @return ANY IPv6 address
-    virtual isc::asiolink::IOAddress default_pool() const {
-        return (isc::asiolink::IOAddress("::"));
+    virtual bundy::asiolink::IOAddress default_pool() const {
+        return (bundy::asiolink::IOAddress("::"));
     }
 
     /// @brief Checks if used pool type is valid
@@ -775,7 +775,7 @@ typedef boost::shared_ptr<Subnet6> Subnet6Ptr;
 /// @brief A collection of Subnet6 objects
 typedef std::vector<Subnet6Ptr> Subnet6Collection;
 
-} // end of isc::dhcp namespace
-} // end of isc namespace
+} // end of bundy::dhcp namespace
+} // end of bundy namespace
 
 #endif // SUBNET_T

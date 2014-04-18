@@ -35,13 +35,13 @@ using namespace std;
 namespace {
 
 // Logger used for logging messages within the logging code itself.
-isc::log::Logger logger("log");
+bundy::log::Logger logger("log");
 
 // Static stores for the initialization severity and debug level.
 // These are put in methods to avoid a "static initialization fiasco".
 
-isc::log::Severity& initSeverity() {
-    static isc::log::Severity severity = isc::log::INFO;
+bundy::log::Severity& initSeverity() {
+    static bundy::log::Severity severity = bundy::log::INFO;
     return (severity);
 }
 
@@ -58,7 +58,7 @@ std::string& initRootName() {
 } // Anonymous namespace
 
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 // Constructor - create the implementation  class.
@@ -93,7 +93,7 @@ LoggerManager::processEnd() {
 /// Logging system initialization
 
 void
-LoggerManager::init(const std::string& root, isc::log::Severity severity,
+LoggerManager::init(const std::string& root, bundy::log::Severity severity,
                     int dbglevel, const char* file, bool buffer)
 {
     // Load in the messages declared in the program and registered by
@@ -158,7 +158,7 @@ LoggerManager::readLocalMessageFile(const char* file) {
     // the local state directory (to create lock files). So we switch to
     // using a null interprocess sync object here.
     logger.setInterprocessSync(
-        new isc::log::interprocess::InterprocessSyncNull("logger"));
+        new bundy::log::interprocess::InterprocessSyncNull("logger"));
 
     try {
 
@@ -182,7 +182,7 @@ LoggerManager::readLocalMessageFile(const char* file) {
 
         // Log the variable number of arguments.  The actual message will be
         // logged when the error_message variable is destroyed.
-        Formatter<isc::log::Logger> error_message = logger.error(ident);
+        Formatter<bundy::log::Logger> error_message = logger.error(ident);
         for (vector<string>::size_type i = 0; i < args.size(); ++i) {
             error_message = error_message.arg(args[i]);
         }
@@ -196,12 +196,12 @@ LoggerManager::reset() {
     LoggerManagerImpl::reset(initSeverity(), initDebugLevel());
 }
 
-isc::util::thread::Mutex&
+bundy::util::thread::Mutex&
 LoggerManager::getMutex() {
-    static isc::util::thread::Mutex mutex;
+    static bundy::util::thread::Mutex mutex;
 
     return (mutex);
 }
 
 } // namespace log
-} // namespace isc
+} // namespace bundy

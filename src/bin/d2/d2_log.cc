@@ -16,12 +16,12 @@
 
 #include <d2/d2_log.h>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 /// @brief Defines the logger used within D2.
-isc::log::Logger dctl_logger("dhcpddns");
+bundy::log::Logger dctl_logger("dhcpddns");
 
 } // namespace d2
-} // namespace isc
+} // namespace bundy
 

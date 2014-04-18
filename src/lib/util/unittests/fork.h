@@ -24,7 +24,7 @@
  * its output and such lives here.
  */
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace unittests {
 

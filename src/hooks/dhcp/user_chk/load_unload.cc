@@ -22,7 +22,7 @@
 #include <fstream>
 #include <errno.h>
 
-using namespace isc::hooks;
+using namespace bundy::hooks;
 using namespace user_chk;
 
 /// @brief Pointer to the registry instance.
@@ -93,7 +93,7 @@ int load(LibraryHandle&) {
         if (!user_chk_output) {
             // Grab the system error message.
             const char* errmsg = strerror(errno);
-            isc_throw(isc::Unexpected, "Cannot open output file: "
+            bundy_throw(bundy::Unexpected, "Cannot open output file: "
                                        << user_chk_output_fname
                                        << " reason: " << errmsg);
         }

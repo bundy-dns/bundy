@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.59])
-AC_INIT(bundy-examples, 20120817, bundy-dev@isc.org)
+AC_INIT(bundy-examples, 20120817, bundy-dev@bundy.org)
 AC_CONFIG_SRCDIR([README])
 AM_INIT_AUTOMAKE
 AC_CONFIG_HEADERS([config.h])
@@ -12,7 +12,7 @@ AC_PROG_CXX
 AC_LANG([C++])
 
 # Checks for BUNDY headers and libraries
-AX_ISC_BUNDY
+AX_BUNDY_BUNDY
 
 # We use -R option etc so the resulting program will be more likekly to
 # "just work" by default.  Embedding a specific library path is a controversial

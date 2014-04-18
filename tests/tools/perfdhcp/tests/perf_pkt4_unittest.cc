@@ -26,10 +26,10 @@
 #include "../perf_pkt4.h"
 
 using namespace std;
-using namespace isc;
-using namespace isc::asiolink;
-using namespace isc::dhcp;
-using namespace isc::perfdhcp;
+using namespace bundy;
+using namespace bundy::asiolink;
+using namespace bundy::dhcp;
+using namespace bundy::perfdhcp;
 
 typedef PerfPkt4::LocalizedOptionPtr LocalizedOptionPtr;
 

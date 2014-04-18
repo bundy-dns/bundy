@@ -21,10 +21,10 @@
 #include "pkt_transform.h"
 
 using namespace std;
-using namespace isc;
+using namespace bundy;
 using namespace dhcp;
 
-namespace isc {
+namespace bundy {
 namespace perfdhcp {
 
 PerfPkt6::PerfPkt6(const uint8_t* buf,
@@ -69,4 +69,4 @@ PerfPkt6::writeAt(size_t dest_pos,
 
 
 } // namespace perfdhcp
-} // namespace isc
+} // namespace bundy

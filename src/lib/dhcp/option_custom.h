@@ -19,7 +19,7 @@
 #include <dhcp/option_definition.h>
 #include <util/io_utilities.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief Option with defined data fields represented as buffers that can
@@ -107,7 +107,7 @@ public:
         checkArrayType();
         OptionDataType data_type = definition_.getType();
         if (OptionDataTypeTraits<T>::type != data_type) {
-            isc_throw(isc::dhcp::InvalidDataType,
+            bundy_throw(bundy::dhcp::InvalidDataType,
                       "specified data type " << data_type << " does not"
                       " match the data type in an option definition");
         }
@@ -127,7 +127,7 @@ public:
     /// @param index buffer index.
     ///
     /// @return IP address read from a buffer.
-    /// @throw isc::OutOfRange if index is out of range.
+    /// @throw bundy::OutOfRange if index is out of range.
     asiolink::IOAddress readAddress(const uint32_t index = 0) const;
 
     /// @brief Write an IP address into a buffer.
@@ -135,8 +135,8 @@ public:
     /// @param address IP address being written.
     /// @param index buffer index.
     ///
-    /// @throw isc::OutOfRange if index is out of range.
-    /// @throw isc::dhcp::BadDataTypeCast if IP address is invalid.
+    /// @throw bundy::OutOfRange if index is out of range.
+    /// @throw bundy::dhcp::BadDataTypeCast if IP address is invalid.
     void writeAddress(const asiolink::IOAddress& address,
                       const uint32_t index = 0);
 
@@ -144,7 +144,7 @@ public:
     ///
     /// @param index buffer index.
     ///
-    /// @throw isc::OutOfRange if index is out of range.
+    /// @throw bundy::OutOfRange if index is out of range.
     /// @return read buffer holding binary data.
     const OptionBuffer& readBinary(const uint32_t index = 0) const;
 
@@ -158,7 +158,7 @@ public:
     ///
     /// @param index buffer index.
     ///
-    /// @throw isc::OutOfRange if index is out of range.
+    /// @throw bundy::OutOfRange if index is out of range.
     /// @return read boolean value.
     bool readBoolean(const uint32_t index = 0) const;
 
@@ -167,15 +167,15 @@ public:
     /// @param value boolean value to be written.
     /// @param index buffer index.
     ///
-    /// @throw isc::OutOfRange if index is out of range.
+    /// @throw bundy::OutOfRange if index is out of range.
     void writeBoolean(const bool value, const uint32_t index = 0);
 
     /// @brief Read a buffer as FQDN.
     ///
     /// @param index buffer index.
     ///
-    /// @throw isc::OutOfRange if buffer index is out of range.
-    /// @throw isc::dhcp::BadDataTypeCast if a buffer being read
+    /// @throw bundy::OutOfRange if buffer index is out of range.
+    /// @throw bundy::dhcp::BadDataTypeCast if a buffer being read
     /// does not hold a valid FQDN.
     /// @return string representation if FQDN.
     std::string readFqdn(const uint32_t index = 0) const;
@@ -185,7 +185,7 @@ public:
     /// @param fqdn text representation of FQDN.
     /// @param index buffer index.
     ///
-    /// @throw isc::OutOfRange if index is out of range.
+    /// @throw bundy::OutOfRange if index is out of range.
     void writeFqdn(const std::string& fqdn, const uint32_t index = 0);
 
     /// @brief Read a buffer as integer value.
@@ -193,8 +193,8 @@ public:
     /// @param index buffer index.
     /// @tparam integer type of a value being returned.
     ///
-    /// @throw isc::OutOfRange if index is out of range.
-    /// @throw isc::dhcp::InvalidDataType if T is invalid.
+    /// @throw bundy::OutOfRange if index is out of range.
+    /// @throw bundy::dhcp::InvalidDataType if T is invalid.
     /// @return read integer value.
     template<typename T>
     T readInteger(const uint32_t index = 0) const {
@@ -216,8 +216,8 @@ public:
     /// @param index buffer index.
     /// @tparam T integer type of a value being written.
     ///
-    /// @throw isc::OutOfRange if index is out of range.
-    /// @throw isc::dhcp::InvalidDataType if T is invalid.
+    /// @throw bundy::OutOfRange if index is out of range.
+    /// @throw bundy::dhcp::InvalidDataType if T is invalid.
     template<typename T>
     void writeInteger(const T value, const uint32_t index = 0) {
         // Check that the index is not out of range.
@@ -238,7 +238,7 @@ public:
     /// @param index buffer index.
     ///
     /// @return string value read from buffer.
-    /// @throw isc::OutOfRange if index is out of range.
+    /// @throw bundy::OutOfRange if index is out of range.
     std::string readString(const uint32_t index = 0) const;
 
     /// @brief Write a string value into a buffer.
@@ -251,7 +251,7 @@ public:
     /// @brief Writes DHCP option in a wire format to a buffer.
     ///
     /// @param buf output buffer (option will be stored there).
-    virtual void pack(isc::util::OutputBuffer& buf);
+    virtual void pack(bundy::util::OutputBuffer& buf);
 
     /// @brief Parses received buffer.
     ///
@@ -290,10 +290,10 @@ private:
     /// and throws an exception if the particular option is not
     /// an array.
     ///
-    /// @throw isc::InvalidOperation if option is not an array.
+    /// @throw bundy::InvalidOperation if option is not an array.
     inline void checkArrayType() const {
         if (!definition_.getArrayType()) {
-            isc_throw(InvalidOperation, "failed to add new array entry to an"
+            bundy_throw(InvalidOperation, "failed to add new array entry to an"
                       << " option. The option is not an array.");
         }
     }
@@ -307,7 +307,7 @@ private:
     /// @param index data field index.
     /// @tparam data type to be validated.
     ///
-    /// @throw isc::dhcp::InvalidDataType if the type is invalid.
+    /// @throw bundy::dhcp::InvalidDataType if the type is invalid.
     template<typename T>
     // cppcheck-suppress unusedPrivateFunction
     void checkDataType(const uint32_t index) const;
@@ -316,7 +316,7 @@ private:
     ///
     /// @param index Data field index to check.
     ///
-    /// @throw isc::OutOfRange if index is out of range.
+    /// @throw bundy::OutOfRange if index is out of range.
     void checkIndex(const uint32_t index) const;
 
     /// @brief Create a collection of non initialized buffers.
@@ -358,7 +358,7 @@ void
 OptionCustom::checkDataType(const uint32_t index) const {
     // Check that the requested return type is a supported integer.
     if (!OptionDataTypeTraits<T>::integer_type) {
-        isc_throw(isc::dhcp::InvalidDataType, "specified data type"
+        bundy_throw(bundy::dhcp::InvalidDataType, "specified data type"
                   " is not a supported integer type.");
     }
 
@@ -376,13 +376,13 @@ OptionCustom::checkDataType(const uint32_t index) const {
     }
 
     if (OptionDataTypeTraits<T>::type != data_type) {
-        isc_throw(isc::dhcp::InvalidDataType,
+        bundy_throw(bundy::dhcp::InvalidDataType,
                   "specified data type " << data_type << " does not"
                   " match the data type in an option definition for field"
                   " index " << index);
     }
 }
-} // namespace isc::dhcp
-} // namespace isc
+} // namespace bundy::dhcp
+} // namespace bundy
 
 #endif // OPTION_CUSTOM_H

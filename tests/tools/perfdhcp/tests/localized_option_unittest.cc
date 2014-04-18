@@ -21,9 +21,9 @@
 #include "../localized_option.h"
 
 using namespace std;
-using namespace isc;
-using namespace isc::dhcp;
-using namespace isc::perfdhcp;
+using namespace bundy;
+using namespace bundy::dhcp;
+using namespace bundy::perfdhcp;
 
 namespace {
 

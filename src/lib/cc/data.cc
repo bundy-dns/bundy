@@ -38,7 +38,7 @@ namespace {
 const char* const WHITESPACE = " \b\f\n\r\t";
 } // end anonymous namespace
 
-namespace isc {
+namespace bundy {
 namespace data {
 
 std::string
@@ -122,57 +122,57 @@ Element::setValue(const std::map<std::string, ConstElementPtr>&) {
 
 ConstElementPtr
 Element::get(const int) const {
-    isc_throw(TypeError, "get(int) called on a non-list Element");
+    bundy_throw(TypeError, "get(int) called on a non-list Element");
 }
 
 void
 Element::set(const size_t, ConstElementPtr) {
-    isc_throw(TypeError, "set(int, element) called on a non-list Element");
+    bundy_throw(TypeError, "set(int, element) called on a non-list Element");
 }
 
 void
 Element::add(ConstElementPtr) {
-    isc_throw(TypeError, "add() called on a non-list Element");
+    bundy_throw(TypeError, "add() called on a non-list Element");
 }
 
 void
 Element::remove(const int) {
-    isc_throw(TypeError, "remove(int) called on a non-list Element");
+    bundy_throw(TypeError, "remove(int) called on a non-list Element");
 }
 
 size_t
 Element::size() const {
-    isc_throw(TypeError, "size() called on a non-list Element");
+    bundy_throw(TypeError, "size() called on a non-list Element");
 }
 
 bool
 Element::empty() const {
-    isc_throw(TypeError, "empty() called on a non-list Element");
+    bundy_throw(TypeError, "empty() called on a non-list Element");
 }
 
 ConstElementPtr
 Element::get(const std::string&) const {
-    isc_throw(TypeError, "get(string) called on a non-map Element");
+    bundy_throw(TypeError, "get(string) called on a non-map Element");
 }
 
 void
 Element::set(const std::string&, ConstElementPtr) {
-    isc_throw(TypeError, "set(name, element) called on a non-map Element");
+    bundy_throw(TypeError, "set(name, element) called on a non-map Element");
 }
 
 void
 Element::remove(const std::string&) {
-    isc_throw(TypeError, "remove(string) called on a non-map Element");
+    bundy_throw(TypeError, "remove(string) called on a non-map Element");
 }
 
 bool
 Element::contains(const std::string&) const {
-    isc_throw(TypeError, "contains(string) called on a non-map Element");
+    bundy_throw(TypeError, "contains(string) called on a non-map Element");
 }
 
 ConstElementPtr
 Element::find(const std::string&) const {
-    isc_throw(TypeError, "find(string) called on a non-map Element");
+    bundy_throw(TypeError, "find(string) called on a non-map Element");
 }
 
 bool
@@ -187,7 +187,7 @@ throwJSONError(const std::string& error, const std::string& file, int line,
 {
     std::stringstream ss;
     ss << error << " in " + file + ":" << line << ":" << pos;
-    isc_throw(JSONError, ss.str());
+    bundy_throw(JSONError, ss.str());
 }
 }
 
@@ -406,13 +406,13 @@ fromStringstreamNumber(std::istream& in, int& pos) {
         try {
             return (Element::create(boost::lexical_cast<double>(number)));
         } catch (const boost::bad_lexical_cast&) {
-            isc_throw(JSONError, std::string("Number overflow: ") + number);
+            bundy_throw(JSONError, std::string("Number overflow: ") + number);
         }
     } else {
         try {
             return (Element::create(boost::lexical_cast<int64_t>(number)));
         } catch (const boost::bad_lexical_cast&) {
-            isc_throw(JSONError, std::string("Number overflow: ") + number);
+            bundy_throw(JSONError, std::string("Number overflow: ") + number);
         }
     }
 }
@@ -549,7 +549,7 @@ Element::nameToType(const std::string& type_name) {
     } else if (type_name == "any") {
         return (Element::any);
     } else {
-        isc_throw(TypeError, type_name + " is not a valid type name");
+        bundy_throw(TypeError, type_name + " is not a valid type name");
     }
 }
 
@@ -637,7 +637,7 @@ Element::fromJSON(std::istream& in, const std::string& file, int& line,
     if (el_read) {
         return (element);
     } else {
-        isc_throw(JSONError, "nothing read");
+        bundy_throw(JSONError, "nothing read");
     }
 }
 
@@ -913,7 +913,7 @@ removeIdentical(ElementPtr a, ConstElementPtr b) {
         return;
     }
     if (a->getType() != Element::map || b->getType() != Element::map) {
-        isc_throw(TypeError, "Non-map Elements passed to removeIdentical");
+        bundy_throw(TypeError, "Non-map Elements passed to removeIdentical");
     }
 
     // As maps do not allow entries with multiple keys, we can either iterate
@@ -940,7 +940,7 @@ removeIdentical(ConstElementPtr a, ConstElementPtr b) {
     }
 
     if (a->getType() != Element::map || b->getType() != Element::map) {
-        isc_throw(TypeError, "Non-map Elements passed to removeIdentical");
+        bundy_throw(TypeError, "Non-map Elements passed to removeIdentical");
     }
 
     const std::map<std::string, ConstElementPtr>& m = a->mapValue();
@@ -959,7 +959,7 @@ void
 merge(ElementPtr element, ConstElementPtr other) {
     if (element->getType() != Element::map ||
         other->getType() != Element::map) {
-        isc_throw(TypeError, "merge arguments not MapElements");
+        bundy_throw(TypeError, "merge arguments not MapElements");
     }
 
     const std::map<std::string, ConstElementPtr>& m = other->mapValue();

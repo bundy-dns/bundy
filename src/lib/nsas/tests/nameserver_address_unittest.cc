@@ -26,11 +26,11 @@
 #include "../nameserver_entry.h"
 #include "nsas_test.h"
 
-using namespace isc::dns;
-using namespace isc::dns::rdata;
-using isc::util::unittests::TestResolver;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
+using bundy::util::unittests::TestResolver;
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 
 #define TEST_ADDRESS_INDEX 1
@@ -53,14 +53,14 @@ public:
         ns_->askIP(resolver_.get(), boost::shared_ptr<Callback>(new Callback), ANY_OK);
         resolver_->asksIPs(name_, 0, 1);
         resolver_->requests[0].second->success(
-            isc::util::unittests::createResponseMessage(rrv4_));
+            bundy::util::unittests::createResponseMessage(rrv4_));
     }
 
     // Return the sample NameserverEntry
     boost::shared_ptr<NameserverEntry>& getNameserverEntry() { return ns_; }
 
     // Return the IOAddress corresponding to the index in rrv4_
-    isc::asiolink::IOAddress getAddressAtIndex(uint32_t index) {
+    bundy::asiolink::IOAddress getAddressAtIndex(uint32_t index) {
         return ns_.get()->getAddressAtIndex(index, V4_ONLY);
     }
 
@@ -109,7 +109,7 @@ TEST_F(NameserverAddressTest, Address) {
     boost::shared_ptr<NameserverEntry> empty_ne((NameserverEntry*)NULL);
     // It will throw an NullNameserverEntryPointer exception with the empty NameserverEntry shared pointer
     ASSERT_THROW({NameserverAddress empty_ns_address(empty_ne,
-        isc::asiolink::IOAddress("127.0.0.1"), V4_ONLY);},
+        bundy::asiolink::IOAddress("127.0.0.1"), V4_ONLY);},
         NullNameserverEntryPointer);
 }
 
@@ -134,4 +134,4 @@ TEST_F(NameserverAddressTest, UpdateRTT) {
 }
 
 } // namespace nsas
-} // namespace isc
+} // namespace bundy

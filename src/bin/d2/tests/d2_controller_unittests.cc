@@ -26,7 +26,7 @@
 
 using namespace boost::posix_time;
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 /// @brief Test fixture class for testing D2Controller class. This class
@@ -126,7 +126,7 @@ TEST_F(D2ControllerTest, launchNormalShutdown) {
 
     // Use an asiolink IntervalTimer and callback to generate the
     // shutdown invocation. (Note IntervalTimer setup is in milliseconds).
-    isc::asiolink::IntervalTimer timer(*getIOService());
+    bundy::asiolink::IntervalTimer timer(*getIOService());
     timer.setup(genShutdownCallback, 2 * 1000);
 
     // Record start time, and invoke launch().
@@ -159,34 +159,34 @@ TEST_F(D2ControllerTest, launchNormalShutdown) {
 /// properly.
 TEST_F(D2ControllerTest, configUpdateTests) {
     int rcode = -1;
-    isc::data::ConstElementPtr answer;
+    bundy::data::ConstElementPtr answer;
 
     // Initialize the application process.
     ASSERT_NO_THROW(initProcess());
     EXPECT_TRUE(checkProcess());
 
     // Create a configuration set using a small, valid D2 configuration.
-    isc::data::ElementPtr config_set =
-                                isc::data::Element::fromJSON(valid_d2_config);
+    bundy::data::ElementPtr config_set =
+                                bundy::data::Element::fromJSON(valid_d2_config);
 
     // We are not stand-alone, so configuration should be rejected as there is
     // no session.  This is a pretty contrived situation that shouldn't be
     // possible other than the handler being called directly (like this does).
     answer = DControllerBase::configHandler(config_set);
-    isc::config::parseAnswer(rcode, answer);
+    bundy::config::parseAnswer(rcode, answer);
     EXPECT_EQ(1, rcode);
 
     // Verify that in stand alone we get a successful update result.
     setStandAlone(true);
     answer = DControllerBase::configHandler(config_set);
-    isc::config::parseAnswer(rcode, answer);
+    bundy::config::parseAnswer(rcode, answer);
     EXPECT_EQ(0, rcode);
 
     // Use an invalid configuration to verify parsing error return.
     std::string config = "{ \"bogus\": 1000 } ";
-    config_set = isc::data::Element::fromJSON(config);
+    config_set = bundy::data::Element::fromJSON(config);
     answer = DControllerBase::configHandler(config_set);
-    isc::config::parseAnswer(rcode, answer);
+    bundy::config::parseAnswer(rcode, answer);
     EXPECT_EQ(1, rcode);
 }
 
@@ -200,8 +200,8 @@ TEST_F(D2ControllerTest, configUpdateTests) {
 /// 2. Shutdown command is recognized and returns a d2::COMMAND_SUCCESS status.
 TEST_F(D2ControllerTest, executeCommandTests) {
     int rcode = -1;
-    isc::data::ConstElementPtr answer;
-    isc::data::ElementPtr arg_set;
+    bundy::data::ConstElementPtr answer;
+    bundy::data::ElementPtr arg_set;
 
     // Initialize the application process.
     ASSERT_NO_THROW(initProcess());
@@ -210,16 +210,16 @@ TEST_F(D2ControllerTest, executeCommandTests) {
     // Verify that an unknown command returns an COMMAND_INVALID response.
     std::string bogus_command("bogus");
     answer = DControllerBase::commandHandler(bogus_command, arg_set);
-    isc::config::parseAnswer(rcode, answer);
+    bundy::config::parseAnswer(rcode, answer);
     EXPECT_EQ(COMMAND_INVALID, rcode);
 
     // Verify that shutdown command returns COMMAND_SUCCESS response.
-    //answer = executeCommand(SHUT_DOWN_COMMAND, isc::data::ElementPtr());
+    //answer = executeCommand(SHUT_DOWN_COMMAND, bundy::data::ElementPtr());
     answer = DControllerBase::commandHandler(SHUT_DOWN_COMMAND, arg_set);
-    isc::config::parseAnswer(rcode, answer);
+    bundy::config::parseAnswer(rcode, answer);
     EXPECT_EQ(COMMAND_SUCCESS, rcode);
 
 }
 
-}; // end of isc::d2 namespace
-}; // end of isc namespace
+}; // end of bundy::d2 namespace
+}; // end of bundy namespace

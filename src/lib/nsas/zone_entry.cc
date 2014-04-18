@@ -29,17 +29,17 @@
 
 using namespace std;
 
-namespace isc {
+namespace bundy {
 
-using namespace isc::dns;
-using namespace isc::util;
-using namespace isc::util::random;
+using namespace bundy::dns;
+using namespace bundy::util;
+using namespace bundy::util::random;
 
 namespace nsas {
 
 ZoneEntry::ZoneEntry(
-    isc::resolve::ResolverInterface* resolver,
-    const std::string& name, const isc::dns::RRClass& class_code,
+    bundy::resolve::ResolverInterface* resolver,
+    const std::string& name, const bundy::dns::RRClass& class_code,
     boost::shared_ptr<HashTable<NameserverEntry> > nameserver_table,
     boost::shared_ptr<LruList<NameserverEntry> > nameserver_lru) :
     expiry_(0),
@@ -53,7 +53,7 @@ ZoneEntry::ZoneEntry(
 
 namespace {
 // Shorter aliases for frequently used types
-typedef isc::util::locks::scoped_lock<isc::util::locks::recursive_mutex> Lock; // Local lock, nameservers not locked
+typedef bundy::util::locks::scoped_lock<bundy::util::locks::recursive_mutex> Lock; // Local lock, nameservers not locked
 typedef boost::shared_ptr<AddressRequestCallback> CallbackPtr;
 
 /*
@@ -80,7 +80,7 @@ newNs(const std::string* name, const RRClass* class_code) {
  * that. Mostly eliminates C++ bad design of missing lambda functions.
  */
 class ZoneEntry::ResolverCallback :
-        public isc::resolve::ResolverInterface::Callback {
+        public bundy::resolve::ResolverInterface::Callback {
     public:
         /// \short Constructor. Pass "this" zone entry
         ResolverCallback(boost::shared_ptr<ZoneEntry> entry) :
@@ -102,15 +102,15 @@ class ZoneEntry::ResolverCallback :
 
             // TODO: find the correct RRset, not simply the first
             if (!response_message ||
-                response_message->getRcode() != isc::dns::Rcode::NOERROR() ||
-                response_message->getRRCount(isc::dns::Message::SECTION_ANSWER) == 0) {
+                response_message->getRcode() != bundy::dns::Rcode::NOERROR() ||
+                response_message->getRRCount(bundy::dns::Message::SECTION_ANSWER) == 0) {
                 // todo: define this
                 failureInternal(300);
             }
 
-            isc::dns::RRsetIterator rrsi =
-                response_message->beginSection(isc::dns::Message::SECTION_ANSWER);
-            const isc::dns::RRsetPtr answer = *rrsi;
+            bundy::dns::RRsetIterator rrsi =
+                response_message->beginSection(bundy::dns::Message::SECTION_ANSWER);
+            const bundy::dns::RRsetPtr answer = *rrsi;
 
             RdataIteratorPtr iterator(answer->getRdataIterator());
             // If there are no data
@@ -311,7 +311,7 @@ updateAddressSelector(std::vector<NameserverAddress>& addresses,
     BOOST_FOREACH(NameserverAddress& address, addresses) {
         uint32_t rtt = address.getAddressEntry().getRTT();
         if(rtt == 0) {
-            isc_throw(RTTIsZero, "The RTT is 0");
+            bundy_throw(RTTIsZero, "The RTT is 0");
         }
 
         if(rtt == AddressEntry::UNREACHABLE) {
@@ -567,4 +567,4 @@ ZoneEntry::insertCallback(NameserverPtr ns, AddressFamily family) {
 }
 
 }; // namespace nsas
-}; // namespace isc
+}; // namespace bundy

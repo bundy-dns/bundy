@@ -22,12 +22,12 @@
 #include "localized_option.h"
 #include "pkt_transform.h"
 
-namespace isc {
+namespace bundy {
 namespace perfdhcp {
 
 /// \brief PerfPkt6 (DHCPv6 packet)
 ///
-/// This class extends the functionality of \ref isc::dhcp::Pkt6 by
+/// This class extends the functionality of \ref bundy::dhcp::Pkt6 by
 /// adding the ability to specify an options offset in the DHCP message
 /// and so override the options' contents. This is particularly useful when we
 /// create a packet object using a template file (i.e. do not build it
@@ -43,7 +43,7 @@ namespace perfdhcp {
 /// \ref dhcp::Pkt6::addOption.
 ///
 /// \note If you don't use template files, simply use constructors
-/// inherited from parent class and the \ref isc::dhcp::Option type instead.
+/// inherited from parent class and the \ref bundy::dhcp::Option type instead.
 
 class PerfPkt6 : public dhcp::Pkt6 {
 public:
@@ -95,8 +95,8 @@ public:
     ///
     /// This methoid handles the parsing of packets that have custom offsets
     /// of options or transaction ID. Use
-    /// \ref isc::dhcp::Pkt4::addOption to specify which options to parse.
-    /// Options should be of the \ref isc::perfdhcp::LocalizedOption
+    /// \ref bundy::dhcp::Pkt4::addOption to specify which options to parse.
+    /// Options should be of the \ref bundy::perfdhcp::LocalizedOption
     /// type with offset values provided. Each added option will
     /// be updated with actual data read from the binary packet buffer.
     ///
@@ -134,6 +134,6 @@ private:
 typedef boost::shared_ptr<PerfPkt6> PerfPkt6Ptr;
 
 } // namespace perfdhcp
-} // namespace isc
+} // namespace bundy
 
 #endif // PERF_PKT6_H

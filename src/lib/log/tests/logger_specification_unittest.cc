@@ -19,7 +19,7 @@
 #include <log/logger_specification.h>
 #include <log/output_option.h>
 
-using namespace isc::log;
+using namespace bundy::log;
 using namespace std;
 
 // Check default initialization.
@@ -27,7 +27,7 @@ TEST(LoggerSpecificationTest, DefaultInitialization) {
     LoggerSpecification spec;
 
     EXPECT_EQ(string(""), spec.getName());
-    EXPECT_EQ(isc::log::INFO, spec.getSeverity());
+    EXPECT_EQ(bundy::log::INFO, spec.getSeverity());
     EXPECT_EQ(0, spec.getDbglevel());
     EXPECT_FALSE(spec.getAdditive());
     EXPECT_EQ(0, spec.optionCount());
@@ -35,10 +35,10 @@ TEST(LoggerSpecificationTest, DefaultInitialization) {
 
 // Non-default initialization
 TEST(LoggerSpecificationTest, Initialization) {
-    LoggerSpecification spec("alpha", isc::log::ERROR, 42, true);
+    LoggerSpecification spec("alpha", bundy::log::ERROR, 42, true);
 
     EXPECT_EQ(string("alpha"), spec.getName());
-    EXPECT_EQ(isc::log::ERROR, spec.getSeverity());
+    EXPECT_EQ(bundy::log::ERROR, spec.getSeverity());
     EXPECT_EQ(42, spec.getDbglevel());
     EXPECT_TRUE(spec.getAdditive());
     EXPECT_EQ(0, spec.optionCount());
@@ -51,8 +51,8 @@ TEST(LoggerSpecificationTest, SetGet) {
     spec.setName("gamma");
     EXPECT_EQ(string("gamma"), spec.getName());
 
-    spec.setSeverity(isc::log::FATAL);
-    EXPECT_EQ(isc::log::FATAL, spec.getSeverity());
+    spec.setSeverity(bundy::log::FATAL);
+    EXPECT_EQ(bundy::log::FATAL, spec.getSeverity());
 
     spec.setDbglevel(7);
     EXPECT_EQ(7, spec.getDbglevel());

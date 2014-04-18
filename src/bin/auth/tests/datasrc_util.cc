@@ -34,11 +34,11 @@
 
 using namespace std;
 
-using namespace isc::dns;
-using namespace isc::data;
-using namespace isc::datasrc;
+using namespace bundy::dns;
+using namespace bundy::data;
+using namespace bundy::datasrc;
 
-namespace isc {
+namespace bundy {
 namespace auth {
 namespace unittest {
 
@@ -59,7 +59,7 @@ createSQLite3DB(RRClass zclass, const Name& zname,
         "/rwtest.sqlite3 ";
     const string install_cmd = string(install_cmd_prefix) + db_file;
     if (system(install_cmd.c_str()) != 0) {
-        isc_throw(isc::Unexpected,
+        bundy_throw(bundy::Unexpected,
                   "Error setting up; command failed: " << install_cmd);
     }
 

@@ -21,7 +21,7 @@
 
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace hooks {
 
 /// @brief LoadLibraries not called
@@ -31,7 +31,7 @@ namespace hooks {
 class LoadLibrariesNotCalled : public Exception {
 public:
     LoadLibrariesNotCalled(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 
@@ -164,7 +164,7 @@ private:
 };
 
 } // namespace hooks
-} // namespace isc
+} // namespace bundy
 
 
 #endif // LIBRARY_MANAGER_COLLECTION_H

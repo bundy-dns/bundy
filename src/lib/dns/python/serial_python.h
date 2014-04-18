@@ -17,7 +17,7 @@
 
 #include <Python.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 class Serial;
 
@@ -56,7 +56,7 @@ const Serial& PySerial_ToSerial(const PyObject* Serial_obj);
 
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 #endif // PYTHON_SERIAL_H
 
 // Local Variables:

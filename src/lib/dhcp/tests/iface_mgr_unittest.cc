@@ -34,10 +34,10 @@
 #include <unistd.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::asiolink;
-using namespace isc::dhcp;
-using namespace isc::dhcp::test;
+using namespace bundy;
+using namespace bundy::asiolink;
+using namespace bundy::dhcp;
+using namespace bundy::dhcp::test;
 using boost::scoped_ptr;
 
 namespace {
@@ -97,7 +97,7 @@ public:
     /// @param addr An address to which the socket is to be bound.
     /// @param port A port to which the socket is to be bound.
     virtual SocketInfo openSocket(const Iface& iface,
-                                  const isc::asiolink::IOAddress& addr,
+                                  const bundy::asiolink::IOAddress& addr,
                                   const uint16_t port,
                                   const bool,
                                   const bool) {
@@ -107,7 +107,7 @@ public:
         for (Iface::SocketCollection::const_iterator socket = sockets.begin();
              socket != sockets.end(); ++socket) {
             if ((socket->addr_ == addr) && (socket->port_ == port)) {
-                isc_throw(SocketConfigError, "test socket bind error");
+                bundy_throw(SocketConfigError, "test socket bind error");
             }
         }
         open_socket_called_ = true;
@@ -354,10 +354,10 @@ public:
     /// @param addr address the socket is bound to
     ///
     /// @return socket info structure (or NULL)
-    const isc::dhcp::SocketInfo*
-    getSocketByAddr(const isc::dhcp::Iface::SocketCollection& sockets,
+    const bundy::dhcp::SocketInfo*
+    getSocketByAddr(const bundy::dhcp::Iface::SocketCollection& sockets,
                     const IOAddress& addr) {
-        for (isc::dhcp::Iface::SocketCollection::const_iterator s =
+        for (bundy::dhcp::Iface::SocketCollection::const_iterator s =
                  sockets.begin(); s != sockets.end(); ++s) {
             if (s->addr_ == addr) {
                 return (&(*s));
@@ -672,8 +672,8 @@ TEST_F(IfaceMgrTest, receiveTimeout6) {
     EXPECT_LE(duration.total_microseconds(), 800000);
 
     // Test with invalid fractional timeout values.
-    EXPECT_THROW(ifacemgr->receive6(0, 1000000), isc::BadValue);
-    EXPECT_THROW(ifacemgr->receive6(1, 1000010), isc::BadValue);
+    EXPECT_THROW(ifacemgr->receive6(0, 1000000), bundy::BadValue);
+    EXPECT_THROW(ifacemgr->receive6(1, 1000010), bundy::BadValue);
 }
 
 TEST_F(IfaceMgrTest, receiveTimeout4) {
@@ -724,8 +724,8 @@ TEST_F(IfaceMgrTest, receiveTimeout4) {
     EXPECT_LE(duration.total_microseconds(), 700000);
 
     // Test with invalid fractional timeout values.
-    EXPECT_THROW(ifacemgr->receive6(0, 1000000), isc::BadValue);
-    EXPECT_THROW(ifacemgr->receive6(2, 1000005), isc::BadValue);
+    EXPECT_THROW(ifacemgr->receive6(0, 1000000), bundy::BadValue);
+    EXPECT_THROW(ifacemgr->receive6(2, 1000005), bundy::BadValue);
 }
 
 TEST_F(IfaceMgrTest, multipleSockets) {
@@ -1152,7 +1152,7 @@ TEST_F(IfaceMgrTest, sendReceive4) {
 // @todo: This part of the test is currently disabled on all BSD systems as it was
 // the quick fix. We need a more elegant (config-based) solution to disable
 // this check on affected systems only. The ticket has been submited for this
-// work: http://bundy.isc.org/ticket/2971
+// work: http://bundy.bundy.org/ticket/2971
 #ifndef OS_BSD
     EXPECT_THROW(ifacemgr->receive4(10), SocketReadError);
 #endif
@@ -1171,7 +1171,7 @@ TEST_F(IfaceMgrTest, setPacketFilter) {
     // Try to set NULL packet filter object and make sure it is rejected.
     boost::shared_ptr<TestPktFilter> custom_packet_filter;
     EXPECT_THROW(iface_mgr->setPacketFilter(custom_packet_filter),
-                 isc::dhcp::InvalidPacketFilter);
+                 bundy::dhcp::InvalidPacketFilter);
 
     // Create valid object and check if it can be set.
     custom_packet_filter.reset(new TestPktFilter());
@@ -1211,7 +1211,7 @@ TEST_F(IfaceMgrTest, setPacketFilter6) {
     // Try to set NULL packet filter object and make sure it is rejected.
     boost::shared_ptr<PktFilter6Stub> custom_packet_filter;
     EXPECT_THROW(iface_mgr->setPacketFilter(custom_packet_filter),
-                 isc::dhcp::InvalidPacketFilter);
+                 bundy::dhcp::InvalidPacketFilter);
 
     // Create valid object and check if it can be set.
     custom_packet_filter.reset(new PktFilter6Stub());
@@ -1306,7 +1306,7 @@ TEST_F(IfaceMgrTest, checkPacketFilterLPFSocket) {
     EXPECT_THROW(
         socket2 = iface_mgr2->openSocket(LOOPBACK, loAddr,
                                          DHCP4_SERVER_PORT + 10000),
-        isc::dhcp::SocketConfigError
+        bundy::dhcp::SocketConfigError
     );
     // Surprisingly we managed to open another socket. We have to close it
     // to prevent resource leak.
@@ -1485,7 +1485,7 @@ TEST_F(IfaceMgrTest, openSockets4NoErrorHandler) {
     // The function throws an exception when it tries to open a socket
     // and bind it to the address in use.
     EXPECT_THROW(ifacemgr.openSockets4(DHCP4_SERVER_PORT, true, NULL),
-                 isc::dhcp::SocketConfigError);
+                 bundy::dhcp::SocketConfigError);
 
 }
 
@@ -1508,7 +1508,7 @@ TEST_F(IfaceMgrTest, openSocket4ErrorHandler) {
 
     // Install an error handler before trying to open sockets. This handler
     // should be called when the IfaceMgr fails to open socket on eth0.
-    isc::dhcp::IfaceMgrErrorMsgCallback error_handler =
+    bundy::dhcp::IfaceMgrErrorMsgCallback error_handler =
         boost::bind(&IfaceMgrTest::ifaceMgrErrorHandler, this, _1);
     // The openSockets4 should detect that there is another socket already
     // open and bound to the same address and port. An attempt to open
@@ -1913,7 +1913,7 @@ TEST_F(IfaceMgrTest, openSocket6ErrorHandler) {
 
     // Install an error handler before trying to open sockets. This handler
     // should be called when the IfaceMgr fails to open socket on eth0.
-    isc::dhcp::IfaceMgrErrorMsgCallback error_handler =
+    bundy::dhcp::IfaceMgrErrorMsgCallback error_handler =
         boost::bind(&IfaceMgrTest::ifaceMgrErrorHandler, this, _1);
     // The openSockets6 should detect that a socket has been already
     // opened on eth0 and an attempt to open another socket and bind to
@@ -2195,7 +2195,7 @@ size_t parse_mac(const std::string& textMac, uint8_t* mac, size_t macLen) {
 /// of text that ifconfig prints and robustness to handle slight differences
 /// in ifconfig output.
 ///
-/// @todo: Consider using isc::util::str::tokens here.
+/// @todo: Consider using bundy::util::str::tokens here.
 ///
 /// @param textFile name of a text file that holds output of ifconfig -a
 /// @param ifaces empty list of interfaces to be filled
@@ -2224,7 +2224,7 @@ void parse_ifconfig(const std::string& textFile, IfaceMgr::IfaceCollection& ifac
             size_t offset;
             offset = line.find_first_of(" ");
             if (offset == string::npos) {
-                isc_throw(BadValue, "Malformed output of ifconfig");
+                bundy_throw(BadValue, "Malformed output of ifconfig");
             }
 
             // ifconfig in Gentoo prints out eth0: instead of eth0
@@ -2488,12 +2488,12 @@ checkIfAddrs(const Iface & iface, struct ifaddrs *& ifptr) {
         int s = -1; // Socket descriptor
 
         if ((s = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-            isc_throw(Unexpected, "Cannot create AF_INET socket");
+            bundy_throw(Unexpected, "Cannot create AF_INET socket");
         }
 
         if (ioctl(s, SIOCGIFHWADDR, & ifr) < 0) {
             close(s);
-            isc_throw(Unexpected, "Cannot set SIOCGIFHWADDR flag");
+            bundy_throw(Unexpected, "Cannot set SIOCGIFHWADDR flag");
         }
 
         const uint8_t * p =
@@ -2582,7 +2582,7 @@ TEST_F(IfaceMgrTest, detectIfaces) {
     struct ifaddrs * iflist = 0, * ifptr = 0;
 
     if(getifaddrs(& iflist) != 0) {
-        isc_throw(Unexpected, "Cannot detect interfaces");
+        bundy_throw(Unexpected, "Cannot detect interfaces");
     }
 
     for (ifptr = iflist; ifptr != 0; ifptr = ifptr->ifa_next) {

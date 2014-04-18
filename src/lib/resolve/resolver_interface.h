@@ -33,7 +33,7 @@
 /// resolver_callback.[h|cc], which calls resumse() on a given DNSServer
 ///
 
-namespace isc {
+namespace bundy {
 namespace resolve {
 
 ///
@@ -59,7 +59,7 @@ class ResolverInterface {
         class Callback {
             public:
                 /// \short Some data arrived.
-                virtual void success(const isc::dns::MessagePtr response) = 0;
+                virtual void success(const bundy::dns::MessagePtr response) = 0;
                 
                 ///
                 ///\short No data available.
@@ -85,7 +85,7 @@ class ResolverInterface {
         /// \param question What to ask. The resolver will decide who.
         /// \param callback What should happen when the answer is ready.
         ///
-        virtual void resolve(const isc::dns::QuestionPtr& question,
+        virtual void resolve(const bundy::dns::QuestionPtr& question,
             const CallbackPtr& callback) = 0;
 
         /// \short Virtual destructor, so descendants are properly cleaned up
@@ -93,6 +93,6 @@ class ResolverInterface {
 };
 
 } // namespace nsas
-} // namespace isc
+} // namespace bundy
 
 #endif //RESOLVER_INTERFACE_H

@@ -23,7 +23,7 @@
 
 #include <iostream>
 
-using namespace isc::dhcp;
+using namespace bundy::dhcp;
 using namespace std;
 
 /// This file contains entry point (main() function) for standard DHCPv6 server
@@ -94,9 +94,9 @@ main(int argc, char* argv[]) {
 
     // Initialize logging.  If verbose, we'll use maximum verbosity.
     // If standalone is enabled, do not buffer initial log messages
-    isc::log::initLogger(DHCP6_NAME,
-                         (verbose_mode ? isc::log::DEBUG : isc::log::INFO),
-                         isc::log::MAX_DEBUG_LEVEL, NULL, !stand_alone);
+    bundy::log::initLogger(DHCP6_NAME,
+                         (verbose_mode ? bundy::log::DEBUG : bundy::log::INFO),
+                         bundy::log::MAX_DEBUG_LEVEL, NULL, !stand_alone);
     LOG_INFO(dhcp6_logger, DHCP6_STARTING);
     LOG_DEBUG(dhcp6_logger, DBG_DHCP6_START, DHCP6_START_INFO)
               .arg(getpid()).arg(port_number).arg(verbose_mode ? "yes" : "no")
@@ -114,7 +114,7 @@ main(int argc, char* argv[]) {
                 // DHCP server in stand-alone mode, e.g. for testing
                 // We do need to make sure logging is no longer buffered
                 // since then it would not print until dhcp6 is stopped
-                isc::log::LoggerManager log_manager;
+                bundy::log::LoggerManager log_manager;
                 log_manager.process();
             }
         } else {

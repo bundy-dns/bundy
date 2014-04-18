@@ -20,7 +20,7 @@
 
 #include <sstream>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 DControllerBasePtr DControllerBase::controller_;
@@ -29,7 +29,7 @@ DControllerBasePtr DControllerBase::controller_;
 DControllerBase::DControllerBase(const char* app_name, const char* bin_name)
     : app_name_(app_name), bin_name_(bin_name), stand_alone_(false),
       verbose_(false), spec_file_name_(""),
-      io_service_(new isc::asiolink::IOService()){
+      io_service_(new bundy::asiolink::IOService()){
 }
 
 
@@ -38,7 +38,7 @@ DControllerBase::setController(const DControllerBasePtr& controller) {
     if (controller_) {
         // This shouldn't happen, but let's make sure it can't be done.
         // It represents a programmatic error.
-        isc_throw (DControllerBaseError,
+        bundy_throw (DControllerBaseError,
                 "Multiple controller instances attempted.");
     }
 
@@ -60,10 +60,10 @@ DControllerBase::launch(int argc, char* argv[], const bool test_mode) {
     if (!test_mode) {
         // Now that we know what the mode flags are, we can init logging.
         // If standalone is enabled, do not buffer initial log messages
-        isc::log::initLogger(bin_name_,
+        bundy::log::initLogger(bin_name_,
                              ((verbose_ && stand_alone_)
-                              ? isc::log::DEBUG : isc::log::INFO),
-                             isc::log::MAX_DEBUG_LEVEL, NULL, !stand_alone_);
+                              ? bundy::log::DEBUG : bundy::log::INFO),
+                             bundy::log::MAX_DEBUG_LEVEL, NULL, !stand_alone_);
     }
 
     LOG_DEBUG(dctl_logger, DBGLVL_START_SHUT, DCTL_STARTING)
@@ -74,7 +74,7 @@ DControllerBase::launch(int argc, char* argv[], const bool test_mode) {
     } catch (const std::exception& ex) {
         LOG_FATAL(dctl_logger, DCTL_INIT_PROCESS_FAIL)
                   .arg(app_name_).arg(ex.what());
-        isc_throw (ProcessInitError,
+        bundy_throw (ProcessInitError,
                    "Application Process initialization failed: " << ex.what());
     }
 
@@ -87,7 +87,7 @@ DControllerBase::launch(int argc, char* argv[], const bool test_mode) {
             establishSession();
         } catch (const std::exception& ex) {
             LOG_FATAL(dctl_logger, DCTL_SESSION_FAIL).arg(ex.what());
-            isc_throw (SessionStartError,
+            bundy_throw (SessionStartError,
                        "Session start up failed: " << ex.what());
         }
     }
@@ -99,7 +99,7 @@ DControllerBase::launch(int argc, char* argv[], const bool test_mode) {
     } catch (const std::exception& ex) {
         LOG_FATAL(dctl_logger, DCTL_PROCESS_FAILED)
                   .arg(app_name_).arg(ex.what());
-        isc_throw (ProcessRunError,
+        bundy_throw (ProcessRunError,
                    "Application process event loop failed: " << ex.what());
     }
 
@@ -110,7 +110,7 @@ DControllerBase::launch(int argc, char* argv[], const bool test_mode) {
         } catch (const std::exception& ex) {
             LOG_ERROR(dctl_logger, DCTL_DISCONNECT_FAIL)
                       .arg(app_name_).arg(ex.what());
-            isc_throw (SessionEndError, "Session end failed: " << ex.what());
+            bundy_throw (SessionEndError, "Session end failed: " << ex.what());
         }
     }
 
@@ -143,7 +143,7 @@ DControllerBase::parseArgs(int argc, char* argv[])
 
         case '?': {
             // We hit an invalid option.
-            isc_throw(InvalidUsage, "unsupported option: ["
+            bundy_throw(InvalidUsage, "unsupported option: ["
                       << static_cast<char>(optopt) << "] "
                       << (!optarg ? "" : optarg));
 
@@ -154,7 +154,7 @@ DControllerBase::parseArgs(int argc, char* argv[])
             // We hit a valid custom option
             if (!customOption(ch, optarg)) {
                 // This would be a programmatic error.
-                isc_throw(InvalidUsage, " Option listed but implemented?: ["
+                bundy_throw(InvalidUsage, " Option listed but implemented?: ["
                           << static_cast<char>(ch) << "] "
                           << (!optarg ? "" : optarg));
             }
@@ -164,7 +164,7 @@ DControllerBase::parseArgs(int argc, char* argv[])
 
     // There was too much information on the command line.
     if (argc > optind) {
-        isc_throw(InvalidUsage, "extraneous command line information");
+        bundy_throw(InvalidUsage, "extraneous command line information");
     }
 }
 
@@ -183,13 +183,13 @@ DControllerBase::initProcess() {
     try {
         process_.reset(createProcess());
     } catch (const std::exception& ex) {
-        isc_throw(DControllerBaseError, std::string("createProcess failed: ")
+        bundy_throw(DControllerBaseError, std::string("createProcess failed: ")
                   + ex.what());
     }
 
     // This is pretty unlikely, but will test for it just to be safe..
     if (!process_) {
-        isc_throw(DControllerBaseError, "createProcess returned NULL");
+        bundy_throw(DControllerBaseError, "createProcess returned NULL");
     }
 
     // Invoke application's init method (Note this call should throw
@@ -203,7 +203,7 @@ DControllerBase::establishSession() {
               .arg(app_name_).arg(spec_file_name_);
 
     // Create the BUNDY command control session with the our IOService.
-    cc_session_ = SessionPtr(new isc::cc::Session(
+    cc_session_ = SessionPtr(new bundy::cc::Session(
                              io_service_->get_io_service()));
 
     // Create the BUNDY config session with the stub configuration handler.
@@ -211,7 +211,7 @@ DControllerBase::establishSession() {
     // the constructor updates the current session with the configuration that
     // had been committed in the previous session. If we do not install
     // the dummy handler, the previous configuration would be lost.
-    config_session_ = ModuleCCSessionPtr(new isc::config::ModuleCCSession(
+    config_session_ = ModuleCCSessionPtr(new bundy::config::ModuleCCSession(
                                          spec_file_name_, *cc_session_,
                                          dummyConfigHandler, commandHandler,
                                          false));
@@ -225,14 +225,14 @@ DControllerBase::establishSession() {
 
     // Call the real configHandler with the full configuration retrieved
     // from the config session.
-    isc::data::ConstElementPtr answer = configHandler(
+    bundy::data::ConstElementPtr answer = configHandler(
                                             config_session_->getFullConfig());
 
     // Parse the answer returned from the configHandler.  Log the error but
     // keep running. This provides an opportunity for the user to correct
     // the configuration dynamically.
     int ret = 0;
-    isc::data::ConstElementPtr comment = isc::config::parseAnswer(ret, answer);
+    bundy::data::ConstElementPtr comment = bundy::config::parseAnswer(ret, answer);
     if (ret) {
         LOG_ERROR(dctl_logger, DCTL_CONFIG_LOAD_FAIL)
                   .arg(app_name_).arg(comment->str());
@@ -248,7 +248,7 @@ DControllerBase::runProcess() {
     LOG_DEBUG(dctl_logger, DBGLVL_START_SHUT, DCTL_RUN_PROCESS).arg(app_name_);
     if (!process_) {
         // This should not be possible.
-        isc_throw(DControllerBaseError, "Process not initialized");
+        bundy_throw(DControllerBaseError, "Process not initialized");
     }
 
     // Invoke the application process's run method. This may throw
@@ -276,15 +276,15 @@ void DControllerBase::disconnectSession() {
     }
 }
 
-isc::data::ConstElementPtr
-DControllerBase::dummyConfigHandler(isc::data::ConstElementPtr) {
+bundy::data::ConstElementPtr
+DControllerBase::dummyConfigHandler(bundy::data::ConstElementPtr) {
     LOG_DEBUG(dctl_logger, DBGLVL_START_SHUT, DCTL_CONFIG_STUB)
              .arg(controller_->getAppName());
-    return (isc::config::createAnswer(0, "Configuration accepted."));
+    return (bundy::config::createAnswer(0, "Configuration accepted."));
 }
 
-isc::data::ConstElementPtr
-DControllerBase::configHandler(isc::data::ConstElementPtr new_config) {
+bundy::data::ConstElementPtr
+DControllerBase::configHandler(bundy::data::ConstElementPtr new_config) {
 
     LOG_DEBUG(dctl_logger, DBGLVL_COMMAND, DCTL_CONFIG_UPDATE)
               .arg(controller_->getAppName()).arg(new_config->str());
@@ -294,9 +294,9 @@ DControllerBase::configHandler(isc::data::ConstElementPtr new_config) {
 }
 
 // Static callback which invokes non-static handler on singleton
-isc::data::ConstElementPtr
+bundy::data::ConstElementPtr
 DControllerBase::commandHandler(const std::string& command,
-                                isc::data::ConstElementPtr args) {
+                                bundy::data::ConstElementPtr args) {
 
     LOG_DEBUG(dctl_logger, DBGLVL_COMMAND, DCTL_COMMAND_RECEIVED)
         .arg(controller_->getAppName()).arg(command)
@@ -306,9 +306,9 @@ DControllerBase::commandHandler(const std::string& command,
     return (controller_->executeCommand(command, args));
 }
 
-isc::data::ConstElementPtr
-DControllerBase::updateConfig(isc::data::ConstElementPtr new_config) {
-    isc::data::ConstElementPtr full_config;
+bundy::data::ConstElementPtr
+DControllerBase::updateConfig(bundy::data::ConstElementPtr new_config) {
+    bundy::data::ConstElementPtr full_config;
     if (stand_alone_) {
         // @todo Until there is a configuration manager to provide retrieval
         // we'll just assume the incoming config is the full configuration set.
@@ -320,8 +320,8 @@ DControllerBase::updateConfig(isc::data::ConstElementPtr new_config) {
         if (!config_session_) {
             // That should never happen as we install config_handler
             // after we instantiate the server.
-            isc::data::ConstElementPtr answer =
-                    isc::config::createAnswer(1, "Configuration rejected,"
+            bundy::data::ConstElementPtr answer =
+                    bundy::config::createAnswer(1, "Configuration rejected,"
                                               " Session has not started.");
             return (answer);
         }
@@ -343,33 +343,33 @@ DControllerBase::updateConfig(isc::data::ConstElementPtr new_config) {
     // configuration with the existing (full) configuration.
 
     // Let's create a new object that will hold the merged configuration.
-    boost::shared_ptr<isc::data::MapElement>
-                            merged_config(new isc::data::MapElement());
+    boost::shared_ptr<bundy::data::MapElement>
+                            merged_config(new bundy::data::MapElement());
 
     // Merge an existing and new configuration.
     merged_config->setValue(full_config->mapValue());
-    isc::data::merge(merged_config, new_config);
+    bundy::data::merge(merged_config, new_config);
 
     // Send the merged configuration to the application.
     return (process_->configure(merged_config));
 }
 
 
-isc::data::ConstElementPtr
+bundy::data::ConstElementPtr
 DControllerBase::executeCommand(const std::string& command,
-                            isc::data::ConstElementPtr args) {
+                            bundy::data::ConstElementPtr args) {
     // Shutdown is universal.  If its not that, then try it as
     // an custom command supported by the derivation.  If that
     // doesn't pan out either, than send to it the application
     // as it may be supported there.
-    isc::data::ConstElementPtr answer;
+    bundy::data::ConstElementPtr answer;
     if (command.compare(SHUT_DOWN_COMMAND) == 0) {
         answer = shutdown(args);
     } else {
         // It wasn't shutdown, so may be a custom controller command.
         int rcode = 0;
         answer = customControllerCommand(command, args);
-        isc::config::parseAnswer(rcode, answer);
+        bundy::config::parseAnswer(rcode, answer);
         if (rcode == COMMAND_INVALID)
         {
             // It wasn't controller command, so may be an application command.
@@ -380,17 +380,17 @@ DControllerBase::executeCommand(const std::string& command,
     return (answer);
 }
 
-isc::data::ConstElementPtr
+bundy::data::ConstElementPtr
 DControllerBase::customControllerCommand(const std::string& command,
-                                     isc::data::ConstElementPtr /* args */) {
+                                     bundy::data::ConstElementPtr /* args */) {
 
     // Default implementation always returns invalid command.
-    return (isc::config::createAnswer(COMMAND_INVALID,
+    return (bundy::config::createAnswer(COMMAND_INVALID,
                                       "Unrecognized command: " + command));
 }
 
-isc::data::ConstElementPtr
-DControllerBase::shutdown(isc::data::ConstElementPtr args) {
+bundy::data::ConstElementPtr
+DControllerBase::shutdown(bundy::data::ConstElementPtr args) {
     if (process_) {
         return (process_->shutdown(args));
     } 
@@ -398,7 +398,7 @@ DControllerBase::shutdown(isc::data::ConstElementPtr args) {
     // Not really a failure, but this condition is worth noting. In reality
     // it should be pretty hard to cause this.
     LOG_WARN(dctl_logger, DCTL_NOT_RUNNING).arg(app_name_);
-    return (isc::config::createAnswer(0, "Process has not been initialzed."));
+    return (bundy::config::createAnswer(0, "Process has not been initialzed."));
 }
 
 void
@@ -419,5 +419,5 @@ DControllerBase::usage(const std::string & text)
 DControllerBase::~DControllerBase() {
 }
 
-}; // namespace isc::d2
-}; // namespace isc
+}; // namespace bundy::d2
+}; // namespace bundy

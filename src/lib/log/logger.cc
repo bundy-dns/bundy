@@ -26,7 +26,7 @@
 
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 // Initialize underlying logger, but only if logging has been initialized.
@@ -34,7 +34,7 @@ void Logger::initLoggerImpl() {
     if (isLoggingInitialized()) {
         loggerptr_ = new LoggerImpl(name_);
     } else {
-        isc_throw(LoggingNotInitialized, "attempt to access logging function "
+        bundy_throw(LoggingNotInitialized, "attempt to access logging function "
                   "before logging has been initialized");
     }
 }
@@ -60,20 +60,20 @@ Logger::getName() {
 // Set the severity for logging.
 
 void
-Logger::setSeverity(isc::log::Severity severity, int dbglevel) {
+Logger::setSeverity(bundy::log::Severity severity, int dbglevel) {
     getLoggerPtr()->setSeverity(severity, dbglevel);
 }
 
 // Return the severity of the logger.
 
-isc::log::Severity
+bundy::log::Severity
 Logger::getSeverity() {
     return (getLoggerPtr()->getSeverity());
 }
 
 // Get Effective Severity Level for Logger
 
-isc::log::Severity
+bundy::log::Severity
 Logger::getEffectiveSeverity() {
     return (getLoggerPtr()->getEffectiveSeverity());
 }
@@ -135,7 +135,7 @@ Logger::output(const Severity& severity, const std::string& message) {
 }
 
 Logger::Formatter
-Logger::debug(int dbglevel, const isc::log::MessageID& ident) {
+Logger::debug(int dbglevel, const bundy::log::MessageID& ident) {
     if (isDebugEnabled(dbglevel)) {
         return (Formatter(DEBUG, getLoggerPtr()->lookupMessage(ident),
                           this));
@@ -145,7 +145,7 @@ Logger::debug(int dbglevel, const isc::log::MessageID& ident) {
 }
 
 Logger::Formatter
-Logger::info(const isc::log::MessageID& ident) {
+Logger::info(const bundy::log::MessageID& ident) {
     if (isInfoEnabled()) {
         return (Formatter(INFO, getLoggerPtr()->lookupMessage(ident),
                           this));
@@ -155,7 +155,7 @@ Logger::info(const isc::log::MessageID& ident) {
 }
 
 Logger::Formatter
-Logger::warn(const isc::log::MessageID& ident) {
+Logger::warn(const bundy::log::MessageID& ident) {
     if (isWarnEnabled()) {
         return (Formatter(WARN, getLoggerPtr()->lookupMessage(ident),
                           this));
@@ -165,7 +165,7 @@ Logger::warn(const isc::log::MessageID& ident) {
 }
 
 Logger::Formatter
-Logger::error(const isc::log::MessageID& ident) {
+Logger::error(const bundy::log::MessageID& ident) {
     if (isErrorEnabled()) {
         return (Formatter(ERROR, getLoggerPtr()->lookupMessage(ident),
                           this));
@@ -175,7 +175,7 @@ Logger::error(const isc::log::MessageID& ident) {
 }
 
 Logger::Formatter
-Logger::fatal(const isc::log::MessageID& ident) {
+Logger::fatal(const bundy::log::MessageID& ident) {
     if (isFatalEnabled()) {
         return (Formatter(FATAL, getLoggerPtr()->lookupMessage(ident),
                           this));
@@ -187,7 +187,7 @@ Logger::fatal(const isc::log::MessageID& ident) {
 // Replace the interprocess synchronization object
 
 void
-Logger::setInterprocessSync(isc::log::interprocess::InterprocessSync* sync) {
+Logger::setInterprocessSync(bundy::log::interprocess::InterprocessSync* sync) {
     getLoggerPtr()->setInterprocessSync(sync);
 }
 
@@ -199,4 +199,4 @@ Logger::operator==(Logger& other) {
 }
 
 } // namespace log
-} // namespace isc
+} // namespace bundy

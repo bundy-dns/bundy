@@ -16,11 +16,11 @@
 
 #include <dhcp4/dhcp4_log.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
-isc::log::Logger dhcp4_logger("dhcp4");
+bundy::log::Logger dhcp4_logger("dhcp4");
 
 } // namespace dhcp
-} // namespace isc
+} // namespace bundy
 

@@ -67,24 +67,24 @@
 #include <netdb.h>
 
 using namespace std;
-using namespace isc::cc;
-using namespace isc::dns;
-using namespace isc::datasrc;
-using namespace isc::util;
-using namespace isc::util::io::internal;
-using namespace isc::util::unittests;
-using namespace isc::dns::rdata;
-using namespace isc::data;
-using namespace isc::xfr;
-using namespace isc::auth;
-using namespace isc::asiodns;
-using namespace isc::asiolink;
-using namespace isc::testutils;
-using namespace isc::server_common::portconfig;
-using namespace isc::auth::unittest;
-using isc::UnitTestUtil;
-using isc::auth::statistics::Counters;
-using isc::util::unittests::matchWireData;
+using namespace bundy::cc;
+using namespace bundy::dns;
+using namespace bundy::datasrc;
+using namespace bundy::util;
+using namespace bundy::util::io::internal;
+using namespace bundy::util::unittests;
+using namespace bundy::dns::rdata;
+using namespace bundy::data;
+using namespace bundy::xfr;
+using namespace bundy::auth;
+using namespace bundy::asiodns;
+using namespace bundy::asiolink;
+using namespace bundy::testutils;
+using namespace bundy::server_common::portconfig;
+using namespace bundy::auth::unittest;
+using bundy::UnitTestUtil;
+using bundy::auth::statistics::Counters;
+using bundy::util::unittests::matchWireData;
 using boost::scoped_ptr;
 
 namespace {
@@ -360,7 +360,7 @@ TEST_F(AuthSrvTest, shortMessage) {
 // Response messages.  Must be silently dropped, whether it's a valid response
 // or malformed or could otherwise cause a protocol error.
 TEST_F(AuthSrvTest, response) {
-    // isc::testutils::SrvTestBase::response() processes 3 messages.
+    // bundy::testutils::SrvTestBase::response() processes 3 messages.
     response();
 
     ConstElementPtr stats_after = server.getStatistics()->get("zones")->
@@ -873,7 +873,7 @@ TEST_F(AuthSrvTest, notifyWithoutRecipient) {
     updateInMemory(server, "example.", CONFIG_INMEMORY_EXAMPLE, false);
 
     // Emulate the case where msgq tells auth there's no Zonemgr module.
-    notify_session.setMessage(isc::config::createAnswer(CC_REPLY_NO_RECPT,
+    notify_session.setMessage(bundy::config::createAnswer(CC_REPLY_NO_RECPT,
                                                         "no recipient"));
 
     UnitTestUtil::createRequestMessage(request_message, Opcode::NOTIFY(),
@@ -1179,7 +1179,7 @@ TEST_F(AuthSrvTest, updateConfigFail) {
 
     // Next, try to update it with a non-existent one.  This should fail.
     EXPECT_THROW(updateDatabase(server, BADCONFIG_TESTDB),
-                 isc::datasrc::DataSourceError);
+                 bundy::datasrc::DataSourceError);
 
     // The original data source should still exist.
     createDataFromFile("examplequery_fromWire.wire");
@@ -1439,11 +1439,11 @@ TEST_F(AuthSrvTest, queryCounterTCPIXFR) {
 
 TEST_F(AuthSrvTest, queryCounterOpcodes) {
     int other_expected = 0;
-    for (int i = 0; i < isc::auth::statistics::num_opcode_to_msgcounter; ++i) {
+    for (int i = 0; i < bundy::auth::statistics::num_opcode_to_msgcounter; ++i) {
         std::string item_name;
         int expected;
-        if (isc::auth::statistics::opcode_to_msgcounter[i] ==
-                isc::auth::statistics::MSG_OPCODE_OTHER)
+        if (bundy::auth::statistics::opcode_to_msgcounter[i] ==
+                bundy::auth::statistics::MSG_OPCODE_OTHER)
         {
             item_name = "OTHER";
             other_expected += i + 1;
@@ -1532,7 +1532,7 @@ TEST_F(AuthSrvTest, stop) {
 }
 
 TEST_F(AuthSrvTest, listenAddresses) {
-    isc::testutils::portconfig::listenAddresses(server);
+    bundy::testutils::portconfig::listenAddresses(server);
     // Check it requests the correct addresses
     const char* tokens[] = {
         "TCP:127.0.0.1:53210:1",
@@ -1596,10 +1596,10 @@ enum ThrowWhen {
 
 /// convenience function to check whether and what to throw
 void
-checkThrow(ThrowWhen method, ThrowWhen throw_at, bool isc_exception) {
+checkThrow(ThrowWhen method, ThrowWhen throw_at, bool bundy_exception) {
     if (method == throw_at) {
-        if (isc_exception) {
-            isc_throw(isc::Exception, "foo");
+        if (bundy_exception) {
+            bundy_throw(bundy::Exception, "foo");
         } else {
             throw std::exception();
         }
@@ -1612,36 +1612,36 @@ checkThrow(ThrowWhen method, ThrowWhen throw_at, bool isc_exception) {
 /// See the documentation for FakeClient for more information,
 /// all methods simply check whether they should throw, and if not, call
 /// their proxied equivalent.
-class FakeZoneFinder : public isc::datasrc::ZoneFinder {
+class FakeZoneFinder : public bundy::datasrc::ZoneFinder {
 public:
-    FakeZoneFinder(isc::datasrc::ZoneFinderPtr zone_finder,
-                   ThrowWhen throw_when, bool isc_exception,
+    FakeZoneFinder(bundy::datasrc::ZoneFinderPtr zone_finder,
+                   ThrowWhen throw_when, bool bundy_exception,
                    ConstRRsetPtr fake_rrset) :
         real_zone_finder_(zone_finder),
         throw_when_(throw_when),
-        isc_exception_(isc_exception),
+        bundy_exception_(bundy_exception),
         fake_rrset_(fake_rrset)
     {}
 
-    virtual isc::dns::Name
+    virtual bundy::dns::Name
     getOrigin() const {
-        checkThrow(THROW_AT_GET_ORIGIN, throw_when_, isc_exception_);
+        checkThrow(THROW_AT_GET_ORIGIN, throw_when_, bundy_exception_);
         return (real_zone_finder_->getOrigin());
     }
 
-    virtual isc::dns::RRClass
+    virtual bundy::dns::RRClass
     getClass() const {
-        checkThrow(THROW_AT_GET_CLASS, throw_when_, isc_exception_);
+        checkThrow(THROW_AT_GET_CLASS, throw_when_, bundy_exception_);
         return (real_zone_finder_->getClass());
     }
 
-    virtual isc::datasrc::ZoneFinderContextPtr
-    find(const isc::dns::Name& name,
-         const isc::dns::RRType& type,
-         isc::datasrc::ZoneFinder::FindOptions options)
+    virtual bundy::datasrc::ZoneFinderContextPtr
+    find(const bundy::dns::Name& name,
+         const bundy::dns::RRType& type,
+         bundy::datasrc::ZoneFinder::FindOptions options)
     {
-        using namespace isc::datasrc;
-        checkThrow(THROW_AT_FIND, throw_when_, isc_exception_);
+        using namespace bundy::datasrc;
+        checkThrow(THROW_AT_FIND, throw_when_, bundy_exception_);
         // If faked RRset was specified on construction and it matches the
         // query, return it instead of searching the real data source.
         if (fake_rrset_ && fake_rrset_->getName() == name &&
@@ -1655,25 +1655,25 @@ public:
         return (real_zone_finder_->find(name, type, options));
     }
 
-    virtual isc::datasrc::ZoneFinderContextPtr
-    findAll(const isc::dns::Name& name,
-            std::vector<isc::dns::ConstRRsetPtr> &target,
+    virtual bundy::datasrc::ZoneFinderContextPtr
+    findAll(const bundy::dns::Name& name,
+            std::vector<bundy::dns::ConstRRsetPtr> &target,
             const FindOptions options = FIND_DEFAULT)
     {
-        checkThrow(THROW_AT_FIND_ALL, throw_when_, isc_exception_);
+        checkThrow(THROW_AT_FIND_ALL, throw_when_, bundy_exception_);
         return (real_zone_finder_->findAll(name, target, options));
     }
 
     virtual FindNSEC3Result
-    findNSEC3(const isc::dns::Name& name, bool recursive) {
-        checkThrow(THROW_AT_FIND_NSEC3, throw_when_, isc_exception_);
+    findNSEC3(const bundy::dns::Name& name, bool recursive) {
+        checkThrow(THROW_AT_FIND_NSEC3, throw_when_, bundy_exception_);
         return (real_zone_finder_->findNSEC3(name, recursive));
     }
 
 private:
-    isc::datasrc::ZoneFinderPtr real_zone_finder_;
+    bundy::datasrc::ZoneFinderPtr real_zone_finder_;
     ThrowWhen throw_when_;
-    bool isc_exception_;
+    bool bundy_exception_;
     ConstRRsetPtr fake_rrset_;
 };
 
@@ -1681,7 +1681,7 @@ private:
 ///
 /// Currently it is used as an 'InMemoryClient' using setInMemoryClient,
 /// but it is in effect a general datasource client.
-class FakeClient : public isc::datasrc::DataSourceClient {
+class FakeClient : public bundy::datasrc::DataSourceClient {
 public:
     /// \brief Create a proxy memory client
     ///
@@ -1689,17 +1689,17 @@ public:
     /// \param throw_when if set to any value other than never, that is
     ///        the method that will throw an exception (either in this
     ///        class or the related FakeZoneFinder)
-    /// \param isc_exception if true, throw isc::Exception, otherwise,
+    /// \param bundy_exception if true, throw bundy::Exception, otherwise,
     ///                      throw std::exception
     /// \param fake_rrset If non NULL, it will be used as an answer to
     /// find() for that name and type.
     FakeClient(const DataSourceClient* real_client,
-               ThrowWhen throw_when, bool isc_exception,
+               ThrowWhen throw_when, bool bundy_exception,
                ConstRRsetPtr fake_rrset = ConstRRsetPtr()) :
         DataSourceClient("fake"),
         real_client_ptr_(real_client),
         throw_when_(throw_when),
-        isc_exception_(isc_exception),
+        bundy_exception_(bundy_exception),
         fake_rrset_(fake_rrset)
     {}
 
@@ -1710,66 +1710,66 @@ public:
     /// instance which will throw at the method specified at the
     /// construction of this instance.
     virtual FindResult
-    findZone(const isc::dns::Name& name) const {
-        checkThrow(THROW_AT_FIND_ZONE, throw_when_, isc_exception_);
+    findZone(const bundy::dns::Name& name) const {
+        checkThrow(THROW_AT_FIND_ZONE, throw_when_, bundy_exception_);
         const FindResult result =
             real_client_ptr_->findZone(name);
-        return (FindResult(result.code, isc::datasrc::ZoneFinderPtr(
+        return (FindResult(result.code, bundy::datasrc::ZoneFinderPtr(
                                         new FakeZoneFinder(result.zone_finder,
                                                            throw_when_,
-                                                           isc_exception_,
+                                                           bundy_exception_,
                                                            fake_rrset_))));
     }
 
-    isc::datasrc::ZoneUpdaterPtr
-    getUpdater(const isc::dns::Name&, bool, bool) const {
-        isc_throw(isc::NotImplemented,
+    bundy::datasrc::ZoneUpdaterPtr
+    getUpdater(const bundy::dns::Name&, bool, bool) const {
+        bundy_throw(bundy::NotImplemented,
                   "Update attempt on in fake data source");
     }
-    std::pair<isc::datasrc::ZoneJournalReader::Result,
-              isc::datasrc::ZoneJournalReaderPtr>
-    getJournalReader(const isc::dns::Name&, uint32_t, uint32_t) const {
-        isc_throw(isc::NotImplemented, "Journaling isn't supported for "
+    std::pair<bundy::datasrc::ZoneJournalReader::Result,
+              bundy::datasrc::ZoneJournalReaderPtr>
+    getJournalReader(const bundy::dns::Name&, uint32_t, uint32_t) const {
+        bundy_throw(bundy::NotImplemented, "Journaling isn't supported for "
                   "fake data source");
     }
 private:
     const DataSourceClient* real_client_ptr_;
     ThrowWhen throw_when_;
-    bool isc_exception_;
+    bool bundy_exception_;
     ConstRRsetPtr fake_rrset_;
 };
 
-class FakeList : public isc::datasrc::ConfigurableClientList {
+class FakeList : public bundy::datasrc::ConfigurableClientList {
 public:
     /// \brief Creates a fake list for the given in-memory client
     ///
     /// It will create a FakeClient for each client in the original list,
     /// with the given arguments, which is used when searching for the
     /// corresponding data source.
-    FakeList(const boost::shared_ptr<isc::datasrc::ConfigurableClientList>
-             real_list, ThrowWhen throw_when, bool isc_exception,
+    FakeList(const boost::shared_ptr<bundy::datasrc::ConfigurableClientList>
+             real_list, ThrowWhen throw_when, bool bundy_exception,
              ConstRRsetPtr fake_rrset = ConstRRsetPtr()) :
         ConfigurableClientList(RRClass::IN()),
         real_(real_list)
     {
         BOOST_FOREACH(const DataSourceInfo& info, real_->getDataSources()) {
-             const isc::datasrc::DataSourceClientPtr
+             const bundy::datasrc::DataSourceClientPtr
                  client(new FakeClient(info.data_src_client_ != NULL ?
                                        info.data_src_client_ :
                                        info.getCacheClient(),
-                                       throw_when, isc_exception, fake_rrset));
+                                       throw_when, bundy_exception, fake_rrset));
              clients_.push_back(client);
              data_sources_.push_back(
                  DataSourceInfo(client.get(),
-                                isc::datasrc::DataSourceClientContainerPtr(),
+                                bundy::datasrc::DataSourceClientContainerPtr(),
                                 boost::shared_ptr<
-                                isc::datasrc::internal::CacheConfig>(),
+                                bundy::datasrc::internal::CacheConfig>(),
                                 RRClass::IN(), ""));
         }
     }
 private:
-    const boost::shared_ptr<isc::datasrc::ConfigurableClientList> real_;
-    vector<isc::datasrc::DataSourceClientPtr> clients_;
+    const boost::shared_ptr<bundy::datasrc::ConfigurableClientList> real_;
+    vector<bundy::datasrc::DataSourceClientPtr> clients_;
 };
 
 } // end anonymous namespace for throwing proxy classes
@@ -1781,7 +1781,7 @@ private:
 TEST_F(AuthSrvTest, queryWithInMemoryClientProxy) {
     // Set real inmem client to proxy
     updateInMemory(server, "example.", CONFIG_INMEMORY_EXAMPLE);
-    boost::shared_ptr<isc::datasrc::ConfigurableClientList> list;
+    boost::shared_ptr<bundy::datasrc::ConfigurableClientList> list;
     DataSrcClientsMgr& mgr = server.getDataSrcClientsMgr();
     {
         DataSrcClientsMgr::Holder holder(mgr);
@@ -1803,22 +1803,22 @@ TEST_F(AuthSrvTest, queryWithInMemoryClientProxy) {
 
 // Convenience function for the rest of the tests, set up a proxy
 // to throw in the given method
-// If isc_exception is true, it will throw isc::Exception, otherwise
+// If bundy_exception is true, it will throw bundy::Exception, otherwise
 // it will throw std::exception
 // If non null rrset is given, it will be passed to the proxy so it can
 // return some faked response.
 void
-setupThrow(AuthSrv& server, ThrowWhen throw_when, bool isc_exception,
+setupThrow(AuthSrv& server, ThrowWhen throw_when, bool bundy_exception,
            ConstRRsetPtr rrset = ConstRRsetPtr())
 {
     updateInMemory(server, "example.", CONFIG_INMEMORY_EXAMPLE);
 
-    boost::shared_ptr<isc::datasrc::ConfigurableClientList> list;
+    boost::shared_ptr<bundy::datasrc::ConfigurableClientList> list;
     DataSrcClientsMgr& mgr = server.getDataSrcClientsMgr();
     {           // we need to limit the scope so swap is outside of it
         DataSrcClientsMgr::Holder holder(mgr);
         list.reset(new FakeList(holder.findClientList(RRClass::IN()),
-                                throw_when, isc_exception, rrset));
+                                throw_when, bundy_exception, rrset));
     }
     ClientListMapPtr lists(new std::map<RRClass, ListPtr>);
     lists->insert(pair<RRClass, ListPtr>(RRClass::IN(), list));
@@ -1840,14 +1840,14 @@ TEST_F(AuthSrvTest, queryWithThrowingProxyServfails) {
         createRequestPacket(request_message, IPPROTO_UDP);
         setupThrow(server, *when, true);
         processAndCheckSERVFAIL();
-        // To be sure, check same for non-isc-exceptions
+        // To be sure, check same for non-bundy-exceptions
         createRequestPacket(request_message, IPPROTO_UDP);
         setupThrow(server, *when, false);
         processAndCheckSERVFAIL();
     }
 }
 
-// Throw isc::Exception in getClass(). (Currently?) getClass is not called
+// Throw bundy::Exception in getClass(). (Currently?) getClass is not called
 // in the processMessage path, so this should result in a normal answer
 TEST_F(AuthSrvTest, queryWithInMemoryClientProxyGetClass) {
     createDataFromFile("nsec3query_nodnssec_fromWire.wire");
@@ -1930,7 +1930,7 @@ checkAddrPort(const struct sockaddr& actual_sa,
                                   sbuf, sizeof(sbuf),
                                   NI_NUMERICHOST | NI_NUMERICSERV);
     if (error != 0) {
-        isc_throw(isc::Unexpected, "getnameinfo failed: " <<
+        bundy_throw(bundy::Unexpected, "getnameinfo failed: " <<
                   gai_strerror(error));
     }
     EXPECT_EQ(expected_addr, hbuf);
@@ -2045,7 +2045,7 @@ namespace {
         ConstElementPtr response = execAuthServerCommand(server, command,
                                                          ConstElementPtr());
         int command_result = -1;
-        isc::config::parseAnswer(command_result, response);
+        bundy::config::parseAnswer(command_result, response);
         EXPECT_EQ(0, command_result);
     }
 
@@ -2054,7 +2054,7 @@ namespace {
         ConstElementPtr response = execAuthServerCommand(server, command,
                                                          args);
         int command_result = -1;
-        isc::config::parseAnswer(command_result, response);
+        bundy::config::parseAnswer(command_result, response);
         EXPECT_EQ(expected_result, command_result);
     }
 } // end anonymous namespace
@@ -2153,8 +2153,8 @@ TEST_F(AuthSrvTest, DISABLED_postReconfigure) {
                         ElementPtr(new ListElement),
                         ElementPtr(new ListElement));
     const string specfile(string(TEST_OWN_DATA_DIR) + "/spec.spec");
-    session.getMessages()->add(isc::config::createAnswer());
-    isc::config::ModuleCCSession mccs(specfile, session, NULL, NULL, false,
+    session.getMessages()->add(bundy::config::createAnswer());
+    bundy::config::ModuleCCSession mccs(specfile, session, NULL, NULL, false,
                                       false);
     server.setConfigSession(&mccs);
     // First, no lists are there, so no reason to subscribe

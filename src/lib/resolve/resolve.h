@@ -24,7 +24,7 @@
 
 #include <dns/rcode.h>
 
-namespace isc {
+namespace bundy {
 namespace resolve {
 
 /// \brief Create an error response
@@ -38,8 +38,8 @@ namespace resolve {
 ///
 /// \param answer_message The message to clear and place the error in
 /// \param error_code The error Rcode
-void makeErrorMessage(isc::dns::MessagePtr answer_message,
-                      const isc::dns::Rcode& error_code);
+void makeErrorMessage(bundy::dns::MessagePtr answer_message,
+                      const bundy::dns::Rcode& error_code);
 
 
 /// \brief Initialize a response message
@@ -49,15 +49,15 @@ void makeErrorMessage(isc::dns::MessagePtr answer_message,
 /// the Opcode). This allows for direct usage of makeErrorMessage(),
 /// as well as ResolveCache.lookup().
 ///
-/// Raises an isc::dns::InvalidMessageOperation if reponse_message is
+/// Raises an bundy::dns::InvalidMessageOperation if reponse_message is
 /// not in RENDER mode.
 ///
 /// \param query_message The query message to take the Question, Qid,
 ///                      and Opcode from.
 /// \param response_message The fresh response message to initialize
 ///                         (must be in RENDER mode)
-void initResponseMessage(const isc::dns::Message& query_message,
-                         isc::dns::Message& response_message);
+void initResponseMessage(const bundy::dns::Message& query_message,
+                         bundy::dns::Message& response_message);
 
 
 /// \brief Initialize a response message
@@ -67,14 +67,14 @@ void initResponseMessage(const isc::dns::Message& query_message,
 /// Opcode Query). This allows for direct usage of makeErrorMessage(),
 /// as well as ResolveCache.lookup().
 ///
-/// Raises an isc::dns::InvalidMessageOperation if reponse_message is
+/// Raises an bundy::dns::InvalidMessageOperation if reponse_message is
 /// not in RENDER mode.
 ///
 /// \param question The question to place in the Question section
 /// \param response_message The fresh response message to initialize
 ///                         (must be in RENDER mode)
-void initResponseMessage(const isc::dns::Question& question,
-                         isc::dns::Message& response_message);
+void initResponseMessage(const bundy::dns::Question& question,
+                         bundy::dns::Message& response_message);
 
 
 /// \brief Copies the parts relevant for a DNS response to the
@@ -85,11 +85,11 @@ void initResponseMessage(const isc::dns::Question& question,
 /// code
 /// \param source The Message to copy the data from
 /// \param target The Message to copy the data to
-void copyResponseMessage(const isc::dns::Message& source,
-                         isc::dns::MessagePtr target);
+void copyResponseMessage(const bundy::dns::Message& source,
+                         bundy::dns::MessagePtr target);
 
 
 } // namespace resolve
-} // namespace isc
+} // namespace bundy
 
 #endif // ISC_RESOLVE_H_

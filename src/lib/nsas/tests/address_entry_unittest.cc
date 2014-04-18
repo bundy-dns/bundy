@@ -32,9 +32,9 @@ static std::string V4B_TEXT("5.6.7.8");
 static std::string V6A_TEXT("2001:dead:beef::");
 static std::string V6B_TEXT("1984:1985::1986:1987");
 
-using namespace isc::asiolink;
+using namespace bundy::asiolink;
 using namespace std;
-using namespace isc::nsas;
+using namespace bundy::nsas;
 
 /// \brief Test Fixture Class
 ///

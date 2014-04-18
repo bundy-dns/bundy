@@ -26,12 +26,12 @@
 
 #include <boost/scoped_ptr.hpp>
 
-using namespace isc::dns;
-using namespace isc::dns::rdata;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
 using namespace std;
-using namespace isc::datasrc;
-using namespace isc::datasrc::memory;
-using namespace isc::datasrc::memory::detail;
+using namespace bundy::datasrc;
+using namespace bundy::datasrc::memory;
+using namespace bundy::datasrc::memory::detail;
 
 namespace {
 

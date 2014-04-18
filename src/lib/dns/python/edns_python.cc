@@ -30,11 +30,11 @@
 #include "messagerenderer_python.h"
 #include "pydnspp_common.h"
 
-using namespace isc::dns;
-using namespace isc::dns::rdata;
-using namespace isc::dns::python;
-using namespace isc::util;
-using namespace isc::util::python;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
+using namespace bundy::dns::python;
+using namespace bundy::util;
+using namespace bundy::util::python;
 
 namespace {
 
@@ -110,7 +110,7 @@ createFromRR(const Name& name, const RRClass& rrclass, const RRType& rrtype,
     try {
         return (createEDNSFromRR(name, rrclass, rrtype, rrttl, rdata,
                                  extended_rcode));
-    } catch (const isc::InvalidParameter& ex) {
+    } catch (const bundy::InvalidParameter& ex) {
         PyErr_SetString(po_InvalidParameter, ex.what());
     } catch (const DNSMessageFORMERR& ex) {
         PyErr_SetString(po_DNSMessageFORMERR, ex.what());
@@ -134,7 +134,7 @@ EDNS_init(s_EDNS* self, PyObject* args) {
     if (PyArg_ParseTuple(args, "|b", &version)) {
         try {
             self->cppobj = new EDNS(version);
-        } catch (const isc::InvalidParameter& ex) {
+        } catch (const bundy::InvalidParameter& ex) {
             PyErr_SetString(po_InvalidParameter, ex.what());
             return (-1);
         } catch (...) {
@@ -304,7 +304,7 @@ EDNS_createFromRR(const s_EDNS* null_self, PyObject* args) {
 
 } // end of anonymous namespace
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace python {
 
@@ -372,7 +372,7 @@ createEDNSObject(const EDNS& source) {
 bool
 PyEDNS_Check(PyObject* obj) {
     if (obj == NULL) {
-        isc_throw(PyCPPWrapperException, "obj argument NULL in typecheck");
+        bundy_throw(PyCPPWrapperException, "obj argument NULL in typecheck");
     }
     return (PyObject_TypeCheck(obj, &edns_type));
 }
@@ -380,7 +380,7 @@ PyEDNS_Check(PyObject* obj) {
 const EDNS&
 PyEDNS_ToEDNS(const PyObject* edns_obj) {
     if (edns_obj == NULL) {
-        isc_throw(PyCPPWrapperException,
+        bundy_throw(PyCPPWrapperException,
                   "obj argument NULL in EDNS PyObject conversion");
     }
     const s_EDNS* edns = static_cast<const s_EDNS*>(edns_obj);
@@ -389,4 +389,4 @@ PyEDNS_ToEDNS(const PyObject* edns_obj) {
 
 } // end namespace python
 } // end namespace dns
-} // end namespace isc
+} // end namespace bundy

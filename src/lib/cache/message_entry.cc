@@ -22,8 +22,8 @@
 #include "rrset_cache.h"
 #include "logger.h"
 
-using namespace isc::dns;
-using namespace isc::nsas;
+using namespace bundy::dns;
+using namespace bundy::nsas;
 using namespace std;
 
 // Put file scope functions in unnamed namespace.
@@ -54,7 +54,7 @@ getDNAMEChainStarter(const Message& message, const Name& query_name) {
 
 } // End of unnamed namespace
 
-namespace isc {
+namespace bundy {
 namespace cache {
 
 static uint32_t MAX_UINT32 = numeric_limits<uint32_t>::max();
@@ -75,7 +75,7 @@ static uint32_t MAX_NEGATIVE_CACHE_TTL = 10800;
 // TODO:Give an option to let user configure
 static uint32_t MAX_NORMAL_CACHE_TTL = 604800;
 
-MessageEntry::MessageEntry(const isc::dns::Message& msg,
+MessageEntry::MessageEntry(const bundy::dns::Message& msg,
                            const RRsetCachePtr& rrset_cache,
                            const RRsetCachePtr& negative_soa_cache):
     rrset_cache_(rrset_cache),
@@ -109,9 +109,9 @@ MessageEntry::getRRsetEntries(vector<RRsetEntryPtr>& rrset_entry_vec,
 }
 
 void
-MessageEntry::addRRset(isc::dns::Message& message,
+MessageEntry::addRRset(bundy::dns::Message& message,
                        const vector<RRsetEntryPtr>& rrset_entry_vec,
-                       const isc::dns::Message::Section& section)
+                       const bundy::dns::Message::Section& section)
 {
     uint16_t start_index = 0;
     uint16_t end_index = answer_count_;
@@ -132,7 +132,7 @@ MessageEntry::addRRset(isc::dns::Message& message,
 
 bool
 MessageEntry::genMessage(const time_t& time_now,
-                         isc::dns::Message& msg)
+                         bundy::dns::Message& msg)
 {
     if (time_now >= expire_time_) {
         // The message entry has expired.
@@ -165,8 +165,8 @@ MessageEntry::genMessage(const time_t& time_now,
 
 RRsetTrustLevel
 MessageEntry::getRRsetTrustLevel(const Message& message,
-    const isc::dns::RRsetPtr& rrset,
-    const isc::dns::Message::Section& section)
+    const bundy::dns::RRsetPtr& rrset,
+    const bundy::dns::Message::Section& section)
 {
     bool aa = message.getHeaderFlag(Message::HEADERFLAG_AA);
     switch(section) {
@@ -241,7 +241,7 @@ MessageEntry::getRRsetTrustLevel(const Message& message,
 }
 
 void
-MessageEntry::parseSection(const isc::dns::Message& msg,
+MessageEntry::parseSection(const bundy::dns::Message& msg,
                          const Message::Section& section,
                          uint32_t& smaller_ttl,
                          uint16_t& rrset_count)
@@ -272,7 +272,7 @@ MessageEntry::parseSection(const isc::dns::Message& msg,
 }
 
 void
-MessageEntry::parseNegativeResponseAuthoritySection(const isc::dns::Message& msg,
+MessageEntry::parseNegativeResponseAuthoritySection(const bundy::dns::Message& msg,
         uint32_t& min_ttl,
         uint16_t& rrset_count)
 {
@@ -303,7 +303,7 @@ MessageEntry::parseNegativeResponseAuthoritySection(const isc::dns::Message& msg
 }
 
 void
-MessageEntry::initMessageEntry(const isc::dns::Message& msg) {
+MessageEntry::initMessageEntry(const bundy::dns::Message& msg) {
     //TODO better way to cache the header flags?
     headerflag_aa_ = msg.getHeaderFlag(Message::HEADERFLAG_AA);
     headerflag_tc_ = msg.getHeaderFlag(Message::HEADERFLAG_TC);
@@ -343,4 +343,4 @@ MessageEntry::initMessageEntry(const isc::dns::Message& msg) {
 }
 
 } // namespace cache
-} // namespace isc
+} // namespace bundy

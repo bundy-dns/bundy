@@ -22,8 +22,8 @@
 #include <log/log_messages.h>
 #include <log/logger_support.h>
 
-using namespace isc;
-using namespace isc::log;
+using namespace bundy;
+using namespace bundy::log;
 using namespace std;
 
 class LoggerLevelTest : public ::testing::Test {
@@ -44,18 +44,18 @@ protected:
 TEST_F(LoggerLevelTest, Creation) {
 
     // Default
-    isc::log::Level level1;
-    EXPECT_EQ(isc::log::DEFAULT, level1.severity);
-    EXPECT_EQ(isc::log::MIN_DEBUG_LEVEL, level1.dbglevel);
+    bundy::log::Level level1;
+    EXPECT_EQ(bundy::log::DEFAULT, level1.severity);
+    EXPECT_EQ(bundy::log::MIN_DEBUG_LEVEL, level1.dbglevel);
 
     // Single argument constructor.
-    isc::log::Level level2(isc::log::FATAL);
-    EXPECT_EQ(isc::log::FATAL, level2.severity);
-    EXPECT_EQ(isc::log::MIN_DEBUG_LEVEL, level2.dbglevel);
+    bundy::log::Level level2(bundy::log::FATAL);
+    EXPECT_EQ(bundy::log::FATAL, level2.severity);
+    EXPECT_EQ(bundy::log::MIN_DEBUG_LEVEL, level2.dbglevel);
 
     // Two-argument constructor
-    isc::log::Level level3(isc::log::DEBUG, 42);
-    EXPECT_EQ(isc::log::DEBUG, level3.severity);
+    bundy::log::Level level3(bundy::log::DEBUG, 42);
+    EXPECT_EQ(bundy::log::DEBUG, level3.severity);
     EXPECT_EQ(42, level3.dbglevel);
 }
 

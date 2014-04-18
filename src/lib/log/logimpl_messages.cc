@@ -4,15 +4,15 @@
 #include <log/message_types.h>
 #include <log/message_initializer.h>
 
-namespace isc {
+namespace bundy {
 namespace log {
 
-extern const isc::log::MessageID LOGIMPL_ABOVE_MAX_DEBUG = "LOGIMPL_ABOVE_MAX_DEBUG";
-extern const isc::log::MessageID LOGIMPL_BAD_DEBUG_STRING = "LOGIMPL_BAD_DEBUG_STRING";
-extern const isc::log::MessageID LOGIMPL_BELOW_MIN_DEBUG = "LOGIMPL_BELOW_MIN_DEBUG";
+extern const bundy::log::MessageID LOGIMPL_ABOVE_MAX_DEBUG = "LOGIMPL_ABOVE_MAX_DEBUG";
+extern const bundy::log::MessageID LOGIMPL_BAD_DEBUG_STRING = "LOGIMPL_BAD_DEBUG_STRING";
+extern const bundy::log::MessageID LOGIMPL_BELOW_MIN_DEBUG = "LOGIMPL_BELOW_MIN_DEBUG";
 
 } // namespace log
-} // namespace isc
+} // namespace bundy
 
 namespace {
 
@@ -23,7 +23,7 @@ const char* values[] = {
     NULL
 };
 
-const isc::log::MessageInitializer initializer(values);
+const bundy::log::MessageInitializer initializer(values);
 
 } // Anonymous namespace
 

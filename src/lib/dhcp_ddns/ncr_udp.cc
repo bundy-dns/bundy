@@ -19,7 +19,7 @@
 #include <asio/error_code.hpp>
 #include <boost/bind.hpp>
 
-namespace isc {
+namespace bundy {
 namespace dhcp_ddns {
 
 //*************************** UDPCallback ***********************
@@ -28,11 +28,11 @@ UDPCallback::UDPCallback (RawBufferPtr& buffer, const size_t buf_size,
                           const UDPCompletionHandler& handler)
     : handler_(handler), data_(new Data(buffer, buf_size, data_source)) {
     if (handler.empty()) {
-        isc_throw(NcrUDPError, "UDPCallback - handler can't be null");
+        bundy_throw(NcrUDPError, "UDPCallback - handler can't be null");
     }
 
     if (!buffer) {
-        isc_throw(NcrUDPError, "UDPCallback - buffer can't be null");
+        bundy_throw(NcrUDPError, "UDPCallback - buffer can't be null");
     }
 }
 
@@ -55,11 +55,11 @@ UDPCallback::operator ()(const asio::error_code error_code,
 void
 UDPCallback::putData(const uint8_t* src, size_t len) {
     if (!src) {
-        isc_throw(NcrUDPError, "UDPCallback putData, data source is NULL");
+        bundy_throw(NcrUDPError, "UDPCallback putData, data source is NULL");
     }
 
     if (len > data_->buf_size_) {
-        isc_throw(NcrUDPError, "UDPCallback putData, data length too large");
+        bundy_throw(NcrUDPError, "UDPCallback putData, data length too large");
     }
 
     memcpy (data_->buffer_.get(), src, len);
@@ -69,7 +69,7 @@ UDPCallback::putData(const uint8_t* src, size_t len) {
 
 //*************************** NameChangeUDPListener ***********************
 NameChangeUDPListener::
-NameChangeUDPListener(const isc::asiolink::IOAddress& ip_address,
+NameChangeUDPListener(const bundy::asiolink::IOAddress& ip_address,
                       const uint32_t port, const NameChangeFormat format,
                       RequestReceiveHandler& ncr_recv_handler,
                       const bool reuse_address)
@@ -92,9 +92,9 @@ NameChangeUDPListener::~NameChangeUDPListener() {
 }
 
 void
-NameChangeUDPListener::open(isc::asiolink::IOService& io_service) {
+NameChangeUDPListener::open(bundy::asiolink::IOService& io_service) {
     // create our endpoint and bind the the low level socket to it.
-    isc::asiolink::UDPEndpoint endpoint(ip_address_, port_);
+    bundy::asiolink::UDPEndpoint endpoint(ip_address_, port_);
 
     // Create the low level socket.
     try {
@@ -112,7 +112,7 @@ NameChangeUDPListener::open(isc::asiolink::IOService& io_service) {
         asio_socket_->bind(endpoint.getASIOEndpoint());
     } catch (asio::system_error& ex) {
         asio_socket_.reset();
-        isc_throw (NcrUDPError, ex.code().message());
+        bundy_throw (NcrUDPError, ex.code().message());
     }
 
     // Create the asiolink socket from the low level socket.
@@ -145,7 +145,7 @@ NameChangeUDPListener::close() {
                 // If we do reopen later it will be with a new socket
                 // instance. Repackage exception as one that is conformant
                 // with the interface.
-                isc_throw (NcrUDPError, ex.code().message());
+                bundy_throw (NcrUDPError, ex.code().message());
             }
         }
 
@@ -163,7 +163,7 @@ NameChangeUDPListener::receiveCompletionHandler(const bool successful,
 
     if (successful) {
         // Make an InputBuffer from our internal array
-        isc::util::InputBuffer input_buffer(callback->getData(),
+        bundy::util::InputBuffer input_buffer(callback->getData(),
                                             callback->getBytesTransferred());
 
         try {
@@ -198,9 +198,9 @@ NameChangeUDPListener::receiveCompletionHandler(const bool successful,
 //*************************** NameChangeUDPSender ***********************
 
 NameChangeUDPSender::
-NameChangeUDPSender(const isc::asiolink::IOAddress& ip_address,
+NameChangeUDPSender(const bundy::asiolink::IOAddress& ip_address,
                     const uint32_t port,
-                    const isc::asiolink::IOAddress& server_address,
+                    const bundy::asiolink::IOAddress& server_address,
                     const uint32_t server_port, const NameChangeFormat format,
                     RequestSendHandler& ncr_send_handler,
                     const size_t send_que_max, const bool reuse_address)
@@ -225,9 +225,9 @@ NameChangeUDPSender::~NameChangeUDPSender() {
 }
 
 void
-NameChangeUDPSender::open(isc::asiolink::IOService& io_service) {
+NameChangeUDPSender::open(bundy::asiolink::IOService& io_service) {
     // create our endpoint and bind the the low level socket to it.
-    isc::asiolink::UDPEndpoint endpoint(ip_address_, port_);
+    bundy::asiolink::UDPEndpoint endpoint(ip_address_, port_);
 
     // Create the low level socket.
     try {
@@ -244,14 +244,14 @@ NameChangeUDPSender::open(isc::asiolink::IOService& io_service) {
         // Bind the low leve socket to our endpoint.
         asio_socket_->bind(endpoint.getASIOEndpoint());
     } catch (asio::system_error& ex) {
-        isc_throw (NcrUDPError, ex.code().message());
+        bundy_throw (NcrUDPError, ex.code().message());
     }
 
     // Create the asiolink socket from the low level socket.
     socket_.reset(new NameChangeUDPSocket(*asio_socket_));
 
     // Create the server endpoint
-    server_endpoint_.reset(new isc::asiolink::
+    server_endpoint_.reset(new bundy::asiolink::
                            UDPEndpoint(server_address_, server_port_));
 
     send_callback_->setDataSource(server_endpoint_);
@@ -275,7 +275,7 @@ NameChangeUDPSender::close() {
                 // If we do reopen later it will be with a new socket
                 // instance. Repackage exception as one that is conformant
                 // with the interface.
-                isc_throw (NcrUDPError, ex.code().message());
+                bundy_throw (NcrUDPError, ex.code().message());
             }
         }
 
@@ -290,7 +290,7 @@ NameChangeUDPSender::close() {
 void
 NameChangeUDPSender::doSend(NameChangeRequestPtr& ncr) {
     // Now use the NCR to write JSON to an output buffer.
-    isc::util::OutputBuffer ncr_buffer(SEND_BUF_MAX);
+    bundy::util::OutputBuffer ncr_buffer(SEND_BUF_MAX);
     ncr->toFormat(format_, ncr_buffer);
 
     // Copy the wire-ized request to callback.  This way we know after
@@ -352,7 +352,7 @@ NameChangeUDPSender::sendCompletionHandler(const bool successful,
 int
 NameChangeUDPSender::getSelectFd() {
     if (!amSending()) {
-        isc_throw(NotImplemented, "NameChangeUDPSender::getSelectFd"
+        bundy_throw(NotImplemented, "NameChangeUDPSender::getSelectFd"
                                   " not in send mode");
     }
 
@@ -370,5 +370,5 @@ NameChangeUDPSender::ioReady() {
 
 
 
-}; // end of isc::dhcp_ddns namespace
-}; // end of isc namespace
+}; // end of bundy::dhcp_ddns namespace
+}; // end of bundy namespace

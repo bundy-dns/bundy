@@ -17,7 +17,7 @@
 
 #include <hooks/hooks.h>
 
-namespace isc {
+namespace bundy {
 namespace hooks {
 
 /// @brief Local class for conversion of void pointers to function pointers
@@ -115,7 +115,7 @@ private:
 };
 
 } // namespace hooks
-} // namespace isc
+} // namespace bundy
 
 
 #endif // POINTER_CONVERTER_H

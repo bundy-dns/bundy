@@ -29,7 +29,7 @@ using std::exception;
 using std::auto_ptr;
 using boost::scoped_ptr;
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace thread {
 
@@ -115,7 +115,7 @@ Thread::Thread(const boost::function<void ()>& main) :
         case EAGAIN:
             throw std::bad_alloc();
         default: // Other errors. They should not happen.
-            isc_throw(isc::InvalidOperation, std::strerror(result));
+            bundy_throw(bundy::InvalidOperation, std::strerror(result));
     }
 }
 
@@ -133,13 +133,13 @@ Thread::~Thread() {
 void
 Thread::wait() {
     if (impl_ == NULL) {
-        isc_throw(isc::InvalidOperation,
+        bundy_throw(bundy::InvalidOperation,
                   "Wait called and no thread to wait for");
     }
 
     const int result = pthread_join(impl_->tid_, NULL);
     if (result != 0) {
-        isc_throw(isc::InvalidOperation, std::strerror(result));
+        bundy_throw(bundy::InvalidOperation, std::strerror(result));
     }
 
     // Was there an exception in the thread?

@@ -24,13 +24,13 @@
 #include <string>
 #include <vector>
 
-using namespace isc::dns;
-using namespace isc::dns::rdata;
-using isc::dns::rdata::generic::detail::CharStringData;
-using isc::dns::rdata::generic::detail::stringToCharStringData;
-using isc::dns::rdata::generic::detail::charStringDataToString;
-using isc::dns::rdata::generic::detail::compareCharStringDatas;
-using isc::util::unittests::matchWireData;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
+using bundy::dns::rdata::generic::detail::CharStringData;
+using bundy::dns::rdata::generic::detail::stringToCharStringData;
+using bundy::dns::rdata::generic::detail::charStringDataToString;
+using bundy::dns::rdata::generic::detail::compareCharStringDatas;
+using bundy::util::unittests::matchWireData;
 
 namespace {
 const uint8_t test_charstr[] = {

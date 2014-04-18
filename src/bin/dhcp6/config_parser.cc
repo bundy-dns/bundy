@@ -43,10 +43,10 @@
 #include <stdint.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::data;
-using namespace isc::dhcp;
-using namespace isc::asiolink;
+using namespace bundy;
+using namespace bundy::data;
+using namespace bundy::dhcp;
+using namespace bundy::asiolink;
 
 namespace {
 
@@ -107,7 +107,7 @@ protected:
             LibDHCP::isStandardOption(Option::V6, option_code)) {
             def = LibDHCP::getOptionDef(Option::V6, option_code);
         } else if (option_space == "dhcp4") {
-            isc_throw(DhcpConfigError, "'dhcp4' option space name is reserved"
+            bundy_throw(DhcpConfigError, "'dhcp4' option space name is reserved"
                      << " for DHCPv4 server");
         } else {
             // Check if this is a vendor-option. If it is, get vendor-specific
@@ -154,7 +154,7 @@ protected:
     /// @return returns a PoolPtr to the new Pool4 object.
     PoolPtr poolMaker (IOAddress &addr, uint32_t len, int32_t ptype)
     {
-        return (PoolPtr(new Pool6(static_cast<isc::dhcp::Lease::Type>
+        return (PoolPtr(new Pool6(static_cast<bundy::dhcp::Lease::Type>
                                   (ptype), addr, len)));
     }
 
@@ -168,7 +168,7 @@ protected:
     /// @return returns a PoolPtr to the new Pool4 object.
     PoolPtr poolMaker (IOAddress &min, IOAddress &max, int32_t ptype)
     {
-        return (PoolPtr(new Pool6(static_cast<isc::dhcp::Lease::Type>
+        return (PoolPtr(new Pool6(static_cast<bundy::dhcp::Lease::Type>
                                   (ptype), min, max)));
     }
 };
@@ -203,7 +203,7 @@ public:
         : uint32_values_(new Uint32Storage()),
           string_values_(new StringStorage()), pools_(pools) {
         if (!pools_) {
-            isc_throw(isc::dhcp::DhcpConfigError,
+            bundy_throw(bundy::dhcp::DhcpConfigError,
                       "PdPoolParser context storage may not be NULL");
         }
     }
@@ -231,7 +231,7 @@ public:
                                                              uint32_values_));
                 parser = code_parser;
             } else {
-                isc_throw(DhcpConfigError, "invalid parameter: " << entry);
+                bundy_throw(DhcpConfigError, "invalid parameter: " << entry);
             }
 
             parser->build(param.second);
@@ -253,7 +253,7 @@ public:
             pool_.reset(new Pool6(Lease::TYPE_PD, addr, prefix_len,
                                  delegated_len));
         } catch (const std::exception& ex) {
-            isc_throw(isc::dhcp::DhcpConfigError,
+            bundy_throw(bundy::dhcp::DhcpConfigError,
                       "PdPoolParser failed to build pool: " << ex.what());
         }
     }
@@ -275,10 +275,10 @@ protected:
     ParserCollection parsers_;
 
     /// Pointer to the created pool object.
-    isc::dhcp::Pool6Ptr pool_;
+    bundy::dhcp::Pool6Ptr pool_;
 
     /// Pointer to storage to which the local pool is written upon commit.
-    isc::dhcp::PoolStoragePtr pools_;
+    bundy::dhcp::PoolStoragePtr pools_;
 };
 
 /// @brief Parser for a list of prefix delegation pools.
@@ -294,11 +294,11 @@ public:
     /// accept string as first argument.
     /// @param storage is the pool storage in which to store the parsed
     /// pools in this list
-    /// @throw isc::dhcp::DhcpConfigError if storage is null.
+    /// @throw bundy::dhcp::DhcpConfigError if storage is null.
     PdPoolListParser(const std::string&, PoolStoragePtr pools)
         : local_pools_(new PoolStorage()), pools_(pools) {
         if (!pools_) {
-            isc_throw(isc::dhcp::DhcpConfigError,
+            bundy_throw(bundy::dhcp::DhcpConfigError,
                       "PdPoolListParser pools storage may not be NULL");
         }
     }
@@ -312,13 +312,13 @@ public:
     /// that define a prefix delegation pool.
     ///
     /// @throw DhcpConfigError if configuration parsing fails.
-    void build(isc::data::ConstElementPtr pd_pool_list) {
+    void build(bundy::data::ConstElementPtr pd_pool_list) {
         // Make sure the local list is empty.
         local_pools_.reset(new PoolStorage());
 
         // Make sure we have a configuration elements to parse.
         if (!pd_pool_list) {
-            isc_throw(DhcpConfigError,
+            bundy_throw(DhcpConfigError,
                       "PdPoolListParser: list of pool definitions is empty");
         }
 
@@ -378,7 +378,7 @@ public:
             Subnet6Ptr sub6ptr = boost::dynamic_pointer_cast<Subnet6>(subnet_);
             if (!sub6ptr) {
                 // If we hit this, it is a programming error.
-                isc_throw(Unexpected,
+                bundy_throw(Unexpected,
                           "Invalid cast in Subnet4ConfigParser::commit");
             }
 
@@ -387,7 +387,7 @@ public:
                 sub6ptr->setRelayInfo(*relay_info_);
             }
 
-            isc::dhcp::CfgMgr::instance().addSubnet6(sub6ptr);
+            bundy::dhcp::CfgMgr::instance().addSubnet6(sub6ptr);
         }
     }
 
@@ -399,7 +399,7 @@ protected:
     ///
     /// @return parser object for specified entry name. Note the caller is
     /// responsible for deleting the parser created.
-    /// @throw isc::dhcp::DhcpConfigError if trying to create a parser
+    /// @throw bundy::dhcp::DhcpConfigError if trying to create a parser
     /// for unknown config element
     DhcpConfigParser* createSubnetConfigParser(const std::string& config_id) {
         DhcpConfigParser* parser = NULL;
@@ -425,7 +425,7 @@ protected:
                                              global_context_,
                                              Dhcp6OptionDataParser::factory);
         } else {
-            isc_throw(NotImplemented,
+            bundy_throw(NotImplemented,
                 "parser error: Subnet6 parameter not supported: " << config_id);
         }
 
@@ -461,7 +461,7 @@ protected:
     /// @todo A means to know the correct logger and perhaps a common
     /// message would allow this message to be emitted by the base class.
     virtual void duplicate_option_warning(uint32_t code,
-                                         isc::asiolink::IOAddress& addr) {
+                                         bundy::asiolink::IOAddress& addr) {
         LOG_WARN(dhcp6_logger, DHCP6_CONFIG_OPTION_DUPLICATE)
             .arg(code).arg(addr.toText());
     }
@@ -471,7 +471,7 @@ protected:
     ///
     /// @param addr is IPv6 prefix of the subnet.
     /// @param len is the prefix length
-    void initSubnet(isc::asiolink::IOAddress addr, uint8_t len) {
+    void initSubnet(bundy::asiolink::IOAddress addr, uint8_t len) {
         // Get all 'time' parameters using inheritance.
         // If the subnet-specific value is defined then use it, else
         // use the global value. The global value must always be
@@ -507,7 +507,7 @@ protected:
             }
 
             if (!iface.empty()) {
-                isc_throw(isc::dhcp::DhcpConfigError,
+                bundy_throw(bundy::dhcp::DhcpConfigError,
                       "parser error: interface (defined for locally reachable "
                       "subnets) and interface-id (defined for subnets reachable"
                       " via relays) cannot be defined at the same time for "
@@ -586,7 +586,7 @@ public:
         // the old one and replace with the new one.
 
         // remove old subnets
-        isc::dhcp::CfgMgr::instance().deleteSubnets6();
+        bundy::dhcp::CfgMgr::instance().deleteSubnets6();
 
         BOOST_FOREACH(ParserPtr subnet, subnets_) {
             subnet->commit();
@@ -607,7 +607,7 @@ public:
 
 } // anonymous namespace
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief creates global parsers
@@ -649,7 +649,7 @@ DhcpConfigParser* createGlobal6DhcpConfigParser(const std::string& config_id) {
     } else if (config_id.compare("dhcp-ddns") == 0) {
         parser = new D2ClientConfigParser(config_id);
     } else {
-        isc_throw(NotImplemented,
+        bundy_throw(NotImplemented,
                 "Parser error: Global configuration parameter not supported: "
                 << config_id);
     }
@@ -657,10 +657,10 @@ DhcpConfigParser* createGlobal6DhcpConfigParser(const std::string& config_id) {
     return (parser);
 }
 
-isc::data::ConstElementPtr
-configureDhcp6Server(Dhcpv6Srv&, isc::data::ConstElementPtr config_set) {
+bundy::data::ConstElementPtr
+configureDhcp6Server(Dhcpv6Srv&, bundy::data::ConstElementPtr config_set) {
     if (!config_set) {
-        ConstElementPtr answer = isc::config::createAnswer(1,
+        ConstElementPtr answer = bundy::config::createAnswer(1,
                                  string("Can't parse NULL config"));
         return (answer);
     }
@@ -762,10 +762,10 @@ configureDhcp6Server(Dhcpv6Srv&, isc::data::ConstElementPtr config_set) {
             subnet_parser->build(subnet_config->second);
         }
 
-    } catch (const isc::Exception& ex) {
+    } catch (const bundy::Exception& ex) {
         LOG_ERROR(dhcp6_logger, DHCP6_PARSER_FAIL)
                   .arg(config_pair.first).arg(ex.what());
-        answer = isc::config::createAnswer(1,
+        answer = bundy::config::createAnswer(1,
                      string("Configuration parsing failed: ") + ex.what());
         // An error occured, so make sure that we restore original data.
         rollback = true;
@@ -773,7 +773,7 @@ configureDhcp6Server(Dhcpv6Srv&, isc::data::ConstElementPtr config_set) {
     } catch (...) {
         // for things like bad_cast in boost::lexical_cast
         LOG_ERROR(dhcp6_logger, DHCP6_PARSER_EXCEPTION).arg(config_pair.first);
-        answer = isc::config::createAnswer(1,
+        answer = bundy::config::createAnswer(1,
                      string("Configuration parsing failed"));
         // An error occured, so make sure that we restore original data.
         rollback = true;
@@ -800,16 +800,16 @@ configureDhcp6Server(Dhcpv6Srv&, isc::data::ConstElementPtr config_set) {
                 hooks_parser->commit();
             }
         }
-        catch (const isc::Exception& ex) {
+        catch (const bundy::Exception& ex) {
             LOG_ERROR(dhcp6_logger, DHCP6_PARSER_COMMIT_FAIL).arg(ex.what());
-            answer = isc::config::createAnswer(2,
+            answer = bundy::config::createAnswer(2,
                          string("Configuration commit failed:") + ex.what());
             // An error occured, so make sure to restore the original data.
             rollback = true;
         } catch (...) {
             // for things like bad_cast in boost::lexical_cast
             LOG_ERROR(dhcp6_logger, DHCP6_PARSER_COMMIT_EXCEPTION);
-            answer = isc::config::createAnswer(2,
+            answer = bundy::config::createAnswer(2,
                          string("Configuration commit failed"));
             // An error occured, so make sure to restore the original data.
             rollback = true;
@@ -825,7 +825,7 @@ configureDhcp6Server(Dhcpv6Srv&, isc::data::ConstElementPtr config_set) {
     LOG_INFO(dhcp6_logger, DHCP6_CONFIG_COMPLETE).arg(config_details);
 
     // Everything was fine. Configuration is successful.
-    answer = isc::config::createAnswer(0, "Configuration committed.");
+    answer = bundy::config::createAnswer(0, "Configuration committed.");
     return (answer);
 }
 
@@ -834,5 +834,5 @@ ParserContextPtr& globalContext() {
     return (global_context_ptr);
 }
 
-}; // end of isc::dhcp namespace
-}; // end of isc namespace
+}; // end of bundy::dhcp namespace
+}; // end of bundy namespace

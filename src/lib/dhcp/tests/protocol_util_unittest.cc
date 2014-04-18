@@ -25,10 +25,10 @@
 #include <netinet/in_systm.h>
 #include <netinet/ip.h>
 
-using namespace isc;
-using namespace isc::asiolink;
-using namespace isc::dhcp;
-using namespace isc::util;
+using namespace bundy;
+using namespace bundy::asiolink;
+using namespace bundy::dhcp;
+using namespace bundy::util;
 
 namespace {
 

@@ -20,7 +20,7 @@
 #include <log/macros.h>
 #include <log/output_option.h>
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 OutputOption::Destination
@@ -52,4 +52,4 @@ getStream(const std::string& stream_str) {
 }
 
 } // namespace log
-} // namespace isc
+} // namespace bundy

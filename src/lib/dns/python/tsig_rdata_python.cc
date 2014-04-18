@@ -28,10 +28,10 @@
 #include "tsig_rdata_python.h"
 
 using namespace std;
-using namespace isc::util::python;
-using namespace isc::dns;
-using namespace isc::dns::rdata;
-using namespace isc::dns::python;
+using namespace bundy::util::python;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
+using namespace bundy::dns::python;
 
 // For each class, we need a struct, a helper functions (init, destroy,
 // and static wrappers around the methods we export), a list of methods,
@@ -279,7 +279,7 @@ TSIG_richcmp(const s_TSIG* const self,
 }
 } // end of unnamed namespace
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace python {
 // This defines the complete type for reflection in python and
@@ -347,7 +347,7 @@ createTSIGObject(const any::TSIG& source) {
 bool
 PyTSIG_Check(PyObject* obj) {
     if (obj == NULL) {
-        isc_throw(PyCPPWrapperException, "obj argument NULL in typecheck");
+        bundy_throw(PyCPPWrapperException, "obj argument NULL in typecheck");
     }
     return (PyObject_TypeCheck(obj, &tsig_type));
 }
@@ -355,7 +355,7 @@ PyTSIG_Check(PyObject* obj) {
 const any::TSIG&
 PyTSIG_ToTSIG(const PyObject* tsig_obj) {
     if (tsig_obj == NULL) {
-        isc_throw(PyCPPWrapperException,
+        bundy_throw(PyCPPWrapperException,
                   "obj argument NULL in TSIG PyObject conversion");
     }
     const s_TSIG* tsig = static_cast<const s_TSIG*>(tsig_obj);
@@ -364,4 +364,4 @@ PyTSIG_ToTSIG(const PyObject* tsig_obj) {
 
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy

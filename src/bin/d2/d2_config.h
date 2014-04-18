@@ -26,7 +26,7 @@
 #include <stdint.h>
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 /// @file d2_config.h
@@ -137,17 +137,17 @@ namespace d2 {
 
 /// @brief Exception thrown when the error during configuration handling
 /// occurs.
-class D2CfgError : public isc::Exception {
+class D2CfgError : public bundy::Exception {
 public:
     D2CfgError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Represents a TSIG Key.
 ///
 /// Currently, this is simple storage class containing the basic attributes of
 /// a TSIG Key.  It is intended primarily as a reference for working with
-/// actual keys and may eventually be replaced by isc::dns::TSIGKey.  TSIG Key
+/// actual keys and may eventually be replaced by bundy::dns::TSIGKey.  TSIG Key
 /// functionality at this stage is strictly limited to configuration parsing.
 /// @todo full functionality for using TSIG during DNS updates will be added
 /// in a future release.
@@ -243,7 +243,7 @@ public:
     /// @param enabled is a flag that indicates whether this server is
     /// enabled for use. It defaults to true.
     DnsServerInfo(const std::string& hostname,
-                  isc::asiolink::IOAddress ip_address,
+                  bundy::asiolink::IOAddress ip_address,
                   uint32_t port = STANDARD_DNS_PORT,
                   bool enabled=true);
 
@@ -267,7 +267,7 @@ public:
     /// @brief Getter which returns the server's ip_address.
     ///
     /// @return returns the address as an IOAddress reference.
-    const isc::asiolink::IOAddress& getIpAddress() const {
+    const bundy::asiolink::IOAddress& getIpAddress() const {
         return (ip_address_);
     }
 
@@ -300,7 +300,7 @@ private:
 
     /// @brief The static IP address of the server. When hostname is blank,
     /// then this address should be used to connect to the server.
-    isc::asiolink::IOAddress ip_address_;
+    bundy::asiolink::IOAddress ip_address_;
 
     /// @brief The port number on which the server listens for DNS traffic.
     uint32_t port_;
@@ -524,7 +524,7 @@ typedef boost::shared_ptr<DScalarContext> DScalarContextPtr;
 ///
 /// This class parses the configuration element "tsig_key" defined in
 /// src/bin/d2/dhcp-ddns.spec and creates an instance of a TSIGKeyInfo.
-class TSIGKeyInfoParser : public  isc::dhcp::DhcpConfigParser {
+class TSIGKeyInfoParser : public  bundy::dhcp::DhcpConfigParser {
 public:
     /// @brief Constructor
     ///
@@ -544,7 +544,7 @@ public:
     /// commit.
     ///
     /// @param key_config is the "tsig_key" configuration to parse
-    virtual void build(isc::data::ConstElementPtr key_config);
+    virtual void build(bundy::data::ConstElementPtr key_config);
 
     /// @brief Creates a parser for the given "tsig_key" member element id.
     ///
@@ -557,7 +557,7 @@ public:
     /// the "tsig_key" specification.
     ///
     /// @return returns a pointer to newly created parser.
-    virtual isc::dhcp::ParserPtr createConfigParser(const std::string&
+    virtual bundy::dhcp::ParserPtr createConfigParser(const std::string&
                                                     config_id);
 
     /// @brief Instantiates a DnsServerInfo from internal data values
@@ -585,7 +585,7 @@ private:
 /// This class parses a list of "tsig_key" configuration elements.
 /// (see src/bin/d2/dhcp-ddns.spec). The TSIGKeyInfo instances are added
 /// to the given storage upon commit.
-class TSIGKeyInfoListParser : public isc::dhcp::DhcpConfigParser {
+class TSIGKeyInfoListParser : public bundy::dhcp::DhcpConfigParser {
 public:
 
     /// @brief Constructor
@@ -609,7 +609,7 @@ public:
     /// prepping them for commit.
     ///
     /// @param key_list_config is the list of "tsig_key" elements to parse.
-    virtual void build(isc::data::ConstElementPtr key_list_config);
+    virtual void build(bundy::data::ConstElementPtr key_list_config);
 
     /// @brief Iterates over the internal list of TSIGKeyInfoParsers,
     /// invoking commit on each.  This causes each parser to instantiate a
@@ -634,14 +634,14 @@ private:
     TSIGKeyInfoMapPtr local_keys_;
 
     /// @brief Local storage of TSIGKeyInfoParser instances
-    isc::dhcp::ParserCollection parsers_;
+    bundy::dhcp::ParserCollection parsers_;
 };
 
 /// @brief Parser for  DnsServerInfo
 ///
 /// This class parses the configuration element "dns_server" defined in
 /// src/bin/d2/dhcp-ddns.spec and creates an instance of a DnsServerInfo.
-class DnsServerInfoParser : public  isc::dhcp::DhcpConfigParser {
+class DnsServerInfoParser : public  bundy::dhcp::DhcpConfigParser {
 public:
     /// @brief Constructor
     ///
@@ -661,7 +661,7 @@ public:
     /// commit.
     ///
     /// @param server_config is the "dns_server" configuration to parse
-    virtual void build(isc::data::ConstElementPtr server_config);
+    virtual void build(bundy::data::ConstElementPtr server_config);
 
     /// @brief Creates a parser for the given "dns_server" member element id.
     ///
@@ -674,7 +674,7 @@ public:
     /// the "dns_server" specification.
     ///
     /// @return returns a pointer to newly created parser.
-    virtual isc::dhcp::ParserPtr createConfigParser(const std::string&
+    virtual bundy::dhcp::ParserPtr createConfigParser(const std::string&
                                                     config_id);
 
     /// @brief Instantiates a DnsServerInfo from internal data values
@@ -702,7 +702,7 @@ private:
 /// This class parses a list of "dns_server" configuration elements.
 /// (see src/bin/d2/dhcp-ddns.spec). The DnsServerInfo instances are added
 /// to the given storage upon commit.
-class DnsServerInfoListParser : public isc::dhcp::DhcpConfigParser {
+class DnsServerInfoListParser : public bundy::dhcp::DhcpConfigParser {
 public:
 
     /// @brief Constructor
@@ -727,7 +727,7 @@ public:
     /// prepping them for commit.
     ///
     /// @param server_list_config is the list of "dns_server" elements to parse.
-    virtual void build(isc::data::ConstElementPtr server_list_config);
+    virtual void build(bundy::data::ConstElementPtr server_list_config);
 
     /// @brief Iterates over the internal list of DnsServerInfoParsers,
     /// invoking commit on each.  This causes each parser to instantiate a
@@ -745,14 +745,14 @@ private:
     DnsServerInfoStoragePtr servers_;
 
     /// @brief Local storage of DnsServerInfoParser instances
-    isc::dhcp::ParserCollection parsers_;
+    bundy::dhcp::ParserCollection parsers_;
 };
 
 /// @brief Parser for  DdnsDomain
 ///
 /// This class parses the configuration element "ddns_domain" defined in
 /// src/bin/d2/dhcp-ddns.spec and creates an instance of a DdnsDomain.
-class DdnsDomainParser : public isc::dhcp::DhcpConfigParser {
+class DdnsDomainParser : public bundy::dhcp::DhcpConfigParser {
 public:
     /// @brief Constructor
     ///
@@ -773,7 +773,7 @@ public:
     /// commit.
     ///
     /// @param domain_config is the "ddns_domain" configuration to parse
-    virtual void build(isc::data::ConstElementPtr domain_config);
+    virtual void build(bundy::data::ConstElementPtr domain_config);
 
     /// @brief Creates a parser for the given "ddns_domain" member element id.
     ///
@@ -786,7 +786,7 @@ public:
     /// the "ddns_domain" specification.
     ///
     /// @return returns a pointer to newly created parser.
-    virtual isc::dhcp::ParserPtr createConfigParser(const std::string&
+    virtual bundy::dhcp::ParserPtr createConfigParser(const std::string&
                                                     config_id);
 
     /// @brief Instantiates a DdnsDomain from internal data values
@@ -825,7 +825,7 @@ private:
 /// This class parses a list of "ddns_domain" configuration elements.
 /// (see src/bin/d2/dhcp-ddns.spec). The DdnsDomain instances are added
 /// to the given storage upon commit.
-class DdnsDomainListParser : public isc::dhcp::DhcpConfigParser {
+class DdnsDomainListParser : public bundy::dhcp::DhcpConfigParser {
 public:
 
     /// @brief Constructor
@@ -852,7 +852,7 @@ public:
     ///
     /// @param domain_list_config is the list of "ddns_domain" elements to
     /// parse.
-    virtual void build(isc::data::ConstElementPtr domain_list_config);
+    virtual void build(bundy::data::ConstElementPtr domain_list_config);
 
     /// @brief Iterates over the internal list of DdnsDomainParsers, invoking
     /// commit on each.  This causes each parser to instantiate a DdnsDomain
@@ -876,7 +876,7 @@ private:
     TSIGKeyInfoMapPtr keys_;
 
     /// @brief Local storage of DdnsDomainParser instances
-    isc::dhcp::ParserCollection parsers_;
+    bundy::dhcp::ParserCollection parsers_;
 };
 
 /// @brief Parser for DdnsDomainListMgr
@@ -886,7 +886,7 @@ private:
 /// given DdnsDomainListMgr with parsed information upon commit.  Note that
 /// unlike other parsers, this parser does NOT instantiate the final object
 /// during the commit phase, it populates it.  It must pre-exist.
-class DdnsDomainListMgrParser : public isc::dhcp::DhcpConfigParser {
+class DdnsDomainListMgrParser : public bundy::dhcp::DhcpConfigParser {
 public:
     /// @brief Constructor
     ///
@@ -906,7 +906,7 @@ public:
     /// commit.
     ///
     /// @param mgr_config is the manager configuration to parse
-    virtual void build(isc::data::ConstElementPtr mgr_config);
+    virtual void build(bundy::data::ConstElementPtr mgr_config);
 
     /// @brief Creates a parser for the given manager member element id.
     ///
@@ -917,7 +917,7 @@ public:
     /// the manager specification.
     ///
     /// @return returns a pointer to newly created parser.
-    virtual isc::dhcp::ParserPtr createConfigParser(const std::string&
+    virtual bundy::dhcp::ParserPtr createConfigParser(const std::string&
                                                     config_id);
 
     /// @brief Populates the DdnsDomainListMgr from internal data values
@@ -953,7 +953,7 @@ private:
 };
 
 
-}; // end of isc::d2 namespace
-}; // end of isc namespace
+}; // end of bundy::d2 namespace
+}; // end of bundy namespace
 
 #endif // D2_CONFIG_H

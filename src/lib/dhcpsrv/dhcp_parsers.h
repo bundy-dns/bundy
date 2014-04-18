@@ -30,7 +30,7 @@
 #include <string>
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief Storage for option definitions.
@@ -83,7 +83,7 @@ class ValueStorage {
                 = values_.find(name);
 
             if (param == values_.end()) {
-                isc_throw(DhcpConfigError, "Missing parameter '"
+                bundy_throw(DhcpConfigError, "Missing parameter '"
                        << name << "'");
             }
 
@@ -182,7 +182,7 @@ public:
     /// The hooks libraries information is a vector of strings, each containing
     /// the name of a library.  Hooks libraries should only be reloaded if the
     /// list of names has changed, so the list of current DHCP parameters
-    /// (in isc::dhcp::CfgMgr) contains an indication as to whether the list has
+    /// (in bundy::dhcp::CfgMgr) contains an indication as to whether the list has
     /// altered.  This indication is implemented by storing a pointer to the
     /// list of library names which is cleared when the libraries are loaded.
     /// So either the pointer is null (meaning don't reload the libraries and
@@ -232,21 +232,21 @@ public:
     /// @param param_name name of the parameter.
     /// @param storage is a pointer to the storage container where the parsed
     /// value be stored upon commit.
-    /// @throw isc::dhcp::DhcpConfigError if a provided parameter's
+    /// @throw bundy::dhcp::DhcpConfigError if a provided parameter's
     /// name is empty.
-    /// @throw isc::dhcp::DhcpConfigError if storage is null.
+    /// @throw bundy::dhcp::DhcpConfigError if storage is null.
     ValueParser(const std::string& param_name,
         boost::shared_ptr<ValueStorage<ValueType> > storage)
         : storage_(storage), param_name_(param_name), value_() {
         // Empty parameter name is invalid.
         if (param_name_.empty()) {
-            isc_throw(isc::dhcp::DhcpConfigError, "parser logic error:"
+            bundy_throw(bundy::dhcp::DhcpConfigError, "parser logic error:"
                 << "empty parameter name provided");
         }
 
         // NUll storage is invalid.
         if (!storage_) {
-            isc_throw(isc::dhcp::DhcpConfigError, "parser logic error:"
+            bundy_throw(bundy::dhcp::DhcpConfigError, "parser logic error:"
                 << "storage may not be NULL");
         }
     }
@@ -256,9 +256,9 @@ public:
     ///
     /// @param value a value to be parsed.
     ///
-    /// @throw isc::BadValue Typically the implementing type will throw
+    /// @throw bundy::BadValue Typically the implementing type will throw
     /// a BadValue exception when given an invalid Element to parse.
-    void build(isc::data::ConstElementPtr value);
+    void build(bundy::data::ConstElementPtr value);
 
     /// @brief Put a parsed value to the storage.
     void commit() {
@@ -304,7 +304,7 @@ public:
     /// See @ref DhcpConfigParser class for details.
     ///
     /// @param new_config pointer to the new configuration
-    virtual void build(isc::data::ConstElementPtr new_config);
+    virtual void build(bundy::data::ConstElementPtr new_config);
 
     /// @brief pretends to apply the configuration
     ///
@@ -319,7 +319,7 @@ private:
     std::string param_name_;
 
     /// pointer to the actual value of the parameter
-    isc::data::ConstElementPtr value_;
+    bundy::data::ConstElementPtr value_;
 
 };
 
@@ -349,7 +349,7 @@ public:
     /// to the interfaces list.
     ///
     /// @param value pointer to the content of parsed values
-    virtual void build(isc::data::ConstElementPtr value);
+    virtual void build(bundy::data::ConstElementPtr value);
 
     /// @brief commits interfaces list configuration
     virtual void commit();
@@ -416,7 +416,7 @@ public:
     /// have a "version" function that returns the correct value).
     ///
     /// @param value pointer to the content of parsed values
-    virtual void build(isc::data::ConstElementPtr value);
+    virtual void build(bundy::data::ConstElementPtr value);
 
     /// @brief Commits hooks libraries data
     ///
@@ -473,7 +473,7 @@ public:
     /// upon "commit".
     /// @param global_context is a pointer to the global context which
     /// stores global scope parameters, options, option defintions.
-    /// @throw isc::dhcp::DhcpConfigError if options or global_context are null.
+    /// @throw bundy::dhcp::DhcpConfigError if options or global_context are null.
     OptionDataParser(const std::string& dummy, OptionStoragePtr options,
                     ParserContextPtr global_context);
 
@@ -488,16 +488,16 @@ public:
     /// for a particular option.
     /// @throw DhcpConfigError if invalid parameter specified in
     /// the configuration.
-    /// @throw isc::InvalidOperation if failed to set storage prior to
+    /// @throw bundy::InvalidOperation if failed to set storage prior to
     /// calling build.
-    virtual void build(isc::data::ConstElementPtr option_data_entries);
+    virtual void build(bundy::data::ConstElementPtr option_data_entries);
 
     /// @brief Commits option value.
     ///
     /// This function adds a new option to the storage or replaces an existing
     /// option with the same code.
     ///
-    /// @throw isc::InvalidOperation if failed to set pointer to storage or
+    /// @throw bundy::InvalidOperation if failed to set pointer to storage or
     /// failed
     /// to call build() prior to commit. If that happens data in the storage
     /// remain un-modified.
@@ -583,7 +583,7 @@ public:
     /// stores global scope parameters, options, option defintions.
     /// @param optionDataParserFactory factory method for creating individual
     /// option parsers
-    /// @throw isc::dhcp::DhcpConfigError if options or global_context are null.
+    /// @throw bundy::dhcp::DhcpConfigError if options or global_context are null.
     OptionDataListParser(const std::string& dummy, OptionStoragePtr options,
                         ParserContextPtr global_context,
                         OptionDataParserFactory *optionDataParserFactory);
@@ -595,7 +595,7 @@ public:
     ///
     /// @param option_data_list pointer to a list of options' data sets.
     /// @throw DhcpConfigError if option parsing failed.
-    void build(isc::data::ConstElementPtr option_data_list);
+    void build(bundy::data::ConstElementPtr option_data_list);
 
     /// @brief Commit all option values.
     ///
@@ -635,7 +635,7 @@ public:
     /// accept string as first argument.
     /// @param storage is the definition storage in which to store the parsed
     /// definition upon "commit".
-    /// @throw isc::dhcp::DhcpConfigError if storage is null.
+    /// @throw bundy::dhcp::DhcpConfigError if storage is null.
     OptionDefParser(const std::string& dummy, OptionDefStoragePtr storage);
 
     /// @brief Parses an entry that describes single option definition.
@@ -643,7 +643,7 @@ public:
     /// @param option_def a configuration entry to be parsed.
     ///
     /// @throw DhcpConfigError if parsing was unsuccessful.
-    void build(isc::data::ConstElementPtr option_def);
+    void build(bundy::data::ConstElementPtr option_def);
 
     /// @brief Stores the parsed option definition in a storage.
     void commit();
@@ -686,7 +686,7 @@ public:
     /// accept string as first argument.
     /// @param storage is the definition storage in which to store the parsed
     /// definitions in this list
-    /// @throw isc::dhcp::DhcpConfigError if storage is null.
+    /// @throw bundy::dhcp::DhcpConfigError if storage is null.
     OptionDefListParser(const std::string& dummy, OptionDefStoragePtr storage);
 
     /// @brief Parse configuration entries.
@@ -697,7 +697,7 @@ public:
     /// @param option_def_list pointer to an element that holds entries
     /// that define option definitions.
     /// @throw DhcpConfigError if configuration parsing fails.
-    void build(isc::data::ConstElementPtr option_def_list);
+    void build(bundy::data::ConstElementPtr option_def_list);
 
     /// @brief Stores option definitions in the CfgMgr.
     void commit();
@@ -730,7 +730,7 @@ public:
     /// accept string as first argument.
     /// @param pools is the storage in which to store the parsed pool
     /// upon "commit".
-    /// @throw isc::dhcp::DhcpConfigError if storage is null.
+    /// @throw bundy::dhcp::DhcpConfigError if storage is null.
     PoolParser(const std::string& dummy, PoolStoragePtr pools);
 
     /// @brief parses the actual list
@@ -739,8 +739,8 @@ public:
     /// No validation is done at this stage, everything is interpreted as
     /// interface name.
     /// @param pools_list list of pools defined for a subnet
-    /// @throw isc::dhcp::DhcpConfigError when pool parsing fails
-    virtual void build(isc::data::ConstElementPtr pools_list);
+    /// @throw bundy::dhcp::DhcpConfigError when pool parsing fails
+    virtual void build(bundy::data::ConstElementPtr pools_list);
 
     /// @brief Stores the parsed values in a storage provided
     ///        by an upper level parser.
@@ -753,7 +753,7 @@ protected:
     /// @param len is the prefix length.
     /// @param ptype is the type of pool to create.
     /// @return returns a PoolPtr to the new Pool object.
-    virtual PoolPtr poolMaker(isc::asiolink::IOAddress &addr, uint32_t len,
+    virtual PoolPtr poolMaker(bundy::asiolink::IOAddress &addr, uint32_t len,
                            int32_t ptype=0) = 0;
 
     /// @brief Creates a Pool object given starting and ending IP addresses.
@@ -762,8 +762,8 @@ protected:
     /// @param max is the last IP address in the pool.
     /// @param ptype is the type of pool to create (not used by all derivations)
     /// @return returns a PoolPtr to the new Pool object.
-    virtual PoolPtr poolMaker(isc::asiolink::IOAddress &min,
-                           isc::asiolink::IOAddress &max, int32_t ptype=0) = 0;
+    virtual PoolPtr poolMaker(bundy::asiolink::IOAddress &min,
+                           bundy::asiolink::IOAddress &max, int32_t ptype=0) = 0;
 
     /// @brief pointer to the actual Pools storage
     ///
@@ -792,12 +792,12 @@ public:
     /// @param relay_info is the storage in which to store the parsed
     /// @param family specifies protocol family (IPv4 or IPv6)
     RelayInfoParser(const std::string& unused,
-                    const isc::dhcp::Subnet::RelayInfoPtr& relay_info,
-                    const isc::dhcp::Option::Universe& family);
+                    const bundy::dhcp::Subnet::RelayInfoPtr& relay_info,
+                    const bundy::dhcp::Option::Universe& family);
 
     /// @brief parses the actual relay parameters
     /// @param relay_info JSON structure holding relay parameters to parse
-    virtual void build(isc::data::ConstElementPtr relay_info);
+    virtual void build(bundy::data::ConstElementPtr relay_info);
 
     /// @brief stores parsed info in relay_info
     virtual void commit();
@@ -813,14 +813,14 @@ protected:
     /// the "relay" specification.
     ///
     /// @return returns a pointer to newly created parser.
-    isc::dhcp::ParserPtr
+    bundy::dhcp::ParserPtr
     createConfigParser(const std::string& parser);
 
     /// Parsed data will be stored there on commit()
-    isc::dhcp::Subnet::RelayInfoPtr storage_;
+    bundy::dhcp::Subnet::RelayInfoPtr storage_;
 
     /// Local storage information (for temporary values)
-    isc::dhcp::Subnet::RelayInfo local_;
+    bundy::dhcp::Subnet::RelayInfo local_;
 
     /// Storage for subnet-specific string values.
     StringStoragePtr string_values_;
@@ -841,14 +841,14 @@ public:
     /// @param global_context
     /// @param default_addr default IP address (0.0.0.0 for IPv4, :: for IPv6)
     SubnetConfigParser(const std::string&, ParserContextPtr global_context,
-                       const isc::asiolink::IOAddress& default_addr);
+                       const bundy::asiolink::IOAddress& default_addr);
 
     /// @brief parses parameter value
     ///
     /// @param subnet pointer to the content of subnet definition
     ///
-    /// @throw isc::DhcpConfigError if subnet configuration parsing failed.
-    virtual void build(isc::data::ConstElementPtr subnet);
+    /// @throw bundy::DhcpConfigError if subnet configuration parsing failed.
+    virtual void build(bundy::data::ConstElementPtr subnet);
 
     /// @brief Adds the created subnet to a server's configuration.
     virtual void commit() = 0;
@@ -868,7 +868,7 @@ protected:
     /// @param config_id name od the entry
     ///
     /// @return parser object for specified entry name
-    /// @throw isc::dhcp::DhcpConfigError if trying to create a parser
+    /// @throw bundy::dhcp::DhcpConfigError if trying to create a parser
     ///        for unknown config element
     virtual DhcpConfigParser* createSubnetConfigParser(
                                             const std::string& config_id) = 0;
@@ -897,14 +897,14 @@ protected:
     /// @todo a means to know the correct logger and perhaps a common
     /// message would allow this method to be emitted by the base class.
     virtual void duplicate_option_warning(uint32_t code,
-        isc::asiolink::IOAddress& addr) = 0;
+        bundy::asiolink::IOAddress& addr) = 0;
 
     /// @brief Instantiates the subnet based on a given IP prefix and prefix
     /// length.
     ///
     /// @param addr is the IP prefix of the subnet.
     /// @param len is the prefix length
-    virtual void initSubnet(isc::asiolink::IOAddress addr, uint8_t len) = 0;
+    virtual void initSubnet(bundy::asiolink::IOAddress addr, uint8_t len) = 0;
 
     /// @brief Returns value for a given parameter (after using inheritance)
     ///
@@ -915,7 +915,7 @@ protected:
     /// @param name name of the parameter
     /// @return triplet with the parameter name
     /// @throw DhcpConfigError when requested parameter is not present
-    isc::dhcp::Triplet<uint32_t> getParam(const std::string& name);
+    bundy::dhcp::Triplet<uint32_t> getParam(const std::string& name);
 
 private:
 
@@ -927,7 +927,7 @@ private:
 
     /// @brief Create a new subnet using a data from child parsers.
     ///
-    /// @throw isc::dhcp::DhcpConfigError if subnet configuration parsing
+    /// @throw bundy::dhcp::DhcpConfigError if subnet configuration parsing
     /// failed.
     void createSubnet();
 
@@ -949,14 +949,14 @@ protected:
     ParserCollection parsers_;
 
     /// Pointer to the created subnet object.
-    isc::dhcp::SubnetPtr subnet_;
+    bundy::dhcp::SubnetPtr subnet_;
 
     /// Parsing context which contains global values, options and option
     /// definitions.
     ParserContextPtr global_context_;
 
     /// Pointer to relay information
-    isc::dhcp::Subnet::RelayInfoPtr relay_info_;
+    bundy::dhcp::Subnet::RelayInfoPtr relay_info_;
 };
 
 /// @brief Parser for  D2ClientConfig
@@ -964,7 +964,7 @@ protected:
 /// This class parses the configuration element "dhcp-ddns" common to the
 /// spec files for both dhcp4 and dhcp6. It creates an instance of a
 /// D2ClientConfig.
-class D2ClientConfigParser : public  isc::dhcp::DhcpConfigParser {
+class D2ClientConfigParser : public  bundy::dhcp::DhcpConfigParser {
 public:
     /// @brief Constructor
     ///
@@ -984,11 +984,11 @@ public:
     /// for configuration is determined.
     ///
     /// @param client_config is the "dhcp-ddns" configuration to parse
-    virtual void build(isc::data::ConstElementPtr client_config);
+    virtual void build(bundy::data::ConstElementPtr client_config);
 
     /// @brief Creates a parser for the given "dhcp-ddns" member element id.
     ///
-    /// The elements currently supported are (see isc::dhcp::D2ClientConfig
+    /// The elements currently supported are (see bundy::dhcp::D2ClientConfig
     /// for details on each):
     /// -# enable-updates
     /// -# server-ip
@@ -1008,7 +1008,7 @@ public:
     /// the "dns_server" specification.
     ///
     /// @return returns a pointer to newly created parser.
-    virtual isc::dhcp::ParserPtr createConfigParser(const std::string&
+    virtual bundy::dhcp::ParserPtr createConfigParser(const std::string&
                                                     config_id);
 
     /// @brief Instantiates a D2ClientConfig from internal data values
@@ -1038,8 +1038,8 @@ typedef boost::shared_ptr<BooleanParser> BooleanParserPtr;
 typedef boost::shared_ptr<StringParser> StringParserPtr;
 typedef boost::shared_ptr<Uint32Parser> Uint32ParserPtr;
 
-}; // end of isc::dhcp namespace
-}; // end of isc namespace
+}; // end of bundy::dhcp namespace
+}; // end of bundy namespace
 
 #endif // DHCP_PARSERS_H
 

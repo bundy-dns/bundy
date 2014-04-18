@@ -47,11 +47,11 @@
 #include <vector>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::dns::rdata;
-using namespace isc::datasrc;
-using namespace isc::auth;
-using namespace isc::testutils;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
+using namespace bundy::datasrc;
+using namespace bundy::auth;
+using namespace bundy::testutils;
 
 namespace {
 
@@ -83,7 +83,7 @@ public:
     }
     virtual ConstZoneTableAccessorPtr
     getZoneTableAccessor(const std::string&, bool) const {
-        isc_throw(isc::NotImplemented,
+        bundy_throw(bundy::NotImplemented,
                   "getZoneTableAccessor not implemented for SingletonList");
     }
 
@@ -243,7 +243,7 @@ public:
         if (found != hash_map_.end()) {
             return (found->second);
         }
-        isc_throw(isc::Unexpected, "unexpected name for NSEC3 test: "
+        bundy_throw(bundy::Unexpected, "unexpected name for NSEC3 test: "
                   << name);
     }
     virtual string calculate(const LabelSequence& ls) const {
@@ -261,20 +261,20 @@ public:
     }
 };
 
-class TestNSEC3HashCreator : public isc::dns::NSEC3HashCreator {
+class TestNSEC3HashCreator : public bundy::dns::NSEC3HashCreator {
 public:
     TestNSEC3HashCreator() {}
-    virtual isc::dns::NSEC3Hash*
-    create(const isc::dns::rdata::generic::NSEC3PARAM&) const {
+    virtual bundy::dns::NSEC3Hash*
+    create(const bundy::dns::rdata::generic::NSEC3PARAM&) const {
         return (new TestNSEC3Hash);
     }
 
-    virtual isc::dns::NSEC3Hash*
-    create(const isc::dns::rdata::generic::NSEC3&) const {
+    virtual bundy::dns::NSEC3Hash*
+    create(const bundy::dns::rdata::generic::NSEC3&) const {
         return (new TestNSEC3Hash);
     }
 
-    virtual isc::dns::NSEC3Hash*
+    virtual bundy::dns::NSEC3Hash*
     create(uint8_t, uint16_t, const uint8_t*, size_t) const {
         return (new TestNSEC3Hash);
     }
@@ -316,13 +316,13 @@ public:
                                                     RRType::NSEC(),
                                                     RRTTL(3600)));
     }
-    virtual isc::dns::Name getOrigin() const { return (origin_); }
-    virtual isc::dns::RRClass getClass() const { return (rrclass_); }
-    virtual ZoneFinderContextPtr find(const isc::dns::Name& name,
-                                      const isc::dns::RRType& type,
+    virtual bundy::dns::Name getOrigin() const { return (origin_); }
+    virtual bundy::dns::RRClass getClass() const { return (rrclass_); }
+    virtual ZoneFinderContextPtr find(const bundy::dns::Name& name,
+                                      const bundy::dns::RRType& type,
                                       const FindOptions options =
                                       FIND_DEFAULT);
-    virtual ZoneFinderContextPtr findAll(const isc::dns::Name& name,
+    virtual ZoneFinderContextPtr findAll(const bundy::dns::Name& name,
                                          std::vector<ConstRRsetPtr>& target,
                                          const FindOptions options =
                                          FIND_DEFAULT);
@@ -386,7 +386,7 @@ protected:
     // A convenient shortcut.  Will also be used by further derived mocks.
     ZoneFinderContextPtr createContext(FindOptions options,
                                        Result code,
-                                       isc::dns::ConstRRsetPtr rrset,
+                                       bundy::dns::ConstRRsetPtr rrset,
                                        FindResultFlags flags = RESULT_DEFAULT)
     {
         ConstRRsetPtr rp = stripRRsigs(rrset, options);
@@ -577,7 +577,7 @@ MockZoneFinder::findNSEC3(const Name& name, bool recursive) {
                         covering_proof));
         }
     }
-    isc_throw(isc::Unexpected, "findNSEC3() isn't expected to fail");
+    bundy_throw(bundy::Unexpected, "findNSEC3() isn't expected to fail");
 }
 
 ZoneFinderContextPtr
@@ -820,7 +820,7 @@ createDataSrcClientList(DataSrcType type, DataSourceClient& client) {
     case INMEMORY:
         list.reset(new ConfigurableClientList(RRClass::IN()));
         // Configure one normal zone and one "empty" zone.
-        list->configure(isc::data::Element::fromJSON(
+        list->configure(bundy::data::Element::fromJSON(
                             "[{\"type\": \"MasterFiles\","
                             "  \"cache-enable\": true, "
                             "  \"params\": {\"example.com\": \"" +
@@ -839,7 +839,7 @@ createDataSrcClientList(DataSrcType type, DataSourceClient& client) {
                                  TEST_OWN_DATA_BUILDDIR
                                  "/example-base.sqlite3.copied"));
         list.reset(new ConfigurableClientList(RRClass::IN()));
-        list->configure(isc::data::Element::fromJSON(
+        list->configure(bundy::data::Element::fromJSON(
                             "[{\"type\": \"sqlite3\","
                             "  \"cache-enable\": false, "
                             "  \"cache-zones\": [], "
@@ -849,7 +849,7 @@ createDataSrcClientList(DataSrcType type, DataSourceClient& client) {
                             "\"}}]"), true);
          return (list);
     default:
-        isc_throw(isc::Unexpected,
+        bundy_throw(bundy::Unexpected,
                   "Unexpected data source type, should be a bug in test code");
     }
 }
@@ -858,7 +858,7 @@ class MockClient : public DataSourceClient {
 public:
     MockClient() : DataSourceClient("mock") {}
 
-    virtual FindResult findZone(const isc::dns::Name& origin) const {
+    virtual FindResult findZone(const bundy::dns::Name& origin) const {
         // Identify the next (strictly) larger name than the given 'origin' in
         // the map.  Its predecessor (if any) is the longest matching name
         // if it's either an exact match or a super domain; otherwise there's
@@ -889,15 +889,15 @@ public:
         }
     }
 
-    virtual ZoneUpdaterPtr getUpdater(const isc::dns::Name&, bool, bool) const
+    virtual ZoneUpdaterPtr getUpdater(const bundy::dns::Name&, bool, bool) const
     {
-        isc_throw(isc::NotImplemented,
+        bundy_throw(bundy::NotImplemented,
                   "Updater isn't supported in the MockClient");
     }
 
     virtual std::pair<ZoneJournalReader::Result, ZoneJournalReaderPtr>
-    getJournalReader(const isc::dns::Name&, uint32_t, uint32_t) const {
-        isc_throw(isc::NotImplemented,
+    getJournalReader(const bundy::dns::Name&, uint32_t, uint32_t) const {
+        bundy_throw(bundy::NotImplemented,
                   "Journaling isn't supported in the MockClient");
     }
 
@@ -999,7 +999,7 @@ protected:
                                      TEST_OWN_DATA_BUILDDIR
                                      "/example-nsec3.sqlite3.copied"));
             new_list.reset(new ConfigurableClientList(RRClass::IN()));
-            new_list->configure(isc::data::Element::fromJSON(
+            new_list->configure(bundy::data::Element::fromJSON(
                                     "[{\"type\": \"sqlite3\","
                                     "  \"cache-enable\": false, "
                                     "  \"cache-zones\": [], "
@@ -1054,7 +1054,7 @@ protected:
             ofs.close();
 
             new_list.reset(new ConfigurableClientList(RRClass::IN()));
-            new_list->configure(isc::data::Element::fromJSON(
+            new_list->configure(bundy::data::Element::fromJSON(
                                     "[{\"type\": \"MasterFiles\","
                                     "  \"cache-enable\": true, "
                                     "  \"params\": {\"example.com\": \"" +
@@ -1142,7 +1142,7 @@ protected:
 // an SOA RR.  The interface is not generic enough but should be okay
 // for our test cases in practice.
 void
-responseCheck(Message& response, const isc::dns::Rcode& rcode,
+responseCheck(Message& response, const bundy::dns::Rcode& rcode,
               unsigned int flags, const unsigned int ancount,
               const unsigned int nscount, const unsigned int arcount,
               const char* const expected_answer,
@@ -1193,7 +1193,7 @@ TEST_P(QueryTest, emptyZone) {
     responseCheck(response, expected_rcode, 0, 0, 0, 0, NULL, NULL, NULL);
 
     // Same for the partial match case
-    response.clear(isc::dns::Message::RENDER);
+    response.clear(bundy::dns::Message::RENDER);
     response.setRcode(Rcode::NOERROR());
     response.setOpcode(Opcode::QUERY());
     query.process(*list_, Name(string("www.") + EMPTY_ZONE_NAME), qtype,
@@ -1215,7 +1215,7 @@ TEST_P(QueryTest, exactMatchMultipleQueries) {
                   www_a_txt, zone_ns_txt, ns_addrs_txt);
 
     // clean up response for second query
-    response.clear(isc::dns::Message::RENDER);
+    response.clear(bundy::dns::Message::RENDER);
     response.setRcode(Rcode::NOERROR());
     response.setOpcode(Opcode::QUERY());
     EXPECT_NO_THROW(query.process(*list_, qname, qtype, response));
@@ -2321,9 +2321,9 @@ public:
     AlternateZoneFinder(const Name& origin, bool have_ds = false) :
         MockZoneFinder(), origin_(origin), have_ds_(have_ds)
     {}
-    virtual isc::dns::Name getOrigin() const { return (origin_); }
-    virtual ZoneFinderContextPtr find(const isc::dns::Name&,
-                                      const isc::dns::RRType& type,
+    virtual bundy::dns::Name getOrigin() const { return (origin_); }
+    virtual ZoneFinderContextPtr find(const bundy::dns::Name&,
+                                      const bundy::dns::RRType& type,
                                       const FindOptions options)
     {
         if (type == RRType::SOA()) {

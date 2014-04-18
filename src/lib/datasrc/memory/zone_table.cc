@@ -30,9 +30,9 @@
 #include <cassert>
 
 using namespace std;
-using namespace isc::dns;
+using namespace bundy::dns;
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 using detail::SegmentObjectHolder;
@@ -90,7 +90,7 @@ ZoneTable::addZone(util::MemorySegment& mem_sgmt,
         arg(zone_name).arg(rrclass_);
 
     if (!content || content->isEmpty()) {
-        isc_throw(InvalidParameter,
+        bundy_throw(InvalidParameter,
                   (content ? "empty data" : "NULL") <<
                   " is passed to Zone::addZone");
     }
@@ -172,4 +172,4 @@ ZoneTable::findZone(const Name& name) const {
 
 } // end of namespace memory
 } // end of namespace datasrc
-} // end of namespace isc
+} // end of namespace bundy

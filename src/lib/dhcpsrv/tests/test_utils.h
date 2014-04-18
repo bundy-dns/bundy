@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 namespace test {
 
@@ -45,6 +45,6 @@ detailCompareLease(const Lease4Ptr& first, const Lease4Ptr& second);
 
 }; // namespace test
 }; // namespace dhcp
-}; // namespace isc
+}; // namespace bundy
 
 #endif

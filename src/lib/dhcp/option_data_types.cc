@@ -17,7 +17,7 @@
 #include <dns/name.h>
 #include <util/encode/hex.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 OptionDataTypeUtil::OptionDataTypeUtil() {
@@ -124,21 +124,21 @@ OptionDataTypeUtil::instance() {
 asiolink::IOAddress
 OptionDataTypeUtil::readAddress(const std::vector<uint8_t>& buf,
                                 const short family) {
-    using namespace isc::asiolink;
+    using namespace bundy::asiolink;
     if (family == AF_INET) {
         if (buf.size() < V4ADDRESS_LEN) {
-            isc_throw(BadDataTypeCast, "unable to read data from the buffer as"
+            bundy_throw(BadDataTypeCast, "unable to read data from the buffer as"
                       << " IPv4 address. Invalid buffer size: " << buf.size());
         }
         return (IOAddress::fromBytes(AF_INET, &buf[0]));
     } else if (family == AF_INET6) {
         if (buf.size() < V6ADDRESS_LEN) {
-            isc_throw(BadDataTypeCast, "unable to read data from the buffer as"
+            bundy_throw(BadDataTypeCast, "unable to read data from the buffer as"
                       << " IPv6 address. Invalid buffer size: " << buf.size());
         }
         return (IOAddress::fromBytes(AF_INET6, &buf[0]));
     } else {
-        isc_throw(BadDataTypeCast, "unable to read data from the buffer as"
+        bundy_throw(BadDataTypeCast, "unable to read data from the buffer as"
                   "IP address. Invalid family: " << family);
     }
 }
@@ -160,7 +160,7 @@ OptionDataTypeUtil::writeBinary(const std::string& hex_str,
     try {
         util::encode::decodeHex(hex_str, binary);
     } catch (const Exception& ex) {
-        isc_throw(BadDataTypeCast, "unable to cast " << hex_str
+        bundy_throw(BadDataTypeCast, "unable to cast " << hex_str
                   << " to binary data type: " << ex.what());
     }
     // Decode was successful so append decoded binary value
@@ -171,7 +171,7 @@ OptionDataTypeUtil::writeBinary(const std::string& hex_str,
 bool
 OptionDataTypeUtil::readBool(const std::vector<uint8_t>& buf) {
     if (buf.empty()) {
-        isc_throw(BadDataTypeCast, "unable to read the buffer as boolean"
+        bundy_throw(BadDataTypeCast, "unable to read the buffer as boolean"
                   << " value. Invalid buffer size " << buf.size());
     }
     if (buf[0] == 1) {
@@ -179,7 +179,7 @@ OptionDataTypeUtil::readBool(const std::vector<uint8_t>& buf) {
     } else if (buf[0] == 0) {
         return (false);
     }
-    isc_throw(BadDataTypeCast, "unable to read the buffer as boolean"
+    bundy_throw(BadDataTypeCast, "unable to read the buffer as boolean"
               << " value. Invalid value " << static_cast<int>(buf[0]));
 }
 
@@ -193,20 +193,20 @@ std::string
 OptionDataTypeUtil::readFqdn(const std::vector<uint8_t>& buf) {
     // If buffer is empty emit an error.
     if (buf.empty()) {
-        isc_throw(BadDataTypeCast, "unable to read FQDN from a buffer."
+        bundy_throw(BadDataTypeCast, "unable to read FQDN from a buffer."
                   << " The buffer is empty.");
     }
-    // Set up an InputBuffer so as we can use isc::dns::Name object to get the FQDN.
-    isc::util::InputBuffer in_buf(static_cast<const void*>(&buf[0]), buf.size());
+    // Set up an InputBuffer so as we can use bundy::dns::Name object to get the FQDN.
+    bundy::util::InputBuffer in_buf(static_cast<const void*>(&buf[0]), buf.size());
     try {
         // Try to create an object from the buffer. If exception is thrown
         // it means that the buffer doesn't hold a valid domain name (invalid
         // syntax).
-        isc::dns::Name name(in_buf);
+        bundy::dns::Name name(in_buf);
         return (name.toText());
-    } catch (const isc::Exception& ex) {
+    } catch (const bundy::Exception& ex) {
         // Unable to convert the data in the buffer into FQDN.
-        isc_throw(BadDataTypeCast, ex.what());
+        bundy_throw(BadDataTypeCast, ex.what());
     }
 }
 
@@ -215,21 +215,21 @@ OptionDataTypeUtil::writeFqdn(const std::string& fqdn,
                               std::vector<uint8_t>& buf,
                               bool downcase) {
     try {
-        isc::dns::Name name(fqdn, downcase);
-        isc::dns::LabelSequence labels(name);
+        bundy::dns::Name name(fqdn, downcase);
+        bundy::dns::LabelSequence labels(name);
         if (labels.getDataLength() > 0) {
             size_t read_len = 0;
             const uint8_t* data = labels.getData(&read_len);
             buf.insert(buf.end(), data, data + read_len);
         }
-    } catch (const isc::Exception& ex) {
-        isc_throw(BadDataTypeCast, ex.what());
+    } catch (const bundy::Exception& ex) {
+        bundy_throw(BadDataTypeCast, ex.what());
     }
 }
 
 unsigned int
 OptionDataTypeUtil::getLabelCount(const std::string& text_name) {
-    // The isc::dns::Name class doesn't accept empty names. However, in some
+    // The bundy::dns::Name class doesn't accept empty names. However, in some
     // cases we may be dealing with empty names (e.g. sent by the DHCP clients).
     // Empty names should not be sent as hostnames but if they are, for some
     // reason, we don't want to throw an exception from this function. We
@@ -238,10 +238,10 @@ OptionDataTypeUtil::getLabelCount(const std::string& text_name) {
         return (0);
     }
     try {
-        isc::dns::Name name(text_name);
+        bundy::dns::Name name(text_name);
         return (name.getLabelCount());
-    } catch (const isc::Exception& ex) {
-        isc_throw(BadDataTypeCast, ex.what());
+    } catch (const bundy::Exception& ex) {
+        bundy_throw(BadDataTypeCast, ex.what());
     }
 }
 
@@ -262,5 +262,5 @@ OptionDataTypeUtil::writeString(const std::string& value,
     }
 }
 
-} // end of isc::dhcp namespace
-} // end of isc namespace
+} // end of bundy::dhcp namespace
+} // end of bundy namespace

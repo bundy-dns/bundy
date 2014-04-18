@@ -22,7 +22,7 @@
 
 #include <stdint.h>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 
 /// \brief Information of a zone stored in a data source zone table.
@@ -109,7 +109,7 @@ public:
         // Perform common check, and delegate the actual work to the protected
         // method.
         if (isLast()) {
-            isc_throw(InvalidOperation,
+            bundy_throw(InvalidOperation,
                       "next() called on iterator beyond end of zone table");
         }
         nextImpl();
@@ -128,7 +128,7 @@ public:
         // Perform common check, and delegate the actual work to the protected
         // method.
         if (isLast()) {
-            isc_throw(InvalidOperation,
+            bundy_throw(InvalidOperation,
                       "getCurrent() called on iterator beyond "
                       "end of zone table");
         }

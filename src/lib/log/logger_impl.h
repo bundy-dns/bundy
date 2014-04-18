@@ -34,7 +34,7 @@
 #include <log/message_types.h>
 #include <log/interprocess/interprocess_sync.h>
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 /// \brief Console Logger Implementation
@@ -178,7 +178,7 @@ public:
     /// synchronizing output of log messages. It should be deletable and
     /// the ownership is transferred to the logger implementation.
     /// If NULL is passed, a BadInterprocessSync exception is thrown.
-    void setInterprocessSync(isc::log::interprocess::InterprocessSync* sync);
+    void setInterprocessSync(bundy::log::interprocess::InterprocessSync* sync);
 
     /// \brief Equality
     ///
@@ -193,11 +193,11 @@ public:
 private:
     std::string                  name_;   ///< Full name of this logger
     log4cplus::Logger            logger_; ///< Underlying log4cplus logger
-    isc::log::interprocess::InterprocessSync* sync_;
+    bundy::log::interprocess::InterprocessSync* sync_;
 };
 
 } // namespace log
-} // namespace isc
+} // namespace bundy
 
 
 #endif // LOGGER_IMPL_H

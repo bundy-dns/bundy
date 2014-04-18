@@ -37,10 +37,10 @@
 #include <util/io/fd_share.h>
 #include <util/unittests/check_valgrind.h>
 
-using namespace isc::data;
-using namespace isc::config;
-using namespace isc::server_common;
-using namespace isc;
+using namespace bundy::data;
+using namespace bundy::config;
+using namespace bundy::server_common;
+using namespace bundy;
 
 namespace {
 
@@ -119,7 +119,7 @@ public:
         }
     }
 
-    isc::cc::FakeSession session;
+    bundy::cc::FakeSession session;
     const std::string specfile;
 };
 
@@ -334,7 +334,7 @@ setRecvTimo(int s) {
     if (errno == ENOPROTOOPT) { // deviant OS, give up using it.
         return (false);
     }
-    isc_throw(isc::Unexpected, "set RCVTIMEO failed: " << strerror(errno));
+    bundy_throw(bundy::Unexpected, "set RCVTIMEO failed: " << strerror(errno));
 }
 
 // Helper test class that creates a randomly named domain socket
@@ -350,7 +350,7 @@ public:
         // Misuse mkstemp to generate a file name.
         const int f = mkstemp(path_);
         if (f == -1) {
-            isc_throw(Unexpected, "mkstemp failed: " << strerror(errno));
+            bundy_throw(Unexpected, "mkstemp failed: " << strerror(errno));
         }
         // Just need the name, so immediately close
         close(f);
@@ -402,13 +402,13 @@ private:
     create() {
         fd_ = socket(AF_UNIX, SOCK_STREAM, 0);
         if (fd_ == -1) {
-            isc_throw(Unexpected, "Unable to create socket");
+            bundy_throw(Unexpected, "Unable to create socket");
         }
         struct sockaddr_un socket_address;
         socket_address.sun_family = AF_UNIX;
         socklen_t len = strlen(path_);
         if (len > sizeof(socket_address.sun_path)) {
-            isc_throw(Unexpected,
+            bundy_throw(Unexpected,
                       "mkstemp() created a filename too long for sun_path");
         }
         strncpy(socket_address.sun_path, path_,
@@ -423,13 +423,13 @@ private:
         // but for the purposes of this test it should be small enough
         unlink(path_);
         if (bind(fd_, (const struct sockaddr*)&socket_address, len) == -1) {
-            isc_throw(Unexpected,
+            bundy_throw(Unexpected,
                       "unable to bind to test domain socket " << path_ <<
                       ": " << strerror(errno));
         }
 
         if (listen(fd_, 1) == -1) {
-            isc_throw(Unexpected,
+            bundy_throw(Unexpected,
                       "unable to listen on test domain socket " << path_ <<
                       ": " << strerror(errno));
         }
@@ -455,7 +455,7 @@ private:
     serve(const std::vector<std::pair<std::string, int> >& data) {
         const int client_fd = accept(fd_, NULL, NULL);
         if (client_fd == -1) {
-            isc_throw(Unexpected, "Error in accept(): " << strerror(errno));
+            bundy_throw(Unexpected, "Error in accept(): " << strerror(errno));
         }
         if (!setRecvTimo(client_fd)) {
             // In the loop below we do blocking read.  To avoid deadlock
@@ -467,21 +467,21 @@ private:
         BOOST_FOREACH(DataPair cur_data, data) {
             char buf[5];
             memset(buf, 0, 5);
-            if (isc::util::io::read_data(client_fd, buf, 4) != 4) {
-                isc_throw(Unexpected, "unable to receive socket token");
+            if (bundy::util::io::read_data(client_fd, buf, 4) != 4) {
+                bundy_throw(Unexpected, "unable to receive socket token");
             }
             if (cur_data.first != buf) {
-                isc_throw(Unexpected, "socket token mismatch: expected="
+                bundy_throw(Unexpected, "socket token mismatch: expected="
                           << cur_data.first << ", actual=" << buf);
             }
 
             bool result;
             if (cur_data.second == -1) {
                 // send 'CREATOR_SOCKET_UNAVAILABLE'
-                result = isc::util::io::write_data(client_fd, "0\n", 2);
+                result = bundy::util::io::write_data(client_fd, "0\n", 2);
             } else if (cur_data.second == -2) {
                 // send 'CREATOR_SOCKET_OK' first
-                result = isc::util::io::write_data(client_fd, "1\n", 2);
+                result = bundy::util::io::write_data(client_fd, "1\n", 2);
                 if (result) {
                     if (send(client_fd, "a", 1, 0) != 1) {
                         result = false;
@@ -489,16 +489,16 @@ private:
                 }
             } else {
                 // send 'CREATOR_SOCKET_OK' first
-                result = isc::util::io::write_data(client_fd, "1\n", 2);
+                result = bundy::util::io::write_data(client_fd, "1\n", 2);
                 if (result) {
-                    if (isc::util::io::send_fd(client_fd,
+                    if (bundy::util::io::send_fd(client_fd,
                                                cur_data.second) != 0) {
                         result = false;
                     }
                 }
             }
             if (!result) {
-                isc_throw(Exception, "Error in send_fd(): " <<
+                bundy_throw(Exception, "Error in send_fd(): " <<
                           strerror(errno));
             }
         }
@@ -510,7 +510,7 @@ private:
 };
 
 TEST_F(SocketRequestorTest, testSocketPassing) {
-    if (!isc::util::unittests::runningOnValgrind()) {
+    if (!bundy::util::unittests::runningOnValgrind()) {
         TestSocket ts;
         std::vector<std::pair<std::string, int> > data;
         data.push_back(std::pair<std::string, int>("foo\n", 1));

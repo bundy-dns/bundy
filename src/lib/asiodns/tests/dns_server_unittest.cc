@@ -70,8 +70,8 @@
 /// involved so the message sending between client and server is plain text
 /// And the valid checker, question lookup and answer composition are dummy.
 
-using namespace isc::asiolink;
-using namespace isc::asiodns;
+using namespace bundy::asiolink;
+using namespace bundy::asiodns;
 using namespace asio;
 
 namespace {
@@ -110,9 +110,9 @@ public:
         allow_resume_(true)
     { }
     virtual void operator()(const IOMessage& io_message,
-            isc::dns::MessagePtr message,
-            isc::dns::MessagePtr answer_message,
-            isc::util::OutputBufferPtr buffer,
+            bundy::dns::MessagePtr message,
+            bundy::dns::MessagePtr answer_message,
+            bundy::util::OutputBufferPtr buffer,
             DNSServer* server) const {
         stopServer();
         if (allow_resume_) {
@@ -128,9 +128,9 @@ public:
 class SimpleAnswer : public DNSAnswer, public ServerStopper {
     public:
         void operator()(const IOMessage& message,
-                isc::dns::MessagePtr query_message,
-                isc::dns::MessagePtr answer_message,
-                isc::util::OutputBufferPtr buffer) const
+                bundy::dns::MessagePtr query_message,
+                bundy::dns::MessagePtr answer_message,
+                bundy::util::OutputBufferPtr buffer) const
         {
             //copy what we get from user
             buffer->writeData(message.getData(), message.getDataSize());
@@ -144,9 +144,9 @@ class SimpleAnswer : public DNSAnswer, public ServerStopper {
 class SyncDummyLookup : public DummyLookup {
 public:
     virtual void operator()(const IOMessage& io_message,
-                            isc::dns::MessagePtr message,
-                            isc::dns::MessagePtr answer_message,
-                            isc::util::OutputBufferPtr buffer,
+                            bundy::dns::MessagePtr message,
+                            bundy::dns::MessagePtr answer_message,
+                            bundy::util::OutputBufferPtr buffer,
                             DNSServer* server) const
     {
         buffer->writeData(io_message.getData(), io_message.getDataSize());
@@ -479,7 +479,7 @@ private:
         const int error = getaddrinfo(server_ip, server_port_str,
                                       &hints, &res);
         if (error != 0) {
-            isc_throw(IOError, "getaddrinfo failed: " << gai_strerror(error));
+            bundy_throw(IOError, "getaddrinfo failed: " << gai_strerror(error));
         }
 
         int sock;
@@ -701,11 +701,11 @@ TYPED_TEST(DNSServerTestBase, invalidFamily) {
     // initialization.
     EXPECT_THROW(TCPServer(this->service, 0, AF_UNIX,
                            this->lookup_, this->answer_),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 TYPED_TEST(DNSServerTest, invalidFamilyUDP) {
-    EXPECT_THROW(this->createServer(0, AF_UNIX), isc::InvalidParameter);
+    EXPECT_THROW(this->createServer(0, AF_UNIX), bundy::InvalidParameter);
 }
 
 // It raises an exception when invalid address family is passed
@@ -719,11 +719,11 @@ TYPED_TEST(DNSServerTestBase, invalidTCPFD) {
      not the others, maybe we could make it run this at last on epoll-based
      systems).
     EXPECT_THROW(UDPServer(service, -1, AF_INET, lookup_,
-                           answer_), isc::asiolink::IOError);
+                           answer_), bundy::asiolink::IOError);
     */
     EXPECT_THROW(TCPServer(this->service, -1, AF_INET,
                            this->lookup_, this->answer_),
-                 isc::asiolink::IOError);
+                 bundy::asiolink::IOError);
 }
 
 TYPED_TEST(DNSServerTest, DISABLED_invalidUDPFD) {
@@ -734,26 +734,26 @@ TYPED_TEST(DNSServerTest, DISABLED_invalidUDPFD) {
      not the others, maybe we could make it run this at least on epoll-based
      systems).
     */
-    EXPECT_THROW(this->createServer(-1, AF_INET), isc::asiolink::IOError);
+    EXPECT_THROW(this->createServer(-1, AF_INET), bundy::asiolink::IOError);
 }
 
 // Check it rejects some of the unsupported operations
 TEST_F(SyncServerTest, unsupportedOps) {
-    EXPECT_THROW(udp_server_->clone(), isc::Unexpected);
-    EXPECT_THROW(udp_server_->asyncLookup(), isc::Unexpected);
+    EXPECT_THROW(udp_server_->clone(), bundy::Unexpected);
+    EXPECT_THROW(udp_server_->asyncLookup(), bundy::Unexpected);
 }
 
 // Check it rejects forgotten resume (eg. insists that it is synchronous)
 TEST_F(SyncServerTest, mustResume) {
     lookup_->allow_resume_ = false;
     ASSERT_THROW(testStopServerByStopper(*udp_server_, udp_client_, lookup_),
-                 isc::Unexpected);
+                 bundy::Unexpected);
 }
 
 // SyncUDPServer doesn't allow NULL lookup callback.
 TEST_F(SyncServerTest, nullLookupCallback) {
     EXPECT_THROW(SyncUDPServer::create(service, 0, AF_INET, NULL),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 TEST_F(SyncServerTest, resetUDPServerBeforeEvent) {

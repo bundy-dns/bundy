@@ -34,7 +34,7 @@ version() {
 }
 
 int
-load(isc::hooks::LibraryHandle& handle) {
+load(bundy::hooks::LibraryHandle& handle) {
     throw std::exception();
 }
 

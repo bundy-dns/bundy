@@ -17,7 +17,7 @@ DISTCLEANFILES = $(man_MANS)
 EXTRA_DIST = $(man_MANS) msgq.xml msgq_messages.mes msgq.spec
 
 nodist_pylogmessage_PYTHON = $(PYTHON_LOGMSGPKG_DIR)/work/msgq_messages.py
-pylogmessagedir = $(pyexecdir)/isc/log_messages/
+pylogmessagedir = $(pyexecdir)/bundy/log_messages/
 BUILT_SOURCES = $(PYTHON_LOGMSGPKG_DIR)/work/msgq_messages.py
 
 if GENERATE_DOCS

@@ -34,9 +34,9 @@
 // In many cases, tests can use TestDataSrcClientsMgr (defined below) where
 // DataSrcClientsMgr is needed.
 
-// Below we extend the isc::auth::datasrc_clientmgr_internal namespace to
+// Below we extend the bundy::auth::datasrc_clientmgr_internal namespace to
 // specialize the doNoop() method.
-namespace isc {
+namespace bundy {
 namespace auth {
 namespace datasrc_clientmgr_internal {
 class TestMutex {
@@ -55,13 +55,13 @@ public:
     public:
         Locker(TestMutex& mutex) : mutex_(mutex) {
             if (mutex.lock_count != mutex.unlock_count) {
-                isc_throw(Unexpected,
+                bundy_throw(Unexpected,
                           "attempt of duplicate lock acquisition");
             }
 
             ++mutex.lock_count;
             if (mutex.lock_count > 100) { // 100 is an arbitrary choice
-                isc_throw(Unexpected,
+                bundy_throw(Unexpected,
                           "too many test mutex count, likely a bug in test");
             }
         }
@@ -97,7 +97,7 @@ public:
         ++mutex.lock_count;
 
         if (wait_count > 100) { // 100 is an arbitrary choice
-            isc_throw(Unexpected,
+            bundy_throw(Unexpected,
                       "too many cond wait count, likely a bug in test");
         }
 
@@ -141,7 +141,7 @@ public:
     static TestCondVar* cond;
     static TestMutex* queue_mutex;
     static int wakeup_fd;
-    static isc::datasrc::ClientListMapPtr* clients_map;
+    static bundy::datasrc::ClientListMapPtr* clients_map;
     static TestMutex* map_mutex;
     static std::list<Command> command_queue_copy;
     static std::list<FinishedCallback> callback_queue_copy;
@@ -161,7 +161,7 @@ public:
         std::list<FinishedCallback>* callback_queue,
         TestCondVar* cond,
         TestMutex* queue_mutex,
-        isc::datasrc::ClientListMapPtr* clients_map,
+        bundy::datasrc::ClientListMapPtr* clients_map,
         TestMutex* map_mutex, int wakeup_fd)
     {
         FakeDataSrcClientsBuilder::started = false;
@@ -194,10 +194,10 @@ public:
         case FakeDataSrcClientsBuilder::NOTHROW:
             break;
         case FakeDataSrcClientsBuilder::THROW_UNCAUGHT_EX:
-            isc_throw(util::thread::Thread::UncaughtException,
+            bundy_throw(util::thread::Thread::UncaughtException,
                       "TestThread wait() saw an exception");
         case FakeDataSrcClientsBuilder::THROW_OTHER:
-            isc_throw(Unexpected,
+            bundy_throw(Unexpected,
                       "General emulated failure in TestThread wait()");
         }
     }
@@ -234,7 +234,7 @@ public:
     {}
 };
 } // namespace auth
-} // namespace isc
+} // namespace bundy
 
 #endif  // TEST_DATASRC_CLIENTS_MGR_H
 

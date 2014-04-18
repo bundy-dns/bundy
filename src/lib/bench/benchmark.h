@@ -21,7 +21,7 @@
 #include <iostream>
 #include <ios>
 
-namespace isc {
+namespace bundy {
 namespace bench {
 
 /// \brief Templated micro benchmark framework.
@@ -154,7 +154,7 @@ namespace bench {
 /// specializing some of its (templated) public methods.
 /// For example, assume you want to customize the output of benchmark result.
 /// It can be done by specializing \c BenchMark::printResult():
-/// \code namespace isc {
+/// \code namespace bundy {
 /// namespace bench {
 /// template<>
 /// void
@@ -170,7 +170,7 @@ namespace bench {
 /// \code Searched for 10000 keys 1000000 times in 0.21s \endcode
 ///
 /// Note that the specialization must be defined in the same namespace as
-/// that of the \c BenchMark class, that is, \c isc::bench.
+/// that of the \c BenchMark class, that is, \c bundy::bench.
 /// It should also be noted that the corresponding \c SetSearchBenchMark
 /// object can be accessed (through its public interfaces) via the \c target_
 /// member variable of \c BenchMark.

@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.59])
-AC_INIT(bundy, 1.2.0, bundy-dev@isc.org)
+AC_INIT(bundy, 1.2.0, bundy-dev@bundy.org)
 AC_CONFIG_SRCDIR(README)
 
 # serial-tests is not available in automake version before 1.13, so
@@ -134,7 +134,7 @@ fi
 
 # check -R, "-Wl,-R" or -rpath (we share the AX function defined in
 #  examples/m4)
-AX_ISC_RPATH
+AX_BUNDY_RPATH
 
 # Compiler dependent settings: define some mandatory CXXFLAGS here.
 # We also use a separate variable BUNDY_CXXFLAGS.  This will (and should) be
@@ -231,7 +231,7 @@ if test $with_werror = 1; then
    # We use struct, not class, here, because some compilers complain about
    # "unused private members", causing a false positive.
    AC_TRY_COMPILE([namespace { struct Foo {}; }
-   namespace isc {struct Bar {Foo foo_;};} ],,
+   namespace bundy {struct Bar {Foo foo_;};} ],,
 	[AC_MSG_RESULT(no)
 	 werror_ok=1
 	 BUNDY_CXXFLAGS="$BUNDY_CXXFLAGS -Werror"],
@@ -378,23 +378,23 @@ fi
 # we can specify in Makefile.am the install directory of various BUNDY
 # python scripts and loadable modules; in Makefile.am we cannot replace
 # $(pyexecdir) using itself, e.g, this doesn't work:
-# pyexecdir = $(pyexecdir)/isc/some_module
+# pyexecdir = $(pyexecdir)/bundy/some_module
 # The separate variable makes this setup possible as follows:
-# pyexecdir = $(PYTHON_SITEPKG_DIR)/isc/some_module
+# pyexecdir = $(PYTHON_SITEPKG_DIR)/bundy/some_module
 PYTHON_SITEPKG_DIR=${pyexecdir}
 AC_SUBST(PYTHON_SITEPKG_DIR)
 
 # This will be commonly used in various Makefile.am's that need to generate
 # python log messages.
-PYTHON_LOGMSGPKG_DIR="\$(top_builddir)/src/lib/python/isc/log_messages"
+PYTHON_LOGMSGPKG_DIR="\$(top_builddir)/src/lib/python/bundy/log_messages"
 AC_SUBST(PYTHON_LOGMSGPKG_DIR)
 
 # This is python package paths commonly used in python tests.  See
 # README of log_messages for why it's included.
-# lib/dns/python/.libs is necessary because __init__.py of isc package
-# automatically imports isc.datasrc, which then requires the DNS loadable
+# lib/dns/python/.libs is necessary because __init__.py of bundy package
+# automatically imports bundy.datasrc, which then requires the DNS loadable
 # module.  #2145 should eliminate the need for it.
-COMMON_PYTHON_PATH="\$(abs_top_builddir)/src/lib/python/isc/log_messages:\$(abs_top_builddir)/src/lib/python/isc/cc:\$(abs_top_srcdir)/src/lib/python:\$(abs_top_builddir)/src/lib/python:\$(abs_top_builddir)/src/lib/dns/python/.libs"
+COMMON_PYTHON_PATH="\$(abs_top_builddir)/src/lib/python/bundy/log_messages:\$(abs_top_builddir)/src/lib/python/bundy/cc:\$(abs_top_srcdir)/src/lib/python:\$(abs_top_builddir)/src/lib/python:\$(abs_top_builddir)/src/lib/dns/python/.libs"
 AC_SUBST(COMMON_PYTHON_PATH)
 
 # Check for python development environments
@@ -434,10 +434,10 @@ fi
 # modules, we embed the path to the modules when possible.  We do this even
 # when the path is known in the common operational environment (e.g. when
 # it's stored in a common "hint" file) for simplicity.
-if test "x$ISC_RPATH_FLAG" != "x"; then
+if test "x$BUNDY_RPATH_FLAG" != "x"; then
 	python_rpath=
 	for flag in ${PYTHON_LDFLAGS}; do
-		python_rpath="${python_rpath} `echo $flag | ${SED} -ne "s/^\(\-L\)/${ISC_RPATH_FLAG}/p"`"
+		python_rpath="${python_rpath} `echo $flag | ${SED} -ne "s/^\(\-L\)/${BUNDY_RPATH_FLAG}/p"`"
 	done
 	PYTHON_LDFLAGS="${PYTHON_LDFLAGS} ${python_rpath}"
 fi
@@ -514,7 +514,7 @@ if test "X$GXX" = "Xyes" -a "$werror_ok" = 1; then
 		 PYTHON_CXXFLAGS="${PYTHON_CXXFLAGS} -Wno-unused-parameter"
 		 AC_SUBST(PYTHON_CXXFLAGS)
 		],
-		[AC_MSG_ERROR([Can't compile against Python.h.  If you're using MacOS X and have installed Python with Homebrew, see http://bundy.isc.org/wiki/SystemNotesMacOSX])]
+		[AC_MSG_ERROR([Can't compile against Python.h.  If you're using MacOS X and have installed Python with Homebrew, see http://bundy.bundy.org/wiki/SystemNotesMacOSX])]
                 )
                 ]
 	)
@@ -846,10 +846,10 @@ for flag in ${BOTAN_LIBS}; do
 done
 
 # See python_rpath for some info on why we do this
-if test "x$ISC_RPATH_FLAG" != "x"; then
+if test "x$BUNDY_RPATH_FLAG" != "x"; then
     BOTAN_RPATH=
     for flag in ${BOTAN_LIBS}; do
-            BOTAN_RPATH="${BOTAN_RPATH} `echo $flag | ${SED} -ne "s/^\(\-L\)/${ISC_RPATH_FLAG}/p"`"
+            BOTAN_RPATH="${BOTAN_RPATH} `echo $flag | ${SED} -ne "s/^\(\-L\)/${BUNDY_RPATH_FLAG}/p"`"
     done
 AC_SUBST(BOTAN_RPATH)
 
@@ -1621,51 +1621,51 @@ AC_CONFIG_FILES([compatcheck/Makefile
                  src/lib/nsas/Makefile
                  src/lib/nsas/tests/Makefile
                  src/lib/python/bundy_config.py
-                 src/lib/python/isc/acl/Makefile
-                 src/lib/python/isc/acl/tests/Makefile
-                 src/lib/python/isc/bundy/Makefile
-                 src/lib/python/isc/bundy/tests/Makefile
-                 src/lib/python/isc/cc/cc_generated/Makefile
-                 src/lib/python/isc/cc/Makefile
-                 src/lib/python/isc/cc/tests/cc_test
-                 src/lib/python/isc/cc/tests/Makefile
-                 src/lib/python/isc/config/Makefile
-                 src/lib/python/isc/config/tests/config_test
-                 src/lib/python/isc/config/tests/Makefile
-                 src/lib/python/isc/datasrc/Makefile
-                 src/lib/python/isc/datasrc/tests/Makefile
-                 src/lib/python/isc/datasrc/tests/testdata/Makefile
-                 src/lib/python/isc/ddns/Makefile
-                 src/lib/python/isc/ddns/tests/Makefile
-                 src/lib/python/isc/dns/Makefile
-                 src/lib/python/isc/log/Makefile
-                 src/lib/python/isc/log_messages/Makefile
-                 src/lib/python/isc/log_messages/work/__init__.py
-                 src/lib/python/isc/log_messages/work/Makefile
-                 src/lib/python/isc/log/tests/log_console.py
-                 src/lib/python/isc/log/tests/Makefile
-                 src/lib/python/isc/Makefile
-                 src/lib/python/isc/memmgr/Makefile
-                 src/lib/python/isc/memmgr/tests/Makefile
-                 src/lib/python/isc/memmgr/tests/testdata/Makefile
-                 src/lib/python/isc/net/Makefile
-                 src/lib/python/isc/net/tests/Makefile
-                 src/lib/python/isc/notify/Makefile
-                 src/lib/python/isc/notify/tests/Makefile
-                 src/lib/python/isc/notify/tests/notify_out_test
-                 src/lib/python/isc/server_common/Makefile
-                 src/lib/python/isc/server_common/tests/Makefile
-                 src/lib/python/isc/statistics/Makefile
-                 src/lib/python/isc/statistics/tests/Makefile
-                 src/lib/python/isc/sysinfo/Makefile
-                 src/lib/python/isc/sysinfo/tests/Makefile
-                 src/lib/python/isc/testutils/Makefile
-                 src/lib/python/isc/util/cio/Makefile
-                 src/lib/python/isc/util/cio/tests/Makefile
-                 src/lib/python/isc/util/Makefile
-                 src/lib/python/isc/util/tests/Makefile
-                 src/lib/python/isc/xfrin/Makefile
-                 src/lib/python/isc/xfrin/tests/Makefile
+                 src/lib/python/bundy/acl/Makefile
+                 src/lib/python/bundy/acl/tests/Makefile
+                 src/lib/python/bundy/bundy/Makefile
+                 src/lib/python/bundy/bundy/tests/Makefile
+                 src/lib/python/bundy/cc/cc_generated/Makefile
+                 src/lib/python/bundy/cc/Makefile
+                 src/lib/python/bundy/cc/tests/cc_test
+                 src/lib/python/bundy/cc/tests/Makefile
+                 src/lib/python/bundy/config/Makefile
+                 src/lib/python/bundy/config/tests/config_test
+                 src/lib/python/bundy/config/tests/Makefile
+                 src/lib/python/bundy/datasrc/Makefile
+                 src/lib/python/bundy/datasrc/tests/Makefile
+                 src/lib/python/bundy/datasrc/tests/testdata/Makefile
+                 src/lib/python/bundy/ddns/Makefile
+                 src/lib/python/bundy/ddns/tests/Makefile
+                 src/lib/python/bundy/dns/Makefile
+                 src/lib/python/bundy/log/Makefile
+                 src/lib/python/bundy/log_messages/Makefile
+                 src/lib/python/bundy/log_messages/work/__init__.py
+                 src/lib/python/bundy/log_messages/work/Makefile
+                 src/lib/python/bundy/log/tests/log_console.py
+                 src/lib/python/bundy/log/tests/Makefile
+                 src/lib/python/bundy/Makefile
+                 src/lib/python/bundy/memmgr/Makefile
+                 src/lib/python/bundy/memmgr/tests/Makefile
+                 src/lib/python/bundy/memmgr/tests/testdata/Makefile
+                 src/lib/python/bundy/net/Makefile
+                 src/lib/python/bundy/net/tests/Makefile
+                 src/lib/python/bundy/notify/Makefile
+                 src/lib/python/bundy/notify/tests/Makefile
+                 src/lib/python/bundy/notify/tests/notify_out_test
+                 src/lib/python/bundy/server_common/Makefile
+                 src/lib/python/bundy/server_common/tests/Makefile
+                 src/lib/python/bundy/statistics/Makefile
+                 src/lib/python/bundy/statistics/tests/Makefile
+                 src/lib/python/bundy/sysinfo/Makefile
+                 src/lib/python/bundy/sysinfo/tests/Makefile
+                 src/lib/python/bundy/testutils/Makefile
+                 src/lib/python/bundy/util/cio/Makefile
+                 src/lib/python/bundy/util/cio/tests/Makefile
+                 src/lib/python/bundy/util/Makefile
+                 src/lib/python/bundy/util/tests/Makefile
+                 src/lib/python/bundy/xfrin/Makefile
+                 src/lib/python/bundy/xfrin/tests/Makefile
                  src/lib/python/Makefile
                  src/lib/resolve/Makefile
                  src/lib/resolve/tests/Makefile
@@ -1728,7 +1728,7 @@ AC_CONFIG_FILES([compatcheck/Makefile
            chmod +x src/lib/log/tests/local_file_test.sh
            chmod +x src/lib/log/tests/logger_lock_test.sh
            chmod +x src/lib/log/tests/severity_test.sh
-           chmod +x src/lib/python/isc/log/tests/log_console.py
+           chmod +x src/lib/python/bundy/log/tests/log_console.py
            chmod +x src/lib/util/python/doxygen2pydoc.py
            chmod +x src/lib/util/python/gen_wiredata.py
            chmod +x src/lib/util/python/mkpywrapper.py

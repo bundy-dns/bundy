@@ -30,12 +30,12 @@
 #include <map>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dhcp;
-using namespace isc::data;
-using namespace isc::asiolink;
+using namespace bundy;
+using namespace bundy::dhcp;
+using namespace bundy::data;
+using namespace bundy::asiolink;
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 // *********************** DCfgContextBase  *************************
@@ -99,20 +99,20 @@ DCfgContextBase::~DCfgContextBase() {
 DCfgMgrBase::DCfgMgrBase(DCfgContextBasePtr context)
     : parse_order_(), context_(context) {
     if (!context_) {
-        isc_throw(DCfgMgrBaseError, "DCfgMgrBase ctor: context cannot be NULL");
+        bundy_throw(DCfgMgrBaseError, "DCfgMgrBase ctor: context cannot be NULL");
     }
 }
 
 DCfgMgrBase::~DCfgMgrBase() {
 }
 
-isc::data::ConstElementPtr
-DCfgMgrBase::parseConfig(isc::data::ConstElementPtr config_set) {
+bundy::data::ConstElementPtr
+DCfgMgrBase::parseConfig(bundy::data::ConstElementPtr config_set) {
     LOG_DEBUG(dctl_logger, DBGLVL_COMMAND,
                 DCTL_CONFIG_START).arg(config_set->str());
 
     if (!config_set) {
-        return (isc::config::createAnswer(1,
+        return (bundy::config::createAnswer(1,
                                     std::string("Can't parse NULL config")));
     }
 
@@ -159,7 +159,7 @@ DCfgMgrBase::parseConfig(isc::data::ConstElementPtr config_set) {
                 else {
                     LOG_ERROR(dctl_logger, DCTL_ORDER_NO_ELEMENT)
                               .arg(element_id);
-                    isc_throw(DCfgMgrBaseError, "Element:" << element_id <<
+                    bundy_throw(DCfgMgrBaseError, "Element:" << element_id <<
                               " is listed in the parse order but is not "
                               " present in the configuration");
                 }
@@ -177,7 +177,7 @@ DCfgMgrBase::parseConfig(isc::data::ConstElementPtr config_set) {
             if (!parsed_count ||
                 (parsed_count && ((parsed_count + 1) < values_map.size()))) {
                 LOG_ERROR(dctl_logger, DCTL_ORDER_ERROR);
-                isc_throw(DCfgMgrBaseError,
+                bundy_throw(DCfgMgrBaseError,
                         "Configuration contains elements not in parse order");
             }
         } else {
@@ -192,11 +192,11 @@ DCfgMgrBase::parseConfig(isc::data::ConstElementPtr config_set) {
 
         // Everything was fine. Configuration set processed successfully.
         LOG_INFO(dctl_logger, DCTL_CONFIG_COMPLETE).arg("");
-        answer = isc::config::createAnswer(0, "Configuration committed.");
+        answer = bundy::config::createAnswer(0, "Configuration committed.");
 
-    } catch (const isc::Exception& ex) {
+    } catch (const bundy::Exception& ex) {
         LOG_ERROR(dctl_logger, DCTL_PARSER_FAIL).arg(element_id).arg(ex.what());
-        answer = isc::config::createAnswer(1,
+        answer = bundy::config::createAnswer(1,
                      string("Configuration parsing failed: ") + ex.what());
 
         // An error occurred, so make sure that we restore original context.
@@ -208,12 +208,12 @@ DCfgMgrBase::parseConfig(isc::data::ConstElementPtr config_set) {
 }
 
 void DCfgMgrBase::buildAndCommit(std::string& element_id,
-                                 isc::data::ConstElementPtr value) {
+                                 bundy::data::ConstElementPtr value) {
     // Call derivation's implementation to create the appropriate parser
     // based on the element id.
     ParserPtr parser = createConfigParser(element_id);
     if (!parser) {
-        isc_throw(DCfgMgrBaseError, "Could not create parser");
+        bundy_throw(DCfgMgrBaseError, "Could not create parser");
     }
 
     try {
@@ -227,14 +227,14 @@ void DCfgMgrBase::buildAndCommit(std::string& element_id,
         // parsers are free to do more than update the context, but that is an
         // nothing something we are concerned with here.)
         parser->commit();
-    } catch (const isc::Exception& ex) {
-        isc_throw(DCfgMgrBaseError,
+    } catch (const bundy::Exception& ex) {
+        bundy_throw(DCfgMgrBaseError,
                   "Could not build and commit: " << ex.what());
     } catch (...) {
-        isc_throw(DCfgMgrBaseError, "Non-ISC exception occurred");
+        bundy_throw(DCfgMgrBaseError, "Non-ISC exception occurred");
     }
 }
 
-}; // end of isc::dhcp namespace
-}; // end of isc namespace
+}; // end of bundy::dhcp namespace
+}; // end of bundy namespace
 

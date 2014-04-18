@@ -26,43 +26,43 @@
 #include <dns/tsigkey.h>
 
 using namespace std;
-using namespace isc::cryptolink;
+using namespace bundy::cryptolink;
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace {
     HashAlgorithm
-    convertAlgorithmName(const isc::dns::Name& name) {
+    convertAlgorithmName(const bundy::dns::Name& name) {
         if (name == TSIGKey::HMACMD5_NAME()) {
-            return (isc::cryptolink::MD5);
+            return (bundy::cryptolink::MD5);
         }
         if (name == TSIGKey::HMACMD5_SHORT_NAME()) {
-            return (isc::cryptolink::MD5);
+            return (bundy::cryptolink::MD5);
         }
         if (name == TSIGKey::HMACSHA1_NAME()) {
-            return (isc::cryptolink::SHA1);
+            return (bundy::cryptolink::SHA1);
         }
         if (name == TSIGKey::HMACSHA256_NAME()) {
-            return (isc::cryptolink::SHA256);
+            return (bundy::cryptolink::SHA256);
         }
         if (name == TSIGKey::HMACSHA224_NAME()) {
-            return (isc::cryptolink::SHA224);
+            return (bundy::cryptolink::SHA224);
         }
         if (name == TSIGKey::HMACSHA384_NAME()) {
-            return (isc::cryptolink::SHA384);
+            return (bundy::cryptolink::SHA384);
         }
         if (name == TSIGKey::HMACSHA512_NAME()) {
-            return (isc::cryptolink::SHA512);
+            return (bundy::cryptolink::SHA512);
         }
 
-        return (isc::cryptolink::UNKNOWN_HASH);
+        return (bundy::cryptolink::UNKNOWN_HASH);
     }
 }
 
 struct
 TSIGKey::TSIGKeyImpl {
     TSIGKeyImpl(const Name& key_name, const Name& algorithm_name,
-                isc::cryptolink::HashAlgorithm algorithm,
+                bundy::cryptolink::HashAlgorithm algorithm,
                 const void* secret, size_t secret_len) :
         key_name_(key_name), algorithm_name_(algorithm_name),
         algorithm_(algorithm),
@@ -71,14 +71,14 @@ TSIGKey::TSIGKeyImpl {
     {
         // Convert the key and algorithm names to the canonical form.
         key_name_.downcase();
-        if (algorithm == isc::cryptolink::MD5) {
+        if (algorithm == bundy::cryptolink::MD5) {
             algorithm_name_ = TSIGKey::HMACMD5_NAME();
         }
         algorithm_name_.downcase();
     }
     Name key_name_;
     Name algorithm_name_;
-    const isc::cryptolink::HashAlgorithm algorithm_;
+    const bundy::cryptolink::HashAlgorithm algorithm_;
     const vector<uint8_t> secret_;
 };
 
@@ -88,12 +88,12 @@ TSIGKey::TSIGKey(const Name& key_name, const Name& algorithm_name,
     const HashAlgorithm algorithm = convertAlgorithmName(algorithm_name);
     if ((secret != NULL && secret_len == 0) ||
         (secret == NULL && secret_len != 0)) {
-        isc_throw(InvalidParameter,
+        bundy_throw(InvalidParameter,
                   "TSIGKey secret and its length are inconsistent: " <<
                   key_name << ":" << algorithm_name);
     }
-    if (algorithm == isc::cryptolink::UNKNOWN_HASH && secret_len != 0) {
-        isc_throw(InvalidParameter,
+    if (algorithm == bundy::cryptolink::UNKNOWN_HASH && secret_len != 0) {
+        bundy_throw(InvalidParameter,
                   "TSIGKey with unknown algorithm has non empty secret: " <<
                   key_name << ":" << algorithm_name);
     }
@@ -108,13 +108,13 @@ TSIGKey::TSIGKey(const std::string& str) : impl_(NULL) {
         string keyname_str;
         getline(iss, keyname_str, ':');
         if (iss.fail() || iss.bad() || iss.eof()) {
-            isc_throw(InvalidParameter, "Invalid TSIG key string: " << str);
+            bundy_throw(InvalidParameter, "Invalid TSIG key string: " << str);
         }
 
         string secret_str;
         getline(iss, secret_str, ':');
         if (iss.fail() || iss.bad()) {
-            isc_throw(InvalidParameter, "Invalid TSIG key string: " << str);
+            bundy_throw(InvalidParameter, "Invalid TSIG key string: " << str);
         }
 
         string algo_str;
@@ -122,7 +122,7 @@ TSIGKey::TSIGKey(const std::string& str) : impl_(NULL) {
             getline(iss, algo_str);
         }
         if (iss.fail() || iss.bad()) {
-            isc_throw(InvalidParameter, "Invalid TSIG key string: " << str);
+            bundy_throw(InvalidParameter, "Invalid TSIG key string: " << str);
         }
 
         const Name algo_name(algo_str.empty() ? "hmac-md5.sig-alg.reg.int" :
@@ -130,10 +130,10 @@ TSIGKey::TSIGKey(const std::string& str) : impl_(NULL) {
         const HashAlgorithm algorithm = convertAlgorithmName(algo_name);
 
         vector<uint8_t> secret;
-        isc::util::encode::decodeBase64(secret_str, secret);
+        bundy::util::encode::decodeBase64(secret_str, secret);
 
-        if (algorithm == isc::cryptolink::UNKNOWN_HASH && !secret.empty()) {
-            isc_throw(InvalidParameter,
+        if (algorithm == bundy::cryptolink::UNKNOWN_HASH && !secret.empty()) {
+            bundy_throw(InvalidParameter,
                       "TSIG key with unknown algorithm has non empty secret: "
                       << str);
         }
@@ -141,10 +141,10 @@ TSIGKey::TSIGKey(const std::string& str) : impl_(NULL) {
         impl_ = new TSIGKeyImpl(Name(keyname_str), algo_name, algorithm,
                                 secret.empty() ? NULL : &secret[0],
                                 secret.size());
-    } catch (const isc::Exception& e) {
+    } catch (const bundy::Exception& e) {
         // 'reduce' the several types of exceptions name parsing and
         // Base64 decoding can throw to just the InvalidParameter
-        isc_throw(InvalidParameter, e.what());
+        bundy_throw(InvalidParameter, e.what());
     }
 }
 
@@ -179,7 +179,7 @@ TSIGKey::getAlgorithmName() const {
     return (impl_->algorithm_name_);
 }
 
-isc::cryptolink::HashAlgorithm
+bundy::cryptolink::HashAlgorithm
 TSIGKey::getAlgorithm() const {
     return (impl_->algorithm_);
 }
@@ -199,7 +199,7 @@ TSIGKey::toText() const {
     const vector<uint8_t> secret_v(static_cast<const uint8_t*>(getSecret()),
                                    static_cast<const uint8_t*>(getSecret()) +
                                    getSecretLength());
-    std::string secret_str = isc::util::encode::encodeBase64(secret_v);
+    std::string secret_str = bundy::util::encode::encodeBase64(secret_v);
 
     return (getKeyName().toText() + ":" + secret_str + ":" +
             getAlgorithmName().toText());
@@ -303,4 +303,4 @@ TSIGKeyRing::find(const Name& key_name, const Name& algorithm_name) const {
 }
 
 } // namespace dns
-} // namespace isc
+} // namespace bundy

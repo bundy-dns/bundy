@@ -30,10 +30,10 @@
 
 #include <new>                  // for bad_alloc
 
-using namespace isc::dns;
-using namespace isc::datasrc;
-using namespace isc::datasrc::memory;
-using namespace isc::datasrc::memory::detail;
+using namespace bundy::dns;
+using namespace bundy::datasrc;
+using namespace bundy::datasrc::memory;
+using namespace bundy::datasrc::memory::detail;
 
 namespace {
 class ZoneTableTest : public ::testing::Test {
@@ -75,7 +75,7 @@ TEST_F(ZoneTableTest, addZone) {
 
     // It doesn't accept NULL as zone data
     EXPECT_THROW(zone_table->addZone(mem_sgmt_, zname1, NULL),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_EQ(0, zone_table->getZoneCount()); // count is still 0
 
     // or an empty zone data
@@ -83,7 +83,7 @@ TEST_F(ZoneTableTest, addZone) {
         mem_sgmt_, zclass_);
     holder_empty.set(ZoneData::create(mem_sgmt_));
     EXPECT_THROW(zone_table->addZone(mem_sgmt_, zname1, holder_empty.get()),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 
     SegmentObjectHolder<ZoneData, RRClass> holder1(
         mem_sgmt_, zclass_);

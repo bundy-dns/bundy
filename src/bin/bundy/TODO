@@ -1,5 +1,5 @@
 - Read msgq configuration from configuration manager (Trac #213)
-  https://bundy.isc.org/ticket/213
+  https://bundy.bundy.org/ticket/213
 - Provide more administrator options:
   - Get information on a process (returns list of times started & stopped, 
     plus current information such as PID)

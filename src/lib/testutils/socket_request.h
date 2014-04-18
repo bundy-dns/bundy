@@ -26,7 +26,7 @@
 #include <vector>
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace testutils {
 
 /// \brief A testcase part for faking the SocketRequestor in tests
@@ -43,7 +43,7 @@ namespace testutils {
 /// Some member variables are intentionally made public so that test cases
 /// can easily check the value of them.  We prefer convenience for tests over
 /// class integrity here.
-class TestSocketRequestor : public isc::server_common::SocketRequestor {
+class TestSocketRequestor : public bundy::server_common::SocketRequestor {
 public:
     /// \brief Constructor
     ///
@@ -120,7 +120,7 @@ public:
     ///     to test exception handling.
     void releaseSocket(const std::string& token) {
         if (break_release_) {
-            isc_throw(SocketError, "Fatal test socket error");
+            bundy_throw(SocketError, "Fatal test socket error");
         }
         released_tokens_.push_back(token);
     }
@@ -156,10 +156,10 @@ public:
                            const std::string& name)
     {
         if (address == "192.0.2.2") {
-            isc_throw(SocketAllocateError, "This address is not allowed");
+            bundy_throw(SocketAllocateError, "This address is not allowed");
         }
         if (address == "192.0.2.3") {
-            isc_throw(SocketError, "Fatal test error");
+            bundy_throw(SocketError, "Fatal test error");
         }
         if (address == "::1" && break_rollback_) {
             // This is valid address, but in case we need to break the
@@ -167,7 +167,7 @@ public:
             //
             // We break the second address to see the first one was
             // allocated and then returned
-            isc_throw(ShareError,
+            bundy_throw(ShareError,
                       "This address is available, but not for you");
         }
         const std::string proto(protocol == TCP ? "TCP" : "UDP");

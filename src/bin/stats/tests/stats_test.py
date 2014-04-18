@@ -29,9 +29,9 @@ import imp
 import sys
 
 import stats
-import isc.log
+import bundy.log
 from test_utils import MyStats
-from isc.config.ccsession import create_answer
+from bundy.config.ccsession import create_answer
 
 class TestUtilties(unittest.TestCase):
     items = [
@@ -296,7 +296,7 @@ class TestStats(unittest.TestCase):
 
     def __send_command(self, stats, command_name, params=None):
         '''Emulate a command arriving to stats by directly calling callback'''
-        return isc.config.ccsession.parse_answer(
+        return bundy.config.ccsession.parse_answer(
             stats.command_handler(command_name, params))
 
     def test_check_command(self):
@@ -328,7 +328,7 @@ class TestStats(unittest.TestCase):
         env = {'from': 'frominit'}
         stat._answers = [(msg, env)]
         # SessionTimeout is raised while doing group_recvmsg()
-        ex = isc.cc.session.SessionTimeout
+        ex = bundy.cc.session.SessionTimeout
         def __raise(*x): raise ex(*x)
         stat.cc_session.group_recvmsg = lambda x: __raise()
         stat._check_command()
@@ -403,7 +403,7 @@ class TestStats(unittest.TestCase):
             if fn_name == 'update_stat':
                 return False        # "no error"
             if fn_name == 'showschema':
-                return isc.config.create_answer(0, 'no error')
+                return bundy.config.create_answer(0, 'no error')
 
         # Fake some methods and attributes for inspection
         __stats.do_polling = lambda: __steal_method('polling')
@@ -476,7 +476,7 @@ class TestStats(unittest.TestCase):
         def __check_rpc_call(command, group):
             self.assertEqual('ConfigManager', group)
             self.assertEqual(command,
-                             isc.config.ccsession.COMMAND_GET_STATISTICS_SPEC)
+                             bundy.config.ccsession.COMMAND_GET_STATISTICS_SPEC)
             answer_value = {'Init': [{
                         "item_name": "boot_time",
                         "item_type": "string",
@@ -523,8 +523,8 @@ class TestStats(unittest.TestCase):
 
         # Error case
         def __raise_on_rpc_call(x, y):
-            raise isc.config.RPCError(99, 'error')
-        orig_parse_answer = stats.isc.config.ccsession.parse_answer
+            raise bundy.config.RPCError(99, 'error')
+        orig_parse_answer = stats.bundy.config.ccsession.parse_answer
         self.stats.cc_session.rpc_call = __raise_on_rpc_call
         self.assertRaises(stats.StatsError, self.stats.update_modules)
 
@@ -620,7 +620,7 @@ class TestStats(unittest.TestCase):
             }
         _test_exp5_2 = {
               'queries.perzone[1]/queries.udp':
-                  isc.cc.data.find(_test_exp5_1,
+                  bundy.cc.data.find(_test_exp5_1,
                                    'queries.perzone[1]/queries.udp')
             }
         # Success cases
@@ -682,7 +682,7 @@ class TestStats(unittest.TestCase):
         _test_exp5_1 = { 'test10.example': { 'queries.udp': 5432 } }
         _test_exp5_2 ={
               'nds_queries.perzone/test10.example/queries.udp':
-                  isc.cc.data.find(_test_exp5_1, 'test10.example/queries.udp')
+                  bundy.cc.data.find(_test_exp5_1, 'test10.example/queries.udp')
             }
         _test_exp6 = { 'foo/bar':  'brabra' }
         _test_exp7 = { 'foo[100]': 'bar' }
@@ -854,23 +854,23 @@ class TestStats(unittest.TestCase):
         self.assertEqual(stat.get_interval(), 60)
         self.assertEqual(stat.next_polltime, self.const_timestamp + 60)
         self.assertEqual(stat.config_handler({'poll-interval': 120}),
-                         isc.config.create_answer(0))
+                         bundy.config.create_answer(0))
         self.assertEqual(stat.config['poll-interval'], 120)
         self.assertEqual(stat.get_interval(), 120)
         self.assertEqual(stat.next_polltime, self.const_timestamp + 120)
         stats.get_timestamp = orig_get_timestamp
         self.assertEqual(stat.config_handler({'poll-interval': "foo"}),
-                         isc.config.create_answer(1, 'foo should be an integer'))
+                         bundy.config.create_answer(1, 'foo should be an integer'))
         self.assertEqual(stat.config_handler({'poll-interval': -1}),
-                         isc.config.create_answer(1, 'Negative integer ignored'))
+                         bundy.config.create_answer(1, 'Negative integer ignored'))
         # unknown item
         self.assertEqual(
             stat.config_handler({'_UNKNOWN_KEY_': None}),
-            isc.config.ccsession.create_answer(
+            bundy.config.ccsession.create_answer(
                 1, "unknown item _UNKNOWN_KEY_"))
         # test no change if zero interval time
         self.assertEqual(stat.config_handler({'poll-interval': 0}),
-                         isc.config.create_answer(0))
+                         bundy.config.create_answer(0))
         self.assertEqual(stat.config['poll-interval'], 0)
 
         # see the comment for test_update_statistics_data_withmid.  We abuse
@@ -896,27 +896,27 @@ class TestStats(unittest.TestCase):
 
         # status
         self.assertEqual(self.stats.command_status(),
-                isc.config.create_answer(
+                bundy.config.create_answer(
                 0, "Stats is up. (PID " + str(os.getpid()) + ")"))
 
         # shutdown
         self.stats.running = True
         self.assertEqual(self.stats.command_shutdown(),
-                         isc.config.create_answer(0))
+                         bundy.config.create_answer(0))
         self.assertFalse(self.stats.running)
 
     def test_command_show_error(self):
         self.stats = MyStats()
         self.assertEqual(self.stats.command_show(owner='Foo', name=None),
-                         isc.config.create_answer(
+                         bundy.config.create_answer(
                 1,
                 "specified arguments are incorrect: owner: Foo, name: None"))
         self.assertEqual(self.stats.command_show(owner='Foo', name='_bar_'),
-                         isc.config.create_answer(
+                         bundy.config.create_answer(
                 1,
                 "specified arguments are incorrect: owner: Foo, name: _bar_"))
         self.assertEqual(self.stats.command_show(owner='Foo', name='bar'),
-                         isc.config.create_answer(
+                         bundy.config.create_answer(
                 1,
                 "specified arguments are incorrect: owner: Foo, name: bar"))
 
@@ -957,7 +957,7 @@ class TestStats(unittest.TestCase):
                 self.stats._nds_queries_per_zone['test10.example']['queries.udp']
 
         self.assertEqual(self.stats.command_show(owner='Auth'),
-                         isc.config.create_answer(
+                         bundy.config.create_answer(
                 0, {'Auth':{ 'queries.udp': sum_qudp,
                      'queries.tcp': sum_qtcp,
                      'queries.perzone': [{ 'zonename': 'test1.example',
@@ -975,10 +975,10 @@ class TestStats(unittest.TestCase):
                                               'queries.tcp': sum_qtcp_nds_perzone20 }
                              }}}))
         self.assertEqual(self.stats.command_show(owner='Auth', name='queries.udp'),
-                         isc.config.create_answer(
+                         bundy.config.create_answer(
                 0, {'Auth': {'queries.udp': sum_qudp}}))
         self.assertEqual(self.stats.command_show(owner='Auth', name='queries.perzone'),
-                         isc.config.create_answer(
+                         bundy.config.create_answer(
                 0, {'Auth': {'queries.perzone': [
                             { 'zonename': 'test1.example',
                               'queries.udp': sum_qudp_perzone1,
@@ -987,7 +987,7 @@ class TestStats(unittest.TestCase):
                               'queries.udp': sum_qudp_perzone2,
                               'queries.tcp': sum_qtcp_perzone2 }]}}))
         self.assertEqual(self.stats.command_show(owner='Auth', name='nds_queries.perzone'),
-                         isc.config.create_answer(
+                         bundy.config.create_answer(
                 0, {'Auth': {'nds_queries.perzone': {
                             'test10.example': {
                                 'queries.udp': sum_qudp_nds_perzone10,
@@ -1004,17 +1004,17 @@ class TestStats(unittest.TestCase):
         stats.get_timestamp = lambda : self.const_timestamp
         self.assertEqual(self.stats.command_show(owner='Stats',
                                                  name='report_time'),
-                         isc.config.create_answer(
+                         bundy.config.create_answer(
                 0, {'Stats': {'report_time':self.const_datetime}}))
         self.assertEqual(self.stats.command_show(owner='Stats',
                                                  name='timestamp'),
-                         isc.config.create_answer(
+                         bundy.config.create_answer(
                 0, {'Stats': {'timestamp':self.const_timestamp}}))
         stats.get_datetime = orig_get_datetime
         stats.get_timestamp = orig_get_timestamp
         self.stats.do_polling = lambda : None
         self.stats.modules[self.stats.module_name] = \
-            isc.config.module_spec.ModuleSpec(
+            bundy.config.module_spec.ModuleSpec(
             { "module_name": self.stats.module_name, "statistics": [] } )
         self.assertRaises(
             stats.StatsError, self.stats.command_show,
@@ -1022,7 +1022,7 @@ class TestStats(unittest.TestCase):
 
     def test_command_showchema(self):
         self.stats = MyStats()
-        (rcode, value) = isc.config.ccsession.parse_answer(
+        (rcode, value) = bundy.config.ccsession.parse_answer(
             self.stats.command_showschema())
         self.assertEqual(rcode, 0)
         self.assertEqual(len(value), 3)
@@ -1069,7 +1069,7 @@ class TestStats(unittest.TestCase):
             self.assertTrue('item_title' in item)
             self.assertTrue('item_description' in item)
 
-        (rcode, value) = isc.config.ccsession.parse_answer(
+        (rcode, value) = bundy.config.ccsession.parse_answer(
             self.stats.command_showschema(owner='Stats'))
         self.assertEqual(rcode, 0)
         self.assertTrue('Stats' in value)
@@ -1086,7 +1086,7 @@ class TestStats(unittest.TestCase):
             if len(item) == 7:
                 self.assertTrue('item_format' in item)
 
-        (rcode, value) = isc.config.ccsession.parse_answer(
+        (rcode, value) = bundy.config.ccsession.parse_answer(
             self.stats.command_showschema(owner='Stats', name='report_time'))
         self.assertEqual(rcode, 0)
         self.assertTrue('Stats' in value)
@@ -1104,13 +1104,13 @@ class TestStats(unittest.TestCase):
         self.assertEqual(value['Stats'][0]['item_format'], 'date-time')
 
         self.assertEqual(self.stats.command_showschema(owner='Foo'),
-                         isc.config.create_answer(
+                         bundy.config.create_answer(
                 1, "specified arguments are incorrect: owner: Foo, name: None"))
         self.assertEqual(self.stats.command_showschema(owner='Foo', name='bar'),
-                         isc.config.create_answer(
+                         bundy.config.create_answer(
                 1, "specified arguments are incorrect: owner: Foo, name: bar"))
         self.assertEqual(self.stats.command_showschema(owner='Auth'),
-                         isc.config.create_answer(
+                         bundy.config.create_answer(
                 0, {'Auth': [{
                         "item_default": 0,
                         "item_description": "A number of total query counts which all auth servers receive over TCP since they started initially",
@@ -1222,7 +1222,7 @@ class TestStats(unittest.TestCase):
                             }
                         }]}))
         self.assertEqual(self.stats.command_showschema(owner='Auth', name='queries.tcp'),
-                         isc.config.create_answer(
+                         bundy.config.create_answer(
                 0, {'Auth': [{
                     "item_default": 0,
                     "item_description": "A number of total query counts which all auth servers receive over TCP since they started initially",
@@ -1232,7 +1232,7 @@ class TestStats(unittest.TestCase):
                     "item_type": "integer"
                     }]}))
         self.assertEqual(self.stats.command_showschema(owner='Auth', name='queries.perzone'),
-                         isc.config.create_answer(
+                         bundy.config.create_answer(
                 0, {'Auth':[{
                     "item_name": "queries.perzone",
                     "item_type": "list",
@@ -1285,7 +1285,7 @@ class TestStats(unittest.TestCase):
                          }
                      }]}))
         self.assertEqual(self.stats.command_showschema(owner='Auth', name='nds_queries.perzone'),
-                         isc.config.create_answer(
+                         bundy.config.create_answer(
                 0, {'Auth':[{
                     "item_name": "nds_queries.perzone",
                     "item_type": "named_set",
@@ -1331,10 +1331,10 @@ class TestStats(unittest.TestCase):
                     }]}))
 
         self.assertEqual(self.stats.command_showschema(owner='Stats', name='bar'),
-                         isc.config.create_answer(
+                         bundy.config.create_answer(
                 1, "specified arguments are incorrect: owner: Stats, name: bar"))
         self.assertEqual(self.stats.command_showschema(name='bar'),
-                         isc.config.create_answer(
+                         bundy.config.create_answer(
                 1, "module name is not specified"))
 
     def test_get_multi_module_list(self):
@@ -1368,7 +1368,7 @@ class TestStats(unittest.TestCase):
         if rcp_call() raise the exception"""
         # RPCRecipientMissing case
         stat = MyStats()
-        ex = isc.config.RPCRecipientMissing
+        ex = bundy.config.RPCRecipientMissing
         def __raise(*x): raise ex(*x)
         stat.mccs.rpc_call = lambda x,y: __raise('Error')
         self.assertRaises(ex, stat._get_multi_module_list)
@@ -1378,7 +1378,7 @@ class TestStats(unittest.TestCase):
         raise an RPCError exception"""
         # RPCError case
         stat = MyStats()
-        ex = isc.config.RPCError
+        ex = bundy.config.RPCError
         def __raise(*x): raise ex(*x)
         stat.mccs.rpc_call = lambda x,y: __raise(99, 'Error')
         self.assertListEqual([], stat._get_multi_module_list())
@@ -1388,7 +1388,7 @@ class TestStats(unittest.TestCase):
         if a CC session times out in rcp_call()"""
         # InitSeeionTimeout case
         stat = MyStats()
-        ex = isc.cc.session.SessionTimeout
+        ex = bundy.cc.session.SessionTimeout
         def __raise(*x): raise ex(*x)
         stat.mccs.rpc_call = lambda x,y: __raise()
         self.assertRaises(stats.InitSessionTimeout, stat._get_multi_module_list)
@@ -1453,7 +1453,7 @@ class TestStats(unittest.TestCase):
         collecting from Auth."""
         # SessionTimeout case
         stat = MyStats()
-        ex = isc.cc.session.SessionTimeout
+        ex = bundy.cc.session.SessionTimeout
         def __raise(*x): raise ex(*x)
         # SessionTimeout is raised when asking to Auth
         stat.cc_session.group_recvmsg = lambda x,seq: \
@@ -1664,5 +1664,5 @@ class Z_TestOSEnv(unittest.TestCase):
         imp.reload(stats)
 
 if __name__ == "__main__":
-    isc.log.resetUnitTestRootLogger()
+    bundy.log.resetUnitTestRootLogger()
     unittest.main()

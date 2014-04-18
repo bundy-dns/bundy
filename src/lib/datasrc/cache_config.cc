@@ -31,9 +31,9 @@
 #include <map>
 #include <string>
 
-using namespace isc::data;
+using namespace bundy::data;
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace internal {
 
@@ -69,12 +69,12 @@ CacheConfig::CacheConfig(const std::string& datasrc_type,
     }
     if (datasrc_type == "MasterFiles") {
         if (datasrc_client_) {
-            isc_throw(InvalidParameter,
+            bundy_throw(InvalidParameter,
                       "data source client is given for MasterFiles");
         }
 
         if (!enabled_) {
-            isc_throw(CacheConfigError,
+            bundy_throw(CacheConfigError,
                       "The cache must be enabled for the MasterFiles type: "
                       << datasrc_conf);
         }
@@ -90,7 +90,7 @@ CacheConfig::CacheConfig(const std::string& datasrc_type,
         }
     } else {
         if (!datasrc_client_) {
-            isc_throw(InvalidParameter,
+            bundy_throw(InvalidParameter,
                       "data source client is missing for data source type: "
                       << datasrc_type);
         }
@@ -99,7 +99,7 @@ CacheConfig::CacheConfig(const std::string& datasrc_type,
         }
 
         if (!datasrc_conf.contains("cache-zones")) {
-            isc_throw(NotImplemented, "Auto-detection of zones "
+            bundy_throw(NotImplemented, "Auto-detection of zones "
                       "to cache is not yet implemented, supply "
                       "cache-zones parameter: "
                       << datasrc_conf);
@@ -112,7 +112,7 @@ CacheConfig::CacheConfig(const std::string& datasrc_type,
             const dns::Name zone_name(zones->get(i)->stringValue());
             if (!zone_config_.insert(Zones::value_type(zone_name,
                                                        "")).second) {
-                isc_throw(CacheConfigError, "Duplicate cache zone: " <<
+                bundy_throw(CacheConfigError, "Duplicate cache zone: " <<
                           zone_name);
             }
         }
@@ -186,7 +186,7 @@ CacheConfig::getLoadAction(const dns::RRClass& rrclass,
         // This shouldn't happen for a compliant implementation of
         // DataSourceClient, but we'll protect ourselves from buggy
         // implementations.
-        isc_throw(Unexpected, "getting LoadAction for " << zone_name
+        bundy_throw(Unexpected, "getting LoadAction for " << zone_name
                   << "/" << rrclass << " resulted in Null zone iterator");
     }
 
@@ -197,4 +197,4 @@ CacheConfig::getLoadAction(const dns::RRClass& rrclass,
 
 } // namespace internal
 } // namespace datasrc
-} // namespace isc
+} // namespace bundy

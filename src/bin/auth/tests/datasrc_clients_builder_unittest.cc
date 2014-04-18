@@ -45,13 +45,13 @@
 #include <cerrno>
 #include <unistd.h>
 
-using isc::data::ConstElementPtr;
-using namespace isc::dns;
-using namespace isc::data;
-using namespace isc::datasrc;
-using namespace isc::auth::datasrc_clientmgr_internal;
-using namespace isc::auth::unittest;
-using namespace isc::testutils;
+using bundy::data::ConstElementPtr;
+using namespace bundy::dns;
+using namespace bundy::data;
+using namespace bundy::datasrc;
+using namespace bundy::auth::datasrc_clientmgr_internal;
+using namespace bundy::auth::unittest;
+using namespace bundy::testutils;
 
 namespace {
 class DataSrcClientsBuilderTest : public ::testing::Test {
@@ -168,7 +168,7 @@ TEST_F(DataSrcClientsBuilderTest, exception) {
     // them.  Right now, we simply abort to prevent the system from running
     // with half-broken state.  Eventually we should introduce a better
     // error handling.
-    if (!isc::util::unittests::runningOnValgrind()) {
+    if (!bundy::util::unittests::runningOnValgrind()) {
         command_queue.push_back(noop_cmd);
         queue_mutex.throw_from_noop = TestMutex::EXCLASS;
         EXPECT_DEATH_IF_SUPPORTED({builder.run();}, "");
@@ -292,7 +292,7 @@ TEST_F(DataSrcClientsBuilderTest, badCommand) {
     EXPECT_THROW(builder.handleCommand(Command(NUM_COMMANDS,
                                                ConstElementPtr(),
                                                FinishedCallback())),
-                 isc::Unexpected);
+                 bundy::Unexpected);
 }
 
 // A helper function commonly used for the "loadzone" command tests.
@@ -589,7 +589,7 @@ TEST_F(DataSrcClientsBuilderTest, loadZoneWithoutDataSrc) {
 TEST_F(DataSrcClientsBuilderTest, loadZoneInvalidParams) {
     configureZones();
 
-    if (!isc::util::unittests::runningOnValgrind()) {
+    if (!bundy::util::unittests::runningOnValgrind()) {
         // null arg: this causes assertion failure
         EXPECT_DEATH_IF_SUPPORTED({
                 builder.handleCommand(Command(LOADZONE, ElementPtr(),
@@ -613,10 +613,10 @@ TEST_F(DataSrcClientsBuilderTest, loadZoneInvalidParams) {
                                  "{\"origin\": \"test1.example\","
                                  " \"class\": 1}"),
                              FinishedCallback())),
-                 isc::data::TypeError);
+                 bundy::data::TypeError);
 
     // class or origin is missing: result in assertion failure
-    if (!isc::util::unittests::runningOnValgrind()) {
+    if (!bundy::util::unittests::runningOnValgrind()) {
         EXPECT_DEATH_IF_SUPPORTED({
                 builder.handleCommand(Command(LOADZONE,
                                               Element::fromJSON(
@@ -637,7 +637,7 @@ TEST_F(DataSrcClientsBuilderTest, loadZoneInvalidParams) {
                              Element::fromJSON(
                                  "{\"origin\": 10, \"class\": 1}"),
                              FinishedCallback())),
-                 isc::data::TypeError);
+                 bundy::data::TypeError);
 }
 
 // This works only if mapped memory segment is compiled.
@@ -738,7 +738,7 @@ TEST_F(DataSrcClientsBuilderTest,
                                  memory::ZoneTableSegment::CREATE,
                                  segment_config);
         const ConfigurableClientList::ZoneWriterPair result =
-            list->getCachedZoneWriter(isc::dns::Name("test1.example"), false,
+            list->getCachedZoneWriter(bundy::dns::Name("test1.example"), false,
                                       "MasterFiles");
         ASSERT_EQ(ConfigurableClientList::ZONE_SUCCESS, result.first);
         result.second->load();

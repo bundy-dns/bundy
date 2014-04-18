@@ -17,17 +17,17 @@
 
 #include <exceptions/exceptions.h>
 
-using namespace isc;
-using namespace isc::dns;
+using namespace bundy;
+using namespace bundy::dns;
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 
 ConstRRsetPtr
-RRsetCollection::find(const isc::dns::Name& name,
-                      const isc::dns::RRClass& rrclass,
-                      const isc::dns::RRType& rrtype) const
+RRsetCollection::find(const bundy::dns::Name& name,
+                      const bundy::dns::RRClass& rrclass,
+                      const bundy::dns::RRType& rrtype) const
 {
     if (rrclass != rrclass_) {
         // We could throw an exception here, but RRsetCollection is
@@ -54,4 +54,4 @@ RRsetCollection::find(const isc::dns::Name& name,
 
 } // end of namespace memory
 } // end of namespace datasrc
-} // end of namespace isc
+} // end of namespace bundy

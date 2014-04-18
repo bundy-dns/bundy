@@ -33,7 +33,7 @@
 #include <exceptions/exceptions.h>
 #include <util/strutil.h>
 
-namespace isc {
+namespace bundy {
 namespace acl {
 
 // Free functions.  These are not supposed to be used outside this module,
@@ -183,7 +183,7 @@ public:
 
         // Only deal with the string after we've removed leading and trailing
         // spaces.
-        const std::string mod_prefix = isc::util::str::trim(ipprefix);
+        const std::string mod_prefix = bundy::util::str::trim(ipprefix);
 
         // Check for special cases first.
         if (mod_prefix == "any4") {
@@ -216,10 +216,10 @@ public:
 
             // Handle errors.
             if (status == 0) {
-                isc_throw(isc::InvalidParameter, "address prefix of " <<
+                bundy_throw(bundy::InvalidParameter, "address prefix of " <<
                           ipprefix << " is not valid");
             } else if (status < 0) {
-                isc_throw(isc::Unexpected, "address conversion of " <<
+                bundy_throw(bundy::Unexpected, "address conversion of " <<
                           ipprefix << " failed due to a system error");
             }
 
@@ -388,7 +388,7 @@ private:
                 }
             }
         } else {
-            isc_throw(isc::OutOfRange,
+            bundy_throw(bundy::OutOfRange,
                       "mask size of " << requested << " is invalid " <<
                       "for the given address family");
         }
@@ -408,7 +408,7 @@ template <typename Context>
 const size_t IPCheck<Context>::IPV4_SIZE;
 
 } // namespace acl
-} // namespace isc
+} // namespace bundy
 
 #endif // IP_CHECK_H
 

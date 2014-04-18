@@ -38,7 +38,7 @@ __main__.
 
 import sys; sys.path.append ('@@PYTHONPATH@@')
 import os
-from isc.util.address_formatter import AddressFormatter
+from bundy.util.address_formatter import AddressFormatter
 
 # If BUNDY_FROM_SOURCE is set in the environment, we use data files
 # from a directory relative to that, otherwise we use the ones
@@ -69,21 +69,21 @@ import copy
 
 from bundy_config import LIBEXECPATH
 import bundy_config
-import isc.cc
-import isc.util.process
-import isc.net.parse
-import isc.log
-import isc.config
-from isc.log_messages.init_messages import *
-import isc.bundy.component
-import isc.bundy.special_component
-import isc.bundy.socket_cache
-import isc.util.traceback_handler
+import bundy.cc
+import bundy.util.process
+import bundy.net.parse
+import bundy.log
+import bundy.config
+from bundy.log_messages.init_messages import *
+import bundy.bundy.component
+import bundy.bundy.special_component
+import bundy.bundy.socket_cache
+import bundy.util.traceback_handler
 import libutil_io_python
 import tempfile
 
-isc.log.init("bundy-init", buffer=True)
-logger = isc.log.Logger("init")
+bundy.log.init("bundy-init", buffer=True)
+logger = bundy.log.Logger("init")
 
 # Pending system-wide debug level definitions, the ones we
 # use here are hardcoded for now
@@ -100,7 +100,7 @@ CREATOR_SOCKET_ERROR = 2
 CREATOR_SHARE_ERROR = 3
 
 # Assign this process some longer name
-isc.util.process.rename()
+bundy.util.process.rename()
 
 # This is the version that gets displayed to the user.
 # The VERSION string consists of the module name, the module version
@@ -254,8 +254,8 @@ class Init:
         # bypasses execution of some code to help with testing.
         self._run_under_unittests = False
 
-        self._component_configurator = isc.bundy.component.Configurator(self,
-            isc.bundy.special_component.get_specials())
+        self._component_configurator = bundy.bundy.component.Configurator(self,
+            bundy.bundy.special_component.get_specials())
         # The priorities here make them start in the correct order. First
         # the socket creator (which would drop root privileges by then),
         # then message queue and after that the config manager (which uses
@@ -322,7 +322,7 @@ class Init:
                 # We use one-shot logger after setuid here.  This will
                 # detect any permission issue regarding logging due to the
                 # result of setuid at the earliest opportunity.
-                isc.log.Logger("bundy-init").info(BUNDY_SETUID, self.__uid)
+                bundy.log.Logger("bundy-init").info(BUNDY_SETUID, self.__uid)
         except Exception as ex:
             raise ChangeUserError('failed to change user: ' + str(ex))
 
@@ -335,10 +335,10 @@ class Init:
         try:
             if 'components' in new_config:
                 self.__propagate_component_config(new_config['components'])
-            return isc.config.ccsession.create_answer(0)
+            return bundy.config.ccsession.create_answer(0)
         except Exception as e:
             logger.error(BUNDY_RECONFIGURE_ERROR, e)
-            return isc.config.ccsession.create_answer(1, str(e))
+            return bundy.config.ccsession.create_answer(1, str(e))
 
     def get_processes(self):
         pids = list(self.components.keys())
@@ -356,36 +356,36 @@ class Init:
 
     def command_handler(self, command, args):
         logger.debug(DBG_COMMANDS, BUNDY_RECEIVED_COMMAND, command)
-        answer = isc.config.ccsession.create_answer(1,
+        answer = bundy.config.ccsession.create_answer(1,
                                                     "command not implemented")
         if type(command) != str:
-            answer = isc.config.ccsession.create_answer(1, "bad command")
+            answer = bundy.config.ccsession.create_answer(1, "bad command")
         else:
             if command == "shutdown":
                 self.runnable = False
-                answer = isc.config.ccsession.create_answer(0)
+                answer = bundy.config.ccsession.create_answer(0)
             elif command == "getstats":
-                answer = isc.config.ccsession.create_answer(
+                answer = bundy.config.ccsession.create_answer(
                     0, self._get_stats_data())
             elif command == "ping":
-                answer = isc.config.ccsession.create_answer(0, "pong")
+                answer = bundy.config.ccsession.create_answer(0, "pong")
             elif command == "show_processes":
-                answer = isc.config.ccsession. \
+                answer = bundy.config.ccsession. \
                     create_answer(0, self.get_processes())
             elif command == "get_socket":
                 answer = self._get_socket(args)
             elif command == "drop_socket":
                 if "token" not in args:
-                    answer = isc.config.ccsession. \
+                    answer = bundy.config.ccsession. \
                         create_answer(1, "Missing token parameter")
                 else:
                     try:
                         self._socket_cache.drop_socket(args["token"])
-                        answer = isc.config.ccsession.create_answer(0)
+                        answer = bundy.config.ccsession.create_answer(0)
                     except Exception as e:
-                        answer = isc.config.ccsession.create_answer(1, str(e))
+                        answer = bundy.config.ccsession.create_answer(1, str(e))
             else:
-                answer = isc.config.ccsession.create_answer(1,
+                answer = bundy.config.ccsession.create_answer(1,
                                                             "Unknown command")
         return answer
 
@@ -511,8 +511,8 @@ class Init:
 
             # try to connect, and if we can't wait a short while
             try:
-                self.cc_session = isc.cc.Session(self.msgq_socket_file)
-            except isc.cc.session.SessionError:
+                self.cc_session = bundy.cc.Session(self.msgq_socket_file)
+            except bundy.cc.session.SessionError:
                 time.sleep(0.1)
 
         # Subscribe to the message queue.  The only messages we expect to
@@ -541,11 +541,11 @@ class Init:
                 # We don't expect this to succeed. If it does, it's programmer
                 # error
                 raise Exception("Non-existing RPC call succeeded")
-            except isc.config.RPCRecipientMissing:
+            except bundy.config.RPCRecipientMissing:
                 retry = True # Not there yet
                 time.sleep(0.1)
                 time_remaining -= 1
-            except isc.config.RPCError:
+            except bundy.config.RPCError:
                 retry = False # It doesn't like the RPC, so it's alive now
 
         if retry: # Still not started
@@ -605,7 +605,7 @@ class Init:
         if self.cc_session is not None:
             self.cc_session.group_unsubscribe("Init")
 
-        self.ccs = isc.config.ModuleCCSession(SPECFILE_LOCATION,
+        self.ccs = bundy.config.ModuleCCSession(SPECFILE_LOCATION,
                                       self.config_handler,
                                       self.command_handler,
                                       socket_file = self.msgq_socket_file)
@@ -634,7 +634,7 @@ class Init:
         Put another process into bundy-init to watch over it.  When the process
         dies, the component.failed() is called with the exit code.
 
-        It is expected the info is a isc.bundy.component.BaseComponent
+        It is expected the info is a bundy.bundy.component.BaseComponent
         subclass (or anything having the same interface).
         """
         self.components[pid] = component
@@ -739,7 +739,7 @@ class Init:
              c_channel_env["BUNDY_MSGQ_SOCKET_FILE"] = self.msgq_socket_file
         logger.debug(DBG_PROCESS, BUNDY_CHECK_MSGQ_ALREADY_RUNNING)
         try:
-            self.cc_session = isc.cc.Session(self.msgq_socket_file)
+            self.cc_session = bundy.cc.Session(self.msgq_socket_file)
             logger.fatal(BUNDY_MSGQ_ALREADY_RUNNING)
             if self.msgq_socket_file is not None:
               socket_name = "socket file '" + self.msg_socket_file + "'"
@@ -747,7 +747,7 @@ class Init:
               socket_name = "default socket file"
             return "bundy-msgq already running, or " + socket_name +\
                 " not cleaned - cannot start"
-        except isc.cc.session.SessionError:
+        except bundy.cc.session.SessionError:
             # this is the case we want, where the msgq is not running
             pass
 
@@ -777,7 +777,7 @@ class Init:
         """
         logger.info(BUNDY_STOP_PROCESS, process)
         try:
-            self.cc_session.group_sendmsg(isc.config.ccsession.
+            self.cc_session.group_sendmsg(bundy.config.ccsession.
                                           create_command('shutdown',
                                                          {'pid': pid}),
                                           recipient, recipient)
@@ -938,8 +938,8 @@ class Init:
         """
         try:
             try:
-                addr = isc.net.parse.addr_parse(args['address'])
-                port = isc.net.parse.port_parse(args['port'])
+                addr = bundy.net.parse.addr_parse(args['address'])
+                port = bundy.net.parse.port_parse(args['port'])
                 protocol = args['protocol']
                 if protocol not in ['UDP', 'TCP']:
                     raise ValueError("Protocol must be either UDP or TCP")
@@ -950,7 +950,7 @@ class Init:
                 share_name = args['share_name']
             except KeyError as ke:
                 return \
-                    isc.config.ccsession.create_answer(1,
+                    bundy.config.ccsession.create_answer(1,
                                                        "Missing parameter " +
                                                        str(ke))
 
@@ -959,18 +959,18 @@ class Init:
             # something about it.
             token = self._socket_cache.get_token(protocol, addr, port,
                                                  share_mode, share_name)
-            return isc.config.ccsession.create_answer(0, {
+            return bundy.config.ccsession.create_answer(0, {
                 'token': token,
                 'path': self._socket_path
             })
-        except isc.bundy.socket_cache.SocketError as e:
-            return isc.config.ccsession.create_answer(CREATOR_SOCKET_ERROR,
+        except bundy.bundy.socket_cache.SocketError as e:
+            return bundy.config.ccsession.create_answer(CREATOR_SOCKET_ERROR,
                                                       str(e))
-        except isc.bundy.socket_cache.ShareError as e:
-            return isc.config.ccsession.create_answer(CREATOR_SHARE_ERROR,
+        except bundy.bundy.socket_cache.ShareError as e:
+            return bundy.config.ccsession.create_answer(CREATOR_SHARE_ERROR,
                                                       str(e))
         except Exception as e:
-            return isc.config.ccsession.create_answer(1, str(e))
+            return bundy.config.ccsession.create_answer(1, str(e))
 
     def socket_request_handler(self, token, unix_socket):
         """
@@ -1018,7 +1018,7 @@ class Init:
         """
         if self._socket_cache is not None:
             raise ValueError("A creator was inserted previously")
-        self._socket_cache = isc.bundy.socket_cache.Cache(creator)
+        self._socket_cache = bundy.bundy.socket_cache.Cache(creator)
 
     def init_socket_srv(self):
         """
@@ -1132,7 +1132,7 @@ class Init:
                 if fd == ccs_fd:
                     try:
                         self.ccs.check_command()
-                    except isc.cc.session.ProtocolError:
+                    except bundy.cc.session.ProtocolError:
                         logger.fatal(BUNDY_MSGQ_DISAPPEARED)
                         self.runnable = False
                         break
@@ -1173,7 +1173,7 @@ def fatal_signal(signal_number, stack_frame):
 
 def process_rename(option, opt_str, value, parser):
     """Function that renames the process if it is requested by a option."""
-    isc.util.process.rename(value)
+    bundy.util.process.rename(value)
 
 def parse_args(args=sys.argv[1:], Parser=OptionParser):
     """
@@ -1220,7 +1220,7 @@ def parse_args(args=sys.argv[1:], Parser=OptionParser):
 
     if options.cmdctl_port is not None:
         try:
-            isc.net.parse.port_parse(options.cmdctl_port)
+            bundy.net.parse.port_parse(options.cmdctl_port)
         except ValueError as e:
             parser.error(e)
 
@@ -1386,4 +1386,4 @@ def main():
     sys.exit(bundy_init.exitcode)
 
 if __name__ == "__main__":
-    isc.util.traceback_handler.traceback_handler(main)
+    bundy.util.traceback_handler.traceback_handler(main)

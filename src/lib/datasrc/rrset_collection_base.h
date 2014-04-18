@@ -19,13 +19,13 @@
 #include <dns/rrclass.h>
 #include <datasrc/zone.h>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 
-/// \brief datasrc derivation of \c isc::dns::RRsetCollectionBase.
+/// \brief datasrc derivation of \c bundy::dns::RRsetCollectionBase.
 ///
 /// This is a default datasrc implementation of
-/// \c isc::dns::RRsetCollectionBase that adds datasrc related detail.
+/// \c bundy::dns::RRsetCollectionBase that adds datasrc related detail.
 ///
 /// While it is a concrete class to be used along with a \c ZoneUpdater,
 /// specific \c ZoneUpdater implementations may derive from it and add
@@ -45,11 +45,11 @@ namespace datasrc {
 /// object, it is not always valid to use it. Implementations of
 /// \c ZoneUpdater may disable an \c RRsetCollection previously returned
 /// by \c ZoneUpdater::getRRsetCollection() after \c commit() is called
-/// on the \c ZoneUpdater. An \c isc::dns::RRsetCollectionError
+/// on the \c ZoneUpdater. An \c bundy::dns::RRsetCollectionError
 /// exception will be thrown if an \c RRsetCollection is used when
 /// disabled. Please see the \c ZoneUpdater methods' documentation for
 /// more detail.
-class RRsetCollectionBase : public isc::dns::RRsetCollectionBase {
+class RRsetCollectionBase : public bundy::dns::RRsetCollectionBase {
 public:
     /// \brief Constructor.
     ///
@@ -60,7 +60,7 @@ public:
     /// \param updater The ZoneUpdater to wrap around.
     /// \param rrclass The RRClass of the records in the zone.
     RRsetCollectionBase(ZoneUpdater& updater,
-                        const isc::dns::RRClass& rrclass) :
+                        const bundy::dns::RRClass& rrclass) :
         updater_(updater),
         rrclass_(rrclass),
         disabled_(false)
@@ -79,23 +79,23 @@ public:
     /// necessarily be found by this method, such as RRs subject to
     /// DNAME substitution.
     ///
-    /// \throw isc::dns::RRsetCollectionError if \c find() results in
+    /// \throw bundy::dns::RRsetCollectionError if \c find() results in
     /// some underlying datasrc error, or if \c disable() was called.
     ///
     /// \param name The name of the RRset to search for.
     /// \param rrclass The class of the RRset to search for.
     /// \param rrtype The type of the RRset to search for.
     /// \returns The RRset if found, \c NULL otherwise.
-    virtual isc::dns::ConstRRsetPtr find(const isc::dns::Name& name,
-                                         const isc::dns::RRClass& rrclass,
-                                         const isc::dns::RRType& rrtype) const;
+    virtual bundy::dns::ConstRRsetPtr find(const bundy::dns::Name& name,
+                                         const bundy::dns::RRClass& rrclass,
+                                         const bundy::dns::RRType& rrtype) const;
 
 protected:
     /// \brief Disable the RRsetCollection.
     ///
     /// After calling this method, calling operations such as find() or
     /// using the iterator would result in an \c
-    /// isc::dns::RRsetCollectionError. This method is typically called
+    /// bundy::dns::RRsetCollectionError. This method is typically called
     /// in the \c commit() implementations of some \c ZoneUpdaters.
     void disable() {
         disabled_ = true;
@@ -106,30 +106,30 @@ protected:
         return (disabled_);
     }
 
-    /// \brief See \c isc::dns::RRsetCollectionBase::getBeginning() for
+    /// \brief See \c bundy::dns::RRsetCollectionBase::getBeginning() for
     /// documentation.
     ///
-    /// \throw isc::NotImplemented as it's not implemented currently.
+    /// \throw bundy::NotImplemented as it's not implemented currently.
     virtual IterPtr getBeginning() {
-        isc_throw(NotImplemented, "This method is not implemented.");
+        bundy_throw(NotImplemented, "This method is not implemented.");
     }
 
-    /// \brief See \c isc::dns::RRsetCollectionBase::getEnd() for
+    /// \brief See \c bundy::dns::RRsetCollectionBase::getEnd() for
     /// documentation.
     ///
-    /// \throw isc::NotImplemented as it's not implemented currently.
+    /// \throw bundy::NotImplemented as it's not implemented currently.
     virtual IterPtr getEnd() {
-        isc_throw(NotImplemented, "This method is not implemented.");
+        bundy_throw(NotImplemented, "This method is not implemented.");
     }
 
 private:
     ZoneUpdater& updater_;
-    isc::dns::RRClass rrclass_;
+    bundy::dns::RRClass rrclass_;
     bool disabled_;
 };
 
 } // end of namespace datasrc
-} // end of namespace isc
+} // end of namespace bundy
 
 #endif  // RRSET_COLLECTION_DATASRC_H
 

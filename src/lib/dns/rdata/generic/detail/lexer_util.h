@@ -25,7 +25,7 @@
 /// commonly used in the RDATA implementation to build RDATA fields from
 /// a \c MasterLexer.
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace rdata {
 namespace generic {
@@ -62,7 +62,7 @@ createNameFromLexer(MasterLexer& lexer, const Name* origin) {
 } // namespace generic
 } // namespace rdata
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 #endif  // DNS_RDATA_LEXER_UTIL_H
 
 // Local Variables:

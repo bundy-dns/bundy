@@ -19,16 +19,16 @@
 #include <sys/fcntl.h>
 #include <sys/socket.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 int
-PktFilter::openFallbackSocket(const isc::asiolink::IOAddress& addr,
+PktFilter::openFallbackSocket(const bundy::asiolink::IOAddress& addr,
                               const uint16_t port) {
     // Create socket.
     int sock = socket(AF_INET, SOCK_DGRAM, 0);
     if (sock < 0) {
-        isc_throw(SocketConfigError, "failed to create fallback socket for"
+        bundy_throw(SocketConfigError, "failed to create fallback socket for"
                   " address " << addr << ", port " << port
                   << ", reason: " << strerror(errno));
     }
@@ -43,7 +43,7 @@ PktFilter::openFallbackSocket(const isc::asiolink::IOAddress& addr,
              sizeof(addr4)) < 0) {
         // Remember to close the socket if we failed to bind it.
         close(sock);
-        isc_throw(SocketConfigError, "failed to bind fallback socket to"
+        bundy_throw(SocketConfigError, "failed to bind fallback socket to"
                   " address " << addr << ", port " << port
                   << ", reason: " << strerror(errno)
                   << " - is another DHCP server running?");
@@ -53,7 +53,7 @@ PktFilter::openFallbackSocket(const isc::asiolink::IOAddress& addr,
     // fallback socket to block message processing on the primary socket.
     if (fcntl(sock, F_SETFL, O_NONBLOCK) != 0) {
         close(sock);
-        isc_throw(SocketConfigError, "failed to set SO_NONBLOCK option on the"
+        bundy_throw(SocketConfigError, "failed to set SO_NONBLOCK option on the"
                   " fallback socket, bound to " << addr << ", port "
                   << port << ", reason: " << strerror(errno));
     }
@@ -62,5 +62,5 @@ PktFilter::openFallbackSocket(const isc::asiolink::IOAddress& addr,
 }
 
 
-} // end of isc::dhcp namespace
-} // end of isc namespace
+} // end of bundy::dhcp namespace
+} // end of bundy namespace

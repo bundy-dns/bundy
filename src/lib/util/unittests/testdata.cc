@@ -29,7 +29,7 @@ getDataPaths() {
 }
 }
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace unittests {
 

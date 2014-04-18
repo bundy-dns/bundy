@@ -40,9 +40,9 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-using namespace isc::util;
+using namespace bundy::util;
 using boost::scoped_ptr;
-using isc::util::unittests::parentReadState;
+using bundy::util::unittests::parentReadState;
 
 namespace {
 // Shortcut to keep code shorter
@@ -62,7 +62,7 @@ class PipeHolder {
 public:
     PipeHolder() {
         if (pipe(fds_) == -1) {
-            isc_throw(isc::Unexpected, "pipe failed");
+            bundy_throw(bundy::Unexpected, "pipe failed");
         }
     }
     ~PipeHolder() {
@@ -187,7 +187,7 @@ TEST_F(MemorySegmentMappedTest, openFail) {
                      mapped_file,
                      static_cast<MemorySegmentMapped::OpenMode>(
                          static_cast<int>(CREATE_ONLY) + 1)),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 
     // Close the existing segment, break its file with bogus data, and
     // try to reopen.  It should fail with exception whether in the
@@ -251,7 +251,7 @@ TEST_F(MemorySegmentMappedTest, badAllocate) {
     const int ret = chmod(mapped_file, 0444);
     ASSERT_EQ(0, ret);
 
-    if (!isc::util::unittests::runningOnValgrind()) {
+    if (!bundy::util::unittests::runningOnValgrind()) {
         EXPECT_DEATH_IF_SUPPORTED(
             {segment_->allocate(DEFAULT_INITIAL_SIZE * 2);}, "");
     }
@@ -270,7 +270,7 @@ TEST_F(MemorySegmentMappedTest, badDeallocate) {
 
     segment_->deallocate(ptr, 4); // this is okay
     // This is duplicate dealloc; should trigger assertion failure.
-    if (!isc::util::unittests::runningOnValgrind()) {
+    if (!bundy::util::unittests::runningOnValgrind()) {
         EXPECT_DEATH_IF_SUPPORTED({segment_->deallocate(ptr, 4);}, "");
         resetSegment();   // the segment is possibly broken; reset it.
     }
@@ -278,7 +278,7 @@ TEST_F(MemorySegmentMappedTest, badDeallocate) {
     // Deallocating at an invalid address; this would result in crash (the
     // behavior may not be portable enough; if so we should disable it by
     // default).
-    if (!isc::util::unittests::runningOnValgrind()) {
+    if (!bundy::util::unittests::runningOnValgrind()) {
         ptr = segment_->allocate(4);
         EXPECT_NE(static_cast<void*>(NULL), ptr);
         EXPECT_DEATH_IF_SUPPORTED({
@@ -313,7 +313,7 @@ checkNamedData(const std::string& name, const std::vector<uint8_t>& data,
 
 TEST_F(MemorySegmentMappedTest, namedAddress) {
     // common test cases
-    isc::util::test::checkSegmentNamedAddress(*segment_, false);
+    bundy::util::test::checkSegmentNamedAddress(*segment_, false);
 
     // Set it again and read it in the read-only mode.
     void* ptr16 = segment_->allocate(sizeof(uint16_t));
@@ -398,7 +398,7 @@ TEST_F(MemorySegmentMappedTest, namedAddress) {
 
 TEST_F(MemorySegmentMappedTest, multiProcess) {
     // Test using fork() doesn't work well on valgrind
-    if (isc::util::unittests::runningOnValgrind()) {
+    if (bundy::util::unittests::runningOnValgrind()) {
         return;
     }
 
@@ -500,7 +500,7 @@ TEST_F(MemorySegmentMappedTest, violateReadOnly) {
 
     // Attempts to modify memory from the read-only segment directly
     // will result in a crash.
-    if (!isc::util::unittests::runningOnValgrind()) {
+    if (!bundy::util::unittests::runningOnValgrind()) {
         EXPECT_DEATH_IF_SUPPORTED({
                 MemorySegmentMapped segment_ro(mapped_file);
                 const MemorySegment::NamedAddressResult result =
@@ -617,7 +617,7 @@ conflictCheck(TestOpenMode parent_mode, TestOpenMode child_mode) {
 
 TEST_F(MemorySegmentMappedTest, conflictReaderWriter) {
     // Test using fork() doesn't work well on valgrind
-    if (isc::util::unittests::runningOnValgrind()) {
+    if (bundy::util::unittests::runningOnValgrind()) {
         return;
     }
 

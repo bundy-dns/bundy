@@ -25,9 +25,9 @@
 #include "../stats_mgr.h"
 
 using namespace std;
-using namespace isc;
-using namespace isc::dhcp;
-using namespace isc::perfdhcp;
+using namespace bundy;
+using namespace bundy::dhcp;
+using namespace bundy::perfdhcp;
 
 namespace {
 
@@ -458,7 +458,7 @@ TEST_F(StatsMgrTest, PrintStats) {
     // Printing timestamps is expected to fail because by default we
     // disable packets archiving mode. Without packets we can't get
     // timestamps.
-    EXPECT_THROW(stats_mgr->printTimestamps(), isc::InvalidOperation);
+    EXPECT_THROW(stats_mgr->printTimestamps(), bundy::InvalidOperation);
 
     // Now, we create another statistics manager instance and enable
     // packets archiving mode.

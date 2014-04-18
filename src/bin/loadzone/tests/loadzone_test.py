@@ -17,9 +17,9 @@
 
 import unittest
 from loadzone import *
-from isc.dns import *
-from isc.datasrc import *
-import isc.log
+from bundy.dns import *
+from bundy.datasrc import *
+import bundy.log
 import bundy_config
 import os
 import shutil
@@ -231,7 +231,7 @@ class TestLoadZoneRunner(unittest.TestCase):
 
         # progress is unknown
         self.__runner._get_time = lambda: 20
-        unknown_progress = isc.datasrc.ZoneLoader.PROGRESS_UNKNOWN
+        unknown_progress = bundy.datasrc.ZoneLoader.PROGRESS_UNKNOWN
         self.assertEqual('\r10 RRs in 0:00:10, 1 RRs/sec',
                          self.__runner._report_progress(10, unknown_progress,
                                                         False))
@@ -384,7 +384,7 @@ class TestLoadZoneRunner(unittest.TestCase):
         self.__check_zone_soa(ORIG_SOA_TXT)
 
 if __name__== "__main__":
-    isc.log.resetUnitTestRootLogger()
+    bundy.log.resetUnitTestRootLogger()
     # Disable the internal logging setup so the test output won't be too
     # verbose by default.
     LoadZoneRunner._config_log = lambda x: None

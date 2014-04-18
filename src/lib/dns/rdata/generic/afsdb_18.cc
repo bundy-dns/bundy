@@ -29,10 +29,10 @@
 
 using namespace std;
 using boost::lexical_cast;
-using namespace isc::util;
-using isc::dns::rdata::generic::detail::createNameFromLexer;
+using namespace bundy::util;
+using bundy::dns::rdata::generic::detail::createNameFromLexer;
 
-// BEGIN_ISC_NAMESPACE
+// BEGIN_BUNDY_NAMESPACE
 // BEGIN_RDATA_NAMESPACE
 
 /// \brief Constructor from string.
@@ -63,11 +63,11 @@ AFSDB::AFSDB(const std::string& afsdb_str) :
         createFromLexer(lexer, NULL);
 
         if (lexer.getNextToken().getType() != MasterToken::END_OF_FILE) {
-            isc_throw(InvalidRdataText, "extra input text for AFSDB: "
+            bundy_throw(InvalidRdataText, "extra input text for AFSDB: "
                       << afsdb_str);
         }
     } catch (const MasterLexer::LexerError& ex) {
-        isc_throw(InvalidRdataText, "Failed to construct AFSDB from '" <<
+        bundy_throw(InvalidRdataText, "Failed to construct AFSDB from '" <<
                   afsdb_str << "': " << ex.what());
     }
 }
@@ -102,7 +102,7 @@ AFSDB::createFromLexer(MasterLexer& lexer, const Name* origin)
 {
     const uint32_t num = lexer.getNextToken(MasterToken::NUMBER).getNumber();
     if (num > 65535) {
-        isc_throw(InvalidRdataText, "Invalid AFSDB subtype: " << num);
+        bundy_throw(InvalidRdataText, "Invalid AFSDB subtype: " << num);
     }
     subtype_ = static_cast<uint16_t>(num);
 
@@ -204,4 +204,4 @@ AFSDB::getSubtype() const {
 }
 
 // END_RDATA_NAMESPACE
-// END_ISC_NAMESPACE
+// END_BUNDY_NAMESPACE

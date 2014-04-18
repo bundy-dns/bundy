@@ -20,7 +20,7 @@
 
 #include <istream>
 
-namespace isc {
+namespace bundy {
 namespace auth {
 namespace unittest {
 

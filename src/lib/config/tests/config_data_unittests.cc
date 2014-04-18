@@ -20,8 +20,8 @@
 
 #include <iostream>
 
-using namespace isc::data;
-using namespace isc::config;
+using namespace bundy::data;
+using namespace bundy::config;
 
 ConfigData
 setupSpec2() {

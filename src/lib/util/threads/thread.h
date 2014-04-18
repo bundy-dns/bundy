@@ -20,7 +20,7 @@
 #include <boost/noncopyable.hpp>
 #include <boost/function.hpp>
 
-namespace isc {
+namespace bundy {
 namespace util {
 /// \brief Wrappers for thread related functionality
 ///
@@ -48,7 +48,7 @@ public:
     /// When a thread terminates because it the main function of the thread
     /// throws, this one is re-thrown out of wait() and contains the what
     /// of the original exception.
-    class UncaughtException : public isc::Exception {
+    class UncaughtException : public bundy::Exception {
     public:
         UncaughtException(const char* file, size_t line, const char* what) :
             Exception(file, line, what)
@@ -74,7 +74,7 @@ public:
     ///
     /// \throw std::bad_alloc if allocation of the new thread or other
     ///     resources fails.
-    /// \throw isc::InvalidOperation for other errors (should not happen).
+    /// \throw bundy::InvalidOperation for other errors (should not happen).
     Thread(const boost::function<void()>& main);
 
     /// \brief Destructor.
@@ -84,7 +84,7 @@ public:
     /// terminates. However, if the thread dies due to exception, for example,
     /// it's up to you to detect that, no error is reported from this class.
     ///
-    /// \throw isc::InvalidOperation in the rare case of OS reporting a
+    /// \throw bundy::InvalidOperation in the rare case of OS reporting a
     ///     problem. This should not happen unless you messed up with the raw
     ///     thread by the low-level API.
     ~Thread();
@@ -93,10 +93,10 @@ public:
     ///
     /// Waits until the thread terminates. Must be called at most once.
     ///
-    /// \throw isc::InvalidOperation if the OS API returns error. This usually
+    /// \throw bundy::InvalidOperation if the OS API returns error. This usually
     ///     mean a programmer error (like two threads trying to wait on each
     ///     other).
-    /// \throw isc::InvalidOperation calling wait a second time.
+    /// \throw bundy::InvalidOperation calling wait a second time.
     /// \throw UncaughtException if the thread terminated by throwing an
     ///     exception instead of just returning from the function.
     void wait();

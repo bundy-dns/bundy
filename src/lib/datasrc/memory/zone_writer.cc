@@ -27,14 +27,14 @@
 
 using std::auto_ptr;
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 
 ZoneTableSegment&
 checkZoneTableSegment(ZoneTableSegment& segment) {
     if (!segment.isWritable()) {
-        isc_throw(isc::InvalidOperation,
+        bundy_throw(bundy::InvalidOperation,
                   "Attempt to construct ZoneWriter for a read-only segment");
     }
     return (segment);
@@ -58,7 +58,7 @@ struct ZoneWriter::Impl {
                 data_holder_.reset(
                     new ZoneDataHolder(segment.getMemorySegment(), rrclass_));
                 break;
-            } catch (const isc::util::MemorySegmentGrown&) {}
+            } catch (const bundy::util::MemorySegmentGrown&) {}
         }
     }
 
@@ -97,7 +97,7 @@ ZoneWriter::~ZoneWriter() {
 void
 ZoneWriter::load(std::string* error_msg) {
     if (impl_->state_ != Impl::ZW_UNUSED) {
-        isc_throw(isc::InvalidOperation, "Trying to load twice");
+        bundy_throw(bundy::InvalidOperation, "Trying to load twice");
     }
 
     try {
@@ -106,7 +106,7 @@ ZoneWriter::load(std::string* error_msg) {
 
         if (!zone_data) {
             // Bug inside impl_->load_action_.
-            isc_throw(isc::InvalidOperation,
+            bundy_throw(bundy::InvalidOperation,
                       "No data returned from load action");
         }
 
@@ -127,7 +127,7 @@ ZoneWriter::load(std::string* error_msg) {
 void
 ZoneWriter::install() {
     if (impl_->state_ != Impl::ZW_LOADED) {
-        isc_throw(isc::InvalidOperation, "No data to install");
+        bundy_throw(bundy::InvalidOperation, "No data to install");
     }
 
     // Check the internal integrity assumption: we should have non NULL
@@ -139,7 +139,7 @@ ZoneWriter::install() {
             ZoneTableHeader& header = impl_->segment_.getHeader();
             ZoneTable* table(header.getTable());
             if (!table) {
-                isc_throw(isc::Unexpected, "No zone table present");
+                bundy_throw(bundy::Unexpected, "No zone table present");
             }
             // We still need to hold the zone data until we return from
             // addZone in case it throws, but we then need to immediately
@@ -154,7 +154,7 @@ ZoneWriter::install() {
                                     impl_->origin_));
             impl_->data_holder_->set(result.zone_data);
             impl_->state_ = Impl::ZW_INSTALLED;
-        } catch (const isc::util::MemorySegmentGrown&) {}
+        } catch (const bundy::util::MemorySegmentGrown&) {}
     }
 }
 

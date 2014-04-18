@@ -9,7 +9,7 @@ CLEANFILES += $(PYTHON_LOGMSGPKG_DIR)/work/init_messages.pyc
 pkglibexecdir = $(libexecdir)/@PACKAGE@
 
 nodist_pylogmessage_PYTHON = $(PYTHON_LOGMSGPKG_DIR)/work/init_messages.py
-pylogmessagedir = $(pyexecdir)/isc/log_messages/
+pylogmessagedir = $(pyexecdir)/bundy/log_messages/
 
 noinst_SCRIPTS = run_bundy.sh
 

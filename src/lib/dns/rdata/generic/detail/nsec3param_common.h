@@ -22,7 +22,7 @@
 #include <stdint.h>
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace rdata {
 namespace generic {
@@ -69,7 +69,7 @@ struct ParseNSEC3ParamResult {
 /// On successful return the given MasterLexer will reach the end of the
 /// salt field.
 ///
-/// \exception isc::BadValue The salt is not a valid hex string.
+/// \exception bundy::BadValue The salt is not a valid hex string.
 /// \exception InvalidRdataText The given RDATA is otherwise invalid for
 /// NSEC3 or NSEC3PARAM fields.
 /// \exception MasterLexer::LexerError There was a syntax error reading
@@ -84,7 +84,7 @@ struct ParseNSEC3ParamResult {
 /// \return The hash algorithm, flags, iterations in the form of
 /// ParseNSEC3ParamResult.
 ParseNSEC3ParamResult parseNSEC3ParamFromLexer(const char* const rrtype_name,
-                                               isc::dns::MasterLexer& lexer,
+                                               bundy::dns::MasterLexer& lexer,
                                                std::vector<uint8_t>& salt);
 
 /// \brief Extract NSEC3 parameters from wire-format data.
@@ -114,7 +114,7 @@ ParseNSEC3ParamResult parseNSEC3ParamFromLexer(const char* const rrtype_name,
 /// \return The hash algorithm, flags, iterations in the form of
 /// ParseNSEC3ParamResult.
 ParseNSEC3ParamResult parseNSEC3ParamWire(const char* const rrtype_name,
-                                          isc::util::InputBuffer& buffer,
+                                          bundy::util::InputBuffer& buffer,
                                           size_t& rdata_len,
                                           std::vector<uint8_t>& salt);
 }

@@ -49,7 +49,7 @@ monthSecs(const int month, const int year) {
 }
 }
 
-namespace isc {
+namespace bundy {
 namespace util {
 
 string
@@ -64,7 +64,7 @@ timeToText64(uint64_t value) {
         value -= secs;
         ++tm.tm_year;
         if (tm.tm_year + 1900 > 9999) {
-            isc_throw(InvalidTime,
+            bundy_throw(InvalidTime,
                       "Time value out of range (year > 9999): " <<
                       tm.tm_year + 1900);
         }
@@ -150,7 +150,7 @@ checkRange(const int min, const int max, const int value,
     if ((value >= min) && (value <= max)) {
         return;
     }
-    isc_throw(InvalidTime, "Invalid " << valname << "value: " << value);
+    bundy_throw(InvalidTime, "Invalid " << valname << "value: " << value);
 }
 }
 
@@ -160,7 +160,7 @@ timeFromText64(const string& time_txt) {
     // minor exceptions.
     for (string::size_type i = 0; i < time_txt.length(); ++i) {
         if (!isdigit(time_txt.at(i))) {
-            isc_throw(InvalidTime, "Couldn't convert non-numeric time value: "
+            bundy_throw(InvalidTime, "Couldn't convert non-numeric time value: "
                       << time_txt);
         }
     }
@@ -170,7 +170,7 @@ timeFromText64(const string& time_txt) {
         sscanf(time_txt.c_str(), "%4d%2d%2d%2d%2d%2d",
                &year, &month, &day, &hour, &minute, &second) != 6)
     {
-        isc_throw(InvalidTime, "Couldn't convert time value: " << time_txt);
+        bundy_throw(InvalidTime, "Couldn't convert time value: " << time_txt);
     }
 
     checkRange(1970, 9999, year, "year");

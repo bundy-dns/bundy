@@ -44,11 +44,11 @@
 
 using boost::scoped_ptr;
 using boost::bind;
-using isc::dns::RRClass;
-using isc::dns::Name;
-using isc::datasrc::ZoneLoaderException;
-using namespace isc::datasrc::memory;
-using namespace isc::datasrc::memory::test;
+using bundy::dns::RRClass;
+using bundy::dns::Name;
+using bundy::datasrc::ZoneLoaderException;
+using namespace bundy::datasrc::memory;
+using namespace bundy::datasrc::memory::test;
 
 namespace {
 
@@ -81,7 +81,7 @@ protected:
     bool load_null_;
     bool load_data_;
 public:
-    ZoneData* loadAction(isc::util::MemorySegment& segment) {
+    ZoneData* loadAction(bundy::util::MemorySegment& segment) {
         // Make sure it is the correct segment passed. We know the
         // exact instance, can compare pointers to them.
         EXPECT_EQ(&segment_->getMemorySegment(), &segment);
@@ -91,7 +91,7 @@ public:
             throw TestException();
         }
         if (load_loader_throw_) {
-            isc_throw(ZoneLoaderException, "faked loader exception");
+            bundy_throw(ZoneLoaderException, "faked loader exception");
         }
 
         if (load_null_) {
@@ -112,8 +112,8 @@ public:
 
 class ReadOnlySegment : public ZoneTableSegmentMock {
 public:
-    ReadOnlySegment(const isc::dns::RRClass& rrclass,
-                    isc::util::MemorySegment& mem_sgmt) :
+    ReadOnlySegment(const bundy::dns::RRClass& rrclass,
+                    bundy::util::MemorySegment& mem_sgmt) :
         ZoneTableSegmentMock(rrclass, mem_sgmt)
     {}
 
@@ -137,7 +137,7 @@ TEST_F(ZoneWriterTest, constructForReadOnlySegment) {
     EXPECT_THROW(ZoneWriter(ztable_segment,
                             bind(&ZoneWriterTest::loadAction, this, _1),
                             Name("example.org"), RRClass::IN(), false),
-                 isc::InvalidOperation);
+                 bundy::InvalidOperation);
 }
 
 // We call it the way we are supposed to, check every callback is called in the
@@ -166,7 +166,7 @@ TEST_F(ZoneWriterTest, loadTwice) {
     load_called_ = false;
 
     // The second time, it should not be possible
-    EXPECT_THROW(writer_->load(), isc::InvalidOperation);
+    EXPECT_THROW(writer_->load(), bundy::InvalidOperation);
     EXPECT_FALSE(load_called_);
 
     // The object should not be damaged, try installing and clearing now
@@ -187,20 +187,20 @@ TEST_F(ZoneWriterTest, loadLater) {
     // Reset so we see nothing is called now
     load_called_ = false;
 
-    EXPECT_THROW(writer_->load(), isc::InvalidOperation);
+    EXPECT_THROW(writer_->load(), bundy::InvalidOperation);
     EXPECT_FALSE(load_called_);
 
     // Cleanup and try loading again. Still shouldn't work.
     EXPECT_NO_THROW(writer_->cleanup());
 
-    EXPECT_THROW(writer_->load(), isc::InvalidOperation);
+    EXPECT_THROW(writer_->load(), bundy::InvalidOperation);
     EXPECT_FALSE(load_called_);
 }
 
 // Try calling install at various bad times
 TEST_F(ZoneWriterTest, invalidInstall) {
     // Nothing loaded yet
-    EXPECT_THROW(writer_->install(), isc::InvalidOperation);
+    EXPECT_THROW(writer_->install(), bundy::InvalidOperation);
     EXPECT_FALSE(load_called_);
 
     EXPECT_NO_THROW(writer_->load());
@@ -208,7 +208,7 @@ TEST_F(ZoneWriterTest, invalidInstall) {
     // This install is OK
     EXPECT_NO_THROW(writer_->install());
     // But we can't call it second time now
-    EXPECT_THROW(writer_->install(), isc::InvalidOperation);
+    EXPECT_THROW(writer_->install(), bundy::InvalidOperation);
     EXPECT_FALSE(load_called_);
 }
 
@@ -222,7 +222,7 @@ TEST_F(ZoneWriterTest, cleanWithoutInstall) {
     EXPECT_TRUE(load_called_);
 
     // We cleaned up, no way to install now
-    EXPECT_THROW(writer_->install(), isc::InvalidOperation);
+    EXPECT_THROW(writer_->install(), bundy::InvalidOperation);
 }
 
 // Test the case when load callback throws
@@ -231,7 +231,7 @@ TEST_F(ZoneWriterTest, loadThrows) {
     EXPECT_THROW(writer_->load(), TestException);
 
     // We can't install now
-    EXPECT_THROW(writer_->install(), isc::InvalidOperation);
+    EXPECT_THROW(writer_->install(), bundy::InvalidOperation);
     EXPECT_TRUE(load_called_);
 
     // But we can cleanup
@@ -264,7 +264,7 @@ TEST_F(ZoneWriterTest, loadLoaderException) {
     writer_->cleanup();
 
     // Check an empty zone has been really installed.
-    using namespace isc::datasrc::result;
+    using namespace bundy::datasrc::result;
     const ZoneTable* ztable = segment_->getHeader().getTable();
     ASSERT_TRUE(ztable);
     const ZoneTable::FindResult result = ztable->findZone(Name("example.org"));
@@ -302,17 +302,17 @@ TEST_F(ZoneWriterTest, retry) {
     EXPECT_NO_THROW(writer_->load());
     // And this one will fail again. But the old data will survive.
     load_data_ = false;
-    EXPECT_THROW(writer_->load(), isc::InvalidOperation);
+    EXPECT_THROW(writer_->load(), bundy::InvalidOperation);
 
     // The rest still works correctly
     EXPECT_NO_THROW(writer_->install());
     ZoneTable* const table(segment_->getHeader().getTable());
     const ZoneTable::FindResult found(table->findZone(Name("example.org")));
-    ASSERT_EQ(isc::datasrc::result::SUCCESS, found.code);
+    ASSERT_EQ(bundy::datasrc::result::SUCCESS, found.code);
     // For some reason it doesn't seem to work by the ZoneNode typedef, using
     // the full definition instead. At least on some compilers.
-    const isc::datasrc::memory::DomainTreeNode<RdataSet>* node;
-    EXPECT_EQ(isc::datasrc::memory::DomainTree<RdataSet>::EXACTMATCH,
+    const bundy::datasrc::memory::DomainTreeNode<RdataSet>* node;
+    EXPECT_EQ(bundy::datasrc::memory::DomainTree<RdataSet>::EXACTMATCH,
               found.zone_data->getZoneTree().
               find(Name("subdomain.example.org"), &node));
     EXPECT_NO_THROW(writer_->cleanup());
@@ -321,10 +321,10 @@ TEST_F(ZoneWriterTest, retry) {
 // Check the writer defends itsefl when load action returns NULL
 TEST_F(ZoneWriterTest, loadNull) {
     load_null_ = true;
-    EXPECT_THROW(writer_->load(), isc::InvalidOperation);
+    EXPECT_THROW(writer_->load(), bundy::InvalidOperation);
 
     // We can't install that
-    EXPECT_THROW(writer_->install(), isc::InvalidOperation);
+    EXPECT_THROW(writer_->install(), bundy::InvalidOperation);
 
     // It should be possible to clean up safely
     EXPECT_NO_THROW(writer_->cleanup());
@@ -340,7 +340,7 @@ TEST_F(ZoneWriterTest, autoCleanUp) {
 // Used in the manyWrites test, encapsulating loadZoneData() to avoid
 // its signature ambiguity.
 ZoneData*
-loadZoneDataWrapper(isc::util::MemorySegment& segment, const RRClass& rrclass,
+loadZoneDataWrapper(bundy::util::MemorySegment& segment, const RRClass& rrclass,
                     const Name& name, const std::string& filename)
 {
     return (loadZoneData(segment, rrclass, name, filename));
@@ -358,17 +358,17 @@ TEST_F(ZoneWriterTest, manyWrites) {
     // to grow in the test.
     const char* const mapped_file = TEST_DATA_BUILDDIR "/test.mapped";
     unlink(mapped_file);
-    boost::scoped_ptr<isc::util::MemorySegmentMapped> segment(
-        new isc::util::MemorySegmentMapped(
-            mapped_file, isc::util::MemorySegmentMapped::CREATE_ONLY, 4096));
+    boost::scoped_ptr<bundy::util::MemorySegmentMapped> segment(
+        new bundy::util::MemorySegmentMapped(
+            mapped_file, bundy::util::MemorySegmentMapped::CREATE_ONLY, 4096));
     segment.reset();
 
     // Then prepare a ZoneTableSegment of the 'mapped' type specifying the
     // file we just created.
     boost::scoped_ptr<ZoneTableSegment> zt_segment(
         ZoneTableSegment::create(RRClass::IN(), "mapped"));
-    const isc::data::ConstElementPtr params =
-        isc::data::Element::fromJSON(
+    const bundy::data::ConstElementPtr params =
+        bundy::data::Element::fromJSON(
             "{\"mapped-file\": \"" + std::string(mapped_file) + "\"}");
     zt_segment->reset(ZoneTableSegment::READ_WRITE, params);
 #else
@@ -398,7 +398,7 @@ TEST_F(ZoneWriterTest, manyWrites) {
         // Confirm it's been successfully added and can be actually found.
         const ZoneTable::FindResult result =
             zt_segment->getHeader().getTable()->findZone(origin);
-        EXPECT_EQ(isc::datasrc::result::SUCCESS, result.code);
+        EXPECT_EQ(bundy::datasrc::result::SUCCESS, result.code);
         EXPECT_NE(static_cast<const ZoneData*>(NULL), result.zone_data) <<
             "unexpected find result: " + origin.toText();
     }

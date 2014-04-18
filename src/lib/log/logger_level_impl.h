@@ -19,7 +19,7 @@
 #include <log4cplus/version.h>
 #include <log/logger_level.h>
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 /// \brief Implementation aspects of logging levels
@@ -82,7 +82,7 @@ public:
     ///
     /// \return Equivalent log4cplus logging level.
     static
-    log4cplus::LogLevel convertFromBindLevel(const isc::log::Level& level);
+    log4cplus::LogLevel convertFromBindLevel(const bundy::log::Level& level);
 
     /// \brief Convert log4cplus logging level to BUNDY logging level
     ///
@@ -94,7 +94,7 @@ public:
     ///
     /// \return Equivalent BUNDY severity and debug level
     static
-    isc::log::Level convertToBindLevel(const log4cplus::LogLevel loglevel);
+    bundy::log::Level convertToBindLevel(const log4cplus::LogLevel loglevel);
 
     /// \brief Convert string to log4cplus logging level
     ///
@@ -129,6 +129,6 @@ public:
 };
 
 } // namespace log
-} // namespace isc
+} // namespace bundy
 
 #endif // LOGGER_LEVEL_IMPL_H

@@ -24,7 +24,7 @@
 #include <stdint.h>
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 class D2CfgContext;
@@ -204,7 +204,7 @@ public:
     /// @return a std::string containing the reverse order address.
     ///
     /// @throw D2CfgError if not given an IPv4  address.
-    static std::string reverseV4Address(const isc::asiolink::IOAddress& ioaddr);
+    static std::string reverseV4Address(const bundy::asiolink::IOAddress& ioaddr);
 
     /// @brief Generate a reverse order string for the given IP address
     ///
@@ -224,7 +224,7 @@ public:
     /// @return a std::string containing the reverse order address.
     ///
     /// @throw D2CfgError if not given an IPv6 address.
-    static std::string reverseV6Address(const isc::asiolink::IOAddress& ioaddr);
+    static std::string reverseV6Address(const bundy::asiolink::IOAddress& ioaddr);
 
 protected:
     /// @brief Given an element_id returns an instance of the appropriate
@@ -243,7 +243,7 @@ protected:
     ///
     /// @return returns a ParserPtr to the parser instance.
     /// @throw throws DCfgMgrBaseError if an error occurs.
-    virtual isc::dhcp::ParserPtr
+    virtual bundy::dhcp::ParserPtr
     createConfigParser(const std::string& element_id);
 };
 
@@ -251,7 +251,7 @@ protected:
 typedef boost::shared_ptr<D2CfgMgr> D2CfgMgrPtr;
 
 
-}; // end of isc::d2 namespace
-}; // end of isc namespace
+}; // end of bundy::d2 namespace
+}; // end of bundy namespace
 
 #endif // D2_CFG_MGR_H

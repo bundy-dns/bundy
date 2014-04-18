@@ -20,8 +20,8 @@
 
 namespace {
 
-using namespace isc;
-using namespace isc::dhcp;
+using namespace bundy;
+using namespace bundy::dhcp;
 using namespace perfdhcp;
 
 /// @todo Implement the tests which use Pkt4 objects once the support for

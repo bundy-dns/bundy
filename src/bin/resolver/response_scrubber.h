@@ -282,8 +282,8 @@ public:
     ///
     /// \return SUCCESS if the two endpoints match, otherwise an error status
     /// indicating what was incorrect.
-    static Category addressCheck(const isc::asiolink::IOEndpoint& to,
-        const isc::asiolink::IOEndpoint& from);
+    static Category addressCheck(const bundy::asiolink::IOEndpoint& to,
+        const bundy::asiolink::IOEndpoint& from);
 
     /// \brief Check QID
     ///
@@ -293,8 +293,8 @@ public:
     /// \param received Message received from the authoritative server
     ///
     /// \return true if the QIDs match, false otherwise.
-    static bool qidCheck(const isc::dns::Message& sent,
-        const isc::dns::Message& received) {
+    static bool qidCheck(const bundy::dns::Message& sent,
+        const bundy::dns::Message& received) {
         return (sent.getQid() == received.getQid());
     }
 
@@ -322,10 +322,10 @@ public:
     /// \param message Message to be scrubbed.
     ///
     /// \return Count of the number of RRsets removed from the section.
-    static unsigned int scrubSection(isc::dns::Message& message,
-        const std::vector<const isc::dns::Name*>& names,
-        const isc::dns::NameComparisonResult::NameRelation connection,
-        const isc::dns::Message::Section section);
+    static unsigned int scrubSection(bundy::dns::Message& message,
+        const std::vector<const bundy::dns::Name*>& names,
+        const bundy::dns::NameComparisonResult::NameRelation connection,
+        const bundy::dns::Message::Section section);
 
     /// \brief Scrub All Sections of a Message
     ///
@@ -345,8 +345,8 @@ public:
     /// queried.
     ///
     /// \return Count of the number of RRsets removed from the message.
-    static unsigned int scrubAllSections(isc::dns::Message& message,
-        const isc::dns::Name& bailiwick);
+    static unsigned int scrubAllSections(bundy::dns::Message& message,
+        const bundy::dns::Name& bailiwick);
 
     /// \brief Scrub Across Message Sections
     ///
@@ -372,7 +372,7 @@ public:
     /// \param message Message to be scrubbed.
     ///
     /// \return Count of the number of RRsets removed from the section.
-    static unsigned int scrubCrossSections(isc::dns::Message& message);
+    static unsigned int scrubCrossSections(bundy::dns::Message& message);
     
     /// \brief Main Scrubbing Entry Point
     ///
@@ -387,8 +387,8 @@ public:
     /// queried.
     ///
     /// \return Count of the number of RRsets removed from the message.
-    static unsigned int scrub(const isc::dns::MessagePtr& message,
-        const isc::dns::Name& bailiwick);
+    static unsigned int scrub(const bundy::dns::MessagePtr& message,
+        const bundy::dns::Name& bailiwick);
 
     /// \brief Comparison Function for Sorting Name Pointers
     ///
@@ -398,8 +398,8 @@ public:
     /// \param n2 Pointer to second Name object
     ///
     /// \return true if n1 is less than n2, false otherwise.
-    static bool compareNameLt(const isc::dns::Name* n1,
-        const isc::dns::Name* n2)
+    static bool compareNameLt(const bundy::dns::Name* n1,
+        const bundy::dns::Name* n2)
     {
         return (*n1 < *n2);
     }
@@ -412,8 +412,8 @@ public:
     /// \param n2 Pointer to second Name object
     ///
     /// \return true if n1 is equal to n2, false otherwise.
-    static bool compareNameEq(const isc::dns::Name* n1,
-        const isc::dns::Name* n2)
+    static bool compareNameEq(const bundy::dns::Name* n1,
+        const bundy::dns::Name* n2)
     {
         return (*n1 == *n2);
     }

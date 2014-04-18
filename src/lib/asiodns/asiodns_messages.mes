@@ -12,7 +12,7 @@
 # OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
 
-$NAMESPACE isc::asiodns
+$NAMESPACE bundy::asiodns
 
 % ASIODNS_FD_ADD_TCP adding a new TCP server by opened fd %1
 A debug message informing about installing a file descriptor as a server.

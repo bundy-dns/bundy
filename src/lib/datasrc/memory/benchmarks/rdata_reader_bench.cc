@@ -32,9 +32,9 @@
 #include <unistd.h>
 
 using std::vector;
-using namespace isc::bench;
-using namespace isc::datasrc::memory;
-using namespace isc::dns;
+using namespace bundy::bench;
+using namespace bundy::datasrc::memory;
+using namespace bundy::dns;
 
 namespace {
 struct EncodeParam {
@@ -209,7 +209,7 @@ main(int argc, char* argv[]) {
 
     // The benchmark test uses a message renderer.  Create it now and keep
     // using it throughout the test.
-    isc::util::OutputBuffer buffer(4096); // 4096 should be sufficiently large
+    bundy::util::OutputBuffer buffer(4096); // 4096 should be sufficiently large
     MessageRenderer renderer;
     renderer.setBuffer(&buffer);
 

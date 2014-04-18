@@ -27,9 +27,9 @@
 #include "tsigkey_python.h"
 
 using namespace std;
-using namespace isc::util::python;
-using namespace isc::dns;
-using namespace isc::dns::python;
+using namespace bundy::util::python;
+using namespace bundy::dns;
+using namespace bundy::dns::python;
 
 // For each class, we need a struct, a helper functions (init, destroy,
 // and static wrappers around the methods we export), a list of methods,
@@ -111,7 +111,7 @@ TSIGKey_init(s_TSIGKey* self, PyObject* args) {
                                        secret, secret_len);
             return (0);
         }
-    } catch (const isc::InvalidParameter& ex) {
+    } catch (const bundy::InvalidParameter& ex) {
         PyErr_SetString(po_InvalidParameter, ex.what());
         return (-1);
     } catch (...) {
@@ -175,7 +175,7 @@ TSIGKey_toText(const s_TSIGKey* self) {
 }
 } // end of unnamed namespace
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace python {
 // This defines the complete type for reflection in python and
@@ -235,7 +235,7 @@ PyTypeObject tsigkey_type = {
 bool
 PyTSIGKey_Check(PyObject* obj) {
     if (obj == NULL) {
-        isc_throw(PyCPPWrapperException, "obj argument NULL in typecheck");
+        bundy_throw(PyCPPWrapperException, "obj argument NULL in typecheck");
     }
     return (PyObject_TypeCheck(obj, &tsigkey_type));
 }
@@ -248,7 +248,7 @@ PyTSIGKey_ToTSIGKey(const PyObject* tsigkey_obj) {
 
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 //
 // End of TSIGKey
 //
@@ -396,7 +396,7 @@ TSIGKeyRing_find(const s_TSIGKeyRing* self, PyObject* args) {
 }
 } // end of unnamed namespace
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace python {
 PyTypeObject tsigkeyring_type = {
@@ -452,7 +452,7 @@ PyTypeObject tsigkeyring_type = {
 bool
 PyTSIGKeyRing_Check(PyObject* obj) {
     if (obj == NULL) {
-        isc_throw(PyCPPWrapperException, "obj argument NULL in typecheck");
+        bundy_throw(PyCPPWrapperException, "obj argument NULL in typecheck");
     }
     return (PyObject_TypeCheck(obj, &tsigkeyring_type));
 }
@@ -460,7 +460,7 @@ PyTSIGKeyRing_Check(PyObject* obj) {
 const TSIGKeyRing&
 PyTSIGKeyRing_ToTSIGKeyRing(const PyObject* tsigkeyring_obj) {
     if (tsigkeyring_obj == NULL) {
-        isc_throw(PyCPPWrapperException,
+        bundy_throw(PyCPPWrapperException,
                   "obj argument NULL in TSIGKeyRing PyObject conversion");
     }
     const s_TSIGKeyRing* tsigkeyring =
@@ -470,4 +470,4 @@ PyTSIGKeyRing_ToTSIGKeyRing(const PyObject* tsigkeyring_obj) {
 
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy

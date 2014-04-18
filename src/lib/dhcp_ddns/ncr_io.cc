@@ -18,7 +18,7 @@
 #include <asio.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
-namespace isc {
+namespace bundy {
 namespace dhcp_ddns {
 
 NameChangeProtocol stringToNcrProtocol(const std::string& protocol_str) {
@@ -30,7 +30,7 @@ NameChangeProtocol stringToNcrProtocol(const std::string& protocol_str) {
         return (NCR_TCP);
     }
 
-    isc_throw(BadValue, "Invalid NameChangeRequest protocol:" << protocol_str);
+    bundy_throw(BadValue, "Invalid NameChangeRequest protocol:" << protocol_str);
 }
 
 std::string ncrProtocolToString(NameChangeProtocol protocol) {
@@ -58,18 +58,18 @@ NameChangeListener::NameChangeListener(RequestReceiveHandler&
 
 
 void
-NameChangeListener::startListening(isc::asiolink::IOService& io_service) {
+NameChangeListener::startListening(bundy::asiolink::IOService& io_service) {
     if (amListening()) {
         // This amounts to a programmatic error.
-        isc_throw(NcrListenerError, "NameChangeListener is already listening");
+        bundy_throw(NcrListenerError, "NameChangeListener is already listening");
     }
 
     // Call implementation dependent open.
     try {
         open(io_service);
-    } catch (const isc::Exception& ex) {
+    } catch (const bundy::Exception& ex) {
         stopListening();
-        isc_throw(NcrListenerOpenError, "Open failed:" << ex.what());
+        bundy_throw(NcrListenerOpenError, "Open failed:" << ex.what());
     }
 
     // Set our status to listening.
@@ -78,9 +78,9 @@ NameChangeListener::startListening(isc::asiolink::IOService& io_service) {
     // Start the first asynchronous receive.
     try {
         receiveNext();
-    } catch (const isc::Exception& ex) {
+    } catch (const bundy::Exception& ex) {
         stopListening();
-        isc_throw(NcrListenerReceiveError, "doReceive failed:" << ex.what());
+        bundy_throw(NcrListenerReceiveError, "doReceive failed:" << ex.what());
     }
 }
 
@@ -95,7 +95,7 @@ NameChangeListener::stopListening() {
     try {
         // Call implementation dependent close.
         close();
-    } catch (const isc::Exception &ex) {
+    } catch (const bundy::Exception &ex) {
         // Swallow exceptions. If we have some sort of error we'll log
         // it but we won't propagate the throw.
         LOG_ERROR(dhcp_ddns_logger, DHCP_DDNS_NCR_LISTEN_CLOSE_ERROR)
@@ -128,7 +128,7 @@ NameChangeListener::invokeRecvHandler(const Result result,
     if (amListening()) {
         try {
             receiveNext();
-        } catch (const isc::Exception& ex) {
+        } catch (const bundy::Exception& ex) {
             // It is possible though unlikely, for doReceive to fail without
             // scheduling the read. While, unlikely, it does mean the callback
             // will not get called with a failure. A throw here would surface
@@ -167,10 +167,10 @@ NameChangeSender::NameChangeSender(RequestSendHandler& send_handler,
 }
 
 void
-NameChangeSender::startSending(isc::asiolink::IOService& io_service) {
+NameChangeSender::startSending(bundy::asiolink::IOService& io_service) {
     if (amSending()) {
         // This amounts to a programmatic error.
-        isc_throw(NcrSenderError, "NameChangeSender is already sending");
+        bundy_throw(NcrSenderError, "NameChangeSender is already sending");
     }
 
     // Clear send marker.
@@ -181,9 +181,9 @@ NameChangeSender::startSending(isc::asiolink::IOService& io_service) {
         // Remember io service we're given.
         io_service_ = &io_service;
         open(io_service);
-    } catch (const isc::Exception& ex) {
+    } catch (const bundy::Exception& ex) {
         stopSending();
-        isc_throw(NcrSenderOpenError, "Open failed: " << ex.what());
+        bundy_throw(NcrSenderOpenError, "Open failed: " << ex.what());
     }
 
     // Set our status to sending.
@@ -215,7 +215,7 @@ NameChangeSender::stopSending() {
     try {
         // Call implementation dependent close.
         close();
-    } catch (const isc::Exception &ex) {
+    } catch (const bundy::Exception &ex) {
         // Swallow exceptions. If we have some sort of error we'll log
         // it but we won't propagate the throw.
         LOG_ERROR(dhcp_ddns_logger,
@@ -228,15 +228,15 @@ NameChangeSender::stopSending() {
 void
 NameChangeSender::sendRequest(NameChangeRequestPtr& ncr) {
     if (!amSending()) {
-        isc_throw(NcrSenderError, "sender is not ready to send");
+        bundy_throw(NcrSenderError, "sender is not ready to send");
     }
 
     if (!ncr) {
-        isc_throw(NcrSenderError, "request to send is empty");
+        bundy_throw(NcrSenderError, "request to send is empty");
     }
 
     if (send_queue_.size() >= send_queue_max_) {
-        isc_throw(NcrSenderQueueFull, "send queue has reached maximum capacity:"
+        bundy_throw(NcrSenderQueueFull, "send queue has reached maximum capacity:"
                   << send_queue_max_ );
     }
 
@@ -298,7 +298,7 @@ NameChangeSender::invokeSendHandler(const NameChangeSender::Result result) {
         if (amSending()) {
             sendNext();
         }
-    } catch (const isc::Exception& ex) {
+    } catch (const bundy::Exception& ex) {
         // It is possible though unlikely, for sendNext to fail without
         // scheduling the send. While, unlikely, it does mean the callback
         // will not get called with a failure. A throw here would surface
@@ -332,7 +332,7 @@ NameChangeSender::skipNext() {
 void
 NameChangeSender::clearSendQueue() {
     if (amSending()) {
-        isc_throw(NcrSenderError, "Cannot clear queue while sending");
+        bundy_throw(NcrSenderError, "Cannot clear queue while sending");
     }
 
     send_queue_.clear();
@@ -341,7 +341,7 @@ NameChangeSender::clearSendQueue() {
 void
 NameChangeSender::setQueueMaxSize(const size_t new_max) {
     if (new_max == 0) {
-        isc_throw(NcrSenderError, "NameChangeSender:"
+        bundy_throw(NcrSenderError, "NameChangeSender:"
                   " queue size must be greater than zero");
     }
 
@@ -351,7 +351,7 @@ NameChangeSender::setQueueMaxSize(const size_t new_max) {
 const NameChangeRequestPtr&
 NameChangeSender::peekAt(const size_t index) const {
     if (index >= getQueueSize()) {
-        isc_throw(NcrSenderError,
+        bundy_throw(NcrSenderError,
                   "NameChangeSender::peekAt peek beyond end of queue attempted"
                   << " index: " << index << " queue size: " << getQueueSize());
     }
@@ -363,22 +363,22 @@ NameChangeSender::peekAt(const size_t index) const {
 void
 NameChangeSender::assumeQueue(NameChangeSender& source_sender) {
     if (source_sender.amSending()) {
-        isc_throw(NcrSenderError, "Cannot assume queue:"
+        bundy_throw(NcrSenderError, "Cannot assume queue:"
                   " source sender is actively sending");
     }
 
     if (amSending()) {
-        isc_throw(NcrSenderError, "Cannot assume queue:"
+        bundy_throw(NcrSenderError, "Cannot assume queue:"
                   " target sender is actively sending");
     }
 
     if (getQueueMaxSize() < source_sender.getQueueSize()) {
-        isc_throw(NcrSenderError, "Cannot assume queue:"
+        bundy_throw(NcrSenderError, "Cannot assume queue:"
                   " source queue count exceeds target queue max");
     }
 
     if (!send_queue_.empty()) {
-        isc_throw(NcrSenderError, "Cannot assume queue:"
+        bundy_throw(NcrSenderError, "Cannot assume queue:"
                   " target queue is not empty");
     }
 
@@ -387,13 +387,13 @@ NameChangeSender::assumeQueue(NameChangeSender& source_sender) {
 
 int
 NameChangeSender::getSelectFd() {
-    isc_throw(NotImplemented, "NameChangeSender::getSelectFd is not supported");
+    bundy_throw(NotImplemented, "NameChangeSender::getSelectFd is not supported");
 }
 
 void
 NameChangeSender::runReadyIO() {
     if (!io_service_) {
-        isc_throw(NcrSenderError, "NameChangeSender::runReadyIO"
+        bundy_throw(NcrSenderError, "NameChangeSender::runReadyIO"
                   " sender io service is null");
     }
 
@@ -405,5 +405,5 @@ NameChangeSender::runReadyIO() {
 }
 
 
-} // namespace isc::dhcp_ddns
-} // namespace isc
+} // namespace bundy::dhcp_ddns
+} // namespace bundy

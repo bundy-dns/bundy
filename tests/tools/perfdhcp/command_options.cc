@@ -29,9 +29,9 @@
 
 
 using namespace std;
-using namespace isc;
+using namespace bundy;
 
-namespace isc {
+namespace bundy {
 namespace perfdhcp {
 
 CommandOptions::LeaseType::LeaseType()
@@ -69,7 +69,7 @@ CommandOptions::LeaseType::fromCommandLine(const std::string& cmd_line_arg) {
         type_ = ADDRESS_AND_PREFIX;
 
     } else {
-        isc_throw(isc::InvalidParameter, "value of lease-type: -e<lease-type>,"
+        bundy_throw(bundy::InvalidParameter, "value of lease-type: -e<lease-type>,"
                   " must be one of the following: 'address-only' or"
                   " 'prefix-only'");
     }
@@ -86,7 +86,7 @@ CommandOptions::LeaseType::toText() const {
         return ("address-and-prefix (Both IA_NA and IA_PD options added to the"
                 " client's request)");
     default:
-        isc_throw(Unexpected, "internal error: undefined lease type code when"
+        bundy_throw(Unexpected, "internal error: undefined lease type code when"
                   " returning textual representation of the lease type");
     }
 }
@@ -260,7 +260,7 @@ CommandOptions::initialize(int argc, char** argv, bool print_cmd_line) {
                 drop_time_[drop_time_set_] =
                     boost::lexical_cast<double>(optarg);
             } catch (boost::bad_lexical_cast&) {
-                isc_throw(isc::InvalidParameter,
+                bundy_throw(bundy::InvalidParameter,
                           "value of drop time: -d<value>"
                           " must be positive number");
             }
@@ -280,7 +280,7 @@ CommandOptions::initialize(int argc, char** argv, bool print_cmd_line) {
                     drop_percent =
                         boost::lexical_cast<double>(drop_arg.substr(0, percent_loc));
                 } catch (boost::bad_lexical_cast&) {
-                    isc_throw(isc::InvalidParameter,
+                    bundy_throw(bundy::InvalidParameter,
                               "value of drop percentage: -D<value%>"
                               " must be 0..100");
                 }
@@ -347,7 +347,7 @@ CommandOptions::initialize(int argc, char** argv, bool print_cmd_line) {
             num_req = positiveInteger("value of num-request:"
                                       " -n<value> must be a positive integer");
             if (num_request_.size() >= 2) {
-                isc_throw(isc::InvalidParameter,
+                bundy_throw(bundy::InvalidParameter,
                           "value of maximum number of requests: -n<value> "
                           "already specified, unexpected 3rd occurrence"
                           " of -n<value>");
@@ -360,7 +360,7 @@ CommandOptions::initialize(int argc, char** argv, bool print_cmd_line) {
                 offset_arg = positiveInteger("value of random offset: "
                                              "-O<value> must be greater than 3");
             } else {
-                isc_throw(isc::InvalidParameter,
+                bundy_throw(bundy::InvalidParameter,
                           "random offsets already specified,"
                           " unexpected 3rd occurrence of -O<value>");
             }
@@ -414,7 +414,7 @@ CommandOptions::initialize(int argc, char** argv, bool print_cmd_line) {
                                       " expected -T<filename>");
                 template_file_.push_back(sarg);
             } else {
-                isc_throw(isc::InvalidParameter,
+                bundy_throw(bundy::InvalidParameter,
                           "template files are already specified,"
                           " unexpected 3rd -T<filename> occurrence");
             }
@@ -440,7 +440,7 @@ CommandOptions::initialize(int argc, char** argv, bool print_cmd_line) {
                                              " -X<value> must be a"
                                              " positive integer");
             } else {
-                isc_throw(isc::InvalidParameter,
+                bundy_throw(bundy::InvalidParameter,
                           "transaction ids already specified,"
                           " unexpected 3rd -X<value> occurrence");
             }
@@ -448,7 +448,7 @@ CommandOptions::initialize(int argc, char** argv, bool print_cmd_line) {
             break;
 
         default:
-            isc_throw(isc::InvalidParameter, "unknown command line option");
+            bundy_throw(bundy::InvalidParameter, "unknown command line option");
         }
     }
 
@@ -509,7 +509,7 @@ CommandOptions::initialize(int argc, char** argv, bool print_cmd_line) {
         }
     }
     if (server_name_.empty()) {
-        isc_throw(InvalidParameter,
+        bundy_throw(InvalidParameter,
                   "without an interface, server is required");
     }
 
@@ -536,7 +536,7 @@ CommandOptions::initClientsNum() {
         check(clients_num < 0, errmsg);
         clients_num_ = boost::lexical_cast<uint32_t>(optarg);
     } catch (boost::bad_lexical_cast&) {
-        isc_throw(isc::InvalidParameter, errmsg);
+        bundy_throw(bundy::InvalidParameter, errmsg);
     }
 }
 
@@ -562,7 +562,7 @@ CommandOptions::decodeBase(const std::string& base) {
     } else if (b.substr(0, 5) == "duid=") {
         decodeDuid(b);
     } else {
-        isc_throw(isc::InvalidParameter,
+        bundy_throw(bundy::InvalidParameter,
                   "base value not provided as -b<value>,"
                   " expected -b mac=<mac> or -b duid=<duid>");
     }
@@ -589,8 +589,8 @@ CommandOptions::decodeMac(const std::string& base) {
             try {
                 // Do actual conversion
                 ui = convertHexString(token);
-            } catch (isc::InvalidParameter&) {
-                isc_throw(isc::InvalidParameter,
+            } catch (bundy::InvalidParameter&) {
+                bundy_throw(bundy::InvalidParameter,
                           "invalid characters in MAC provided");
 
             }
@@ -622,8 +622,8 @@ CommandOptions::decodeDuid(const std::string& base) {
         try {
             // Do actual conversion
             ui = convertHexString(b.substr(i, 2));
-        } catch (isc::InvalidParameter&) {
-            isc_throw(isc::InvalidParameter,
+        } catch (bundy::InvalidParameter&) {
+            bundy_throw(bundy::InvalidParameter,
                       "invalid characters in DUID provided,"
                       " expected hex digits");
         }
@@ -647,8 +647,8 @@ CommandOptions::generateDuidTemplate() {
     const uint8_t duid_template_len = 14;
     duid_template_.resize(duid_template_len);
     // The first four octets consist of DUID LLT and hardware type.
-    duid_template_[0] = static_cast<uint8_t>(static_cast<uint16_t>(isc::dhcp::DUID::DUID_LLT) >> 8);
-    duid_template_[1] = static_cast<uint8_t>(static_cast<uint16_t>(isc::dhcp::DUID::DUID_LLT) & 0xff);
+    duid_template_[0] = static_cast<uint8_t>(static_cast<uint16_t>(bundy::dhcp::DUID::DUID_LLT) >> 8);
+    duid_template_[1] = static_cast<uint8_t>(static_cast<uint16_t>(bundy::dhcp::DUID::DUID_LLT) & 0xff);
     duid_template_[2] = HWTYPE_ETHERNET >> 8;
     duid_template_[3] = HWTYPE_ETHERNET & 0xff;
 
@@ -673,7 +673,7 @@ CommandOptions::convertHexString(const std::string& text) const {
     // First, check if we are dealing with hexadecimal digits only
     for (int i = 0; i < text.length(); ++i) {
         if (!std::isxdigit(text[i])) {
-            isc_throw(isc::InvalidParameter,
+            bundy_throw(bundy::InvalidParameter,
                       "The following digit: " << text[i] << " in "
                       << text << "is not hexadecimal");
         }
@@ -683,7 +683,7 @@ CommandOptions::convertHexString(const std::string& text) const {
     text_stream >> std::hex >> ui >> std::dec;
     // Check if for some reason we have overflow - this should never happen!
     if (ui > 0xFF) {
-        isc_throw(isc::InvalidParameter, "Can't convert more than"
+        bundy_throw(bundy::InvalidParameter, "Can't convert more than"
                   " two hex digits to byte");
     }
     return ui;
@@ -773,7 +773,7 @@ CommandOptions::check(bool condition, const std::string& errmsg) const {
     std::ostringstream stream;
     stream << errmsg << "\n";
     if (condition) {
-        isc_throw(isc::InvalidParameter, errmsg);
+        bundy_throw(bundy::InvalidParameter, errmsg);
     }
 }
 
@@ -784,7 +784,7 @@ CommandOptions::positiveInteger(const std::string& errmsg) const {
         check(value <= 0, errmsg);
         return (value);
     } catch (boost::bad_lexical_cast&) {
-        isc_throw(InvalidParameter, errmsg);
+        bundy_throw(InvalidParameter, errmsg);
     }
 }
 
@@ -795,7 +795,7 @@ CommandOptions::nonNegativeInteger(const std::string& errmsg) const {
         check(value < 0, errmsg);
         return (value);
     } catch (boost::bad_lexical_cast&) {
-        isc_throw(InvalidParameter, errmsg);
+        bundy_throw(InvalidParameter, errmsg);
     }
 }
 
@@ -803,7 +803,7 @@ std::string
 CommandOptions::nonEmptyString(const std::string& errmsg) const {
     std::string sarg = optarg;
     if (sarg.length() == 0) {
-        isc_throw(isc::InvalidParameter, errmsg);
+        bundy_throw(bundy::InvalidParameter, errmsg);
     }
     return sarg;
 }
@@ -1064,4 +1064,4 @@ CommandOptions::version() const {
 
 
 } // namespace perfdhcp
-} // namespace isc
+} // namespace bundy

@@ -47,14 +47,14 @@
 #include <asiodns/logger.h>
 
 using namespace asio;
-using namespace isc::asiolink;
-using namespace isc::dns;
-using namespace isc::util;
-using namespace isc::util::random;
-using namespace isc::log;
+using namespace bundy::asiolink;
+using namespace bundy::dns;
+using namespace bundy::util;
+using namespace bundy::util::random;
+using namespace bundy::log;
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace asiodns {
 
 // Log debug verbosity
@@ -97,10 +97,10 @@ struct IOFetchData {
     // as the ID of the error message that would be generated if the I/O failed.
     // This means that we must make sure that all possible "origins" take the
     // same arguments in their message in the same order.
-    isc::log::MessageID         origin;     ///< Origin of last asynchronous I/O
+    bundy::log::MessageID         origin;     ///< Origin of last asynchronous I/O
     uint8_t                     staging[IOFetch::STAGING_LENGTH];
                                             ///< Temporary array for received data
-    isc::dns::qid_t             qid;         ///< The QID set in the query
+    bundy::dns::qid_t             qid;         ///< The QID set in the query
 
     /// \brief Constructor
     ///
@@ -169,7 +169,7 @@ struct IOFetchData {
 /// IOFetch Constructor - just initialize the private data
 
 IOFetch::IOFetch(Protocol protocol, IOService& service,
-    const isc::dns::Question& question, const IOAddress& address,
+    const bundy::dns::Question& question, const IOAddress& address,
     uint16_t port, OutputBufferPtr& buff, Callback* cb, int wait, bool edns)
 {
     MessagePtr query_msg(new Message(Message::RENDER));
@@ -207,7 +207,7 @@ IOFetch::IOFetch(Protocol protocol, IOService& service,
 void
 IOFetch::initIOFetch(MessagePtr& query_msg, Protocol protocol,
                      IOService& service,
-                     const isc::dns::Question& question,
+                     const bundy::dns::Question& question,
                      const IOAddress& address, uint16_t port,
                      OutputBufferPtr& buff, Callback* cb, int wait, bool edns)
 {
@@ -418,4 +418,4 @@ void IOFetch::logIOFailure(asio::error_code ec) {
 }
 
 } // namespace asiodns
-} // namespace isc {
+} // namespace bundy {

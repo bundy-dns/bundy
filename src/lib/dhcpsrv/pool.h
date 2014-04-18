@@ -21,7 +21,7 @@
 
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief base class for Pool4 and Pool6
@@ -45,20 +45,20 @@ public:
     /// @brief Returns the first address in a pool.
     ///
     /// @return first address in a pool
-    const isc::asiolink::IOAddress& getFirstAddress() const {
+    const bundy::asiolink::IOAddress& getFirstAddress() const {
         return (first_);
     }
 
     /// @brief Returns the last address in a pool.
     /// @return last address in a pool
-    const isc::asiolink::IOAddress& getLastAddress() const {
+    const bundy::asiolink::IOAddress& getLastAddress() const {
         return (last_);
     }
 
     /// @brief Checks if a given address is in the range.
     ///
     /// @return true, if the address is in pool
-    bool inRange(const isc::asiolink::IOAddress& addr) const;
+    bool inRange(const bundy::asiolink::IOAddress& addr) const;
 
     /// @brief Returns pool type (v4, v6 non-temporary, v6 temp, v6 prefix)
     /// @return returns pool type
@@ -91,8 +91,8 @@ protected:
     /// @param first first address of a range
     /// @param last last address of a range
     Pool(Lease::Type type,
-         const isc::asiolink::IOAddress& first,
-         const isc::asiolink::IOAddress& last);
+         const bundy::asiolink::IOAddress& first,
+         const bundy::asiolink::IOAddress& last);
 
     /// @brief returns the next unique Pool-ID
     ///
@@ -108,10 +108,10 @@ protected:
     uint32_t id_;
 
     /// @brief The first address in a pool
-    isc::asiolink::IOAddress first_;
+    bundy::asiolink::IOAddress first_;
 
     /// @brief The last address in a pool
-    isc::asiolink::IOAddress last_;
+    bundy::asiolink::IOAddress last_;
 
     /// @brief Comments field
     ///
@@ -132,14 +132,14 @@ public:
     ///
     /// @param first the first address in a pool
     /// @param last the last address in a pool
-    Pool4(const isc::asiolink::IOAddress& first,
-          const isc::asiolink::IOAddress& last);
+    Pool4(const bundy::asiolink::IOAddress& first,
+          const bundy::asiolink::IOAddress& last);
 
     /// @brief the constructor for Pool4 "prefix/len" style definition
     ///
     /// @param prefix specifies prefix of the pool
     /// @param prefix_len specifies length of the prefix of the pool
-    Pool4(const isc::asiolink::IOAddress& prefix,
+    Pool4(const bundy::asiolink::IOAddress& prefix,
           uint8_t prefix_len);
 };
 
@@ -160,8 +160,8 @@ public:
     /// @param type type of the pool (IA or TA)
     /// @param first the first address in a pool
     /// @param last the last address in a pool
-    Pool6(Lease::Type type, const isc::asiolink::IOAddress& first,
-          const isc::asiolink::IOAddress& last);
+    Pool6(Lease::Type type, const bundy::asiolink::IOAddress& first,
+          const bundy::asiolink::IOAddress& last);
 
     /// @brief the constructor for Pool6 "prefix/len" style definition
     ///
@@ -190,7 +190,7 @@ public:
     /// @param prefix specifies prefix of the pool
     /// @param prefix_len specifies prefix length of the pool
     /// @param delegated_len specifies lenght of the delegated prefixes
-    Pool6(Lease::Type type, const isc::asiolink::IOAddress& prefix,
+    Pool6(Lease::Type type, const bundy::asiolink::IOAddress& prefix,
           uint8_t prefix_len, uint8_t delegated_len = 128);
 
     /// @brief returns pool type
@@ -229,8 +229,8 @@ typedef boost::shared_ptr<Pool> PoolPtr;
 typedef std::vector<PoolPtr> PoolCollection;
 
 
-} // end of isc::dhcp namespace
-} // end of isc namespace
+} // end of bundy::dhcp namespace
+} // end of bundy namespace
 
 
 #endif // POOL_H

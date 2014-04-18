@@ -27,12 +27,12 @@
 #include <util/unittests/wiredata.h>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::util;
-using namespace isc::dns::rdata;
-using namespace isc::dns::rdata::generic;
-using isc::UnitTestUtil;
-using isc::util::unittests::matchWireData;
+using namespace bundy::dns;
+using namespace bundy::util;
+using namespace bundy::dns::rdata;
+using namespace bundy::dns::rdata::generic;
+using bundy::UnitTestUtil;
+using bundy::util::unittests::matchWireData;
 
 namespace {
 class Rdata_HINFO_Test : public RdataTest {

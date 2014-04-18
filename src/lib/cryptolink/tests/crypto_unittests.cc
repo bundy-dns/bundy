@@ -32,9 +32,9 @@
 #include <boost/shared_ptr.hpp>
 
 using boost::lexical_cast;
-using namespace isc::util;
-using namespace isc::util::encode;
-using namespace isc::cryptolink;
+using namespace bundy::util;
+using namespace bundy::util::encode;
+using namespace bundy::cryptolink;
 
 namespace {
     void checkData(const uint8_t* data, const uint8_t* expected,

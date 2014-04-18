@@ -18,7 +18,7 @@
 
 #include <gtest/gtest.h>
 
-using namespace isc::nsas;
+using namespace bundy::nsas;
 
 namespace {
 

@@ -19,13 +19,13 @@
 
 #include <boost/shared_ptr.hpp>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 /// @brief Defines a smart pointer to an IOService instance.
-typedef boost::shared_ptr<isc::asiolink::IOService> IOServicePtr;
+typedef boost::shared_ptr<bundy::asiolink::IOService> IOServicePtr;
 
-}; // namespace isc::d2
-}; // namespace isc
+}; // namespace bundy::d2
+}; // namespace bundy
 
 #endif

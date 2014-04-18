@@ -42,7 +42,7 @@
 
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 // Constructor.  The setting of logger_ must be done when the variable is
@@ -65,13 +65,13 @@ LoggerImpl::~LoggerImpl() {
 
 // Set the severity for logging.
 void
-LoggerImpl::setSeverity(isc::log::Severity severity, int dbglevel) {
+LoggerImpl::setSeverity(bundy::log::Severity severity, int dbglevel) {
     Level level(severity, dbglevel);
     logger_.setLogLevel(LoggerLevelImpl::convertFromBindLevel(level));
 }
 
 // Return severity level
-isc::log::Severity
+bundy::log::Severity
 LoggerImpl::getSeverity() {
     Level level = LoggerLevelImpl::convertToBindLevel(logger_.getLogLevel());
     return level.severity;
@@ -86,7 +86,7 @@ LoggerImpl::getDebugLevel() {
 
 // Get effective severity.  Either the current severity or, if not set, the
 // severity of the root level.
-isc::log::Severity
+bundy::log::Severity
 LoggerImpl::getEffectiveSeverity() {
     Level level = LoggerLevelImpl::convertToBindLevel(logger_.getChainedLogLevel());
     return level.severity;
@@ -111,10 +111,10 @@ LoggerImpl::lookupMessage(const MessageID& ident) {
 // Replace the interprocess synchronization object
 
 void
-LoggerImpl::setInterprocessSync(isc::log::interprocess::InterprocessSync* sync)
+LoggerImpl::setInterprocessSync(bundy::log::interprocess::InterprocessSync* sync)
 {
     if (sync == NULL) {
-        isc_throw(BadInterprocessSync,
+        bundy_throw(BadInterprocessSync,
                   "NULL was passed to setInterprocessSync()");
     }
 
@@ -126,7 +126,7 @@ void
 LoggerImpl::outputRaw(const Severity& severity, const string& message) {
     // Use a mutex locker for mutual exclusion from other threads in
     // this process.
-    isc::util::thread::Mutex::Locker mutex_locker(LoggerManager::getMutex());
+    bundy::util::thread::Mutex::Locker mutex_locker(LoggerManager::getMutex());
 
     // Use an interprocess sync locker for mutual exclusion from other
     // processes to avoid log messages getting interspersed.
@@ -172,4 +172,4 @@ LoggerImpl::outputRaw(const Severity& severity, const string& message) {
 }
 
 } // namespace log
-} // namespace isc
+} // namespace bundy

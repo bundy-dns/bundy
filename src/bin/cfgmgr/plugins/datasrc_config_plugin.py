@@ -13,11 +13,11 @@
 # NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
 # WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from isc.config.module_spec import module_spec_from_file
-from isc.util.file import path_search
+from bundy.config.module_spec import module_spec_from_file
+from bundy.util.file import path_search
 from bundy_config import PLUGIN_PATHS
-import isc.dns
-import isc.datasrc
+import bundy.dns
+import bundy.datasrc
 import json
 import os.path
 import copy
@@ -40,11 +40,11 @@ def check(config):
 
     for rr_class_str in classes:
         try:
-            rr_class = isc.dns.RRClass(rr_class_str)
-        except isc.dns.InvalidRRClass as irc:
+            rr_class = bundy.dns.RRClass(rr_class_str)
+        except bundy.dns.InvalidRRClass as irc:
             return "The class '" + rr_class_str + "' is invalid"
 
-        dlist = isc.datasrc.ConfigurableClientList(rr_class)
+        dlist = bundy.datasrc.ConfigurableClientList(rr_class)
         # We get a copy here, as we are going to mangle the configuration.
         # But we don't want our changes to propagate outside, to the real
         # configuration.
@@ -59,7 +59,7 @@ def check(config):
                     return 'Params of MasterFiles must be a named set'
                 for name in params:
                     try:
-                        isc.dns.Name(name)
+                        bundy.dns.Name(name)
                     except Exception as e: # There are many related exceptions
                         return str(e)
                     if not os.path.exists(params[name]):
@@ -72,7 +72,7 @@ def check(config):
 
         try:
             dlist.configure(json.dumps(client_config), False)
-        except isc.datasrc.Error as dse:
+        except bundy.datasrc.Error as dse:
             return str(dse)
     return None
 

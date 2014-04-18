@@ -24,7 +24,7 @@
 
 #include <log/message_types.h>
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 /// \brief Message Dictionary
@@ -185,6 +185,6 @@ private:
 };
 
 } // namespace log
-} // namespace isc
+} // namespace bundy
 
 #endif // MESSAGE_DICTIONARY_H

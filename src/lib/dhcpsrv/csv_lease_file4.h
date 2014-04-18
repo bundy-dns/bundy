@@ -24,7 +24,7 @@
 #include <string>
 #include <time.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief Provides methods to access CSV file with DHCPv4 leases.
@@ -35,10 +35,10 @@ namespace dhcp {
 ///
 /// @todo This class doesn't validate the lease values read from the file.
 /// The @c Lease4 is a structure that should be itself responsible for this
-/// validation (see http://bundy.isc.org/ticket/2405). However, when #2405
+/// validation (see http://bundy.bundy.org/ticket/2405). However, when #2405
 /// is implemented, the @c next function may need to be updated to use the
 /// validation capablity of @c Lease4.
-class CSVLeaseFile4 : public isc::util::CSVFile {
+class CSVLeaseFile4 : public bundy::util::CSVFile {
 public:
 
     /// @brief Constructor.
@@ -75,7 +75,7 @@ public:
     ///
     /// @todo Make sure that the values read from the file are correct.
     /// The appropriate @c Lease4 validation mechanism should be used once
-    /// ticket http://bundy.isc.org/ticket/2405 is implemented.
+    /// ticket http://bundy.bundy.org/ticket/2405 is implemented.
     bool next(Lease4Ptr& lease);
 
 private:
@@ -147,7 +147,7 @@ private:
 
 };
 
-} // namespace isc::dhcp
-} // namespace isc
+} // namespace bundy::dhcp
+} // namespace bundy
 
 #endif // CSV_LEASE_FILE4_H

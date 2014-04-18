@@ -35,18 +35,18 @@
 #include <iostream>
 #include <sstream>
 
-using namespace isc;
-using namespace isc::data;
-using namespace isc::config;
-using namespace isc::test;
-using namespace isc::asiolink;
-using namespace isc::dhcp;
-using namespace isc::util;
-using namespace isc::hooks;
+using namespace bundy;
+using namespace bundy::data;
+using namespace bundy::config;
+using namespace bundy::test;
+using namespace bundy::asiolink;
+using namespace bundy::dhcp;
+using namespace bundy::util;
+using namespace bundy::hooks;
 using namespace std;
 
 // namespace has to be named, because friends are defined in Dhcpv6Srv class
-// Maybe it should be isc::test?
+// Maybe it should be bundy::test?
 namespace {
 
 // Checks if hooks are implemented properly.

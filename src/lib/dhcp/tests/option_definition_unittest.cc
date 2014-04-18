@@ -33,9 +33,9 @@
 #include <gtest/gtest.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dhcp;
-using namespace isc::util;
+using namespace bundy;
+using namespace bundy::dhcp;
+using namespace bundy::util;
 
 namespace {
 
@@ -76,23 +76,23 @@ TEST_F(OptionDefinitionTest, constructor) {
     // Specify encapsulated option space name and option data type
     // as enum value.
     OptionDefinition opt_def3("OPTION_VENDOR_OPTS", D6O_VENDOR_OPTS,
-                              OPT_UINT32_TYPE, "isc");
+                              OPT_UINT32_TYPE, "bundy");
     EXPECT_EQ("OPTION_VENDOR_OPTS", opt_def3.getName());
     EXPECT_EQ(D6O_VENDOR_OPTS, opt_def3.getCode());
     EXPECT_EQ(OPT_UINT32_TYPE, opt_def3.getType());
     EXPECT_FALSE(opt_def3.getArrayType());
-    EXPECT_EQ("isc", opt_def3.getEncapsulatedSpace());
+    EXPECT_EQ("bundy", opt_def3.getEncapsulatedSpace());
     EXPECT_NO_THROW(opt_def3.validate());
 
     // Specify encapsulated option space name and option data type
     // as string value.
     OptionDefinition opt_def4("OPTION_VENDOR_OPTS", D6O_VENDOR_OPTS,
-                              "uint32", "isc");
+                              "uint32", "bundy");
     EXPECT_EQ("OPTION_VENDOR_OPTS", opt_def4.getName());
     EXPECT_EQ(D6O_VENDOR_OPTS, opt_def4.getCode());
     EXPECT_EQ(OPT_UINT32_TYPE, opt_def4.getType());
     EXPECT_FALSE(opt_def4.getArrayType());
-    EXPECT_EQ("isc", opt_def4.getEncapsulatedSpace());
+    EXPECT_EQ("bundy", opt_def4.getEncapsulatedSpace());
     EXPECT_NO_THROW(opt_def4.validate());
 
     // Check if it is possible to set that option is an array.
@@ -131,7 +131,7 @@ TEST_F(OptionDefinitionTest, addRecordField) {
         }
         OptionDefinition opt_def("OPTION_IAADDR", 5,
                                  static_cast<OptionDataType>(i));
-        EXPECT_THROW(opt_def.addRecordField("uint8"), isc::InvalidOperation);
+        EXPECT_THROW(opt_def.addRecordField("uint8"), bundy::InvalidOperation);
     }
 
     // Positive scenario starts here.
@@ -149,10 +149,10 @@ TEST_F(OptionDefinitionTest, addRecordField) {
     EXPECT_EQ(OPT_UINT32_TYPE, fields[2]);
 
     // Let's try some more negative scenarios: use invalid data types.
-    EXPECT_THROW(opt_def.addRecordField("unknown_type_xyz"), isc::BadValue);
+    EXPECT_THROW(opt_def.addRecordField("unknown_type_xyz"), bundy::BadValue);
     OptionDataType invalid_type =
         static_cast<OptionDataType>(OPT_UNKNOWN_TYPE + 10);
-    EXPECT_THROW(opt_def.addRecordField(invalid_type), isc::BadValue);
+    EXPECT_THROW(opt_def.addRecordField(invalid_type), bundy::BadValue);
 
     // It is bad if we use 'record' option type but don't specify
     // at least two fields.
@@ -759,13 +759,13 @@ TEST_F(OptionDefinitionTest, boolTokenized) {
     // this value is neither "true" nor "false".
     values[0] = "garbage";
     EXPECT_THROW(opt_def.optionFactory(Option::V4, DHO_IP_FORWARDING, values),
-      isc::dhcp::BadDataTypeCast);
+      bundy::dhcp::BadDataTypeCast);
 
     // A conversion of numeric value to boolean should fail if this value
     // is neither "0" nor "1".
     values[0] = "2";
     EXPECT_THROW(opt_def.optionFactory(Option::V4, DHO_IP_FORWARDING, values),
-      isc::dhcp::BadDataTypeCast);
+      bundy::dhcp::BadDataTypeCast);
 
 }
 
@@ -1103,7 +1103,7 @@ TEST_F(OptionDefinitionTest, integerInvalidType) {
     EXPECT_THROW(
         OptionDefinition::factoryInteger<bool>(Option::V6, D6O_PREFERENCE, "dhcp6",
                                                buf.begin(), buf.end(), NULL),
-        isc::dhcp::InvalidDataType
+        bundy::dhcp::InvalidDataType
     );
 }
 

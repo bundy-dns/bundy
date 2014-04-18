@@ -34,9 +34,9 @@
 #include <sstream>
 #include <vector>
 
-using isc::Unexpected;
-using namespace isc::dns;
-using namespace isc::dns::rdata;
+using bundy::Unexpected;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
 
 namespace {
 

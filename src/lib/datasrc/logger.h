@@ -25,11 +25,11 @@
 /// and should not be included in any publicly used header, only in local
 /// cc files.
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 
 /// \brief The logger for this library
-extern isc::log::Logger logger;
+extern bundy::log::Logger logger;
 
 /// \brief Trace basic operations
 const int DBG_TRACE_BASIC = DBGLVL_TRACE_BASIC;

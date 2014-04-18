@@ -43,12 +43,12 @@
 
 #include <iomanip>
 
-using namespace isc;
-using namespace isc::asiolink;
-using namespace isc::dhcp;
-using namespace isc::dhcp_ddns;
-using namespace isc::hooks;
-using namespace isc::log;
+using namespace bundy;
+using namespace bundy::asiolink;
+using namespace bundy::dhcp;
+using namespace bundy::dhcp_ddns;
+using namespace bundy::hooks;
+using namespace bundy::log;
 using namespace std;
 
 /// Structure that holds registered hook indexes
@@ -77,7 +77,7 @@ struct Dhcp4Hooks {
 // module is called.
 Dhcp4Hooks Hooks;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 const std::string Dhcpv4Srv::VENDOR_CLASS_PREFIX("VENDOR_CLASS_");
@@ -107,7 +107,7 @@ Dhcpv4Srv::Dhcpv4Srv(uint16_t port, const char* dbconfig, const bool use_bcast,
             // Create error handler. This handler will be called every time
             // the socket opening operation fails. We use this handler to
             // log a warning.
-            isc::dhcp::IfaceMgrErrorMsgCallback error_handler =
+            bundy::dhcp::IfaceMgrErrorMsgCallback error_handler =
                 boost::bind(&Dhcpv4Srv::ifaceMgrSocket4ErrorHandler, _1);
             IfaceMgr::instance().openSockets4(port_, use_bcast_, error_handler);
         }
@@ -310,7 +310,7 @@ Dhcpv4Srv::run() {
                 // "switch" statement.
                 ;
             }
-        } catch (const isc::Exception& e) {
+        } catch (const bundy::Exception& e) {
 
             // Catch-all exception (at least for ones based on the isc
             // Exception class, which covers more or less all that
@@ -432,31 +432,31 @@ Dhcpv4Srv::run() {
 string
 Dhcpv4Srv::srvidToString(const OptionPtr& srvid) {
     if (!srvid) {
-        isc_throw(BadValue, "NULL pointer passed to srvidToString()");
+        bundy_throw(BadValue, "NULL pointer passed to srvidToString()");
     }
     boost::shared_ptr<Option4AddrLst> generated =
         boost::dynamic_pointer_cast<Option4AddrLst>(srvid);
     if (!srvid) {
-        isc_throw(BadValue, "Pointer to invalid option passed to srvidToString()");
+        bundy_throw(BadValue, "Pointer to invalid option passed to srvidToString()");
     }
 
     Option4AddrLst::AddressContainer addrs = generated->getAddresses();
     if (addrs.size() != 1) {
-        isc_throw(BadValue, "Malformed option passed to srvidToString(). "
+        bundy_throw(BadValue, "Malformed option passed to srvidToString(). "
                   << "Expected to contain a single IPv4 address.");
     }
 
     return (addrs[0].toText());
 }
 
-isc::dhcp_ddns::D2Dhcid
+bundy::dhcp_ddns::D2Dhcid
 Dhcpv4Srv::computeDhcid(const Lease4Ptr& lease) {
     if (!lease) {
-        isc_throw(DhcidComputeError, "a pointer to the lease must be not"
+        bundy_throw(DhcidComputeError, "a pointer to the lease must be not"
                   " NULL to compute DHCID");
 
     } else if (lease->hostname_.empty()) {
-        isc_throw(DhcidComputeError, "unable to compute the DHCID for the"
+        bundy_throw(DhcidComputeError, "unable to compute the DHCID for the"
                   " lease which has empty hostname set");
 
     }
@@ -472,7 +472,7 @@ Dhcpv4Srv::computeDhcid(const Lease4Ptr& lease) {
         OptionDataTypeUtil::writeFqdn(lease->hostname_, fqdn_wire, true);
 
     } catch (const Exception& ex) {
-        isc_throw(DhcidComputeError, "unable to compute DHCID because the"
+        bundy_throw(DhcidComputeError, "unable to compute DHCID because the"
                   " hostname: " << lease->hostname_ << " is invalid");
 
     }
@@ -488,7 +488,7 @@ Dhcpv4Srv::computeDhcid(const Lease4Ptr& lease) {
             return (D2Dhcid(hwaddr, fqdn_wire));
         }
     } catch (const Exception& ex) {
-        isc_throw(DhcidComputeError, "unable to compute DHCID: "
+        bundy_throw(DhcidComputeError, "unable to compute DHCID: "
                   << ex.what());
 
     }
@@ -772,7 +772,7 @@ Dhcpv4Srv::processHostnameOption(const OptionStringPtr& opt_hostname,
         return;
     }
 
-    std::string hostname = isc::util::str::trim(opt_hostname->getValue());
+    std::string hostname = bundy::util::str::trim(opt_hostname->getValue());
     unsigned int label_count = OptionDataTypeUtil::getLabelCount(hostname);
     // The hostname option sent by the client should be at least 1 octet long.
     // If it isn't we ignore this option. (Per RFC 2131, section 3.14)
@@ -820,7 +820,7 @@ void
 Dhcpv4Srv::createNameChangeRequests(const Lease4Ptr& lease,
                                     const Lease4Ptr& old_lease) {
     if (!lease) {
-        isc_throw(isc::Unexpected,
+        bundy_throw(bundy::Unexpected,
                   "NULL lease specified when creating NameChangeRequest");
     }
 
@@ -832,7 +832,7 @@ Dhcpv4Srv::createNameChangeRequests(const Lease4Ptr& lease,
     // we discover that nothing has changed in the client's FQDN data.
     if (old_lease) {
         if (!lease->matches(*old_lease)) {
-            isc_throw(isc::Unexpected,
+            bundy_throw(bundy::Unexpected,
                       "there is no match between the current instance of the"
                       " lease: " << lease->toText() << ", and the previous"
                       " instance: " << lease->toText());
@@ -844,7 +844,7 @@ Dhcpv4Srv::createNameChangeRequests(const Lease4Ptr& lease,
             // - A server has performed reverse, forward or both updates.
             // - FQDN data between the new and old lease do not match.
             if (!lease->hasIdenticalFqdn(*old_lease)) {
-                queueNameChangeRequest(isc::dhcp_ddns::CHG_REMOVE,
+                queueNameChangeRequest(bundy::dhcp_ddns::CHG_REMOVE,
                                        old_lease);
 
             // If FQDN data from both leases match, there is no need to update.
@@ -859,12 +859,12 @@ Dhcpv4Srv::createNameChangeRequests(const Lease4Ptr& lease,
     // We may need to generate the NameChangeRequest for the new lease. It
     // will be generated only if hostname is set and if forward or reverse
     // update has been requested.
-    queueNameChangeRequest(isc::dhcp_ddns::CHG_ADD, lease);
+    queueNameChangeRequest(bundy::dhcp_ddns::CHG_ADD, lease);
 }
 
 void
 Dhcpv4Srv::
-queueNameChangeRequest(const isc::dhcp_ddns::NameChangeType chg_type,
+queueNameChangeRequest(const bundy::dhcp_ddns::NameChangeType chg_type,
                        const Lease4Ptr& lease) {
     // The hostname must not be empty, and at least one type of update
     // should be requested.
@@ -1348,7 +1348,7 @@ Dhcpv4Srv::processRelease(Pkt4Ptr& release) {
 
                 if (CfgMgr::instance().ddnsEnabled()) {
                     // Remove existing DNS entries for the lease, if any.
-                    queueNameChangeRequest(isc::dhcp_ddns::CHG_REMOVE, lease);
+                    queueNameChangeRequest(bundy::dhcp_ddns::CHG_REMOVE, lease);
                 }
             } else {
                 // Release failed -
@@ -1358,7 +1358,7 @@ Dhcpv4Srv::processRelease(Pkt4Ptr& release) {
                     .arg(release->getHWAddr()->toText());
             }
         }
-    } catch (const isc::Exception& ex) {
+    } catch (const bundy::Exception& ex) {
         // Rethrow the exception with a bit more data.
         LOG_ERROR(dhcp4_logger, DHCP4_RELEASE_EXCEPTION)
             .arg(ex.what())
@@ -1623,14 +1623,14 @@ Dhcpv4Srv::sanityCheck(const Pkt4Ptr& pkt, RequirementLevel serverid) {
     switch (serverid) {
     case FORBIDDEN:
         if (server_id) {
-            isc_throw(RFCViolation, "Server-id option was not expected, but "
+            bundy_throw(RFCViolation, "Server-id option was not expected, but "
                       << "received in " << serverReceivedPacketName(pkt->getType()));
         }
         break;
 
     case MANDATORY:
         if (!server_id) {
-            isc_throw(RFCViolation, "Server-id option was expected, but not "
+            bundy_throw(RFCViolation, "Server-id option was expected, but not "
                       " received in message "
                       << serverReceivedPacketName(pkt->getType()));
         }
@@ -1652,7 +1652,7 @@ Dhcpv4Srv::sanityCheck(const Pkt4Ptr& pkt, RequirementLevel serverid) {
 
     // If there's no client-id (or a useless one is provided, i.e. 0 length)
     if (!client_id || client_id->len() == client_id->getHeaderLen()) {
-        isc_throw(RFCViolation, "Missing or useless client-id and no HW address "
+        bundy_throw(RFCViolation, "Missing or useless client-id and no HW address "
                   " provided in message "
                   << serverReceivedPacketName(pkt->getType()));
     }
@@ -1673,7 +1673,7 @@ Dhcpv4Srv::openActiveSockets(const uint16_t port,
          iface != ifaces.end(); ++iface) {
         Iface* iface_ptr = IfaceMgr::instance().getIface(iface->getName());
         if (iface_ptr == NULL) {
-            isc_throw(isc::Unexpected, "Interface Manager returned NULL"
+            bundy_throw(bundy::Unexpected, "Interface Manager returned NULL"
                       << " instance of the interface when DHCPv4 server was"
                       << " trying to reopen sockets after reconfiguration");
         }
@@ -1696,7 +1696,7 @@ Dhcpv4Srv::openActiveSockets(const uint16_t port,
     // sockets are marked active or inactive.
     /// @todo Optimization: we should not reopen all sockets but rather select
     /// those that have been affected by the new configuration.
-    isc::dhcp::IfaceMgrErrorMsgCallback error_handler =
+    bundy::dhcp::IfaceMgrErrorMsgCallback error_handler =
         boost::bind(&Dhcpv4Srv::ifaceMgrSocket4ErrorHandler, _1);
     if (!IfaceMgr::instance().openSockets4(port, use_bcast, error_handler)) {
         LOG_WARN(dhcp4_logger, DHCP4_NO_SOCKETS_OPEN);
@@ -1706,7 +1706,7 @@ Dhcpv4Srv::openActiveSockets(const uint16_t port,
 size_t
 Dhcpv4Srv::unpackOptions(const OptionBuffer& buf,
                          const std::string& option_space,
-                         isc::dhcp::OptionCollection& options) {
+                         bundy::dhcp::OptionCollection& options) {
     size_t offset = 0;
 
     OptionDefContainer option_defs;
@@ -1741,13 +1741,13 @@ Dhcpv4Srv::unpackOptions(const OptionBuffer& buf,
         if (offset + 1 >= buf.size()) {
             // opt_type must be cast to integer so as it is not treated as
             // unsigned char value (a number is presented in error message).
-            isc_throw(OutOfRange, "Attempt to parse truncated option "
+            bundy_throw(OutOfRange, "Attempt to parse truncated option "
                       << static_cast<int>(opt_type));
         }
 
         uint8_t opt_len =  buf[offset++];
         if (offset + opt_len > buf.size()) {
-            isc_throw(OutOfRange, "Option parse failed. Tried to parse "
+            bundy_throw(OutOfRange, "Option parse failed. Tried to parse "
                       << offset + opt_len << " bytes from " << buf.size()
                       << "-byte long buffer.");
         }
@@ -1763,7 +1763,7 @@ Dhcpv4Srv::unpackOptions(const OptionBuffer& buf,
         OptionPtr opt;
         if (num_defs > 1) {
             // Multiple options of the same code are not supported right now!
-            isc_throw(isc::Unexpected, "Internal error: multiple option definitions"
+            bundy_throw(bundy::Unexpected, "Internal error: multiple option definitions"
                       " for option type " << static_cast<int>(opt_type)
                       << " returned. Currently it is not supported to initialize"
                       << " multiple option definitions for the same option code."
@@ -1904,4 +1904,4 @@ Dhcpv4Srv::d2ClientErrorHandler(const
 }
 
 }   // namespace dhcp
-}   // namespace isc
+}   // namespace bundy

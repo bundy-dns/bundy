@@ -3,7 +3,7 @@ bin_SCRIPTS = bundy-loadzone
 noinst_SCRIPTS = run_loadzone.sh
 
 nodist_pylogmessage_PYTHON = $(PYTHON_LOGMSGPKG_DIR)/work/loadzone_messages.py
-pylogmessagedir = $(pyexecdir)/isc/log_messages/
+pylogmessagedir = $(pyexecdir)/bundy/log_messages/
 
 CLEANFILES = bundy-loadzone loadzone.pyc
 CLEANFILES += $(PYTHON_LOGMSGPKG_DIR)/work/loadzone_messages.py

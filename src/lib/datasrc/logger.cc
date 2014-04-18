@@ -14,10 +14,10 @@
 
 #include <datasrc/logger.h>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 
-isc::log::Logger logger("datasrc");
+bundy::log::Logger logger("datasrc");
 
 }
 }

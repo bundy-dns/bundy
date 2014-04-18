@@ -34,25 +34,25 @@ import urllib.parse
 import json
 import re
 import ssl, socket
-import isc
+import bundy
 import pprint
 import csv
 import random
 import time
 import signal
 import errno
-from isc.config import ccsession
-import isc.cc.proto_defs
-import isc.util.process
-import isc.net.parse
+from bundy.config import ccsession
+import bundy.cc.proto_defs
+import bundy.util.process
+import bundy.net.parse
 from optparse import OptionParser, OptionValueError
 from hashlib import sha1
-from isc.util import socketserver_mixin
-from isc.log_messages.cmdctl_messages import *
-import isc.util.traceback_handler
+from bundy.util import socketserver_mixin
+from bundy.log_messages.cmdctl_messages import *
+import bundy.util.traceback_handler
 
-isc.log.init("bundy-cmdctl", buffer=True)
-logger = isc.log.Logger("cmdctl")
+bundy.log.init("bundy-cmdctl", buffer=True)
+logger = bundy.log.Logger("cmdctl")
 
 # Debug level for communication with BUNDY
 DBG_CMDCTL_MESSAGING = logger.DBGLVL_COMMAND
@@ -62,7 +62,7 @@ try:
 except ImportError:
     import dummy_threading as threading
 
-isc.util.process.rename()
+bundy.util.process.rename()
 
 __version__ = 'BUNDY'
 URL_PATTERN = re.compile('/([\w]+)(?:/([\w]+))?/?')
@@ -263,8 +263,8 @@ class CommandControl():
         commands sent from other modules, another one (self._cc)
         is used to send the command from Bindctl or other tools
         to proper modules.'''
-        self._cc = isc.cc.Session()
-        self._module_cc = isc.config.ModuleCCSession(SPECFILE_LOCATION,
+        self._cc = bundy.cc.Session()
+        self._module_cc = bundy.config.ModuleCCSession(SPECFILE_LOCATION,
                                               self.config_handler,
                                               self.command_handler)
         self._module_name = self._module_cc.get_module_spec().get_module_name()
@@ -437,7 +437,7 @@ class CommandControl():
         if module_name not in specs.keys():
             return 1, {'error' : 'unknown module'}
 
-        spec_obj = isc.config.module_spec.ModuleSpec(specs[module_name], False)
+        spec_obj = bundy.config.module_spec.ModuleSpec(specs[module_name], False)
         errors = []
         if not spec_obj.validate_command(command_name, params, errors):
             return 1, {'error': errors[0]}
@@ -470,7 +470,7 @@ class CommandControl():
         # in timeout.
         try:
             answer, env = self._cc.group_recvmsg(False, seq)
-        except isc.cc.session.SessionTimeout:
+        except bundy.cc.session.SessionTimeout:
             errstr = "Module '%s' not responding" % module_name
 
         if answer:
@@ -484,7 +484,7 @@ class CommandControl():
                         return rcode, {}
                 else:
                     errstr = \
-                        str(answer[isc.cc.proto_defs.CC_PAYLOAD_RESULT][1])
+                        str(answer[bundy.cc.proto_defs.CC_PAYLOAD_RESULT][1])
             except ccsession.ModuleCCSessionError as mcse:
                 errstr = str("Error in ccsession answer:") + str(mcse)
 
@@ -661,13 +661,13 @@ def run(addr = 'localhost', port = 8080, idle_timeout = 1200, verbose = False):
 
 def check_port(option, opt_str, value, parser):
     try:
-        parser.values.port = isc.net.parse.port_parse(value)
+        parser.values.port = bundy.net.parse.port_parse(value)
     except ValueError as e:
         raise OptionValueError(str(e))
 
 def check_addr(option, opt_str, value, parser):
     try:
-        isc.net.parse.addr_parse(value)
+        bundy.net.parse.addr_parse(value)
         parser.values.addr = value
     except ValueError as e:
         raise OptionValueError(str(e))
@@ -698,9 +698,9 @@ def main():
             logger.set_severity("DEBUG", 99)
         run(options.addr, options.port, options.idle_timeout, options.verbose)
         result = 0
-    except isc.cc.SessionError as err:
+    except bundy.cc.SessionError as err:
         logger.fatal(CMDCTL_CC_SESSION_ERROR, err)
-    except isc.cc.SessionTimeout:
+    except bundy.cc.SessionTimeout:
         logger.fatal(CMDCTL_CC_SESSION_TIMEOUT)
     except KeyboardInterrupt:
         logger.info(CMDCTL_STOPPED_BY_KEYBOARD)
@@ -715,4 +715,4 @@ def main():
     sys.exit(result)
 
 if __name__ == '__main__':
-    isc.util.traceback_handler.traceback_handler(main)
+    bundy.util.traceback_handler.traceback_handler(main)

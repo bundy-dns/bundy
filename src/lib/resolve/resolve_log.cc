@@ -16,11 +16,11 @@
 
 #include <resolve/resolve_log.h>
 
-namespace isc {
+namespace bundy {
 namespace resolve {
 
-isc::log::Logger logger("reslib");  // Distinct from "resolver"
+bundy::log::Logger logger("reslib");  // Distinct from "resolver"
 
 } // namespace resolve
-} // namespace isc
+} // namespace bundy
 

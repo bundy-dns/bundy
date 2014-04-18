@@ -29,9 +29,9 @@
 #include <boost/scoped_ptr.hpp>
 #include <boost/bind.hpp>
 
-using namespace isc::data;
-using namespace isc::config;
-using namespace isc::cc;
+using namespace bundy::data;
+using namespace bundy::config;
+using namespace bundy::cc;
 using namespace std;
 
 namespace {
@@ -48,7 +48,7 @@ el(const std::string& str) {
 class CCSessionTest : public ::testing::Test {
 protected:
     CCSessionTest() : session(el("[]"), el("[]"), el("[]")),
-                      root_name(isc::log::getRootLoggerName())
+                      root_name(bundy::log::getRootLoggerName())
     {
         // upon creation of a ModuleCCSession, the class
 
@@ -81,7 +81,7 @@ protected:
         return (result);
     }
     ~CCSessionTest() {
-        isc::log::setRootLoggerName(root_name);
+        bundy::log::setRootLoggerName(root_name);
     }
     FakeSession session;
     const std::string root_name;
@@ -115,7 +115,7 @@ TEST_F(CCSessionTest, receiveNotification) {
     EXPECT_TRUE(session.haveSubscription("notifications/group", "*"));
     EXPECT_TRUE(called.empty());
     // Send the notification
-    const isc::data::ConstElementPtr msg = el("{"
+    const bundy::data::ConstElementPtr msg = el("{"
         "       \"notification\": ["
         "           \"event\", {"
         "               \"param\": true"
@@ -1178,16 +1178,16 @@ TEST_F(AsyncReceiveCCSessionTest, cancelSome) {
 }
 
 void doRelatedLoggersTest(const char* input, const char* expected) {
-    ConstElementPtr all_conf = isc::data::Element::fromJSON(input);
-    ConstElementPtr expected_conf = isc::data::Element::fromJSON(expected);
-    EXPECT_EQ(*expected_conf, *isc::config::getRelatedLoggers(all_conf));
+    ConstElementPtr all_conf = bundy::data::Element::fromJSON(input);
+    ConstElementPtr expected_conf = bundy::data::Element::fromJSON(expected);
+    EXPECT_EQ(*expected_conf, *bundy::config::getRelatedLoggers(all_conf));
 }
 
 TEST(LogConfigTest, relatedLoggersTest) {
     // make sure logger configs for 'other' programs are ignored,
     // and that * is substituted correctly
     // We'll use a root logger name of "bundy-test".
-    isc::log::setRootLoggerName("bundy-test");
+    bundy::log::setRootLoggerName("bundy-test");
 
     doRelatedLoggersTest("[{ \"name\": \"other_module\" }]",
                          "[]");

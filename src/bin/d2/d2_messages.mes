@@ -12,7 +12,7 @@
 # OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
 
-$NAMESPACE isc::d2
+$NAMESPACE bundy::d2
 
 % DCTL_CCSESSION_ENDING %1 ending control channel session
 This debug message is issued just before the controller attempts

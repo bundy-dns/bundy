@@ -24,7 +24,7 @@
 
 #include <map>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 /// @brief Exception indicating that Zone section contains invalid content.
@@ -36,7 +36,7 @@ namespace d2 {
 class InvalidZoneSection : public Exception {
 public:
     InvalidZoneSection(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// @brief Exception indicating that QR flag has invalid value.
@@ -50,7 +50,7 @@ public:
 class InvalidQRFlag : public Exception {
 public:
     InvalidQRFlag(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// @brief Exception indicating that the parsed message is not DNS Update.
@@ -60,7 +60,7 @@ public:
 class NotUpdateMessage : public Exception {
 public:
     NotUpdateMessage(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 class D2UpdateMessage;
@@ -76,11 +76,11 @@ typedef boost::shared_ptr<D2UpdateMessage> D2UpdateMessagePtr;
 /// messages received from the DNS server in the on-wire format.
 ///
 /// <b>Design choice:</b> A dedicated class has been created to encapsulate
-/// DNS Update message because existing @c isc::dns::Message is designed to
+/// DNS Update message because existing @c bundy::dns::Message is designed to
 /// support regular DNS messages (described in RFC 1035) only. Although DNS
 /// Update has the same format, particular sections serve different purposes.
-/// In order to avoid rewrite of significant portions of @c isc::dns::Message
-/// class, this class is implemented in-terms-of @c isc::dns::Message class
+/// In order to avoid rewrite of significant portions of @c bundy::dns::Message
+/// class, this class is implemented in-terms-of @c bundy::dns::Message class
 /// to reuse its functionality where possible.
 class D2UpdateMessage {
 public:
@@ -283,20 +283,20 @@ public:
     /// - The number of records in the Zone section is greater than 1.
     ///
     /// @param buffer input buffer, holding DNS Update message to be parsed.
-    void fromWire(isc::util::InputBuffer& buffer);
+    void fromWire(bundy::util::InputBuffer& buffer);
     //@}
 
 private:
     /// Maps the values of the @c UpdateMessageSection field to the
-    /// corresponding values in the @c isc::dns::Message class. This
-    /// mapping is required here because this class uses @c isc::dns::Message
+    /// corresponding values in the @c bundy::dns::Message class. This
+    /// mapping is required here because this class uses @c bundy::dns::Message
     /// class to do the actual processing of the DNS Update message.
     ///
     /// @param section An enum indicating the section for which the
-    /// corresponding  enum value from @c isc::dns::Message will be returned.
+    /// corresponding  enum value from @c bundy::dns::Message will be returned.
     ///
     /// @return The enum value indicating the section in the DNS message
-    /// represented by the @c isc::dns::Message class.
+    /// represented by the @c bundy::dns::Message class.
     static
     dns::Message::Section ddnsToDnsSection(const UpdateMsgSection section);
 
@@ -311,9 +311,9 @@ private:
     /// The function will throw exception if any of the conditions above are
     /// not met.
     ///
-    /// @throw isc::d2::NotUpdateMessage if invalid Opcode.
-    /// @throw isc::d2::InvalidQRFlag if QR flag is not set to RESPONSE
-    /// @throw isc::d2::InvalidZone section, if Zone section comprises more
+    /// @throw bundy::d2::NotUpdateMessage if invalid Opcode.
+    /// @throw bundy::d2::InvalidQRFlag if QR flag is not set to RESPONSE
+    /// @throw bundy::d2::InvalidZone section, if Zone section comprises more
     /// than one record.
     void validateResponse() const;
 
@@ -336,6 +336,6 @@ private:
 };
 
 } // namespace d2
-} // namespace isc
+} // namespace bundy
 
 #endif // D2_UPDATE_MESSAGE_H

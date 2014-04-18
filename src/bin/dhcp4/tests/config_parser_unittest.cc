@@ -41,13 +41,13 @@
 #include <sstream>
 #include <limits.h>
 
-using namespace isc;
-using namespace isc::asiolink;
-using namespace isc::config;
-using namespace isc::data;
-using namespace isc::dhcp;
-using namespace isc::dhcp::test;
-using namespace isc::hooks;
+using namespace bundy;
+using namespace bundy::asiolink;
+using namespace bundy::config;
+using namespace bundy::data;
+using namespace bundy::dhcp;
+using namespace bundy::dhcp::test;
+using namespace bundy::hooks;
 using namespace std;
 
 namespace {
@@ -65,8 +65,8 @@ std::string specfile(const std::string& name) {
 /// Verifies that the BUNDY DHCP-DDNS configuration specification file
 //  is valid.
 TEST(Dhcp4SpecTest, basicSpec) {
-    (isc::config::moduleSpecFromFile(specfile("dhcp4.spec")));
-    ASSERT_NO_THROW(isc::config::moduleSpecFromFile(specfile("dhcp4.spec")));
+    (bundy::config::moduleSpecFromFile(specfile("dhcp4.spec")));
+    ASSERT_NO_THROW(bundy::config::moduleSpecFromFile(specfile("dhcp4.spec")));
 }
 
 class Dhcp4ParserTest : public ::testing::Test {
@@ -459,7 +459,7 @@ public:
     boost::scoped_ptr<Dhcpv4Srv> srv_;  ///< DHCP4 server under test
     int rcode_;                         ///< Return code from element parsing
     ConstElementPtr comment_;           ///< Reason for parse fail
-    isc::dhcp::ClientClasses classify_; ///< used in client classification
+    bundy::dhcp::ClientClasses classify_; ///< used in client classification
 };
 
 // Goal of this test is a verification if a very simple config update
@@ -1109,14 +1109,14 @@ TEST_F(Dhcp4ParserTest, optionDefIpv4Address) {
         "      \"type\": \"ipv4-address\","
         "      \"array\": False,"
         "      \"record-types\": \"\","
-        "      \"space\": \"isc\","
+        "      \"space\": \"bundy\","
         "      \"encapsulate\": \"\""
         "  } ]"
         "}";
     ElementPtr json = Element::fromJSON(config);
 
     // Make sure that the particular option definition does not exist.
-    OptionDefinitionPtr def = CfgMgr::instance().getOptionDef("isc", 100);
+    OptionDefinitionPtr def = CfgMgr::instance().getOptionDef("bundy", 100);
     ASSERT_FALSE(def);
 
     // Use the configuration string to create new option definition.
@@ -1126,7 +1126,7 @@ TEST_F(Dhcp4ParserTest, optionDefIpv4Address) {
     checkResult(status, 0);
 
     // The option definition should now be available in the CfgMgr.
-    def = CfgMgr::instance().getOptionDef("isc", 100);
+    def = CfgMgr::instance().getOptionDef("bundy", 100);
     ASSERT_TRUE(def);
 
     // Verify that the option definition data is valid.
@@ -1150,14 +1150,14 @@ TEST_F(Dhcp4ParserTest, optionDefRecord) {
         "      \"type\": \"record\","
         "      \"array\": False,"
         "      \"record-types\": \"uint16, ipv4-address, ipv6-address, string\","
-        "      \"space\": \"isc\","
+        "      \"space\": \"bundy\","
         "      \"encapsulate\": \"\""
         "  } ]"
         "}";
     ElementPtr json = Element::fromJSON(config);
 
     // Make sure that the particular option definition does not exist.
-    OptionDefinitionPtr def = CfgMgr::instance().getOptionDef("isc", 100);
+    OptionDefinitionPtr def = CfgMgr::instance().getOptionDef("bundy", 100);
     ASSERT_FALSE(def);
 
     // Use the configuration string to create new option definition.
@@ -1167,7 +1167,7 @@ TEST_F(Dhcp4ParserTest, optionDefRecord) {
     checkResult(status, 0);
 
     // The option definition should now be available in the CfgMgr.
-    def = CfgMgr::instance().getOptionDef("isc", 100);
+    def = CfgMgr::instance().getOptionDef("bundy", 100);
     ASSERT_TRUE(def);
 
     // Check the option data.
@@ -1199,7 +1199,7 @@ TEST_F(Dhcp4ParserTest, optionDefMultiple) {
         "      \"type\": \"uint32\","
         "      \"array\": False,"
         "      \"record-types\": \"\","
-        "      \"space\": \"isc\","
+        "      \"space\": \"bundy\","
         "      \"encapsulate\": \"\""
         "  },"
         "  {"
@@ -1208,15 +1208,15 @@ TEST_F(Dhcp4ParserTest, optionDefMultiple) {
         "      \"type\": \"ipv4-address\","
         "      \"array\": False,"
         "      \"record-types\": \"\","
-        "      \"space\": \"isc\","
+        "      \"space\": \"bundy\","
         "      \"encapsulate\": \"\""
         "  } ]"
         "}";
     ElementPtr json = Element::fromJSON(config);
 
     // Make sure that the option definitions do not exist yet.
-    ASSERT_FALSE(CfgMgr::instance().getOptionDef("isc", 100));
-    ASSERT_FALSE(CfgMgr::instance().getOptionDef("isc", 101));
+    ASSERT_FALSE(CfgMgr::instance().getOptionDef("bundy", 100));
+    ASSERT_FALSE(CfgMgr::instance().getOptionDef("bundy", 101));
 
     // Use the configuration string to create new option definitions.
     ConstElementPtr status;
@@ -1225,7 +1225,7 @@ TEST_F(Dhcp4ParserTest, optionDefMultiple) {
     checkResult(status, 0);
 
     // Check the first definition we have created.
-    OptionDefinitionPtr def1 = CfgMgr::instance().getOptionDef("isc", 100);
+    OptionDefinitionPtr def1 = CfgMgr::instance().getOptionDef("bundy", 100);
     ASSERT_TRUE(def1);
 
     // Check the option data.
@@ -1236,7 +1236,7 @@ TEST_F(Dhcp4ParserTest, optionDefMultiple) {
     EXPECT_TRUE(def1->getEncapsulatedSpace().empty());
 
     // Check the second option definition we have created.
-    OptionDefinitionPtr def2 = CfgMgr::instance().getOptionDef("isc", 101);
+    OptionDefinitionPtr def2 = CfgMgr::instance().getOptionDef("bundy", 101);
     ASSERT_TRUE(def2);
 
     // Check the option data.
@@ -1261,7 +1261,7 @@ TEST_F(Dhcp4ParserTest, optionDefDuplicate) {
         "      \"type\": \"uint32\","
         "      \"array\": False,"
         "      \"record-types\": \"\","
-        "      \"space\": \"isc\","
+        "      \"space\": \"bundy\","
         "      \"encapsulate\": \"\""
         "  },"
         "  {"
@@ -1270,14 +1270,14 @@ TEST_F(Dhcp4ParserTest, optionDefDuplicate) {
         "      \"type\": \"ipv4-address\","
         "      \"array\": False,"
         "      \"record-types\": \"\","
-        "      \"space\": \"isc\","
+        "      \"space\": \"bundy\","
         "      \"encapsulate\": \"\""
         "  } ]"
         "}";
     ElementPtr json = Element::fromJSON(config);
 
     // Make sure that the option definition does not exist yet.
-    ASSERT_FALSE(CfgMgr::instance().getOptionDef("isc", 100));
+    ASSERT_FALSE(CfgMgr::instance().getOptionDef("bundy", 100));
 
     // Use the configuration string to create new option definitions.
     ConstElementPtr status;
@@ -1299,14 +1299,14 @@ TEST_F(Dhcp4ParserTest, optionDefArray) {
         "      \"type\": \"uint32\","
         "      \"array\": True,"
         "      \"record-types\": \"\","
-        "      \"space\": \"isc\","
+        "      \"space\": \"bundy\","
         "      \"encapsulate\": \"\""
         "  } ]"
         "}";
     ElementPtr json = Element::fromJSON(config);
 
     // Make sure that the particular option definition does not exist.
-    OptionDefinitionPtr def = CfgMgr::instance().getOptionDef("isc", 100);
+    OptionDefinitionPtr def = CfgMgr::instance().getOptionDef("bundy", 100);
     ASSERT_FALSE(def);
 
     // Use the configuration string to create new option definition.
@@ -1316,7 +1316,7 @@ TEST_F(Dhcp4ParserTest, optionDefArray) {
     checkResult(status, 0);
 
     // The option definition should now be available in the CfgMgr.
-    def = CfgMgr::instance().getOptionDef("isc", 100);
+    def = CfgMgr::instance().getOptionDef("bundy", 100);
     ASSERT_TRUE(def);
 
     // Check the option data.
@@ -1340,14 +1340,14 @@ TEST_F(Dhcp4ParserTest, optionDefEncapsulate) {
         "      \"type\": \"uint32\","
         "      \"array\": False,"
         "      \"record-types\": \"\","
-        "      \"space\": \"isc\","
+        "      \"space\": \"bundy\","
         "      \"encapsulate\": \"sub-opts-space\""
         "  } ]"
         "}";
     ElementPtr json = Element::fromJSON(config);
 
     // Make sure that the particular option definition does not exist.
-    OptionDefinitionPtr def = CfgMgr::instance().getOptionDef("isc", 100);
+    OptionDefinitionPtr def = CfgMgr::instance().getOptionDef("bundy", 100);
     ASSERT_FALSE(def);
 
     // Use the configuration string to create new option definition.
@@ -1357,7 +1357,7 @@ TEST_F(Dhcp4ParserTest, optionDefEncapsulate) {
     checkResult(status, 0);
 
     // The option definition should now be available in the CfgMgr.
-    def = CfgMgr::instance().getOptionDef("isc", 100);
+    def = CfgMgr::instance().getOptionDef("bundy", 100);
     ASSERT_TRUE(def);
 
     // Check the option data.
@@ -1380,7 +1380,7 @@ TEST_F(Dhcp4ParserTest, optionDefInvalidName) {
         "      \"type\": \"string\","
         "      \"array\": False,"
         "      \"record-types\": \"\","
-        "      \"space\": \"isc\","
+        "      \"space\": \"bundy\","
         "      \"encapsulate\": \"\""
         "  } ]"
         "}";
@@ -1406,7 +1406,7 @@ TEST_F(Dhcp4ParserTest, optionDefInvalidType) {
         "      \"type\": \"sting\","
         "      \"array\": False,"
         "      \"record-types\": \"\","
-        "      \"space\": \"isc\","
+        "      \"space\": \"bundy\","
         "      \"encapsulate\": \"\""
         "  } ]"
         "}";
@@ -1432,7 +1432,7 @@ TEST_F(Dhcp4ParserTest, optionDefInvalidRecordType) {
         "      \"type\": \"record\","
         "      \"array\": False,"
         "      \"record-types\": \"uint32,uint8,sting\","
-        "      \"space\": \"isc\","
+        "      \"space\": \"bundy\","
         "      \"encapsulate\": \"\""
         "  } ]"
         "}";
@@ -1458,7 +1458,7 @@ TEST_F(Dhcp4ParserTest, optionDefInvalidEncapsulatedSpace) {
         "      \"type\": \"uint32\","
         "      \"array\": False,"
         "      \"record-types\": \"\","
-        "      \"space\": \"isc\","
+        "      \"space\": \"bundy\","
         "      \"encapsulate\": \"invalid%space%name\""
         "  } ]"
         "}";
@@ -1486,7 +1486,7 @@ TEST_F(Dhcp4ParserTest, optionDefEncapsulatedSpaceAndArray) {
         "      \"type\": \"uint32\","
         "      \"array\": True,"
         "      \"record-types\": \"\","
-        "      \"space\": \"isc\","
+        "      \"space\": \"bundy\","
         "      \"encapsulate\": \"valid-space-name\""
         "  } ]"
         "}";
@@ -1512,8 +1512,8 @@ TEST_F(Dhcp4ParserTest, optionDefEncapsulateOwnSpace) {
         "      \"type\": \"uint32\","
         "      \"array\": False,"
         "      \"record-types\": \"\","
-        "      \"space\": \"isc\","
-        "      \"encapsulate\": \"isc\""
+        "      \"space\": \"bundy\","
+        "      \"encapsulate\": \"bundy\""
         "  } ]"
         "}";
     ElementPtr json = Element::fromJSON(config);
@@ -1715,7 +1715,7 @@ TEST_F(Dhcp4ParserTest, optionDataTwoSpaces) {
         " },"
         " {"
         "    \"name\": \"foo\","
-        "    \"space\": \"isc\","
+        "    \"space\": \"bundy\","
         "    \"code\": 56,"
         "    \"data\": \"1234\","
         "    \"csv-format\": True"
@@ -1726,7 +1726,7 @@ TEST_F(Dhcp4ParserTest, optionDataTwoSpaces) {
         "    \"type\": \"uint32\","
         "    \"array\": False,"
         "    \"record-types\": \"\","
-        "    \"space\": \"isc\","
+        "    \"space\": \"bundy\","
         "    \"encapsulate\": \"\""
         " } ],"
         "\"subnet4\": [ { "
@@ -1751,8 +1751,8 @@ TEST_F(Dhcp4ParserTest, optionDataTwoSpaces) {
     Subnet::OptionDescriptor desc1 = subnet->getOptionDescriptor("dhcp4", 56);
     ASSERT_TRUE(desc1.option);
     EXPECT_EQ(56, desc1.option->getType());
-    // Try to get the option from the space isc.
-    Subnet::OptionDescriptor desc2 = subnet->getOptionDescriptor("isc", 56);
+    // Try to get the option from the space bundy.
+    Subnet::OptionDescriptor desc2 = subnet->getOptionDescriptor("bundy", 56);
     ASSERT_TRUE(desc2.option);
     EXPECT_EQ(56, desc1.option->getType());
     // Try to get the non-existing option from the non-existing
@@ -1787,14 +1787,14 @@ TEST_F(Dhcp4ParserTest, optionDataEncapsulate) {
         "\"renew-timer\": 1000,"
         "\"option-data\": [ {"
         "    \"name\": \"foo\","
-        "    \"space\": \"isc\","
+        "    \"space\": \"bundy\","
         "    \"code\": 1,"
         "    \"data\": \"1234\","
         "    \"csv-format\": True"
         " },"
         " {"
         "    \"name\": \"foo2\","
-        "    \"space\": \"isc\","
+        "    \"space\": \"bundy\","
         "    \"code\": 2,"
         "    \"data\": \"192.168.2.1\","
         "    \"csv-format\": True"
@@ -1805,7 +1805,7 @@ TEST_F(Dhcp4ParserTest, optionDataEncapsulate) {
         "    \"type\": \"uint32\","
         "    \"array\": False,"
         "    \"record-types\": \"\","
-        "    \"space\": \"isc\","
+        "    \"space\": \"bundy\","
         "    \"encapsulate\": \"\""
         " },"
         " {"
@@ -1814,7 +1814,7 @@ TEST_F(Dhcp4ParserTest, optionDataEncapsulate) {
         "    \"type\": \"ipv4-address\","
         "    \"array\": False,"
         "    \"record-types\": \"\","
-        "    \"space\": \"isc\","
+        "    \"space\": \"bundy\","
         "    \"encapsulate\": \"\""
         " } ]"
         "}";
@@ -1843,14 +1843,14 @@ TEST_F(Dhcp4ParserTest, optionDataEncapsulate) {
         " },"
         " {"
         "    \"name\": \"foo\","
-        "    \"space\": \"isc\","
+        "    \"space\": \"bundy\","
         "    \"code\": 1,"
         "    \"data\": \"1234\","
         "    \"csv-format\": True"
         " },"
         " {"
         "    \"name\": \"foo2\","
-        "    \"space\": \"isc\","
+        "    \"space\": \"bundy\","
         "    \"code\": 2,"
         "    \"data\": \"192.168.2.1\","
         "    \"csv-format\": True"
@@ -1862,7 +1862,7 @@ TEST_F(Dhcp4ParserTest, optionDataEncapsulate) {
         "    \"array\": False,"
         "    \"record-types\": \"\","
         "    \"space\": \"dhcp4\","
-        "    \"encapsulate\": \"isc\""
+        "    \"encapsulate\": \"bundy\""
         "},"
         "{"
         "    \"name\": \"foo\","
@@ -1870,7 +1870,7 @@ TEST_F(Dhcp4ParserTest, optionDataEncapsulate) {
         "    \"type\": \"uint32\","
         "    \"array\": False,"
         "    \"record-types\": \"\","
-        "    \"space\": \"isc\","
+        "    \"space\": \"bundy\","
         "    \"encapsulate\": \"\""
         " },"
         " {"
@@ -1879,7 +1879,7 @@ TEST_F(Dhcp4ParserTest, optionDataEncapsulate) {
         "    \"type\": \"ipv4-address\","
         "    \"array\": False,"
         "    \"record-types\": \"\","
-        "    \"space\": \"isc\","
+        "    \"space\": \"bundy\","
         "    \"encapsulate\": \"\""
         " } ],"
         "\"subnet4\": [ { "
@@ -2667,7 +2667,7 @@ buildHooksLibrariesConfig(const std::vector<std::string>& libraries) {
         " },"
         " {"
         "    \"name\": \"foo\","
-        "    \"space\": \"isc\","
+        "    \"space\": \"bundy\","
         "    \"code\": 56,"
         "    \"data\": \"1234\","
         "    \"csv-format\": True"
@@ -2678,7 +2678,7 @@ buildHooksLibrariesConfig(const std::vector<std::string>& libraries) {
         "    \"type\": \"uint32\","
         "    \"array\": False,"
         "    \"record-types\": \"\","
-        "    \"space\": \"isc\","
+        "    \"space\": \"bundy\","
         "    \"encapsulate\": \"\""
         " } ],"
         "\"subnet4\": [ { "

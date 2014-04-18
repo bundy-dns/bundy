@@ -28,11 +28,11 @@
 #include <ifaddrs.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::asiolink;
-using namespace isc::dhcp;
+using namespace bundy;
+using namespace bundy::asiolink;
+using namespace bundy::dhcp;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// This is a BSD specific interface detection method.
@@ -43,7 +43,7 @@ IfaceMgr::detectIfaces() {
 
     // Gets list of ifaddrs struct
     if(getifaddrs(&iflist) != 0) {
-        isc_throw(Unexpected, "Network interfaces detection failed.");
+        bundy_throw(Unexpected, "Network interfaces detection failed.");
     }
 
     typedef map<string, Iface> ifaceLst;
@@ -58,7 +58,7 @@ IfaceMgr::detectIfaces() {
         if (!(ifindex = if_nametoindex(ifname))) {
             // Interface name does not have corresponding index ...
             freeifaddrs(iflist);
-            isc_throw(Unexpected, "Interface " << ifname << " has no index");
+            bundy_throw(Unexpected, "Interface " << ifname << " has no index");
         }
 
         if ((iface_iter = ifaces.find(ifname)) != ifaces.end()) {
@@ -152,7 +152,7 @@ IfaceMgr::setMatchingPacketFilter(const bool /* direct_response_desired */) {
 
 bool
 IfaceMgr::openMulticastSocket(Iface& iface,
-                              const isc::asiolink::IOAddress& addr,
+                              const bundy::asiolink::IOAddress& addr,
                               const uint16_t port,
                               IfaceMgrErrorMsgCallback error_handler) {
     try {
@@ -173,7 +173,7 @@ IfaceMgr::openMulticastSocket(Iface& iface,
 }
 
 
-} // end of isc::dhcp namespace
+} // end of bundy::dhcp namespace
 } // end of dhcp namespace
 
 #endif

@@ -121,7 +121,7 @@ subject to certain restrictions (see below).
 Before the callouts at any hook point are called and any user libraries
 loaded - so typically during component initialization - the component must
 register the names of all the hooks.  The registration is done using
-the static method isc::hooks::HooksManager::registerHook():
+the static method bundy::hooks::HooksManager::registerHook():
 
 @code
 
@@ -142,7 +142,7 @@ unregistering a hook and there is no need to do so.
 In some components, it may be convenient to set up a single initialization
 function that registers all hooks.  For others, it may be more convenient
 for each module within the component to perform its own initialization.
-Since the isc::hooks::HooksManager object is a singleton and is created when first
+Since the bundy::hooks::HooksManager object is a singleton and is created when first
 accessed, a useful trick is to automatically register the hooks when
 the module is loaded.
 
@@ -197,7 +197,7 @@ However, the following guidelines should be observed:
 
 - The names <b>context_create</b> and <b>context_destroy</b> are reserved to
 the hooks system and are automatically registered: an attempt to register
-one of these will lead to a isc::hooks::DuplicateHook exception being thrown.
+one of these will lead to a bundy::hooks::DuplicateHook exception being thrown.
 
 - The hook name should be a valid "C" function name.  If a user gives a
 callout the same name as one of the hooks, the hooks framework will
@@ -221,10 +221,10 @@ how to pass data to it.
 
 Each user callout has the signature:
 @code
-int callout_name(isc::hooks::CalloutHandle& handle);
+int callout_name(bundy::hooks::CalloutHandle& handle);
 @endcode
 
-The isc::hooks::CalloutHandle object is the object used to pass data to
+The bundy::hooks::CalloutHandle object is the object used to pass data to
 and from the callout.  This holds the data as a set of name/value pairs,
 each pair being considered an argument to the callout.  If there are
 multiple callouts attached to a hook, the CalloutHandle is passed to
@@ -299,8 +299,8 @@ that its flow of control should be altered.  For example:
   the skip flag to indicate to the server that the packet should be dropped.
 
 For ease of processing, the CalloutHandle contains
-two methods, isc::hooks::CalloutHandle::getSkip() and
-isc::hooks::CalloutHandle::setSkip().  It is only meaningful for the
+two methods, bundy::hooks::CalloutHandle::getSkip() and
+bundy::hooks::CalloutHandle::setSkip().  It is only meaningful for the
 component to use the "get" method.  The skip flag is cleared by the hooks
 framework when the component requests that callouts be executed, so any
 value set by the component is lost.  Callouts can both inspect the flag (it
@@ -327,12 +327,12 @@ if (! handle_ptr->getSkip()) {
 
 The CalloutHandle object is linked to the loaded libraries
 for lifetime reasons (described below).  Components
-should retrieve a isc::hooks::CalloutHandle using
-isc::hooks::HooksManager::createCalloutHandle():
+should retrieve a bundy::hooks::CalloutHandle using
+bundy::hooks::HooksManager::createCalloutHandle():
 @code
     CalloutHandlePtr handle_ptr = HooksManager::createCalloutHandle();
 @endcode
-(isc::hooks::CalloutHandlePtr is a typedef for a Boost shared pointer to a
+(bundy::hooks::CalloutHandlePtr is a typedef for a Boost shared pointer to a
 CalloutHandle.)  The CalloutHandle so retrieved may be used for as
 long as the libraries are loaded.
 
@@ -350,14 +350,14 @@ in a future version.)
 @subsection hooksComponentCallingCallout Calling the Callout
 
 Calling the callout is a simple matter of executing the
-isc::hooks::HooksManager::callCallouts() method for the hook index in
+bundy::hooks::HooksManager::callCallouts() method for the hook index in
 question.  For example, with the hook index pkt_sent defined as above,
 the hook can be executed by:
 @code
     HooksManager::callCallouts(pkt_sent, *handle_ptr);
 @endcode
 ... where "*handle_ptr" is a reference (note: not a pointer) to the
-isc::hooks::CalloutHandle object holding the arguments.  No status code
+bundy::hooks::CalloutHandle object holding the arguments.  No status code
 is returned.  If a component needs to get data returned (other than that
 provided by the "skip" flag), it should define an argument through which
 the callout can do so.
@@ -367,7 +367,7 @@ the callout can do so.
 Most hooks in a component will not have callouts attached to them. To
 avoid the overhead of setting up arguments in the CalloutHandle, a
 component can check for callouts before doing that processing using
-isc::hooks::HooksManager::calloutsPresent().  Taking the index of a
+bundy::hooks::HooksManager::calloutsPresent().  Taking the index of a
 hook as its sole argument, the function returns true if there are any
 callouts attached to the hook and false otherwise.
 
@@ -391,15 +391,15 @@ if (HooksManager::calloutsPresent(lease_hook_index)) {
 Once hooks are defined, all the hooks code described above will
 work, even if no libraries are loaded (and even if the library
 loading method is not called).  The CalloutHandle returned by
-isc::hooks::HooksManager::createCalloutHandle() will be valid,
-isc::hooks::HooksManager::calloutsPresent() will return false for every
-index, and isc::hooks::HooksManager::callCallouts() will be a no-op.
+bundy::hooks::HooksManager::createCalloutHandle() will be valid,
+bundy::hooks::HooksManager::calloutsPresent() will return false for every
+index, and bundy::hooks::HooksManager::callCallouts() will be a no-op.
 
 However, if user libraries are specified in the BUNDY configuration,
 the component should load them.  (Note the term "libraries": the hooks
 framework allows multiple user libraries to be loaded.) This should take
 place after the component's configuration has been read, and is achieved
-by the isc::hooks::HooksManager::loadLibraries() method.  The method is
+by the bundy::hooks::HooksManager::loadLibraries() method.  The method is
 passed a vector of strings, each giving the full file specification of
 a user library:
 @code
@@ -415,7 +415,7 @@ should proceed in such circumstances.
 If loadLibraries() is called a second or subsequent time (as a result
 of a reconfiguration), all existing libraries are unloaded and a new
 set loaded.  Libraries can be explicitly unloaded either by calling
-isc::hooks::HooksManager::unloadLibraries() or by calling
+bundy::hooks::HooksManager::unloadLibraries() or by calling
 loadLibraries() with an empty vector as an argument.
 
 @subsection hooksComponentUnloadIssues Unload and Reload Issues
@@ -467,16 +467,16 @@ found in @ref hooksdgDevelopersGuide.)
 
 A component can associate with a hook callouts that run either before
 user-registered callouts or after them.  Registration is done via a
-isc::hooks::LibraryHandle object, a reference to one being obtained
-through the methods isc::hooks::HooksManager::preCalloutLibraryHandle()
+bundy::hooks::LibraryHandle object, a reference to one being obtained
+through the methods bundy::hooks::HooksManager::preCalloutLibraryHandle()
 (for a handle to register callouts to run before the user library
-callouts) or isc::hooks::HooksManager::postCalloutLibraryHandle() (for
+callouts) or bundy::hooks::HooksManager::postCalloutLibraryHandle() (for
 a handle to register callouts to run after the user callouts).  Use of
 the LibraryHandle to register and deregister callouts is described in
 @ref hooksdgLibraryHandle.
 
 Finally, it should be noted that callouts registered in this way only
-remain registered until the next call to isc::hooks::loadLibraries().
+remain registered until the next call to bundy::hooks::loadLibraries().
 It is up to the component to re-register the callouts after this
 method has been called.
 

@@ -24,7 +24,7 @@
 #include <set>
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace unittest {
 
@@ -43,12 +43,12 @@ public:
     // These methods are not used. They just need to be there to have
     // complete vtable.
     virtual ZoneUpdaterPtr getUpdater(const dns::Name&, bool, bool) const {
-        isc_throw(isc::NotImplemented, "Not implemented");
+        bundy_throw(bundy::NotImplemented, "Not implemented");
     }
     virtual std::pair<ZoneJournalReader::Result, ZoneJournalReaderPtr>
     getJournalReader(const dns::Name&, uint32_t, uint32_t) const
     {
-        isc_throw(isc::NotImplemented, "Not implemented");
+        bundy_throw(bundy::NotImplemented, "Not implemented");
     }
     virtual ZoneIteratorPtr getIterator(const dns::Name& name, bool) const;
     void disableA() { have_a_ = false; }

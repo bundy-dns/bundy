@@ -32,7 +32,7 @@
 #include <list>
 #include <sstream>
 
-using namespace isc::dns;
+using namespace bundy::dns;
 using std::vector;
 using std::string;
 using std::list;
@@ -122,7 +122,7 @@ public:
         EXPECT_EQ(RRClass::IN(), current->getClass());
         EXPECT_EQ(rrttl, current->getTTL());
         ASSERT_EQ(1, current->getRdataCount());
-        EXPECT_EQ(0, isc::dns::rdata::createRdata(type, RRClass::IN(), data)->
+        EXPECT_EQ(0, bundy::dns::rdata::createRdata(type, RRClass::IN(), data)->
                   compare(current->getRdataIterator()->getCurrent()))
             << data << " vs. "
             << current->getRdataIterator()->getCurrent().toText();
@@ -1350,12 +1350,12 @@ TEST_F(MasterLoaderTest, ttlOverflow) {
 TEST_F(MasterLoaderTest, emptyCallback) {
     EXPECT_THROW(MasterLoader(TEST_DATA_SRCDIR "/example.org",
                               Name("example.org"), RRClass::IN(), callbacks_,
-                              AddRRCallback()), isc::InvalidParameter);
+                              AddRRCallback()), bundy::InvalidParameter);
     // And the same with the second constructor
     stringstream ss("");
     EXPECT_THROW(MasterLoader(ss, Name("example.org"), RRClass::IN(),
                               callbacks_, AddRRCallback()),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 // Check it throws when we try to load after loading was complete.
@@ -1364,7 +1364,7 @@ TEST_F(MasterLoaderTest, loadTwice) {
               RRClass::IN(), MasterLoader::MANY_ERRORS);
 
     loader_->load();
-    EXPECT_THROW(loader_->load(), isc::InvalidOperation);
+    EXPECT_THROW(loader_->load(), bundy::InvalidOperation);
     // Don't check them, they are not interesting, so suppress the error
     // at TearDown
     rrsets_.clear();
@@ -1374,7 +1374,7 @@ TEST_F(MasterLoaderTest, loadTwice) {
 TEST_F(MasterLoaderTest, loadZero) {
     setLoader(TEST_DATA_SRCDIR "/example.org", Name("example.org."),
               RRClass::IN(), MasterLoader::MANY_ERRORS);
-    EXPECT_THROW(loader_->loadIncremental(0), isc::InvalidParameter);
+    EXPECT_THROW(loader_->loadIncremental(0), bundy::InvalidParameter);
 }
 
 // Test there's a warning when the file terminates without end of

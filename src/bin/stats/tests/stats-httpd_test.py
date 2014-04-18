@@ -42,14 +42,14 @@ try:
 except ImportError:
     lxml_etree = None
 
-import isc
-import isc.log
+import bundy
+import bundy.log
 import stats_httpd
 import stats
 from test_utils import ThreadingServerManager, SignalHandler, \
     MyStatsHttpd, CONST_BASETIME
-from isc.testutils.ccsession_mock import MockModuleCCSession
-from isc.config import RPCRecipientMissing, RPCError
+from bundy.testutils.ccsession_mock import MockModuleCCSession
+from bundy.config import RPCRecipientMissing, RPCError
 
 # This test suite uses xml.etree.ElementTree.XMLParser via
 # xml.etree.ElementTree.parse. On the platform where expat isn't
@@ -197,7 +197,7 @@ class TestItemNameList(unittest.TestCase):
                 {'a':{'b':[1,2,3], 'c':1}}, 'a/c'))
         # for specifying a wrong identifier which is not found in
         # element
-        self.assertRaises(isc.cc.data.DataNotFoundError,
+        self.assertRaises(bundy.cc.data.DataNotFoundError,
                          stats_httpd.item_name_list, {'x':1}, 'a')
         # for specifying a string in element and an empty string in
         # identifier
@@ -208,15 +208,15 @@ class TestItemNameList(unittest.TestCase):
                          stats_httpd.item_name_list('', ''))
         # for specifying wrong element, which is an non-empty string,
         # and an non-empty string in identifier
-        self.assertRaises(isc.cc.data.DataTypeError,
+        self.assertRaises(bundy.cc.data.DataTypeError,
                          stats_httpd.item_name_list, 'a', 'a')
         # for specifying None in element and identifier
-        self.assertRaises(isc.cc.data.DataTypeError,
+        self.assertRaises(bundy.cc.data.DataTypeError,
                          stats_httpd.item_name_list, None, None)
         # for specifying non-dict in element
-        self.assertRaises(isc.cc.data.DataTypeError,
+        self.assertRaises(bundy.cc.data.DataTypeError,
                          stats_httpd.item_name_list, [1,2,3], 'a')
-        self.assertRaises(isc.cc.data.DataTypeError,
+        self.assertRaises(bundy.cc.data.DataTypeError,
                          stats_httpd.item_name_list, [1,2,3], '')
         # for checking key names sorted which consist of element
         num = 11
@@ -292,7 +292,7 @@ class TestHttpHandler(unittest.TestCase):
             self.assertEqual(id_list, item_list)
             for elem in root:
                 attr = elem.attrib
-                value = isc.cc.data.find(DUMMY_DATA, attr['identifier'])
+                value = bundy.cc.data.find(DUMMY_DATA, attr['identifier'])
                 # No 'value' attribute should be found in the 'item'
                 # element when datatype of the value is list or dict.
                 if type(value) is list or type(value) is dict:
@@ -459,7 +459,7 @@ class TestHttpHandler(unittest.TestCase):
         # failure case (Stats is down, so rpc_call() results in an exception)
         # Note: this should eventually be RPCRecipientMissing.
         self.stats_httpd._rpc_answers.append(
-            isc.cc.session.SessionTimeout('timeout'))
+            bundy.cc.session.SessionTimeout('timeout'))
 
         # request XML
         self.client.putrequest('GET', stats_httpd.XML_URL_PATH + '/')
@@ -871,29 +871,29 @@ class TestStatsHttpd(unittest.TestCase):
     def test_commands(self):
         self.stats_httpd = MyStatsHttpd(get_availaddr())
         self.assertEqual(self.stats_httpd.command_handler("status", None),
-                         isc.config.ccsession.create_answer(
+                         bundy.config.ccsession.create_answer(
                 0, "Stats Httpd is up. (PID " + str(os.getpid()) + ")"))
         self.stats_httpd.running = True
         self.assertEqual(self.stats_httpd.command_handler("shutdown", None),
-                         isc.config.ccsession.create_answer(0))
+                         bundy.config.ccsession.create_answer(0))
         self.assertFalse(self.stats_httpd.running)
         self.assertEqual(
             self.stats_httpd.command_handler("__UNKNOWN_COMMAND__", None),
-            isc.config.ccsession.create_answer(
+            bundy.config.ccsession.create_answer(
                 1, "Unknown command: __UNKNOWN_COMMAND__"))
 
     def test_config(self):
         self.stats_httpd = MyStatsHttpd(get_availaddr())
         self.assertEqual(
             self.stats_httpd.config_handler(dict(_UNKNOWN_KEY_=None)),
-            isc.config.ccsession.create_answer(
+            bundy.config.ccsession.create_answer(
                 1, "unknown item _UNKNOWN_KEY_"))
 
         addresses = get_availaddr()
         self.assertEqual(
             self.stats_httpd.config_handler(
                 dict(listen_on=[dict(address=addresses[0],port=addresses[1])])),
-            isc.config.ccsession.create_answer(0))
+            bundy.config.ccsession.create_answer(0))
         self.assertTrue("listen_on" in self.stats_httpd.config)
         for addr in self.stats_httpd.config["listen_on"]:
             self.assertTrue("address" in addr)
@@ -906,7 +906,7 @@ class TestStatsHttpd(unittest.TestCase):
             self.assertEqual(
                 self.stats_httpd.config_handler(
                 dict(listen_on=[dict(address=addresses[0],port=addresses[1])])),
-                isc.config.ccsession.create_answer(0))
+                bundy.config.ccsession.create_answer(0))
             self.assertTrue("listen_on" in self.stats_httpd.config)
             for addr in self.stats_httpd.config["listen_on"]:
                 self.assertTrue("address" in addr)
@@ -918,14 +918,14 @@ class TestStatsHttpd(unittest.TestCase):
         self.assertEqual(
             self.stats_httpd.config_handler(
                 dict(listen_on=[dict(address=addresses[0],port=addresses[1])])),
-            isc.config.ccsession.create_answer(0))
+            bundy.config.ccsession.create_answer(0))
         self.assertTrue("listen_on" in self.stats_httpd.config)
         for addr in self.stats_httpd.config["listen_on"]:
             self.assertTrue("address" in addr)
             self.assertTrue("port" in addr)
             self.assertTrue(addr["address"] == addresses[0])
             self.assertTrue(addr["port"] == addresses[1])
-        (ret, arg) = isc.config.ccsession.parse_answer(
+        (ret, arg) = bundy.config.ccsession.parse_answer(
             self.stats_httpd.config_handler(
                 dict(listen_on=[dict(address="1.2.3.4",port=543210)]))
             )
@@ -1023,7 +1023,7 @@ class TestStatsHttpd(unittest.TestCase):
         names = stats_httpd.item_name_list(stats_data, '')
         for i in range(0, len(names)):
             self.assertEqual('%s/%s' % (module_name, names[i]), stats_xml[i].attrib['identifier'])
-            value = isc.cc.data.find(stats_data, names[i])
+            value = bundy.cc.data.find(stats_data, names[i])
             if type(value) is int:
                 value = str(value)
             if type(value) is dict or type(value) is list:
@@ -1034,7 +1034,7 @@ class TestStatsHttpd(unittest.TestCase):
             self.assertEqual(urllib.parse.quote('%s/%s/%s' % (stats_httpd.XML_URL_PATH,
                                                               module_name, names[i])),
                              stats_xml[i].attrib['uri'])
-            spec = isc.config.find_spec_part(stats_spec, names[i])
+            spec = bundy.config.find_spec_part(stats_spec, names[i])
             self.assertEqual(spec['item_name'], stats_xml[i].attrib['name'])
             self.assertEqual(spec['item_type'], stats_xml[i].attrib['type'])
             self.assertEqual(spec['item_description'], stats_xml[i].attrib['description'])
@@ -1124,5 +1124,5 @@ class Z_TestOSEnv(unittest.TestCase):
             imp.reload(stats_httpd)
 
 if __name__ == "__main__":
-    isc.log.resetUnitTestRootLogger()
+    bundy.log.resetUnitTestRootLogger()
     unittest.main()

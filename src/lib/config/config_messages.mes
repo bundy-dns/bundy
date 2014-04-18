@@ -12,7 +12,7 @@
 # OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
 
-$NAMESPACE isc::config
+$NAMESPACE bundy::config
 
 % CONFIG_CCSESSION_MSG error in CC session message: %1
 There was a problem with an incoming message on the command and control

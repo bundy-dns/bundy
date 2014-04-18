@@ -20,8 +20,8 @@
 #include <unistd.h>
 
 using namespace std;
-using namespace isc::log::interprocess;
-using isc::util::unittests::parentReadState;
+using namespace bundy::log::interprocess;
+using bundy::util::unittests::parentReadState;
 
 namespace {
 TEST(InterprocessSyncFileTest, TestLock) {
@@ -32,7 +32,7 @@ TEST(InterprocessSyncFileTest, TestLock) {
     EXPECT_TRUE(locker.lock());
     EXPECT_TRUE(locker.isLocked());
 
-    if (!isc::util::unittests::runningOnValgrind()) {
+    if (!bundy::util::unittests::runningOnValgrind()) {
 
         int fds[2];
 
@@ -106,7 +106,7 @@ TEST(InterprocessSyncFileTest, TestMultipleFilesForked) {
 
     EXPECT_TRUE(locker.lock());
 
-    if (!isc::util::unittests::runningOnValgrind()) {
+    if (!bundy::util::unittests::runningOnValgrind()) {
 
         int fds[2];
 

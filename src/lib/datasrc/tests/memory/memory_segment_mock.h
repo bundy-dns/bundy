@@ -20,7 +20,7 @@
 #include <cstddef>              // for size_t
 #include <new>                  // for bad_alloc
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 namespace test {
@@ -33,7 +33,7 @@ namespace test {
 // allocate() will succeed, and the 3rd call will fail with an exception.
 // This segment object can be used after the exception is thrown, and the
 // count is internally reset to 0.
-class MemorySegmentMock : public isc::util::MemorySegmentLocal {
+class MemorySegmentMock : public bundy::util::MemorySegmentLocal {
 public:
     MemorySegmentMock() : throw_count_(0) {}
     virtual void* allocate(std::size_t size) {
@@ -42,7 +42,7 @@ public:
                 throw std::bad_alloc();
             }
         }
-        return (isc::util::MemorySegmentLocal::allocate(size));
+        return (bundy::util::MemorySegmentLocal::allocate(size));
     }
     void setThrowCount(std::size_t count) { throw_count_ = count; }
 
@@ -53,7 +53,7 @@ private:
 } // namespace test
 } // namespace memory
 } // namespace datasrc
-} // namespace isc
+} // namespace bundy
 
 #endif // DATASRC_MEMORY_SEGMENT_TEST_H
 

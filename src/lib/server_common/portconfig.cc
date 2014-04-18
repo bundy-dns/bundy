@@ -23,16 +23,16 @@
 #include <boost/lexical_cast.hpp>
 
 using namespace std;
-using namespace isc::data;
-using namespace isc::asiolink;
-using namespace isc::asiodns;
+using namespace bundy::data;
+using namespace bundy::asiolink;
+using namespace bundy::asiodns;
 
-namespace isc {
+namespace bundy {
 namespace server_common {
 namespace portconfig {
 
 AddressList
-parseAddresses(isc::data::ConstElementPtr addresses,
+parseAddresses(bundy::data::ConstElementPtr addresses,
                const std::string& elemName)
 {
     AddressList result;
@@ -45,7 +45,7 @@ parseAddresses(isc::data::ConstElementPtr addresses,
                 if (!addr || ! port) {
                     LOG_ERROR(logger, SRVCOMM_ADDRESS_MISSING).
                         arg(addrPair->str());
-                    isc_throw(BadValue, "Address must contain both the IP"
+                    bundy_throw(BadValue, "Address must contain both the IP"
                         "address and port");
                 }
                 try {
@@ -57,7 +57,7 @@ parseAddresses(isc::data::ConstElementPtr addresses,
                         port->intValue() > 0xffff) {
                         LOG_ERROR(logger, SRVCOMM_PORT_RANGE).
                             arg(port->intValue()).arg(addrPair->str());
-                        isc_throw(BadValue, "Bad port value (" <<
+                        bundy_throw(BadValue, "Bad port value (" <<
                             port->intValue() << ")");
                     }
                     result.push_back(AddressPair(addr->stringValue(),
@@ -65,13 +65,13 @@ parseAddresses(isc::data::ConstElementPtr addresses,
                 } catch (const TypeError&) { // Better error message
                     LOG_ERROR(logger, SRVCOMM_ADDRESS_TYPE).
                         arg(addrPair->str());
-                    isc_throw(TypeError,
+                    bundy_throw(TypeError,
                         "Address must be a string and port an integer");
                 }
             }
         } else if (addresses->getType() != Element::null) {
             LOG_ERROR(logger, SRVCOMM_ADDRESSES_NOT_LIST).arg(elemName);
-            isc_throw(TypeError, elemName + " config element must be a list");
+            bundy_throw(TypeError, elemName + " config element must be a list");
         }
     }
     return (result);

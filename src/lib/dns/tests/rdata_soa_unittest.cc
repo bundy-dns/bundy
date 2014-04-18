@@ -26,11 +26,11 @@
 #include <util/unittests/wiredata.h>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::util;
-using namespace isc::dns::rdata;
-using isc::UnitTestUtil;
-using isc::util::unittests::matchWireData;
+using namespace bundy::dns;
+using namespace bundy::util;
+using namespace bundy::dns::rdata;
+using bundy::UnitTestUtil;
+using bundy::util::unittests::matchWireData;
 
 namespace {
 class Rdata_SOA_Test : public RdataTest {
@@ -55,40 +55,40 @@ protected:
 };
 
 TEST_F(Rdata_SOA_Test, createFromText) {
-    // Below we specify isc::Exception as a dummy value for the exception type
+    // Below we specify bundy::Exception as a dummy value for the exception type
     // in case it's not expected to throw an exception; the type isn't used
     // in the check code.
 
     // A simple case.
-    checkFromTextSOA<isc::Exception, isc::Exception>(
+    checkFromTextSOA<bundy::Exception, bundy::Exception>(
         "ns.example.com. root.example.com. 2010012601 3600 300 3600000 1200",
         NULL, false, false);
 
     // Beginning and trailing space are ignored.
-    checkFromTextSOA<isc::Exception, isc::Exception>(
+    checkFromTextSOA<bundy::Exception, bundy::Exception>(
         "  ns.example.com. root.example.com. "
         "2010012601 3600 300 3600000 1200  ", NULL, false, false);
 
     // using extended TTL-like form for some parameters.
-    checkFromTextSOA<isc::Exception, isc::Exception>(
+    checkFromTextSOA<bundy::Exception, bundy::Exception>(
         "ns.example.com. root.example.com. 2010012601 1H 5M 1000H 20M",
         NULL, false, false);
 
     // multi-line.
-    checkFromTextSOA<isc::Exception, isc::Exception>(
+    checkFromTextSOA<bundy::Exception, bundy::Exception>(
         "ns.example.com. (root.example.com.\n"
         "2010012601 1H 5M 1000H) 20M", NULL, false, false);
 
     // relative names for MNAME and RNAME with a separate origin (lexer
     // version only)
     const Name origin("example.com");
-    checkFromTextSOA<MissingNameOrigin, isc::Exception>(
+    checkFromTextSOA<MissingNameOrigin, bundy::Exception>(
         "ns root 2010012601 1H 5M 1000H 20M", &origin, true, false);
 
     // with the '@' notation with a separate origin (lexer version only;
     // string version would throw)
     const Name full_mname("ns.example.com");
-    checkFromTextSOA<MissingNameOrigin, isc::Exception>(
+    checkFromTextSOA<MissingNameOrigin, bundy::Exception>(
         "@ root.example.com. 2010012601 1H 5M 1000H 20M", &full_mname, true,
         false);
 
@@ -146,14 +146,14 @@ TEST_F(Rdata_SOA_Test, createFromText) {
     // Extra parameter.  string version immediately detects the error.
     // lexer version defers the check to the upper layer (we pass origin
     // to skip the check with the string version).
-    checkFromTextSOA<InvalidRdataText, isc::Exception>(
+    checkFromTextSOA<InvalidRdataText, bundy::Exception>(
         "ns.example.com. root.example.com. 2010012601 1H 5M 1000H 20M "
         "extra", &origin, true, false);
 
     // Likewise.  Redundant newline is also considered an error.  The lexer
     // version accepts trailing newline, but not the beginning one (where
     // the lexer expects a string excluding newline and EOF).
-    checkFromTextSOA<InvalidRdataText, isc::Exception>(
+    checkFromTextSOA<InvalidRdataText, bundy::Exception>(
         "ns.example.com. root.example.com. 2010012601 1H 5M 1000H 20M\n",
         NULL, true, false);
     checkFromTextSOA<InvalidRdataText, MasterLexer::LexerError>(

@@ -47,14 +47,14 @@
 #include <unistd.h>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::data;
-using namespace isc::datasrc;
-using namespace isc::config;
-using namespace isc::util::unittests;
-using namespace isc::testutils;
-using namespace isc::auth;
-using namespace isc::auth::unittest;
+using namespace bundy::dns;
+using namespace bundy::data;
+using namespace bundy::datasrc;
+using namespace bundy::config;
+using namespace bundy::util::unittests;
+using namespace bundy::testutils;
+using namespace bundy::auth;
+using namespace bundy::auth::unittest;
 
 namespace {
 
@@ -79,7 +79,7 @@ protected:
     // The shutdown command parameter
     ConstElementPtr param_;
     int rcode_, expect_rcode_;
-    isc::asiolink::IntervalTimer itimer_;
+    bundy::asiolink::IntervalTimer itimer_;
 public:
     void stopServer();          // need to be public for boost::bind
     void dontStopServer();          // need to be public for boost::bind
@@ -118,8 +118,8 @@ TEST_F(AuthCommandTest, shutdown) {
 TEST_F(AuthCommandTest, shutdownCorrectPID) {
     // Put the pid parameter there
     const pid_t pid(getpid());
-    ElementPtr param(new isc::data::MapElement());
-    param->set("pid", ConstElementPtr(new isc::data::IntElement(pid)));
+    ElementPtr param(new bundy::data::MapElement());
+    param->set("pid", ConstElementPtr(new bundy::data::IntElement(pid)));
     param_ = param;
     // With the correct PID, it should act exactly the same as in case
     // of no parameter
@@ -148,8 +148,8 @@ AuthCommandTest::dontStopServer() {
 // act as if nothing came.
 TEST_F(AuthCommandTest, shutdownNotInt) {
     // Put the pid parameter there
-    ElementPtr param(new isc::data::MapElement());
-    param->set("pid", ConstElementPtr(new isc::data::StringElement("pid")));
+    ElementPtr param(new bundy::data::MapElement());
+    param->set("pid", ConstElementPtr(new bundy::data::StringElement("pid")));
     param_ = param;
     expect_rcode_ = 1;
     // It should reject to stop if the PID is not an int.

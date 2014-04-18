@@ -34,10 +34,10 @@
 #include "rdata_python.h"
 
 using namespace std;
-using namespace isc::util::python;
-using namespace isc::dns;
-using namespace isc::dns::rdata;
-using namespace isc::dns::python;
+using namespace bundy::util::python;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
+using namespace bundy::dns::python;
 
 // Import pydoc text
 #include "nsec3hash_python_inc.cc"
@@ -187,7 +187,7 @@ PyMethodDef NSEC3Hash_methods[] = {
 };
 } // end of unnamed namespace
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace python {
 //
@@ -268,4 +268,4 @@ initModulePart_NSEC3Hash(PyObject* mod) {
 }
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy

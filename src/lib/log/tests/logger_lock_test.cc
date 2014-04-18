@@ -23,10 +23,10 @@
 #include <iostream>
 
 using namespace std;
-using namespace isc::log;
-using isc::util::thread::Mutex;
+using namespace bundy::log;
+using bundy::util::thread::Mutex;
 
-class MockLoggingSync : public isc::log::interprocess::InterprocessSync {
+class MockLoggingSync : public bundy::log::interprocess::InterprocessSync {
 public:
     /// \brief Constructor
     MockLoggingSync(const std::string& component_name) :

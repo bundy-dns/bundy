@@ -27,11 +27,11 @@
 #include "name_python.h"
 #include "pydnspp_common.h"
 
-using namespace isc::dns;
-using namespace isc::dns::python;
-using namespace isc::util;
-using namespace isc::util::python;
-using namespace isc::dns::rdata;
+using namespace bundy::dns;
+using namespace bundy::dns::python;
+using namespace bundy::util;
+using namespace bundy::util::python;
+using namespace bundy::dns::rdata;
 
 namespace {
 
@@ -57,7 +57,7 @@ exception_wrap(method* method, PyObject* self, PyObject* args) {
 
 class s_Rdata : public PyObject {
 public:
-    isc::dns::rdata::ConstRdataPtr cppobj;
+    bundy::dns::rdata::ConstRdataPtr cppobj;
 };
 
 typedef CPPPyObjectContainer<s_Rdata, Rdata> RdataContainer;
@@ -124,16 +124,16 @@ Rdata_init(PyObject* self_p, PyObject* args, PyObject*) {
                                        input_buffer, len);
             return (0);
         }
-    } catch (const isc::dns::rdata::InvalidRdataText& irdt) {
+    } catch (const bundy::dns::rdata::InvalidRdataText& irdt) {
         PyErr_SetString(po_InvalidRdataText, irdt.what());
         return (-1);
-    } catch (const isc::dns::rdata::InvalidRdataLength& irdl) {
+    } catch (const bundy::dns::rdata::InvalidRdataLength& irdl) {
         PyErr_SetString(po_InvalidRdataLength, irdl.what());
         return (-1);
-    } catch (const isc::dns::rdata::CharStringTooLong& cstl) {
+    } catch (const bundy::dns::rdata::CharStringTooLong& cstl) {
         PyErr_SetString(po_CharStringTooLong, cstl.what());
         return (-1);
-    } catch (const isc::dns::DNSMessageFORMERR& dmfe) {
+    } catch (const bundy::dns::DNSMessageFORMERR& dmfe) {
         PyErr_SetString(po_DNSMessageFORMERR, dmfe.what());
         return (-1);
     } catch (const std::exception& ex) {
@@ -275,7 +275,7 @@ RData_richcmp(PyObject* self_p, PyObject* other_p, int op) {
 
 } // end of unnamed namespace
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace python {
 
@@ -348,7 +348,7 @@ createRdataObject(ConstRdataPtr source) {
     s_Rdata* py_rdata =
         static_cast<s_Rdata*>(rdata_type.tp_alloc(&rdata_type, 0));
     if (py_rdata == NULL) {
-        isc_throw(PyCPPWrapperException, "Unexpected NULL C++ object, "
+        bundy_throw(PyCPPWrapperException, "Unexpected NULL C++ object, "
                   "probably due to short memory");
     }
     py_rdata->cppobj = source;
@@ -358,7 +358,7 @@ createRdataObject(ConstRdataPtr source) {
 bool
 PyRdata_Check(PyObject* obj) {
     if (obj == NULL) {
-        isc_throw(PyCPPWrapperException, "obj argument NULL in typecheck");
+        bundy_throw(PyCPPWrapperException, "obj argument NULL in typecheck");
     }
     return (PyObject_TypeCheck(obj, &rdata_type));
 }
@@ -366,7 +366,7 @@ PyRdata_Check(PyObject* obj) {
 const Rdata&
 PyRdata_ToRdata(const PyObject* rdata_obj) {
     if (rdata_obj == NULL) {
-        isc_throw(PyCPPWrapperException,
+        bundy_throw(PyCPPWrapperException,
                   "obj argument NULL in Rdata PyObject conversion");
     }
     const s_Rdata* rdata = static_cast<const s_Rdata*>(rdata_obj);
@@ -375,4 +375,4 @@ PyRdata_ToRdata(const PyObject* rdata_obj) {
 
 } // end python namespace
 } // end dns namespace
-} // end isc namespace
+} // end bundy namespace

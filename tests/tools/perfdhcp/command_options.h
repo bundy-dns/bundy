@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace perfdhcp {
 
 /// \brief Command Options.
@@ -91,7 +91,7 @@ public:
         /// - address-only
         /// - prefix-only
         ///
-        /// \throw isc::InvalidParameter if the specified argument is invalid.
+        /// \throw bundy::InvalidParameter if the specified argument is invalid.
         void fromCommandLine(const std::string& cmd_line_arg);
 
         /// \brief Return textual representation of the lease type.
@@ -131,7 +131,7 @@ public:
     /// \param argc Argument count passed to main().
     /// \param argv Argument value array passed to main().
     /// \param print_cmd_line Print the command line being run to the console.
-    /// \throws isc::InvalidParameter if parse fails.
+    /// \throws bundy::InvalidParameter if parse fails.
     /// \return true if program has been run in help or version mode ('h' or 'v' flag).
     bool parse(int argc, char** const argv, bool print_cmd_line = false);
 
@@ -352,13 +352,13 @@ private:
     /// \param argc Argument count passed to main().
     /// \param argv Argument value array passed to main().
     /// \param print_cmd_line Print the command line being run to the console.
-    /// \throws isc::InvalidParameter if command line options initialization fails.
+    /// \throws bundy::InvalidParameter if command line options initialization fails.
     /// \return true if program has been run in help or version mode ('h' or 'v' flag).
     bool initialize(int argc, char** argv, bool print_cmd_line);
 
     /// \brief Validates initialized options.
     ///
-    /// \throws isc::InvalidParameter if command line validation fails.
+    /// \throws bundy::InvalidParameter if command line validation fails.
     void validate() const;
 
     /// \brief Throws !InvalidParameter exception if condition is true.
@@ -368,7 +368,7 @@ private:
     ///
     /// \param condition Condition to be checked.
     /// \param errmsg Error message in exception.
-    /// \throws isc::InvalidParameter if condition argument true.
+    /// \throws bundy::InvalidParameter if condition argument true.
     inline void check(bool condition, const std::string& errmsg) const;
 
     /// \brief Casts command line argument to positive integer.
@@ -423,7 +423,7 @@ private:
     /// and/or duid_template_ members.
     ///
     /// \param base Base in string format.
-    /// \throws isc::InvalidParameter if base is invalid.
+    /// \throws bundy::InvalidParameter if base is invalid.
     void decodeBase(const std::string& base);
 
     /// \brief Decodes base MAC address provided with -b<base>.
@@ -434,7 +434,7 @@ private:
     /// Provided MAC address is for example only.
     ///
     /// \param base Base string given as -b mac=00:01:02:03:04:05.
-    /// \throws isc::InvalidParameter if mac address is invalid.
+    /// \throws bundy::InvalidParameter if mac address is invalid.
     void decodeMac(const std::string& base);
 
     /// \brief Decodes base DUID provided with -b<base>.
@@ -445,7 +445,7 @@ private:
     /// Provided DUID is for example only.
     ///
     /// \param base Base string given as -b duid=0F1234.
-    /// \throws isc::InvalidParameter if DUID is invalid.
+    /// \throws bundy::InvalidParameter if DUID is invalid.
     void decodeDuid(const std::string& base);
 
     /// \brief Generates DUID-LLT (based on link layer address).
@@ -459,7 +459,7 @@ private:
     /// \brief Converts two-digit hexadecimal string to a byte.
     ///
     /// \param hex_text Hexadecimal string e.g. AF.
-    /// \throw isc::InvalidParameter if string does not represent hex byte.
+    /// \throw bundy::InvalidParameter if string does not represent hex byte.
     uint8_t convertHexString(const std::string& hex_text) const;
 
     /// IP protocol version to be used, expected values are:
@@ -562,6 +562,6 @@ private:
 };
 
 } // namespace perfdhcp
-} // namespace isc
+} // namespace bundy
 
 #endif // COMMAND_OPTIONS_H

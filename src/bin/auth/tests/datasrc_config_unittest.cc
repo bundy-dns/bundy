@@ -24,11 +24,11 @@
 
 #include <memory>
 
-using namespace isc;
-using namespace isc::cc;
-using namespace isc::config;
-using namespace isc::data;
-using namespace isc::dns;
+using namespace bundy;
+using namespace bundy::cc;
+using namespace bundy::config;
+using namespace bundy::data;
+using namespace bundy::dns;
 using namespace std;
 
 namespace {
@@ -62,12 +62,12 @@ typedef boost::shared_ptr<FakeList> ListPtr;
 // to complete this function.
 void
 testConfigureDataSource(DatasrcConfigTest& test,
-                        const isc::data::ConstElementPtr& config);
+                        const bundy::data::ConstElementPtr& config);
 
 void
 datasrcConfigHandler(DatasrcConfigTest* fake_server, const std::string&,
-                     isc::data::ConstElementPtr config,
-                     const isc::config::ConfigData&)
+                     bundy::data::ConstElementPtr config,
+                     const bundy::config::ConfigData&)
 {
     if (config->contains("classes")) {
         testConfigureDataSource(*fake_server, config->get("classes"));
@@ -154,7 +154,7 @@ protected:
 
 void
 testConfigureDataSource(DatasrcConfigTest& test,
-                        const isc::data::ConstElementPtr& config)
+                        const bundy::data::ConstElementPtr& config)
 {
     // We use customized (faked lists) for the List type.  This makes it
     // possible to easily look that they were called.

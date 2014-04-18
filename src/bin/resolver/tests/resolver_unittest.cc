@@ -25,11 +25,11 @@
 #include <testutils/srv_test.h>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::data;
-using isc::acl::dns::RequestACL;
-using namespace isc::testutils;
-using isc::UnitTestUtil;
+using namespace bundy::dns;
+using namespace bundy::data;
+using bundy::acl::dns::RequestACL;
+using namespace bundy::testutils;
+using bundy::UnitTestUtil;
 
 namespace {
 const char* const TEST_PORT = "53535";
@@ -157,7 +157,7 @@ TEST_F(ResolverTest, setQueryACL) {
     // valid cases are tested through other tests.  We only explicitly check
     // an invalid case: passing a NULL shared pointer.
     EXPECT_THROW(server.setQueryACL(boost::shared_ptr<const RequestACL>()),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 TEST_F(ResolverTest, queryACL) {

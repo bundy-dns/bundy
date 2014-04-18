@@ -24,10 +24,10 @@
 #include <gtest/gtest.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dhcp;
-using namespace isc::asiolink;
-using namespace isc::util;
+using namespace bundy;
+using namespace bundy::dhcp;
+using namespace bundy::asiolink;
+using namespace bundy::util;
 
 namespace {
 
@@ -65,7 +65,7 @@ public:
         // Constructor throws exception if provided buffer is empty.
         EXPECT_THROW(
             OptionIntArray<T>(u, opt_code, buf_.begin(), buf_.begin()),
-            isc::OutOfRange
+            bundy::OutOfRange
         );
 
         // Provided buffer is not empty so it should not throw exception.
@@ -144,14 +144,14 @@ public:
         // Constructor throws exception if provided buffer is empty.
         EXPECT_THROW(
             OptionIntArray<T>(u, opt_code, buf_.begin(), buf_.begin()),
-            isc::OutOfRange
+            bundy::OutOfRange
         );
 
         // Constructor throws exception if provided buffer's length is not
         // multiple of 2-bytes.
         EXPECT_THROW(
             OptionIntArray<T>(u, opt_code, buf_.begin(), buf_.begin() + 5),
-            isc::OutOfRange
+            bundy::OutOfRange
         );
 
         // Now the buffer length is correct.
@@ -226,14 +226,14 @@ public:
         // Constructor throws exception if provided buffer is empty.
         EXPECT_THROW(
             OptionIntArray<T>(u, opt_code, buf_.begin(), buf_.begin()),
-            isc::OutOfRange
+            bundy::OutOfRange
         );
 
         // Constructor throws exception if provided buffer's length is not
         // multiple of 4-bytes.
         EXPECT_THROW(
             OptionIntArray<T>(u, opt_code, buf_.begin(), buf_.begin() + 9),
-            isc::OutOfRange
+            bundy::OutOfRange
         );
 
         // Now the buffer length is correct.

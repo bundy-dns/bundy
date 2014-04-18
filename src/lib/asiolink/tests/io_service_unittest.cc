@@ -18,7 +18,7 @@
 #include <boost/bind.hpp>
 #include <vector>
 
-using namespace isc::asiolink;
+using namespace bundy::asiolink;
 
 namespace {
 

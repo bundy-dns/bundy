@@ -18,12 +18,12 @@
 #include <exceptions/exceptions.h>
 #include <cstddef>
 
-namespace isc {
+namespace bundy {
 namespace util {
 
 /// \brief Read Unsigned 16-Bit Integer from Buffer
 ///
-/// This is essentially a copy of the isc::util::InputBuffer::readUint16.  It
+/// This is essentially a copy of the bundy::util::InputBuffer::readUint16.  It
 /// should really be moved into a separate library.
 ///
 /// \param buffer Data buffer at least two bytes long of which the first two
@@ -35,7 +35,7 @@ namespace util {
 inline uint16_t
 readUint16(const void* buffer, size_t length) {
     if (length < sizeof(uint16_t)) {
-        isc_throw(isc::OutOfRange,
+        bundy_throw(bundy::OutOfRange,
                   "Length (" << length << ") of buffer is insufficient " <<
                   "to read a uint16_t");
     }
@@ -50,7 +50,7 @@ readUint16(const void* buffer, size_t length) {
 
 /// \brief Write Unisgned 16-Bit Integer to Buffer
 ///
-/// This is essentially a copy of isc::util::OutputBuffer::writeUint16.  It
+/// This is essentially a copy of bundy::util::OutputBuffer::writeUint16.  It
 /// should really be moved into a separate library.
 ///
 /// \param value 16-bit value to convert
@@ -62,7 +62,7 @@ readUint16(const void* buffer, size_t length) {
 inline uint8_t*
 writeUint16(uint16_t value, void* buffer, size_t length) {
     if (length < sizeof(uint16_t)) {
-        isc_throw(isc::OutOfRange,
+        bundy_throw(bundy::OutOfRange,
                   "Length (" << length << ") of buffer is insufficient " <<
                   "to write a uint16_t");
     }
@@ -86,7 +86,7 @@ writeUint16(uint16_t value, void* buffer, size_t length) {
 inline uint32_t
 readUint32(const uint8_t* buffer, size_t length) {
     if (length < sizeof(uint32_t)) {
-        isc_throw(isc::OutOfRange,
+        bundy_throw(bundy::OutOfRange,
                   "Length (" << length << ") of buffer is insufficient " <<
                   "to read a uint32_t");
     }
@@ -112,7 +112,7 @@ readUint32(const uint8_t* buffer, size_t length) {
 inline uint8_t*
 writeUint32(uint32_t value, uint8_t* buffer, size_t length) {
     if (length < sizeof(uint32_t)) {
-        isc_throw(isc::OutOfRange,
+        bundy_throw(bundy::OutOfRange,
                   "Length (" << length << ") of buffer is insufficient " <<
                   "to write a uint32_t");
     }
@@ -128,6 +128,6 @@ writeUint32(uint32_t value, uint8_t* buffer, size_t length) {
 }
 
 } // namespace util
-} // namespace isc
+} // namespace bundy
 
 #endif // IO_UTILITIES_H

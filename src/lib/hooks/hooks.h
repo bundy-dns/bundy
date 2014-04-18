@@ -31,12 +31,12 @@ const char* const VERSION_FUNCTION_NAME = "version";
 
 // Typedefs for pointers to the framework functions.
 typedef int (*version_function_ptr)();
-typedef int (*load_function_ptr)(isc::hooks::LibraryHandle&);
+typedef int (*load_function_ptr)(bundy::hooks::LibraryHandle&);
 typedef int (*unload_function_ptr)();
 
 } // Anonymous namespace
 
-namespace isc {
+namespace bundy {
 namespace hooks {
 
 /// @brief User-Library Initialization for Statically-Linked BUNDY
@@ -72,6 +72,6 @@ namespace hooks {
 void hooksStaticLinkInit();
 
 } // namespace hooks
-} // namespace isc
+} // namespace bundy
 
 #endif  // HOOKS_H

@@ -21,7 +21,7 @@
 
 #include <cstdlib> // for NULL.
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace thread {
 class CondVar;
@@ -35,7 +35,7 @@ class CondVar;
 /// Mutex::Locker object.
 ///
 /// Also, as mutex is a low-level system object, an error might happen at any
-/// operation with it. We convert many errors to the isc::InvalidOperation,
+/// operation with it. We convert many errors to the bundy::InvalidOperation,
 /// since the errors usually happen only when used in a wrong way. Any methods
 /// or constructors in this class can throw. Allocation errors are converted
 /// to std::bad_alloc (for example when OS-dependant limit of mutexes is
@@ -57,7 +57,7 @@ public:
     ///
     /// \throw std::bad_alloc In case allocation of something (memory, the
     ///     OS mutex) fails.
-    /// \throw isc::InvalidOperation Other unspecified errors around the mutex.
+    /// \throw bundy::InvalidOperation Other unspecified errors around the mutex.
     ///     This should be rare.
     Mutex();
 
@@ -81,9 +81,9 @@ public:
     public:
         /// \brief Exception thrown when the mutex is already locked and
         ///     a non-blocking locker is attempted around it.
-        struct AlreadyLocked : public isc::InvalidParameter {
+        struct AlreadyLocked : public bundy::InvalidParameter {
             AlreadyLocked(const char* file, size_t line, const char* what) :
-                isc::InvalidParameter(file, line, what)
+                bundy::InvalidParameter(file, line, what)
             {}
         };
 
@@ -92,7 +92,7 @@ public:
         /// Locks the mutex. May block for extended period of time if
         /// \c block is true.
         ///
-        /// \throw isc::InvalidOperation when OS reports error. This usually
+        /// \throw bundy::InvalidOperation when OS reports error. This usually
         ///     means an attempt to use the mutex in a wrong way (locking
         ///     a mutex second time from the same thread, for example).
         /// \throw AlreadyLocked if \c block is false and the mutex is
@@ -104,7 +104,7 @@ public:
                 mutex.lock();
             } else {
                 if (!mutex.tryLock()) {
-                    isc_throw(AlreadyLocked, "The mutex is already locked");
+                    bundy_throw(AlreadyLocked, "The mutex is already locked");
                 }
             }
         }
@@ -157,7 +157,7 @@ private:
     // Commonly called before releasing the lock, checking and updating
     // internal state for debug.
     //
-    // If throw_ok is true, it throws \c isc::InvalidOperation when the check
+    // If throw_ok is true, it throws \c bundy::InvalidOperation when the check
     // fails; otherwise it aborts the process.  This parameter must be set
     // to false if the call to this shouldn't result in an exception (e.g.
     // when called from a destructor).
@@ -214,7 +214,7 @@ public:
     /// \brief Constructor.
     ///
     /// \throw std::bad_alloc memory allocation failure
-    /// \throw isc::Unexpected other unexpected shortage of system resource
+    /// \throw bundy::Unexpected other unexpected shortage of system resource
     CondVar();
 
     /// \brief Destructor.
@@ -234,8 +234,8 @@ public:
     /// The lock will be automatically released within this method, and
     /// will be re-acquired on the exit of this method.
     ///
-    /// \throw isc::InvalidOperation mutex isn't locked
-    /// \throw isc::BadValue mutex is not a valid \c Mutex object
+    /// \throw bundy::InvalidOperation mutex isn't locked
+    /// \throw bundy::BadValue mutex is not a valid \c Mutex object
     ///
     /// \param mutex A \c Mutex object to be released on wait().
     void wait(Mutex& mutex);
@@ -255,7 +255,7 @@ private:
 
 } // namespace thread
 } // namespace util
-} // namespace isc
+} // namespace bundy
 
 #endif
 

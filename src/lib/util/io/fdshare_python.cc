@@ -27,7 +27,7 @@ fdshare_recv_fd(PyObject*, PyObject* args) {
     if (!PyArg_ParseTuple(args, "i", &sock)) {
         return (NULL);
     }
-    fd = isc::util::io::recv_fd(sock);
+    fd = bundy::util::io::recv_fd(sock);
     return (Py_BuildValue("i", fd));
 }
 
@@ -37,7 +37,7 @@ fdshare_send_fd(PyObject*, PyObject* args) {
     if (!PyArg_ParseTuple(args, "ii", &sock, &fd)) {
         return (NULL);
     }
-    result = isc::util::io::send_fd(sock, fd);
+    result = bundy::util::io::send_fd(sock, fd);
     return (Py_BuildValue("i", result));
 }
 
@@ -68,7 +68,7 @@ PyInit_libutil_io_python(void) {
     }
 
     PyObject* FD_SYSTEM_ERROR = Py_BuildValue("i",
-                                              isc::util::io::FD_SYSTEM_ERROR);
+                                              bundy::util::io::FD_SYSTEM_ERROR);
     if (FD_SYSTEM_ERROR == NULL) {
         Py_XDECREF(mod);
         return (NULL);
@@ -81,7 +81,7 @@ PyInit_libutil_io_python(void) {
     }
 
     PyObject* FD_OTHER_ERROR = Py_BuildValue("i",
-                                             isc::util::io::FD_OTHER_ERROR);
+                                             bundy::util::io::FD_OTHER_ERROR);
     if (FD_OTHER_ERROR == NULL) {
         Py_XDECREF(mod);
         return (NULL);

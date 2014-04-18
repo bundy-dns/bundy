@@ -20,9 +20,9 @@
 #include <sstream>
 #include <vector>
 
-using namespace isc;
-using namespace isc::dhcp;
-using namespace isc::util;
+using namespace bundy;
+using namespace bundy::dhcp;
+using namespace bundy::util;
 
 namespace {
 

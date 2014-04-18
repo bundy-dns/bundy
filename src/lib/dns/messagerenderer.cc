@@ -27,10 +27,10 @@
 #include <vector>
 
 using namespace std;
-using namespace isc::util;
-using isc::dns::name::internal::maptolower;
+using namespace bundy::util;
+using bundy::dns::name::internal::maptolower;
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 namespace {     // hide internal-only names from the public namespaces
@@ -282,7 +282,7 @@ MessageRenderer::getCompressMode() const {
 void
 MessageRenderer::setCompressMode(const CompressMode mode) {
     if (getLength() != 0) {
-        isc_throw(isc::InvalidParameter,
+        bundy_throw(bundy::InvalidParameter,
                   "compress mode cannot be changed during rendering");
     }
     impl_->compress_mode_ = mode;
@@ -376,10 +376,10 @@ AbstractMessageRenderer::AbstractMessageRenderer() :
 void
 AbstractMessageRenderer::setBuffer(OutputBuffer* buffer) {
     if (buffer != NULL && buffer_->getLength() != 0) {
-        isc_throw(isc::InvalidParameter,
+        bundy_throw(bundy::InvalidParameter,
                   "MessageRenderer buffer cannot be set when in use");
     } if (buffer == NULL && buffer_ == &local_buffer_) {
-        isc_throw(isc::InvalidParameter,
+        bundy_throw(bundy::InvalidParameter,
                   "Default MessageRenderer buffer cannot be reset");
     }
 

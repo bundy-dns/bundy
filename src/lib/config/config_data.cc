@@ -19,7 +19,7 @@
 #include <string>
 #include <iostream>
 
-using namespace isc::data;
+using namespace bundy::data;
 
 namespace {
 
@@ -70,7 +70,7 @@ ConstElementPtr findItemInSpecList(ConstElementPtr spec_part,
         }
     }
     if (!found) {
-        isc_throw(isc::config::DataNotFoundError,
+        bundy_throw(bundy::config::DataNotFoundError,
                   id_part + " in " + id_full + " not found");
     }
     return (spec_part);
@@ -78,7 +78,7 @@ ConstElementPtr findItemInSpecList(ConstElementPtr spec_part,
 
 } // anonymous namespace
 
-namespace isc {
+namespace bundy {
 namespace config {
 
 //
@@ -94,12 +94,12 @@ namespace config {
 static ConstElementPtr
 find_spec_part(ConstElementPtr spec, const std::string& identifier) {
     if (!spec) {
-        isc_throw(DataNotFoundError, "Empty specification");
+        bundy_throw(DataNotFoundError, "Empty specification");
     }
 
     ConstElementPtr spec_part = spec;
     if (identifier == "") {
-        isc_throw(DataNotFoundError, "Empty identifier");
+        bundy_throw(DataNotFoundError, "Empty identifier");
     }
     std::string id = identifier;
     size_t sep = id.find('/');
@@ -109,7 +109,7 @@ find_spec_part(ConstElementPtr spec, const std::string& identifier) {
         if (spec_part->getType() == Element::list) {
             spec_part = findItemInSpecList(spec_part, part, identifier);
         } else {
-            isc_throw(DataNotFoundError,
+            bundy_throw(DataNotFoundError,
                       "Not a list of spec items: " + spec_part->str());
         }
         id = id.substr(sep + 1);
@@ -136,7 +136,7 @@ find_spec_part(ConstElementPtr spec, const std::string& identifier) {
                 // not exist (i.e. the code does not match the spec)
                 if (!spec_part->contains("item_name") ||
                     spec_part->get("item_name")->stringValue() != id) {
-                    isc_throw(DataNotFoundError, "Element above " + id +
+                    bundy_throw(DataNotFoundError, "Element above " + id +
                                                  " in " + identifier +
                                                  " is not a map: " + spec_part->str());
                 }
@@ -212,7 +212,7 @@ ConfigData::getDefaultValue(const std::string& identifier) const {
     if (spec_part->contains("item_default")) {
         return spec_part->get("item_default");
     } else {
-        isc_throw(DataNotFoundError, "No default for " + identifier);
+        bundy_throw(DataNotFoundError, "No default for " + identifier);
     }
 }
 

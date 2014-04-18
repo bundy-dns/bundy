@@ -40,13 +40,13 @@
 #include <set>
 #include <fstream>
 
-using namespace isc::datasrc;
-using isc::datasrc::unittest::MockDataSourceClient;
-using isc::datasrc::memory::InMemoryClient;
-using isc::datasrc::memory::ZoneTableSegment;
-using isc::datasrc::memory::InMemoryZoneFinder;
-using namespace isc::data;
-using namespace isc::dns;
+using namespace bundy::datasrc;
+using bundy::datasrc::unittest::MockDataSourceClient;
+using bundy::datasrc::memory::InMemoryClient;
+using bundy::datasrc::memory::ZoneTableSegment;
+using bundy::datasrc::memory::InMemoryZoneFinder;
+using namespace bundy::data;
+using namespace bundy::dns;
 // note: don't use 'using [namespace]' for shared_ptr.  It would conflict with
 // C++ std:: definitions.
 using namespace std;
@@ -70,10 +70,10 @@ public:
                                                configuration)
     {
         if (type == "error") {
-            isc_throw(DataSourceError, "The error data source type");
+            bundy_throw(DataSourceError, "The error data source type");
         }
         if (type == "library_error") {
-            isc_throw(DataSourceLibraryError,
+            bundy_throw(DataSourceLibraryError,
                       "The library error data source type");
         }
         if (type == "MasterFiles") {
@@ -581,7 +581,7 @@ TEST_P(ListTest, status) {
     ASSERT_EQ(2, statuses.size());
     EXPECT_EQ("type1", statuses[0].getName());
     EXPECT_EQ(SEGMENT_UNUSED, statuses[0].getSegmentState());
-    EXPECT_THROW(statuses[0].getSegmentType(), isc::InvalidOperation);
+    EXPECT_THROW(statuses[0].getSegmentType(), bundy::InvalidOperation);
     EXPECT_EQ("Test name", statuses[1].getName());
     EXPECT_EQ(SEGMENT_INUSE, statuses[1].getSegmentState());
     EXPECT_EQ("local", statuses[1].getSegmentType());
@@ -853,7 +853,7 @@ TEST_P(ListTest, badCache) {
         "   \"cache-zones\": [\"noiter.org\"],"
         "   \"params\": [\"noiter.org\"]"
         "}]"));
-    EXPECT_THROW(list_->configure(elem2, true), isc::NotImplemented);
+    EXPECT_THROW(list_->configure(elem2, true), bundy::NotImplemented);
     checkDS(0, "test_type", "[\"example.org\"]", true);
     // Now, the zone returns NULL iterator
     const ConstElementPtr elem3(Element::fromJSON("["
@@ -863,7 +863,7 @@ TEST_P(ListTest, badCache) {
         "   \"cache-zones\": [\"null.org\"],"
         "   \"params\": [\"null.org\"]"
         "}]"));
-    EXPECT_THROW(list_->configure(elem3, true), isc::Unexpected);
+    EXPECT_THROW(list_->configure(elem3, true), bundy::Unexpected);
     checkDS(0, "test_type", "[\"example.org\"]", true);
     // The autodetection of zones is not enabled
     const ConstElementPtr elem4(Element::fromJSON("["
@@ -872,7 +872,7 @@ TEST_P(ListTest, badCache) {
         "   \"cache-enable\": true,"
         "   \"params\": [\"example.org\"]"
         "}]"));
-    EXPECT_THROW(list_->configure(elem4, true), isc::NotImplemented);
+    EXPECT_THROW(list_->configure(elem4, true), bundy::NotImplemented);
     checkDS(0, "test_type", "[\"example.org\"]", true);
 }
 
@@ -1100,7 +1100,7 @@ TEST_P(ListTest, checkZoneWriterThrows) {
     // catch_load_error=false, the following should throw and must not
     // modify error_msg.
     EXPECT_THROW(result.second->load(&error_msg),
-                 isc::datasrc::ZoneLoaderException);
+                 bundy::datasrc::ZoneLoaderException);
     EXPECT_TRUE(error_msg.empty());
     result.second->cleanup();
 }
@@ -1113,7 +1113,7 @@ TEST_P(ListTest, reloadSuccess) {
     ASSERT_EQ(1, statii_before.size());
     EXPECT_EQ("test_type", statii_before[0].getName());
     EXPECT_EQ(SEGMENT_UNUSED, statii_before[0].getSegmentState());
-    EXPECT_THROW(statii_before[0].getSegmentType(), isc::InvalidOperation);
+    EXPECT_THROW(statii_before[0].getSegmentType(), bundy::InvalidOperation);
 
     const Name name("example.org");
     prepareCache(0, name);
@@ -1189,11 +1189,11 @@ TEST_P(ListTest, reloadNoSuchZone) {
     EXPECT_EQ(ConfigurableClientList::ZONE_NOT_FOUND,
               doReload(Name("sub.example.com")));
     // Nothing changed here - these zones don't exist
-    EXPECT_EQ(static_cast<isc::datasrc::DataSourceClient*>(NULL),
+    EXPECT_EQ(static_cast<bundy::datasrc::DataSourceClient*>(NULL),
               list_->find(name).dsrc_client_);
-    EXPECT_EQ(static_cast<isc::datasrc::DataSourceClient*>(NULL),
+    EXPECT_EQ(static_cast<bundy::datasrc::DataSourceClient*>(NULL),
               list_->find(Name("example.cz")).dsrc_client_);
-    EXPECT_EQ(static_cast<isc::datasrc::DataSourceClient*>(NULL),
+    EXPECT_EQ(static_cast<bundy::datasrc::DataSourceClient*>(NULL),
               list_->find(Name("sub.example.com"), true).dsrc_client_);
     // Not reloaded, so A record shouldn't be visible yet.
     EXPECT_EQ(ZoneFinder::NXDOMAIN,
@@ -1260,7 +1260,7 @@ TEST_P(ListTest, reloadZoneThrow) {
     EXPECT_EQ(ZoneFinder::SUCCESS,
               list_->find(name).finder_->find(name, RRType::SOA())->code);
     // The iterator throws, so abort the reload.
-    EXPECT_THROW(doReload(name), isc::NotImplemented);
+    EXPECT_THROW(doReload(name), bundy::NotImplemented);
     // The zone is not hurt.
     EXPECT_EQ(ZoneFinder::SUCCESS,
               list_->find(name).finder_->find(name, RRType::SOA())->code);
@@ -1274,7 +1274,7 @@ TEST_P(ListTest, reloadNullIterator) {
     EXPECT_EQ(ZoneFinder::SUCCESS,
               list_->find(name).finder_->find(name, RRType::SOA())->code);
     // The iterator throws, so abort the reload.
-    EXPECT_THROW(doReload(name), isc::Unexpected);
+    EXPECT_THROW(doReload(name), bundy::Unexpected);
     // The zone is not hurt.
     EXPECT_EQ(ZoneFinder::SUCCESS,
               list_->find(name).finder_->find(name, RRType::SOA())->code);
@@ -1287,7 +1287,7 @@ TEST_P(ListTest, reloadMasterFile) {
     if (system(install_cmd) != 0) {
         // any exception will do, this is failure in test setup, but
         // nice to show the command that fails, and shouldn't be caught
-        isc_throw(isc::Exception,
+        bundy_throw(bundy::Exception,
           "Error setting up; command failed: " << install_cmd);
     }
 
@@ -1430,9 +1430,9 @@ TEST_F(ListTest, zoneTableAccessor) {
 
     // allow_cache = true, use_cache = false
     list_->configure(elem2, true);
-    EXPECT_THROW(list_->getZoneTableAccessor("", false), isc::NotImplemented);
+    EXPECT_THROW(list_->getZoneTableAccessor("", false), bundy::NotImplemented);
     EXPECT_THROW(list_->getZoneTableAccessor("type1", false),
-                 isc::NotImplemented);
+                 bundy::NotImplemented);
 
     // datasrc not found, returns NULL pointer
     EXPECT_FALSE(list_->getZoneTableAccessor("bogus", true));
@@ -1459,7 +1459,7 @@ TEST(DataSourceStatus, status) {
     const DataSourceStatus status_unused("Unused");
     EXPECT_EQ("Unused", status_unused.getName());
     EXPECT_EQ(SEGMENT_UNUSED, status_unused.getSegmentState());
-    EXPECT_THROW(status_unused.getSegmentType(), isc::InvalidOperation);
+    EXPECT_THROW(status_unused.getSegmentType(), bundy::InvalidOperation);
 }
 
 }

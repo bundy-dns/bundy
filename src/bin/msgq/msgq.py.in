@@ -30,26 +30,26 @@ import time
 import select
 import random
 import threading
-import isc.config.ccsession
+import bundy.config.ccsession
 from optparse import OptionParser, OptionValueError
-import isc.util.process
-import isc.util.traceback_handler
-from isc.cc.proto_defs import *
-import isc.log
-from isc.log_messages.msgq_messages import *
+import bundy.util.process
+import bundy.util.traceback_handler
+from bundy.cc.proto_defs import *
+import bundy.log
+from bundy.log_messages.msgq_messages import *
 
-import isc.cc
+import bundy.cc
 
-isc.util.process.rename()
+bundy.util.process.rename()
 
-isc.log.init("bundy-msgq", buffer=True)
+bundy.log.init("bundy-msgq", buffer=True)
 # Logger that is used in the actual msgq handling - startup, shutdown and the
 # poller thread.
-logger = isc.log.Logger("msgq")
+logger = bundy.log.Logger("msgq")
 # A separate copy for the master/config thread when the poller thread runs.
 # We use a separate instance, since the logger itself doesn't have to be
 # thread safe.
-config_logger = isc.log.Logger("msgq")
+config_logger = bundy.log.Logger("msgq")
 TRACE_START = logger.DBGLVL_START_SHUT
 TRACE_BASIC = logger.DBGLVL_TRACE_BASIC
 TRACE_DETAIL = logger.DBGLVL_TRACE_DETAIL
@@ -277,8 +277,8 @@ class MsgQ:
             # attempt to create a new socket.
             existing_msgq = None
             try:
-                existing_msgq = isc.cc.Session(self.socket_file)
-            except isc.cc.session.SessionError:
+                existing_msgq = bundy.cc.Session(self.socket_file)
+            except bundy.cc.session.SessionError:
                 existing_msgq = None
 
             if existing_msgq:
@@ -430,7 +430,7 @@ class MsgQ:
             return
 
         try:
-            routingmsg = isc.cc.message.from_wire(routing)
+            routingmsg = bundy.cc.message.from_wire(routing)
         except DecodeError as err:
             self.kill_socket(fd, sock)
             logger.error(MSGQ_HDR_DECODE_ERROR, fd, err)
@@ -461,9 +461,9 @@ class MsgQ:
 
     def preparemsg(self, env, msg = None):
         if type(env) == dict:
-            env = isc.cc.message.to_wire(env)
+            env = bundy.cc.message.to_wire(env)
         if type(msg) == dict:
-            msg = isc.cc.message.to_wire(msg)
+            msg = bundy.cc.message.to_wire(msg)
         length = 2 + len(env);
         if msg:
             length += len(msg)
@@ -628,7 +628,7 @@ class MsgQ:
             # negative errors for delivery errors to distinguish them a
             # little. We probably should have a way to provide more data
             # in the error message.
-            payload = isc.config.ccsession.create_answer(CC_REPLY_NO_RECPT,
+            payload = bundy.config.ccsession.create_answer(CC_REPLY_NO_RECPT,
                                                          "No such recipient")
             # We create the header based on the current one. But we don't
             # want to mangle it for the caller, so we get a copy. A shallow
@@ -767,7 +767,7 @@ class MsgQ:
 
             # TODO: Any config handling goes here.
 
-            return isc.config.create_answer(0)
+            return bundy.config.create_answer(0)
 
     def command_handler(self, command, args):
         """The command handler (run in a separate thread)."""
@@ -785,15 +785,15 @@ class MsgQ:
                     args = {}
                 group = args.get('group')
                 if group:
-                    return isc.config.create_answer(0,
+                    return bundy.config.create_answer(0,
                         list(map(lambda sock: self.fd_to_lname[sock.fileno()],
                                  self.subs.find(group, ''))))
                 else:
-                    return isc.config.create_answer(0,
+                    return bundy.config.create_answer(0,
                                                     list(self.lnames.keys()))
 
             config_logger.error(MSGQ_COMMAND_UNKNOWN, command)
-            return isc.config.create_answer(1, 'unknown command: ' + command)
+            return bundy.config.create_answer(1, 'unknown command: ' + command)
 
 def signal_handler(msgq, signal, frame):
     if msgq:
@@ -849,7 +849,7 @@ def main():
         poller_thread.start()
         if msgq.wait_cfgmgr():
             # Once we get the config manager, we can read our own config.
-            session = isc.config.ModuleCCSession(SPECFILE_LOCATION,
+            session = bundy.config.ModuleCCSession(SPECFILE_LOCATION,
                                                  msgq.config_handler,
                                                  msgq.command_handler,
                                                  None, True,
@@ -883,4 +883,4 @@ def main():
     logger.info(MSGQ_EXITING)
 
 if __name__ == "__main__":
-    isc.util.traceback_handler.traceback_handler(main)
+    bundy.util.traceback_handler.traceback_handler(main)

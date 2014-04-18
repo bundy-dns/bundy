@@ -35,12 +35,12 @@
 #include <set>
 #include <vector>
 
-using namespace isc::dns;
-using namespace isc::dns::rdata;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
 using std::vector;
 using std::set;
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 
@@ -256,7 +256,7 @@ public:
     virtual void setCompressMode(CompressMode) {}
     virtual void writeName(const LabelSequence&, bool) {
         // We don't need this version of writeName
-        isc_throw(Unexpected, "unexpected version of writeName is called");
+        bundy_throw(Unexpected, "unexpected version of writeName is called");
     }
 
     // Called for each domain name in the RDATA, from the RDATA's toWire()
@@ -269,7 +269,7 @@ public:
         // Then, we should still have a field in the spec, and it must be a
         // domain name field.
         if (current_field_ >= encode_spec_->field_count) {
-            isc_throw(BadValue,
+            bundy_throw(BadValue,
                       "RDATA encoder encounters an unexpected name data: " <<
                       name);
         }
@@ -283,7 +283,7 @@ public:
         // It would be compressed iff the field has that attribute.
         if (compress !=
             ((field.name_attributes & NAMEATTR_COMPRESSIBLE) != 0)) {
-            isc_throw(BadValue, "RDATA encoder error, inconsistent name "
+            bundy_throw(BadValue, "RDATA encoder error, inconsistent name "
                       "compression policy: " << name);
         }
 
@@ -310,7 +310,7 @@ public:
         // we should reach the end of the fields.
         updateOtherData();
         if (current_field_ != encode_spec_->field_count) {
-            isc_throw(BadValue,
+            bundy_throw(BadValue,
                       "RDATA encoder didn't find all expected fields");
         }
     }
@@ -343,7 +343,7 @@ private:
             // The data length of a fixed length field must be the one
             // specified in the field spec.
             if (data_len != field.fixeddata_len) {
-                isc_throw(BadValue,
+                bundy_throw(BadValue,
                           "RDATA encoding: available data too short for the "
                           "type");
             }
@@ -352,7 +352,7 @@ private:
             // a single field covering all data, even if it may
             // consist of multiple fields as DNS RDATA (e.g. TXT).
             if (data_len > 0xffff) {
-                isc_throw(RdataEncodingError, "RDATA field is too large: "
+                bundy_throw(RdataEncodingError, "RDATA field is too large: "
                           << data_len << " bytes");
             }
             data_lengths_.push_back(data_len);
@@ -394,7 +394,7 @@ struct RdataEncoder::RdataEncoderImpl {
     // Common initialization for RdataEncoder::start().
     void start(RRClass rrclass, RRType rrtype) {
         if (rrtype == RRType::RRSIG()) {
-            isc_throw(BadValue, "RRSIG cannot be encoded as main RDATA type");
+            bundy_throw(BadValue, "RRSIG cannot be encoded as main RDATA type");
         }
 
         encode_spec_ = &getRdataEncodeSpec(rrclass, rrtype);
@@ -521,7 +521,7 @@ RdataEncoder::start(RRClass rrclass, RRType rrtype, const void* old_data,
         if (!impl_->rdatas_.insert(
                 createRdata(rrtype, rrclass, ibuffer,
                             impl_->olddata_buffer_.getLength())).second) {
-            isc_throw(Unexpected, "duplicate RDATA found in merging RdataSet");
+            bundy_throw(Unexpected, "duplicate RDATA found in merging RdataSet");
         }
         impl_->olddata_buffer_.clear();
     }
@@ -534,7 +534,7 @@ RdataEncoder::start(RRClass rrclass, RRType rrtype, const void* old_data,
         if (!impl_->rrsigs_.insert(
                 createRdata(RRType::RRSIG(), rrclass, ibuffer,
                             impl_->olddata_buffer_.getLength())).second) {
-            isc_throw(Unexpected, "duplicate RRSIG found in merging RdataSet");
+            bundy_throw(Unexpected, "duplicate RRSIG found in merging RdataSet");
         }
         impl_->olddata_buffer_.clear();
     }
@@ -544,7 +544,7 @@ RdataEncoder::start(RRClass rrclass, RRType rrtype, const void* old_data,
 bool
 RdataEncoder::addRdata(const Rdata& rdata) {
     if (impl_->encode_spec_ == NULL) {
-        isc_throw(InvalidOperation,
+        bundy_throw(InvalidOperation,
                   "RdataEncoder::addRdata performed before start");
     }
 
@@ -567,7 +567,7 @@ RdataEncoder::addRdata(const Rdata& rdata) {
 bool
 RdataEncoder::addSIGRdata(const Rdata& sig_rdata) {
     if (impl_->encode_spec_ == NULL) {
-        isc_throw(InvalidOperation,
+        bundy_throw(InvalidOperation,
                   "RdataEncoder::addSIGRdata performed before start");
     }
 
@@ -582,7 +582,7 @@ RdataEncoder::addSIGRdata(const Rdata& sig_rdata) {
     sig_rdata.toWire(impl_->rrsig_buffer_);
     const size_t rrsig_datalen = impl_->rrsig_buffer_.getLength() - cur_pos;
     if (rrsig_datalen > 0xffff) {
-        isc_throw(RdataEncodingError, "RRSIG is too large: "
+        bundy_throw(RdataEncodingError, "RRSIG is too large: "
                   << rrsig_datalen << " bytes");
     }
     impl_->rrsigs_.insert(rdatap);
@@ -594,7 +594,7 @@ RdataEncoder::addSIGRdata(const Rdata& sig_rdata) {
 size_t
 RdataEncoder::getStorageLength() const {
     if (impl_->encode_spec_ == NULL) {
-        isc_throw(InvalidOperation,
+        bundy_throw(InvalidOperation,
                   "RdataEncoder::getStorageLength performed before start");
     }
 
@@ -610,15 +610,15 @@ RdataEncoder::getStorageLength() const {
 void
 RdataEncoder::encode(void* buf, size_t buf_len) const {
     if (impl_->encode_spec_ == NULL) {
-        isc_throw(InvalidOperation,
+        bundy_throw(InvalidOperation,
                   "RdataEncoder::encode performed before start");
     }
     if (buf == NULL) {
-        isc_throw(BadValue,
+        bundy_throw(BadValue,
                   "RdataEncoder::encode NULL buffer is given");
     }
     if (getStorageLength() > buf_len) {
-        isc_throw(BadValue, "RdataEncoder::encode short buffer given");
+        bundy_throw(BadValue, "RdataEncoder::encode short buffer given");
     }
 
     uint8_t* const dp_beg = reinterpret_cast<uint8_t*>(buf);

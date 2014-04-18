@@ -59,22 +59,22 @@
 #include <asiolink/io_error.h>
 
 using namespace std;
-using namespace isc::asiodns;
-using namespace isc::asiolink;
-using namespace isc::dns;
-using namespace isc::util;
-using isc::UnitTestUtil;
-using isc::util::unittests::matchWireData;
+using namespace bundy::asiodns;
+using namespace bundy::asiolink;
+using namespace bundy::dns;
+using namespace bundy::util;
+using bundy::UnitTestUtil;
+using bundy::util::unittests::matchWireData;
 using boost::scoped_ptr;
 
-namespace isc {
+namespace bundy {
 namespace asiodns {
 
 // This is defined in recursive_query.cc, but not in header (it's not public
 // function). So bring it in to be tested.
 std::string
 deepestDelegation(Name name, RRClass rrclass,
-                  isc::cache::ResolverCache& cache);
+                  bundy::cache::ResolverCache& cache);
 
 }
 }
@@ -104,7 +104,7 @@ resolveAddress(const int protocol, const char* const addr,
     struct addrinfo* res;
     const int error = getaddrinfo(addr, port, &hints, &res);
     if (error != 0) {
-        isc_throw(IOError, "getaddrinfo failed: " << gai_strerror(error));
+        bundy_throw(IOError, "getaddrinfo failed: " << gai_strerror(error));
     }
 
     return (res);
@@ -191,12 +191,12 @@ protected:
         sock_.reset(socket(res->ai_family, res->ai_socktype,
                            res->ai_protocol));
         if (sock_.s_ < 0) {
-            isc_throw(IOError, "failed to open test socket");
+            bundy_throw(IOError, "failed to open test socket");
         }
         const int cc = sendto(sock_.s_, test_data, sizeof(test_data), 0,
                               res->ai_addr, res->ai_addrlen);
         if (cc != sizeof(test_data)) {
-            isc_throw(IOError, "unexpected sendto result: " << cc);
+            bundy_throw(IOError, "unexpected sendto result: " << cc);
         }
         io_service_.run();
     }
@@ -209,14 +209,14 @@ protected:
         sock_.reset(socket(res->ai_family, res->ai_socktype,
                            res->ai_protocol));
         if (sock_.s_ < 0) {
-            isc_throw(IOError, "failed to open test socket");
+            bundy_throw(IOError, "failed to open test socket");
         }
         if (connect(sock_.s_, res->ai_addr, res->ai_addrlen) < 0) {
-            isc_throw(IOError, "failed to connect to the test server");
+            bundy_throw(IOError, "failed to connect to the test server");
         }
         const int cc = send(sock_.s_, test_data, sizeof(test_data), 0);
         if (cc != sizeof(test_data)) {
-            isc_throw(IOError, "unexpected send result: " << cc);
+            bundy_throw(IOError, "unexpected send result: " << cc);
         }
         io_service_.run();
     }
@@ -231,11 +231,11 @@ protected:
         sock_.reset(socket(res->ai_family, res->ai_socktype,
                            res->ai_protocol));
         if (sock_.s_ < 0) {
-            isc_throw(IOError, "failed to open test socket");
+            bundy_throw(IOError, "failed to open test socket");
         }
 
         if (bind(sock_.s_, res->ai_addr, res->ai_addrlen) < 0) {
-            isc_throw(IOError, "bind failed: " << strerror(errno));
+            bundy_throw(IOError, "bind failed: " << strerror(errno));
         }
 
         // The IO service queue should have a RecursiveQuery object scheduled
@@ -264,12 +264,12 @@ protected:
                 // can happen often we'll consider a more complete solution.
                 recv_options = MSG_DONTWAIT;
             } else {
-                isc_throw(IOError, "set RCVTIMEO failed: " << strerror(errno));
+                bundy_throw(IOError, "set RCVTIMEO failed: " << strerror(errno));
             }
         }
         const int ret = recv(sock_.s_, buffer, size, recv_options);
         if (ret < 0) {
-            isc_throw(IOError, "recvfrom failed: " << strerror(errno));
+            bundy_throw(IOError, "recvfrom failed: " << strerror(errno));
         }
 
         // Pass the message size back via the size parameter
@@ -286,22 +286,22 @@ protected:
                                  res->ai_protocol));
         const int s = sock.s_;
         if (s < 0) {
-            isc_throw(isc::Unexpected, "failed to open a test socket");
+            bundy_throw(bundy::Unexpected, "failed to open a test socket");
         }
         const int on = 1;
         if (family == AF_INET6) {
             if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, &on, sizeof(on)) ==
                 -1) {
-                isc_throw(isc::Unexpected,
+                bundy_throw(bundy::Unexpected,
                           "failed to set socket option(IPV6_V6ONLY)");
             }
         }
         if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) == -1) {
-            isc_throw(isc::Unexpected,
+            bundy_throw(bundy::Unexpected,
                       "failed to set socket option(SO_REUSEADDR)");
         }
         if (bind(s, res->ai_addr, res->ai_addrlen) != 0) {
-            isc_throw(isc::Unexpected, "failed to bind a test socket");
+            bundy_throw(bundy::Unexpected, "failed to bind a test socket");
         }
         if (protocol == IPPROTO_TCP) {
             dns_service_->addServerTCPFromFD(sock.release(), family);
@@ -410,10 +410,10 @@ protected:
     private:
         // Currently unused; these will be used for testing
         // asynchronous lookup calls via the asyncLookup() method
-        boost::shared_ptr<isc::asiolink::IOMessage> io_message_;
-        isc::dns::MessagePtr message_;
-        isc::dns::MessagePtr answer_message_;
-        isc::util::OutputBufferPtr respbuf_;
+        boost::shared_ptr<bundy::asiolink::IOMessage> io_message_;
+        bundy::dns::MessagePtr message_;
+        bundy::dns::MessagePtr answer_message_;
+        bundy::util::OutputBufferPtr respbuf_;
 
         // Callback functions provided by the caller
         const SimpleCallback* checkin_;
@@ -479,8 +479,8 @@ private:
     public:
         ASIOCallBack(RecursiveQueryTest* test_obj) : test_obj_(test_obj) {}
         void operator()(const IOMessage& io_message,
-                        isc::dns::MessagePtr, isc::dns::MessagePtr,
-                        isc::util::OutputBufferPtr, DNSServer*) const {
+                        bundy::dns::MessagePtr, bundy::dns::MessagePtr,
+                        bundy::util::OutputBufferPtr, DNSServer*) const {
             test_obj_->callBack(io_message);
         }
     private:
@@ -500,24 +500,24 @@ private:
 protected:
     IOService io_service_;
     scoped_ptr<DNSService> dns_service_;
-    scoped_ptr<isc::nsas::NameserverAddressStore> nsas_;
-    isc::cache::ResolverCache cache_;
+    scoped_ptr<bundy::nsas::NameserverAddressStore> nsas_;
+    bundy::cache::ResolverCache cache_;
     scoped_ptr<ASIOCallBack> callback_;
     int callback_protocol_;
     int callback_native_;
     string callback_address_;
     vector<uint8_t> callback_data_;
     ScopedSocket sock_;
-    boost::shared_ptr<isc::util::unittests::TestResolver> resolver_;
+    boost::shared_ptr<bundy::util::unittests::TestResolver> resolver_;
     AbstractRunningQuery* running_query_;
 };
 
 RecursiveQueryTest::RecursiveQueryTest() :
     dns_service_(NULL), callback_(NULL), callback_protocol_(0),
-    callback_native_(-1), resolver_(new isc::util::unittests::TestResolver()),
+    callback_native_(-1), resolver_(new bundy::util::unittests::TestResolver()),
     running_query_(NULL)
 {
-    nsas_.reset(new isc::nsas::NameserverAddressStore(resolver_));
+    nsas_.reset(new bundy::nsas::NameserverAddressStore(resolver_));
 }
 
 TEST_F(RecursiveQueryTest, v6UDPSend) {
@@ -657,7 +657,7 @@ TEST_F(RecursiveQueryTest, forwarderSend) {
 
     Question q(Name("example.com"), RRClass::IN(), RRType::TXT());
     MessagePtr query_message(new Message(Message::RENDER));
-    isc::resolve::initResponseMessage(q, *query_message);
+    bundy::resolve::initResponseMessage(q, *query_message);
 
     OutputBufferPtr buffer(new OutputBuffer(0));
     MessagePtr answer(new Message(Message::RENDER));
@@ -689,16 +689,16 @@ createTestSocket() {
     ScopedSocket sock(socket(res->ai_family, res->ai_socktype,
                              res->ai_protocol));
     if (sock.s_ < 0) {
-        isc_throw(IOError, "failed to open test socket");
+        bundy_throw(IOError, "failed to open test socket");
     }
     if (bind(sock.s_, res->ai_addr, res->ai_addrlen) < 0) {
-        isc_throw(IOError, "failed to bind test socket");
+        bundy_throw(IOError, "failed to bind test socket");
     }
     return (sock.release());
 }
 
 // Mock resolver callback for testing forward query.
-class MockResolverCallback : public isc::resolve::ResolverInterface::Callback {
+class MockResolverCallback : public bundy::resolve::ResolverInterface::Callback {
 public:
     enum ResultValue {
         DEFAULT = 0,
@@ -715,7 +715,7 @@ public:
         delete server_;
     }
 
-    void success(const isc::dns::MessagePtr response) {
+    void success(const bundy::dns::MessagePtr response) {
         result = SUCCESS;
         server_->resume(true);
     }
@@ -754,7 +754,7 @@ TEST_F(RecursiveQueryTest, forwardQueryTimeout) {
     OutputBufferPtr buffer(new OutputBuffer(0));
     MessagePtr answer(new Message(Message::RENDER));
     MessagePtr query_message(new Message(Message::RENDER));
-    isc::resolve::initResponseMessage(question, *query_message);
+    bundy::resolve::initResponseMessage(question, *query_message);
 
     boost::shared_ptr<MockResolverCallback> callback(new MockResolverCallback(&server));
     running_query_ = query.forward(query_message, answer, buffer, &server, callback);
@@ -789,7 +789,7 @@ TEST_F(RecursiveQueryTest, forwardClientTimeout) {
     Question q(Name("example.net"), RRClass::IN(), RRType::A());
     OutputBufferPtr buffer(new OutputBuffer(0));
     MessagePtr query_message(new Message(Message::RENDER));
-    isc::resolve::initResponseMessage(q, *query_message);
+    bundy::resolve::initResponseMessage(q, *query_message);
 
     boost::shared_ptr<MockResolverCallback> callback(new MockResolverCallback(&server));
     running_query_ = query.forward(query_message, answer, buffer, &server, callback);
@@ -825,7 +825,7 @@ TEST_F(RecursiveQueryTest, forwardLookupTimeout) {
 
     //Message query_message(Message::RENDER);
     MessagePtr query_message(new Message(Message::RENDER));
-    isc::resolve::initResponseMessage(question, *query_message);
+    bundy::resolve::initResponseMessage(question, *query_message);
 
     boost::shared_ptr<MockResolverCallback> callback(new MockResolverCallback(&server));
     running_query_ = query.forward(query_message, answer, buffer, &server, callback);
@@ -860,7 +860,7 @@ TEST_F(RecursiveQueryTest, lowtimeouts) {
     OutputBufferPtr buffer(new OutputBuffer(0));
 
     MessagePtr query_message(new Message(Message::RENDER));
-    isc::resolve::initResponseMessage(question, *query_message);
+    bundy::resolve::initResponseMessage(question, *query_message);
 
     boost::shared_ptr<MockResolverCallback> callback(new MockResolverCallback(&server));
     running_query_ = query.forward(query_message, answer, buffer, &server, callback);
@@ -884,7 +884,7 @@ TEST_F(RecursiveQueryTest, DISABLED_recursiveSendOk) {
     RecursiveQuery rq(*dns_service_, *nsas_, cache_, empty_vector,
                       empty_vector, 10000, 0);
 
-    Question q(Name("www.isc.org"), RRClass::IN(), RRType::A());
+    Question q(Name("www.bundy.org"), RRClass::IN(), RRType::A());
     OutputBufferPtr buffer(new OutputBuffer(0));
     MessagePtr answer(new Message(Message::RENDER));
     running_query_ = rq.resolve(q, answer, buffer, &server);
@@ -910,7 +910,7 @@ TEST_F(RecursiveQueryTest, DISABLED_recursiveSendNXDOMAIN) {
     RecursiveQuery rq(*dns_service_, *nsas_, cache_, empty_vector,
                       empty_vector, 10000, 0);
 
-    Question q(Name("wwwdoesnotexist.isc.org"), RRClass::IN(), RRType::A());
+    Question q(Name("wwwdoesnotexist.bundy.org"), RRClass::IN(), RRType::A());
     OutputBufferPtr buffer(new OutputBuffer(0));
     MessagePtr answer(new Message(Message::RENDER));
     running_query_ = rq.resolve(q, answer, buffer, &server);

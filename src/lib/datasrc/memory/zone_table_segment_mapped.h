@@ -21,7 +21,7 @@
 #include <boost/scoped_ptr.hpp>
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 
@@ -41,7 +41,7 @@ protected:
     /// Instances are expected to be created by the factory method
     /// (\c ZoneTableSegment::create()), so this constructor is
     /// protected.
-    ZoneTableSegmentMapped(const isc::dns::RRClass& rrclass);
+    ZoneTableSegmentMapped(const bundy::dns::RRClass& rrclass);
 
 public:
     /// \brief Destructor
@@ -53,7 +53,7 @@ public:
     /// \brief Return the \c ZoneTableHeader for this mapped zone table
     /// segment.
     ///
-    /// \throws isc::InvalidOperation if this method is called without a
+    /// \throws bundy::InvalidOperation if this method is called without a
     /// successful \c reset() call first.
     virtual ZoneTableHeader& getHeader();
 
@@ -64,9 +64,9 @@ public:
     /// table segment implementation (a \c MemorySegmentMapped
     /// instance).
     ///
-    /// \throws isc::InvalidOperation if this method is called without a
+    /// \throws bundy::InvalidOperation if this method is called without a
     /// successful \c reset() call first.
-    virtual isc::util::MemorySegment& getMemorySegment();
+    virtual bundy::util::MemorySegment& getMemorySegment();
 
     /// \brief Returns if the segment is writable.
     ///
@@ -91,7 +91,7 @@ public:
     /// Please see the \c ZoneTableSegment API documentation for the
     /// behavior in case of exceptions.
     ///
-    /// \throws isc::Unexpected when it's unable to lookup a named
+    /// \throws bundy::Unexpected when it's unable to lookup a named
     /// address that it expected to be present. This is extremely
     /// unlikely, and it points to corruption.
     ///
@@ -100,7 +100,7 @@ public:
     /// \param params An element containing config for the mapped file
     /// (see the description).
     virtual void reset(MemorySegmentOpenMode mode,
-                       isc::data::ConstElementPtr params);
+                       bundy::data::ConstElementPtr params);
 
     /// \brief Close the currently configured \c MemorySegment (if
     /// open). See the base class for a definition of "open" and
@@ -115,30 +115,30 @@ public:
 private:
     void sync();
 
-    bool processChecksum(isc::util::MemorySegmentMapped& segment, bool create,
+    bool processChecksum(bundy::util::MemorySegmentMapped& segment, bool create,
                          bool has_allocations, std::string& error_msg);
-    bool processHeader(isc::util::MemorySegmentMapped& segment, bool create,
+    bool processHeader(bundy::util::MemorySegmentMapped& segment, bool create,
                        bool has_allocations, std::string& error_msg);
 
-    isc::util::MemorySegmentMapped* openReadWrite(const std::string& filename,
+    bundy::util::MemorySegmentMapped* openReadWrite(const std::string& filename,
                                                   bool create);
-    isc::util::MemorySegmentMapped* openReadOnly(const std::string& filename);
+    bundy::util::MemorySegmentMapped* openReadOnly(const std::string& filename);
 
     template<typename T> T* getHeaderHelper(bool initial) const;
 
 private:
     std::string impl_type_;
-    isc::dns::RRClass rrclass_;
+    bundy::dns::RRClass rrclass_;
     MemorySegmentOpenMode current_mode_;
     std::string current_filename_;
     // Internally holds a MemorySegmentMapped. This is NULL on
     // construction, and is set by the \c reset() method.
-    boost::scoped_ptr<isc::util::MemorySegmentMapped> mem_sgmt_;
+    boost::scoped_ptr<bundy::util::MemorySegmentMapped> mem_sgmt_;
     ZoneTableHeader* cached_ro_header_;
 };
 
 } // namespace memory
 } // namespace datasrc
-} // namespace isc
+} // namespace bundy
 
 #endif // ZONE_TABLE_SEGMENT_MAPPED_H

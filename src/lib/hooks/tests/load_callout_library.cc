@@ -35,7 +35,7 @@
 
 #include <hooks/hooks.h>
 
-using namespace isc::hooks;
+using namespace bundy::hooks;
 
 extern "C" {
 

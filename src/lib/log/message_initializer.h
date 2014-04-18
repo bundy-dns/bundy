@@ -20,7 +20,7 @@
 #include <vector>
 #include <log/message_dictionary.h>
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 /// \brief Initialize Message Dictionary
@@ -118,6 +118,6 @@ public:
 };
 
 } // namespace log
-} // namespace isc
+} // namespace bundy
 
 #endif // MESSAGEINITIALIZER_H

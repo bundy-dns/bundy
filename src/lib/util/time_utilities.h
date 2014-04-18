@@ -28,7 +28,7 @@
 // utility area.
 //
 
-namespace isc {
+namespace bundy {
 namespace util {
 
 ///
@@ -38,7 +38,7 @@ namespace util {
 class InvalidTime : public Exception {
 public:
     InvalidTime(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 namespace detail {
@@ -53,7 +53,7 @@ namespace detail {
 /// an unusual or a specifically chosen "current" via system-provided
 /// library functions to get time.  This function acts as a straightforward
 /// wrapper of such a library function, but provides test code with a hook
-/// to return an arbitrary time value: if \c isc::util::detail::gettimeFunction
+/// to return an arbitrary time value: if \c bundy::util::detail::gettimeFunction
 /// is set to a pointer of function that returns 64-bit signed integer,
 /// \c gettimeWrapper() calls that function instead of the system library.
 ///

@@ -25,7 +25,7 @@
 /// @todo: This header file and its .cc counterpart are very similar between
 /// DHCPv4 and DHCPv6. They should be merged. A ticket #2355.
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 class Dhcpv4Srv;
@@ -57,16 +57,16 @@ class Dhcpv4Srv;
 ///
 /// @param config_set a new configuration (JSON) for DHCPv4 server
 /// @return answer that contains result of reconfiguration
-isc::data::ConstElementPtr
+bundy::data::ConstElementPtr
 configureDhcp4Server(Dhcpv4Srv&,
-                     isc::data::ConstElementPtr config_set);
+                     bundy::data::ConstElementPtr config_set);
 
 /// @brief Returns the global context
 ///
 /// @return a reference to the global context
 ParserContextPtr& globalContext();
 
-}; // end of isc::dhcp namespace
-}; // end of isc namespace
+}; // end of bundy::dhcp namespace
+}; // end of bundy namespace
 
 #endif // DHCP4_CONFIG_PARSER_H

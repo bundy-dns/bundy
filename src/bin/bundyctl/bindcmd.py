@@ -25,8 +25,8 @@ from bundyctl.moduleinfo import *
 from bundyctl.cmdparse import BindCmdParser
 from bundyctl import command_sets
 from xml.dom import minidom
-import isc.config
-import isc.cc.data
+import bundy.config
+import bundy.cc.data
 import http.client
 import json
 import inspect
@@ -264,7 +264,7 @@ WARNING: The Python readline module isn't available, so some command line
                         'For information on how to set up a BUNDY system, '
                         'please check see the\n'
                         'BUNDY Guide: \n\n'
-                        'http://bundy.isc.org/docs/bundy-guide.html#quick-start-auth-dns\n\n'
+                        'http://bundy.bundy.org/docs/bundy-guide.html#quick-start-auth-dns\n\n'
 
                         'If a user account has been set up, please check the '
                         'bundy-cmdctl log for other\n'
@@ -344,7 +344,7 @@ WARNING: The Python readline module isn't available, so some command line
         if self.config_data is not None:
             self.config_data.update_specs_and_config()
         else:
-            self.config_data = isc.config.UIModuleCCSession(self)
+            self.config_data = bundy.config.UIModuleCCSession(self)
         self._update_commands()
 
     def precmd(self, line):
@@ -454,9 +454,9 @@ WARNING: The Python readline module isn't available, so some command line
             for param_name in cmd.params:
                 param_spec = command_info.get_param_with_name(param_name).param_spec
                 try:
-                    cmd.params[param_name] = isc.config.config_data.convert_type(param_spec, cmd.params[param_name])
-                except isc.cc.data.DataTypeError as e:
-                    raise isc.cc.data.DataTypeError('Invalid parameter value for \"%s\", the type should be \"%s\" \n'
+                    cmd.params[param_name] = bundy.config.config_data.convert_type(param_spec, cmd.params[param_name])
+                except bundy.cc.data.DataTypeError as e:
+                    raise bundy.cc.data.DataTypeError('Invalid parameter value for \"%s\", the type should be \"%s\" \n'
                                                      % (param_name, param_spec['item_type']) + str(e))
 
     def _handle_cmd(self, cmd):
@@ -684,13 +684,13 @@ WARNING: The Python readline module isn't available, so some command line
         except BindCtlException as err:
             self._print("Error! ", err)
             self._print_correct_usage(err)
-        except isc.cc.data.DataTypeError as err:
+        except bundy.cc.data.DataTypeError as err:
             self._print("Error! ", err)
-        except isc.cc.data.DataTypeError as dte:
+        except bundy.cc.data.DataTypeError as dte:
             self._print("Error: " + str(dte))
-        except isc.cc.data.DataNotFoundError as dnfe:
+        except bundy.cc.data.DataNotFoundError as dnfe:
             self._print("Error: " + str(dnfe))
-        except isc.cc.data.DataAlreadyPresentError as dape:
+        except bundy.cc.data.DataAlreadyPresentError as dape:
             self._print("Error: " + str(dape))
         except KeyError as ke:
             self._print("Error: missing " + str(ke))
@@ -822,7 +822,7 @@ WARNING: The Python readline module isn't available, so some command line
         elif cmd.command == "commit":
             try:
                 self.config_data.commit()
-            except isc.config.ModuleCCSessionError as mcse:
+            except bundy.config.ModuleCCSessionError as mcse:
                 self._print(str(mcse))
         elif cmd.command == "diff":
             self._print(self.config_data.get_local_changes())
@@ -833,7 +833,7 @@ WARNING: The Python readline module isn't available, so some command line
         '''Handles the config go command, change the 'current' location
            within the configuration tree. '..' will be interpreted as
            'up one level'.'''
-        id_parts = isc.cc.data.split_identifier(identifier)
+        id_parts = bundy.cc.data.split_identifier(identifier)
 
         new_location = ""
         for id_part in id_parts:
@@ -916,11 +916,11 @@ WARNING: The Python readline module isn't available, so some command line
                     cmd = BindCmdParser(line)
                     self._validate_cmd(cmd)
                     self._handle_cmd(cmd)
-        except (isc.config.ModuleCCSessionError,
+        except (bundy.config.ModuleCCSessionError,
                 IOError, http.client.HTTPException,
-                BindCtlException, isc.cc.data.DataTypeError,
-                isc.cc.data.DataNotFoundError,
-                isc.cc.data.DataAlreadyPresentError,
+                BindCtlException, bundy.cc.data.DataTypeError,
+                bundy.cc.data.DataNotFoundError,
+                bundy.cc.data.DataAlreadyPresentError,
                 KeyError) as err:
             self._print('Error: ', err)
             self._print()

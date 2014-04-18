@@ -25,9 +25,9 @@ import sys
 import time
 import errno
 import threading
-import isc.cc
+import bundy.cc
 import collections
-import isc.log
+import bundy.log
 import struct
 import json
 
@@ -690,7 +690,7 @@ class SendNonblock(unittest.TestCase):
                         (routing, received) = msgq.read_packet(out.fileno(),
                             out)
                         self.assertEqual({"type" : "pong"},
-                            isc.cc.message.from_wire(routing))
+                            bundy.cc.message.from_wire(routing))
                         self.assertEqual(data, received)
                 finally:
                     os.kill(queue_pid, signal.SIGTERM)
@@ -1117,5 +1117,5 @@ class SocketTests(unittest.TestCase):
         self.assertEqual({42, 43}, set(self.__writes))
 
 if __name__ == '__main__':
-    isc.log.resetUnitTestRootLogger()
+    bundy.log.resetUnitTestRootLogger()
     unittest.main()

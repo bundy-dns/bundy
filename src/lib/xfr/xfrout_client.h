@@ -21,7 +21,7 @@
 
 #include <exceptions/exceptions.h>
 
-namespace isc {
+namespace bundy {
 namespace xfr {
 
 struct XfroutClientImpl;
@@ -29,7 +29,7 @@ struct XfroutClientImpl;
 class XfroutError: public Exception {
 public:
     XfroutError(const char *file, size_t line, const char *what):
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// \brief The AbstractXfroutClient class is an abstract base class that
@@ -82,7 +82,7 @@ private:
 };
 
 } // End for namespace xfr
-} // End for namespace isc
+} // End for namespace bundy
 
 #endif
 

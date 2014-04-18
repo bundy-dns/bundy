@@ -18,8 +18,8 @@
   All DHCP lease data is stored in some form of database, the interface
   to this being through the Lease Manager.
 
-  All backend classes such as isc::dhcp::MySqlLeaseMgr are derived from
-  the abstract isc::dhcp::LeaseMgr class.  This provides methods to
+  All backend classes such as bundy::dhcp::MySqlLeaseMgr are derived from
+  the abstract bundy::dhcp::LeaseMgr class.  This provides methods to
   create, retrieve, modify and delete leases in the database.
 
   There are currently two available Lease Managers, MySQL and Memfile:
@@ -38,15 +38,15 @@
   A lease manager is instantiated through the LeaseMgrFactory class.  This
   has three methods:
 
-  - isc::dhcp::LeaseMgrFactory::create - Creates a singleton Lease
+  - bundy::dhcp::LeaseMgrFactory::create - Creates a singleton Lease
     Manager of the appropriate type.
-  - isc::dhcp::LeaseMgrFactory::instance - Returns a reference to the
+  - bundy::dhcp::LeaseMgrFactory::instance - Returns a reference to the
     the instance of the Lease Manager.
-  - isc::dhcp::LeaseMgrFactory::destroy - Destroys the singleton lease manager.
+  - bundy::dhcp::LeaseMgrFactory::destroy - Destroys the singleton lease manager.
 
   The selection of the Lease Manager (and thus the backend database) is
   controlled by the connection string passed to
-  isc::dhcp::LeaseMgrFactory::create.  This is a set of "keyword=value" pairs
+  bundy::dhcp::LeaseMgrFactory::create.  This is a set of "keyword=value" pairs
   (no embedded spaces), each pair separated by a space from the others, e.g.
 
   \code
@@ -120,7 +120,7 @@
 
   The unit tests are run automatically when "make check" is executed (providing
   that BUNDY has been build with the \--with-dhcp-mysql switch (see the installation
-  section in the <a href="http://bundy.isc.org/docs/bundy-guide.html">BUNDY Guide</a>).
+  section in the <a href="http://bundy.bundy.org/docs/bundy-guide.html">BUNDY Guide</a>).
 
  @subsection dhcp-pgsql-unittest PostgreSQL unit-tests
 
@@ -192,6 +192,6 @@ host    all             all             ::1/128                 password
 
   The unit tests are run automatically when "make check" is executed (providing
   that BUNDY has been build with the \--with-dhcp-pgsql switch (see the installation
-  section in the <a href="http://bundy.isc.org/docs/bundy-guide.html">BUNDY Guide</a>).
+  section in the <a href="http://bundy.bundy.org/docs/bundy-guide.html">BUNDY Guide</a>).
 
   */

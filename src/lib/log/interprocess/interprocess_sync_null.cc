@@ -14,7 +14,7 @@
 
 #include <log/interprocess/interprocess_sync_null.h>
 
-namespace isc {
+namespace bundy {
 namespace log {
 namespace interprocess {
 
@@ -41,4 +41,4 @@ InterprocessSyncNull::unlock() {
 
 } // namespace interprocess
 } // namespace log
-} // namespace isc
+} // namespace bundy

@@ -54,14 +54,14 @@
 
 using namespace std;
 using boost::scoped_ptr;
-using namespace isc::acl;
-using isc::acl::dns::RequestContext;
-using namespace isc::data;
-using namespace isc::testutils;
-using namespace isc::asiodns;
-using namespace isc::asiolink;
-using namespace isc::server_common;
-using isc::UnitTestUtil;
+using namespace bundy::acl;
+using bundy::acl::dns::RequestContext;
+using namespace bundy::data;
+using namespace bundy::testutils;
+using namespace bundy::asiodns;
+using namespace bundy::asiolink;
+using namespace bundy::server_common;
+using bundy::UnitTestUtil;
 
 namespace {
 const char* const TEST_ADDRESS = "127.0.0.1";
@@ -69,10 +69,10 @@ const char* const TEST_ADDRESS_FAIL = "192.0.2.2";
 const char* const TEST_PORT = "53210";
 
 // An internal exception class
-class TestConfigError : public isc::Exception {
+class TestConfigError : public bundy::Exception {
 public:
     TestConfigError(const char *file, size_t line, const char *what):
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 class ResolverConfig : public ::testing::Test {
@@ -103,8 +103,8 @@ protected:
         return (*request);
     }
     void invalidTest(const string &JSON, const string& name);
-    isc::server_common::portconfig::AddressList address_store_;
-    isc::testutils::TestSocketRequestor sock_requestor_;
+    bundy::server_common::portconfig::AddressList address_store_;
+    bundy::testutils::TestSocketRequestor sock_requestor_;
 };
 
 TEST_F(ResolverConfig, forwardAddresses) {
@@ -142,7 +142,7 @@ TEST_F(ResolverConfig, forwardAddressConfig) {
                                              "]"
                                              "}"));
     ConstElementPtr result(server.updateConfig(config));
-    EXPECT_EQ(result->toWire(), isc::config::createAnswer()->toWire());
+    EXPECT_EQ(result->toWire(), bundy::config::createAnswer()->toWire());
     EXPECT_TRUE(server.isForwarding());
     ASSERT_EQ(1, server.getForwardAddresses().size());
     EXPECT_EQ("192.0.2.1", server.getForwardAddresses()[0].first);
@@ -153,7 +153,7 @@ TEST_F(ResolverConfig, forwardAddressConfig) {
         "\"forward_addresses\": null"
         "}");
     result = server.updateConfig(config);
-    EXPECT_EQ(result->toWire(), isc::config::createAnswer()->toWire());
+    EXPECT_EQ(result->toWire(), bundy::config::createAnswer()->toWire());
     EXPECT_FALSE(server.isForwarding());
     EXPECT_EQ(0, server.getForwardAddresses().size());
 }
@@ -169,7 +169,7 @@ TEST_F(ResolverConfig, rootAddressConfig) {
                                              "]"
                                              "}"));
     ConstElementPtr result(server.updateConfig(config));
-    EXPECT_EQ(result->toWire(), isc::config::createAnswer()->toWire());
+    EXPECT_EQ(result->toWire(), bundy::config::createAnswer()->toWire());
     ASSERT_EQ(1, server.getRootAddresses().size());
     EXPECT_EQ("192.0.2.1", server.getRootAddresses()[0].first);
     EXPECT_EQ(53, server.getRootAddresses()[0].second);
@@ -179,7 +179,7 @@ TEST_F(ResolverConfig, rootAddressConfig) {
         "\"root_addresses\": null"
         "}");
     result = server.updateConfig(config);
-    EXPECT_EQ(result->toWire(), isc::config::createAnswer()->toWire());
+    EXPECT_EQ(result->toWire(), bundy::config::createAnswer()->toWire());
     EXPECT_EQ(0, server.getRootAddresses().size());
 }
 
@@ -211,18 +211,18 @@ createSocket(const char* address, const char* port) {
     hints.ai_flags = AI_NUMERICHOST | AI_NUMERICSERV;
     const int error = getaddrinfo(address, port, &hints, &res);
     if (error != 0) {
-        isc_throw(TestConfigError, "getaddrinfo failed: " <<
+        bundy_throw(TestConfigError, "getaddrinfo failed: " <<
                   gai_strerror(error));
     }
     ScopedAddrInfo scoped_res(res);
     const int s = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
     if (s == -1) {
-        isc_throw(TestConfigError, "socket system call failed: " <<
+        bundy_throw(TestConfigError, "socket system call failed: " <<
                   strerror(errno));
     }
     if (bind(s, res->ai_addr, res->ai_addrlen) == -1) {
         close(s);
-        isc_throw(TestConfigError, "bind system call failed: " <<
+        bundy_throw(TestConfigError, "bind system call failed: " <<
                   strerror(errno));
     }
     return (s);
@@ -288,7 +288,7 @@ TEST_F(ResolverConfig, listenOnAndOtherConfig) {
 
 void
 ResolverConfig::invalidTest(const string &JSON, const string& name) {
-    isc::testutils::portconfig::configRejected(server, JSON, name);
+    bundy::testutils::portconfig::configRejected(server, JSON, name);
 }
 
 TEST_F(ResolverConfig, invalidForwardAddresses) {
@@ -318,7 +318,7 @@ TEST_F(ResolverConfig, invalidForwardAddresses) {
 
 // Try setting the addresses directly
 TEST_F(ResolverConfig, listenAddresses) {
-    isc::testutils::portconfig::listenAddresses(server);
+    bundy::testutils::portconfig::listenAddresses(server);
 
     // listenAddressConfig should have attempted to create 4 DNS server
     // objects: two IP addresses, TCP and UDP for each.  For UDP, the "SYNC_OK"
@@ -346,12 +346,12 @@ TEST_F(ResolverConfig, listenAddresses) {
 
 // Try setting some addresses and a rollback
 TEST_F(ResolverConfig, listenAddressConfig) {
-    isc::testutils::portconfig::listenAddressConfig(server);
+    bundy::testutils::portconfig::listenAddressConfig(server);
 }
 
 // Try some invalid configs are rejected
 TEST_F(ResolverConfig, invalidListenAddresses) {
-    isc::testutils::portconfig::invalidListenAddressConfig(server);
+    bundy::testutils::portconfig::invalidListenAddressConfig(server);
 }
 
 // Just test it sets and gets the values correctly
@@ -376,7 +376,7 @@ TEST_F(ResolverConfig, timeoutsConfig) {
                                                "\"retries\": 4"
                                                "}");
     ConstElementPtr result(server.updateConfig(config));
-    EXPECT_EQ(result->toWire(), isc::config::createAnswer()->toWire());
+    EXPECT_EQ(result->toWire(), bundy::config::createAnswer()->toWire());
     EXPECT_EQ(1000, server.getQueryTimeout());
     EXPECT_EQ(2000, server.getClientTimeout());
     EXPECT_EQ(3000, server.getLookupTimeout());
@@ -427,7 +427,7 @@ TEST_F(ResolverConfig, emptyQueryACL) {
     // Explicitly configured empty ACL should have the same effect.
     ConstElementPtr config(Element::fromJSON("{ \"query_acl\": [] }"));
     ConstElementPtr result(server.updateConfig(config));
-    EXPECT_EQ(result->toWire(), isc::config::createAnswer()->toWire());
+    EXPECT_EQ(result->toWire(), bundy::config::createAnswer()->toWire());
     EXPECT_EQ(REJECT, server.getQueryACL().execute(createRequest("192.0.2.1")));
     EXPECT_EQ(REJECT, server.getQueryACL().execute(
                   createRequest("2001:db8::1")));
@@ -440,7 +440,7 @@ TEST_F(ResolverConfig, queryACLIPv4) {
                                "  [ {\"action\": \"ACCEPT\","
                                "     \"from\": \"192.0.2.1\"} ] }"));
     ConstElementPtr result(server.updateConfig(config));
-    EXPECT_EQ(result->toWire(), isc::config::createAnswer()->toWire());
+    EXPECT_EQ(result->toWire(), bundy::config::createAnswer()->toWire());
     EXPECT_EQ(ACCEPT, server.getQueryACL().execute(createRequest("192.0.2.1")));
     EXPECT_EQ(REJECT, server.getQueryACL().execute(
                   createRequest("2001:db8::1")));
@@ -453,7 +453,7 @@ TEST_F(ResolverConfig, queryACLIPv6) {
                                "  [ {\"action\": \"ACCEPT\","
                                "     \"from\": \"2001:db8::1\"} ] }"));
     ConstElementPtr result(server.updateConfig(config));
-    EXPECT_EQ(result->toWire(), isc::config::createAnswer()->toWire());
+    EXPECT_EQ(result->toWire(), bundy::config::createAnswer()->toWire());
     EXPECT_EQ(REJECT, server.getQueryACL().execute(createRequest("192.0.2.1")));
     EXPECT_EQ(ACCEPT, server.getQueryACL().execute(
                   createRequest("2001:db8::1")));
@@ -475,7 +475,7 @@ TEST_F(ResolverConfig, multiEntryACL) {
                                "     \"from\": \"2001:db8::1\"},"
                                "] }"));
     ConstElementPtr result(server.updateConfig(config));
-    EXPECT_EQ(result->toWire(), isc::config::createAnswer()->toWire());
+    EXPECT_EQ(result->toWire(), bundy::config::createAnswer()->toWire());
     EXPECT_EQ(ACCEPT, server.getQueryACL().execute(createRequest("192.0.2.1")));
     EXPECT_EQ(REJECT, server.getQueryACL().execute(createRequest("192.0.2.2")));
     EXPECT_EQ(DROP, server.getQueryACL().execute(
@@ -488,7 +488,7 @@ TEST_F(ResolverConfig, multiEntryACL) {
 int
 getResultCode(ConstElementPtr result) {
     int rcode;
-    isc::config::parseAnswer(rcode, result);
+    bundy::config::parseAnswer(rcode, result);
     return (rcode);
 }
 

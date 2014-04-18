@@ -23,18 +23,18 @@ purposes.
 
 '''
 
-import isc.datasrc
-import isc.log
-from isc.dns import *
-from isc.testutils.rrset_utils import *
+import bundy.datasrc
+import bundy.log
+from bundy.dns import *
+from bundy.testutils.rrset_utils import *
 
-isc.log.init("dummy")           # XXX
+bundy.log.init("dummy")           # XXX
 
 ZONE_NAME = Name('example.com')
 NS_NAME_STR = 'a.dns.example.com'
 NS_NAME = Name(NS_NAME_STR)
 
-client = isc.datasrc.DataSourceClient('sqlite3',
+client = bundy.datasrc.DataSourceClient('sqlite3',
                                       '{ "database_file": "test.sqlite3" }')
 
 # Install the initial data

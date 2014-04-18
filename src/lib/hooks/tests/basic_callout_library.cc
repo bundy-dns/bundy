@@ -38,7 +38,7 @@
 #include <hooks/hooks.h>
 #include <fstream>
 
-using namespace isc::hooks;
+using namespace bundy::hooks;
 using namespace std;
 
 extern "C" {
@@ -113,7 +113,7 @@ version() {
 
 // load() initializes the user library if the main image was statically linked.
 int
-load(isc::hooks::LibraryHandle&) {
+load(bundy::hooks::LibraryHandle&) {
 #ifdef USE_STATIC_LINK
     hooksStaticLinkInit();
 #endif

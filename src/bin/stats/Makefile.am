@@ -10,7 +10,7 @@ bundy_stats_DATA += stats-httpd-xml.tpl stats-httpd-xsd.tpl stats-httpd-xsl.tpl
 
 nodist_pylogmessage_PYTHON = $(PYTHON_LOGMSGPKG_DIR)/work/stats_messages.py
 nodist_pylogmessage_PYTHON += $(PYTHON_LOGMSGPKG_DIR)/work/stats_httpd_messages.py
-pylogmessagedir = $(pyexecdir)/isc/log_messages/
+pylogmessagedir = $(pyexecdir)/bundy/log_messages/
 
 CLEANFILES = bundy-stats stats.pyc
 CLEANFILES += bundy-stats-httpd stats_httpd.pyc

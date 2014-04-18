@@ -18,12 +18,12 @@
 
 #include <memory>
 
-using namespace isc::data;
-using namespace isc::dns;
-using namespace isc::util;
-using isc::datasrc::memory::detail::SegmentObjectHolder;
+using namespace bundy::data;
+using namespace bundy::dns;
+using namespace bundy::util;
+using bundy::datasrc::memory::detail::SegmentObjectHolder;
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 
@@ -167,11 +167,11 @@ ZoneTableSegmentMapped::openReadWrite(const std::string& filename,
     if ((!processChecksum(*segment, create, has_allocations, error_msg)) ||
         (!processHeader(*segment, create, has_allocations, error_msg))) {
          if (mem_sgmt_) {
-              isc_throw(ResetFailed,
+              bundy_throw(ResetFailed,
                         "Error in resetting zone table segment to use "
                         << filename << ": " << error_msg);
          } else {
-              isc_throw(ResetFailedAndSegmentCleared,
+              bundy_throw(ResetFailedAndSegmentCleared,
                         "Error in resetting zone table segment to use "
                         << filename << ": " << error_msg);
          }
@@ -194,11 +194,11 @@ ZoneTableSegmentMapped::openReadOnly(const std::string& filename) {
              "There is no previously saved checksum in a "
              "mapped segment opened in read-only mode";
          if (mem_sgmt_) {
-              isc_throw(ResetFailed,
+              bundy_throw(ResetFailed,
                         "Error in resetting zone table segment to use "
                         << filename << ": " << error_msg);
          } else {
-              isc_throw(ResetFailedAndSegmentCleared,
+              bundy_throw(ResetFailedAndSegmentCleared,
                         "Error in resetting zone table segment to use "
                         << filename << ": " << error_msg);
          }
@@ -217,11 +217,11 @@ ZoneTableSegmentMapped::openReadOnly(const std::string& filename) {
              "There is no previously saved ZoneTableHeader in a "
              "mapped segment opened in read-only mode.";
          if (mem_sgmt_) {
-              isc_throw(ResetFailed,
+              bundy_throw(ResetFailed,
                         "Error in resetting zone table segment to use "
                         << filename << ": " << error_msg);
          } else {
-              isc_throw(ResetFailedAndSegmentCleared,
+              bundy_throw(ResetFailedAndSegmentCleared,
                         "Error in resetting zone table segment to use "
                         << filename << ": " << error_msg);
          }
@@ -232,21 +232,21 @@ ZoneTableSegmentMapped::openReadOnly(const std::string& filename) {
 
 void
 ZoneTableSegmentMapped::reset(MemorySegmentOpenMode mode,
-                              isc::data::ConstElementPtr params)
+                              bundy::data::ConstElementPtr params)
 {
     if (!params || params->getType() != Element::map) {
-        isc_throw(isc::InvalidParameter,
+        bundy_throw(bundy::InvalidParameter,
                   "Configuration does not contain a map");
     }
 
     if (!params->contains("mapped-file")) {
-        isc_throw(isc::InvalidParameter,
+        bundy_throw(bundy::InvalidParameter,
                   "Configuration does not contain a \"mapped-file\" key");
     }
 
     ConstElementPtr mapped_file = params->get("mapped-file");
     if ((!mapped_file) || (mapped_file->getType() != Element::string)) {
-        isc_throw(isc::InvalidParameter,
+        bundy_throw(bundy::InvalidParameter,
                   "Value of \"mapped-file\" is not a string");
     }
 
@@ -279,7 +279,7 @@ ZoneTableSegmentMapped::reset(MemorySegmentOpenMode mode,
         break;
 
     default:
-        isc_throw(isc::InvalidParameter,
+        bundy_throw(bundy::InvalidParameter,
                   "Invalid MemorySegmentOpenMode passed to reset()");
     }
 
@@ -327,7 +327,7 @@ template<typename T>
 T*
 ZoneTableSegmentMapped::getHeaderHelper(bool initial) const {
     if (!isUsable()) {
-        isc_throw(isc::InvalidOperation,
+        bundy_throw(bundy::InvalidOperation,
                   "getHeader() called without calling reset() first");
     }
 
@@ -340,7 +340,7 @@ ZoneTableSegmentMapped::getHeaderHelper(bool initial) const {
     const MemorySegment::NamedAddressResult result =
         mem_sgmt_->getNamedAddress(ZONE_TABLE_HEADER_NAME);
     if (!result.first) {
-        isc_throw(isc::Unexpected,
+        bundy_throw(bundy::Unexpected,
                   "Unable to look up the address of the table header in "
                   "getHeader()");
     }
@@ -363,7 +363,7 @@ ZoneTableSegmentMapped::getHeader() const {
 MemorySegment&
 ZoneTableSegmentMapped::getMemorySegment() {
     if (!isUsable()) {
-        isc_throw(isc::InvalidOperation,
+        bundy_throw(bundy::InvalidOperation,
                   "getMemorySegment() called without calling reset() first");
     }
     return (*mem_sgmt_);
@@ -389,4 +389,4 @@ ZoneTableSegmentMapped::isWritable() const {
 
 } // namespace memory
 } // namespace datasrc
-} // namespace isc
+} // namespace bundy

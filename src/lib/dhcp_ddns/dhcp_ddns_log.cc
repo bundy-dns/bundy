@@ -16,12 +16,12 @@
 
 #include <dhcp_ddns/dhcp_ddns_log.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp_ddns {
 
 /// @brief Defines the logger used within lib dhcp_ddns.
-isc::log::Logger dhcp_ddns_logger("libdhcp-ddns");
+bundy::log::Logger dhcp_ddns_logger("libdhcp-ddns");
 
 } // namespace dhcp_ddns
-} // namespace isc
+} // namespace bundy
 

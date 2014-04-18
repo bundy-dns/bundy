@@ -21,7 +21,7 @@
 
 #include <dns/dns_fwd.h>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 class ZoneTableSegment;
@@ -53,7 +53,7 @@ public:
     /// so the zone table recognizes the existence of the zone (and being
     /// aware that it's broken).
     ///
-    /// \throw isc::InvalidOperation if \c segment is read-only.
+    /// \throw bundy::InvalidOperation if \c segment is read-only.
     ///
     /// \param segment The zone table segment to store the zone into.
     /// \param load_action The callback used to load data.
@@ -89,7 +89,7 @@ public:
     ///     discard it.
     /// \note After successful load(), you have to call cleanup() some time
     ///     later.
-    /// \throw isc::InvalidOperation if called second time.
+    /// \throw bundy::InvalidOperation if called second time.
     /// \throw DataSourceError load related error (not thrown if constructed
     /// with catch_load_error being \c true).
     ///
@@ -114,7 +114,7 @@ public:
     /// This may throw in rare cases.  If it throws, you still need to
     /// call cleanup().
     ///
-    /// \throw isc::InvalidOperation if called without previous load() or for
+    /// \throw bundy::InvalidOperation if called without previous load() or for
     ///     the second time or cleanup() was called already.
     void install();
 

@@ -42,13 +42,13 @@
 #include <asiodns/io_fetch.h>
 
 using namespace asio;
-using namespace isc::dns;
-using namespace isc::util;
+using namespace bundy::dns;
+using namespace bundy::util;
 using namespace asio::ip;
 using namespace std;
-using namespace isc::asiolink;
+using namespace bundy::asiolink;
 
-namespace isc {
+namespace bundy {
 namespace asiodns {
 
 const asio::ip::address TEST_HOST(asio::ip::address::from_string("127.0.0.1"));
@@ -744,4 +744,4 @@ TEST_F(IOFetchTest, TcpSendReceive8192ShortSend) {
 
 
 } // namespace asiodns
-} // namespace isc
+} // namespace bundy

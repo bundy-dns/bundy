@@ -31,12 +31,12 @@
 #include <boost/algorithm/string.hpp>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dns;
-using namespace isc::util;
-using namespace isc::dns::rdata;
-using isc::UnitTestUtil;
-using isc::util::unittests::matchWireData;
+using namespace bundy;
+using namespace bundy::dns;
+using namespace bundy::util;
+using namespace bundy::dns::rdata;
+using bundy::UnitTestUtil;
+using bundy::util::unittests::matchWireData;
 
 namespace {
 class Rdata_TLSA_Test : public RdataTest {
@@ -48,7 +48,7 @@ protected:
         {}
 
     void checkFromText_None(const string& rdata_str) {
-        checkFromText<generic::TLSA, isc::Exception, isc::Exception>(
+        checkFromText<generic::TLSA, bundy::Exception, bundy::Exception>(
             rdata_str, rdata_tlsa, false, false);
     }
 
@@ -65,7 +65,7 @@ protected:
 
     void checkFromText_BadString(const string& rdata_str) {
         checkFromText
-            <generic::TLSA, InvalidRdataText, isc::Exception>(
+            <generic::TLSA, InvalidRdataText, bundy::Exception>(
                 rdata_str, rdata_tlsa, true, false);
     }
 

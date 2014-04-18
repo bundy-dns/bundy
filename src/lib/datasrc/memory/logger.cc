@@ -14,11 +14,11 @@
 
 #include <datasrc/memory/logger.h>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 
-isc::log::Logger logger("datasrc_memory");
+bundy::log::Logger logger("datasrc_memory");
 
 }
 }

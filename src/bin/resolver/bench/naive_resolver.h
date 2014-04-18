@@ -17,7 +17,7 @@
 
 #include <resolver/bench/fake_resolution.h>
 
-namespace isc {
+namespace bundy {
 namespace resolver {
 namespace bench {
 

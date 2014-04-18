@@ -31,12 +31,12 @@
 #include <boost/algorithm/string.hpp>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dns;
-using namespace isc::util;
-using namespace isc::dns::rdata;
-using isc::UnitTestUtil;
-using isc::util::unittests::matchWireData;
+using namespace bundy;
+using namespace bundy::dns;
+using namespace bundy::util;
+using namespace bundy::dns::rdata;
+using bundy::UnitTestUtil;
+using bundy::util::unittests::matchWireData;
 
 namespace {
 class Rdata_SSHFP_Test : public RdataTest {
@@ -47,7 +47,7 @@ protected:
         {}
 
     void checkFromText_None(const string& rdata_str) {
-        checkFromText<generic::SSHFP, isc::Exception, isc::Exception>(
+        checkFromText<generic::SSHFP, bundy::Exception, bundy::Exception>(
             rdata_str, rdata_sshfp, false, false);
     }
 
@@ -64,7 +64,7 @@ protected:
 
     void checkFromText_BadString(const string& rdata_str) {
         checkFromText
-            <generic::SSHFP, InvalidRdataText, isc::Exception>(
+            <generic::SSHFP, InvalidRdataText, bundy::Exception>(
                 rdata_str, rdata_sshfp, true, false);
     }
 

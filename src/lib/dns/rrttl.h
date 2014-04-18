@@ -21,7 +21,7 @@
 
 #include <stdint.h>
 
-namespace isc {
+namespace bundy {
 namespace util {
 class InputBuffer;
 class OutputBuffer;
@@ -46,10 +46,10 @@ public:
 /// \brief A standard DNS module exception that is thrown if an RRTTL object
 /// is being constructed from a incomplete (too short) wire-format data.
 ///
-class IncompleteRRTTL : public isc::dns::Exception {
+class IncompleteRRTTL : public bundy::dns::Exception {
 public:
     IncompleteRRTTL(const char* file, size_t line, const char* what) :
-        isc::dns::Exception(file, line, what) {}
+        bundy::dns::Exception(file, line, what) {}
 };
 
 ///
@@ -101,7 +101,7 @@ public:
     /// an exception of class \c IncompleteRRTTL will be thrown.
     ///
     /// \param buffer A buffer storing the wire format data.
-    explicit RRTTL(isc::util::InputBuffer& buffer);
+    explicit RRTTL(bundy::util::InputBuffer& buffer);
 
     /// A separate factory of RRTTL from text.
     ///
@@ -169,7 +169,7 @@ public:
     /// standard exception will be thrown.
     ///
     /// \param buffer An output buffer to store the wire data.
-    void toWire(isc::util::OutputBuffer& buffer) const;
+    void toWire(bundy::util::OutputBuffer& buffer) const;
     //@}
 
     ///

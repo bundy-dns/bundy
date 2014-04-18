@@ -27,26 +27,26 @@
 #include <boost/random/uniform_real.hpp>
 #include <boost/random/variate_generator.hpp>
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace random {
 
-class InvalidLimits : public isc::BadValue {
+class InvalidLimits : public bundy::BadValue {
 public:
     InvalidLimits(const char* file, size_t line, const char* what) :
-        isc::BadValue(file, line, what) {}
+        bundy::BadValue(file, line, what) {}
 };
 
-class SumNotOne : public isc::BadValue {
+class SumNotOne : public bundy::BadValue {
 public:
     SumNotOne(const char* file, size_t line, const char* what) :
-        isc::BadValue(file, line, what) {}
+        bundy::BadValue(file, line, what) {}
 };
 
-class InvalidProbValue : public isc::BadValue {
+class InvalidProbValue : public bundy::BadValue {
 public:
     InvalidProbValue(const char* file, size_t line, const char* what) :
-        isc::BadValue(file, line, what) {}
+        bundy::BadValue(file, line, what) {}
 };
 
 
@@ -68,7 +68,7 @@ public:
         // to retain compatibility with earlier versions of the class), we will
         // abort if the minimum and maximum given are the wrong way round.
         if (min > max) {
-            isc_throw(InvalidLimits, "minimum limit is greater than maximum "
+            bundy_throw(InvalidLimits, "minimum limit is greater than maximum "
                       "when initializing UniformRandomIntegerGenerator");
         }
 
@@ -173,7 +173,7 @@ private:
         for(Iterator it = probabilities.begin(); it != probabilities.end(); ++it){
             //The probability must be in [0, 1.0]
             if(*it < 0.0 || *it > 1.0) {
-                isc_throw(InvalidProbValue,
+                bundy_throw(InvalidProbValue,
                           "probability must be in the range 0..1");
             }
 
@@ -183,7 +183,7 @@ private:
         double epsilon = 0.0001;
         // The sum must be equal to 1
        if (std::fabs(sum - 1.0) >= epsilon) {
-           isc_throw(SumNotOne, "Sum of probabilities is not equal to 1");
+           bundy_throw(SumNotOne, "Sum of probabilities is not equal to 1");
        }
 
        return true;
@@ -204,6 +204,6 @@ private:
 
 }   // namespace random
 }   // namespace util
-}   // namespace isc
+}   // namespace bundy
 
 #endif//NSAS_RANDOM_NUMBER_GENERATOR_H

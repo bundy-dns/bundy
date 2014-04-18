@@ -24,8 +24,8 @@
 
 #include <gtest/gtest.h>
 
-using namespace isc::datasrc;
-using namespace isc::data;
+using namespace bundy::datasrc;
+using namespace bundy::data;
 
 std::string SQLITE_DBFILE_EXAMPLE_ORG = TEST_DATA_DIR "/example.org.sqlite3";
 const std::string ROOT_ZONE_FILE = TEST_DATA_DIR "/root.zone";
@@ -147,18 +147,18 @@ TEST(FactoryTest, sqlite3ClientBadConfig) {
     DataSourceClientContainer dsc("sqlite3", "sqlite3", config);
 
     DataSourceClient::FindResult result1(
-        dsc.getInstance().findZone(isc::dns::Name("example.org.")));
+        dsc.getInstance().findZone(bundy::dns::Name("example.org.")));
     ASSERT_EQ(result::SUCCESS, result1.code);
 
     DataSourceClient::FindResult result2(
-        dsc.getInstance().findZone(isc::dns::Name("no.such.zone.")));
+        dsc.getInstance().findZone(bundy::dns::Name("no.such.zone.")));
     ASSERT_EQ(result::NOTFOUND, result2.code);
 
     ZoneIteratorPtr iterator(dsc.getInstance().getIterator(
-        isc::dns::Name("example.org.")));
+        bundy::dns::Name("example.org.")));
 
     ZoneUpdaterPtr updater(dsc.getInstance().getUpdater(
-        isc::dns::Name("example.org."), false));
+        bundy::dns::Name("example.org."), false));
 }
 
 TEST(FactoryTest, badType) {

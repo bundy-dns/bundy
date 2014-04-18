@@ -20,6 +20,6 @@ int
 main(int argc, char* argv[])
 {
     ::testing::InitGoogleTest(&argc, argv);         // Initialize Google test
-    isc::log::LoggerManager::init("unittest");      // Set a root logger name
-    return (isc::util::unittests::run_all());
+    bundy::log::LoggerManager::init("unittest");      // Set a root logger name
+    return (bundy::util::unittests::run_all());
 }

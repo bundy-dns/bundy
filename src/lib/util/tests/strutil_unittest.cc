@@ -20,8 +20,8 @@
 
 #include <util/strutil.h>
 
-using namespace isc;
-using namespace isc::util;
+using namespace bundy;
+using namespace bundy::util;
 using namespace std;
 
 // Check for slash replacement
@@ -29,15 +29,15 @@ using namespace std;
 TEST(StringUtilTest, Slash) {
 
     string instring = "";
-    isc::util::str::normalizeSlash(instring);
+    bundy::util::str::normalizeSlash(instring);
     EXPECT_EQ("", instring);
 
     instring = "C:\\A\\B\\C.D";
-    isc::util::str::normalizeSlash(instring);
+    bundy::util::str::normalizeSlash(instring);
     EXPECT_EQ("C:/A/B/C.D", instring);
 
     instring = "// \\ //";
-    isc::util::str::normalizeSlash(instring);
+    bundy::util::str::normalizeSlash(instring);
     EXPECT_EQ("// / //", instring);
 }
 
@@ -46,19 +46,19 @@ TEST(StringUtilTest, Slash) {
 TEST(StringUtilTest, Trim) {
 
     // Empty and full string.
-    EXPECT_EQ("", isc::util::str::trim(""));
-    EXPECT_EQ("abcxyz", isc::util::str::trim("abcxyz"));
+    EXPECT_EQ("", bundy::util::str::trim(""));
+    EXPECT_EQ("abcxyz", bundy::util::str::trim("abcxyz"));
 
     // Trim right-most blanks
-    EXPECT_EQ("ABC", isc::util::str::trim("ABC   "));
-    EXPECT_EQ("ABC", isc::util::str::trim("ABC\t\t  \n\t"));
+    EXPECT_EQ("ABC", bundy::util::str::trim("ABC   "));
+    EXPECT_EQ("ABC", bundy::util::str::trim("ABC\t\t  \n\t"));
 
     // Left-most blank trimming
-    EXPECT_EQ("XYZ", isc::util::str::trim("  XYZ"));
-    EXPECT_EQ("XYZ", isc::util::str::trim("\t\t  \tXYZ"));
+    EXPECT_EQ("XYZ", bundy::util::str::trim("  XYZ"));
+    EXPECT_EQ("XYZ", bundy::util::str::trim("\t\t  \tXYZ"));
 
     // Right and left, with embedded spaces
-    EXPECT_EQ("MN \t OP", isc::util::str::trim("\t\tMN \t OP \t"));
+    EXPECT_EQ("MN \t OP", bundy::util::str::trim("\t\tMN \t OP \t"));
 }
 
 // Check tokenization.  Note that ASSERT_EQ is used to check the size of the
@@ -71,49 +71,49 @@ TEST(StringUtilTest, Tokens) {
     // Default delimiters
 
     // Degenerate cases
-    result = isc::util::str::tokens("");          // Empty string
+    result = bundy::util::str::tokens("");          // Empty string
     EXPECT_EQ(0, result.size());
 
-    result = isc::util::str::tokens(" \n ");      // String is all delimiters
+    result = bundy::util::str::tokens(" \n ");      // String is all delimiters
     EXPECT_EQ(0, result.size());
 
-    result = isc::util::str::tokens("abc");       // String has no delimiters
+    result = bundy::util::str::tokens("abc");       // String has no delimiters
     ASSERT_EQ(1, result.size());
     EXPECT_EQ(string("abc"), result[0]);
 
     // String containing leading and/or trailing delimiters, no embedded ones.
-    result = isc::util::str::tokens("\txyz");     // One leading delimiter
+    result = bundy::util::str::tokens("\txyz");     // One leading delimiter
     ASSERT_EQ(1, result.size());
     EXPECT_EQ(string("xyz"), result[0]);
 
-    result = isc::util::str::tokens("\t \nxyz");  // Multiple leading delimiters
+    result = bundy::util::str::tokens("\t \nxyz");  // Multiple leading delimiters
     ASSERT_EQ(1, result.size());
     EXPECT_EQ(string("xyz"), result[0]);
 
-    result = isc::util::str::tokens("xyz\n");     // One trailing delimiter
+    result = bundy::util::str::tokens("xyz\n");     // One trailing delimiter
     ASSERT_EQ(1, result.size());
     EXPECT_EQ(string("xyz"), result[0]);
 
-    result = isc::util::str::tokens("xyz  \t");   // Multiple trailing
+    result = bundy::util::str::tokens("xyz  \t");   // Multiple trailing
     ASSERT_EQ(1, result.size());
     EXPECT_EQ(string("xyz"), result[0]);
 
-    result = isc::util::str::tokens("\t xyz \n"); // Leading and trailing
+    result = bundy::util::str::tokens("\t xyz \n"); // Leading and trailing
     ASSERT_EQ(1, result.size());
     EXPECT_EQ(string("xyz"), result[0]);
 
     // Embedded delimiters
-    result = isc::util::str::tokens("abc\ndef");  // 2 tokens, one separator
+    result = bundy::util::str::tokens("abc\ndef");  // 2 tokens, one separator
     ASSERT_EQ(2, result.size());
     EXPECT_EQ(string("abc"), result[0]);
     EXPECT_EQ(string("def"), result[1]);
 
-    result = isc::util::str::tokens("abc\t\t\ndef");  // 2 tokens, 3 separators
+    result = bundy::util::str::tokens("abc\t\t\ndef");  // 2 tokens, 3 separators
     ASSERT_EQ(2, result.size());
     EXPECT_EQ(string("abc"), result[0]);
     EXPECT_EQ(string("def"), result[1]);
 
-    result = isc::util::str::tokens("abc\n  \tdef\t\tghi");
+    result = bundy::util::str::tokens("abc\n  \tdef\t\tghi");
     ASSERT_EQ(3, result.size());                // Multiple tokens, many delims
     EXPECT_EQ(string("abc"), result[0]);
     EXPECT_EQ(string("def"), result[1]);
@@ -121,14 +121,14 @@ TEST(StringUtilTest, Tokens) {
 
     // Embedded and non-embedded delimiters
 
-    result = isc::util::str::tokens("\t\t  \nabc\n  \tdef\t\tghi   \n\n");
+    result = bundy::util::str::tokens("\t\t  \nabc\n  \tdef\t\tghi   \n\n");
     ASSERT_EQ(3, result.size());                // Multiple tokens, many delims
     EXPECT_EQ(string("abc"), result[0]);
     EXPECT_EQ(string("def"), result[1]);
     EXPECT_EQ(string("ghi"), result[2]);
 
     // Non-default delimiter
-    result = isc::util::str::tokens("alpha/beta/ /gamma//delta/epsilon/", "/");
+    result = bundy::util::str::tokens("alpha/beta/ /gamma//delta/epsilon/", "/");
     ASSERT_EQ(6, result.size());
     EXPECT_EQ(string("alpha"), result[0]);
     EXPECT_EQ(string("beta"), result[1]);
@@ -138,7 +138,7 @@ TEST(StringUtilTest, Tokens) {
     EXPECT_EQ(string("epsilon"), result[5]);
 
     // Non-default delimiters (plural)
-    result = isc::util::str::tokens("+*--alpha*beta+ -gamma**delta+epsilon-+**",
+    result = bundy::util::str::tokens("+*--alpha*beta+ -gamma**delta+epsilon-+**",
         "*+-");
     ASSERT_EQ(6, result.size());
     EXPECT_EQ(string("alpha"), result[0]);
@@ -157,11 +157,11 @@ TEST(StringUtilTest, ChangeCase) {
     string lower("abcdefghijklmno123[]{=+--+]}");
 
     string test = mixed;
-    isc::util::str::lowercase(test);
+    bundy::util::str::lowercase(test);
     EXPECT_EQ(lower, test);
 
     test = mixed;
-    isc::util::str::uppercase(test);
+    bundy::util::str::uppercase(test);
     EXPECT_EQ(upper, test);
 }
 
@@ -175,54 +175,54 @@ TEST(StringUtilTest, Formatting) {
     args.push_back("arg3");
 
     string format1 = "This is a string with no tokens";
-    EXPECT_EQ(format1, isc::util::str::format(format1, args));
+    EXPECT_EQ(format1, bundy::util::str::format(format1, args));
 
     string format2 = "";    // Empty string
-    EXPECT_EQ(format2, isc::util::str::format(format2, args));
+    EXPECT_EQ(format2, bundy::util::str::format(format2, args));
 
     string format3 = "   ";    // Empty string
-    EXPECT_EQ(format3, isc::util::str::format(format3, args));
+    EXPECT_EQ(format3, bundy::util::str::format(format3, args));
 
     string format4 = "String with %d non-string tokens %lf";
-    EXPECT_EQ(format4, isc::util::str::format(format4, args));
+    EXPECT_EQ(format4, bundy::util::str::format(format4, args));
 
     string format5 = "String with %s correct %s number of tokens %s";
     string result5 = "String with arg1 correct arg2 number of tokens arg3";
-    EXPECT_EQ(result5, isc::util::str::format(format5, args));
+    EXPECT_EQ(result5, bundy::util::str::format(format5, args));
 
     string format6 = "String with %s too %s few tokens";
     string result6 = "String with arg1 too arg2 few tokens";
-    EXPECT_EQ(result6, isc::util::str::format(format6, args));
+    EXPECT_EQ(result6, bundy::util::str::format(format6, args));
 
     string format7 = "String with %s too %s many %s tokens %s !";
     string result7 = "String with arg1 too arg2 many arg3 tokens %s !";
-    EXPECT_EQ(result7, isc::util::str::format(format7, args));
+    EXPECT_EQ(result7, bundy::util::str::format(format7, args));
 
     string format8 = "String with embedded%s%s%stokens";
     string result8 = "String with embeddedarg1arg2arg3tokens";
-    EXPECT_EQ(result8, isc::util::str::format(format8, args));
+    EXPECT_EQ(result8, bundy::util::str::format(format8, args));
 
     // Handle an empty vector
     args.clear();
     string format9 = "%s %s";
-    EXPECT_EQ(format9, isc::util::str::format(format9, args));
+    EXPECT_EQ(format9, bundy::util::str::format(format9, args));
 }
 
 TEST(StringUtilTest, getToken) {
     string s("a b c");
     istringstream ss(s);
-    EXPECT_EQ("a", isc::util::str::getToken(ss));
-    EXPECT_EQ("b", isc::util::str::getToken(ss));
-    EXPECT_EQ("c", isc::util::str::getToken(ss));
-    EXPECT_THROW(isc::util::str::getToken(ss), isc::util::str::StringTokenError);
+    EXPECT_EQ("a", bundy::util::str::getToken(ss));
+    EXPECT_EQ("b", bundy::util::str::getToken(ss));
+    EXPECT_EQ("c", bundy::util::str::getToken(ss));
+    EXPECT_THROW(bundy::util::str::getToken(ss), bundy::util::str::StringTokenError);
 }
 
 int32_t tokenToNumCall_32_16(const string& token) {
-    return isc::util::str::tokenToNum<int32_t, 16>(token);
+    return bundy::util::str::tokenToNum<int32_t, 16>(token);
 }
 
 int16_t tokenToNumCall_16_8(const string& token) {
-    return isc::util::str::tokenToNum<int16_t, 8>(token);
+    return bundy::util::str::tokenToNum<int16_t, 8>(token);
 }
 
 TEST(StringUtilTest, tokenToNum) {
@@ -234,17 +234,17 @@ TEST(StringUtilTest, tokenToNum) {
     EXPECT_EQ(65535, num32);
 
     EXPECT_THROW(tokenToNumCall_32_16(""),
-                 isc::util::str::StringTokenError);
+                 bundy::util::str::StringTokenError);
     EXPECT_THROW(tokenToNumCall_32_16("a"),
-                 isc::util::str::StringTokenError);
+                 bundy::util::str::StringTokenError);
     EXPECT_THROW(tokenToNumCall_32_16("-1"),
-                 isc::util::str::StringTokenError);
+                 bundy::util::str::StringTokenError);
     EXPECT_THROW(tokenToNumCall_32_16("65536"),
-                 isc::util::str::StringTokenError);
+                 bundy::util::str::StringTokenError);
     EXPECT_THROW(tokenToNumCall_32_16("1234567890"),
-                 isc::util::str::StringTokenError);
+                 bundy::util::str::StringTokenError);
     EXPECT_THROW(tokenToNumCall_32_16("-1234567890"),
-                 isc::util::str::StringTokenError);
+                 bundy::util::str::StringTokenError);
 
     uint16_t num16 = tokenToNumCall_16_8("123");
     EXPECT_EQ(123, num16);
@@ -254,16 +254,16 @@ TEST(StringUtilTest, tokenToNum) {
     EXPECT_EQ(255, num16);
 
     EXPECT_THROW(tokenToNumCall_16_8(""),
-                 isc::util::str::StringTokenError);
+                 bundy::util::str::StringTokenError);
     EXPECT_THROW(tokenToNumCall_16_8("a"),
-                 isc::util::str::StringTokenError);
+                 bundy::util::str::StringTokenError);
     EXPECT_THROW(tokenToNumCall_16_8("-1"),
-                 isc::util::str::StringTokenError);
+                 bundy::util::str::StringTokenError);
     EXPECT_THROW(tokenToNumCall_16_8("256"),
-                 isc::util::str::StringTokenError);
+                 bundy::util::str::StringTokenError);
     EXPECT_THROW(tokenToNumCall_16_8("1234567890"),
-                 isc::util::str::StringTokenError);
+                 bundy::util::str::StringTokenError);
     EXPECT_THROW(tokenToNumCall_16_8("-1234567890"),
-                 isc::util::str::StringTokenError);
+                 bundy::util::str::StringTokenError);
 
 }

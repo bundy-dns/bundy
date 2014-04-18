@@ -32,17 +32,17 @@ import xml.etree.ElementTree
 import urllib.parse
 import re
 
-import isc.cc
-import isc.config
-import isc.util.process
-import isc.util.traceback_handler
-from isc.util.address_formatter import AddressFormatter
+import bundy.cc
+import bundy.config
+import bundy.util.process
+import bundy.util.traceback_handler
+from bundy.util.address_formatter import AddressFormatter
 
-import isc.log
-from isc.log_messages.stats_httpd_messages import *
+import bundy.log
+from bundy.log_messages.stats_httpd_messages import *
 
-isc.log.init("bundy-stats-httpd", buffer=True)
-logger = isc.log.Logger("stats-httpd")
+bundy.log.init("bundy-stats-httpd", buffer=True)
+logger = bundy.log.Logger("stats-httpd")
 
 # Some constants for debug levels.
 DBG_STATSHTTPD_INIT = logger.DBGLVL_START_SHUT
@@ -70,7 +70,7 @@ XML_URL_PATH = '/bundy/statistics/xml'
 XSD_URL_PATH = '/bundy/statistics.xsd'
 XSL_URL_PATH = '/bundy/statistics.xsl'
 # TODO: This should be considered later.
-XSD_NAMESPACE = 'http://bundy.isc.org/bundy'
+XSD_NAMESPACE = 'http://bundy.bundy.org/bundy'
 XMLNS_XSI = "http://www.w3.org/2001/XMLSchema-instance"
 
 # constant parameter of XML
@@ -80,7 +80,7 @@ XML_ROOT_ATTRIB = { 'xsi:schemaLocation' : '%s %s' % (XSD_NAMESPACE, XSD_URL_PAT
                     'xmlns:xsi' : XMLNS_XSI }
 
 # Assign this process name
-isc.util.process.rename()
+bundy.util.process.rename()
 
 def item_name_list(element, identifier):
     """Return a list of strings. The strings are string expression of
@@ -109,12 +109,12 @@ def item_name_list(element, identifier):
 
       ['a', 'x', 'xx'].
 
-    This method internally invokes isc.cc.data.find(). The arguments
-    of this method are passed to isc.cc.data.find(). So an exception
+    This method internally invokes bundy.cc.data.find(). The arguments
+    of this method are passed to bundy.cc.data.find(). So an exception
     DataNotFoundError or DataTypeError might be raised via
-    isc.cc.data.find() depending on the arguments. See details of
-    isc.cc.data.find() for more information about exceptions"""
-    elem = isc.cc.data.find(element, identifier)
+    bundy.cc.data.find() depending on the arguments. See details of
+    bundy.cc.data.find() for more information about exceptions"""
+    elem = bundy.cc.data.find(element, identifier)
     ret = []
     ident = identifier
     if ident:
@@ -274,7 +274,7 @@ class StatsHttpd:
         """Opens a ModuleCCSession object"""
         # create ModuleCCSession
         logger.debug(DBG_STATSHTTPD_INIT, STATSHTTPD_STARTING_CC_SESSION)
-        self.mccs = isc.config.ModuleCCSession(
+        self.mccs = bundy.config.ModuleCCSession(
             SPECFILE_LOCATION, self.config_handler, self.command_handler)
         self.cc_session = self.mccs._session
 
@@ -402,7 +402,7 @@ class StatsHttpd:
         errors = []
         if not self.mccs.get_module_spec().\
                 validate_config(False, new_config, errors):
-                return isc.config.ccsession.create_answer(
+                return bundy.config.ccsession.create_answer(
                     1, ", ".join(errors))
         # backup old config
         old_config = self.config.copy()
@@ -410,7 +410,7 @@ class StatsHttpd:
         # If the http sockets aren't opened or
         # if new_config doesn't have 'listen_on', it returns
         if len(self.httpd) == 0 or 'listen_on' not in new_config:
-            return isc.config.ccsession.create_answer(0)
+            return bundy.config.ccsession.create_answer(0)
         self.close_httpd()
         try:
             self.open_httpd()
@@ -419,9 +419,9 @@ class StatsHttpd:
             # restore old config
             self.load_config(old_config)
             self.open_httpd()
-            return isc.config.ccsession.create_answer(1, str(err))
+            return bundy.config.ccsession.create_answer(1, str(err))
         else:
-            return isc.config.ccsession.create_answer(0)
+            return bundy.config.ccsession.create_answer(0)
 
     def command_handler(self, command, args):
         """Command handler for the ModuleCCSesson object. It handles
@@ -429,17 +429,17 @@ class StatsHttpd:
         if command == "status":
             logger.debug(DBG_STATSHTTPD_MESSAGING,
                          STATSHTTPD_RECEIVED_STATUS_COMMAND)
-            return isc.config.ccsession.create_answer(
+            return bundy.config.ccsession.create_answer(
                 0, "Stats Httpd is up. (PID " + str(os.getpid()) + ")")
         elif command == "shutdown":
             logger.debug(DBG_STATSHTTPD_MESSAGING,
                          STATSHTTPD_RECEIVED_SHUTDOWN_COMMAND)
             self.running = False
-            return isc.config.ccsession.create_answer(0)
+            return bundy.config.ccsession.create_answer(0)
         else:
             logger.debug(DBG_STATSHTTPD_MESSAGING,
                          STATSHTTPD_RECEIVED_UNKNOWN_COMMAND, command)
-            return isc.config.ccsession.create_answer(
+            return bundy.config.ccsession.create_answer(
                 1, "Unknown command: " + str(command))
 
     def get_stats_data(self, owner=None, name=None):
@@ -462,12 +462,12 @@ class StatsHttpd:
             param['name'] = name
         try:
             return self.mccs.rpc_call('show', 'Stats', params=param)
-        except (isc.cc.session.SessionTimeout,
-                isc.cc.session.SessionError,
-                isc.config.RPCRecipientMissing) as err:
+        except (bundy.cc.session.SessionTimeout,
+                bundy.cc.session.SessionError,
+                bundy.config.RPCRecipientMissing) as err:
             raise StatsHttpdError("%s: %s" %
                                   (err.__class__.__name__, err))
-        except isc.config.RPCError as e:
+        except bundy.config.RPCError as e:
             raise StatsHttpdDataError("Stats module: %s" % str(e))
 
     def get_stats_spec(self, owner=None, name=None):
@@ -490,10 +490,10 @@ class StatsHttpd:
             param['name'] = name
         try:
             return self.mccs.rpc_call('showschema', 'Stats', params=param)
-        except isc.config.RPCError as e:
+        except bundy.config.RPCError as e:
             raise StatsHttpdDataError("Stats module: %s" % str(e))
-        except (isc.cc.session.SessionTimeout,
-                isc.cc.session.SessionError) as err:
+        except (bundy.cc.session.SessionTimeout,
+                bundy.cc.session.SessionError) as err:
             raise StatsHttpdError("%s: %s" %
                                   (err.__class__.__name__, err))
 
@@ -522,7 +522,7 @@ class StatsHttpd:
         path_list = []
         try:
             path_list = item_name_list(stats_data, path)
-        except isc.cc.data.DataNotFoundError as err:
+        except bundy.cc.data.DataNotFoundError as err:
             raise StatsHttpdDataError(
                 "%s: %s" % (err.__class__.__name__, err))
         item_list = []
@@ -531,7 +531,7 @@ class StatsHttpd:
             if len(dirs) < 2: continue
             item = {}
             item['identifier'] = path
-            value = isc.cc.data.find(stats_data, path)
+            value = bundy.cc.data.find(stats_data, path)
             if type(value) is bool:
                 value = str(value).lower()
             if type(value) is dict or type(value) is list:
@@ -542,7 +542,7 @@ class StatsHttpd:
             item['owner'] = owner
             item['uri'] = urllib.parse.quote('%s/%s' % (XML_URL_PATH, path))
             item_path = '/'.join(dirs[1:])
-            spec = isc.config.find_spec_part(stats_spec[owner], item_path)
+            spec = bundy.config.find_spec_part(stats_spec[owner], item_path)
             for key in ['name', 'type', 'description', 'title', \
                             'optional', 'default', 'format']:
                 value = spec.get('item_%s' % key)
@@ -607,13 +607,13 @@ def main():
             help="enable maximum debug logging")
         (options, args) = parser.parse_args()
         if options.verbose:
-            isc.log.init("bundy-stats-httpd", "DEBUG", 99, buffer=True)
+            bundy.log.init("bundy-stats-httpd", "DEBUG", 99, buffer=True)
         stats_httpd = StatsHttpd()
         stats_httpd.start()
     except OptionValueError as ove:
         logger.fatal(STATSHTTPD_BAD_OPTION_VALUE, ove)
         sys.exit(1)
-    except isc.cc.session.SessionError as se:
+    except bundy.cc.session.SessionError as se:
         logger.fatal(STATSHTTPD_CC_SESSION_ERROR, se)
         sys.exit(1)
     except HttpServerError as hse:
@@ -625,4 +625,4 @@ def main():
     logger.info(STATSHTTPD_EXITING)
 
 if __name__ == "__main__":
-    isc.util.traceback_handler.traceback_handler(main)
+    bundy.util.traceback_handler.traceback_handler(main)

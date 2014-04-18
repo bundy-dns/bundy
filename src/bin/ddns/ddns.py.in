@@ -17,29 +17,29 @@
 
 
 import sys; sys.path.append ('@@PYTHONPATH@@')
-import isc
-from isc.acl.dns import REQUEST_LOADER
+import bundy
+from bundy.acl.dns import REQUEST_LOADER
 import bundy_config
-from isc.dns import *
-import isc.ddns.session
-from isc.ddns.zone_config import ZoneConfig
-from isc.ddns.logger import ClientFormatter, ZoneFormatter
-from isc.config.ccsession import *
-from isc.config.module_spec import ModuleSpecError
-from isc.cc import SessionError, SessionTimeout, ProtocolError
-import isc.util.process
-import isc.util.traceback_handler
-import isc.util.cio.socketsession
-import isc.server_common.tsig_keyring
-from isc.server_common.dns_tcp import DNSTCPContext
-from isc.server_common.datasrc_clients_mgr \
+from bundy.dns import *
+import bundy.ddns.session
+from bundy.ddns.zone_config import ZoneConfig
+from bundy.ddns.logger import ClientFormatter, ZoneFormatter
+from bundy.config.ccsession import *
+from bundy.config.module_spec import ModuleSpecError
+from bundy.cc import SessionError, SessionTimeout, ProtocolError
+import bundy.util.process
+import bundy.util.traceback_handler
+import bundy.util.cio.socketsession
+import bundy.server_common.tsig_keyring
+from bundy.server_common.dns_tcp import DNSTCPContext
+from bundy.server_common.datasrc_clients_mgr \
     import DataSrcClientsMgr, ConfigError
-from isc.datasrc import DataSourceClient
+from bundy.datasrc import DataSourceClient
 import select
 import time
 import errno
 
-from isc.log_messages.ddns_messages import *
+from bundy.log_messages.ddns_messages import *
 
 from optparse import OptionParser, OptionValueError
 import os
@@ -47,8 +47,8 @@ import os.path
 import signal
 import socket
 
-isc.log.init("bundy-ddns", buffer=True)
-logger = isc.log.Logger("ddns")
+bundy.log.init("bundy-ddns", buffer=True)
+logger = bundy.log.Logger("ddns")
 TRACE_BASIC = logger.DBGLVL_TRACE_BASIC
 
 # Well known path settings.  We need to define
@@ -83,7 +83,7 @@ XFROUT_MODULE_NAME = 'Xfrout'
 ZONEMGR_MODULE_NAME = 'Zonemgr'
 DATASRC_MODULE_NAME = 'data_sources'
 
-isc.util.process.rename()
+bundy.util.process.rename()
 
 class DDNSConfigError(Exception):
     '''An exception indicating an error in updating ddns configuration.
@@ -141,7 +141,7 @@ class DDNSServer:
         if cc_session is not None:
             self._cc = cc_session
         else:
-            self._cc = isc.config.ModuleCCSession(SPECFILE_LOCATION,
+            self._cc = bundy.config.ModuleCCSession(SPECFILE_LOCATION,
                                                   self.config_handler,
                                                   self.command_handler)
 
@@ -170,7 +170,7 @@ class DDNSServer:
                     (DATASRC_MODULE_NAME, self.__datasrc_config_handler)]:
             self.__add_remote_module(mod[0], mod[1])
         # This should succeed as long as cfgmgr is up.
-        isc.server_common.tsig_keyring.init_keyring(self._cc)
+        bundy.server_common.tsig_keyring.init_keyring(self._cc)
 
         self._shutdown = False
         # List of the session receivers where we get the requests
@@ -189,7 +189,7 @@ class DDNSServer:
         # They should not be overridden/referenced for any other purposes.
         #
         # DDNS Protocol handling class.
-        self._UpdateSessionClass = isc.ddns.session.UpdateSession
+        self._UpdateSessionClass = bundy.ddns.session.UpdateSession
         # Outstanding TCP context: fileno=>(context_obj, dst)
         self._tcp_ctxs = {}
 
@@ -280,7 +280,7 @@ class DDNSServer:
             genid, clients_map = self._datasrc_clients_mgr.get_clients_map()
             self._datasrc_clients = clients_map
             logger.info(DDNS_DATASRC_RECONFIGURED, genid)
-        except isc.server_common.datasrc_clients_mgr.ConfigError as ex:
+        except bundy.server_common.datasrc_clients_mgr.ConfigError as ex:
             logger.error(DDNS_DATASRC_CONFIG_ERROR, ex)
 
     def __zonemgr_config_handler(self, new_config, module_config):
@@ -358,9 +358,9 @@ class DDNSServer:
             fileno = sock.fileno()
             logger.debug(TRACE_BASIC, DDNS_NEW_CONN, fileno,
                          remote_addr if remote_addr else '<anonymous address>')
-            receiver = isc.util.cio.socketsession.SocketSessionReceiver(sock)
+            receiver = bundy.util.cio.socketsession.SocketSessionReceiver(sock)
             self._socksession_receivers[fileno] = (sock, receiver)
-        except (socket.error, isc.util.cio.socketsession.SocketSessionError) \
+        except (socket.error, bundy.util.cio.socketsession.SocketSessionError) \
             as e:
             # These exceptions mean the connection didn't work, but we can
             # continue with the rest
@@ -382,7 +382,7 @@ class DDNSServer:
             return None
         tsig_ctx = TSIGContext(tsig_record.get_name(),
                                tsig_record.get_rdata().get_algorithm(),
-                               isc.server_common.tsig_keyring.get_keyring())
+                               bundy.server_common.tsig_keyring.get_keyring())
         tsig_error = tsig_ctx.verify(tsig_record, req_data)
         if tsig_error != TSIGError.NOERROR:
             raise self.InternalError("Failed to verify request's TSIG: " +
@@ -445,7 +445,7 @@ class DDNSServer:
 
         # If the request should be dropped, we're done; otherwise, send the
         # response generated by the session object.
-        if result == isc.ddns.session.UPDATE_DROP:
+        if result == bundy.ddns.session.UPDATE_DROP:
             return False
         msg = update_session.get_message()
         self.__response_renderer.clear()
@@ -453,7 +453,7 @@ class DDNSServer:
 
         ret = self.__send_response(sock, self.__response_renderer.get_data(),
                                    remote_addr)
-        if result == isc.ddns.session.UPDATE_SUCCESS:
+        if result == bundy.ddns.session.UPDATE_SUCCESS:
             self._cc.notify('ZoneUpdateListener', 'zone_updated',
                             { 'datasource': datasrc_name,
                               'origin': str(zname),
@@ -571,7 +571,7 @@ class DDNSServer:
                 sock.close()
                 return False
             return self.handle_request(req_session)
-        except isc.util.cio.socketsession.SocketSessionError as se:
+        except bundy.util.cio.socketsession.SocketSessionError as se:
             # No matter why this failed, the connection is in unknown, possibly
             # broken state. So, we close the socket and remove the receiver.
             del self._socksession_receivers[fileno]
@@ -691,4 +691,4 @@ def main(ddns_server=None):
         clear_socket()
 
 if '__main__' == __name__:
-    isc.util.traceback_handler.traceback_handler(main)
+    bundy.util.traceback_handler.traceback_handler(main)

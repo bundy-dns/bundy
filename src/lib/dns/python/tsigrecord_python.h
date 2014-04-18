@@ -17,7 +17,7 @@
 
 #include <Python.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 class TSIGRecord;
 
@@ -57,7 +57,7 @@ const TSIGRecord& PyTSIGRecord_ToTSIGRecord(PyObject* tsigrecord_obj);
 
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 #endif // PYTHON_TSIGRECORD_H
 
 // Local Variables:

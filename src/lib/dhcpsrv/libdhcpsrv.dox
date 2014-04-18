@@ -23,9 +23,9 @@ server, client, relay and other tools like perfdhcp) code, please see
 
 This library contains several crucial elements of the DHCP server operation:
 
-- isc::dhcp::LeaseMgr - Lease Manager is a name for database backend that stores
+- bundy::dhcp::LeaseMgr - Lease Manager is a name for database backend that stores
   leases.
-- isc::dhcp::CfgMgr - Configuration Manager that holds DHCP specific
+- bundy::dhcp::CfgMgr - Configuration Manager that holds DHCP specific
   configuration information (subnets, pools, options, timer values etc.) in
   easy to use format.
 - AllocEngine - allocation engine that handles new requestes and allocates new
@@ -34,20 +34,20 @@ This library contains several crucial elements of the DHCP server operation:
 @section leasemgr Lease Manager
 
 LeaseMgr provides a common, unified abstract API for all database backends. All
-backends are derived from the base class isc::dhcp::LeaseMgr. Currently the
-only available backend is MySQL (see \ref isc::dhcp::MySqlLeaseMgr).
+backends are derived from the base class bundy::dhcp::LeaseMgr. Currently the
+only available backend is MySQL (see \ref bundy::dhcp::MySqlLeaseMgr).
 
 @section cfgmgr Configuration Manager
 
-Configuration Manager (\ref isc::dhcp::CfgMgr) stores configuration information
+Configuration Manager (\ref bundy::dhcp::CfgMgr) stores configuration information
 necessary for DHCPv4 and DHCPv6 server operation. In particular, it stores
-subnets (\ref isc::dhcp::Subnet4 and \ref isc::dhcp::Subnet6) together with
-their pools (\ref isc::dhcp::Pool4 and \ref isc::dhcp::Pool6), options and
+subnets (\ref bundy::dhcp::Subnet4 and \ref bundy::dhcp::Subnet6) together with
+their pools (\ref bundy::dhcp::Pool4 and \ref bundy::dhcp::Pool6), options and
 other information specified by the used in BUNDY configuration.
 
 @section allocengine Allocation Engine
 
-Allocation Engine (\ref isc::dhcp::AllocEngine) is what its name say - an engine
+Allocation Engine (\ref bundy::dhcp::AllocEngine) is what its name say - an engine
 that handles allocation of new leases. It takes parameters that the client
 provided (client-id, DUID, subnet, a hint if the user provided one, etc.) and
 then attempts to allocate a lease.
@@ -75,7 +75,7 @@ this allocator is that it does not attempt to give the same address to returning
 clients (clients that released or expired their leases and are requesting a new
 lease will likely to get a different lease). This allocator is not suitable for
 temporary addresses, which must be randomized. This allocator is implemented
-in \ref isc::dhcp::AllocEngine::IterativeAllocator.
+in \ref bundy::dhcp::AllocEngine::IterativeAllocator.
 
 - Hashed - ISC-DHCP uses hash of the client-id or DUID to determine, which
 address is tried first. If that address is not available, the result is hashed
@@ -115,7 +115,7 @@ For a prefix pool, the iterative allocator "walks over"
 every available pool. It is similar to how it iterates over address pool,
 but instead of increasing address by just one, it walks over the whole delegated
 prefix length in one step. This is implemented in
-isc::dhcp::AllocEngine::IterativeAllocator::increasePrefix(). Functionally the
+bundy::dhcp::AllocEngine::IterativeAllocator::increasePrefix(). Functionally the
 increaseAddress(addr) call is equivalent to increasePrefix(addr, 128)
 (increasing by a /128 prefix, i.e. a single address).  However, both methods are
 kept, because increaseAddress() is faster and this is a routine that may be

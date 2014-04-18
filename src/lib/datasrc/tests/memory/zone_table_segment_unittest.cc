@@ -18,10 +18,10 @@
 #include <gtest/gtest.h>
 #include <boost/scoped_ptr.hpp>
 
-using namespace isc::dns;
-using namespace isc::datasrc::memory;
-using namespace isc::data;
-using namespace isc::util;
+using namespace bundy::dns;
+using namespace bundy::datasrc::memory;
+using namespace bundy::data;
+using namespace bundy::util;
 using namespace std;
 using boost::scoped_ptr;
 
@@ -60,13 +60,13 @@ TEST_F(ZoneTableSegmentTest, reset) {
     EXPECT_THROW({
         ztable_segment_->reset(ZoneTableSegment::CREATE,
                                Element::fromJSON("{}"));
-    }, isc::NotImplemented);
+    }, bundy::NotImplemented);
 }
 
 TEST_F(ZoneTableSegmentTest, clear) {
     // clear() should throw that it's not implemented so that any
     // accidental calls are found out.
-    EXPECT_THROW(ztable_segment_->clear(), isc::NotImplemented);
+    EXPECT_THROW(ztable_segment_->clear(), bundy::NotImplemented);
 }
 
 // Helper function to check const and non-const methods.

@@ -25,7 +25,7 @@
 #include <dns/name.h>
 #include <dns/rdataclass.h>
 
-namespace isc {
+namespace bundy {
 namespace util {
 class OutputBuffer;
 }
@@ -257,7 +257,7 @@ public:
     /// except it renders the RR in an \c OutputBuffer and therefore
     /// does not care about message size limit.
     /// As a consequence it always returns 1.
-    int toWire(isc::util::OutputBuffer& buffer) const;
+    int toWire(bundy::util::OutputBuffer& buffer) const;
 
     /// Convert the TSIG record to a string.
     ///
