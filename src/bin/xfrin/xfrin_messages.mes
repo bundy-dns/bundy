@@ -15,9 +15,9 @@
 # No namespace declaration - these constants go in the global namespace
 # of the xfrin messages python module.
 
-% XFRIN_AUTH_LOADZONE sending Auth loadzone for origin=%1, class=%2
-There was a successful zone transfer.  We send the "loadzone" command for the
-zone to b10-auth.
+% XFRIN_NOTIFY_ZONEUPDATE sending notification of updated on zone %1/%2
+There was a successful zone transfer, and b10-xfrin sent out a notification
+message about the update of the zone to interested modules.
 
 % XFRIN_AXFR_INCONSISTENT_SOA AXFR SOAs are inconsistent for %1: %2 expected, %3 received
 The serial fields of the first and last SOAs of AXFR (including AXFR-style

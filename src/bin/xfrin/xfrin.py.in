@@ -36,7 +36,6 @@ from isc.util.address_formatter import AddressFormatter
 from isc.datasrc import DataSourceClient, ZoneFinder
 import isc.net.parse
 from isc.xfrin.diff import Diff
-from isc.server_common.auth_command import auth_loadzone_command
 from isc.server_common.tsig_keyring import init_keyring, get_keyring
 from isc.server_common.datasrc_clients_mgr import DataSrcClientsMgr, ConfigError
 from isc.log_messages.xfrin_messages import *
@@ -63,7 +62,6 @@ if "B10_FROM_SOURCE" in os.environ:
     SPECFILE_PATH = os.environ["B10_FROM_SOURCE"] + "/src/bin/xfrin"
 SPECFILE_LOCATION = SPECFILE_PATH + "/xfrin.spec"
 
-AUTH_MODULE_NAME = 'Auth'
 XFROUT_MODULE_NAME = 'Xfrout'
 
 # Remote module and identifiers (according to their spec files)
@@ -1460,16 +1458,6 @@ class ZoneInfo:
         return (self.master_addr.family, socket.SOCK_STREAM,
                 (str(self.master_addr), self.master_port))
 
-def _do_auth_loadzone(server, zone_name, zone_class):
-    msg = auth_loadzone_command(server._module_cc, zone_name, zone_class)
-    if msg is not None:
-        param = msg['command'][1]
-        logger.debug(DBG_XFRIN_TRACE, XFRIN_AUTH_LOADZONE, param["origin"],
-                     param["class"])
-        seq = server._send_cc_session.group_sendmsg(msg, AUTH_MODULE_NAME,
-                                                    want_answer=True)
-        answer, env = server._send_cc_session.group_recvmsg(False, seq)
-
 def _notify_zoneupdate(server, dsrc_name, zone_name, zone_class):
     """Helper for notifying interested modules of the update.
 
@@ -1783,7 +1771,7 @@ class Xfrin:
         if xfr_result == XFRIN_OK:
             # Note: this mostly solves the FIXME below (except that it cannot
             # use ModuleCCSession).  We should eventually migrate to the
-            # general notification for auth and zonemgr, too.
+            # general notification for xfrout and zonemgr, too.
             _notify_zoneupdate(self, dsrc_name, zone_name, zone_class)
 
             # FIXME: Due to the hack with two different CC sessions
@@ -1794,7 +1782,6 @@ class Xfrin:
             # do we do group_recvmsg when we don't need the answer?
             # And why is this direct RPC call if a notification would
             # be more appropriate?
-            _do_auth_loadzone(self, zone_name, zone_class)
             msg = create_command(notify_out.ZONE_NEW_DATA_READY_CMD, param)
             # catch the exception, in case msgq has been killed.
             try:
