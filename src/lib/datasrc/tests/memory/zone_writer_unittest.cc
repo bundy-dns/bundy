@@ -42,8 +42,6 @@
 #include <string>
 #include <unistd.h>
 
-using boost::scoped_ptr;
-using boost::bind;
 using bundy::dns::RRClass;
 using bundy::dns::Name;
 using bundy::datasrc::ZoneLoaderException;
@@ -54,59 +52,89 @@ namespace {
 
 class TestException {};
 
+class MockLoader : public ZoneDataLoader {
+public:
+    MockLoader(bundy::util::MemorySegment& segment,
+               bool* load_called, const bool* load_throw,
+               const bool* load_loader_throw, const bool* load_null,
+               const bool* load_data) :
+        load_called_(load_called), load_throw_(load_throw),
+        load_loader_throw_(load_loader_throw), load_null_(load_null),
+        load_data_(load_data), segment_(segment)
+    {}
+    virtual ~MockLoader() {}
+    virtual ZoneData *load() {
+        // We got called
+        *load_called_ = true;
+        if (*load_throw_) {
+            throw TestException();
+        }
+        if (*load_loader_throw_) {
+            bundy_throw(ZoneLoaderException, "faked loader exception");
+        }
+
+        if (*load_null_) {
+            // Be nasty to the caller and return NULL, which is forbidden
+            return (NULL);
+        }
+        ZoneData* data = ZoneData::create(segment_, Name("example.org"));
+        if (*load_data_) {
+            // Put something inside. The node itself should be enough for
+            // the tests.
+            ZoneNode* node(NULL);
+            data->insertName(segment_, Name("subdomain.example.org"), &node);
+            EXPECT_NE(static_cast<ZoneNode*>(NULL), node);
+        }
+        return (data);
+    }
+
+    bool* const load_called_;
+    const bool* const load_throw_;
+    const bool* const load_loader_throw_;
+    const bool* const load_null_;
+    const bool* const load_data_;
+private:
+    bundy::util::MemorySegment& segment_;
+};
+
 class ZoneWriterTest : public ::testing::Test {
 protected:
     ZoneWriterTest() :
-        segment_(new ZoneTableSegmentMock(RRClass::IN(), mem_sgmt_)),
-        writer_(new
-            ZoneWriter(*segment_,
-                       bind(&ZoneWriterTest::loadAction, this, _1),
-                       Name("example.org"), RRClass::IN(), false)),
         load_called_(false),
         load_throw_(false),
         load_loader_throw_(false),
         load_null_(false),
-        load_data_(false)
+        load_data_(false),
+        zt_segment_(new ZoneTableSegmentMock(RRClass::IN(), mem_sgmt_)),
+        writer_(new
+            ZoneWriter(*zt_segment_,
+                       boost::bind(&ZoneWriterTest::loaderCreator,
+                                   this, _1, _2),
+                       Name("example.org"), RRClass::IN(), false))
     {}
     virtual void TearDown() {
         // Release the writer
         writer_.reset();
     }
-    MemorySegmentMock mem_sgmt_;
-    scoped_ptr<ZoneTableSegmentMock> segment_;
-    scoped_ptr<ZoneWriter> writer_;
     bool load_called_;
     bool load_throw_;
     bool load_loader_throw_;
     bool load_null_;
     bool load_data_;
+    MemorySegmentMock mem_sgmt_;
+    boost::scoped_ptr<ZoneTableSegmentMock> zt_segment_;
+    boost::scoped_ptr<ZoneWriter> writer_;
 public:
-    ZoneData* loadAction(bundy::util::MemorySegment& segment) {
+    ZoneDataLoader* loaderCreator(bundy::util::MemorySegment& mem_sgmt,
+                                  ZoneData*)
+    {
         // Make sure it is the correct segment passed. We know the
         // exact instance, can compare pointers to them.
-        EXPECT_EQ(&segment_->getMemorySegment(), &segment);
-        // We got called
-        load_called_ = true;
-        if (load_throw_) {
-            throw TestException();
-        }
-        if (load_loader_throw_) {
-            bundy_throw(ZoneLoaderException, "faked loader exception");
-        }
+        EXPECT_EQ(&zt_segment_->getMemorySegment(), &mem_sgmt);
 
-        if (load_null_) {
-            // Be nasty to the caller and return NULL, which is forbidden
-            return (NULL);
-        }
-        ZoneData* data = ZoneData::create(segment, Name("example.org"));
-        if (load_data_) {
-            // Put something inside. The node itself should be enough for
-            // the tests.
-            ZoneNode* node(NULL);
-            data->insertName(segment, Name("subdomain.example.org"), &node);
-            EXPECT_NE(static_cast<ZoneNode*>(NULL), node);
-        }
-        return (data);
+        return (new MockLoader(mem_sgmt_, &load_called_, &load_throw_,
+                               &load_loader_throw_, &load_null_,
+                               &load_data_));
     }
 };
 
@@ -135,7 +163,8 @@ TEST_F(ZoneWriterTest, constructForReadOnlySegment) {
     MemorySegmentMock mem_sgmt;
     ReadOnlySegment ztable_segment(RRClass::IN(), mem_sgmt);
     EXPECT_THROW(ZoneWriter(ztable_segment,
-                            bind(&ZoneWriterTest::loadAction, this, _1),
+                            boost::bind(&ZoneWriterTest::loaderCreator,
+                                        this, _1, _2),
                             Name("example.org"), RRClass::IN(), false),
                  bundy::InvalidOperation);
 }
@@ -246,8 +275,9 @@ TEST_F(ZoneWriterTest, loadLoaderException) {
     load_loader_throw_ = true;
     EXPECT_THROW(writer_->load(), ZoneLoaderException);
     // In this case, passed error_msg won't be updated.
-    writer_.reset(new ZoneWriter(*segment_,
-                                 bind(&ZoneWriterTest::loadAction, this, _1),
+    writer_.reset(new ZoneWriter(*zt_segment_,
+                                 boost::bind(&ZoneWriterTest::loaderCreator,
+                                             this, _1, _2),
                                  Name("example.org"), RRClass::IN(), false));
     EXPECT_THROW(writer_->load(&error_msg), ZoneLoaderException);
     EXPECT_EQ("", error_msg);
@@ -256,8 +286,9 @@ TEST_F(ZoneWriterTest, loadLoaderException) {
     // adds an empty zone.  Note that we implicitly pass NULL to load()
     // as it's the default parameter, so the following also confirms it doesn't
     // cause disruption.
-    writer_.reset(new ZoneWriter(*segment_,
-                                 bind(&ZoneWriterTest::loadAction, this, _1),
+    writer_.reset(new ZoneWriter(*zt_segment_,
+                                 boost::bind(&ZoneWriterTest::loaderCreator,
+                                             this, _1, _2),
                                  Name("example.org"), RRClass::IN(), true));
     writer_->load();
     writer_->install();
@@ -265,7 +296,7 @@ TEST_F(ZoneWriterTest, loadLoaderException) {
 
     // Check an empty zone has been really installed.
     using namespace bundy::datasrc::result;
-    const ZoneTable* ztable = segment_->getHeader().getTable();
+    const ZoneTable* ztable = zt_segment_->getHeader().getTable();
     ASSERT_TRUE(ztable);
     const ZoneTable::FindResult result = ztable->findZone(Name("example.org"));
     EXPECT_EQ(SUCCESS, result.code);
@@ -273,8 +304,9 @@ TEST_F(ZoneWriterTest, loadLoaderException) {
 
     // Allowing an error, and passing a template for the error message.
     // It will be filled with the reason for the error.
-    writer_.reset(new ZoneWriter(*segment_,
-                                 bind(&ZoneWriterTest::loadAction, this, _1),
+    writer_.reset(new ZoneWriter(*zt_segment_,
+                                 boost::bind(&ZoneWriterTest::loaderCreator,
+                                             this, _1, _2),
                                  Name("example.org"), RRClass::IN(), true));
     writer_->load(&error_msg);
     EXPECT_NE("", error_msg);
@@ -282,8 +314,9 @@ TEST_F(ZoneWriterTest, loadLoaderException) {
     // In case of no error, the placeholder will be intact.
     load_loader_throw_ = false;
     error_msg.clear();
-    writer_.reset(new ZoneWriter(*segment_,
-                                 bind(&ZoneWriterTest::loadAction, this, _1),
+    writer_.reset(new ZoneWriter(*zt_segment_,
+                                 boost::bind(&ZoneWriterTest::loaderCreator,
+                                             this, _1, _2),
                                  Name("example.org"), RRClass::IN(), true));
     writer_->load(&error_msg);
     EXPECT_EQ("", error_msg);
@@ -306,7 +339,7 @@ TEST_F(ZoneWriterTest, retry) {
 
     // The rest still works correctly
     EXPECT_NO_THROW(writer_->install());
-    ZoneTable* const table(segment_->getHeader().getTable());
+    ZoneTable* const table(zt_segment_->getHeader().getTable());
     const ZoneTable::FindResult found(table->findZone(Name("example.org")));
     ASSERT_EQ(bundy::datasrc::result::SUCCESS, found.code);
     // For some reason it doesn't seem to work by the ZoneNode typedef, using
@@ -339,11 +372,11 @@ TEST_F(ZoneWriterTest, autoCleanUp) {
 
 // Used in the manyWrites test, encapsulating ZoneDataLoader ctor to avoid
 // its signature ambiguity.
-ZoneData*
-loadZoneDataWrapper(bundy::util::MemorySegment& segment, const RRClass& rrclass,
+ZoneDataLoader*
+createLoaderWrapper(bundy::util::MemorySegment& segment, const RRClass& rrclass,
                     const Name& name, const std::string& filename)
 {
-    return (ZoneDataLoader(segment, rrclass, name, filename).load());
+    return (new ZoneDataLoader(segment, rrclass, name, filename, NULL));
 }
 
 // Check the behavior of creating many small zones.  The main purpose of
@@ -386,11 +419,10 @@ TEST_F(ZoneWriterTest, manyWrites) {
         const Name origin(
             boost::str(boost::format("%063u.%063u.%063u.example.org")
                        % i % i % i));
-        const LoadAction action = boost::bind(loadZoneDataWrapper, _1,
-                                              RRClass::IN(), origin,
-                                              TEST_DATA_DIR
-                                              "/template.zone");
-        ZoneWriter writer(*zt_segment, action, origin, RRClass::IN(), false);
+        const ZoneDataLoaderCreator creator =
+            boost::bind(createLoaderWrapper, _1, RRClass::IN(), origin,
+                        TEST_DATA_DIR "/template.zone");
+        ZoneWriter writer(*zt_segment, creator, origin, RRClass::IN(), false);
         writer.load();
         writer.install();
         writer.cleanup();

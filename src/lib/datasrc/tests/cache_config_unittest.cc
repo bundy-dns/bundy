@@ -25,6 +25,7 @@
 
 #include <gtest/gtest.h>
 
+#include <boost/scoped_ptr.hpp>
 #include <iterator>             // for std::distance
 
 using namespace bundy::datasrc;
@@ -33,7 +34,7 @@ using namespace bundy::dns;
 using bundy::datasrc::unittest::MockDataSourceClient;
 using bundy::datasrc::internal::CacheConfig;
 using bundy::datasrc::internal::CacheConfigError;
-using bundy::datasrc::memory::LoadAction;
+using bundy::datasrc::memory::ZoneDataLoaderCreator;
 using bundy::datasrc::memory::ZoneData;
 
 namespace {
@@ -153,26 +154,28 @@ TEST_F(CacheConfigTest, badConstructMasterFiles) {
                  bundy::InvalidParameter);
 }
 
-TEST_F(CacheConfigTest, getLoadActionWithMasterFiles) {
+TEST_F(CacheConfigTest, getLoaderCreatorWithMasterFiles) {
     uint8_t labels_buf[LabelSequence::MAX_SERIALIZED_LENGTH];
 
     const CacheConfig cache_conf("MasterFiles", 0, *master_config_, true);
 
-    // Check getLoadAction.  Since it returns a mere functor, we can only
+    // Check getLoaderCreator.  Since it returns a mere functor, we can only
     // check the behavior by actually calling it.  For the purpose of this
     // test, it should suffice if we confirm the call succeeds and shows
     // some reasonably valid behavior (we'll check the origin name for that).
-    LoadAction action = cache_conf.getLoadAction(RRClass::IN(),
-                                                 Name::ROOT_NAME());
-    ZoneData* zone_data = action(msgmt_);
+    boost::scoped_ptr<memory::ZoneDataLoader> loader(
+        cache_conf.getLoaderCreator(RRClass::IN(), Name::ROOT_NAME())
+        (msgmt_, NULL));
+    ZoneData* zone_data = loader->load();
     ASSERT_TRUE(zone_data);
     EXPECT_EQ(".", zone_data->getOriginNode()->
               getAbsoluteLabels(labels_buf).toText());
     ZoneData::destroy(msgmt_, zone_data, RRClass::IN());
 
     // If the specified zone name is not configured to be cached,
-    // getLoadAction returns empty (false) functor.
-    EXPECT_FALSE(cache_conf.getLoadAction(RRClass::IN(), Name("example.com")));
+    // getLoaderCreator returns empty (false) functor.
+    EXPECT_FALSE(cache_conf.getLoaderCreator(RRClass::IN(),
+                                             Name("example.com")));
 }
 
 TEST_F(CacheConfigTest, constructWithMock) {
@@ -254,7 +257,7 @@ TEST_F(CacheConfigTest, badConstructWithMock) {
                  bundy::InvalidParameter);
 }
 
-TEST_F(CacheConfigTest, getLoadActionWithMock) {
+TEST_F(CacheConfigTest, getLoaderCreatorWithMock) {
     uint8_t labels_buf[LabelSequence::MAX_SERIALIZED_LENGTH];
 
     // Similar to MasterFiles counterpart, but using underlying source
@@ -267,24 +270,27 @@ TEST_F(CacheConfigTest, getLoadActionWithMock) {
                                      " \"cache-zones\": [\"example.org\","
                                      " \"example.net\", \"null.org\"]}"));
     const CacheConfig cache_conf("mock", &mock_client_, *config, true);
-    LoadAction action = cache_conf.getLoadAction(RRClass::IN(),
-                                                 Name("example.org"));
-    ZoneData* zone_data = action(msgmt_);
+    boost::scoped_ptr<memory::ZoneDataLoader> loader(
+        cache_conf.getLoaderCreator(RRClass::IN(), Name("example.org"))
+        (msgmt_, NULL));
+    ZoneData* zone_data = loader->load();
     ASSERT_TRUE(zone_data);
     EXPECT_EQ("example.org.", zone_data->getOriginNode()->
               getAbsoluteLabels(labels_buf).toText());
     ZoneData::destroy(msgmt_, zone_data, RRClass::IN());
 
     // Zone not configured for the cache
-    EXPECT_FALSE(cache_conf.getLoadAction(RRClass::IN(), Name("example.com")));
+    EXPECT_FALSE(cache_conf.getLoaderCreator(RRClass::IN(),
+                                             Name("example.com")));
 
     // Zone configured for the cache but doesn't exist in the underling data
     // source.
-    EXPECT_THROW(cache_conf.getLoadAction(RRClass::IN(), Name("example.net")),
+    EXPECT_THROW(cache_conf.getLoaderCreator(RRClass::IN(),
+                                             Name("example.net")),
                  NoSuchZone);
 
     // buggy data source client: it returns a null pointer from getIterator.
-    EXPECT_THROW(cache_conf.getLoadAction(RRClass::IN(), Name("null.org")),
+    EXPECT_THROW(cache_conf.getLoaderCreator(RRClass::IN(), Name("null.org")),
                  bundy::Unexpected);
 }
 

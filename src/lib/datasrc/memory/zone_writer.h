@@ -56,14 +56,16 @@ public:
     /// \throw bundy::InvalidOperation if \c segment is read-only.
     ///
     /// \param segment The zone table segment to store the zone into.
-    /// \param load_action The callback used to load data.
+    /// \param loader_creator Functor to create ZoneDataLoader for the actual
+    ///  load.
     /// \param name The name of the zone.
     /// \param rrclass The class of the zone.
     /// \param catch_load_error true if loading errors are to be caught
     /// internally; false otherwise.
     ZoneWriter(ZoneTableSegment& segment,
-               const LoadAction& load_action, const dns::Name& name,
-               const dns::RRClass& rrclass, bool catch_load_error);
+               const ZoneDataLoaderCreator& loader_creator,
+               const dns::Name& name, const dns::RRClass& rrclass,
+               bool catch_load_error);
 
     /// \brief Destructor.
     ~ZoneWriter();

@@ -217,9 +217,9 @@ public:
     ZoneDataLoaderImpl(util::MemorySegment& mem_sgmt,
                        const dns::RRClass& rrclass,
                        const dns::Name& zone_name,
-                       boost::function<void(LoadCallback)> rrset_installer) :
+                       const std::string& zone_file) :
         mem_sgmt_(mem_sgmt), rrclass_(rrclass), zone_name_(zone_name),
-        rrset_installer_(rrset_installer), datasrc_client_(NULL)
+        zone_file_(zone_file), datasrc_client_(NULL)
     {}
 
     ZoneDataLoaderImpl(util::MemorySegment& mem_sgmt,
@@ -233,29 +233,32 @@ public:
     ZoneData* doLoad();
 
 private:
-    ZoneData* doLoadCommon();
+    typedef boost::function<void(LoadCallback)> RRsetInstaller;
+    ZoneData* doLoadCommon(RRsetInstaller installer);
 
     util::MemorySegment& mem_sgmt_;
     const dns::RRClass rrclass_;
     const dns::Name zone_name_;
-    boost::function<void(LoadCallback)> rrset_installer_;
+    const std::string zone_file_;
     const DataSourceClient* const datasrc_client_;
 };
 
 ZoneData*
 ZoneDataLoader::ZoneDataLoaderImpl::doLoad() {
-    ZoneIteratorPtr iterator;
     if (datasrc_client_) {
-        iterator =  datasrc_client_->getIterator(zone_name_);
+        ZoneIteratorPtr iterator =  datasrc_client_->getIterator(zone_name_);
         /* TODO: compare the iterator's SOA and in-memory SOA */
-        rrset_installer_ =  boost::bind(generateRRsetFromIterator,
-                                        iterator.get(), _1);
+        return (doLoadCommon(boost::bind(generateRRsetFromIterator,
+                                         iterator.get(), _1)));
+    } else {
+            return (doLoadCommon(boost::bind(masterLoaderWrapper,
+                                             zone_file_.c_str(),
+                                             zone_name_, rrclass_, _1)));
     }
-    return (doLoadCommon());
 }
 
 ZoneData*
-ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon() {
+ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon(RRsetInstaller installer) {
     while (true) { // Try as long as it takes to load and grow the segment
         bool created = false;
         try {
@@ -268,8 +271,8 @@ ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon() {
 
             ZoneDataLoaderHelper loader(mem_sgmt_, rrclass_, zone_name_,
                                         *holder.get());
-            rrset_installer_(boost::bind(&ZoneDataLoaderHelper::addFromLoad,
-                                         &loader, _1));
+            installer(boost::bind(&ZoneDataLoaderHelper::addFromLoad,
+                                  &loader, _1));
             // Add any last RRsets that were left
             loader.flushNodeRRsets();
 
@@ -303,22 +306,21 @@ ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon() {
 ZoneDataLoader::ZoneDataLoader(util::MemorySegment& mem_sgmt,
                                const dns::RRClass& rrclass,
                                const dns::Name& zone_name,
-                               const std::string& zone_file) :
+                               const std::string& zone_file,
+                               ZoneData*) :
     impl_(NULL)                 // defer until logging to avoid leak
 {
     LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_MEM_LOAD_FROM_FILE).
         arg(zone_name).arg(rrclass).arg(zone_file);
 
-    impl_ = new ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name,
-                                   boost::bind(masterLoaderWrapper,
-                                               zone_file.c_str(),
-                                               zone_name, rrclass, _1));
+    impl_ = new ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name, zone_file);
 }
 
 ZoneDataLoader::ZoneDataLoader(util::MemorySegment& mem_sgmt,
                                const dns::RRClass& rrclass,
                                const dns::Name& zone_name,
-                               const DataSourceClient& datasrc_client) :
+                               const DataSourceClient& datasrc_client,
+                               ZoneData*) :
     impl_(NULL)
 {
     LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_MEM_LOAD_FROM_DATASRC).

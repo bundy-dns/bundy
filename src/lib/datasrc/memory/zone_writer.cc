@@ -14,6 +14,7 @@
 
 #include <datasrc/memory/zone_writer.h>
 #include <datasrc/memory/zone_data.h>
+#include <datasrc/memory/zone_data_loader.h>
 #include <datasrc/memory/zone_table_segment.h>
 #include <datasrc/memory/segment_object_holder.h>
 
@@ -41,13 +42,14 @@ checkZoneTableSegment(ZoneTableSegment& segment) {
 }
 
 struct ZoneWriter::Impl {
-    Impl(ZoneTableSegment& segment, const LoadAction& load_action,
+    Impl(ZoneTableSegment& segment,
+         const ZoneDataLoaderCreator & loader_creator,
          const dns::Name& origin, const dns::RRClass& rrclass,
          bool throw_on_load_error) :
         // We validate segment first so we can use it to initialize
         // data_holder_ safely.
         segment_(checkZoneTableSegment(segment)),
-        load_action_(load_action),
+        loader_creator_(loader_creator),
         origin_(origin),
         rrclass_(rrclass),
         state_(ZW_UNUSED),
@@ -63,7 +65,7 @@ struct ZoneWriter::Impl {
     }
 
     ZoneTableSegment& segment_;
-    const LoadAction load_action_;
+    const ZoneDataLoaderCreator loader_creator_;
     const dns::Name origin_;
     const dns::RRClass rrclass_;
     enum State {
@@ -76,14 +78,16 @@ struct ZoneWriter::Impl {
     const bool catch_load_error_;
     typedef detail::SegmentObjectHolder<ZoneData, dns::RRClass> ZoneDataHolder;
     boost::scoped_ptr<ZoneDataHolder> data_holder_;
+    boost::scoped_ptr<ZoneDataLoader> loader_;
 };
 
 ZoneWriter::ZoneWriter(ZoneTableSegment& segment,
-                       const LoadAction& load_action,
+                       const ZoneDataLoaderCreator& loader_creator,
                        const dns::Name& origin,
                        const dns::RRClass& rrclass,
                        bool throw_on_load_error) :
-    impl_(new Impl(segment, load_action, origin, rrclass, throw_on_load_error))
+    impl_(new Impl(segment, loader_creator, origin, rrclass,
+                   throw_on_load_error))
 {
 }
 
@@ -101,17 +105,17 @@ ZoneWriter::load(std::string* error_msg) {
     }
 
     try {
-        ZoneData* zone_data =
-            impl_->load_action_(impl_->segment_.getMemorySegment());
+        impl_->loader_.reset(impl_->loader_creator_(
+                                 impl_->segment_.getMemorySegment(), NULL));
+        ZoneData* zone_data = impl_->loader_->load();
 
         if (!zone_data) {
             // Bug inside impl_->load_action_.
             bundy_throw(bundy::InvalidOperation,
-                      "No data returned from load action");
+                        "No data returned from load action");
         }
 
         impl_->data_holder_->set(zone_data);
-
     } catch (const ZoneLoaderException& ex) {
         if (!impl_->catch_load_error_) {
             throw;

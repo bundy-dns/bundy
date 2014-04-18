@@ -77,7 +77,7 @@ createInMemoryClient(RRClass zclass, const Name& zname) {
     boost::shared_ptr<ZoneTableSegment> ztable_segment(
         ZoneTableSegment::create(zclass, cache_conf.getSegmentType()));
     memory::ZoneWriter writer(*ztable_segment,
-                              cache_conf.getLoadAction(zclass, zname),
+                              cache_conf.getLoaderCreator(zclass, zname),
                               zname, zclass, false);
     writer.load();
     writer.install();

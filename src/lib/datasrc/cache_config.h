@@ -17,10 +17,13 @@
 
 #include <exceptions/exceptions.h>
 
+#include <util/memory_segment.h>
 #include <dns/name.h>
 #include <dns/dns_fwd.h>
 #include <cc/data.h>
 #include <datasrc/memory/load_action.h>
+#include <datasrc/memory/zone_data.h>
+#include <datasrc/memory/zone_data_loader.h>
 
 #include <boost/noncopyable.hpp>
 
@@ -170,8 +173,37 @@ public:
     /// \param zone_name The origin name of the zone
     /// \return A \c LoadAction functor to load zone data or an empty functor
     /// (see above).
-    memory::LoadAction getLoadAction(const dns::RRClass& rrclass,
-                                     const dns::Name& zone_name) const;
+
+    /// \brief Return a \c ZoneDataLoaderCreator functor to load zone data
+    /// into memory.
+    ///
+    /// This method returns an appropriate \c ZoneDataLoaderCreator functor that
+    /// can be passed to a \c memory::ZoneWriter object to create a
+    /// \c ZoneDataLoader, and subsequently load data of the specified
+    /// zone into memory.  The source of the zone data differs depending on
+    /// the cache configuration (either a master file or another data source),
+    /// but this method hides the details and works as a unified interface
+    /// for the caller.
+    ///
+    /// If the specified zone is not configured to be cached, it returns an
+    /// empty functor (which can be evaluated to be \c false as a boolean).
+    /// It doesn't throw an exception in this case because the expected caller
+    /// of this method would handle such a case internally.
+    ///
+    /// \throw NoSuchZone The specified zone doesn't exist in the
+    /// underlying data source storing the original data to be cached.
+    /// \throw DataSourceError Other, unexpected but possible error happens
+    /// in the underlying data source.
+    /// \throw Unexpected Unexpected error happens in the underlying data
+    /// source.  This shouldn't happen as long as the data source
+    /// implementation meets the public API requirement.
+    ///
+    /// \param rrclass The RR class of the zone
+    /// \param zname The origin name of the zone
+    /// \return A \c ZoneDataLoaderCreator functor to be used to load zone
+    /// data or an empty functor (see above).
+    memory::ZoneDataLoaderCreator getLoaderCreator(
+        const dns::RRClass& rrclass, const dns::Name& zname) const;
 
     /// \brief Read only iterator type over configured cached zones.
     ///

@@ -38,7 +38,13 @@ struct ZoneValidationError : public ZoneLoaderException {
 };
 
 /// \brief Utility class for loading/updating a zone from a given source.
+///
+/// Some of the methods are defined as virtual so that tests can mock the
+/// behavior of class.  For other purposes this class shouldn't be derived.
 class ZoneDataLoader {
+protected:
+    ZoneDataLoader() : impl_(NULL) {}
+
 public:
     /// \brief Constructor for loading from a file.
     ///
@@ -46,24 +52,27 @@ public:
     /// \param rrclass The RRClass.
     /// \param zone_name The name of the zone that is being loaded.
     /// \param zone_file Filename which contains the zone data for \c zone_name.
+    /// \param old_data If non-NULL, zone data currently being used.
     ZoneDataLoader(util::MemorySegment& mem_sgmt,
                    const dns::RRClass& rrclass,
                    const dns::Name& zone_name,
-                   const std::string& zone_file);
+                   const std::string& zone_file,
+                   ZoneData* old_data = NULL);
 
     /// \brief Constructor for loading from a given data source.
     ///
-    /// \param mem_sgmt The memory segment.
-    /// \param rrclass The RRClass.
-    /// \param zone_name The name of the zone that is being loaded.
-    /// \param iterator Iterator that returns RRsets to load into the zone.
+    /// Most of the parameters are the same as the other version.
+    ///
+    /// \param datasrc_client A client for the data source from which new
+    /// zone data should be loaded.
     ZoneDataLoader(util::MemorySegment& mem_sgmt,
                    const dns::RRClass& rrclass,
                    const dns::Name& zone_name,
-                   const DataSourceClient& datasrc_client);
+                   const DataSourceClient& datasrc_client,
+                   ZoneData* old_data = NULL);
 
     /// Destructor.
-    ~ZoneDataLoader();
+    virtual ~ZoneDataLoader();
 
     /// \brief Create and return a ZoneData instance populated from the
     /// source passed on construction.
@@ -75,7 +84,7 @@ public:
     ///         implementation).
     ///
     /// \return A \c ZoneData containing zone data loaded from the source.
-    ZoneData* load();
+    virtual ZoneData* load();
 
 private:
     class ZoneDataLoaderImpl;
