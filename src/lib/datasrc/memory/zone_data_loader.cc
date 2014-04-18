@@ -66,11 +66,12 @@ typedef boost::function<void(bundy::dns::ConstRRsetPtr)> LoadCallback;
 // do it, but since we cannot guarantee the adding operation is exception free,
 // we don't choose that option to maintain the common expectation for
 // destructors.
-class ZoneDataLoader : boost::noncopyable {
+class ZoneDataLoaderHelper : boost::noncopyable {
 public:
-    ZoneDataLoader(util::MemorySegment& mem_sgmt,
-                   const bundy::dns::RRClass& rrclass,
-                   const bundy::dns::Name& zone_name, ZoneData& zone_data) :
+    ZoneDataLoaderHelper(util::MemorySegment& mem_sgmt,
+                         const bundy::dns::RRClass& rrclass,
+                         const bundy::dns::Name& zone_name,
+                         ZoneData& zone_data) :
         updater_(mem_sgmt, rrclass, zone_name, zone_data)
     {}
 
@@ -92,7 +93,7 @@ private:
 };
 
 void
-ZoneDataLoader::addFromLoad(const ConstRRsetPtr& rrset) {
+ZoneDataLoaderHelper::addFromLoad(const ConstRRsetPtr& rrset) {
     // If we see a new name, flush the temporary holders, adding the
     // pairs of RRsets and RRSIGs of the previous name to the zone.
     if ((!node_rrsets_.empty() || !node_rrsigsets_.empty() ||
@@ -117,7 +118,7 @@ ZoneDataLoader::addFromLoad(const ConstRRsetPtr& rrset) {
 }
 
 void
-ZoneDataLoader::flushNodeRRsets() {
+ZoneDataLoaderHelper::flushNodeRRsets() {
     BOOST_FOREACH(NodeRRsetsVal val, node_rrsets_) {
         // Identify the corresponding RRSIG for the RRset, if any.  If
         // found add both the RRset and its RRSIG at once.
@@ -152,7 +153,7 @@ ZoneDataLoader::flushNodeRRsets() {
 }
 
 const Name&
-ZoneDataLoader::getCurrentName() const {
+ZoneDataLoaderHelper::getCurrentName() const {
     if (!node_rrsets_.empty()) {
         return (node_rrsets_.begin()->second->getName());
     }
@@ -174,55 +175,6 @@ logError(const dns::Name* zone_name, const dns::RRClass* rrclass,
 {
     LOG_ERROR(logger, DATASRC_MEMORY_CHECK_ERROR).arg(*zone_name).arg(*rrclass).
         arg(reason);
-}
-
-ZoneData*
-loadZoneDataInternal(util::MemorySegment& mem_sgmt,
-                     const bundy::dns::RRClass& rrclass,
-                     const Name& zone_name,
-                     boost::function<void(LoadCallback)> rrset_installer)
-{
-    while (true) { // Try as long as it takes to load and grow the segment
-        bool created = false;
-        try {
-            SegmentObjectHolder<ZoneData, RRClass> holder(mem_sgmt, rrclass);
-            holder.set(ZoneData::create(mem_sgmt, zone_name));
-
-            // Nothing from this point on should throw MemorySegmentGrown.
-            // It is handled inside here.
-            created = true;
-
-            ZoneDataLoader loader(mem_sgmt, rrclass, zone_name, *holder.get());
-            rrset_installer(boost::bind(&ZoneDataLoader::addFromLoad, &loader,
-                                        _1));
-            // Add any last RRsets that were left
-            loader.flushNodeRRsets();
-
-            const ZoneNode* origin_node = holder.get()->getOriginNode();
-            const RdataSet* rdataset = origin_node->getData();
-            // If the zone is NSEC3-signed, check if it has NSEC3PARAM
-            if (holder.get()->isNSEC3Signed()) {
-                if (RdataSet::find(rdataset, RRType::NSEC3PARAM()) == NULL) {
-                    LOG_WARN(logger, DATASRC_MEMORY_MEM_NO_NSEC3PARAM).
-                        arg(zone_name).arg(rrclass);
-                }
-            }
-
-            RRsetCollection collection(*(holder.get()), rrclass);
-            const dns::ZoneCheckerCallbacks
-                callbacks(boost::bind(&logError, &zone_name, &rrclass, _1),
-                          boost::bind(&logWarning, &zone_name, &rrclass, _1));
-            if (!dns::checkZone(zone_name, rrclass, collection, callbacks)) {
-                bundy_throw(ZoneValidationError,
-                          "Errors found when validating zone: "
-                          << zone_name << "/" << rrclass);
-            }
-
-            return (holder.release());
-        } catch (const util::MemorySegmentGrown&) {
-            assert(!created);
-        }
-    }
 }
 
 // A wrapper for dns::MasterLoader used by loadZoneData() below.  Essentially
@@ -259,34 +211,106 @@ generateRRsetFromIterator(ZoneIterator* iterator, LoadCallback callback) {
 
 } // end of unnamed namespace
 
+class ZoneDataLoader::ZoneDataLoaderImpl {
+public:
+    ZoneDataLoaderImpl(util::MemorySegment& mem_sgmt,
+                       const dns::RRClass& rrclass,
+                       const dns::Name& zone_name,
+                       boost::function<void(LoadCallback)> rrset_installer) :
+        mem_sgmt_(mem_sgmt), rrclass_(rrclass), zone_name_(zone_name),
+        rrset_installer_(rrset_installer)
+    {}
+    ZoneData* doLoad();
+
+private:
+    util::MemorySegment& mem_sgmt_;
+    const dns::RRClass rrclass_;
+    const dns::Name zone_name_;
+    boost::function<void(LoadCallback)> rrset_installer_;
+};
+
 ZoneData*
-loadZoneData(util::MemorySegment& mem_sgmt,
-             const bundy::dns::RRClass& rrclass,
-             const bundy::dns::Name& zone_name,
-             const std::string& zone_file)
+ZoneDataLoader::ZoneDataLoaderImpl::doLoad() {
+    while (true) { // Try as long as it takes to load and grow the segment
+        bool created = false;
+        try {
+            SegmentObjectHolder<ZoneData, RRClass> holder(mem_sgmt_, rrclass_);
+            holder.set(ZoneData::create(mem_sgmt_, zone_name_));
+
+            // Nothing from this point on should throw MemorySegmentGrown.
+            // It is handled inside here.
+            created = true;
+
+            ZoneDataLoaderHelper loader(mem_sgmt_, rrclass_, zone_name_,
+                                        *holder.get());
+            rrset_installer_(boost::bind(&ZoneDataLoaderHelper::addFromLoad,
+                                         &loader, _1));
+            // Add any last RRsets that were left
+            loader.flushNodeRRsets();
+
+            const ZoneNode* origin_node = holder.get()->getOriginNode();
+            const RdataSet* rdataset = origin_node->getData();
+            // If the zone is NSEC3-signed, check if it has NSEC3PARAM
+            if (holder.get()->isNSEC3Signed()) {
+                if (RdataSet::find(rdataset, RRType::NSEC3PARAM()) == NULL) {
+                    LOG_WARN(logger, DATASRC_MEMORY_MEM_NO_NSEC3PARAM).
+                        arg(zone_name_).arg(rrclass_);
+                }
+            }
+
+            RRsetCollection collection(*(holder.get()), rrclass_);
+            const dns::ZoneCheckerCallbacks
+                callbacks(boost::bind(&logError, &zone_name_, &rrclass_, _1),
+                          boost::bind(&logWarning, &zone_name_, &rrclass_, _1));
+            if (!dns::checkZone(zone_name_, rrclass_, collection, callbacks)) {
+                bundy_throw(ZoneValidationError,
+                            "Errors found when validating zone: "
+                            << zone_name_ << "/" << rrclass_);
+            }
+
+            return (holder.release());
+        } catch (const util::MemorySegmentGrown&) {
+            assert(!created);
+        }
+    }
+}
+
+ZoneDataLoader::ZoneDataLoader(util::MemorySegment& mem_sgmt,
+                               const dns::RRClass& rrclass,
+                               const dns::Name& zone_name,
+                               const std::string& zone_file) :
+    impl_(NULL)                 // defer after logging to avoid leak
 {
     LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_MEM_LOAD_FROM_FILE).
         arg(zone_name).arg(rrclass).arg(zone_file);
 
-    return (loadZoneDataInternal(mem_sgmt, rrclass, zone_name,
-                                 boost::bind(masterLoaderWrapper,
-                                             zone_file.c_str(),
-                                             zone_name, rrclass,
-                                             _1)));
+    impl_ = new ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name,
+                                   boost::bind(masterLoaderWrapper,
+                                               zone_file.c_str(),
+                                               zone_name, rrclass, _1));
 }
 
-ZoneData*
-loadZoneData(util::MemorySegment& mem_sgmt,
-             const bundy::dns::RRClass& rrclass,
-             const bundy::dns::Name& zone_name,
-             ZoneIterator& iterator)
+ZoneDataLoader::ZoneDataLoader(util::MemorySegment& mem_sgmt,
+                               const dns::RRClass& rrclass,
+                               const dns::Name& zone_name,
+                               ZoneIterator& iterator) :
+    impl_(NULL)
 {
     LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_MEM_LOAD_FROM_DATASRC).
         arg(zone_name).arg(rrclass);
 
-    return (loadZoneDataInternal(mem_sgmt, rrclass, zone_name,
-                                 boost::bind(generateRRsetFromIterator,
-                                             &iterator, _1)));
+    impl_ = new ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name,
+                                   boost::bind(generateRRsetFromIterator,
+                                               &iterator, _1));
+}
+
+ZoneDataLoader::~ZoneDataLoader() {
+    delete impl_;
+}
+
+ZoneData*
+ZoneDataLoader::load() {
+    return (impl_->doLoad());
 }
 
 } // namespace memory

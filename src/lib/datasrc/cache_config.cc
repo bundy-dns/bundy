@@ -139,7 +139,8 @@ public:
         iterator_(iterator)
     {}
     memory::ZoneData* operator()(util::MemorySegment& segment) {
-        return (memory::loadZoneData(segment, rrclass_, name_, *iterator_));
+        return (memory::ZoneDataLoader(segment, rrclass_, name_,
+                                       *iterator_).load());
     }
 private:
     const dns::RRClass rrclass_;
@@ -154,7 +155,7 @@ memory::ZoneData*
 loadZoneDataFromFile(util::MemorySegment& segment, const dns::RRClass& rrclass,
                      const dns::Name& name, const std::string& filename)
 {
-    return (memory::loadZoneData(segment, rrclass, name, filename));
+    return (memory::ZoneDataLoader(segment, rrclass, name, filename).load());
 }
 
 } // unnamed namespace

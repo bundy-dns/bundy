@@ -337,13 +337,13 @@ TEST_F(ZoneWriterTest, autoCleanUp) {
     EXPECT_NO_THROW(writer_->load());
 }
 
-// Used in the manyWrites test, encapsulating loadZoneData() to avoid
+// Used in the manyWrites test, encapsulating ZoneDataLoader ctor to avoid
 // its signature ambiguity.
 ZoneData*
 loadZoneDataWrapper(bundy::util::MemorySegment& segment, const RRClass& rrclass,
                     const Name& name, const std::string& filename)
 {
-    return (loadZoneData(segment, rrclass, name, filename));
+    return (ZoneDataLoader(segment, rrclass, name, filename).load());
 }
 
 // Check the behavior of creating many small zones.  The main purpose of

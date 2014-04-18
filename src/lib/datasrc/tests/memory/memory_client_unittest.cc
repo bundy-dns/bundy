@@ -188,8 +188,8 @@ protected:
 TEST_F(MemoryClientTest, loadRRsetDoesntMatchOrigin) {
     // Attempting to load example.org to example.com zone should result
     // in an exception.
-    EXPECT_THROW(loadZoneData(mem_sgmt_, zclass_, Name("example.com"),
-                              TEST_DATA_DIR "/example.org-empty.zone"),
+    EXPECT_THROW(ZoneDataLoader(mem_sgmt_, zclass_, Name("example.com"),
+                                TEST_DATA_DIR "/example.org-empty.zone").load(),
                  ZoneLoaderException);
 }
 
@@ -197,9 +197,9 @@ TEST_F(MemoryClientTest, loadErrorsInParsingZoneMustNotLeak1) {
     // Attempting to load broken example.org zone should result in an
     // exception. This should not leak ZoneData and other such
     // allocations.
-    EXPECT_THROW(loadZoneData(mem_sgmt_, zclass_, Name("example.org"),
-                              TEST_DATA_DIR "/example.org-broken1.zone"),
-                 ZoneLoaderException);
+    EXPECT_THROW(ZoneDataLoader(mem_sgmt_, zclass_, Name("example.org"),
+                                TEST_DATA_DIR "/example.org-broken1.zone").
+                 load(), ZoneLoaderException);
     // Teardown checks for memory segment leaks
 }
 
@@ -207,15 +207,15 @@ TEST_F(MemoryClientTest, loadErrorsInParsingZoneMustNotLeak2) {
     // Attempting to load broken example.org zone should result in an
     // exception. This should not leak ZoneData and other such
     // allocations.
-    EXPECT_THROW(loadZoneData(mem_sgmt_, zclass_, Name("example.org"),
-                              TEST_DATA_DIR "/example.org-broken2.zone"),
-                 ZoneLoaderException);
+    EXPECT_THROW(ZoneDataLoader(mem_sgmt_, zclass_, Name("example.org"),
+                                TEST_DATA_DIR "/example.org-broken2.zone").
+                 load(), ZoneLoaderException);
     // Teardown checks for memory segment leaks
 }
 
 TEST_F(MemoryClientTest, loadNonExistentZoneFile) {
-    EXPECT_THROW(loadZoneData(mem_sgmt_, zclass_, Name("example.org"),
-                              TEST_DATA_DIR "/somerandomfilename"),
+    EXPECT_THROW(ZoneDataLoader(mem_sgmt_, zclass_, Name("example.org"),
+                                TEST_DATA_DIR "/somerandomfilename").load(),
                  ZoneLoaderException);
     // Teardown checks for memory segment leaks
 }
@@ -224,8 +224,8 @@ TEST_F(MemoryClientTest, loadEmptyZoneFileThrows) {
     // When an empty zone file is loaded, the origin doesn't even have
     // an SOA RR. This condition should be avoided, and hence it results in
     // an exception.
-    EXPECT_THROW(loadZoneData(mem_sgmt_, zclass_, Name("."),
-                              TEST_DATA_DIR "/empty.zone"),
+    EXPECT_THROW(ZoneDataLoader(mem_sgmt_, zclass_, Name("."),
+                                TEST_DATA_DIR "/empty.zone").load(),
                  ZoneValidationError);
     // Teardown checks for memory segment leaks
 }
@@ -233,10 +233,10 @@ TEST_F(MemoryClientTest, loadEmptyZoneFileThrows) {
 TEST_F(MemoryClientTest, load) {
     // This is a simple load check for a "full" and correct zone that
     // should not result in any exceptions.
-    ZoneData* zone_data = loadZoneData(mem_sgmt_, zclass_,
-                                       Name("example.org"),
-                                       TEST_DATA_DIR
-                                       "/example.org.zone");
+    ZoneData* zone_data = ZoneDataLoader(mem_sgmt_, zclass_,
+                                         Name("example.org"),
+                                         TEST_DATA_DIR
+                                         "/example.org.zone").load();
     ASSERT_NE(static_cast<const ZoneData*>(NULL), zone_data);
     EXPECT_FALSE(zone_data->isSigned());
     EXPECT_FALSE(zone_data->isNSEC3Signed());
