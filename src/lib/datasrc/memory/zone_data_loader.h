@@ -18,8 +18,7 @@
 #include <datasrc/exceptions.h>
 #include <datasrc/memory/zone_data.h>
 #include <datasrc/zone_iterator.h>
-#include <dns/name.h>
-#include <dns/rrclass.h>
+#include <dns/dns_fwd.h>
 #include <util/memory_segment.h>
 
 namespace bundy {
@@ -36,40 +35,50 @@ struct ZoneValidationError : public ZoneLoaderException {
     {}
 };
 
-/// \brief Create and return a ZoneData instance populated from the
-/// \c zone_file.
-///
-/// Throws \c ZoneDataUpdater::AddError if invalid or inconsistent data
-/// is present in the \c zone_file. Throws \c bundy::Unexpected if empty
-/// RRsets are passed by the master loader. Throws \c EmptyZone if an
-/// empty zone would be created due to the \c loadZoneData().
-///
-/// \param mem_sgmt The memory segment.
-/// \param rrclass The RRClass.
-/// \param zone_name The name of the zone that is being loaded.
-/// \param zone_file Filename which contains the zone data for \c zone_name.
-ZoneData* loadZoneData(util::MemorySegment& mem_sgmt,
-                       const bundy::dns::RRClass& rrclass,
-                       const bundy::dns::Name& zone_name,
-                       const std::string& zone_file);
+/// \brief Utility class for loading/updating a zone from a given source.
+class ZoneDataLoader {
+public:
+    /// \brief Constructor for loading from a file.
+    ///
+    /// \param mem_sgmt The memory segment.
+    /// \param rrclass The RRClass.
+    /// \param zone_name The name of the zone that is being loaded.
+    /// \param zone_file Filename which contains the zone data for \c zone_name.
+    ZoneDataLoader(util::MemorySegment& mem_sgmt,
+                   const dns::RRClass& rrclass,
+                   const dns::Name& zone_name,
+                   const std::string& zone_file);
 
-/// \brief Create and return a ZoneData instance populated from the
-/// \c iterator.
-///
-/// Throws \c ZoneDataUpdater::AddError if invalid or inconsistent data
-/// is present in the \c iterator. Throws \c bundy::Unexpected if empty
-/// RRsets are passed by the zone iterator. Throws \c EmptyZone if an
-/// empty zone would be created due to the \c loadZoneData().
-///
-/// \param mem_sgmt The memory segment.
-/// \param rrclass The RRClass.
-/// \param zone_name The name of the zone that is being loaded.
-/// \param iterator Iterator that returns RRsets to load into the zone.
-ZoneData* loadZoneData(util::MemorySegment& mem_sgmt,
-                       const bundy::dns::RRClass& rrclass,
-                       const bundy::dns::Name& zone_name,
-                       ZoneIterator& iterator);
+    /// \brief Constructor for loading using data source zone iterator.
+    ///
+    /// \param mem_sgmt The memory segment.
+    /// \param rrclass The RRClass.
+    /// \param zone_name The name of the zone that is being loaded.
+    /// \param iterator Iterator that returns RRsets to load into the zone.
+    ZoneDataLoader(util::MemorySegment& mem_sgmt,
+                   const dns::RRClass& rrclass,
+                   const dns::Name& zone_name,
+                   ZoneIterator& iterator);
 
+    /// Destructor.
+    ~ZoneDataLoader();
+
+    /// \brief Create and return a ZoneData instance populated from the
+    /// source passed on construction.
+    ///
+    /// \throw ZoneDataUpdater::AddError Invalid or inconsistent data found.
+    /// \throw EmptyZone If an empty zone would be created
+    /// \throw bundy::Unexpected An empty RRset is given from the source
+    ///        (shouldn't happen, but possible for a buggy data source
+    ///         implementation).
+    ///
+    /// \return A \c ZoneData containing zone data loaded from the source.
+    ZoneData* load();
+
+private:
+    class ZoneDataLoaderImpl;
+    ZoneDataLoaderImpl* impl_;
+};
 } // namespace memory
 } // namespace datasrc
 } // namespace bundy

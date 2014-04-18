@@ -62,9 +62,10 @@ TEST_F(ZoneDataLoaderTest, loadRRSIGFollowsNothing) {
     // This causes the situation where an RRSIG is added without a covered
     // RRset.  It will be accepted, and corresponding "sig-only" rdata will
     // be created.
-    zone_data_ = loadZoneData(mem_sgmt_, zclass_, Name("example.org"),
-                              TEST_DATA_DIR
-                              "/example.org-rrsig-follows-nothing.zone");
+    zone_data_ = ZoneDataLoader(mem_sgmt_, zclass_, Name("example.org"),
+                                TEST_DATA_DIR
+                                "/example.org-rrsig-follows-nothing.zone").
+        load();
     ZoneNode* node = NULL;
     zone_data_->insertName(mem_sgmt_, Name("ns1.example.org"), &node);
     ASSERT_NE(static_cast<ZoneNode*>(NULL), node);
@@ -79,9 +80,9 @@ TEST_F(ZoneDataLoaderTest, loadRRSIGFollowsNothing) {
 
 TEST_F(ZoneDataLoaderTest, zoneMinTTL) {
     // This should hold outside of the loader class, but we do double check.
-    zone_data_ = loadZoneData(mem_sgmt_, zclass_, Name("example.org"),
-                              TEST_DATA_DIR
-                              "/example.org-nsec3-signed.zone");
+    zone_data_ = ZoneDataLoader(mem_sgmt_, zclass_, Name("example.org"),
+                                TEST_DATA_DIR
+                                "/example.org-nsec3-signed.zone").load();
     bundy::util::InputBuffer b(zone_data_->getMinTTLData(), sizeof(uint32_t));
     EXPECT_EQ(RRTTL(1200), RRTTL(b));
 }
@@ -101,10 +102,11 @@ TEST(ZoneDataLoaterTest, relocate) {
     std::vector<HolderPtr> zones;
     for (size_t i = 0; i < zone_count; ++i) {
         // Load some zone
-        ZoneData* data = loadZoneData(segment, RRClass::IN(),
-                                      Name("example.org"),
-                                      TEST_DATA_DIR
-                                      "/example.org-nsec3-signed.zone");
+        ZoneData* data = ZoneDataLoader(segment, RRClass::IN(),
+                                        Name("example.org"),
+                                        TEST_DATA_DIR
+                                        "/example.org-nsec3-signed.zone").
+            load();
         // Store it, so it is cleaned up later
         zones.push_back(HolderPtr(new Holder(segment, RRClass::IN())));
         zones.back()->set(data);

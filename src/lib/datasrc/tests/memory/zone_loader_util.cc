@@ -59,7 +59,8 @@ public:
         iterator_(iterator)
     {}
     memory::ZoneData* operator()(util::MemorySegment& segment) {
-        return (memory::loadZoneData(segment, rrclass_, name_, iterator_));
+        return (memory::ZoneDataLoader(segment, rrclass_, name_,
+                                       iterator_).load());
     }
 private:
     const dns::RRClass rrclass_;
