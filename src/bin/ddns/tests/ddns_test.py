@@ -62,7 +62,7 @@ BAD_TSIG_KEY = TSIGKey("example.com:SFuWd/q99SzF8Yzd1QbB9g==")
 # Incorporate it so we can use the real default values of zonemgr config
 # in the tests.
 ZONEMGR_MODULE_SPEC = module_spec_from_file(
-    os.environ["B10_FROM_BUILD"] + "/src/bin/zonemgr/zonemgr.spec")
+    os.environ["BUNDY_FROM_BUILD"] + "/src/bin/zonemgr/zonemgr.spec")
 
 class FakeSocket:
     """
@@ -1103,7 +1103,7 @@ class TestDDNSSession(unittest.TestCase):
 
     def check_session_msg(self, result, expect_recv=1):
         '''Check post update communication with other modules.'''
-        # iff the update succeeds, b10-ddns should tell interested other
+        # iff the update succeeds, bundy-ddns should tell interested other
         # modules the information about the update zone.  Eventually this should
         # be conslidated into a single notify to the group 'ZoneUpdateListener'
         # whose parameter should be:
@@ -1367,9 +1367,9 @@ class TestConfig(unittest.TestCase):
 
     def test_file_path(self):
         # Check some common paths
-        self.assertEqual(os.environ["B10_FROM_BUILD"] + "/ddns_socket",
+        self.assertEqual(os.environ["BUNDY_FROM_BUILD"] + "/ddns_socket",
                          ddns.SOCKET_FILE)
-        self.assertEqual(os.environ["B10_FROM_SOURCE"] +
+        self.assertEqual(os.environ["BUNDY_FROM_SOURCE"] +
                          "/src/bin/ddns/ddns.spec", ddns.SPECFILE_LOCATION)
 
 if __name__== "__main__":

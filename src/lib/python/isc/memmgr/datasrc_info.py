@@ -134,7 +134,7 @@ class SegmentInfo:
         transition happens.
 
         When the SegmentInfo is not in the READY state, if memmgr gets
-        notified of a new reader (such as b10-auth) subscribing to the
+        notified of a new reader (such as bundy-auth) subscribing to the
         readers group and calls add_reader(), we assume the new reader
         is using the new mapped file and not the old one. For making
         sure there is no race, memmgr should make SegmentInfo updates in
@@ -335,7 +335,7 @@ class MappedSegmentInfo(SegmentInfo):
     def __init__(self, genid, rrclass, datasrc_name, mgr_config):
         super().__init__()
 
-        # Something like "/var/bind10/zone-IN-1-sqlite3-mapped"
+        # Something like "/var/bundy/zone-IN-1-sqlite3-mapped"
         self.__mapped_file_base = mgr_config['mapped_file_dir'] + os.sep + \
             'zone-' + str(rrclass) + '-' + str(genid) + '-' + datasrc_name + \
             '-mapped'

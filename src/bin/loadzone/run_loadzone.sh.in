@@ -29,16 +29,16 @@ if test $SET_ENV_LIBRARY_PATH = yes; then
 	export @ENV_LIBRARY_PATH@
 fi
 
-BIND10_MSGQ_SOCKET_FILE=@abs_top_builddir@/msgq_socket
-export BIND10_MSGQ_SOCKET_FILE
+BUNDY_MSGQ_SOCKET_FILE=@abs_top_builddir@/msgq_socket
+export BUNDY_MSGQ_SOCKET_FILE
 
-# For bind10_config
-B10_FROM_SOURCE=@abs_top_srcdir@
-export B10_FROM_SOURCE
+# For bundy_config
+BUNDY_FROM_SOURCE=@abs_top_srcdir@
+export BUNDY_FROM_SOURCE
 
 # For data source loadable modules
-B10_FROM_BUILD=@abs_top_builddir@
-export B10_FROM_BUILD
+BUNDY_FROM_BUILD=@abs_top_builddir@
+export BUNDY_FROM_BUILD
 
 LOADZONE_PATH=@abs_top_builddir@/src/bin/loadzone
-exec ${LOADZONE_PATH}/b10-loadzone "$@"
+exec ${LOADZONE_PATH}/bundy-loadzone "$@"

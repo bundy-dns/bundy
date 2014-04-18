@@ -59,7 +59,7 @@ namespace d2 {
 /// that the application can carry out DNS update exchanges with it. Servers
 /// are represented by the class, DnsServerInfo.
 ///
-/// The configuration specification for use with BIND10 is detailed in the file
+/// The configuration specification for use with BUNDY is detailed in the file
 /// dhcp-ddns.spec.
 ///
 /// The parsing class hierarchy reflects this same scheme.  Working top down:

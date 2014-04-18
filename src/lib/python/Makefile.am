@@ -1,9 +1,9 @@
 SUBDIRS = isc
 
-nodist_python_PYTHON =	bind10_config.py
+nodist_python_PYTHON =	bundy_config.py
 pythondir = $(pyexecdir)
 
-CLEANFILES = bind10_config.pyc bind10_config.pyo
+CLEANFILES = bundy_config.pyc bundy_config.pyo
 CLEANDIRS = __pycache__
 
 clean-local:

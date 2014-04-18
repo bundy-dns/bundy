@@ -35,7 +35,7 @@ namespace log {
 /// TRACE_LOG_LEVEL, ALL_LOG_LEVEL (which here will be abbreviated OFF, FATAL
 /// etc.).  Within the context of BIND-10, OFF, TRACE and ALL are not used
 /// and the idea of DEBUG has been extended, as will be seen below.  In
-/// BIND 10 terms, this is known as "severity"; the "logging level" usage will
+/// BUNDY terms, this is known as "severity"; the "logging level" usage will
 /// usually be used when talking about log4cplus aspects of the idea (as
 /// log4cplus uses that teminology).
 ///
@@ -60,7 +60,7 @@ namespace log {
 /// it corresponds to the default level of DEBUG.
 ///
 /// This class comprises nothing more than static methods to aid the conversion
-/// of logging levels between log4cplus and BIND 10, and to register those
+/// of logging levels between log4cplus and BUNDY, and to register those
 /// levels with log4cplus.
 
 class LoggerLevelImpl {
@@ -72,33 +72,33 @@ public:
     typedef log4cplus::tstring LogLevelString;
 #endif
 
-    /// \brief Convert BIND 10 level to log4cplus logging level
+    /// \brief Convert BUNDY level to log4cplus logging level
     ///
-    /// Converts the BIND 10 severity level into a log4cplus logging level.
-    /// If the severity is DEBUG, the current BIND 10 debug level is taken
+    /// Converts the BUNDY severity level into a log4cplus logging level.
+    /// If the severity is DEBUG, the current BUNDY debug level is taken
     /// into account when doing the conversion.
     ///
-    /// \param level BIND 10 severity and debug level
+    /// \param level BUNDY severity and debug level
     ///
     /// \return Equivalent log4cplus logging level.
     static
     log4cplus::LogLevel convertFromBindLevel(const isc::log::Level& level);
 
-    /// \brief Convert log4cplus logging level to BIND 10 logging level
+    /// \brief Convert log4cplus logging level to BUNDY logging level
     ///
-    /// Converts the log4cplus log level into a BIND 10 severity level.
+    /// Converts the log4cplus log level into a BUNDY severity level.
     /// The log4cplus log level may be non-standard in which case it is
-    /// encoding a BIND 10 debug level as well.
+    /// encoding a BUNDY debug level as well.
     ///
     /// \param loglevel log4cplus log level
     ///
-    /// \return Equivalent BIND 10 severity and debug level
+    /// \return Equivalent BUNDY severity and debug level
     static
     isc::log::Level convertToBindLevel(const log4cplus::LogLevel loglevel);
 
     /// \brief Convert string to log4cplus logging level
     ///
-    /// BIND 10 extends the set of logging levels in log4cplus with a group
+    /// BUNDY extends the set of logging levels in log4cplus with a group
     /// of debug levels.  These are given names DEBUG0 through DEBUG99 (with
     /// DEBUG0 being equivalent to DEBUG, the standard log level.  If the name
     /// is DEBUGn but n lies outside the range of debug levels, debug level

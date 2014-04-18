@@ -101,7 +101,7 @@ const TestRdata test_rdata_list[] = {
     {"IN", "TYPE65535", "\\# 0", 1},        // max RR type, 0-length RDATA
     {"CH", "A", "\\# 2 0102", 1}, // A RR for non-IN class; varlen data
     {"CH", "NS", "ns.example.com.", 0}, // class CH, generic data
-    {"CH", "TXT", "BIND10", 1},        // ditto
+    {"CH", "TXT", "BUNDY", 1},        // ditto
     {"HS", "A", "\\# 5 0102030405", 1}, // A RR for non-IN class; varlen data
     {NULL, NULL, NULL, 0}
 };

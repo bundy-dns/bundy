@@ -359,8 +359,8 @@ Query::process(datasrc::ClientList& client_list,
     // If we have no matching authoritative zone for the query name, return
     // REFUSED.  In short, this is to be compatible with BIND 9, but the
     // background discussion is not that simple.  See the relevant topic
-    // at the BIND 10 developers' ML:
-    // https://lists.isc.org/mailman/htdig/bind10-dev/2010-December/001633.html
+    // at the BUNDY developers' ML:
+    // https://lists.isc.org/mailman/htdig/bundy-dev/2010-December/001633.html
     if (result.dsrc_client_ == NULL) {
         // If we tried to find a "parent zone" for a DS query and failed,
         // we may still have authority at the child side.  If we do, the query

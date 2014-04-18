@@ -1,6 +1,6 @@
-AM_CPPFLAGS = $(BOOST_CPPFLAGS) $(BIND10_CPPFLAGS)
+AM_CPPFLAGS = $(BOOST_CPPFLAGS) $(BUNDY_CPPFLAGS)
 
-bin_PROGRAMS = b10-host
-b10_host_SOURCES = host.cc
-b10_host_LDFLAGS = ${BIND10_LDFLAGS}
-b10_host_LDADD = ${BIND10_DNS_LIB}
+bin_PROGRAMS = bundy-host
+bundy_host_SOURCES = host.cc
+bundy_host_LDFLAGS = ${BUNDY_LDFLAGS}
+bundy_host_LDADD = ${BUNDY_DNS_LIB}

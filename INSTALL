@@ -6,8 +6,8 @@ To then build from source:
     make
 
 For detailed installation directions, see the guide
-at doc/guide/bind10-guide.txt or doc/guide/bind10-guide.html.
+at doc/guide/bundy-guide.txt or doc/guide/bundy-guide.html.
 
 You can find user-contributed OS-specific build/installation
-instructions on the BIND 10 wiki:
-http://bind10.isc.org/wiki/SystemSpecificNotes
+instructions on the BUNDY wiki:
+http://bundy.isc.org/wiki/SystemSpecificNotes

@@ -1,27 +1,27 @@
 Feature: Authoritative DNS server with a bad zone
-    This feature set is for testing the execution of the b10-auth
+    This feature set is for testing the execution of the bundy-auth
     component when one zone is broken, whereas others are fine. In this
-    case, b10-auth should not reject the data source, but reject the bad
+    case, bundy-auth should not reject the data source, but reject the bad
     zone only (with SERVFAIL) and serve the good zones anyway.
 
     Scenario: Bad zone
-        Given I have bind10 running with configuration auth/auth_badzone.config
+        Given I have bundy running with configuration auth/auth_badzone.config
 
         # loading example.com, example.net and example.info zones fail.
         # Note: wait for these messages right away as otherwise they
         # will be logged and we cannot use the 'new' keyword to wait for
         # 3 different log messages. *There could still be a race here if
         # auth starts very quickly.*
-        And wait for new bind10 stderr message DATASRC_LOAD_ZONE_ERROR
-        And wait for new bind10 stderr message DATASRC_LOAD_ZONE_ERROR
-        And wait for new bind10 stderr message DATASRC_LOAD_ZONE_ERROR
+        And wait for new bundy stderr message DATASRC_LOAD_ZONE_ERROR
+        And wait for new bundy stderr message DATASRC_LOAD_ZONE_ERROR
+        And wait for new bundy stderr message DATASRC_LOAD_ZONE_ERROR
 
-        And wait for bind10 stderr message BIND10_STARTED_CC
-        And wait for bind10 stderr message CMDCTL_STARTED
-        And wait for bind10 stderr message AUTH_SERVER_STARTED
+        And wait for bundy stderr message BUNDY_STARTED_CC
+        And wait for bundy stderr message CMDCTL_STARTED
+        And wait for bundy stderr message AUTH_SERVER_STARTED
 
-        bind10 module Auth should be running
-        And bind10 module Resolver should not be running
+        bundy module Auth should be running
+        And bundy module Resolver should not be running
 
         A query for www.example.org should have rcode NOERROR
         The last query response should have flags qr aa

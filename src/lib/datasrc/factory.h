@@ -132,7 +132,7 @@ private:
 /// installation directory, see the value of
 /// isc::datasrc::BACKEND_LIBRARY_PATH in datasrc_config.h for the exact path.
 ///
-/// \note When 'B10_FROM_BUILD' is set in the environment, the build
+/// \note When 'BUNDY_FROM_BUILD' is set in the environment, the build
 ///       directory is used instead of the install directory.
 ///
 /// There are of course some demands to an implementation, not all of which

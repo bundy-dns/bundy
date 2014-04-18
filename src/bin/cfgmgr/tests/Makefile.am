@@ -1,5 +1,5 @@
 PYCOVERAGE_RUN = @PYCOVERAGE_RUN@
-PYTESTS = b10-cfgmgr_test.py
+PYTESTS = bundy-cfgmgr_test.py
 
 noinst_SCRIPTS = $(PYTESTS)
 EXTRA_DIST = testdata/plugins/testplugin.py

@@ -119,7 +119,7 @@ datasrcConfigHandler(AuthSrv* server, bool* first_time,
 
 void
 usage() {
-    cerr << "Usage:  b10-auth [-v]"
+    cerr << "Usage:  bundy-auth [-v]"
          << endl;
     cerr << "\t-v: verbose logging (debug-level)" << endl;
     exit(1);
@@ -164,8 +164,8 @@ main(int argc, char* argv[]) {
     SocketSessionForwarder ddns_forwarder(getDDNSSocketPath());
     try {
         string specfile;
-        if (getenv("B10_FROM_BUILD")) {
-            specfile = string(getenv("B10_FROM_BUILD")) +
+        if (getenv("BUNDY_FROM_BUILD")) {
+            specfile = string(getenv("BUNDY_FROM_BUILD")) +
                 "/src/bin/auth/auth.spec";
         } else {
             specfile = string(AUTH_SPECFILE_LOCATION);
@@ -191,7 +191,7 @@ main(int argc, char* argv[]) {
         // We delay starting listening to new commands/config just before we
         // go into the main loop to avoid confusion due to mixture of
         // synchronous and asynchronous operations (this would happen in
-        // initial communication with b10-init that takes place in
+        // initial communication with bundy-init that takes place in
         // updateConfig() for listen_on and in initializing TSIG keys below).
         // Until then all operations on the CC session will take place
         // synchronously.

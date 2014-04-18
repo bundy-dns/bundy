@@ -508,7 +508,7 @@ def SysInfoFromFactory():
         return SysInfoFreeBSD()
     elif osname == 'Darwin':
         return SysInfoOSX()
-    elif osname == 'BIND10Testcase':
+    elif osname == 'BUNDYTestcase':
         return SysInfoTestcase()
     else:
         return SysInfoPOSIX()

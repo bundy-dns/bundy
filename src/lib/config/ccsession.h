@@ -755,18 +755,18 @@ default_logconfig_handler(const std::string& module_name,
 ///   this module, but *only* if the expanded name is not configured
 ///   explicitly.
 ///
-/// Examples: if this is the module b10-resolver,
-/// For the config names ['*', 'b10-auth']
-/// The '*' is replaced with 'b10-resolver', and this logger is used.
-/// 'b10-auth' is ignored (of course, it will not be in the b10-auth
+/// Examples: if this is the module bundy-resolver,
+/// For the config names ['*', 'bundy-auth']
+/// The '*' is replaced with 'bundy-resolver', and this logger is used.
+/// 'bundy-auth' is ignored (of course, it will not be in the bundy-auth
 /// module).
 ///
-/// For ['*', 'b10-resolver']
-/// The '*' is ignored, and only 'b10-resolver' is used.
+/// For ['*', 'bundy-resolver']
+/// The '*' is ignored, and only 'bundy-resolver' is used.
 ///
-/// For ['*.reslib', 'b10-resolver']
-/// Or ['b10-resolver.reslib', '*']
-/// Both are used, where the * will be expanded to b10-resolver
+/// For ['*.reslib', 'bundy-resolver']
+/// Or ['bundy-resolver.reslib', '*']
+/// Both are used, where the * will be expanded to bundy-resolver
 ///
 /// \note This is a public function at this time, but mostly for
 /// the purposes of testing. Once we can directly test what loggers

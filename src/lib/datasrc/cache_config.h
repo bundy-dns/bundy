@@ -121,7 +121,7 @@ public:
     /// cache, if it's used; for MasterFiles types it's null.
     /// \param datasrc_conf Configuration element for the data source.
     /// This must be the value of, e.g., data_sources/classes/IN[0] of
-    /// BIND 10 configuration.
+    /// BUNDY configuration.
     /// \param allowed Whether in-memory cache is allowed by the process.
     /// This must be derived from the allow_cache parameter of
     /// \c ConfigurableClientList::configure().

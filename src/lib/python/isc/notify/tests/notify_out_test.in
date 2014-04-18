@@ -23,6 +23,6 @@ NOTIFY_OUT_PATH=@abs_top_srcdir@/src/lib/python/isc/notify/tests
 PYTHONPATH=@abs_top_srcdir@/src/lib/python
 export PYTHONPATH
 
-cd ${BIND10_PATH}
+cd ${BUNDY_PATH}
 ${PYTHON_EXEC} -O ${NOTIFY_OUT_PATH}/notify_out_test.py $*
 

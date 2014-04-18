@@ -113,7 +113,7 @@ my_command_handler(const string& command, ConstElementPtr args) {
 
 void
 usage() {
-    cerr << "Usage:  b10-resolver [-u user] [-v]" << endl;
+    cerr << "Usage:  bundy-resolver [-u user] [-v]" << endl;
     cerr << "\t-v: verbose output" << endl;
     exit(1);
 }
@@ -158,8 +158,8 @@ main(int argc, char* argv[]) {
     ModuleCCSession* config_session = NULL;
     try {
         string specfile;
-        if (getenv("B10_FROM_BUILD")) {
-            specfile = string(getenv("B10_FROM_BUILD")) +
+        if (getenv("BUNDY_FROM_BUILD")) {
+            specfile = string(getenv("BUNDY_FROM_BUILD")) +
                 "/src/bin/resolver/resolver.spec";
         } else {
             specfile = string(RESOLVER_SPECFILE_LOCATION);

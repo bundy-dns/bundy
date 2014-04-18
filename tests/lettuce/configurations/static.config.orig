@@ -28,9 +28,9 @@
     },
     "Init": {
         "components": {
-            "b10-auth": { "kind": "needed", "special": "auth" },
-            "b10-stats": { "address": "Stats", "kind": "dispensable" },
-            "b10-cmdctl": { "special": "cmdctl", "kind": "needed" }
+            "bundy-auth": { "kind": "needed", "special": "auth" },
+            "bundy-stats": { "address": "Stats", "kind": "dispensable" },
+            "bundy-cmdctl": { "special": "cmdctl", "kind": "needed" }
         }
     }
 }

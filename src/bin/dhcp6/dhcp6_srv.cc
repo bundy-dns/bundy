@@ -112,7 +112,7 @@ const std::string Dhcpv6Srv::VENDOR_CLASS_PREFIX("VENDOR_CLASS_");
 /// double digit hex values separated by colons format, e.g.
 /// 01:ff:02:03:06:80:90:ab:cd:ef. Server will create it during first
 /// run and then use it afterwards.
-static const char* SERVER_DUID_FILE = "b10-dhcp6-serverid";
+static const char* SERVER_DUID_FILE = "bundy-dhcp6-serverid";
 
 Dhcpv6Srv::Dhcpv6Srv(uint16_t port)
 :alloc_engine_(), serverid_(), port_(port), shutdown_(true)
@@ -412,7 +412,7 @@ bool Dhcpv6Srv::run() {
 
             // Catch-all exception (at least for ones based on the isc
             // Exception class, which covers more or less all that
-            // are explicitly raised in the BIND 10 code).  Just log
+            // are explicitly raised in the BUNDY code).  Just log
             // the problem and ignore the packet. (The problem is logged
             // as a debug message because debug is disabled by default -
             // it prevents a DDOS attack based on the sending of problem
@@ -2612,7 +2612,7 @@ Dhcpv6Srv::d2ClientErrorHandler(const
                                 dhcp_ddns::NameChangeRequestPtr& ncr) {
     LOG_ERROR(dhcp6_logger, DHCP6_DDNS_REQUEST_SEND_FAILED).
               arg(result).arg((ncr ? ncr->toText() : " NULL "));
-    // We cannot communicate with b10-dhcp-ddns, suspend futher updates.
+    // We cannot communicate with bundy-dhcp-ddns, suspend futher updates.
     /// @todo We may wish to revisit this, but for now we will simpy turn
     /// them off.
     CfgMgr::instance().getD2ClientMgr().suspendUpdates();

@@ -45,8 +45,8 @@ with open(filename_in) as file_in, open(filename_out, "w") as file_out:
         if preproc.match(line):
             # There's only one preprocessor line in the .cc file. We abuse
             # that to position the top part of the header.
-            file_out.write("#ifndef BIND10_COMMON_DEFS_H\n" +
-                           "#define BIND10_COMMON_DEFS_H\n" +
+            file_out.write("#ifndef BUNDY_COMMON_DEFS_H\n" +
+                           "#define BUNDY_COMMON_DEFS_H\n" +
                            "\n" +
                            "// \\file " + filename_out + "\n" +
 '''// \\brief Common shared constants\n

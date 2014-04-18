@@ -62,8 +62,8 @@ getDataSourceLibFile(const std::string& type) {
     if (type[0] != '/') {
         // When running from the build tree, we do NOT want
         // to load the installed loadable library
-        if (getenv("B10_FROM_BUILD") != NULL) {
-            lib_file = std::string(getenv("B10_FROM_BUILD")) +
+        if (getenv("BUNDY_FROM_BUILD") != NULL) {
+            lib_file = std::string(getenv("BUNDY_FROM_BUILD")) +
                        "/src/lib/datasrc/.libs/" + lib_file;
         } else {
             lib_file = isc::datasrc::BACKEND_LIBRARY_PATH + lib_file;

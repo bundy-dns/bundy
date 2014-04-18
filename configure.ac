@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.59])
-AC_INIT(bind10, 1.2.0, bind10-dev@isc.org)
+AC_INIT(bundy, 1.2.0, bundy-dev@isc.org)
 AC_CONFIG_SRCDIR(README)
 
 # serial-tests is not available in automake version before 1.13, so
@@ -65,7 +65,7 @@ AC_SUBST(WANT_EXPERIMENTAL_RESOLVER)
 
 # At least DNS or DHCP components must be enabled
 if test "$want_dns" != "yes" -a "$want_dhcp" != "yes"; then
-    AC_MSG_ERROR([At least one of DNS or DHCP components must be enabled to do a BIND 10 build.])
+    AC_MSG_ERROR([At least one of DNS or DHCP components must be enabled to do a BUNDY build.])
 fi
 
 # Experimental resolver requires DNS components to be enabled
@@ -92,7 +92,7 @@ AM_COND_IF([DEBUG_ENABLED], [AC_DEFINE([ENABLE_DEBUG], [1], [Enable low-performi
 
 # libtool cannot handle spaces in paths, so exit early if there is one
 if [ test `echo $PWD | grep -c ' '` != "0"  ]; then
-    AC_MSG_ERROR([BIND 10 cannot be built in a directory that contains spaces, because of libtool limitations. Please change the directory name, or use a symbolic link that does not contain spaces.])
+    AC_MSG_ERROR([BUNDY cannot be built in a directory that contains spaces, because of libtool limitations. Please change the directory name, or use a symbolic link that does not contain spaces.])
 fi
 
 # On FreeBSD (and probably some others), clang++ does not meet an autoconf
@@ -137,9 +137,9 @@ fi
 AX_ISC_RPATH
 
 # Compiler dependent settings: define some mandatory CXXFLAGS here.
-# We also use a separate variable B10_CXXFLAGS.  This will (and should) be
+# We also use a separate variable BUNDY_CXXFLAGS.  This will (and should) be
 # used as the default value for each specific AM_CXXFLAGS:
-# AM_CXXFLAGS = $(B10_CXXFLAGS)
+# AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 # AM_CXXFLAGS += ... # add module specific flags
 # We need this so that we can disable some specific compiler warnings per
 # module basis; since AM_CXXFLAGS are placed before CXXFLAGS, and since
@@ -148,23 +148,23 @@ AX_ISC_RPATH
 # "override" the default.
 
 # This may be used to try linker flags.
-AC_DEFUN([BIND10_CXX_TRY_FLAG], [
+AC_DEFUN([BUNDY_CXX_TRY_FLAG], [
   AC_MSG_CHECKING([whether $CXX supports $1])
 
-  bind10_save_CXXFLAGS="$CXXFLAGS"
+  bundy_save_CXXFLAGS="$CXXFLAGS"
   CXXFLAGS="$CXXFLAGS $1"
 
   AC_LINK_IFELSE([AC_LANG_SOURCE([int main(void){ return 0;}])],
-                 [bind10_cxx_flag=yes], [bind10_cxx_flag=no])
-  CXXFLAGS="$bind10_save_CXXFLAGS"
+                 [bundy_cxx_flag=yes], [bundy_cxx_flag=no])
+  CXXFLAGS="$bundy_save_CXXFLAGS"
 
-  if test "x$bind10_cxx_flag" = "xyes"; then
+  if test "x$bundy_cxx_flag" = "xyes"; then
     ifelse([$2], , :, [$2])
   else
     ifelse([$3], , :, [$3])
   fi
 
-  AC_MSG_RESULT([$bind10_cxx_flag])
+  AC_MSG_RESULT([$bundy_cxx_flag])
 ])
 
 CXX_VERSION="unknown"
@@ -186,22 +186,22 @@ fi
 # on the source code.
 if test "$CLANGPP" = "yes"; then
 CXX_VERSION=`$CXX --version 2> /dev/null | head -1`
-B10_CXXFLAGS="$B10_CXXFLAGS -Qunused-arguments"
+BUNDY_CXXFLAGS="$BUNDY_CXXFLAGS -Qunused-arguments"
 fi
 
-BIND10_CXX_TRY_FLAG([-Wno-missing-field-initializers],
+BUNDY_CXX_TRY_FLAG([-Wno-missing-field-initializers],
 	[WARNING_NO_MISSING_FIELD_INITIALIZERS_CFLAG="-Wno-missing-field-initializers"])
 AC_SUBST(WARNING_NO_MISSING_FIELD_INITIALIZERS_CFLAG)
 
 # gcc specific settings:
 if test "X$GXX" = "Xyes"; then
 CXX_VERSION=`$CXX --version 2> /dev/null | head -1`
-B10_CXXFLAGS="$B10_CXXFLAGS -Wall -Wextra -Wnon-virtual-dtor -Wwrite-strings -Woverloaded-virtual -Wno-sign-compare"
+BUNDY_CXXFLAGS="$BUNDY_CXXFLAGS -Wall -Wextra -Wnon-virtual-dtor -Wwrite-strings -Woverloaded-virtual -Wno-sign-compare"
 case "$host" in
 *-solaris*)
 	MULTITHREADING_FLAG=-pthreads
 	# In Solaris, IN6ADDR_ANY_INIT and IN6ADDR_LOOPBACK_INIT need -Wno-missing-braces
-	B10_CXXFLAGS="$B10_CXXFLAGS -Wno-missing-braces"
+	BUNDY_CXXFLAGS="$BUNDY_CXXFLAGS -Wno-missing-braces"
 	;;
 *)
 	MULTITHREADING_FLAG=-pthread
@@ -226,7 +226,7 @@ werror_ok=0
 # translation unit.  For these versions we have to disable -Werror.
 if test $with_werror = 1; then
    CXXFLAGS_SAVED="$CXXFLAGS"
-   CXXFLAGS="$CXXFLAGS $B10_CXXFLAGS -Werror"
+   CXXFLAGS="$CXXFLAGS $BUNDY_CXXFLAGS -Werror"
    AC_MSG_CHECKING(for in-TU anonymous namespace breakage)
    # We use struct, not class, here, because some compilers complain about
    # "unused private members", causing a false positive.
@@ -234,7 +234,7 @@ if test $with_werror = 1; then
    namespace isc {struct Bar {Foo foo_;};} ],,
 	[AC_MSG_RESULT(no)
 	 werror_ok=1
-	 B10_CXXFLAGS="$B10_CXXFLAGS -Werror"],
+	 BUNDY_CXXFLAGS="$BUNDY_CXXFLAGS -Werror"],
 	[AC_MSG_RESULT(yes)])
    CXXFLAGS="$CXXFLAGS_SAVED"
 fi
@@ -248,14 +248,14 @@ AC_HELP_STRING([--enable-static-link],
   [build programs with static link [[default=no]]]),
   [enable_static_link=yes], [enable_static_link=no])
 AM_CONDITIONAL(USE_STATIC_LINK, test $enable_static_link = yes)
-AM_COND_IF([USE_STATIC_LINK], [AC_DEFINE([USE_STATIC_LINK], [1], [BIND 10 was statically linked?])])
+AM_COND_IF([USE_STATIC_LINK], [AC_DEFINE([USE_STATIC_LINK], [1], [BUNDY was statically linked?])])
 
 # Check validity about some libtool options
 if test $enable_static_link = yes -a $enable_static = no; then
 	AC_MSG_ERROR([--enable-static-link requires --enable-static])
 fi
 if test $enable_shared = no; then
-	AC_MSG_ERROR([BIND 10 requires shared libraries to be built])
+	AC_MSG_ERROR([BUNDY requires shared libraries to be built])
 fi
 
 # allow configuring without setproctitle.
@@ -267,7 +267,7 @@ AC_HELP_STRING([--disable-setproctitle-check],
 # OS dependent configuration
 SET_ENV_LIBRARY_PATH=no
 ENV_LIBRARY_PATH=LD_LIBRARY_PATH
-bind10_undefined_pthread_behavior=no
+bundy_undefined_pthread_behavior=no
 
 case "$host" in
 *-solaris*)
@@ -279,7 +279,7 @@ case "$host" in
 	# Destroying locked mutexes, condition variables being waited
 	# on, etc. are undefined behavior on Solaris, so we set it as
 	# such here.
-	bind10_undefined_pthread_behavior=yes
+	bundy_undefined_pthread_behavior=yes
 	;;
 *-apple-darwin*)
 	# Starting with OSX 10.7 (Lion) we must choose which IPv6 API to use
@@ -297,7 +297,7 @@ case "$host" in
 	if [ test $osx_version = "10.9" \
          -o $osx_version = "10.9.1" \
          -o $osx_version = "10.9.2" ]; then
-		bind10_undefined_pthread_behavior=yes
+		bundy_undefined_pthread_behavior=yes
 	fi
 
 	# libtool doesn't work perfectly with Darwin: libtool embeds the
@@ -322,7 +322,7 @@ esac
 AM_CONDITIONAL(SET_ENV_LIBRARY_PATH, test $SET_ENV_LIBRARY_PATH = yes)
 AC_SUBST(SET_ENV_LIBRARY_PATH)
 AC_SUBST(ENV_LIBRARY_PATH)
-if [ test $bind10_undefined_pthread_behavior = "yes" ]; then
+if [ test $bundy_undefined_pthread_behavior = "yes" ]; then
    AC_DEFINE([HAS_UNDEFINED_PTHREAD_BEHAVIOR], [1], [Does this platform have some undefined pthreads behavior?])
 fi
 
@@ -375,7 +375,7 @@ else
 fi
 
 # We need to store the default pyexecdir in a separate variable so that
-# we can specify in Makefile.am the install directory of various BIND 10
+# we can specify in Makefile.am the install directory of various BUNDY
 # python scripts and loadable modules; in Makefile.am we cannot replace
 # $(pyexecdir) using itself, e.g, this doesn't work:
 # pyexecdir = $(pyexecdir)/isc/some_module
@@ -500,7 +500,7 @@ if test "X$GXX" = "Xyes" -a "$werror_ok" = 1; then
 	CPPFLAGS_SAVED="$CPPFLAGS"
 	CPPFLAGS=${PYTHON_INCLUDES}
 	CXXFLAGS_SAVED="$CXXFLAGS"
-	CXXFLAGS="$CXXFLAGS $B10_CXXFLAGS -Werror"
+	CXXFLAGS="$CXXFLAGS $BUNDY_CXXFLAGS -Werror"
 	AC_MSG_CHECKING([whether we need -Wno-unused-parameter for python])
 	AC_TRY_COMPILE(
 		[#include <Python.h>],
@@ -514,7 +514,7 @@ if test "X$GXX" = "Xyes" -a "$werror_ok" = 1; then
 		 PYTHON_CXXFLAGS="${PYTHON_CXXFLAGS} -Wno-unused-parameter"
 		 AC_SUBST(PYTHON_CXXFLAGS)
 		],
-		[AC_MSG_ERROR([Can't compile against Python.h.  If you're using MacOS X and have installed Python with Homebrew, see http://bind10.isc.org/wiki/SystemNotesMacOSX])]
+		[AC_MSG_ERROR([Can't compile against Python.h.  If you're using MacOS X and have installed Python with Homebrew, see http://bundy.isc.org/wiki/SystemNotesMacOSX])]
                 )
                 ]
 	)
@@ -524,10 +524,10 @@ fi
 
 # produce PIC unless we disable shared libraries. need this for python bindings.
 if test $enable_shared != "no" -a "X$GXX" = "Xyes"; then
-   B10_CXXFLAGS="$B10_CXXFLAGS -fPIC"
+   BUNDY_CXXFLAGS="$BUNDY_CXXFLAGS -fPIC"
 fi
 
-AC_SUBST(B10_CXXFLAGS)
+AC_SUBST(BUNDY_CXXFLAGS)
 
 # Checks for libraries.
 
@@ -1090,7 +1090,7 @@ LIBS=$LIBS_SAVED
 #
 # Configure Boost header path
 #
-AX_BOOST_FOR_BIND10
+AX_BOOST_FOR_BUNDY
 # Boost offset_ptr is required in one library and not optional right now, so
 # we unconditionally fail here if it doesn't work.
 if test "$BOOST_OFFSET_PTR_WOULDFAIL" = "yes" -a "$werror_ok" = 1; then
@@ -1289,7 +1289,7 @@ if test "x$HAVE_PKG_CONFIG" = "xno" ; then
   AC_MSG_ERROR(Please install pkg-config)
 fi
 
-AX_SQLITE3_FOR_BIND10
+AX_SQLITE3_FOR_BUNDY
 if test "x$have_sqlite" = "xyes" ; then
   enable_features="$enable_features SQLite3"
 
@@ -1444,29 +1444,29 @@ AC_CONFIG_FILES([compatcheck/Makefile
                  src/bin/auth/tests/testdata/example-nsec3.zone
                  src/bin/auth/tests/testdata/example.zone
                  src/bin/auth/tests/testdata/Makefile
-                 src/bin/bind10/bind10
-                 src/bin/bind10/init.py
-                 src/bin/bind10/Makefile
-                 src/bin/bind10/run_bind10.sh
-                 src/bin/bind10/tests/init_test.py
-                 src/bin/bind10/tests/Makefile
-                 src/bin/bindctl/bindctl_main.py
-                 src/bin/bindctl/Makefile
-                 src/bin/bindctl/run_bindctl.sh
-                 src/bin/bindctl/tests/bindctl_test
-                 src/bin/bindctl/tests/Makefile
-                 src/bin/cfgmgr/b10-cfgmgr.py
+                 src/bin/bundy/bundy
+                 src/bin/bundy/init.py
+                 src/bin/bundy/Makefile
+                 src/bin/bundy/run_bundy.sh
+                 src/bin/bundy/tests/init_test.py
+                 src/bin/bundy/tests/Makefile
+                 src/bin/bundyctl/bundyctl_main.py
+                 src/bin/bundyctl/Makefile
+                 src/bin/bundyctl/run_bundyctl.sh
+                 src/bin/bundyctl/tests/bundyctl_test
+                 src/bin/bundyctl/tests/Makefile
+                 src/bin/cfgmgr/bundy-cfgmgr.py
                  src/bin/cfgmgr/local_plugins/Makefile
                  src/bin/cfgmgr/Makefile
                  src/bin/cfgmgr/plugins/datasrc.spec.pre
                  src/bin/cfgmgr/plugins/Makefile
                  src/bin/cfgmgr/plugins/tests/Makefile
-                 src/bin/cfgmgr/tests/b10-cfgmgr_test.py
+                 src/bin/cfgmgr/tests/bundy-cfgmgr_test.py
                  src/bin/cfgmgr/tests/Makefile
                  src/bin/cmdctl/cmdctl.py
                  src/bin/cmdctl/cmdctl.spec.pre
                  src/bin/cmdctl/Makefile
-                 src/bin/cmdctl/run_b10-cmdctl.sh
+                 src/bin/cmdctl/run_bundy-cmdctl.sh
                  src/bin/cmdctl/tests/cmdctl_test
                  src/bin/cmdctl/tests/Makefile
                  src/bin/d2/Makefile
@@ -1526,25 +1526,25 @@ AC_CONFIG_FILES([compatcheck/Makefile
                  src/bin/sysinfo/sysinfo.py
                  src/bin/tests/Makefile
                  src/bin/tests/process_rename_test.py
-                 src/bin/usermgr/b10-cmdctl-usermgr.py
+                 src/bin/usermgr/bundy-cmdctl-usermgr.py
                  src/bin/usermgr/Makefile
-                 src/bin/usermgr/run_b10-cmdctl-usermgr.sh
+                 src/bin/usermgr/run_bundy-cmdctl-usermgr.sh
                  src/bin/usermgr/tests/Makefile
                  src/bin/xfrin/Makefile
-                 src/bin/xfrin/run_b10-xfrin.sh
+                 src/bin/xfrin/run_bundy-xfrin.sh
                  src/bin/xfrin/tests/Makefile
                  src/bin/xfrin/tests/testdata/Makefile
                  src/bin/xfrin/tests/xfrin_test
                  src/bin/xfrin/xfrin.py
                  src/bin/xfrout/Makefile
-                 src/bin/xfrout/run_b10-xfrout.sh
+                 src/bin/xfrout/run_bundy-xfrout.sh
                  src/bin/xfrout/tests/Makefile
                  src/bin/xfrout/tests/xfrout_test
                  src/bin/xfrout/tests/xfrout_test.py
                  src/bin/xfrout/xfrout.py
                  src/bin/xfrout/xfrout.spec.pre
                  src/bin/zonemgr/Makefile
-                 src/bin/zonemgr/run_b10-zonemgr.sh
+                 src/bin/zonemgr/run_bundy-zonemgr.sh
                  src/bin/zonemgr/tests/Makefile
                  src/bin/zonemgr/tests/zonemgr_test
                  src/bin/zonemgr/zonemgr.py
@@ -1620,11 +1620,11 @@ AC_CONFIG_FILES([compatcheck/Makefile
                  src/lib/Makefile
                  src/lib/nsas/Makefile
                  src/lib/nsas/tests/Makefile
-                 src/lib/python/bind10_config.py
+                 src/lib/python/bundy_config.py
                  src/lib/python/isc/acl/Makefile
                  src/lib/python/isc/acl/tests/Makefile
-                 src/lib/python/isc/bind10/Makefile
-                 src/lib/python/isc/bind10/tests/Makefile
+                 src/lib/python/isc/bundy/Makefile
+                 src/lib/python/isc/bundy/tests/Makefile
                  src/lib/python/isc/cc/cc_generated/Makefile
                  src/lib/python/isc/cc/Makefile
                  src/lib/python/isc/cc/tests/cc_test
@@ -1691,7 +1691,7 @@ AC_CONFIG_FILES([compatcheck/Makefile
                  src/lib/xfr/tests/Makefile
                  src/Makefile
                  tests/lettuce/Makefile
-                 tests/lettuce/setup_intree_bind10.sh
+                 tests/lettuce/setup_intree_bundy.sh
                  tests/Makefile
                  tests/tools/badpacket/Makefile
                  tests/tools/badpacket/tests/Makefile
@@ -1702,11 +1702,11 @@ AC_CONFIG_FILES([compatcheck/Makefile
 ])
 
  AC_CONFIG_COMMANDS([permissions], [
-           chmod +x src/bin/bind10/bind10
-           chmod +x src/bin/bind10/run_bind10.sh
-           chmod +x src/bin/bindctl/run_bindctl.sh
-           chmod +x src/bin/bindctl/tests/bindctl_test
-           chmod +x src/bin/cmdctl/run_b10-cmdctl.sh
+           chmod +x src/bin/bundy/bundy
+           chmod +x src/bin/bundy/run_bundy.sh
+           chmod +x src/bin/bundyctl/run_bundyctl.sh
+           chmod +x src/bin/bundyctl/tests/bundyctl_test
+           chmod +x src/bin/cmdctl/run_bundy-cmdctl.sh
            chmod +x src/bin/cmdctl/tests/cmdctl_test
            chmod +x src/bin/dbutil/run_dbutil.sh
            chmod +x src/bin/dbutil/tests/dbutil_test.sh
@@ -1714,12 +1714,12 @@ AC_CONFIG_FILES([compatcheck/Makefile
            chmod +x src/bin/loadzone/tests/correct/correct_test.sh
            chmod +x src/bin/msgq/run_msgq.sh
            chmod +x src/bin/sysinfo/run_sysinfo.sh
-           chmod +x src/bin/usermgr/run_b10-cmdctl-usermgr.sh
-           chmod +x src/bin/xfrin/run_b10-xfrin.sh
+           chmod +x src/bin/usermgr/run_bundy-cmdctl-usermgr.sh
+           chmod +x src/bin/xfrin/run_bundy-xfrin.sh
            chmod +x src/bin/xfrin/tests/xfrin_test
-           chmod +x src/bin/xfrout/run_b10-xfrout.sh
+           chmod +x src/bin/xfrout/run_bundy-xfrout.sh
            chmod +x src/bin/xfrout/tests/xfrout_test
-           chmod +x src/bin/zonemgr/run_b10-zonemgr.sh
+           chmod +x src/bin/zonemgr/run_bundy-zonemgr.sh
            chmod +x src/bin/zonemgr/tests/zonemgr_test
            chmod +x src/lib/dns/gen-rdatacode.py
            chmod +x src/lib/log/tests/console_test.sh
@@ -1741,7 +1741,7 @@ dnl
 
 cat > config.report << END
 
-     BIND 10 source configure results:
+     BUNDY source configure results:
     -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 Package:
@@ -1757,7 +1757,7 @@ C++ Compiler:
   CPPFLAGS:        ${CPPFLAGS}
   CXXFLAGS:        ${CXXFLAGS}
   LDFLAGS:         ${LDFLAGS}
-  B10_CXXFLAGS:    ${B10_CXXFLAGS}
+  BUNDY_CXXFLAGS:    ${BUNDY_CXXFLAGS}
 
 Python:
   PYTHON_VERSION:  ${PYTHON_VERSION}
@@ -1855,7 +1855,7 @@ END
 cat config.report
 cat <<EOF
 
-  Now you can type "make" to build BIND 10. Note that if you intend to
+  Now you can type "make" to build BUNDY. Note that if you intend to
   run "make check", you must run "make" first as some files need to be
   generated by "make" before "make check" can be run.
 

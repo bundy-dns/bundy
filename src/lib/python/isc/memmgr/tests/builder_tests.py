@@ -235,6 +235,6 @@ class TestMemorySegmentBuilder(unittest.TestCase):
         self.assertEqual(len(self._builder_response_queue), 0)
 
 if __name__ == "__main__":
-    isc.log.init("bind10-test")
+    isc.log.init("bundy-test")
     isc.log.resetUnitTestRootLogger()
     unittest.main()

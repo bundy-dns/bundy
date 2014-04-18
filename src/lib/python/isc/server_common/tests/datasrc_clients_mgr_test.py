@@ -21,7 +21,7 @@ import isc.config
 import os
 
 # A (slightly tweaked) local copy of the default data source spec
-DATASRC_SPECFILE = os.environ["B10_FROM_BUILD"] + \
+DATASRC_SPECFILE = os.environ["BUNDY_FROM_BUILD"] + \
     "/src/lib/python/isc/server_common/tests/datasrc.spec"
 DEFAULT_CONFIG = \
     isc.config.ConfigData(isc.config.module_spec_from_file(DATASRC_SPECFILE)).\
@@ -137,6 +137,6 @@ class DataSrcClientsMgrTest(unittest.TestCase):
         self.assertEqual(2, self.__mgr.get_clients_map()[0])
 
 if __name__ == "__main__":
-    isc.log.init("bind10")
+    isc.log.init("bundy")
     isc.log.resetUnitTestRootLogger()
     unittest.main()

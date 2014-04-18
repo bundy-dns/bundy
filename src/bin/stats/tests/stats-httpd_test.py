@@ -17,7 +17,7 @@
 In each of these tests we start several virtual components. They are
 not the real components, no external processes are started. They are
 just simple mock objects running each in its own thread and pretending
-to be bind10 modules. This helps testing the stats http server in a
+to be bundy modules. This helps testing the stats http server in a
 close to real environment.
 """
 
@@ -306,7 +306,7 @@ class TestHttpHandler(unittest.TestCase):
                 else:
                     self.assertEqual(attr['value'], value)
 
-        # URL is '/bind10/statistics/xml'
+        # URL is '/bundy/statistics/xml'
         check_XML_URL_PATH()
         for path in stats_httpd.item_name_list(DUMMY_DATA, ''):
             check_XML_URL_PATH(path)
@@ -328,7 +328,7 @@ class TestHttpHandler(unittest.TestCase):
             self.assertEqual(root.attrib['targetNamespace'],
                              stats_httpd.XSD_NAMESPACE)
 
-        # URL is '/bind10/statistics/xsd'
+        # URL is '/bundy/statistics/xsd'
         check_XSD_URL_PATH()
 
         def check_XSL_URL_PATH():
@@ -345,7 +345,7 @@ class TestHttpHandler(unittest.TestCase):
             url_xhtml = '{%s}' % XMLNS_XHTML
             self.assertEqual(root.tag, url_trans + 'stylesheet')
 
-        # URL is '/bind10/statistics/xsl'
+        # URL is '/bundy/statistics/xsl'
         check_XSL_URL_PATH()
 
         # 302 redirect
@@ -365,12 +365,12 @@ class TestHttpHandler(unittest.TestCase):
         response = self.client.getresponse()
         self.assertEqual(response.status, 404)
         self.client._http_vsn_str = 'HTTP/1.0'
-        self.client.putrequest('GET', '/bind10/foo')
+        self.client.putrequest('GET', '/bundy/foo')
         self.client.endheaders()
         response = self.client.getresponse()
         self.assertEqual(response.status, 404)
         self.client._http_vsn_str = 'HTTP/1.0'
-        self.client.putrequest('GET', '/bind10/statistics/foo')
+        self.client.putrequest('GET', '/bundy/statistics/foo')
         self.client.endheaders()
         response = self.client.getresponse()
         self.assertEqual(response.status, 404)
@@ -1092,7 +1092,7 @@ class TestStatsHttpd(unittest.TestCase):
         stats_xsl = xml.etree.ElementTree.fromstring(xsl_string)
         nst = '{%s}' % XMLNS_XSL
         nsx = '{%s}' % XMLNS_XHTML
-        self.assertEqual("bind10:statistics", stats_xsl[2].attrib['match'])
+        self.assertEqual("bundy:statistics", stats_xsl[2].attrib['match'])
         stats_xsl = stats_xsl[2].find('%stable' % nsx)
         self.assertEqual('item', stats_xsl[1].attrib['select'])
         stats_xsl = stats_xsl[1].find('%str' % nsx)
@@ -1106,7 +1106,7 @@ class TestStatsHttpd(unittest.TestCase):
         self.assertEqual('@description', stats_xsl[2].find('%sif/%svalue-of' % ((nst,)*2)).attrib['select'])
 
 class Z_TestOSEnv(unittest.TestCase):
-    def test_for_without_B10_FROM_SOURCE(self):
+    def test_for_without_BUNDY_FROM_SOURCE(self):
         # Note: this test is sensitive due to its substantial side effect of
         # reloading.  For exmaple, it affects tests that tweak module
         # attributes (such as test_init_hterr).  It also breaks logging
@@ -1114,13 +1114,13 @@ class Z_TestOSEnv(unittest.TestCase):
         # workaround: make it very likely to run at the end of the tests
         # by naming the test class "Z_".
 
-        # just lets it go through the code without B10_FROM_SOURCE env
+        # just lets it go through the code without BUNDY_FROM_SOURCE env
         # variable
-        if "B10_FROM_SOURCE" in os.environ:
-            tmppath = os.environ["B10_FROM_SOURCE"]
-            os.environ.pop("B10_FROM_SOURCE")
+        if "BUNDY_FROM_SOURCE" in os.environ:
+            tmppath = os.environ["BUNDY_FROM_SOURCE"]
+            os.environ.pop("BUNDY_FROM_SOURCE")
             imp.reload(stats_httpd)
-            os.environ["B10_FROM_SOURCE"] = tmppath
+            os.environ["BUNDY_FROM_SOURCE"] = tmppath
             imp.reload(stats_httpd)
 
 if __name__ == "__main__":

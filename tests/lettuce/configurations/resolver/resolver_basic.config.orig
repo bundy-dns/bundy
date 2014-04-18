@@ -19,10 +19,10 @@
     },
     "Init": {
         "components": {
-            "b10-resolver": {
+            "bundy-resolver": {
                 "kind": "needed"
             },
-            "b10-cmdctl": {
+            "bundy-cmdctl": {
                 "kind": "needed",
                 "special": "cmdctl"
             }

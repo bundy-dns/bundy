@@ -1732,25 +1732,25 @@ class TestInitialization(unittest.TestCase):
             os.environ[name] = value
 
     def setUp(self):
-        self._oldSocket = os.getenv("BIND10_XFROUT_SOCKET_FILE")
-        self._oldFromBuild = os.getenv("B10_FROM_BUILD")
+        self._oldSocket = os.getenv("BUNDY_XFROUT_SOCKET_FILE")
+        self._oldFromBuild = os.getenv("BUNDY_FROM_BUILD")
 
     def tearDown(self):
-        self.setEnv("B10_FROM_BUILD", self._oldFromBuild)
-        self.setEnv("BIND10_XFROUT_SOCKET_FILE", self._oldSocket)
+        self.setEnv("BUNDY_FROM_BUILD", self._oldFromBuild)
+        self.setEnv("BUNDY_XFROUT_SOCKET_FILE", self._oldSocket)
         # Make sure even the computed values are back
         xfrout.init_paths()
 
     def testNoEnv(self):
-        self.setEnv("B10_FROM_BUILD", None)
-        self.setEnv("BIND10_XFROUT_SOCKET_FILE", None)
+        self.setEnv("BUNDY_FROM_BUILD", None)
+        self.setEnv("BUNDY_XFROUT_SOCKET_FILE", None)
         xfrout.init_paths()
         self.assertEqual(xfrout.UNIX_SOCKET_FILE,
                          "@@LOCALSTATEDIR@@/@PACKAGE_NAME@/auth_xfrout_conn")
 
     def testProvidedSocket(self):
-        self.setEnv("B10_FROM_BUILD", None)
-        self.setEnv("BIND10_XFROUT_SOCKET_FILE", "The/Socket/File")
+        self.setEnv("BUNDY_FROM_BUILD", None)
+        self.setEnv("BUNDY_XFROUT_SOCKET_FILE", "The/Socket/File")
         xfrout.init_paths()
         self.assertEqual(xfrout.UNIX_SOCKET_FILE, "The/Socket/File")
 

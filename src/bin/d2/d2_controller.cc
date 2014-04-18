@@ -26,14 +26,14 @@ namespace d2 {
 const char* D2Controller::d2_app_name_ = "DHCP-DDNS";
 
 /// @brief Defines the executable name. This is passed into the base class
-/// by convention this should match the BIND10 module name.
-const char* D2Controller::d2_bin_name_ = "b10-dhcp-ddns";
+/// by convention this should match the BUNDY module name.
+const char* D2Controller::d2_bin_name_ = "bundy-dhcp-ddns";
 
 DControllerBasePtr&
 D2Controller::instance() {
     // If the instance hasn't been created yet, create it.  Note this method
     // must use the base class singleton instance methods.  The base class
-    // must have access to the singleton in order to use it within BIND10
+    // must have access to the singleton in order to use it within BUNDY
     // static function callbacks.
     if (!getController()) {
         DControllerBasePtr controller_ptr(new D2Controller());
@@ -51,10 +51,10 @@ DProcessBase* D2Controller::createProcess() {
 
 D2Controller::D2Controller()
     : DControllerBase(d2_app_name_, d2_bin_name_) {
-    // set the BIND10 spec file either from the environment or
+    // set the BUNDY spec file either from the environment or
     // use the production value.
-    if (getenv("B10_FROM_BUILD")) {
-        setSpecFileName(std::string(getenv("B10_FROM_BUILD")) +
+    if (getenv("BUNDY_FROM_BUILD")) {
+        setSpecFileName(std::string(getenv("BUNDY_FROM_BUILD")) +
             "/src/bin/d2/dhcp-ddns.spec");
     } else {
         setSpecFileName(D2_SPECFILE_LOCATION);

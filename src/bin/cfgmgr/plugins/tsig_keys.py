@@ -22,7 +22,7 @@
 from isc.config.module_spec import module_spec_from_file
 from isc.util.file import path_search
 from pydnspp import TSIGKey, InvalidParameter
-from bind10_config import PLUGIN_PATHS
+from bundy_config import PLUGIN_PATHS
 spec = module_spec_from_file(path_search('tsig_keys.spec', PLUGIN_PATHS))
 
 def check(config):

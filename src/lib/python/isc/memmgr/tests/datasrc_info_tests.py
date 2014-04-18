@@ -484,6 +484,6 @@ class TestDataSrcInfo(unittest.TestCase):
         self.assertIsNone(sgmt_info.get_reset_param(SegmentInfo.READER))
 
 if __name__ == "__main__":
-    isc.log.init("bind10-test")
+    isc.log.init("bundy-test")
     isc.log.resetUnitTestRootLogger()
     unittest.main()

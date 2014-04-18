@@ -35,7 +35,7 @@ class InterprocessSync;
 
 /// \page LoggingApi Logging API
 /// \section LoggingApiOverview Overview
-/// BIND 10 logging uses the concepts of the widely-used Java logging
+/// BUNDY logging uses the concepts of the widely-used Java logging
 /// package log4j (http://logging.apache.log/log4j), albeit implemented
 /// in C++ using an open-source port.  Features of the system are:
 ///
@@ -54,12 +54,12 @@ class InterprocessSync;
 /// to the logger severity level or greater, e.g. if the logger's severity
 /// is WARN, only messages logged at WARN, ERROR or FATAL will be output.
 ///
-/// \section LoggingApiLoggerNames BIND 10 Logger Names
-/// Within BIND 10, the root logger root logger is given the name of the
+/// \section LoggingApiLoggerNames BUNDY Logger Names
+/// Within BUNDY, the root logger root logger is given the name of the
 /// program (via the stand-alone function setRootLoggerName()). Other loggers
 /// are children of the root logger and are named "<program>.<sublogger>".
 /// This name appears in logging output, allowing users to identify both
-/// the BIND 10 program and the component within the program that generated
+/// the BUNDY program and the component within the program that generated
 /// the message.
 ///
 /// When creating a logger, the abbreviated name "<sublogger>" can be used;

@@ -10,7 +10,7 @@ python_PYTHON = __init__.py sqlite3_ds.py
 AM_CPPFLAGS = -I$(top_srcdir)/src/lib -I$(top_builddir)/src/lib
 AM_CPPFLAGS += $(BOOST_INCLUDES)
 AM_CPPFLAGS += $(SQLITE_CFLAGS)
-AM_CXXFLAGS = $(B10_CXXFLAGS)
+AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 
 python_LTLIBRARIES = datasrc.la
 datasrc_la_SOURCES = datasrc.cc datasrc.h
@@ -30,9 +30,9 @@ datasrc_la_CPPFLAGS = $(AM_CPPFLAGS) $(PYTHON_INCLUDES)
 datasrc_la_CXXFLAGS = $(AM_CXXFLAGS) $(PYTHON_CXXFLAGS)
 datasrc_la_LDFLAGS = $(PYTHON_LDFLAGS)
 datasrc_la_LDFLAGS += -module -avoid-version
-datasrc_la_LIBADD = $(top_builddir)/src/lib/datasrc/libb10-datasrc.la
-datasrc_la_LIBADD += $(top_builddir)/src/lib/cc/libb10-cc.la
-datasrc_la_LIBADD += $(top_builddir)/src/lib/dns/python/libb10-pydnspp.la
+datasrc_la_LIBADD = $(top_builddir)/src/lib/datasrc/libbundy-datasrc.la
+datasrc_la_LIBADD += $(top_builddir)/src/lib/cc/libbundy-cc.la
+datasrc_la_LIBADD += $(top_builddir)/src/lib/dns/python/libbundy-pydnspp.la
 datasrc_la_LIBADD += $(PYTHON_LIB)
 
 EXTRA_DIST = client_inc.cc

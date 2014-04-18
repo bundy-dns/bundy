@@ -2,7 +2,7 @@ AM_CPPFLAGS = -I$(top_builddir)/src/lib -I$(top_srcdir)/src/lib
 AM_CPPFLAGS += $(BOOST_INCLUDES)
 AM_CPPFLAGS += -I$(top_srcdir)/src/lib/dns -I$(top_builddir)/src/lib/dns
 
-AM_CXXFLAGS = $(B10_CXXFLAGS)
+AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 if USE_GXX			#XXX: see ../Makefile.am
 AM_CXXFLAGS += -Wno-unused-parameter
 endif
@@ -25,12 +25,12 @@ run_unittests_CPPFLAGS = $(AM_CPPFLAGS) $(GTEST_INCLUDES)
 run_unittests_LDFLAGS = $(AM_LDFLAGS) $(GTEST_LDFLAGS)
 
 # We need to put our libs first, in case gtest (or any dependency, really)
-# is installed in the same location as a different version of bind10
+# is installed in the same location as a different version of bundy
 # Otherwise the linker may not use the source tree libs
-run_unittests_LDADD =  $(top_builddir)/src/lib/cc/libb10-cc.la
-run_unittests_LDADD +=  $(top_builddir)/src/lib/log/libb10-log.la
+run_unittests_LDADD =  $(top_builddir)/src/lib/cc/libbundy-cc.la
+run_unittests_LDADD +=  $(top_builddir)/src/lib/log/libbundy-log.la
 run_unittests_LDADD +=  $(top_builddir)/src/lib/util/unittests/libutil_unittests.la
-run_unittests_LDADD +=  $(top_builddir)/src/lib/exceptions/libb10-exceptions.la
+run_unittests_LDADD +=  $(top_builddir)/src/lib/exceptions/libbundy-exceptions.la
 run_unittests_LDADD += $(GTEST_LDADD)
 
 endif

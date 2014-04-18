@@ -544,6 +544,6 @@ class TestNotifyOut(unittest.TestCase):
         self.assertFalse(thread.is_alive())
 
 if __name__== "__main__":
-    isc.log.init("bind10")
+    isc.log.init("bundy")
     isc.log.resetUnitTestRootLogger()
     unittest.main()

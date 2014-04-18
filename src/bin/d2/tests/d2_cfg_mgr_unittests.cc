@@ -51,7 +51,7 @@ public:
 };
 
 /// @brief Tests that the spec file is valid.
-/// Verifies that the BIND10 DHCP-DDNS configuration specification file
+/// Verifies that the BUNDY DHCP-DDNS configuration specification file
 //  is valid.
 TEST(D2SpecTest, basicSpec) {
     ASSERT_NO_THROW(isc::config::

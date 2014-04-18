@@ -2,41 +2,41 @@ SUBDIRS = . tests
 
 pkglibexecdir = $(libexecdir)/@PACKAGE@
 
-pkglibexec_SCRIPTS = b10-cmdctl
+pkglibexec_SCRIPTS = bundy-cmdctl
 
-bin_PROGRAMS = b10-certgen
+bin_PROGRAMS = bundy-certgen
 
 nodist_pylogmessage_PYTHON = $(PYTHON_LOGMSGPKG_DIR)/work/cmdctl_messages.py
 pylogmessagedir = $(pyexecdir)/isc/log_messages/
 
-b10_cmdctldir = $(pkgdatadir)
+bundy_cmdctldir = $(pkgdatadir)
 
 CERTFILES = cmdctl-keyfile.pem cmdctl-certfile.pem
 
-b10_cmdctl_DATA = cmdctl.spec
+bundy_cmdctl_DATA = cmdctl.spec
 
-CLEANFILES= b10-cmdctl cmdctl.pyc cmdctl.spec
+CLEANFILES= bundy-cmdctl cmdctl.pyc cmdctl.spec
 CLEANFILES += $(PYTHON_LOGMSGPKG_DIR)/work/cmdctl_messages.py
 CLEANFILES += $(PYTHON_LOGMSGPKG_DIR)/work/cmdctl_messages.pyc
 
-man_MANS = b10-cmdctl.8 b10-certgen.1
+man_MANS = bundy-cmdctl.8 bundy-certgen.1
 DISTCLEANFILES = $(man_MANS) cmdctl-certfile.pem cmdctl-keyfile.pem
-EXTRA_DIST  = $(man_MANS) b10-certgen.xml b10-cmdctl.xml cmdctl_messages.mes
+EXTRA_DIST  = $(man_MANS) bundy-certgen.xml bundy-cmdctl.xml cmdctl_messages.mes
 EXTRA_DIST += cmdctl-accounts.csv
 
 if GENERATE_DOCS
 
-b10-cmdctl.8: b10-cmdctl.xml
-	@XSLTPROC@ --novalid --xinclude --nonet -o $@ http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $(srcdir)/b10-cmdctl.xml
+bundy-cmdctl.8: bundy-cmdctl.xml
+	@XSLTPROC@ --novalid --xinclude --nonet -o $@ http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $(srcdir)/bundy-cmdctl.xml
 
-b10-certgen.1: b10-certgen.xml
-	@XSLTPROC@ --novalid --xinclude --nonet -o $@ http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $(srcdir)/b10-certgen.xml
+bundy-certgen.1: bundy-certgen.xml
+	@XSLTPROC@ --novalid --xinclude --nonet -o $@ http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $(srcdir)/bundy-certgen.xml
 
 else
 
 $(man_MANS):
 	@echo Man generation disabled.  Creating dummy $@.  Configure with --enable-generate-docs to enable it.
-	@echo Man generation disabled.  Remove this file, configure with --enable-generate-docs, and rebuild BIND 10 > $@
+	@echo Man generation disabled.  Remove this file, configure with --enable-generate-docs, and rebuild BUNDY > $@
 
 endif
 
@@ -48,19 +48,19 @@ $(PYTHON_LOGMSGPKG_DIR)/work/cmdctl_messages.py : cmdctl_messages.mes
 	-d $(PYTHON_LOGMSGPKG_DIR)/work -p $(srcdir)/cmdctl_messages.mes
 
 # this is done here since configure.ac AC_OUTPUT doesn't expand exec_prefix
-b10-cmdctl: cmdctl.py $(PYTHON_LOGMSGPKG_DIR)/work/cmdctl_messages.py $(CERTFILES)
+bundy-cmdctl: cmdctl.py $(PYTHON_LOGMSGPKG_DIR)/work/cmdctl_messages.py $(CERTFILES)
 	$(SED) "s|@@PYTHONPATH@@|@pyexecdir@|" cmdctl.py >$@
 	chmod a+x $@
 
-b10_certgen_SOURCES = b10-certgen.cc
-b10_certgen_CXXFLAGS = $(BOTAN_INCLUDES)
-b10_certgen_LDFLAGS = $(BOTAN_LIBS)
+bundy_certgen_SOURCES = bundy-certgen.cc
+bundy_certgen_CXXFLAGS = $(BOTAN_INCLUDES)
+bundy_certgen_LDFLAGS = $(BOTAN_LIBS)
 
 # Generate the initial certificates immediately
-cmdctl-keyfile.pem: b10-certgen
-	./b10-certgen -q -w
+cmdctl-keyfile.pem: bundy-certgen
+	./bundy-certgen -q -w
 
-# This is a hack, as b10-certgen creates both cmdctl-keyfile.pem and
+# This is a hack, as bundy-certgen creates both cmdctl-keyfile.pem and
 # cmdctl-certfile.pem, and in a parallel make, making these targets
 # simultaneously may result in corrupted files. With GNU make, there is
 # a non-portable way of working around this with pattern rules, but we

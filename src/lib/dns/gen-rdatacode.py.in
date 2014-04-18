@@ -162,7 +162,7 @@ def import_definitions(classcode2txt, typecode2txt, typeandclass):
     # files should compile regardless of the order in which the components
     # are included but...  Having a fixed order for the directories should
     # eliminate system-dependent problems.  (Note that the directory names
-    # in BIND 10 are ASCII, so the order should be locale-independent.)
+    # in BUNDY are ASCII, so the order should be locale-independent.)
     dirlist = os.listdir('@srcdir@/rdata')
     dirlist.sort()
     for dir in dirlist:

@@ -17,7 +17,7 @@
 In each of these tests we start several virtual components. They are
 not the real components, no external processes are started. They are
 just simple mock objects running each in its own thread and pretending
-to be bind10 modules. This helps testing the stats module in a close
+to be bundy modules. This helps testing the stats module in a close
 to real environment.
 """
 
@@ -758,8 +758,8 @@ class TestStats(unittest.TestCase):
         # do_polling, and return the following faked answer directly.
         self.stats._answers = [
             # Answer for "show_processes"
-            (create_answer(0, [[1034, 'b10-auth-1', 'Auth'],
-                               [1035, 'b10-auth-2', 'Auth']]),  None),
+            (create_answer(0, [[1034, 'bundy-auth-1', 'Auth'],
+                               [1035, 'bundy-auth-2', 'Auth']]),  None),
             # Answers for "getstats".  2 for Auth instances and 1 for Init.
             # we return some bogus values for Init, but the rest of the test
             # doesn't need it, so it's okay.
@@ -926,8 +926,8 @@ class TestStats(unittest.TestCase):
 
         # Test data borrowed from test_update_statistics_data_withmid
         self.stats._answers = [
-            (create_answer(0, [[1034, 'b10-auth-1', 'Auth'],
-                               [1035, 'b10-auth-2', 'Auth']]),  None),
+            (create_answer(0, [[1034, 'bundy-auth-1', 'Auth'],
+                               [1035, 'bundy-auth-2', 'Auth']]),  None),
             (create_answer(0, self.stats._auth_sdata), {'from': 'auth1'}),
             (create_answer(0, self.stats._auth_sdata), {'from': 'auth2'}),
             (create_answer(0, self.stats._auth_sdata), {'from': 'auth3'})
@@ -1345,10 +1345,10 @@ class TestStats(unittest.TestCase):
         self.assertListEqual([], stat._get_multi_module_list())
         # proc list returned
         proc_list = [
-            [29317, 'b10-xfrout', 'Xfrout'],
-            [29318, 'b10-xfrin', 'Xfrin'],
-            [20061, 'b10-auth','Auth'],
-            [20103, 'b10-auth-2', 'Auth']]
+            [29317, 'bundy-xfrout', 'Xfrout'],
+            [29318, 'bundy-xfrin', 'Xfrin'],
+            [20061, 'bundy-auth','Auth'],
+            [20103, 'bundy-auth-2', 'Auth']]
         mod_list = [ a[2] for a in proc_list ]
         stat._answers = [
             # Answer for "show_processes"
@@ -1529,8 +1529,8 @@ class TestStats(unittest.TestCase):
 
         # Test data borrowed from test_update_statistics_data_withmid
         stat._answers = [
-            (create_answer(0, [[1034, 'b10-auth-1', 'Auth'],
-                               [1035, 'b10-auth-2', 'Auth']]),  None),
+            (create_answer(0, [[1034, 'bundy-auth-1', 'Auth'],
+                               [1035, 'bundy-auth-2', 'Auth']]),  None),
             (create_answer(0, stat._auth_sdata), {'from': 'auth1'}),
             (create_answer(0, stat._auth_sdata), {'from': 'auth2'}),
             (create_answer(0, stat._auth_sdata), {'from': 'auth3'})
@@ -1644,23 +1644,23 @@ class Z_TestOSEnv(unittest.TestCase):
     # stats-httpd_test.py.
     def test_osenv(self):
         """
-        test for the environ variable "B10_FROM_SOURCE"
-        "B10_FROM_SOURCE" is set in Makefile
+        test for the environ variable "BUNDY_FROM_SOURCE"
+        "BUNDY_FROM_SOURCE" is set in Makefile
         """
-        # test case having B10_FROM_SOURCE
-        self.assertTrue("B10_FROM_SOURCE" in os.environ)
+        # test case having BUNDY_FROM_SOURCE
+        self.assertTrue("BUNDY_FROM_SOURCE" in os.environ)
         self.assertEqual(stats.SPECFILE_LOCATION, \
-                             os.environ["B10_FROM_SOURCE"] + os.sep + \
+                             os.environ["BUNDY_FROM_SOURCE"] + os.sep + \
                              "src" + os.sep + "bin" + os.sep + "stats" + \
                              os.sep + "stats.spec")
-        # test case not having B10_FROM_SOURCE
-        path = os.environ["B10_FROM_SOURCE"]
-        os.environ.pop("B10_FROM_SOURCE")
-        self.assertFalse("B10_FROM_SOURCE" in os.environ)
+        # test case not having BUNDY_FROM_SOURCE
+        path = os.environ["BUNDY_FROM_SOURCE"]
+        os.environ.pop("BUNDY_FROM_SOURCE")
+        self.assertFalse("BUNDY_FROM_SOURCE" in os.environ)
         # import stats again
         imp.reload(stats)
         # revert the changes
-        os.environ["B10_FROM_SOURCE"] = path
+        os.environ["BUNDY_FROM_SOURCE"] = path
         imp.reload(stats)
 
 if __name__ == "__main__":

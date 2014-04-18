@@ -1,0 +1,16 @@
+This directory contains the source for the "bundy-init" program, as well as
+the "bundy" script that runs it.
+
+Files:
+  Makefile.am      - build information
+  README           - this file
+  TODO             - remaining development tasks for this program
+  bundy.py.in     - used to make bundy.py with proper Python paths
+  init.spec        - defines the options and commands
+  run_bundy.sh.in - use to make run_bundy.sh with proper Python paths
+
+The "tests" directory contains unit tests for the application.
+
+If you want to run the bundy program from the source directory, then
+use the "run_bundy.sh" script. To run it in the installed location,
+use the "bundy" program.

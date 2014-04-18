@@ -16,7 +16,7 @@
 # WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 """
-A standalone HTTP server for HTTP/XML interface of statistics in BIND 10
+A standalone HTTP server for HTTP/XML interface of statistics in BUNDY
 
 """
 import sys; sys.path.append ('@@PYTHONPATH@@')
@@ -41,18 +41,18 @@ from isc.util.address_formatter import AddressFormatter
 import isc.log
 from isc.log_messages.stats_httpd_messages import *
 
-isc.log.init("b10-stats-httpd", buffer=True)
+isc.log.init("bundy-stats-httpd", buffer=True)
 logger = isc.log.Logger("stats-httpd")
 
 # Some constants for debug levels.
 DBG_STATSHTTPD_INIT = logger.DBGLVL_START_SHUT
 DBG_STATSHTTPD_MESSAGING = logger.DBGLVL_COMMAND
 
-# If B10_FROM_SOURCE is set in the environment, we use data files
+# If BUNDY_FROM_SOURCE is set in the environment, we use data files
 # from a directory relative to that, otherwise we use the ones
 # installed on the system
-if "B10_FROM_SOURCE" in os.environ:
-    BASE_LOCATION = os.environ["B10_FROM_SOURCE"] + os.sep + \
+if "BUNDY_FROM_SOURCE" in os.environ:
+    BASE_LOCATION = os.environ["BUNDY_FROM_SOURCE"] + os.sep + \
         "src" + os.sep + "bin" + os.sep + "stats"
 else:
     PREFIX = "@prefix@"
@@ -66,17 +66,17 @@ XSL_TEMPLATE_LOCATION = BASE_LOCATION + os.sep + "stats-httpd-xsl.tpl"
 
 # These variables are paths part of URL.
 # eg. "http://${address}" + XXX_URL_PATH
-XML_URL_PATH = '/bind10/statistics/xml'
-XSD_URL_PATH = '/bind10/statistics.xsd'
-XSL_URL_PATH = '/bind10/statistics.xsl'
+XML_URL_PATH = '/bundy/statistics/xml'
+XSD_URL_PATH = '/bundy/statistics.xsd'
+XSL_URL_PATH = '/bundy/statistics.xsl'
 # TODO: This should be considered later.
-XSD_NAMESPACE = 'http://bind10.isc.org/bind10'
+XSD_NAMESPACE = 'http://bundy.isc.org/bundy'
 XMLNS_XSI = "http://www.w3.org/2001/XMLSchema-instance"
 
 # constant parameter of XML
-XML_ROOT_ELEMENT = 'bind10:statistics'
+XML_ROOT_ELEMENT = 'bundy:statistics'
 XML_ROOT_ATTRIB = { 'xsi:schemaLocation' : '%s %s' % (XSD_NAMESPACE, XSD_URL_PATH),
-                    'xmlns:bind10' : XSD_NAMESPACE,
+                    'xmlns:bundy' : XSD_NAMESPACE,
                     'xmlns:xsi' : XMLNS_XSI }
 
 # Assign this process name
@@ -150,7 +150,7 @@ class HttpHandler(http.server.BaseHTTPRequestHandler):
             req_path = urllib.parse.unquote(req_path)
             body = None
             # In case that the requested path (req_path),
-            # e.g. /bind10/statistics/Auth/, is started with
+            # e.g. /bundy/statistics/Auth/, is started with
             # XML_URL_PATH + '/'
             if req_path.find('%s/' % XML_URL_PATH) == 0:
                 # remove './' from the path if there is
@@ -205,7 +205,7 @@ class HttpHandler(http.server.BaseHTTPRequestHandler):
 
     def log_message(self, format, *args):
         """overrides the parent method log_message()
-        to use the bind10 logging framework.
+        to use the bundy logging framework.
         """
         logger.debug(DBG_STATSHTTPD_MESSAGING, STATSHTTPD_HTTPLOG,
                      self.address_string(),
@@ -607,7 +607,7 @@ def main():
             help="enable maximum debug logging")
         (options, args) = parser.parse_args()
         if options.verbose:
-            isc.log.init("b10-stats-httpd", "DEBUG", 99, buffer=True)
+            isc.log.init("bundy-stats-httpd", "DEBUG", 99, buffer=True)
         stats_httpd = StatsHttpd()
         stats_httpd.start()
     except OptionValueError as ove:

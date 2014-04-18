@@ -135,7 +135,7 @@ public:
 
     /// @brief Implements the error handler for DHCP_DDNS IO errors
     ///
-    /// Invoked when a NameChangeRequest send to b10-dhcp-ddns completes with
+    /// Invoked when a NameChangeRequest send to bundy-dhcp-ddns completes with
     /// a failed status.  These are communications errors, not data related
     /// failures.
     ///
@@ -678,7 +678,7 @@ protected:
     volatile bool shutdown_;
 
     /// Holds a list of @c isc::dhcp_ddns::NameChangeRequest objects, which
-    /// are waiting for sending to b10-dhcp-ddns module.
+    /// are waiting for sending to bundy-dhcp-ddns module.
     std::queue<isc::dhcp_ddns::NameChangeRequest> name_change_reqs_;
 };
 

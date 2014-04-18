@@ -47,7 +47,7 @@ public:
     static const char* d2_app_name_;
 
     /// @brief Defines the executable name. This is passed into the base class
-    /// by convention this should match the BIND10 module name.
+    /// by convention this should match the BUNDY module name.
     static const char* d2_bin_name_;
 
 private:

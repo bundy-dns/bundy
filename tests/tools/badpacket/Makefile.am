@@ -4,7 +4,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/src/lib -I$(top_builddir)/src/lib
 AM_CPPFLAGS += -I$(top_srcdir)/src/lib/log -I$(top_builddir)/src/lib/log
 AM_CPPFLAGS += $(BOOST_INCLUDES)
 
-AM_CXXFLAGS = $(B10_CXXFLAGS)
+AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 
 if USE_STATIC_LINK
 AM_LDFLAGS = -static
@@ -22,9 +22,9 @@ badpacket_SOURCES += version.h
 
 badpacket_CXXFLAGS = $(AM_CXXFLAGS)
 
-badpacket_LDADD  = $(top_builddir)/src/lib/asiodns/libb10-asiodns.la
-badpacket_LDADD += $(top_builddir)/src/lib/dns/libb10-dns++.la
-badpacket_LDADD += $(top_builddir)/src/lib/asiolink/libb10-asiolink.la
-badpacket_LDADD += $(top_builddir)/src/lib/log/libb10-log.la
-badpacket_LDADD += $(top_builddir)/src/lib/util/libb10-util.la
-badpacket_LDADD += $(top_builddir)/src/lib/exceptions/libb10-exceptions.la
+badpacket_LDADD  = $(top_builddir)/src/lib/asiodns/libbundy-asiodns.la
+badpacket_LDADD += $(top_builddir)/src/lib/dns/libbundy-dns++.la
+badpacket_LDADD += $(top_builddir)/src/lib/asiolink/libbundy-asiolink.la
+badpacket_LDADD += $(top_builddir)/src/lib/log/libbundy-log.la
+badpacket_LDADD += $(top_builddir)/src/lib/util/libbundy-util.la
+badpacket_LDADD += $(top_builddir)/src/lib/exceptions/libbundy-exceptions.la

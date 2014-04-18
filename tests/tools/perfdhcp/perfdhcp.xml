@@ -853,9 +853,9 @@
     <refsect1>
         <title>SEE ALSO</title>
         <para>
-            <citerefentry><refentrytitle>b10-dhcp4</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
-            <citerefentry><refentrytitle>b10-dhcp6</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
-            <citetitle>BIND 10 Guide</citetitle>,
+            <citerefentry><refentrytitle>bundy-dhcp4</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+            <citerefentry><refentrytitle>bundy-dhcp6</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+            <citetitle>BUNDY Guide</citetitle>,
             <citetitle>DHCP Performance Guide</citetitle>.
         </para>
     </refsect1>

@@ -10,7 +10,7 @@ LIBRARY_PATH_PLACEHOLDER = $(ENV_LIBRARY_PATH)=$(abs_top_builddir)/src/lib/crypt
 endif
 
 # test using command-line arguments, so use check-local target instead of TESTS
-# B10_FROM_BUILD is necessary to load data source backend from the build tree.
+# BUNDY_FROM_BUILD is necessary to load data source backend from the build tree.
 check-local:
 if ENABLE_PYTHON_COVERAGE
 	touch $(abs_top_srcdir)/.coverage
@@ -22,7 +22,7 @@ endif
 	$(LIBRARY_PATH_PLACEHOLDER) \
 	TESTDATA_PATH=$(abs_top_srcdir)/src/lib/testutils/testdata \
 	TESTDATA_WRITE_PATH=$(builddir) \
-	B10_FROM_BUILD=$(abs_top_builddir) \
+	BUNDY_FROM_BUILD=$(abs_top_builddir) \
 	PYTHONPATH=$(COMMON_PYTHON_PATH):$(abs_top_builddir)/src/lib/dns/python/.libs \
 	$(PYCOVERAGE_RUN) $(abs_srcdir)/$$pytest || exit ; \
 	done

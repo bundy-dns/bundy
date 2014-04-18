@@ -19,7 +19,7 @@
 import sys; sys.path.append ('@@PYTHONPATH@@')
 import isc
 from isc.acl.dns import REQUEST_LOADER
-import bind10_config
+import bundy_config
 from isc.dns import *
 import isc.ddns.session
 from isc.ddns.zone_config import ZoneConfig
@@ -47,32 +47,32 @@ import os.path
 import signal
 import socket
 
-isc.log.init("b10-ddns", buffer=True)
+isc.log.init("bundy-ddns", buffer=True)
 logger = isc.log.Logger("ddns")
 TRACE_BASIC = logger.DBGLVL_TRACE_BASIC
 
 # Well known path settings.  We need to define
 # SPECFILE_LOCATION: ddns configuration spec file
-# SOCKET_FILE: Unix domain socket file to communicate with b10-auth
+# SOCKET_FILE: Unix domain socket file to communicate with bundy-auth
 #
-# If B10_FROM_SOURCE is set in the environment, we use data files
+# If BUNDY_FROM_SOURCE is set in the environment, we use data files
 # from a directory relative to that, otherwise we use the ones
 # installed on the system
-if "B10_FROM_SOURCE" in os.environ:
-    SPECFILE_PATH = os.environ["B10_FROM_SOURCE"] + "/src/bin/ddns"
+if "BUNDY_FROM_SOURCE" in os.environ:
+    SPECFILE_PATH = os.environ["BUNDY_FROM_SOURCE"] + "/src/bin/ddns"
 else:
     PREFIX = "@prefix@"
     DATAROOTDIR = "@datarootdir@"
     SPECFILE_PATH = "@datadir@/@PACKAGE@".replace("${datarootdir}", DATAROOTDIR)
     SPECFILE_PATH = SPECFILE_PATH.replace("${prefix}", PREFIX)
 
-if "B10_FROM_BUILD" in os.environ:
-    if "B10_FROM_SOURCE_LOCALSTATEDIR" in os.environ:
-        SOCKET_FILE_PATH = os.environ["B10_FROM_SOURCE_LOCALSTATEDIR"]
+if "BUNDY_FROM_BUILD" in os.environ:
+    if "BUNDY_FROM_SOURCE_LOCALSTATEDIR" in os.environ:
+        SOCKET_FILE_PATH = os.environ["BUNDY_FROM_SOURCE_LOCALSTATEDIR"]
     else:
-        SOCKET_FILE_PATH = os.environ["B10_FROM_BUILD"]
+        SOCKET_FILE_PATH = os.environ["BUNDY_FROM_BUILD"]
 else:
-    SOCKET_FILE_PATH = bind10_config.DATA_PATH
+    SOCKET_FILE_PATH = bundy_config.DATA_PATH
 
 SPECFILE_LOCATION = SPECFILE_PATH + "/ddns.spec"
 SOCKET_FILE = SOCKET_FILE_PATH + '/ddns_socket'
@@ -132,7 +132,7 @@ class DDNSServer:
     def __init__(self, cc_session=None):
         '''
         Initialize the DDNS Server.
-        This sets up a ModuleCCSession for the BIND 10 system.
+        This sets up a ModuleCCSession for the BUNDY system.
         Parameters:
         cc_session: If None (default), a new ModuleCCSession will be set up.
                     If specified, the given session will be used. This is
@@ -234,8 +234,8 @@ class DDNSServer:
 
     def command_handler(self, cmd, args):
         '''
-        Handle a CC session command, as sent from bindctl or other
-        BIND 10 modules.
+        Handle a CC session command, as sent from bundyctl or other
+        BUNDY modules.
         '''
         # TODO: Handle exceptions and turn them to an error response
         if cmd == "shutdown":
@@ -415,7 +415,7 @@ class DDNSServer:
         # give tuple elements intuitive names
         (sock, local_addr, remote_addr, req_data) = req_session
 
-        # The session sender (b10-auth) should have made sure that this is
+        # The session sender (bundy-auth) should have made sure that this is
         # a validly formed DNS message of OPCODE being UPDATE, and if it's
         # TSIG signed, its key is known to the system and the signature is
         # valid.  Messages that don't meet these should have been resopnded
@@ -671,7 +671,7 @@ def main(ddns_server=None):
         set_cmd_options(parser)
         (options, args) = parser.parse_args()
         if options.verbose:
-            print("[b10-ddns] Warning: -v verbose option is ignored at this point.")
+            print("[bundy-ddns] Warning: -v verbose option is ignored at this point.")
 
         if ddns_server is None:
             ddns_server = DDNSServer()

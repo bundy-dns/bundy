@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# We use this wrapper script both for production and in-source tests; in
+# the latter case BUNDY_FROM_BUILD environment is expected to be defined.
+if test -n "${BUNDY_FROM_BUILD}"; then
+	exec ${BUNDY_FROM_BUILD}/src/bin/bundy/bundy-init $*
+else
+	prefix=@prefix@
+	exec_prefix=@exec_prefix@
+	exec @libexecdir@/@PACKAGE@/bundy-init $*
+fi

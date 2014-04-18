@@ -122,11 +122,11 @@ public:
         { }
     };
 
-    /// \brief Exception when the socket is allocated by other bind10 module
+    /// \brief Exception when the socket is allocated by other bundy module
     ///    and it doesn't want to share it.
     ///
     /// This is thrown if a socket is requested and the socket is already
-    /// allocated by bind10, but other bind10 module(s) is using it and
+    /// allocated by bundy, but other bundy module(s) is using it and
     /// the sharing parameters are incompatible (the socket can't be shared
     /// between the module and our module).
     class ShareError : public NonFatalSocketError {
@@ -194,7 +194,7 @@ public:
     ///     in the transport, etc). If the exception is not of the following
     ///     derived ones, it usualy means something serious happened.
     /// \throw SocketAllocateError if the other side can't create the socket.
-    /// \throw ShareError if the socket is used by other bind10 module and
+    /// \throw ShareError if the socket is used by other bundy module and
     ///     that one doesn't want to share it with us.
     virtual SocketID requestSocket(Protocol protocol,
                                    const std::string& address,

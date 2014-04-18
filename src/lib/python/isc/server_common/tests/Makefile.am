@@ -1,6 +1,6 @@
 PYCOVERAGE_RUN = @PYCOVERAGE_RUN@
 PYTESTS = tsig_keyring_test.py dns_tcp_test.py datasrc_clients_mgr_test.py
-PYTESTS += bind10_server_test.py
+PYTESTS += bundy_server_test.py
 EXTRA_DIST = $(PYTESTS)
 
 # If necessary (rare cases), explicitly specify paths to dynamic libraries
@@ -29,8 +29,8 @@ endif
 	echo Running test: $$pytest ; \
 	$(LIBRARY_PATH_PLACEHOLDER) \
 	PYTHONPATH=$(COMMON_PYTHON_PATH):$(abs_top_builddir)/src/lib/dns/python/.libs \
-	B10_LOCKFILE_DIR_FROM_BUILD=$(abs_top_builddir) \
-	B10_FROM_SOURCE=$(abs_top_srcdir) \
-	B10_FROM_BUILD=$(abs_top_builddir) \
+	BUNDY_LOCKFILE_DIR_FROM_BUILD=$(abs_top_builddir) \
+	BUNDY_FROM_SOURCE=$(abs_top_srcdir) \
+	BUNDY_FROM_BUILD=$(abs_top_builddir) \
 	$(PYCOVERAGE_RUN) $(abs_srcdir)/$$pytest || exit ; \
 	done

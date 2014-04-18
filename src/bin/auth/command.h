@@ -39,7 +39,7 @@ class AuthSrv;
 /// the underlying DNS library will throw an exception.  These internal
 /// exceptions will be caught inside this function, and will be converted
 /// to a return value with a non 0 error code.
-/// However, exceptions thrown outside of BIND 10 modules (including standard
+/// However, exceptions thrown outside of BUNDY modules (including standard
 /// exceptions) are expected to be handled at a higher layer, and will be
 /// propagated to the caller.  In particular if memory allocation fails and
 /// \c std::bad_alloc is thrown it will be propagated.

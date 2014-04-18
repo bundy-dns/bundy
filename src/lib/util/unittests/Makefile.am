@@ -1,5 +1,5 @@
 AM_CPPFLAGS = -I$(top_srcdir)/src/lib -I$(top_builddir)/src/lib
-AM_CXXFLAGS = $(B10_CXXFLAGS)
+AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 
 noinst_LTLIBRARIES = libutil_unittests.la
 libutil_unittests_la_SOURCES = fork.h fork.cc resolver.h
@@ -22,8 +22,8 @@ if HAVE_GTEST
 libutil_unittests_la_CPPFLAGS += $(GTEST_INCLUDES)
 endif
 
-libutil_unittests_la_LIBADD  = $(top_builddir)/src/lib/util/libb10-util.la
-libutil_unittests_la_LIBADD += $(top_builddir)/src/lib/util/io/libb10-util-io.la
-libutil_unittests_la_LIBADD += $(top_builddir)/src/lib/exceptions/libb10-exceptions.la
+libutil_unittests_la_LIBADD  = $(top_builddir)/src/lib/util/libbundy-util.la
+libutil_unittests_la_LIBADD += $(top_builddir)/src/lib/util/io/libbundy-util-io.la
+libutil_unittests_la_LIBADD += $(top_builddir)/src/lib/exceptions/libbundy-exceptions.la
 
 CLEANFILES = *.gcno *.gcda

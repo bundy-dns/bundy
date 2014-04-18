@@ -31,16 +31,16 @@ if test $SET_ENV_LIBRARY_PATH = yes; then
     export @ENV_LIBRARY_PATH@
 fi
 
-B10_FROM_SOURCE=@abs_top_srcdir@
-export B10_FROM_SOURCE
+BUNDY_FROM_SOURCE=@abs_top_srcdir@
+export BUNDY_FROM_SOURCE
 # TODO: We need to do this feature based (ie. no general from_source)
 # But right now we need a second one because some spec files are
 # generated and hence end up under builddir
-B10_FROM_BUILD=@abs_top_builddir@
-export B10_FROM_BUILD
+BUNDY_FROM_BUILD=@abs_top_builddir@
+export BUNDY_FROM_BUILD
 
-BIND10_MSGQ_SOCKET_FILE=@abs_top_builddir@/msgq_socket
-export BIND10_MSGQ_SOCKET_FILE
+BUNDY_MSGQ_SOCKET_FILE=@abs_top_builddir@/msgq_socket
+export BUNDY_MSGQ_SOCKET_FILE
 
 cd ${MYPATH_PATH}
-exec ${PYTHON_EXEC} -O b10-msgq "$@"
+exec ${PYTHON_EXEC} -O bundy-msgq "$@"

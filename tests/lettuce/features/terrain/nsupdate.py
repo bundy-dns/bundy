@@ -164,5 +164,5 @@ def set_ddns_acl_to(step, nr, address, action):
     Replaces the ACL at the given index for the given
     address, to the given action
     """
-    step.given('set bind10 configuration DDNS/zones[' + nr + ']/update_acl to [{"action": "' + action + '", "from": "' + address + '"}]')
-    step.given('last bindctl output should not contain Error')
+    step.given('set bundy configuration DDNS/zones[' + nr + ']/update_acl to [{"action": "' + action + '", "from": "' + address + '"}]')
+    step.given('last bundyctl output should not contain Error')

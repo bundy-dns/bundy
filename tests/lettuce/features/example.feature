@@ -7,18 +7,18 @@ Feature: Example feature
     support
 
     Scenario: A simple example
-        Given I have bind10 running with configuration example.org.config
-        And wait for bind10 stderr message BIND10_STARTED_CC
-        And wait for bind10 stderr message CMDCTL_STARTED
-        And wait for bind10 stderr message AUTH_SERVER_STARTED
+        Given I have bundy running with configuration example.org.config
+        And wait for bundy stderr message BUNDY_STARTED_CC
+        And wait for bundy stderr message CMDCTL_STARTED
+        And wait for bundy stderr message AUTH_SERVER_STARTED
 
-        bind10 module Auth should be running
-        And bind10 module Resolver should not be running
-        And bind10 module Xfrout should not be running
-        And bind10 module Zonemgr should not be running
-        And bind10 module Xfrin should not be running
-        And bind10 module Stats should not be running
-        And bind10 module StatsHttpd should not be running
+        bundy module Auth should be running
+        And bundy module Resolver should not be running
+        And bundy module Xfrout should not be running
+        And bundy module Zonemgr should not be running
+        And bundy module Xfrin should not be running
+        And bundy module Stats should not be running
+        And bundy module StatsHttpd should not be running
 
         A query for www.example.org should have rcode NOERROR
         A query for www.doesnotexist.org should have rcode REFUSED
@@ -34,31 +34,31 @@ Feature: Example feature
         # This file is actually automatically created.
         The file data/test_nonexistent_db.sqlite3 should not exist
 
-        # In the first scenario, we used 'given I have bind10 running', which
+        # In the first scenario, we used 'given I have bundy running', which
         # is actually a compound step consisting of the following two
         # one to start the server
-        When I start bind10 with configuration no_db_file.config
+        When I start bundy with configuration no_db_file.config
 
-        And wait for bind10 stderr message BIND10_STARTED_CC
-        And wait for bind10 stderr message CMDCTL_STARTED
-        And wait for bind10 stderr message AUTH_SERVER_STARTED
+        And wait for bundy stderr message BUNDY_STARTED_CC
+        And wait for bundy stderr message CMDCTL_STARTED
+        And wait for bundy stderr message AUTH_SERVER_STARTED
 
         # Now we use the first step again to see if the file has been created
         The file data/test_nonexistent_db.sqlite3 should exist
 
-        bind10 module Auth should be running
-        And bind10 module Resolver should not be running
-        And bind10 module Xfrout should not be running
-        And bind10 module Zonemgr should not be running
-        And bind10 module Xfrin should not be running
-        And bind10 module Stats should not be running
-        And bind10 module StatsHttpd should not be running
+        bundy module Auth should be running
+        And bundy module Resolver should not be running
+        And bundy module Xfrout should not be running
+        And bundy module Zonemgr should not be running
+        And bundy module Xfrin should not be running
+        And bundy module Stats should not be running
+        And bundy module StatsHttpd should not be running
 
         # This is a general step to stop a named process. By convention,
         # the default name for any process is the same as the one we
-        # use in the start step (for bind 10, that is 'I start bind10 with')
+        # use in the start step (for bundy, that is 'I start bundy with')
         # See scenario 'Multiple instances' for more.
-        Then stop process bind10
+        Then stop process bundy
 
     Scenario: example.org queries
         # This scenario performs a number of queries and inspects the results
@@ -71,18 +71,18 @@ Feature: Example feature
 
         # This is a compound statement that starts and waits for the
         # started message
-        Given I have bind10 running with configuration example.org.config
-        And wait for bind10 stderr message BIND10_STARTED_CC
-        And wait for bind10 stderr message CMDCTL_STARTED
-        And wait for bind10 stderr message AUTH_SERVER_STARTED
+        Given I have bundy running with configuration example.org.config
+        And wait for bundy stderr message BUNDY_STARTED_CC
+        And wait for bundy stderr message CMDCTL_STARTED
+        And wait for bundy stderr message AUTH_SERVER_STARTED
 
-        bind10 module Auth should be running
-        And bind10 module Resolver should not be running
-        And bind10 module Xfrout should not be running
-        And bind10 module Zonemgr should not be running
-        And bind10 module Xfrin should not be running
-        And bind10 module Stats should not be running
-        And bind10 module StatsHttpd should not be running
+        bundy module Auth should be running
+        And bundy module Resolver should not be running
+        And bundy module Xfrout should not be running
+        And bundy module Zonemgr should not be running
+        And bundy module Xfrin should not be running
+        And bundy module Stats should not be running
+        And bundy module StatsHttpd should not be running
 
         # Some simple queries that is not examined further
         A query for www.example.com should have rcode REFUSED
@@ -139,18 +139,18 @@ Feature: Example feature
         # section 5.2 of:
         # http://tools.ietf.org/html/draft-vixie-dnsext-dns0x20-00
 
-        Given I have bind10 running with configuration example.org.config
-        And wait for bind10 stderr message BIND10_STARTED_CC
-        And wait for bind10 stderr message CMDCTL_STARTED
-        And wait for bind10 stderr message AUTH_SERVER_STARTED
+        Given I have bundy running with configuration example.org.config
+        And wait for bundy stderr message BUNDY_STARTED_CC
+        And wait for bundy stderr message CMDCTL_STARTED
+        And wait for bundy stderr message AUTH_SERVER_STARTED
 
-        bind10 module Auth should be running
-        And bind10 module Resolver should not be running
-        And bind10 module Xfrout should not be running
-        And bind10 module Zonemgr should not be running
-        And bind10 module Xfrin should not be running
-        And bind10 module Stats should not be running
-        And bind10 module StatsHttpd should not be running
+        bundy module Auth should be running
+        And bundy module Resolver should not be running
+        And bundy module Xfrout should not be running
+        And bundy module Zonemgr should not be running
+        And bundy module Xfrin should not be running
+        And bundy module Stats should not be running
+        And bundy module StatsHttpd should not be running
 
         A query for wWw.eXaMpLe.Org should have rcode NOERROR
         The last query response should have qdcount 1
@@ -171,46 +171,46 @@ Feature: Example feature
         # Therefore we wait for specific log messages after each operation
         #
         # This scenario outlines every single step, and does not use
-        # 'steps of steps' (e.g. Given I have bind10 running)
+        # 'steps of steps' (e.g. Given I have bundy running)
         # We can do that but as an example this is probably better to learn
         # the system
 
-        When I start bind10 with configuration example.org.config
-        And wait for bind10 stderr message BIND10_STARTED_CC
-        And wait for bind10 stderr message CMDCTL_STARTED
-        And wait for bind10 stderr message AUTH_SERVER_STARTED
+        When I start bundy with configuration example.org.config
+        And wait for bundy stderr message BUNDY_STARTED_CC
+        And wait for bundy stderr message CMDCTL_STARTED
+        And wait for bundy stderr message AUTH_SERVER_STARTED
 
-        bind10 module Auth should be running
-        And bind10 module Resolver should not be running
-        And bind10 module Xfrout should not be running
-        And bind10 module Zonemgr should not be running
-        And bind10 module Xfrin should not be running
-        And bind10 module Stats should not be running
-        And bind10 module StatsHttpd should not be running
+        bundy module Auth should be running
+        And bundy module Resolver should not be running
+        And bundy module Xfrout should not be running
+        And bundy module Zonemgr should not be running
+        And bundy module Xfrin should not be running
+        And bundy module Stats should not be running
+        And bundy module StatsHttpd should not be running
 
         A query for www.example.org should have rcode NOERROR
-        Wait for new bind10 stderr message AUTH_SEND_NORMAL_RESPONSE
-        Then set bind10 configuration data_sources/classes/IN[0]/params to {"database_file": "data/empty_db.sqlite3"}
+        Wait for new bundy stderr message AUTH_SEND_NORMAL_RESPONSE
+        Then set bundy configuration data_sources/classes/IN[0]/params to {"database_file": "data/empty_db.sqlite3"}
         # The 'not missing placeholder' check is for #2743
-        And wait for new bind10 stderr message DATASRC_SQLITE_CONNOPEN not Missing placeholder
+        And wait for new bundy stderr message DATASRC_SQLITE_CONNOPEN not Missing placeholder
         A query for www.example.org should have rcode REFUSED
-        Wait for new bind10 stderr message AUTH_SEND_NORMAL_RESPONSE
-        Then set bind10 configuration data_sources/classes/IN[0]/params to {"database_file": "data/example.org.sqlite3"}
+        Wait for new bundy stderr message AUTH_SEND_NORMAL_RESPONSE
+        Then set bundy configuration data_sources/classes/IN[0]/params to {"database_file": "data/example.org.sqlite3"}
         # The 'not missing placeholder' check is for #2743
-        And wait for new bind10 stderr message DATASRC_SQLITE_CONNOPEN not Missing placeholder
+        And wait for new bundy stderr message DATASRC_SQLITE_CONNOPEN not Missing placeholder
         A query for www.example.org should have rcode NOERROR
 
-    Scenario: two bind10 instances
-        # This is more a test of the test system, start 2 bind10's
-        When I start bind10 with configuration example.org.config as bind10_one
-        And wait for bind10_one stderr message BIND10_STARTED_CC
-        And wait for bind10_one stderr message CMDCTL_STARTED
-        And wait for bind10_one stderr message AUTH_SERVER_STARTED
+    Scenario: two bundy instances
+        # This is more a test of the test system, start 2 bundy's
+        When I start bundy with configuration example.org.config as bundy_one
+        And wait for bundy_one stderr message BUNDY_STARTED_CC
+        And wait for bundy_one stderr message CMDCTL_STARTED
+        And wait for bundy_one stderr message AUTH_SERVER_STARTED
 
-        And I start bind10 with configuration example2.org.config with cmdctl port 56174 as bind10_two
-        And wait for bind10_two stderr message BIND10_STARTED_CC
-        And wait for bind10_two stderr message CMDCTL_STARTED
-        And wait for bind10_two stderr message AUTH_SERVER_STARTED
+        And I start bundy with configuration example2.org.config with cmdctl port 56174 as bundy_two
+        And wait for bundy_two stderr message BUNDY_STARTED_CC
+        And wait for bundy_two stderr message CMDCTL_STARTED
+        And wait for bundy_two stderr message AUTH_SERVER_STARTED
 
         A query for www.example.org to 127.0.0.1:56176 should have rcode NOERROR
         A query for www.example.org to [::1]:56177 should have rcode NOERROR
@@ -218,8 +218,8 @@ Feature: Example feature
         The SOA serial for example.org at 127.0.0.1:56176 should be 1234
         The SOA serial for example.org at ::1:56177 should be 1234
 
-        Then set bind10 configuration data_sources/classes/IN[0]/params to {"database_file": "data/empty_db.sqlite3"}
-        And wait for bind10_one stderr message DATASRC_SQLITE_CONNOPEN
+        Then set bundy configuration data_sources/classes/IN[0]/params to {"database_file": "data/empty_db.sqlite3"}
+        And wait for bundy_one stderr message DATASRC_SQLITE_CONNOPEN
 
         A query for www.example.org to 127.0.0.1:56176 should have rcode REFUSED
         A query for www.example.org to [::1]:56177 should have rcode NOERROR

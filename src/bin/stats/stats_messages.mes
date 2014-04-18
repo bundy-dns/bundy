@@ -20,9 +20,9 @@ The stats module was called with a bad command-line argument and will
 not start.
 
 % STATS_CC_SESSION_ERROR error connecting to message bus: %1
-The stats module was unable to connect to the BIND 10 command and
+The stats module was unable to connect to the BUNDY command and
 control bus. A likely problem is that the message bus daemon
-(b10-msgq) is not running. The stats module will now shut down.
+(bundy-msgq) is not running. The stats module will now shut down.
 
 % STATS_EXITING exiting
 The stats module process is exiting.
@@ -90,5 +90,5 @@ daemon will now shut down.
 The specification file for the stats module contains a command that
 is unknown in the implementation. The most likely cause is an
 installation problem, where the specification file stats.spec is
-from a different version of BIND 10 than the stats module itself.
+from a different version of BUNDY than the stats module itself.
 Please check your installation.

@@ -438,14 +438,14 @@ class TestCommandControl(unittest.TestCase):
 
     def test_get_cmdctl_config_data(self):
         old_env = os.environ
-        if 'B10_FROM_SOURCE' in os.environ:
-            del os.environ['B10_FROM_SOURCE']
+        if 'BUNDY_FROM_SOURCE' in os.environ:
+            del os.environ['BUNDY_FROM_SOURCE']
         self.cmdctl.get_cmdctl_config_data()
         self._check_config(self.cmdctl)
         os.environ = old_env
 
         old_env = os.environ
-        os.environ['B10_FROM_SOURCE'] = '../'
+        os.environ['BUNDY_FROM_SOURCE'] = '../'
         self._check_config(self.cmdctl)
         os.environ = old_env
 
@@ -518,7 +518,7 @@ class TestCommandControl(unittest.TestCase):
         self._check_answer(answer, 1, 'unknown config item: non-exist')
 
         old_env = os.environ
-        os.environ['B10_FROM_SOURCE'] = '../'
+        os.environ['BUNDY_FROM_SOURCE'] = '../'
         self._check_config(self.cmdctl)
         os.environ = old_env
 

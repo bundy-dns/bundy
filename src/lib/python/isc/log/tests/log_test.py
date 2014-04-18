@@ -18,7 +18,7 @@ import isc.log
 import unittest
 import json
 import sys
-import bind10_config
+import bundy_config
 from isc.config.ccsession import path_search
 
 class LogDict(unittest.TestCase):
@@ -79,7 +79,7 @@ class Manager(unittest.TestCase):
                           buffer=None)
 
     def test_log_config_update(self):
-        log_spec = json.dumps(isc.config.module_spec_from_file(path_search('logging.spec', bind10_config.PLUGIN_PATHS)).get_full_spec())
+        log_spec = json.dumps(isc.config.module_spec_from_file(path_search('logging.spec', bundy_config.PLUGIN_PATHS)).get_full_spec())
 
         self.assertRaises(TypeError, isc.log.log_config_update)
         self.assertRaises(TypeError, isc.log.log_config_update, 1)
@@ -99,8 +99,8 @@ class Manager(unittest.TestCase):
 
         # Try a correct one
         log_conf = json.dumps({"loggers":
-                                [{"name": "b10-xfrout", "output_options":
-                                    [{"output": "/tmp/bind10.log",
+                                [{"name": "bundy-xfrout", "output_options":
+                                    [{"output": "/tmp/bundy.log",
                                        "destination": "file",
                                        "flush": True}]}]})
         isc.log.log_config_update(log_conf, log_spec)

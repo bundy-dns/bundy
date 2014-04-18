@@ -32,17 +32,17 @@
    other modules.
 
    Configuration user interfaces should use the UIModuleCCSession
-   to connect to b10-cmdctl, and receive and send configuration and
+   to connect to bundy-cmdctl, and receive and send configuration and
    commands through that to the configuration manager.
 """
 
 from isc.cc import Session
 from isc.cc.proto_defs import *
-from isc.config.config_data import ConfigData, MultiConfigData, BIND10_CONFIG_DATA_VERSION
+from isc.config.config_data import ConfigData, MultiConfigData, BUNDY_CONFIG_DATA_VERSION
 import isc.config.module_spec
 import isc
 from isc.util.file import path_search
-import bind10_config
+import bundy_config
 from isc.log import log_config_update
 import json
 from isc.log_messages.config_messages import *
@@ -224,7 +224,7 @@ class ModuleCCSession(ConfigData):
         self._last_notif_id = 0
 
         if handle_logging_config:
-            self.add_remote_config(path_search('logging.spec', bind10_config.PLUGIN_PATHS),
+            self.add_remote_config(path_search('logging.spec', bundy_config.PLUGIN_PATHS),
                                    default_logconfig_handler)
 
     def __del__(self):
@@ -658,7 +658,7 @@ class ModuleCCSession(ConfigData):
 class UIModuleCCSession(MultiConfigData):
     """This class is used in a configuration user interface. It contains
        specific functions for getting, displaying, and sending
-       configuration settings through the b10-cmdctl module."""
+       configuration settings through the bundy-cmdctl module."""
     def __init__(self, conn):
         """Initialize a UIModuleCCSession. The conn object that is
            passed must have send_GET and send_POST functions"""
@@ -668,7 +668,7 @@ class UIModuleCCSession(MultiConfigData):
 
     def request_specifications(self):
         """Clears the current list of specifications, and requests a new
-            list from b10-cmdctl. As other actions may have caused modules
+            list from bundy-cmdctl. As other actions may have caused modules
             to be stopped, or new modules to be added, this is expected to
             be run after each interaction (at this moment). It is usually
             also combined with request_current_config(). For that reason,
@@ -680,11 +680,11 @@ class UIModuleCCSession(MultiConfigData):
 
     def request_current_config(self):
         """Requests the current configuration from the configuration
-           manager through b10-cmdctl, and stores those as CURRENT. This
+           manager through bundy-cmdctl, and stores those as CURRENT. This
            does not modify any local changes, it just updates to the current
            state of the server itself."""
         config = self._conn.send_GET('/config_data')
-        if 'version' not in config or config['version'] != BIND10_CONFIG_DATA_VERSION:
+        if 'version' not in config or config['version'] != BUNDY_CONFIG_DATA_VERSION:
             raise ModuleCCSessionError("Bad config version")
         self._set_current_config(config)
 
@@ -853,7 +853,7 @@ class UIModuleCCSession(MultiConfigData):
 
 
     def commit(self):
-        """Commit all local changes, send them through b10-cmdctl to
+        """Commit all local changes, send them through bundy-cmdctl to
            the configuration manager"""
         if self.get_local_changes():
             response = self._conn.send_POST('/ConfigManager/set_config',

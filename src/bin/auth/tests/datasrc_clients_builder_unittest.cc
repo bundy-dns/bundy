@@ -641,7 +641,7 @@ TEST_F(DataSrcClientsBuilderTest, loadZoneInvalidParams) {
 }
 
 // This works only if mapped memory segment is compiled.
-// Note also that this test case may fail as we make b10-auth more aware
+// Note also that this test case may fail as we make bundy-auth more aware
 // of shared-memory cache.
 TEST_F(DataSrcClientsBuilderTest,
 #ifdef USE_SHARED_MEMORY

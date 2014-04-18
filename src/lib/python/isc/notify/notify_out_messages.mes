@@ -31,7 +31,7 @@ source or software bug.
 The notify_out library tried to send a notify message to the given
 address, but it appears to be an invalid address. The configuration
 for secondary nameservers might contain a typographic error, or a
-different BIND 10 module has forgotten to validate its data before
+different BUNDY module has forgotten to validate its data before
 sending this module a notify command. As such, this should normally
 not happen, and points to an oversight in a different module.
 

@@ -19,7 +19,7 @@ endif # WANT_DNS
 # The following build order must be maintained. So we create the
 # variables above and add directories in that order to SUBDIRS.
 SUBDIRS = $(want_datasrc) util cc config dns log net $(want_notify) \
-	testutils $(want_acl) bind10 $(want_xfrin) log_messages \
+	testutils $(want_acl) bundy $(want_xfrin) log_messages \
 	$(want_server_common) $(want_ddns) sysinfo $(want_statistics) \
 	$(want_memmgr)
 

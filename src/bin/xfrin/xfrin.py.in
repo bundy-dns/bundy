@@ -42,7 +42,7 @@ from isc.log_messages.xfrin_messages import *
 from isc.dns import *
 from isc.cc.proto_defs import CC_PAYLOAD_NOTIFICATION, CC_GROUP_NOTIFICATION_PREFIX
 
-isc.log.init("b10-xfrin", buffer=True)
+isc.log.init("bundy-xfrin", buffer=True)
 logger = isc.log.Logger("xfrin")
 
 # Pending system-wide debug level definitions, the ones we
@@ -52,14 +52,14 @@ DBG_COMMANDS = logger.DBGLVL_TRACE_DETAIL
 
 isc.util.process.rename()
 
-# If B10_FROM_BUILD or B10_FROM_SOURCE is set in the environment, we
+# If BUNDY_FROM_BUILD or BUNDY_FROM_SOURCE is set in the environment, we
 # use data files from a directory relative to that, otherwise we use
 # the ones installed on the system
 SPECFILE_PATH = "@datadir@/@PACKAGE@"\
     .replace("${datarootdir}", "@datarootdir@")\
     .replace("${prefix}", "@prefix@")
-if "B10_FROM_SOURCE" in os.environ:
-    SPECFILE_PATH = os.environ["B10_FROM_SOURCE"] + "/src/bin/xfrin"
+if "BUNDY_FROM_SOURCE" in os.environ:
+    SPECFILE_PATH = os.environ["BUNDY_FROM_SOURCE"] + "/src/bin/xfrin"
 SPECFILE_LOCATION = SPECFILE_PATH + "/xfrin.spec"
 
 XFROUT_MODULE_NAME = 'Xfrout'
@@ -79,7 +79,7 @@ DBG_XFRIN_TRACE = logger.DBGLVL_TRACE_BASIC
 DEFAULT_MASTER_PORT = 53
 DEFAULT_ZONE_CLASS = RRClass.IN
 
-__version__ = 'BIND10'
+__version__ = 'BUNDY'
 
 # Internal result codes of an xfr session
 XFRIN_OK = 0                    # normal success
@@ -244,7 +244,7 @@ class XfrinState:
     the implementation logic here.  BIND 9 has been supporting IXFR
     for many years, so the fact that it still behaves this way
     probably means it at least doesn't cause a severe operational
-    problem in practice.  Second, especially because BIND 10 would
+    problem in practice.  Second, especially because BUNDY would
     often uses a database backend, a larger transaction could cause an
     undesirable effects, e.g. suspending normal lookups for a longer
     period depending on the characteristics of the database.  Even if
@@ -1683,14 +1683,14 @@ class Xfrin:
                 answer = self.__handle_xfr_command(args, True, addr_validator,
                                                    None)
             elif command == 'retransfer':
-                # retransfer from cmdctl (sent by bindctl).
+                # retransfer from cmdctl (sent by bundyctl).
                 # No need for address validation, skip SOA check, and always
                 # use AXFR.
                 answer = self.__handle_xfr_command(
                     args, False, lambda x, y, z: None,
                     ZoneInfo.REQUEST_IXFR_DISABLED)
             elif command == 'refresh':
-                # retransfer from cmdctl (sent by bindctl).  similar to
+                # retransfer from cmdctl (sent by bundyctl).  similar to
                 # retransfer, but do SOA check, and honor request_ixfr config.
                 answer = self.__handle_xfr_command(
                     args, True, lambda x, y, z: None, None)
@@ -1698,8 +1698,8 @@ class Xfrin:
             elif command == "getstats":
                 # The log level is here set to debug in order to avoid
                 # that a log becomes too verbose. Because the
-                # b10-stats daemon is periodically asking to the
-                # b10-xfrin daemon.
+                # bundy-stats daemon is periodically asking to the
+                # bundy-xfrin daemon.
                 answer = create_answer(0, self._counters.get_statistics())
 
             else:

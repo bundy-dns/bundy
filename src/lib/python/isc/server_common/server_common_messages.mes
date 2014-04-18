@@ -48,7 +48,7 @@ been transmitted so far (including the 2-byte length field) are shown
 in the log message.
 
 % PYSERVER_COMMON_SERVER_FATAL %1 server has encountered a fatal error: %2
-The BIND 10 server process encountered a fatal error (normally specific to
+The BUNDY server process encountered a fatal error (normally specific to
 the particular program), and is forcing itself to shut down.
 
 % PYSERVER_COMMON_SERVER_STARTED %1 server has started
@@ -74,6 +74,6 @@ This happens at startup or when the configuration changes. The old keyring
 is removed and new one created with all the keys.
 
 % PYSERVER_COMMON_UNCAUGHT_EXCEPTION uncaught exception of type %1: %2
-The BIND 10 server process encountered an uncaught exception and will now shut
+The BUNDY server process encountered an uncaught exception and will now shut
 down. This is indicative of a programming error and should not happen under
 normal circumstances. The exception type and message are printed.

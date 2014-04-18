@@ -18,7 +18,7 @@
 //! \file datasrc/memory/domaintree.h
 ///
 /// \note The purpose of the DomainTree is to provide a generic map with
-///     domain names as the key that can be used by various BIND 10
+///     domain names as the key that can be used by various BUNDY
 ///     modules or even by other applications.  However, because of some
 ///     unresolved design issue, the design and interface are not fixed,
 ///     and DomainTree isn't ready to be used as a base data structure

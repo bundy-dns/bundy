@@ -196,7 +196,7 @@ init(PyObject*, PyObject* args, PyObject* arg_keywords) {
 }
 
 // This initialization is for unit tests.  It allows message settings to
-// be determined by a set of B10_xxx environment variables.  (See the
+// be determined by a set of BUNDY_xxx environment variables.  (See the
 // description of initLogger() for more details.)  The function has been named
 // resetUnitTestRootLogger() here as being more descriptive and
 // trying to avoid confusion.
@@ -287,7 +287,7 @@ PyMethodDef methods[] = {
         "which point they shall be logged."},
     {"resetUnitTestRootLogger", resetUnitTestRootLogger, METH_VARARGS,
         "Resets the configuration of the root logger to that set by the "
-        "B10_XXX environment variables.  It is aimed at unit tests, where "
+        "BUNDY_XXX environment variables.  It is aimed at unit tests, where "
         "the logging is initialized by the code under test; called before "
         "the unit test starts, this function resets the logging configuration "
         "to that in use for the C++ unit tests."},

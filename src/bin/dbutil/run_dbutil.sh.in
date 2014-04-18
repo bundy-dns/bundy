@@ -34,10 +34,10 @@ if test $SET_ENV_LIBRARY_PATH = yes; then
 	export @ENV_LIBRARY_PATH@
 fi
 
-B10_FROM_SOURCE=@abs_top_srcdir@
-export B10_FROM_SOURCE
+BUNDY_FROM_SOURCE=@abs_top_srcdir@
+export BUNDY_FROM_SOURCE
 
-BIND10_MSGQ_SOCKET_FILE=@abs_top_builddir@/msgq_socket
-export BIND10_MSGQ_SOCKET_FILE
+BUNDY_MSGQ_SOCKET_FILE=@abs_top_builddir@/msgq_socket
+export BUNDY_MSGQ_SOCKET_FILE
 
-exec ${PYTHON_EXEC} -O ${DBUTIL_PATH}/b10-dbutil "$@"
+exec ${PYTHON_EXEC} -O ${DBUTIL_PATH}/bundy-dbutil "$@"

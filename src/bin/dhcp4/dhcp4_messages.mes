@@ -21,11 +21,11 @@ Interface Manager starts up procedure of opening sockets.
 
 % DHCP4_CCSESSION_STARTED control channel session started on socket %1
 A debug message issued during startup after the DHCPv4 server has
-successfully established a session with the BIND 10 control channel.
+successfully established a session with the BUNDY control channel.
 
 % DHCP4_CCSESSION_STARTING starting control channel session, specfile: %1
 This debug message is issued just before the DHCPv4 server attempts
-to establish a session with the BIND 10 control channel.
+to establish a session with the BUNDY control channel.
 
 % DHCP4_CLASS_ASSIGNED client packet has been assigned to the following class(es): %1
 This debug message informs that incoming packet has been assigned to specified
@@ -42,7 +42,7 @@ name was malformed or due to internal server error.
 
 % DHCP4_COMMAND_RECEIVED received command %1, arguments: %2
 A debug message listing the command (and possible arguments) received
-from the BIND 10 control system by the DHCPv4 server.
+from the BUNDY control system by the DHCPv4 server.
 
 % DHCP4_CONFIG_COMPLETE DHCPv4 server has completed configuration: %1
 This is an informational message announcing the successful processing of a
@@ -71,14 +71,14 @@ change is committed by the administrator.
 
 % DHCP4_CONFIG_UPDATE updated configuration received: %1
 A debug message indicating that the DHCPv4 server has received an
-updated configuration from the BIND 10 configuration system.
+updated configuration from the BUNDY configuration system.
 
 % DHCP4_DB_BACKEND_STARTED lease database started (type: %1, name: %2)
 This informational message is printed every time DHCPv4 server is started
 and gives both the type and name of the database being used to store
 lease and other information.
 
-% DHCP4_DDNS_REQUEST_SEND_FAILED failed sending a request to b10-dhcp-ddns, error: %1,  ncr: %2
+% DHCP4_DDNS_REQUEST_SEND_FAILED failed sending a request to bundy-dhcp-ddns, error: %1,  ncr: %2
 This error message indicates that DHCP4 server attempted to send a DDNS
 update reqeust to the DHCP-DDNS server.  This is most likely a configuration or
 networking error.
@@ -170,7 +170,7 @@ failure.
 
 % DHCP4_NCR_CREATION_FAILED failed to generate name change requests for DNS: %1
 This message indicates that server was unable to generate NameChangeRequests
-which should be sent to the b10-dhcp_ddns module to create
+which should be sent to the bundy-dhcp_ddns module to create
 new DNS records for the lease being acquired or to update existing records
 for the renewed lease. The reason for the failure is printed in the logged
 message.
@@ -257,7 +257,7 @@ On receipt of message containing details to a change of its configuration,
 the DHCPv4 server failed to create a parser to decode the contents of
 the named configuration element, or the creation succeeded but the parsing
 actions and committal of changes failed.  The message has been output in
-response to a non-BIND 10 exception being raised.  Additional messages
+response to a non-BUNDY exception being raised.  Additional messages
 may give further information.
 
 % DHCP4_PARSER_FAIL failed to create or run parser for configuration element %1: %2
@@ -320,10 +320,10 @@ A debug message listing the data returned to the client.
 The DHCPv4 server has encountered a fatal error and is terminating.
 The reason for the failure is included in the message.
 
-% DHCP4_SESSION_FAIL failed to establish BIND 10 session (%1), running stand-alone
+% DHCP4_SESSION_FAIL failed to establish BUNDY session (%1), running stand-alone
 The server has failed to establish communication with the rest of BIND
 10 and is running in stand-alone mode.  (This behavior will change once
-the DHCPv4 server is properly integrated with the rest of BIND 10.)
+the DHCPv4 server is properly integrated with the rest of BUNDY.)
 
 % DHCP4_SHUTDOWN server shutdown
 The DHCPv4 server has terminated normally.

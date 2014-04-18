@@ -314,7 +314,7 @@ Dhcpv4Srv::run() {
 
             // Catch-all exception (at least for ones based on the isc
             // Exception class, which covers more or less all that
-            // are explicitly raised in the BIND 10 code).  Just log
+            // are explicitly raised in the BUNDY code).  Just log
             // the problem and ignore the packet. (The problem is logged
             // as a debug message because debug is disabled by default -
             // it prevents a DDOS attack based on the sending of problem
@@ -1897,7 +1897,7 @@ Dhcpv4Srv::d2ClientErrorHandler(const
                                 dhcp_ddns::NameChangeRequestPtr& ncr) {
     LOG_ERROR(dhcp4_logger, DHCP4_DDNS_REQUEST_SEND_FAILED).
               arg(result).arg((ncr ? ncr->toText() : " NULL "));
-    // We cannot communicate with b10-dhcp-ddns, suspend futher updates.
+    // We cannot communicate with bundy-dhcp-ddns, suspend futher updates.
     /// @todo We may wish to revisit this, but for now we will simpy turn
     /// them off.
     CfgMgr::instance().getD2ClientMgr().suspendUpdates();

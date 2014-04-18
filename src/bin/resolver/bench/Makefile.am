@@ -4,7 +4,7 @@ AM_CPPFLAGS += -I$(top_builddir)/src/lib/cc
 AM_CPPFLAGS += -I$(top_builddir)/src/bin/resolver
 AM_CPPFLAGS += $(BOOST_INCLUDES)
 
-AM_CXXFLAGS = $(B10_CXXFLAGS)
+AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 
 if USE_STATIC_LINK
 AM_LDFLAGS = -static
@@ -19,6 +19,6 @@ resolver_bench_SOURCES += fake_resolution.h fake_resolution.cc
 resolver_bench_SOURCES += dummy_work.h dummy_work.cc
 resolver_bench_SOURCES += naive_resolver.h naive_resolver.cc
 
-resolver_bench_LDADD = $(top_builddir)/src/lib/exceptions/libb10-exceptions.la
-resolver_bench_LDADD += $(top_builddir)/src/lib/asiolink/libb10-asiolink.la
+resolver_bench_LDADD = $(top_builddir)/src/lib/exceptions/libbundy-exceptions.la
+resolver_bench_LDADD += $(top_builddir)/src/lib/asiolink/libbundy-asiolink.la
 

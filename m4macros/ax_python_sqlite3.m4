@@ -1,6 +1,6 @@
 dnl @synopsis AX_PYTHON_SQLITE3
 dnl
-dnl Test for the Python sqlite3 module used by BIND10's datasource
+dnl Test for the Python sqlite3 module used by BUNDY's datasource
 dnl
 
 AC_DEFUN([AX_PYTHON_SQLITE3], [

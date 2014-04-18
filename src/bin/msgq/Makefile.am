@@ -2,17 +2,17 @@ SUBDIRS = . tests
 
 pkglibexecdir = $(libexecdir)/@PACKAGE@
 
-pkglibexec_SCRIPTS = b10-msgq
+pkglibexec_SCRIPTS = bundy-msgq
 
-b10_msgqdir = $(pkgdatadir)
-b10_msgq_DATA = msgq.spec
+bundy_msgqdir = $(pkgdatadir)
+bundy_msgq_DATA = msgq.spec
 
-CLEANFILES = b10-msgq msgq.pyc
+CLEANFILES = bundy-msgq msgq.pyc
 CLEANFILES += $(PYTHON_LOGMSGPKG_DIR)/work/msgq_messages.py
 CLEANFILES += $(PYTHON_LOGMSGPKG_DIR)/work/msgq_messages.pyc
 CLEANFILES += $(PYTHON_LOGMSGPKG_DIR)/work/msgq_messages.pyo
 
-man_MANS = b10-msgq.8
+man_MANS = bundy-msgq.8
 DISTCLEANFILES = $(man_MANS)
 EXTRA_DIST = $(man_MANS) msgq.xml msgq_messages.mes msgq.spec
 
@@ -22,14 +22,14 @@ BUILT_SOURCES = $(PYTHON_LOGMSGPKG_DIR)/work/msgq_messages.py
 
 if GENERATE_DOCS
 
-b10-msgq.8: msgq.xml
+bundy-msgq.8: msgq.xml
 	@XSLTPROC@ --novalid --xinclude --nonet -o $@ http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $(srcdir)/msgq.xml
 
 else
 
 $(man_MANS):
 	@echo Man generation disabled.  Creating dummy $@.  Configure with --enable-generate-docs to enable it.
-	@echo Man generation disabled.  Remove this file, configure with --enable-generate-docs, and rebuild BIND 10 > $@
+	@echo Man generation disabled.  Remove this file, configure with --enable-generate-docs, and rebuild BUNDY > $@
 
 endif
 
@@ -39,7 +39,7 @@ $(PYTHON_LOGMSGPKG_DIR)/work/msgq_messages.py : msgq_messages.mes
 	-d $(PYTHON_LOGMSGPKG_DIR)/work -p $(srcdir)/msgq_messages.mes
 
 # this is done here since configure.ac AC_OUTPUT doesn't expand exec_prefix
-b10-msgq: msgq.py
+bundy-msgq: msgq.py
 	$(SED) "s|@@PYTHONPATH@@|@pyexecdir@|" msgq.py >$@
 	chmod a+x $@
 

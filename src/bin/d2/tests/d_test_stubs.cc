@@ -155,8 +155,8 @@ DStubController::instance() {
 DStubController::DStubController()
     : DControllerBase(stub_app_name_, stub_bin_name_) {
 
-    if (getenv("B10_FROM_BUILD")) {
-        setSpecFileName(std::string(getenv("B10_FROM_BUILD")) +
+    if (getenv("BUNDY_FROM_BUILD")) {
+        setSpecFileName(std::string(getenv("BUNDY_FROM_BUILD")) +
             "/src/bin/d2/dhcp-ddns.spec");
     } else {
         setSpecFileName(D2_SPECFILE_LOCATION);

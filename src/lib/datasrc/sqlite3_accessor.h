@@ -242,8 +242,8 @@ public:
     /// The SQLite3 implementation of this method returns a string starting
     /// with a fixed prefix of "sqlite3_" followed by the DB file name
     /// removing any path name.  For example, for the DB file
-    /// /somewhere/in/the/system/bind10.sqlite3, this method will return
-    /// "sqlite3_bind10.sqlite3".
+    /// /somewhere/in/the/system/bundy.sqlite3, this method will return
+    /// "sqlite3_bundy.sqlite3".
     virtual const std::string& getDBName() const { return (database_name_); }
 
     /// \brief Concrete implementation of the pure virtual method

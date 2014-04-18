@@ -306,11 +306,11 @@ public:
     /// SERVFAIL will be set in the response.
     /// <b>Note:</b> this is different from the error code that BIND 9 returns
     /// by default when it's configured as an authoritative-only server (and
-    /// from the behavior of the BIND 10 datasrc library, which was implemented
+    /// from the behavior of the BUNDY datasrc library, which was implemented
     /// to be compatible with BIND 9).
     /// The difference comes from the fact that BIND 9 returns REFUSED as a
     /// result of access control check on the use of its cache.
-    /// Since BIND 10's authoritative server doesn't have the notion of cache
+    /// Since BUNDY's authoritative server doesn't have the notion of cache
     /// by design, it doesn't make sense to return REFUSED.  On the other hand,
     /// providing compatible behavior may have its own benefit, so this point
     /// should be revisited later.

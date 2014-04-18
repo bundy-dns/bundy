@@ -18,7 +18,7 @@ import sys
 import os
 import unittest
 import json
-sys.path.extend(os.environ["B10_TEST_PLUGIN_DIR"].split(':'))
+sys.path.extend(os.environ["BUNDY_TEST_PLUGIN_DIR"].split(':'))
 import isc.log
 
 import datasrc_config_plugin
@@ -240,6 +240,6 @@ class DatasrcTest(unittest.TestCase):
         }]})
 
 if __name__ == '__main__':
-    isc.log.init("bind10")
+    isc.log.init("bundy")
     isc.log.resetUnitTestRootLogger()
     unittest.main()

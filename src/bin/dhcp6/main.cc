@@ -27,7 +27,7 @@ using namespace isc::dhcp;
 using namespace std;
 
 /// This file contains entry point (main() function) for standard DHCPv6 server
-/// component for BIND10 framework. It parses command-line arguments and
+/// component for BUNDY framework. It parses command-line arguments and
 /// instantiates ControlledDhcpv6Srv class that is responsible for establishing
 /// connection with msgq (receiving commands and configuration) and also
 /// creating Dhcpv6 server object as well.
@@ -36,13 +36,13 @@ using namespace std;
 /// Dhcpv6Srv and other classes, see \ref dhcpv6Session.
 
 namespace {
-const char* const DHCP6_NAME = "b10-dhcp6";
+const char* const DHCP6_NAME = "bundy-dhcp6";
 
 void
 usage() {
     cerr << "Usage: " << DHCP6_NAME << " [-v] [-s] [-p number]" << endl;
     cerr << "  -v: verbose output" << endl;
-    cerr << "  -s: stand-alone mode (don't connect to BIND10)" << endl;
+    cerr << "  -s: stand-alone mode (don't connect to BUNDY)" << endl;
     cerr << "  -p number: specify non-standard port number 1-65535 "
          << "(useful for testing only)" << endl;
     exit(EXIT_FAILURE);
@@ -54,7 +54,7 @@ main(int argc, char* argv[]) {
     int ch;
     int port_number = DHCP6_SERVER_PORT; // The default. Any other values are
                                          // useful for testing only.
-    bool stand_alone = false;  // Should be connect to BIND10 msgq?
+    bool stand_alone = false;  // Should be connect to BUNDY msgq?
     bool verbose_mode = false; // Should server be verbose?
 
     while ((ch = getopt(argc, argv, "vsp:")) != -1) {

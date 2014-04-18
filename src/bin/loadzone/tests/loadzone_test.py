@@ -20,7 +20,7 @@ from loadzone import *
 from isc.dns import *
 from isc.datasrc import *
 import isc.log
-import bind10_config
+import bundy_config
 import os
 import shutil
 
@@ -133,7 +133,7 @@ class TestLoadZoneRunner(unittest.TestCase):
     def test_get_datasrc_config(self):
         # For sqlite3, we use the config with the well-known DB file.
         expected_conf = \
-            '{"database_file": "' + bind10_config.DATA_PATH + '/zone.sqlite3"}'
+            '{"database_file": "' + bundy_config.DATA_PATH + '/zone.sqlite3"}'
         self.assertEqual(expected_conf,
                          self.__runner._get_datasrc_config('sqlite3'))
 

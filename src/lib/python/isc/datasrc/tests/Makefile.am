@@ -21,7 +21,7 @@ LIBRARY_PATH_PLACEHOLDER += $(ENV_LIBRARY_PATH)=$(abs_top_builddir)/src/lib/data
 endif
 
 # test using command-line arguments, so use check-local target instead of TESTS
-# We need to define B10_FROM_BUILD for datasrc loadable modules
+# We need to define BUNDY_FROM_BUILD for datasrc loadable modules
 check-local:
 if ENABLE_PYTHON_COVERAGE
 	touch $(abs_top_srcdir)/.coverage
@@ -40,6 +40,6 @@ endif
 	TESTDATA_PATH=$(abs_srcdir)/testdata \
 	TESTDATA_WRITE_PATH=$(abs_builddir) \
 	HAVE_SHARED_MEMORY=$(HAVE_SHARED_MEMORY) \
-	B10_FROM_BUILD=$(abs_top_builddir) \
+	BUNDY_FROM_BUILD=$(abs_top_builddir) \
 	$(PYCOVERAGE_RUN) $(abs_srcdir)/$$pytest || exit ; \
 	done

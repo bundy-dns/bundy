@@ -7,7 +7,7 @@ check them for correctness. So the plugin takes this responsibility.
 
 Each plugin is a python file installed into the
 `@prefix@/share/@PACKAGE@/config_plugins` directory (usually
-`/usr/share/bind10/config_plugins`). It is loaded automatically at startup.
+`/usr/share/bundy/config_plugins`). It is loaded automatically at startup.
 
 The entrypoint of a plugin is function called `load()`. It should return a
 tuple, first value should be the module specification (usually instance of

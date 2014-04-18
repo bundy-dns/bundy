@@ -38,7 +38,7 @@ class TestDhcpv4Daemon(unittest.TestCase):
         # "If the platform supports the putenv() function...". It was checked
         # that it does not work on Ubuntu. To overcome this problem we access
         # os.environ directly.
-        lockdir_envvar = "B10_LOCKFILE_DIR_FROM_BUILD"
+        lockdir_envvar = "BUNDY_LOCKFILE_DIR_FROM_BUILD"
         if lockdir_envvar not in os.environ:
             os.environ[lockdir_envvar] = os.getcwd()
 
@@ -159,14 +159,14 @@ class TestDhcpv4Daemon(unittest.TestCase):
         print("Note: Purpose of some of the tests is to check if DHCPv4 server can be started,")
         print("      not that is can bind sockets correctly. Please ignore binding errors.")
 
-        (returncode, output, error) = self.runCommand(["../b10-dhcp4", "-v"])
+        (returncode, output, error) = self.runCommand(["../bundy-dhcp4", "-v"])
         output_text = str(output) + str(error)
         self.assertEqual(output_text.count("DHCP4_STARTING"), 1)
 
     def test_portnumber_0(self):
         print("Check that specifying port number 0 is not allowed.")
 
-        (returncode, output, error) = self.runCommand(['../b10-dhcp4', '-v', '-p', '0'])
+        (returncode, output, error) = self.runCommand(['../bundy-dhcp4', '-v', '-p', '0'])
 
         # When invalid port number is specified, return code must not be success
         self.assertTrue(returncode != 0)
@@ -177,7 +177,7 @@ class TestDhcpv4Daemon(unittest.TestCase):
     def test_portnumber_missing(self):
         print("Check that -p option requires a parameter.")
 
-        (returncode, output, error) = self.runCommand(['../b10-dhcp4', '-p'])
+        (returncode, output, error) = self.runCommand(['../bundy-dhcp4', '-p'])
 
         # When invalid port number is specified, return code must not be success
         self.assertTrue(returncode != 0)
@@ -188,7 +188,7 @@ class TestDhcpv4Daemon(unittest.TestCase):
     def test_portnumber_invalid1(self):
         print("Check that -p option is check against bogus port number (999999).")
 
-        (returncode, output, error) = self.runCommand(['../b10-dhcp4', '-p','999999'])
+        (returncode, output, error) = self.runCommand(['../bundy-dhcp4', '-p','999999'])
 
         # When invalid port number is specified, return code must not be success
         self.assertTrue(returncode != 0)
@@ -199,7 +199,7 @@ class TestDhcpv4Daemon(unittest.TestCase):
     def test_portnumber_invalid2(self):
         print("Check that -p option is check against bogus port number (123garbage).")
 
-        (returncode, output, error) = self.runCommand(['../b10-dhcp4', '-p','123garbage'])
+        (returncode, output, error) = self.runCommand(['../bundy-dhcp4', '-p','123garbage'])
 
         # When invalid port number is specified, return code must not be success
         self.assertTrue(returncode != 0)
@@ -211,16 +211,16 @@ class TestDhcpv4Daemon(unittest.TestCase):
         print("Check that specifying unprivileged port number will work.")
 
         # Check that there is a message about running with an unprivileged port
-        (returncode, output, error) = self.runCommand(['../b10-dhcp4', '-v', '-s', '-p', '10057'])
+        (returncode, output, error) = self.runCommand(['../bundy-dhcp4', '-v', '-s', '-p', '10057'])
         output_text = str(output) + str(error)
         self.assertEqual(output_text.count("DHCP4_OPEN_SOCKET opening sockets on port 10057"), 1)
 
     def test_skip_msgq(self):
-        print("Check that connection to BIND10 msgq can be disabled.")
+        print("Check that connection to BUNDY msgq can be disabled.")
 
         # Check that the system outputs a message on one of its streams about running
         # standalone.
-        (returncode, output, error) = self.runCommand(['../b10-dhcp4', '-v', '-s', '-p', '10057'])
+        (returncode, output, error) = self.runCommand(['../bundy-dhcp4', '-v', '-s', '-p', '10057'])
         output_text = str(output) + str(error)
         self.assertEqual(output_text.count("DHCP4_STANDALONE"), 1)
 

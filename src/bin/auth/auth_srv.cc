@@ -284,8 +284,8 @@ public:
     BaseSocketSessionForwarder& ddns_base_forwarder_;
 
     /// Holder for the DDNS Forwarder, which is used to send
-    /// DDNS messages to b10-ddns, but can be set to empty if
-    /// b10-ddns is not running
+    /// DDNS messages to bundy-ddns, but can be set to empty if
+    /// bundy-ddns is not running
     boost::scoped_ptr<SocketSessionForwarderHolder> ddns_forwarder_;
 
     /// \brief Resume the server
@@ -839,7 +839,7 @@ bool
 AuthSrvImpl::processUpdate(const IOMessage& io_message)
 {
     // Push the update request to a separate process via the forwarder.
-    // On successful push, the request shouldn't be responded from b10-auth,
+    // On successful push, the request shouldn't be responded from bundy-auth,
     // so we return false.
     ddns_forwarder_->push(io_message);
     return (false);

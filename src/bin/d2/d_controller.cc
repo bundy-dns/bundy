@@ -202,11 +202,11 @@ DControllerBase::establishSession() {
     LOG_DEBUG(dctl_logger, DBGLVL_START_SHUT, DCTL_CCSESSION_STARTING)
               .arg(app_name_).arg(spec_file_name_);
 
-    // Create the BIND10 command control session with the our IOService.
+    // Create the BUNDY command control session with the our IOService.
     cc_session_ = SessionPtr(new isc::cc::Session(
                              io_service_->get_io_service()));
 
-    // Create the BIND10 config session with the stub configuration handler.
+    // Create the BUNDY config session with the stub configuration handler.
     // This handler is internally invoked by the constructor and on success
     // the constructor updates the current session with the configuration that
     // had been committed in the previous session. If we do not install
@@ -264,12 +264,12 @@ void DControllerBase::disconnectSession() {
     // logic prior to session loss.
     onSessionDisconnect();
 
-    // Destroy the BIND10 config session.
+    // Destroy the BUNDY config session.
     if (config_session_) {
         config_session_.reset();
     }
 
-    // Destroy the BIND10 command and control session.
+    // Destroy the BUNDY command and control session.
     if (cc_session_) {
         cc_session_->disconnect();
         cc_session_.reset();
@@ -410,7 +410,7 @@ DControllerBase::usage(const std::string & text)
 
     std::cerr << "Usage: " << bin_name_ <<  std::endl;
     std::cerr << "  -v: verbose output" << std::endl;
-    std::cerr << "  -s: stand-alone mode (don't connect to BIND10)"
+    std::cerr << "  -s: stand-alone mode (don't connect to BUNDY)"
               << std::endl;
 
     std::cerr << getUsageText() << std::endl;

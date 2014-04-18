@@ -188,6 +188,6 @@ class TSIGKeyRingTest(unittest.TestCase):
         self.assertEqual(keys, get_keyring())
 
 if __name__ == "__main__":
-    isc.log.init("bind10") # FIXME Should this be needed?
+    isc.log.init("bundy") # FIXME Should this be needed?
     isc.log.resetUnitTestRootLogger()
     unittest.main()

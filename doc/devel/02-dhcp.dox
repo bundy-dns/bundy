@@ -1,8 +1,8 @@
 /**
  * @page dhcpv4 DHCPv4 Server Component
  *
- * BIND10 offers DHCPv4 server implementation. It is implemented as
- * b10-dhcp4 component.  Its primary code is located in
+ * BUNDY offers DHCPv4 server implementation. It is implemented as
+ * bundy-dhcp4 component.  Its primary code is located in
  * isc::dhcp::Dhcpv4Srv class. It uses \ref libdhcp extensively,
  * especially isc::dhcp::Pkt4, isc::dhcp::Option and
  * isc::dhcp::IfaceMgr classes. Currently this code offers skeleton
@@ -15,11 +15,11 @@
  * only), as support for transmission to hosts without IPv4 address
  * assigned is not implemented in IfaceMgr yet.
  *
- * DHCPv4 server component does not use BIND10 logging yet.
+ * DHCPv4 server component does not use BUNDY logging yet.
  *
- * @section dhcpv4Session BIND10 message queue integration
+ * @section dhcpv4Session BUNDY message queue integration
  *
- * DHCPv4 server component is now integrated with the BIND10 message queue.
+ * DHCPv4 server component is now integrated with the BUNDY message queue.
  * The integration is performed by establishSession() and disconnectSession()
  * functions in isc::dhcp::ControlledDhcpv4Srv class. main() method defined
  * in the src/bin/dhcp4/main.cc file instantiates isc::dhcp::ControlledDhcpv4Srv

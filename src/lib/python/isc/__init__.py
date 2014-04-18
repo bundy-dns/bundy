@@ -1,3 +1,3 @@
 """
-This is the top directory for common BIND 10 Python modules and packages.
+This is the top directory for common BUNDY Python modules and packages.
 """

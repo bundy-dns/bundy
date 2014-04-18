@@ -32,7 +32,7 @@ extern "C" {
 
 int
 version() {
-    return (BIND10_HOOKS_VERSION);
+    return (BUNDY_HOOKS_VERSION);
 }
 
 int

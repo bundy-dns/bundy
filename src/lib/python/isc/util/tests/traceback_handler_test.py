@@ -96,6 +96,6 @@ class TracebackHandlerTest(unittest.TestCase):
         self.assertTrue(self.logged)
 
 if __name__ == "__main__":
-    isc.log.init("bind10")
+    isc.log.init("bundy")
     isc.log.resetUnitTestRootLogger()
     unittest.main()

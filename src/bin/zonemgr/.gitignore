@@ -1,6 +1,6 @@
-/b10-zonemgr
-/run_b10-zonemgr.sh
+/bundy-zonemgr
+/run_bundy-zonemgr.sh
 /zonemgr.py
 /zonemgr.spec
 /zonemgr.spec.pre
-/b10-zonemgr.8
+/bundy-zonemgr.8

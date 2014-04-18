@@ -26,7 +26,7 @@ most likely cause is that the msgq daemon is not running.
 % XFROUT_CC_SESSION_TIMEOUT_ERROR timeout waiting for cc response
 There was a problem reading a response from another module over the
 command and control channel. The most likely cause is that the
-configuration manager b10-cfgmgr is not running.
+configuration manager bundy-cfgmgr is not running.
 
 % XFROUT_CONFIG_ERROR error found in configuration data: %1
 The xfrout process encountered an error when installing the configuration at
@@ -36,7 +36,7 @@ startup time.  Details of the error are included in the log message.
 The xfrout daemon is exiting.
 
 % XFROUT_FETCH_REQUEST_ERROR socket error while fetching a request from the auth daemon
-There was a socket error while contacting the b10-auth daemon to
+There was a socket error while contacting the bundy-auth daemon to
 fetch a transfer request. The auth daemon may have shutdown.
 
 % XFROUT_HANDLE_QUERY_ERROR error while handling query: %1
@@ -113,17 +113,17 @@ error is shown in the log message. A remote client sent a packet we
 do not understand or support. The xfrout request will be ignored.
 In general, this should only occur for unexpected problems like
 memory allocation failures, as the query should already have been
-parsed by the b10-auth daemon, before it was passed here.
+parsed by the bundy-auth daemon, before it was passed here.
 
 % XFROUT_PROCESS_REQUEST_ERROR error processing transfer request: %1
-There was an error in receiving a transfer request from b10-auth.
+There was an error in receiving a transfer request from bundy-auth.
 This is generally an unexpected event, but is possible when, for
-example, b10-auth terminates in the middle of forwarding the request.
+example, bundy-auth terminates in the middle of forwarding the request.
 When this happens it's unlikely to be recoverable with the same
-communication session with b10-auth, so b10-xfrout drops it and
+communication session with bundy-auth, so bundy-xfrout drops it and
 waits for a new session.  In any case, this error indicates that
 there's something very wrong in the system, so it's advisable to check
-the over all status of the BIND 10 system.
+the over all status of the BUNDY system.
 
 % XFROUT_QUERY_DROPPED %1 client %2: request to transfer %3 dropped
 The xfrout process silently dropped a request to transfer zone to
@@ -157,15 +157,15 @@ and will now shut down.
 
 % XFROUT_RECEIVE_FD_FAILED error receiving the file descriptor for an XFR connection
 There was an error receiving the file descriptor for the transfer
-request from b10-auth.  There can be several reasons for this, but
-the most likely cause is that b10-auth terminates for some reason
-(maybe it's a bug of b10-auth, maybe it's an intentional restart by
+request from bundy-auth.  There can be several reasons for this, but
+the most likely cause is that bundy-auth terminates for some reason
+(maybe it's a bug of bundy-auth, maybe it's an intentional restart by
 the administrator), so depending on how this happens it may or may not
 be a serious error.  But in any case this is not expected to happen
 frequently, and it's advisable to figure out how this happened if
 this message is logged.  Even if this error happens xfrout will reset
 its internal state and will keep receiving further requests.  So
-if it's just a temporary restart of b10-auth the administrator does
+if it's just a temporary restart of bundy-auth the administrator does
 not have to do anything.
 
 % XFROUT_REMOVE_OLD_UNIX_SOCKET_FILE_ERROR error removing unix socket file %1: %2
@@ -200,7 +200,7 @@ The current transfer is aborted, as the xfrout daemon is shutting down.
 
 % XFROUT_UNIX_SOCKET_FILE_IN_USE another xfrout process seems to be using the unix socket file %1
 While starting up, the xfrout daemon tried to clear the unix domain
-socket needed for contacting the b10-auth daemon to pass requests
+socket needed for contacting the bundy-auth daemon to pass requests
 on, but the file is in use. The most likely cause is that another
 xfrout daemon process is still running. This xfrout daemon (the one
 printing this message) will not start.

@@ -1,6 +1,6 @@
-/b10-stats
-/b10-stats-httpd
+/bundy-stats
+/bundy-stats-httpd
 /stats.py
 /stats_httpd.py
-/b10-stats-httpd.8
-/b10-stats.8
+/bundy-stats-httpd.8
+/bundy-stats.8

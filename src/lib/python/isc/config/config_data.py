@@ -28,7 +28,7 @@ import sys
 
 class ConfigDataError(Exception): pass
 
-BIND10_CONFIG_DATA_VERSION = 3
+BUNDY_CONFIG_DATA_VERSION = 3
 
 # Helper functions
 def spec_part_is_list(spec_part):
@@ -841,7 +841,7 @@ class MultiConfigData:
 
            This behaviour is slightly arbitrary, and currently reflects
            the most probable way the resulting data should look like;
-           for lists, bindctl would always expect their contents to
+           for lists, bundyctl would always expect their contents to
            be added as well. For named_sets, however, we do not
            do recursion, since the resulting list may be too long.
            This will probably change in a revision of the way this

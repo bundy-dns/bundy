@@ -27,7 +27,7 @@ import isc.dns
 import isc.log
 from isc.config import ModuleSpecError, ModuleCCSessionError
 from isc.log_messages.memmgr_messages import *
-from isc.server_common.bind10_server import BIND10Server, BIND10ServerFatal
+from isc.server_common.bundy_server import BUNDYServer, BUNDYServerFatal
 from isc.server_common.datasrc_clients_mgr \
     import DataSrcClientsMgr, ConfigError
 from isc.memmgr.datasrc_info import DataSrcInfo, SegmentInfo
@@ -38,7 +38,7 @@ import isc.util.traceback_handler
 MODULE_NAME = 'memmgr'
 SEGMENT_READER_GROUP = 'SegmentReader'
 
-isc.log.init('b10-memmgr', buffer=True)
+isc.log.init('bundy-memmgr', buffer=True)
 logger = isc.log.Logger(MODULE_NAME)
 
 isc.util.process.rename()
@@ -50,9 +50,9 @@ class ConfigError(Exception):
 class _LoadZoneError(Exception):
     "Internal error in parsing loadzone command."
 
-class Memmgr(BIND10Server):
+class Memmgr(BUNDYServer):
     def __init__(self):
-        BIND10Server.__init__(self)
+        BUNDYServer.__init__(self)
 
         # The following attributes are defined as "protected" so tests can
         # inspect it; others shouldn't use them directly.
@@ -170,7 +170,7 @@ class Memmgr(BIND10Server):
         return dsrc_info, rrclass, dsrc_name, zone_name, sgmt_info
 
     def _config_handler(self, new_config):
-        """Configuration handler, called via BIND10Server.
+        """Configuration handler, called via BUNDYServer.
 
         This method must be exception free.  We assume minimum validity
         about the parameter, though: it should be a valid dict, and conform
@@ -408,13 +408,13 @@ class Memmgr(BIND10Server):
                             self._cmd_to_builder(bcmd)
 
     def _setup_module(self):
-        """Module specific initialization for BIND10Server."""
+        """Module specific initialization for BUNDYServer."""
         try:
             # If self._config_params is None, it means the initial call to
             # __update_config() failed.  We cannot fail at that point due to
             # API contract, but this is the time to terminate.
             if self._config_params is None:
-                raise BIND10ServerFatal('memmgr failed in ' +
+                raise BUNDYServerFatal('memmgr failed in ' +
                                         'initial configuration')
 
             # Now is the time to start the builder thread;
@@ -446,7 +446,7 @@ class Memmgr(BIND10Server):
                 'data_sources', self._datasrc_config_handler)
         except (ModuleSpecError, ModuleCCSessionError) as ex:
             logger.error(MEMMGR_NO_DATASRC_CONF, ex)
-            raise BIND10ServerFatal('failed to setup memmgr module')
+            raise BUNDYServerFatal('failed to setup memmgr module')
 
     def _shutdown_module(self):
         """Module specific finalization."""

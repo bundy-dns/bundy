@@ -2,7 +2,7 @@ SUBDIRS = . tests
 
 AM_CPPFLAGS = -I$(top_srcdir)/src/lib -I$(top_builddir)/src/lib
 AM_CPPFLAGS += $(BOOST_INCLUDES)
-AM_CXXFLAGS = $(B10_CXXFLAGS)
+AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 
 python_PYTHON = __init__.py
 pythondir = $(PYTHON_SITEPKG_DIR)/isc/util/cio
@@ -24,7 +24,7 @@ socketsession_la_CXXFLAGS = $(AM_CXXFLAGS) $(PYTHON_CXXFLAGS)
 # Python prefers .so, while some OSes (specifically MacOS) use a different
 # suffix for dynamic objects.  -module is necessary to work this around.
 socketsession_la_LDFLAGS += -module -avoid-version
-socketsession_la_LIBADD = $(top_builddir)/src/lib/util/io/libb10-util-io.la
+socketsession_la_LIBADD = $(top_builddir)/src/lib/util/io/libbundy-util-io.la
 socketsession_la_LIBADD += $(PYTHON_LIB)
 
 # This is not installed, it helps locate the module during tests

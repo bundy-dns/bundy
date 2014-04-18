@@ -438,9 +438,9 @@ class testSession(unittest.TestCase):
                                 {"hello": "a"}))
 
     def test_timeout(self):
-        if "BIND10_TEST_SOCKET_FILE" not in os.environ:
-            self.assertEqual("", "This test can only run if the value BIND10_TEST_SOCKET_FILE is set in the environment")
-        TEST_SOCKET_FILE = os.environ["BIND10_TEST_SOCKET_FILE"]
+        if "BUNDY_TEST_SOCKET_FILE" not in os.environ:
+            self.assertEqual("", "This test can only run if the value BUNDY_TEST_SOCKET_FILE is set in the environment")
+        TEST_SOCKET_FILE = os.environ["BUNDY_TEST_SOCKET_FILE"]
 
         # create a read domain socket to pass into the session
         s1 = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)

@@ -38,7 +38,7 @@ class TestD2Daemon(unittest.TestCase):
         # "If the platform supports the putenv() function...". It was checked
         # that it does not work on Ubuntu. To overcome this problem we access
         # os.environ directly.
-        lockdir_envvar = "B10_LOCKFILE_DIR_FROM_BUILD"
+        lockdir_envvar = "BUNDY_LOCKFILE_DIR_FROM_BUILD"
         if lockdir_envvar not in os.environ:
             os.environ[lockdir_envvar] = os.getcwd()
 
@@ -159,7 +159,7 @@ class TestD2Daemon(unittest.TestCase):
         print("Note: Simple test to verify that D2 server can be started.")
         # note that "-s" for stand alone is necessary in order to flush the log output
         # soon enough to catch it.
-        (returncode, output, error) = self.runCommand(["../b10-dhcp-ddns", 
+        (returncode, output, error) = self.runCommand(["../bundy-dhcp-ddns", 
                                                        "-s", "-v"])
         output_text = str(output) + str(error)
         self.assertEqual(output_text.count("DCTL_STARTING"), 1)

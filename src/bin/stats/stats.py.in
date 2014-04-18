@@ -16,7 +16,7 @@
 # WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 """
-Statistics daemon in BIND 10
+Statistics daemon in BUNDY
 
 """
 import sys; sys.path.append ('@@PYTHONPATH@@')
@@ -33,7 +33,7 @@ import isc.util.traceback_handler
 import isc.log
 from isc.log_messages.stats_messages import *
 
-isc.log.init("b10-stats", buffer=True)
+isc.log.init("bundy-stats", buffer=True)
 logger = isc.log.Logger("stats")
 
 # Some constants for debug levels.
@@ -45,11 +45,11 @@ _BASETIME = gmtime()
 # for setproctitle
 isc.util.process.rename()
 
-# If B10_FROM_SOURCE is set in the environment, we use data files
+# If BUNDY_FROM_SOURCE is set in the environment, we use data files
 # from a directory relative to that, otherwise we use the ones
 # installed on the system
-if "B10_FROM_SOURCE" in os.environ:
-    SPECFILE_LOCATION = os.environ["B10_FROM_SOURCE"] + os.sep + \
+if "BUNDY_FROM_SOURCE" in os.environ:
+    SPECFILE_LOCATION = os.environ["BUNDY_FROM_SOURCE"] + os.sep + \
         "src" + os.sep + "bin" + os.sep + "stats" + os.sep + "stats.spec"
 else:
     PREFIX = "@prefix@"
@@ -288,12 +288,12 @@ class Stats:
             #  ...
             #    [
             #      20061,
-            #      "b10-auth",
+            #      "bundy-auth",
             #      "Auth"
             #    ],
             #    [
             #      20103,
-            #      "b10-auth-2",
+            #      "bundy-auth-2",
             #      "Auth"
             #    ]
             #  ...
@@ -532,7 +532,7 @@ class Stats:
         # by mid. The statistics data, which is the existing variable, is
         # preserved by accumlating from statistics data by the mid. This
         # is an ad-hoc fix because administrators can not see
-        # statistics by each instance via bindctl or HTTP/XML. These
+        # statistics by each instance via bundyctl or HTTP/XML. These
         # interfaces aren't changed in this fix.
 
         def _accum_bymodule(statistics_data_bymid):
@@ -731,7 +731,7 @@ def main():
             help="enable maximum debug logging")
         (options, args) = parser.parse_args()
         if options.verbose:
-            isc.log.init("b10-stats", "DEBUG", 99, buffer=True)
+            isc.log.init("bundy-stats", "DEBUG", 99, buffer=True)
         stats = Stats()
         stats.start()
     except OptionValueError as ove:

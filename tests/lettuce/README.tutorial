@@ -37,10 +37,10 @@ feature. Each scenario consists of a number of steps.
 So let's open up a simple one.
 
 -- example.feature
-Feature: showing off BIND 10
-    This is to show BIND 10 running and that it answer queries
+Feature: showing off BUNDY
+    This is to show BUNDY running and that it answer queries
 
-    Scenario: Starting bind10
+    Scenario: Starting bundy
         # steps go here
 --
 
@@ -55,10 +55,10 @@ see something like:
 
 -- output
 > ./run_lettuce.sh
-Feature: showing off BIND 10
-  This is to show BIND 10 running and that it answer queries
+Feature: showing off BUNDY
+  This is to show BUNDY running and that it answer queries
 
-  Scenario: Starting bind10
+  Scenario: Starting bundy
 
 1 feature (1 passed)
 1 scenario (1 passed)
@@ -72,24 +72,24 @@ Let's first add some steps that send queries.
         A query for www.example.org should have rcode NOERROR
 --
 
-Since we didn't start any bind10, dig will time out and the result
+Since we didn't start any bundy, dig will time out and the result
 should be an error saying it got no answer. Errors are in the
 form of stack traces (trigger by failed assertions), so we can find
 out easily where in the tests they occurred. Especially when the total
 set of steps gets bigger we might need that.
 
-So let's add a step that starts bind10.
+So let's add a step that starts bundy.
 
 --
-        When I start bind10 with configuration example.org.config
+        When I start bundy with configuration example.org.config
 --
 
 This is not good enough; it will start the process, but setting up
-b10-auth may take a few moments, so we need to add a step to wait for
+bundy-auth may take a few moments, so we need to add a step to wait for
 it to be started before we continue.
 
 --
-        Then wait for bind10 auth to start
+        Then wait for bundy auth to start
 --
 
 And let's run the tests again.
@@ -97,12 +97,12 @@ And let's run the tests again.
 --
 > ./run_lettuce.sh
 
-Feature: showing off BIND 10
-  This is to show BIND 10 running and that it answer queries
+Feature: showing off BUNDY
+  This is to show BUNDY running and that it answer queries
 
-  Scenario: Starting bind10
-    When I start bind10 with configuration example.org.config
-    Then wait for bind10 auth to start
+  Scenario: Starting bundy
+    When I start bundy with configuration example.org.config
+    Then wait for bundy auth to start
     A query for www.example.com should have rcode REFUSED
     A query for www.example.org should have rcode NOERROR
 
@@ -121,17 +121,17 @@ regular expression itself), so if the step is defined with "do foo bar", the
 scenario can add words for readability "When I do foo bar".
 
 Each captured group will be passed as an argument to the function we define.
-For bind10, I defined a configuration file, a cmdctl port, and a process
+For bundy, I defined a configuration file, a cmdctl port, and a process
 name. The first two should be self-evident, and the process name is an
 optional name we give it, should we want to address it in the rest of the
 tests. This is most useful if we want to start multiple instances. In the
 next step (the wait for auth to start), I added a 'of <instance>'. So if we 
-define the bind10 'as b10_second_instance', we can specify that one here as 
-'of b10_second_instance'.
+define the bundy 'as bundy_second_instance', we can specify that one here as 
+'of bundy_second_instance'.
 
 --
-        When I start bind10 with configuration second.config
-        with cmdctl port 12345 as b10_second_instance
+        When I start bundy with configuration second.config
+        with cmdctl port 12345 as bundy_second_instance
 --
 (line wrapped for readability)
 
@@ -139,16 +139,16 @@ But notice how we needed two steps, which we probably always need (but
 not entirely always)? We can also combine steps; for instance:
 
 --
-@step('have bind10 running(?: with configuration ([\w.]+))?')
-def have_bind10_running(step, config_file):
-    step.given('start bind10 with configuration ' + config_file)
-    step.given('wait for bind10 auth to start')
+@step('have bundy running(?: with configuration ([\w.]+))?')
+def have_bundy_running(step, config_file):
+    step.given('start bundy with configuration ' + config_file)
+    step.given('wait for bundy auth to start')
 --
 
 Now we can replace the two steps with one:
 
 --
-    Given I have bind10 running
+    Given I have bundy running
 --
 
 That's it for the quick overview. For some more examples, with comments, 

@@ -4,7 +4,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/src/lib -I$(top_builddir)/src/lib
 AM_CPPFLAGS += -I$(top_srcdir)/src/lib/dns -I$(top_builddir)/src/lib/dns
 AM_CPPFLAGS += -I$(top_srcdir)/src/lib/util -I$(top_builddir)/src/lib/util
 AM_CPPFLAGS += $(BOOST_INCLUDES)
-AM_CXXFLAGS = $(B10_CXXFLAGS)
+AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 
 CLEANFILES = *.gcno *.gcda
 CLEANFILES += rrclass.h rrtype.h rrparamregistry.cc rdataclass.h rdataclass.cc s-rdatacode
@@ -99,65 +99,65 @@ noinst_SCRIPTS = gen-rdatacode.py
 BUILT_SOURCES = rrclass.h rrtype.h rrparamregistry.cc
 BUILT_SOURCES += rdataclass.h rdataclass.cc
 
-lib_LTLIBRARIES = libb10-dns++.la
+lib_LTLIBRARIES = libbundy-dns++.la
 
-libb10_dns___la_LDFLAGS = -no-undefined -version-info 2:0:0
+libbundy_dns___la_LDFLAGS = -no-undefined -version-info 2:0:0
 
-libb10_dns___la_SOURCES =
-libb10_dns___la_SOURCES += dns_fwd.h
-libb10_dns___la_SOURCES += edns.h edns.cc
-libb10_dns___la_SOURCES += exceptions.h exceptions.cc
-libb10_dns___la_SOURCES += master_lexer_inputsource.h master_lexer_inputsource.cc
-libb10_dns___la_SOURCES += labelsequence.h labelsequence.cc
-libb10_dns___la_SOURCES += masterload.h masterload.cc
-libb10_dns___la_SOURCES += master_lexer.h master_lexer.cc
-libb10_dns___la_SOURCES += master_lexer_state.h
-libb10_dns___la_SOURCES += master_loader.h master_loader.cc
-libb10_dns___la_SOURCES += message.h message.cc
-libb10_dns___la_SOURCES += messagerenderer.h messagerenderer.cc
-libb10_dns___la_SOURCES += name.h name.cc
-libb10_dns___la_SOURCES += name_internal.h
-libb10_dns___la_SOURCES += nsec3hash.h nsec3hash.cc
-libb10_dns___la_SOURCES += opcode.h opcode.cc
-libb10_dns___la_SOURCES += rcode.h rcode.cc
-libb10_dns___la_SOURCES += rdata.h rdata.cc
-libb10_dns___la_SOURCES += rdatafields.h rdatafields.cc
-libb10_dns___la_SOURCES += rrclass.cc
-libb10_dns___la_SOURCES += rrparamregistry.h
-libb10_dns___la_SOURCES += rrset.h rrset.cc
-libb10_dns___la_SOURCES += rrttl.h rrttl.cc
-libb10_dns___la_SOURCES += rrtype.cc
-libb10_dns___la_SOURCES += rrcollator.h rrcollator.cc
-libb10_dns___la_SOURCES += question.h question.cc
-libb10_dns___la_SOURCES += serial.h serial.cc
-libb10_dns___la_SOURCES += tsig.h tsig.cc
-libb10_dns___la_SOURCES += tsigerror.h tsigerror.cc
-libb10_dns___la_SOURCES += tsigkey.h tsigkey.cc
-libb10_dns___la_SOURCES += tsigrecord.h tsigrecord.cc
-libb10_dns___la_SOURCES += master_loader_callbacks.h master_loader_callbacks.cc
-libb10_dns___la_SOURCES += master_loader.h
-libb10_dns___la_SOURCES += rrset_collection_base.h
-libb10_dns___la_SOURCES += rrset_collection.h rrset_collection.cc
-libb10_dns___la_SOURCES += zone_checker.h zone_checker.cc
-libb10_dns___la_SOURCES += rdata_pimpl_holder.h
-libb10_dns___la_SOURCES += rdata/generic/detail/char_string.h
-libb10_dns___la_SOURCES += rdata/generic/detail/char_string.cc
-libb10_dns___la_SOURCES += rdata/generic/detail/nsec_bitmap.h
-libb10_dns___la_SOURCES += rdata/generic/detail/nsec_bitmap.cc
-libb10_dns___la_SOURCES += rdata/generic/detail/nsec3param_common.cc
-libb10_dns___la_SOURCES += rdata/generic/detail/nsec3param_common.h
-libb10_dns___la_SOURCES += rdata/generic/detail/txt_like.h
-libb10_dns___la_SOURCES += rdata/generic/detail/ds_like.h
+libbundy_dns___la_SOURCES =
+libbundy_dns___la_SOURCES += dns_fwd.h
+libbundy_dns___la_SOURCES += edns.h edns.cc
+libbundy_dns___la_SOURCES += exceptions.h exceptions.cc
+libbundy_dns___la_SOURCES += master_lexer_inputsource.h master_lexer_inputsource.cc
+libbundy_dns___la_SOURCES += labelsequence.h labelsequence.cc
+libbundy_dns___la_SOURCES += masterload.h masterload.cc
+libbundy_dns___la_SOURCES += master_lexer.h master_lexer.cc
+libbundy_dns___la_SOURCES += master_lexer_state.h
+libbundy_dns___la_SOURCES += master_loader.h master_loader.cc
+libbundy_dns___la_SOURCES += message.h message.cc
+libbundy_dns___la_SOURCES += messagerenderer.h messagerenderer.cc
+libbundy_dns___la_SOURCES += name.h name.cc
+libbundy_dns___la_SOURCES += name_internal.h
+libbundy_dns___la_SOURCES += nsec3hash.h nsec3hash.cc
+libbundy_dns___la_SOURCES += opcode.h opcode.cc
+libbundy_dns___la_SOURCES += rcode.h rcode.cc
+libbundy_dns___la_SOURCES += rdata.h rdata.cc
+libbundy_dns___la_SOURCES += rdatafields.h rdatafields.cc
+libbundy_dns___la_SOURCES += rrclass.cc
+libbundy_dns___la_SOURCES += rrparamregistry.h
+libbundy_dns___la_SOURCES += rrset.h rrset.cc
+libbundy_dns___la_SOURCES += rrttl.h rrttl.cc
+libbundy_dns___la_SOURCES += rrtype.cc
+libbundy_dns___la_SOURCES += rrcollator.h rrcollator.cc
+libbundy_dns___la_SOURCES += question.h question.cc
+libbundy_dns___la_SOURCES += serial.h serial.cc
+libbundy_dns___la_SOURCES += tsig.h tsig.cc
+libbundy_dns___la_SOURCES += tsigerror.h tsigerror.cc
+libbundy_dns___la_SOURCES += tsigkey.h tsigkey.cc
+libbundy_dns___la_SOURCES += tsigrecord.h tsigrecord.cc
+libbundy_dns___la_SOURCES += master_loader_callbacks.h master_loader_callbacks.cc
+libbundy_dns___la_SOURCES += master_loader.h
+libbundy_dns___la_SOURCES += rrset_collection_base.h
+libbundy_dns___la_SOURCES += rrset_collection.h rrset_collection.cc
+libbundy_dns___la_SOURCES += zone_checker.h zone_checker.cc
+libbundy_dns___la_SOURCES += rdata_pimpl_holder.h
+libbundy_dns___la_SOURCES += rdata/generic/detail/char_string.h
+libbundy_dns___la_SOURCES += rdata/generic/detail/char_string.cc
+libbundy_dns___la_SOURCES += rdata/generic/detail/nsec_bitmap.h
+libbundy_dns___la_SOURCES += rdata/generic/detail/nsec_bitmap.cc
+libbundy_dns___la_SOURCES += rdata/generic/detail/nsec3param_common.cc
+libbundy_dns___la_SOURCES += rdata/generic/detail/nsec3param_common.h
+libbundy_dns___la_SOURCES += rdata/generic/detail/txt_like.h
+libbundy_dns___la_SOURCES += rdata/generic/detail/ds_like.h
 
-libb10_dns___la_CPPFLAGS = $(AM_CPPFLAGS)
+libbundy_dns___la_CPPFLAGS = $(AM_CPPFLAGS)
 # Most applications of libdns++ will only implicitly rely on libcryptolink,
 # so we add the dependency here so that the applications don't have to link
 # libcryptolink explicitly.
-libb10_dns___la_LIBADD = $(top_builddir)/src/lib/cryptolink/libb10-cryptolink.la
-libb10_dns___la_LIBADD += $(top_builddir)/src/lib/util/libb10-util.la
+libbundy_dns___la_LIBADD = $(top_builddir)/src/lib/cryptolink/libbundy-cryptolink.la
+libbundy_dns___la_LIBADD += $(top_builddir)/src/lib/util/libbundy-util.la
 
 nodist_libdns___include_HEADERS = rdataclass.h rrclass.h rrtype.h
-nodist_libb10_dns___la_SOURCES = rdataclass.cc rrparamregistry.cc
+nodist_libbundy_dns___la_SOURCES = rdataclass.cc rrparamregistry.cc
 
 rrclass.h: rrclass-placeholder.h
 rrtype.h: rrtype-placeholder.h

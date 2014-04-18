@@ -24,7 +24,7 @@ Configuration for the global data sources is updated, but the update
 cannot be applied to zonemgr.  The zonemgr module will still keep running
 with the previous configuration, but the cause of the failure and
 other log messages must be carefully examined because if only zonemgr
-rejects the new configuration then the entire BIND 10 system will have
+rejects the new configuration then the entire BUNDY system will have
 inconsistent state among different modules.  If other modules accept
 the update but zonemgr produces this error, the zonemgr module should
 probably be restarted.
@@ -41,7 +41,7 @@ terminal and it was terminated via a keyboard interrupt signal.
 This is a debug message indicating that the zone of the specified class
 is being loaded.
 
-% ZONEMGR_NO_MASTER_ADDRESS internal BIND 10 command did not contain address of master
+% ZONEMGR_NO_MASTER_ADDRESS internal BUNDY command did not contain address of master
 A command received by the zone manager from the Auth module did not
 contain the address of the master server from which a NOTIFY message
 was received.  This may be due to an internal programming error; please
@@ -57,14 +57,14 @@ An attempt was made to stop the timer thread (used to track when zones
 should be refreshed) but it was not running.  This may indicate an
 internal program error.  Please submit a bug report.
 
-% ZONEMGR_NO_ZONE_CLASS internal BIND 10 command did not contain class of zone
-A command received by the zone manager from another BIND 10 module did
+% ZONEMGR_NO_ZONE_CLASS internal BUNDY command did not contain class of zone
+A command received by the zone manager from another BUNDY module did
 not contain the class of the zone on which the zone manager should act.
 This may be due to an internal programming error; please submit a
 bug report.
 
-% ZONEMGR_NO_ZONE_NAME internal BIND 10 command did not contain name of zone
-A command received by the zone manager from another BIND 10 module did
+% ZONEMGR_NO_ZONE_NAME internal BUNDY command did not contain name of zone
+A command received by the zone manager from another BUNDY module did
 not contain the name of the zone on which the zone manager should act.
 This may be due to an internal programming error; please submit a
 bug report.
@@ -98,7 +98,7 @@ failed, and causes the zone manager to schedule another transfer attempt.
 This is a debug message indicating that the zone manager has received
 an XFRIN SUCCESS command over the command channel.  The command is sent
 by the Xfrin process when the transfer of zone data into the system has
-succeeded, and causes the data to be loaded and served by BIND 10.
+succeeded, and causes the data to be loaded and served by BUNDY.
 
 % ZONEMGR_REFRESH_ZONE refreshing zone %1 (class %2)
 The zone manager is refreshing the named zone of the specified class
@@ -110,7 +110,7 @@ is a call to the operating system's select() function, which failed for
 the given reason.
 
 % ZONEMGR_SEND_FAIL failed to send command to %1, session has been closed
-The zone manager attempted to send a command to the named BIND 10 module,
+The zone manager attempted to send a command to the named BUNDY module,
 but the send failed.  The session between the modules has been closed.
 
 % ZONEMGR_SESSION_ERROR unable to establish session to command channel daemon
@@ -143,7 +143,7 @@ a bug report.
 % ZONEMGR_UNKNOWN_ZONE_FAIL zone %1 (class %2) is not known to the zone manager
 An XFRIN operation has failed but the zone that was the subject of the
 operation is not being managed by the zone manager. This can be either the
-result of a bindctl command to transfer in a currently unknown (or mistyped)
+result of a bundyctl command to transfer in a currently unknown (or mistyped)
 zone, or, if this error appears without the administrator giving transfer
 commands, it can indicate an error in the program, as it should not have
 initiated transfers of unknown zones on its own.

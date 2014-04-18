@@ -15,7 +15,7 @@
 
 from isc.config.module_spec import module_spec_from_file
 from isc.util.file import path_search
-from bind10_config import PLUGIN_PATHS
+from bundy_config import PLUGIN_PATHS
 import isc.dns
 import isc.datasrc
 import json

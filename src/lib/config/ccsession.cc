@@ -178,25 +178,25 @@ ConstElementPtr getValueOrDefault(ConstElementPtr config_part,
     }
 }
 
-// Prefix name with "b10-".
+// Prefix name with "bundy-".
 //
-// In BIND 10, modules have names taken from the .spec file, which are typically
+// In BUNDY, modules have names taken from the .spec file, which are typically
 // names starting with a capital letter (e.g. "Resolver", "Auth" etc.).  The
 // names of the associated binaries are derived from the module names, being
-// prefixed "b10-" and having the first letter of the module name lower-cased
-// (e.g. "b10-resolver", "b10-auth").  (It is a required convention that there
+// prefixed "bundy-" and having the first letter of the module name lower-cased
+// (e.g. "bundy-resolver", "bundy-auth").  (It is a required convention that there
 // be this relationship between the names.)
 //
 // Within the binaries the root loggers are named after the binaries themselves.
 // (The reason for this is that the name of the logger is included in the
-// message logged, so making it clear which message comes from which BIND 10
+// message logged, so making it clear which message comes from which BUNDY
 // process.) As logging is configured using module names, the configuration code
 // has to match these with the corresponding logger names. This function
 // converts a module name to a root logger name by lowercasing the first letter
-// of the module name and prepending "b10-".
+// of the module name and prepending "bundy-".
 //
 // \param instring String to convert.  (This may be empty, in which case
-//        "b10-" will be returned.)
+//        "bundy-" will be returned.)
 //
 // \return Converted string.
 std::string
@@ -205,7 +205,7 @@ b10Prefix(const std::string& instring) {
     if (!result.empty()) {
         result[0] = tolower(result[0]);
     }
-    return (std::string("b10-") + result);
+    return (std::string("bundy-") + result);
 }
 
 // Reads a output_option subelement of a logger configuration,
@@ -314,7 +314,7 @@ getRelatedLoggers(ConstElementPtr loggers) {
     ElementPtr result = isc::data::Element::createList();
 
     BOOST_FOREACH(ConstElementPtr cur_logger, loggers->listValue()) {
-        // Need to add the b10- prefix to names ready from the spec file.
+        // Need to add the bundy- prefix to names ready from the spec file.
         const std::string cur_name = cur_logger->get("name")->stringValue();
         const std::string mod_name = b10Prefix(cur_name);
         if (mod_name == root_name || mod_name.find(root_name + ".") == 0) {
@@ -323,7 +323,7 @@ getRelatedLoggers(ConstElementPtr loggers) {
             our_names.insert(mod_name);
 
             // We want to store the logger with the modified name (i.e. with
-            // the b10- prefix).  As we are dealing with const loggers, we
+            // the bundy- prefix).  As we are dealing with const loggers, we
             // store a modified copy of the data.
             result->add(copyLogger(cur_logger, mod_name));
             LOG_DEBUG(config_logger, DBG_CONFIG_PROCESS, CONFIG_LOG_EXPLICIT)

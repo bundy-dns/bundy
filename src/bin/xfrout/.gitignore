@@ -1,6 +1,6 @@
-/b10-xfrout
-/run_b10-xfrout.sh
+/bundy-xfrout
+/run_bundy-xfrout.sh
 /xfrout.py
 /xfrout.spec
 /xfrout.spec.pre
-/b10-xfrout.8
+/bundy-xfrout.8

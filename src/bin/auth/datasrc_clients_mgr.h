@@ -658,7 +658,7 @@ private:
                     arg(isc_error.what());
             }
             // other exceptions are propagated, see
-            // http://bind10.isc.org/ticket/2210#comment:13
+            // http://bundy.isc.org/ticket/2210#comment:13
 
             // old clients_map_ data is released by leaving scope
         }

@@ -1,4 +1,4 @@
-Configuration and commands in BIND10
+Configuration and commands in BUNDY
 
 Introduction
 Overview
@@ -10,7 +10,7 @@ Specification files
 Introduction
 ------------
 
-One of the goals of BIND 10 was to have 'live' configuration; to be able to change settings on the fly, and have the system remember those settings automatically, much like, for instance, a router operates.
+One of the goals of BUNDY was to have 'live' configuration; to be able to change settings on the fly, and have the system remember those settings automatically, much like, for instance, a router operates.
 
 In order for this to work, it is important that all modules have a way of dynamically handling configuration updates. The way this works is explained in this document.
 
@@ -18,7 +18,7 @@ In order for this to work, it is important that all modules have a way of dynami
 Overview
 --------
 
-Central to the configuration part is the Configuration Manager b10-cfgmgr. The configuration manager loads any existing configuration, receives configuration updates from user interfaces, and notifies modules about configuration updates.
+Central to the configuration part is the Configuration Manager bundy-cfgmgr. The configuration manager loads any existing configuration, receives configuration updates from user interfaces, and notifies modules about configuration updates.
 
 UI  <---UIAPI---> Configuration Manager <---ModuleAPI---> Module
                                         <---ModuleAPI---> Module

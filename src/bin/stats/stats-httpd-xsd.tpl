@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schema targetNamespace="$xsd_namespace"
         xmlns="http://www.w3.org/2001/XMLSchema"
-        xmlns:bind10="$xsd_namespace">
+        xmlns:bundy="$xsd_namespace">
   <annotation>
-    <documentation>XML schema of statistics data in BIND 10</documentation>
+    <documentation>XML schema of statistics data in BUNDY</documentation>
   </annotation>
   <element name="statistics">
     <annotation><documentation>A set of statistics data</documentation></annotation>

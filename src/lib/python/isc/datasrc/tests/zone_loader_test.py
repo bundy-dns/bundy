@@ -255,6 +255,6 @@ class ZoneLoaderTests(unittest.TestCase):
                                    isc.datasrc.Error))
 
 if __name__ == "__main__":
-    isc.log.init("bind10")
+    isc.log.init("bundy")
     isc.log.resetUnitTestRootLogger()
     unittest.main()

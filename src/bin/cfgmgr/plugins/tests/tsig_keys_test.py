@@ -16,7 +16,7 @@
 # Make sure we can load the module, put it into path
 import sys
 import os
-sys.path.extend(os.environ["B10_TEST_PLUGIN_DIR"].split(':'))
+sys.path.extend(os.environ["BUNDY_TEST_PLUGIN_DIR"].split(':'))
 
 import tsig_keys
 import unittest

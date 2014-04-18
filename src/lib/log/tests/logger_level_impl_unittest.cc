@@ -38,7 +38,7 @@ protected:
 };
 
 
-// Checks that the log4cplus and BIND 10 levels convert correctly
+// Checks that the log4cplus and BUNDY levels convert correctly
 TEST_F(LoggerLevelImplTest, DefaultConversionFromBind) {
     log4cplus::LogLevel fatal =
         LoggerLevelImpl::convertFromBindLevel(Level(FATAL));

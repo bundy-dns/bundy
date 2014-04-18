@@ -1,6 +1,6 @@
 @startuml
 
-participant auth as ":b10-auth"
+participant auth as ":bundy-auth"
 [-> auth: new/initial config\n(datasrc cfg)
 activate auth
 

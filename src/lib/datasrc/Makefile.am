@@ -5,7 +5,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/src/lib/dns -I$(top_builddir)/src/lib/dns
 AM_CPPFLAGS += $(BOOST_INCLUDES)
 AM_CPPFLAGS += $(SQLITE_CFLAGS)
 
-AM_CXXFLAGS = $(B10_CXXFLAGS)
+AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 
 pkglibdir = $(libexecdir)/@PACKAGE@/backends
 
@@ -24,27 +24,27 @@ CLEANFILES += datasrc_config.h
 CLEANFILES += static.zone
 CLEANFILES += s-messages1 s-messages2
 
-lib_LTLIBRARIES = libb10-datasrc.la
-libb10_datasrc_la_SOURCES = exceptions.h
-libb10_datasrc_la_SOURCES += zone.h zone_finder.h zone_finder.cc
-libb10_datasrc_la_SOURCES += zone_finder_context.cc
-libb10_datasrc_la_SOURCES += zone_iterator.h
-libb10_datasrc_la_SOURCES += result.h
-libb10_datasrc_la_SOURCES += logger.h logger.cc
-libb10_datasrc_la_SOURCES += client.h client.cc
-libb10_datasrc_la_SOURCES += database.h database.cc
-libb10_datasrc_la_SOURCES += factory.h factory.cc
-libb10_datasrc_la_SOURCES += client_list.h client_list.cc
-libb10_datasrc_la_SOURCES += master_loader_callbacks.h
-libb10_datasrc_la_SOURCES += master_loader_callbacks.cc
-libb10_datasrc_la_SOURCES += rrset_collection_base.h rrset_collection_base.cc
-libb10_datasrc_la_SOURCES += zone_loader.h zone_loader.cc
-libb10_datasrc_la_SOURCES += cache_config.h cache_config.cc
-libb10_datasrc_la_SOURCES += zone_table_accessor.h
-libb10_datasrc_la_SOURCES += zone_table_accessor_cache.h
-libb10_datasrc_la_SOURCES += zone_table_accessor_cache.cc
-nodist_libb10_datasrc_la_SOURCES = datasrc_messages.h datasrc_messages.cc
-libb10_datasrc_la_LDFLAGS = -no-undefined -version-info 1:0:1
+lib_LTLIBRARIES = libbundy-datasrc.la
+libbundy_datasrc_la_SOURCES = exceptions.h
+libbundy_datasrc_la_SOURCES += zone.h zone_finder.h zone_finder.cc
+libbundy_datasrc_la_SOURCES += zone_finder_context.cc
+libbundy_datasrc_la_SOURCES += zone_iterator.h
+libbundy_datasrc_la_SOURCES += result.h
+libbundy_datasrc_la_SOURCES += logger.h logger.cc
+libbundy_datasrc_la_SOURCES += client.h client.cc
+libbundy_datasrc_la_SOURCES += database.h database.cc
+libbundy_datasrc_la_SOURCES += factory.h factory.cc
+libbundy_datasrc_la_SOURCES += client_list.h client_list.cc
+libbundy_datasrc_la_SOURCES += master_loader_callbacks.h
+libbundy_datasrc_la_SOURCES += master_loader_callbacks.cc
+libbundy_datasrc_la_SOURCES += rrset_collection_base.h rrset_collection_base.cc
+libbundy_datasrc_la_SOURCES += zone_loader.h zone_loader.cc
+libbundy_datasrc_la_SOURCES += cache_config.h cache_config.cc
+libbundy_datasrc_la_SOURCES += zone_table_accessor.h
+libbundy_datasrc_la_SOURCES += zone_table_accessor_cache.h
+libbundy_datasrc_la_SOURCES += zone_table_accessor_cache.cc
+nodist_libbundy_datasrc_la_SOURCES = datasrc_messages.h datasrc_messages.cc
+libbundy_datasrc_la_LDFLAGS = -no-undefined -version-info 1:0:1
 
 pkglib_LTLIBRARIES = sqlite3_ds.la
 
@@ -53,16 +53,16 @@ sqlite3_ds_la_SOURCES += sqlite3_accessor_link.cc
 nodist_sqlite3_ds_la_SOURCES = sqlite3_datasrc_messages.h sqlite3_datasrc_messages.cc
 sqlite3_ds_la_LDFLAGS = -module -avoid-version
 sqlite3_ds_la_LDFLAGS += -no-undefined -version-info 1:0:0
-sqlite3_ds_la_LIBADD = $(top_builddir)/src/lib/exceptions/libb10-exceptions.la
-sqlite3_ds_la_LIBADD += libb10-datasrc.la
+sqlite3_ds_la_LIBADD = $(top_builddir)/src/lib/exceptions/libbundy-exceptions.la
+sqlite3_ds_la_LIBADD += libbundy-datasrc.la
 sqlite3_ds_la_LIBADD += $(SQLITE_LIBS)
 
-libb10_datasrc_la_LIBADD = $(top_builddir)/src/lib/exceptions/libb10-exceptions.la
-libb10_datasrc_la_LIBADD += $(top_builddir)/src/lib/dns/libb10-dns++.la
-libb10_datasrc_la_LIBADD += $(top_builddir)/src/lib/log/libb10-log.la
-libb10_datasrc_la_LIBADD += $(top_builddir)/src/lib/cc/libb10-cc.la
-libb10_datasrc_la_LIBADD += $(top_builddir)/src/lib/datasrc/memory/libdatasrc_memory.la
-libb10_datasrc_la_LIBADD += $(SQLITE_LIBS)
+libbundy_datasrc_la_LIBADD = $(top_builddir)/src/lib/exceptions/libbundy-exceptions.la
+libbundy_datasrc_la_LIBADD += $(top_builddir)/src/lib/dns/libbundy-dns++.la
+libbundy_datasrc_la_LIBADD += $(top_builddir)/src/lib/log/libbundy-log.la
+libbundy_datasrc_la_LIBADD += $(top_builddir)/src/lib/cc/libbundy-cc.la
+libbundy_datasrc_la_LIBADD += $(top_builddir)/src/lib/datasrc/memory/libdatasrc_memory.la
+libbundy_datasrc_la_LIBADD += $(SQLITE_LIBS)
 
 BUILT_SOURCES = datasrc_config.h datasrc_messages.h datasrc_messages.cc
 BUILT_SOURCES += sqlite3_datasrc_messages.h sqlite3_datasrc_messages.cc

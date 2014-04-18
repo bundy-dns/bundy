@@ -2,7 +2,7 @@ SUBDIRS = . tests
 
 AM_CPPFLAGS = -I$(top_srcdir)/src/lib -I$(top_builddir)/src/lib
 AM_CPPFLAGS += $(BOOST_INCLUDES)
-AM_CXXFLAGS = $(B10_CXXFLAGS)
+AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 
 # Some versions of GCC warn about some versions of Boost regarding
 # missing initializer for members in its posix_time.
@@ -16,22 +16,22 @@ if USE_CLANGPP
 AM_CXXFLAGS += -Wno-unused-parameter
 endif
 
-lib_LTLIBRARIES = libb10-server-common.la
-libb10_server_common_la_SOURCES = client.h client.cc
-libb10_server_common_la_SOURCES += keyring.h keyring.cc
-libb10_server_common_la_SOURCES += portconfig.h portconfig.cc
-libb10_server_common_la_SOURCES += logger.h logger.cc
-libb10_server_common_la_SOURCES += socket_request.h socket_request.cc
-nodist_libb10_server_common_la_SOURCES = server_common_messages.h
-nodist_libb10_server_common_la_SOURCES += server_common_messages.cc
-libb10_server_common_la_LIBADD = $(top_builddir)/src/lib/exceptions/libb10-exceptions.la
-libb10_server_common_la_LIBADD += $(top_builddir)/src/lib/asiolink/libb10-asiolink.la
-libb10_server_common_la_LIBADD += $(top_builddir)/src/lib/cc/libb10-cc.la
-libb10_server_common_la_LIBADD += $(top_builddir)/src/lib/config/libb10-cfgclient.la
-libb10_server_common_la_LIBADD += $(top_builddir)/src/lib/log/libb10-log.la
-libb10_server_common_la_LIBADD += $(top_builddir)/src/lib/acl/libb10-acl.la
-libb10_server_common_la_LIBADD += $(top_builddir)/src/lib/dns/libb10-dns++.la
-libb10_server_common_la_LIBADD += $(top_builddir)/src/lib/util/io/libb10-util-io.la
+lib_LTLIBRARIES = libbundy-server-common.la
+libbundy_server_common_la_SOURCES = client.h client.cc
+libbundy_server_common_la_SOURCES += keyring.h keyring.cc
+libbundy_server_common_la_SOURCES += portconfig.h portconfig.cc
+libbundy_server_common_la_SOURCES += logger.h logger.cc
+libbundy_server_common_la_SOURCES += socket_request.h socket_request.cc
+nodist_libbundy_server_common_la_SOURCES = server_common_messages.h
+nodist_libbundy_server_common_la_SOURCES += server_common_messages.cc
+libbundy_server_common_la_LIBADD = $(top_builddir)/src/lib/exceptions/libbundy-exceptions.la
+libbundy_server_common_la_LIBADD += $(top_builddir)/src/lib/asiolink/libbundy-asiolink.la
+libbundy_server_common_la_LIBADD += $(top_builddir)/src/lib/cc/libbundy-cc.la
+libbundy_server_common_la_LIBADD += $(top_builddir)/src/lib/config/libbundy-cfgclient.la
+libbundy_server_common_la_LIBADD += $(top_builddir)/src/lib/log/libbundy-log.la
+libbundy_server_common_la_LIBADD += $(top_builddir)/src/lib/acl/libbundy-acl.la
+libbundy_server_common_la_LIBADD += $(top_builddir)/src/lib/dns/libbundy-dns++.la
+libbundy_server_common_la_LIBADD += $(top_builddir)/src/lib/util/io/libbundy-util-io.la
 BUILT_SOURCES = server_common_messages.h server_common_messages.cc
 server_common_messages.h server_common_messages.cc: s-messages
 

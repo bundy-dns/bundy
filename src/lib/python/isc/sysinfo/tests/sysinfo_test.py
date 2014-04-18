@@ -29,7 +29,7 @@ NPROCESSORS_OSX = 45
 
 
 def _my_testcase_platform_system():
-    return 'BIND10Testcase'
+    return 'BUNDYTestcase'
 
 def _my_linux_platform_system():
     return 'Linux'

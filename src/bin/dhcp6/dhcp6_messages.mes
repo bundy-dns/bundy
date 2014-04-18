@@ -21,11 +21,11 @@ Interface Manager starts up procedure of opening sockets.
 
 % DHCP6_CCSESSION_STARTED control channel session started on socket %1
 A debug message issued during startup after the IPv6 DHCP server has
-successfully established a session with the BIND 10 control channel.
+successfully established a session with the BUNDY control channel.
 
 % DHCP6_CCSESSION_STARTING starting control channel session, specfile: %1
 This debug message is issued just before the IPv6 DHCP server attempts
-to establish a session with the BIND 10 control channel.
+to establish a session with the BUNDY control channel.
 
 % DHCP6_CLASS_ASSIGNED client packet has been assigned to the following class(es): %1
 This debug message informs that incoming packet has been assigned to specified
@@ -38,7 +38,7 @@ address assignment.  The most likely cause is a problem with the client.
 
 % DHCP6_COMMAND_RECEIVED received command %1, arguments: %2
 A debug message listing the command (and possible arguments) received
-from the BIND 10 control system by the IPv6 DHCP server.
+from the BUNDY control system by the IPv6 DHCP server.
 
 % DHCP6_CONFIG_COMPLETE DHCPv6 server has completed configuration: %1
 This is an informational message announcing the successful processing of a
@@ -67,7 +67,7 @@ change is committed by the administrator.
 
 % DHCP6_CONFIG_UPDATE updated configuration received: %1
 A debug message indicating that the IPv6 DHCP server has received an
-updated configuration from the BIND 10 configuration system.
+updated configuration from the BUNDY configuration system.
 
 % DHCP6_DB_BACKEND_STARTED lease database started (type: %1, name: %2)
 This informational message is printed every time the IPv6 DHCP server
@@ -101,7 +101,7 @@ that the DNS Update has been performed for it, but the FQDN held in the lease
 database has invalid format and can't be transformed to the canonical on-wire
 format.
 
-% DHCP6_DDNS_REQUEST_SEND_FAILED failed sending a request to b10-dhcp-ddns, error: %1,  ncr: %2
+% DHCP6_DDNS_REQUEST_SEND_FAILED failed sending a request to bundy-dhcp-ddns, error: %1,  ncr: %2
 This error message indicates that IPv6 DHCP server failed to send a DDNS
 update reqeust to the DHCP-DDNS server. This is most likely a configuration or
 networking error.
@@ -351,13 +351,13 @@ On receipt of message containing details to a change of its configuration,
 the IPv6 DHCP server failed to create a parser to decode the contents of
 the named configuration element, or the creation succeeded but the parsing
 actions and committal of changes failed.  The message has been output in
-response to a non-BIND 10 exception being raised.  Additional messages
+response to a non-BUNDY exception being raised.  Additional messages
 may give further information.
 
 The most likely cause of this is that the specification file for the
 server (which details the allowable contents of the configuration) is
-not correct for this version of BIND 10.  This may be the result of an
-interrupted installation of an update to BIND 10.
+not correct for this version of BUNDY.  This may be the result of an
+interrupted installation of an update to BUNDY.
 
 % DHCP6_PARSER_FAIL failed to create or run parser for configuration element %1: %2
 On receipt of message containing details to a change of its configuration,
@@ -499,10 +499,10 @@ to recover.
 The IPv6 DHCP server has encountered a fatal error and is terminating.
 The reason for the failure is included in the message.
 
-% DHCP6_SESSION_FAIL failed to establish BIND 10 session (%1), running stand-alone
+% DHCP6_SESSION_FAIL failed to establish BUNDY session (%1), running stand-alone
 The server has failed to establish communication with the rest of BIND
 10 and is running in stand-alone mode.  (This behavior will change once
-the IPv6 DHCP server is properly integrated with the rest of BIND 10.)
+the IPv6 DHCP server is properly integrated with the rest of BUNDY.)
 
 % DHCP6_SHUTDOWN server shutdown
 The IPv6 DHCP server has terminated normally.

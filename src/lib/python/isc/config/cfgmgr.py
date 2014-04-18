@@ -13,7 +13,7 @@
 # NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
 # WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-"""This is the BIND 10 configuration manager, run by b10-cfgmgr.
+"""This is the BUNDY configuration manager, run by bundy-cfgmgr.
 
    It stores the system configuration, and sends updates of the
    configuration to the modules that need them.
@@ -31,7 +31,7 @@ from isc.cc import data
 from isc.cc.proto_defs import *
 from isc.config import ccsession, config_data, module_spec
 from isc.util.file import path_search
-import bind10_config
+import bundy_config
 import isc.log
 from isc.log_messages.cfgmgr_messages import *
 
@@ -61,7 +61,7 @@ class ConfigManagerData:
            and the directory where the file_name lives is used instead.
            """
         self.data = {}
-        self.data['version'] = config_data.BIND10_CONFIG_DATA_VERSION
+        self.data['version'] = config_data.BUNDY_CONFIG_DATA_VERSION
         if os.path.isabs(file_name):
             self.db_filename = file_name
             self.data_path = os.path.dirname(file_name)
@@ -86,11 +86,11 @@ class ConfigManagerData:
             data_version = 1
 
         # For efficiency, if up-to-date, return now
-        if data_version == config_data.BIND10_CONFIG_DATA_VERSION:
+        if data_version == config_data.BUNDY_CONFIG_DATA_VERSION:
             return config
 
         # Don't know what to do if it is more recent
-        if data_version > config_data.BIND10_CONFIG_DATA_VERSION:
+        if data_version > config_data.BUNDY_CONFIG_DATA_VERSION:
             raise ConfigManagerDataReadError(
                       "Cannot load configuration file: version "
                       "%d not yet supported" % config['version'])
@@ -170,7 +170,7 @@ class ConfigManagerData:
 
         try:
             file = tempfile.NamedTemporaryFile(mode='w',
-                                               prefix="b10-config.db.",
+                                               prefix="bundy-config.db.",
                                                dir=self.data_path,
                                                delete=False)
             filename = file.name
@@ -261,7 +261,7 @@ class ConfigManager:
         self.log_config_data = config_data.ConfigData(
             isc.config.module_spec_from_file(
                 path_search('logging.spec',
-                bind10_config.PLUGIN_PATHS)))
+                bundy_config.PLUGIN_PATHS)))
         # store the logging 'module' name for easier reference
         self.log_module_name = self.log_config_data.get_module_spec().get_module_name()
 
@@ -275,7 +275,7 @@ class ConfigManager:
             # handler, so make it use defaults (and flush any buffered logs)
             ccsession.default_logconfig_handler({}, self.log_config_data)
 
-    def notify_b10_init(self):
+    def notify_bundy_init(self):
         """Notifies the Init module that the Config Manager is running"""
         # TODO: Use a real, broadcast notification here.
         self.cc.group_sendmsg({"running": "ConfigManager"}, "Init")
@@ -403,7 +403,7 @@ class ConfigManager:
             except data.DataNotFoundError as dnfe:
                 # no data is ok, that means we have nothing that
                 # deviates from default values
-                return ccsession.create_answer(0, { 'version': config_data.BIND10_CONFIG_DATA_VERSION })
+                return ccsession.create_answer(0, { 'version': config_data.BUNDY_CONFIG_DATA_VERSION })
         else:
             return ccsession.create_answer(1, "Bad module_name in get_config command")
 

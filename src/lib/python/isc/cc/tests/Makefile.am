@@ -24,6 +24,6 @@ endif
 	echo Running test: $$pytest ; \
 	$(LIBRARY_PATH_PLACEHOLDER) \
 	PYTHONPATH=$(COMMON_PYTHON_PATH) \
-	BIND10_TEST_SOCKET_FILE=$(builddir)/test_socket.sock \
+	BUNDY_TEST_SOCKET_FILE=$(builddir)/test_socket.sock \
 	$(PYCOVERAGE_RUN) $(abs_srcdir)/$$pytest || exit ; \
 	done

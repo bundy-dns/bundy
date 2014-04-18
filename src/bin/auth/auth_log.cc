@@ -12,7 +12,7 @@
 // OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 // PERFORMANCE OF THIS SOFTWARE.
 
-/// Defines the logger used by the top-level component of b10-auth.
+/// Defines the logger used by the top-level component of bundy-auth.
 
 #include "auth_log.h"
 

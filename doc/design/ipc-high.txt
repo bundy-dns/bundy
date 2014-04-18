@@ -163,7 +163,7 @@ subscriptions by subscribing to a group with well-known name (as with
 any notification).
 
 Note that due to implementation details, the `Msgq` alias is not yet
-available during early stage of the bootstrap of bind10 system. This
+available during early stage of the bootstrap of bundy system. This
 means some very core services can't rely on the above services of the
 system. The alias is guaranteed to be working before the first
 non-core module is started.
@@ -172,7 +172,7 @@ Higher-level services
 ---------------------
 
 While the system is able to send any kind of data, the payload sent by
-users in bind10 is structured data encoded as JSON. The messages sent
+users in bundy is structured data encoded as JSON. The messages sent
 are of three general types:
 
 Command::

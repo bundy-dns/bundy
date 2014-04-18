@@ -2,32 +2,32 @@ SUBDIRS = . tests
 
 pkglibexecdir = $(libexecdir)/@PACKAGE@
 
-pkglibexec_SCRIPTS = b10-zonemgr
+pkglibexec_SCRIPTS = bundy-zonemgr
 
-b10_zonemgrdir = $(pkgdatadir)
-b10_zonemgr_DATA = zonemgr.spec
+bundy_zonemgrdir = $(pkgdatadir)
+bundy_zonemgr_DATA = zonemgr.spec
 
 nodist_pylogmessage_PYTHON = $(PYTHON_LOGMSGPKG_DIR)/work/zonemgr_messages.py
 pylogmessagedir = $(pyexecdir)/isc/log_messages/
 
-CLEANFILES  = b10-zonemgr zonemgr.pyc zonemgr.spec
+CLEANFILES  = bundy-zonemgr zonemgr.pyc zonemgr.spec
 CLEANFILES += $(PYTHON_LOGMSGPKG_DIR)/work/zonemgr_messages.py
 CLEANFILES += $(PYTHON_LOGMSGPKG_DIR)/work/zonemgr_messages.pyc
 
-man_MANS = b10-zonemgr.8
+man_MANS = bundy-zonemgr.8
 DISTCLEANFILES = $(man_MANS)
-EXTRA_DIST = $(man_MANS) b10-zonemgr.xml zonemgr_messages.mes
+EXTRA_DIST = $(man_MANS) bundy-zonemgr.xml zonemgr_messages.mes
 
 if GENERATE_DOCS
 
-b10-zonemgr.8: b10-zonemgr.xml
-	@XSLTPROC@ --novalid --xinclude --nonet -o $@ http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $(srcdir)/b10-zonemgr.xml
+bundy-zonemgr.8: bundy-zonemgr.xml
+	@XSLTPROC@ --novalid --xinclude --nonet -o $@ http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $(srcdir)/bundy-zonemgr.xml
 
 else
 
 $(man_MANS):
 	@echo Man generation disabled.  Creating dummy $@.  Configure with --enable-generate-docs to enable it.
-	@echo Man generation disabled.  Remove this file, configure with --enable-generate-docs, and rebuild BIND 10 > $@
+	@echo Man generation disabled.  Remove this file, configure with --enable-generate-docs, and rebuild BUNDY > $@
 
 endif
 
@@ -39,7 +39,7 @@ $(PYTHON_LOGMSGPKG_DIR)/work/zonemgr_messages.py : zonemgr_messages.mes
 zonemgr.spec: zonemgr.spec.pre
 	$(SED) -e "s|@@LOCALSTATEDIR@@|$(localstatedir)|" zonemgr.spec.pre >$@
 
-b10-zonemgr: zonemgr.py $(PYTHON_LOGMSGPKG_DIR)/work/zonemgr_messages.py
+bundy-zonemgr: zonemgr.py $(PYTHON_LOGMSGPKG_DIR)/work/zonemgr_messages.py
 	$(SED) -e "s|@@PYTHONPATH@@|@pyexecdir@|" \
 	       -e "s|@@LOCALSTATEDIR@@|$(localstatedir)|" zonemgr.py >$@
 	chmod a+x $@

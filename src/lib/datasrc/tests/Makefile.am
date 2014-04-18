@@ -9,7 +9,7 @@ AM_CPPFLAGS += -DTEST_DATA_COMMONDIR=\"$(abs_top_srcdir)/src/lib/testutils/testd
 AM_CPPFLAGS += -DTEST_DATA_BUILDDIR=\"$(abs_builddir)/testdata\"
 AM_CPPFLAGS += -DINSTALL_PROG=\"$(abs_top_srcdir)/install-sh\"
 
-AM_CXXFLAGS = $(B10_CXXFLAGS)
+AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 
 if USE_STATIC_LINK
 AM_LDFLAGS = -static
@@ -34,13 +34,13 @@ common_sources = run_unittests.cc
 common_sources += $(top_srcdir)/src/lib/dns/tests/unittest_util.h
 common_sources += $(top_srcdir)/src/lib/dns/tests/unittest_util.cc
 
-common_ldadd = $(top_builddir)/src/lib/datasrc/libb10-datasrc.la
-common_ldadd += $(top_builddir)/src/lib/dns/libb10-dns++.la
-common_ldadd += $(top_builddir)/src/lib/util/libb10-util.la
-common_ldadd += $(top_builddir)/src/lib/log/libb10-log.la
-common_ldadd += $(top_builddir)/src/lib/exceptions/libb10-exceptions.la
-common_ldadd += $(top_builddir)/src/lib/cc/libb10-cc.la
-common_ldadd += $(top_builddir)/src/lib/testutils/libb10-testutils.la
+common_ldadd = $(top_builddir)/src/lib/datasrc/libbundy-datasrc.la
+common_ldadd += $(top_builddir)/src/lib/dns/libbundy-dns++.la
+common_ldadd += $(top_builddir)/src/lib/util/libbundy-util.la
+common_ldadd += $(top_builddir)/src/lib/log/libbundy-log.la
+common_ldadd += $(top_builddir)/src/lib/exceptions/libbundy-exceptions.la
+common_ldadd += $(top_builddir)/src/lib/cc/libbundy-cc.la
+common_ldadd += $(top_builddir)/src/lib/testutils/libbundy-testutils.la
 common_ldadd += $(top_builddir)/src/lib/util/unittests/libutil_unittests.la
 common_ldadd += $(GTEST_LDADD) $(SQLITE_LIBS)
 
@@ -78,7 +78,7 @@ noinst_PROGRAMS+= $(TESTS)
 # For the factory unit tests, we need to specify that we want
 # the loadable backend libraries from the build tree, and not from
 # the installation directory. Therefore we build it into a separate
-# binary, and call that from check-local with B10_FROM_BUILD set.
+# binary, and call that from check-local with BUNDY_FROM_BUILD set.
 # Also, we only want to do this when static building is not used,
 # since it will cause various troubles with static link such as
 # "missing" symbols in the static object for the module.
@@ -90,7 +90,7 @@ run_unittests_factory_CPPFLAGS = $(AM_CPPFLAGS) $(GTEST_INCLUDES)
 run_unittests_factory_LDFLAGS  = $(AM_LDFLAGS)  $(GTEST_LDFLAGS)
 run_unittests_factory_LDADD = $(common_ldadd)
 check-local:
-	B10_FROM_BUILD=${abs_top_builddir} ./run_unittests_factory
+	BUNDY_FROM_BUILD=${abs_top_builddir} ./run_unittests_factory
 endif
 
 endif

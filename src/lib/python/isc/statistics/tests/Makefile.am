@@ -26,8 +26,8 @@ endif
 	echo Running test: $$pytest ; \
 	PYTHONPATH=$(COMMON_PYTHON_PATH) \
 	$(LIBRARY_PATH_PLACEHOLDER) \
-	B10_FROM_BUILD=$(abs_top_builddir) \
-	B10_FROM_SOURCE=$(abs_top_srcdir) \
+	BUNDY_FROM_BUILD=$(abs_top_builddir) \
+	BUNDY_FROM_SOURCE=$(abs_top_srcdir) \
 	TESTDATASRCDIR=$(abs_top_srcdir)/src/lib/python/isc/statistics/tests/testdata \
 	$(PYCOVERAGE_RUN) $(abs_srcdir)/$$pytest || exit ; \
 	done

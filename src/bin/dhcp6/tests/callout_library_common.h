@@ -63,7 +63,7 @@ appendDigit(const char* name) {
 // Framework functions
 int
 version() {
-    return (BIND10_HOOKS_VERSION);
+    return (BUNDY_HOOKS_VERSION);
 }
 
 int

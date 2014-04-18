@@ -19,8 +19,8 @@
 # <topsrcdir>/tools/reorder_message_file.py to make sure the
 # messages are in the correct order.
 
-% MSGQ_ALREADY_RUNNING Another copy of b10-msgq is already running.
-Only a single instance of b10-msgq should ever be run at one time.
+% MSGQ_ALREADY_RUNNING Another copy of bundy-msgq is already running.
+Only a single instance of bundy-msgq should ever be run at one time.
 This instance will now terminate.
 
 % MSGQ_CFGMGR_SUBSCRIBED The config manager subscribed to message queue
@@ -40,9 +40,9 @@ client terminates (for some reason - either gracefully or as a crash)
 while other modules try to send a message to the terminated module.
 Since msgq doesn't keep track of the status of client modules, this
 can happen and is not really an error for msgq; however, it can still
-be an unexpected event for the BIND 10 system as a whole in that this
+be an unexpected event for the BUNDY system as a whole in that this
 particular message is lost, so it's logged as a warning.  If this
-message is logged for a running BIND 10 system, it's suggested to
+message is logged for a running BUNDY system, it's suggested to
 check other log messages; there may be an error from other modules
 reporting a missing response message.  One common, less critical case
 where this message is logged is during shutdown.  The ordering of
@@ -93,7 +93,7 @@ waits for incoming connections.
 There was a low-level error when reading from a socket. The error is logged and
 the corresponding socket is dropped.  The errors include receiving
 broken or (non empty but) incomplete data.  In either case it usually suggests
-something unexpected happens within the BIND 10 system; it's probably
+something unexpected happens within the BUNDY system; it's probably
 better to restart the system, and if it continues it should be
 reported as a bug.  One known, probably non critical case is
 the "connection reset by peer" (or its variants) socket error appearing

@@ -86,7 +86,7 @@ public:
     /// points to a string value containing the filename of a mapped
     /// file. E.g.,
     ///
-    ///  {"mapped-file": "/var/bind10/mapped-files/zone-sqlite3.mapped.0"}
+    ///  {"mapped-file": "/var/bundy/mapped-files/zone-sqlite3.mapped.0"}
     ///
     /// Please see the \c ZoneTableSegment API documentation for the
     /// behavior in case of exceptions.

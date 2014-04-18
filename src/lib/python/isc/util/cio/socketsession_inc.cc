@@ -127,7 +127,7 @@ is malicious or extremely buggy and intentionally sends partial\n\
 session and keeps the connection, the receiver could block in\n\
 receiving a session. In general, we assume the forwarder doesn't do\n\
 intentional blocking as it's a local node and is generally a module of\n\
-the same (BIND 10) system. The minimum requirement for the forwarder\n\
+the same (BUNDY) system. The minimum requirement for the forwarder\n\
 implementation (and application) is to make sure the connection is\n\
 closed once it detects an error on it. Even a naive implementation\n\
 that simply dies due to the exception will meet this requirement.\n\

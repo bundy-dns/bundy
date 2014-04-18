@@ -17,7 +17,7 @@ check-local:
 	chmod +x $(abs_builddir)/log_console.py
 	$(LIBRARY_PATH_PLACEHOLDER) \
 	PYTHONPATH=$(COMMON_PYTHON_PATH):$(abs_top_builddir)/src/lib/python/isc/log \
-	B10_LOCKFILE_DIR_FROM_BUILD=$(abs_top_builddir) \
+	BUNDY_LOCKFILE_DIR_FROM_BUILD=$(abs_top_builddir) \
 	$(abs_srcdir)/check_output.sh $(abs_builddir)/log_console.py $(abs_srcdir)/console.out
 if ENABLE_PYTHON_COVERAGE
 	touch $(abs_top_srcdir)/.coverage
@@ -28,8 +28,8 @@ endif
 	echo Running test: $$pytest ; \
 	$(LIBRARY_PATH_PLACEHOLDER) \
 	PYTHONPATH=$(COMMON_PYTHON_PATH):$(abs_top_builddir)/src/lib/python/isc/log:$(abs_top_builddir)/src/lib/log/python/.libs \
-	B10_TEST_PLUGIN_DIR=$(abs_top_srcdir)/src/bin/cfgmgr/plugins \
-	B10_LOCKFILE_DIR_FROM_BUILD=$(abs_top_builddir) \
+	BUNDY_TEST_PLUGIN_DIR=$(abs_top_srcdir)/src/bin/cfgmgr/plugins \
+	BUNDY_LOCKFILE_DIR_FROM_BUILD=$(abs_top_builddir) \
 	$(PYCOVERAGE_RUN) $(abs_srcdir)/$$pytest || exit ; \
 	done ; \
 	for pytest in $(PYTESTS_GEN) ; do \
@@ -37,7 +37,7 @@ endif
 	chmod +x $(abs_builddir)/$$pytest ; \
 	$(LIBRARY_PATH_PLACEHOLDER) \
 	PYTHONPATH=$(COMMON_PYTHON_PATH):$(abs_top_builddir)/src/lib/python/isc/log:$(abs_top_builddir)/src/lib/log/python/.libs \
-	B10_TEST_PLUGIN_DIR=$(abs_top_srcdir)/src/bin/cfgmgr/plugins \
-	B10_LOCKFILE_DIR_FROM_BUILD=$(abs_top_builddir) \
+	BUNDY_TEST_PLUGIN_DIR=$(abs_top_srcdir)/src/bin/cfgmgr/plugins \
+	BUNDY_LOCKFILE_DIR_FROM_BUILD=$(abs_top_builddir) \
 	$(PYCOVERAGE_RUN) $(abs_builddir)/$$pytest || exit ; \
 	done

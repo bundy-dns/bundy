@@ -176,6 +176,6 @@ class ACLConfigTest(unittest.TestCase):
         self.assertEqual(DROP, acl.execute(TEST_ACL_CONTEXT))
 
 if __name__ == "__main__":
-    isc.log.init("bind10")
+    isc.log.init("bundy")
     isc.log.resetUnitTestRootLogger()
     unittest.main()

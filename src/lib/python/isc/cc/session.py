@@ -19,7 +19,7 @@ import struct
 import errno
 import os
 import threading
-import bind10_config
+import bundy_config
 
 import isc.cc.message
 import isc.log
@@ -47,10 +47,10 @@ class Session:
         self._recv_size = 0
 
         if socket_file is None:
-            if "BIND10_MSGQ_SOCKET_FILE" in os.environ:
-                self.socket_file = os.environ["BIND10_MSGQ_SOCKET_FILE"]
+            if "BUNDY_MSGQ_SOCKET_FILE" in os.environ:
+                self.socket_file = os.environ["BUNDY_MSGQ_SOCKET_FILE"]
             else:
-                self.socket_file = bind10_config.BIND10_MSGQ_SOCKET_FILE
+                self.socket_file = bundy_config.BUNDY_MSGQ_SOCKET_FILE
         else:
             self.socket_file = socket_file
 

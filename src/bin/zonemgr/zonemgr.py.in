@@ -19,8 +19,8 @@
 This file implements the Secondary Manager program.
 
 The secondary manager is one of the co-operating processes
-of BIND10, which keeps track of timers and other information
-necessary for BIND10 to act as a slave.
+of BUNDY, which keeps track of timers and other information
+necessary for BUNDY to act as a slave.
 """
 
 import sys; sys.path.append ('@@PYTHONPATH@@')
@@ -45,7 +45,7 @@ from isc.datasrc import DataSourceClient, ZoneFinder
 from isc.dns import *
 
 # Initialize logging for called modules.
-isc.log.init("b10-zonemgr", buffer=True)
+isc.log.init("bundy-zonemgr", buffer=True)
 logger = isc.log.Logger("zonemgr")
 
 # Pending system-wide debug level definitions, the ones we
@@ -60,12 +60,12 @@ DBG_ZONEMGR_BASIC = logger.DBGLVL_TRACE_BASIC
 
 isc.util.process.rename()
 
-# If B10_FROM_BUILD is set in the environment, we use data files
+# If BUNDY_FROM_BUILD is set in the environment, we use data files
 # from a directory relative to that, otherwise we use the ones
 # installed on the system
-if "B10_FROM_BUILD" in os.environ:
-    SPECFILE_PATH = os.environ["B10_FROM_BUILD"] + "/src/bin/zonemgr"
-    AUTH_SPECFILE_PATH = os.environ["B10_FROM_BUILD"] + "/src/bin/auth"
+if "BUNDY_FROM_BUILD" in os.environ:
+    SPECFILE_PATH = os.environ["BUNDY_FROM_BUILD"] + "/src/bin/zonemgr"
+    AUTH_SPECFILE_PATH = os.environ["BUNDY_FROM_BUILD"] + "/src/bin/auth"
 else:
     PREFIX = "@prefix@"
     DATAROOTDIR = "@datarootdir@"
@@ -77,7 +77,7 @@ else:
 SPECFILE_LOCATION = SPECFILE_PATH + "/zonemgr.spec"
 AUTH_SPECFILE_LOCATION = AUTH_SPECFILE_PATH + "/auth.spec"
 
-__version__ = "BIND10"
+__version__ = "BUNDY"
 
 # define module name
 XFRIN_MODULE_NAME = 'Xfrin'
@@ -184,7 +184,7 @@ class ZonemgrRefresh:
         if self._zone_not_exist(zone_name_class):
             logger.error(ZONEMGR_UNKNOWN_ZONE_SUCCESS, zone_name_class[0],
                          zone_name_class[1])
-            raise ZonemgrException("[b10-zonemgr] Zone (%s, %s) doesn't "
+            raise ZonemgrException("[bundy-zonemgr] Zone (%s, %s) doesn't "
                                    "belong to zonemgr" % zone_name_class)
         self.zonemgr_reload_zone(zone_name_class)
         self._set_zone_refresh_timer(zone_name_class)
@@ -197,7 +197,7 @@ class ZonemgrRefresh:
         if self._zone_not_exist(zone_name_class):
             logger.error(ZONEMGR_UNKNOWN_ZONE_FAIL, zone_name_class[0],
                          zone_name_class[1])
-            raise ZonemgrException("[b10-zonemgr] Zone (%s, %s) doesn't "
+            raise ZonemgrException("[bundy-zonemgr] Zone (%s, %s) doesn't "
                                    "belong to zonemgr" % zone_name_class)
         # Is zone expired?
         if ((self._get_zone_soa_rdata(zone_name_class) is None) or

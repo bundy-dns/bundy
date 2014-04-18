@@ -35,7 +35,7 @@ class LibraryManagerCollection;
 /// @brief Hooks Manager
 ///
 /// This is the overall manager of the hooks framework and is the main class
-/// used by a BIND 10 module when handling hooks.  It is responsible for the
+/// used by a BUNDY module when handling hooks.  It is responsible for the
 /// loading and unloading of user libraries, and for calling the callouts on
 /// each hook point.
 ///
@@ -218,7 +218,7 @@ private:
     ///
     /// @return An empty string if all libraries validated.  Otherwise it is
     ///         the name of the first library that failed validation.  The
-    ///         configuration code can return this to bindctl as an indication
+    ///         configuration code can return this to bundyctl as an indication
     ///         of the problem.
     std::string validateLibrariesInternal(
                        const std::vector<std::string>& libraries) const;

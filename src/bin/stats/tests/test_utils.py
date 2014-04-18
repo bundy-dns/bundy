@@ -87,8 +87,8 @@ INIT_SPEC_STR = """\
         "item_type": "named_set",
         "item_optional": false,
         "item_default": {
-          "b10-stats": { "address": "Stats", "kind": "dispensable" },
-          "b10-cmdctl": { "special": "cmdctl", "kind": "needed" }
+          "bundy-stats": { "address": "Stats", "kind": "dispensable" },
+          "bundy-cmdctl": { "special": "cmdctl", "kind": "needed" }
         },
         "named_set_item_spec": {
           "item_name": "component",
@@ -140,17 +140,17 @@ INIT_SPEC_STR = """\
     "commands": [
       {
         "command_name": "shutdown",
-        "command_description": "Shut down BIND 10",
+        "command_description": "Shut down BUNDY",
         "command_args": []
       },
       {
         "command_name": "ping",
-        "command_description": "Ping the b10-init process",
+        "command_description": "Ping the bundy-init process",
         "command_args": []
       },
       {
         "command_name": "show_processes",
-        "command_description": "List the running BIND 10 processes",
+        "command_description": "List the running BUNDY processes",
         "command_args": []
       }
     ],
@@ -161,7 +161,7 @@ INIT_SPEC_STR = """\
         "item_optional": false,
         "item_default": "1970-01-01T00:00:00Z",
         "item_title": "Boot time",
-        "item_description": "A date time when bind10 process starts initially",
+        "item_description": "A date time when bundy process starts initially",
         "item_format": "date-time"
       }
     ]

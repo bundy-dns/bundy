@@ -23,7 +23,7 @@ backend DB server.  The cause of the error is also logged.  It's
 advisable to check the message, and, if necessary, take an appropriate
 action (e.g., restarting the DB server if it dies).  If this message
 is logged the data source isn't modified due to the
-corresponding update request.  When used by the b10-ddns, the server
+corresponding update request.  When used by the bundy-ddns, the server
 will return a response with an RCODE of SERVFAIL.
 
 % LIBDDNS_PREREQ_FORMERR update client %1 for zone %2: Format error in prerequisite (%3). Non-zero TTL.
@@ -158,13 +158,13 @@ A FORMERR response is sent back to the client.
 % LIBDDNS_UPDATE_DENIED update client %1 for zone %2 denied
 Informational message.  An update request was denied because it was
 rejected by the zone's update ACL.  When this library is used by
-b10-ddns, the server will respond to the request with an RCODE of
+bundy-ddns, the server will respond to the request with an RCODE of
 REFUSED as described in Section 3.3 of RFC2136.
 
 % LIBDDNS_UPDATE_DROPPED update client %1 for zone %2 dropped
 Informational message.  An update request was denied because it was
 rejected by the zone's update ACL.  When this library is used by
-b10-ddns, the server will then completely ignore the request; no
+bundy-ddns, the server will then completely ignore the request; no
 response will be sent.
 
 % LIBDDNS_UPDATE_FORWARD_FAIL update client %1 for zone %2: update forwarding not supported

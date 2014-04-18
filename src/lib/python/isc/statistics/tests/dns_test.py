@@ -167,7 +167,7 @@ class DummyNotifyOut(BaseDummyModule):
                           TEST_ZONE_NAME_STR, 'notifyoutv6')
 
 class DummyXfroutSession(BaseDummyModule):
-    """A dummy class equivalent to XfroutSession in b10-xfrout"""
+    """A dummy class equivalent to XfroutSession in bundy-xfrout"""
     def inc_counters(self):
         """increments counters"""
         self.counters.inc('zones', TEST_ZONE_CLASS_STR,
@@ -180,14 +180,14 @@ class DummyXfroutSession(BaseDummyModule):
         self.counters.dec('ixfr_running')
 
 class DummyUnixSockServer(BaseDummyModule):
-    """A dummy class equivalent to UnixSockServer in b10-xfrout"""
+    """A dummy class equivalent to UnixSockServer in bundy-xfrout"""
     def inc_counters(self):
         """increments counters"""
         self.counters.inc('socket', 'unixdomain', 'open')
         self.counters.inc('socket', 'unixdomain', 'close')
 
 class DummyXfroutServer(BaseDummyModule):
-    """A dummy class equivalent to XfroutServer in b10-xfrout"""
+    """A dummy class equivalent to XfroutServer in bundy-xfrout"""
     def __init__(self):
         self.counters = dns.Counters(self.TEST_SPECFILE_LOCATION)
         self.xfrout_sess = DummyXfroutSession(self.counters)

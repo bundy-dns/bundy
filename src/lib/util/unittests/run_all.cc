@@ -30,7 +30,7 @@ run_all() {
     int ret = 0;
 
     // The catching of exceptions generated in tests is controlled by the
-    // B10TEST_CATCH_EXCEPTION environment variable.  Setting this to
+    // BUNDYTEST_CATCH_EXCEPTION environment variable.  Setting this to
     // 1 enables the catching of exceptions; setting it to 0 disables it.
     // Anything else causes a message to be printed to stderr and the default
     // taken.  (The default is to catch exceptions if compiling with clang
@@ -41,14 +41,14 @@ run_all() {
     bool catch_exception = false;
 #endif
 
-    const char* b10test_catch_exception = getenv("B10TEST_CATCH_EXCEPTION");
+    const char* b10test_catch_exception = getenv("BUNDYTEST_CATCH_EXCEPTION");
     if (b10test_catch_exception != NULL) {
         if (strcmp(b10test_catch_exception, "1") == 0) {
             catch_exception = true;
         } else if (strcmp(b10test_catch_exception, "0") == 0) {
             catch_exception = false;
         } else {
-            std::cerr << "***ERROR: B10TEST_CATCH_EXCEPTION is '"
+            std::cerr << "***ERROR: BUNDYTEST_CATCH_EXCEPTION is '"
                          << b10test_catch_exception
                          << "': allowed values are '1' or '0'.\n"
                       << "          The default value of "

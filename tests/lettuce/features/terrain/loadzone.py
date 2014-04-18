@@ -18,7 +18,7 @@ import subprocess
 import tempfile
 
 def run_loadzone(zone, zone_file, db_file):
-    """Run b10-loadzone.
+    """Run bundy-loadzone.
 
     It currently only works for an SQLite3-based data source, and takes
     its DB file as a parameter.
@@ -32,9 +32,9 @@ def run_loadzone(zone, zone_file, db_file):
     """
     sqlite_datasrc_cfg = '{"database_file": "' + db_file + '"}'
     if zone_file is not None:
-        args = ['b10-loadzone', '-c', sqlite_datasrc_cfg, zone, zone_file]
+        args = ['bundy-loadzone', '-c', sqlite_datasrc_cfg, zone, zone_file]
     else:
-        args = ['b10-loadzone', '-c', sqlite_datasrc_cfg, '-e', zone]
+        args = ['bundy-loadzone', '-c', sqlite_datasrc_cfg, '-e', zone]
     loadzone = subprocess.Popen(args, 1, None, None,
                                 subprocess.PIPE, subprocess.PIPE)
     (stdout, stderr) = loadzone.communicate()

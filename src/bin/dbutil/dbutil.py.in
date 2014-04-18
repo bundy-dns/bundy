@@ -19,10 +19,10 @@
 @file Database Utilities
 
 This file holds the "dbutil" program, a general utility program for doing
-management of the BIND 10 database.  There are two modes of operation:
+management of the BUNDY database.  There are two modes of operation:
 
-      b10-dbutil --check [--verbose] database
-      b10-dbutil --upgrade [--noconfirm] [--verbose] database
+      bundy-dbutil --check [--verbose] database
+      bundy-dbutil --upgrade [--noconfirm] [--verbose] database
 
 The first form checks the version of the given database.  The second form
 upgrades the database to the latest version of the schema, omitting the
@@ -62,7 +62,7 @@ import isc.util.traceback_handler
 import isc.log
 from isc.log_messages.dbutil_messages import *
 
-isc.log.init("b10-dbutil")
+isc.log.init("bundy-dbutil")
 logger = isc.log.Logger("dbutil")
 isc.util.process.rename()
 
@@ -71,9 +71,9 @@ TRACE_BASIC = logger.DBGLVL_TRACE_BASIC
 
 # @brief Version String
 # This is the version displayed to the user.  It comprises the module name,
-# the module version number, and the overall BIND 10 version number (set in
+# the module version number, and the overall BUNDY version number (set in
 # configure.ac)
-VERSION = "b10-dbutil 20120319 (BIND 10 @PACKAGE_VERSION@)"
+VERSION = "bundy-dbutil 20120319 (BUNDY @PACKAGE_VERSION@)"
 
 # @brief Statements to Update the Database
 # These are in the form of a list of dictionaries, each of which contains the
@@ -185,7 +185,7 @@ UPGRADES = [
             "DROP TABLE old_diffs",
 
             # Schema table.  This is updated to include a second column for
-            # future changes.  The idea is that if a version of BIND 10 is
+            # future changes.  The idea is that if a version of BUNDY is
             # written for schema M.N, it should be able to work for all
             # versions of N; if not, M must be incremented.
             #
@@ -326,12 +326,12 @@ def prompt_user():
     """
     sys.stdout.write(
 """You have selected the upgrade option.  This will upgrade the schema of the
-selected BIND 10 zone database to the latest version.
+selected BUNDY zone database to the latest version.
 
 The utility will take a copy of the zone database file before executing so, in
 the event of a problem, you will be able to restore the zone database from
 the backup.  To ensure that the integrity of this backup, please ensure that
-BIND 10 is not running before continuing.
+BUNDY is not running before continuing.
 """)
     yes_entered = False
     no_entered = False
@@ -573,12 +573,12 @@ def main():
     global logger
 
     if options.verbose:
-        isc.log.init("b10-dbutil", "DEBUG", 99)
+        isc.log.init("bundy-dbutil", "DEBUG", 99)
         logger = isc.log.Logger("dbutil")
     elif options.quiet:
         # We don't use FATAL, so setting the logger to use
         # it should essentially make it silent.
-        isc.log.init("b10-dbutil", "FATAL")
+        isc.log.init("bundy-dbutil", "FATAL")
         logger = isc.log.Logger("dbutil")
 
     db = Database(args[0])

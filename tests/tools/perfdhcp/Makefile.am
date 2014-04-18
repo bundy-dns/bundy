@@ -4,7 +4,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/src/lib -I$(top_builddir)/src/lib
 AM_CPPFLAGS += -I$(top_srcdir)/src/lib/log -I$(top_builddir)/src/lib/log
 AM_CPPFLAGS += $(BOOST_INCLUDES)
 
-AM_CXXFLAGS = $(B10_CXXFLAGS)
+AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 
 # Some versions of GCC warn about some versions of Boost regarding
 # missing initializer for members in its posix_time.
@@ -28,7 +28,7 @@ perfdhcp_SOURCES += pkt_transform.cc pkt_transform.h
 perfdhcp_SOURCES += rate_control.cc rate_control.h
 perfdhcp_SOURCES += stats_mgr.h
 perfdhcp_SOURCES += test_control.cc test_control.h
-libb10_perfdhcp___la_CXXFLAGS = $(AM_CXXFLAGS)
+libbundy_perfdhcp___la_CXXFLAGS = $(AM_CXXFLAGS)
 
 perfdhcp_CXXFLAGS = $(AM_CXXFLAGS)
 if USE_CLANGPP
@@ -37,9 +37,9 @@ if USE_CLANGPP
 perfdhcp_CXXFLAGS += -Wno-unused-parameter
 endif
 
-perfdhcp_LDADD = $(top_builddir)/src/lib/exceptions/libb10-exceptions.la
-perfdhcp_LDADD += $(top_builddir)/src/lib/dhcp/libb10-dhcp++.la
-perfdhcp_LDADD += $(top_builddir)/src/lib/asiolink/libb10-asiolink.la
+perfdhcp_LDADD = $(top_builddir)/src/lib/exceptions/libbundy-exceptions.la
+perfdhcp_LDADD += $(top_builddir)/src/lib/dhcp/libbundy-dhcp++.la
+perfdhcp_LDADD += $(top_builddir)/src/lib/asiolink/libbundy-asiolink.la
 
 
 # ... and the documentation
@@ -58,6 +58,6 @@ else
 
 $(man_MANS):
 	@echo Man generation disabled.  Creating dummy $@.  Configure with --enable-generate-docs to enable it.
-	@echo Man generation disabled.  Remove this file, configure with --enable-generate-docs, and rebuild BIND 10 > $@
+	@echo Man generation disabled.  Remove this file, configure with --enable-generate-docs, and rebuild BUNDY > $@
 
 endif

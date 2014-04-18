@@ -68,7 +68,7 @@ PyModuleDef pyunittests_util = {
     { PyObject_HEAD_INIT(NULL) NULL, 0, NULL},
     "pyunittests_util",
     "This module is a collection of utilities useful for testing "
-    "the BIND 10 C++ binding modules.",
+    "the BUNDY C++ binding modules.",
     -1,
     PyUnittestsUtilMethods,
     NULL,

@@ -4,7 +4,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/src/lib -I$(top_builddir)/src/lib
 AM_CPPFLAGS += -I$(top_srcdir)/src/lib/dns -I$(top_builddir)/src/lib/dns
 AM_CPPFLAGS += $(BOOST_INCLUDES)
 
-AM_CXXFLAGS = $(B10_CXXFLAGS)
+AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 
 # Define rule to build logging source files from message file
 resolve_messages.h resolve_messages.cc: s-messages
@@ -23,26 +23,26 @@ BUILT_SOURCES = resolve_messages.h resolve_messages.cc
 
 CLEANFILES = *.gcno *.gcda resolve_messages.cc resolve_messages.h s-messages
 
-lib_LTLIBRARIES = libb10-resolve.la
-libb10_resolve_la_SOURCES = resolve.h resolve.cc
-libb10_resolve_la_SOURCES += resolve_log.h resolve_log.cc
-libb10_resolve_la_SOURCES += resolver_interface.h
-libb10_resolve_la_SOURCES += resolver_callback.h resolver_callback.cc
-libb10_resolve_la_SOURCES += response_classifier.cc response_classifier.h
-libb10_resolve_la_SOURCES += recursive_query.cc recursive_query.h
+lib_LTLIBRARIES = libbundy-resolve.la
+libbundy_resolve_la_SOURCES = resolve.h resolve.cc
+libbundy_resolve_la_SOURCES += resolve_log.h resolve_log.cc
+libbundy_resolve_la_SOURCES += resolver_interface.h
+libbundy_resolve_la_SOURCES += resolver_callback.h resolver_callback.cc
+libbundy_resolve_la_SOURCES += response_classifier.cc response_classifier.h
+libbundy_resolve_la_SOURCES += recursive_query.cc recursive_query.h
 
-nodist_libb10_resolve_la_SOURCES = resolve_messages.h resolve_messages.cc
+nodist_libbundy_resolve_la_SOURCES = resolve_messages.h resolve_messages.cc
 
-libb10_resolve_la_LIBADD = $(top_builddir)/src/lib/dns/libb10-dns++.la
-libb10_resolve_la_LIBADD += $(top_builddir)/src/lib/exceptions/libb10-exceptions.la
-libb10_resolve_la_LIBADD += $(top_builddir)/src/lib/log/libb10-log.la
-libb10_resolve_la_LIBADD += $(top_builddir)/src/lib/asiodns/libb10-asiodns.la
-libb10_resolve_la_LIBADD += $(top_builddir)/src/lib/nsas/libb10-nsas.la
+libbundy_resolve_la_LIBADD = $(top_builddir)/src/lib/dns/libbundy-dns++.la
+libbundy_resolve_la_LIBADD += $(top_builddir)/src/lib/exceptions/libbundy-exceptions.la
+libbundy_resolve_la_LIBADD += $(top_builddir)/src/lib/log/libbundy-log.la
+libbundy_resolve_la_LIBADD += $(top_builddir)/src/lib/asiodns/libbundy-asiodns.la
+libbundy_resolve_la_LIBADD += $(top_builddir)/src/lib/nsas/libbundy-nsas.la
 
 # The message file should be in the distribution.
 EXTRA_DIST = resolve_messages.mes
 
 # Note: the ordering matters: -Wno-... must follow -Wextra (defined in
-# B10_CXXFLAGS)
-libb10_resolve_la_CXXFLAGS = $(AM_CXXFLAGS)
-libb10_resolve_la_CPPFLAGS = $(AM_CPPFLAGS)
+# BUNDY_CXXFLAGS)
+libbundy_resolve_la_CXXFLAGS = $(AM_CXXFLAGS)
+libbundy_resolve_la_CPPFLAGS = $(AM_CPPFLAGS)

@@ -15,8 +15,8 @@
 # NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
 # WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-''' cmdctl module is the configuration entry point for all commands from bindctl
-or some other web tools client of bind10. cmdctl is pure https server which provi-
+''' cmdctl module is the configuration entry point for all commands from bundyctl
+or some other web tools client of bundy. cmdctl is pure https server which provi-
 des RESTful API. When command client connecting with cmdctl, it should first login
 with legal username and password.
     When cmdctl starting up, it will collect command specification and
@@ -51,10 +51,10 @@ from isc.util import socketserver_mixin
 from isc.log_messages.cmdctl_messages import *
 import isc.util.traceback_handler
 
-isc.log.init("b10-cmdctl", buffer=True)
+isc.log.init("bundy-cmdctl", buffer=True)
 logger = isc.log.Logger("cmdctl")
 
-# Debug level for communication with BIND10
+# Debug level for communication with BUNDY
 DBG_CMDCTL_MESSAGING = logger.DBGLVL_COMMAND
 
 try:
@@ -64,17 +64,17 @@ except ImportError:
 
 isc.util.process.rename()
 
-__version__ = 'BIND10'
+__version__ = 'BUNDY'
 URL_PATTERN = re.compile('/([\w]+)(?:/([\w]+))?/?')
 CONFIG_DATA_URL = 'config_data'
 MODULE_SPEC_URL = 'module_spec'
 
 
-# If B10_FROM_BUILD is set in the environment, we use data files
+# If BUNDY_FROM_BUILD is set in the environment, we use data files
 # from a directory relative to that, otherwise we use the ones
 # installed on the system
-if "B10_FROM_BUILD" in os.environ:
-    SPECFILE_PATH = os.environ["B10_FROM_BUILD"] + "/src/bin/cmdctl"
+if "BUNDY_FROM_BUILD" in os.environ:
+    SPECFILE_PATH = os.environ["BUNDY_FROM_BUILD"] + "/src/bin/cmdctl"
 else:
     PREFIX = "@prefix@"
     DATAROOTDIR = "@datarootdir@"
@@ -366,7 +366,7 @@ class CommandControl():
                     self.modules_spec[args[0]] = args[1]
 
         elif command == ccsession.COMMAND_SHUTDOWN:
-            #When cmdctl get 'shutdown' command from b10-init,
+            #When cmdctl get 'shutdown' command from bundy-init,
             #shutdown the outer httpserver.
             self._module_cc.send_stopping()
             self._httpserver.shutdown()
@@ -445,7 +445,7 @@ class CommandControl():
         return self.send_command(module_name, command_name, params)
 
     def send_command(self, module_name, command_name, params=None):
-        """Send the command from bindctl to proper module.
+        """Send the command from bundyctl to proper module.
 
         Note that commands sent to Cmdctl itself are also delivered via the
         CC session.  Since this method is called from a thread handling a
@@ -494,8 +494,8 @@ class CommandControl():
     def get_cmdctl_config_data(self):
         ''' If running in source code tree, use keyfile, certificate
         and user accounts file in source code. '''
-        if "B10_FROM_SOURCE" in os.environ:
-            sysconf_path = os.environ["B10_FROM_SOURCE"] + "/src/bin/cmdctl/"
+        if "BUNDY_FROM_SOURCE" in os.environ:
+            sysconf_path = os.environ["BUNDY_FROM_SOURCE"] + "/src/bin/cmdctl/"
             accountsfile  = sysconf_path + "cmdctl-accounts.csv"
             keyfile = sysconf_path + "cmdctl-keyfile.pem"
             certfile = sysconf_path + "cmdctl-certfile.pem"
@@ -530,7 +530,7 @@ class SecureHTTPServer(socketserver_mixin.NoPollMixIn,
                                        "already in use. Please stop " +\
                                        "the application that uses it or " +\
                                        "see the guide about using a " +\
-                                       "different port for b10-cmdctl.") % \
+                                       "different port for bundy-cmdctl.") % \
                                       (server_address[1], \
                                        server_address[0]))
             else:

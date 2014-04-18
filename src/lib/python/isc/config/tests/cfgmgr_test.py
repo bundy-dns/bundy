@@ -28,7 +28,7 @@ class TestConfigManagerData(unittest.TestCase):
         self.data_path = os.environ['CONFIG_TESTDATA_PATH']
         self.writable_data_path = os.environ['CONFIG_WR_TESTDATA_PATH']
         self.config_manager_data = ConfigManagerData(self.writable_data_path,
-                                                     file_name="b10-config.db")
+                                                     file_name="bundy-config.db")
         self.assertTrue(self.config_manager_data)
 
     def test_abs_file(self):
@@ -36,23 +36,23 @@ class TestConfigManagerData(unittest.TestCase):
         Test what happens if we give the config manager an absolute path.
         It shouldn't append the data path to it.
         """
-        abs_path = self.data_path + os.sep + "b10-config-imaginary.db"
+        abs_path = self.data_path + os.sep + "bundy-config-imaginary.db"
         data = ConfigManagerData(self.data_path, abs_path)
         self.assertEqual(abs_path, data.db_filename)
         self.assertEqual(self.data_path, data.data_path)
 
     def test_init(self):
         self.assertEqual(self.config_manager_data.data['version'],
-                         config_data.BIND10_CONFIG_DATA_VERSION)
+                         config_data.BUNDY_CONFIG_DATA_VERSION)
         self.assertEqual(self.config_manager_data.data_path,
                          self.writable_data_path)
         self.assertEqual(self.config_manager_data.db_filename,
-                         self.writable_data_path + os.sep + "b10-config.db")
+                         self.writable_data_path + os.sep + "bundy-config.db")
 
     def test_check_for_updates_up_to_date(self):
         # This should automatically give an up-to-date version
         file_config = ConfigManagerData.read_from_file(
-                        self.writable_data_path, "b10-config.db").data
+                        self.writable_data_path, "bundy-config.db").data
         updated_config = ConfigManagerData.check_for_updates(file_config)
         self.assertEqual(file_config, updated_config)
 
@@ -61,7 +61,7 @@ class TestConfigManagerData(unittest.TestCase):
                    "foo": "bar",
                    "something": [ 1, 2, 3 ] }
         updated = ConfigManagerData.check_for_updates(config)
-        config['version'] = config_data.BIND10_CONFIG_DATA_VERSION
+        config['version'] = config_data.BUNDY_CONFIG_DATA_VERSION
         self.assertEqual(config, updated)
 
     def test_check_for_updates_from_2(self):
@@ -70,7 +70,7 @@ class TestConfigManagerData(unittest.TestCase):
                    "foo": "bar",
                    "something": [ 1, 2, 3 ] }
         updated = ConfigManagerData.check_for_updates(config)
-        config['version'] = config_data.BIND10_CONFIG_DATA_VERSION
+        config['version'] = config_data.BUNDY_CONFIG_DATA_VERSION
         self.assertEqual(config, updated)
 
         # With Boss, should be changed to 'Init'
@@ -78,7 +78,7 @@ class TestConfigManagerData(unittest.TestCase):
                    "Boss": { "some config": 1 },
                    "something": [ 1, 2, 3 ] }
         updated = ConfigManagerData.check_for_updates(config)
-        config = { "version": config_data.BIND10_CONFIG_DATA_VERSION,
+        config = { "version": config_data.BUNDY_CONFIG_DATA_VERSION,
                    "Init": { "some config": 1 },
                    "something": [ 1, 2, 3 ] }
         self.assertEqual(config, updated)
@@ -89,29 +89,29 @@ class TestConfigManagerData(unittest.TestCase):
                    "Init": { "some other config": 1 },
                    "something": [ 1, 2, 3 ] }
         updated = ConfigManagerData.check_for_updates(config)
-        config['version'] = config_data.BIND10_CONFIG_DATA_VERSION
+        config['version'] = config_data.BUNDY_CONFIG_DATA_VERSION
         self.assertEqual(config, updated)
 
     def test_read_from_file(self):
-        ConfigManagerData.read_from_file(self.writable_data_path, "b10-config.db")
+        ConfigManagerData.read_from_file(self.writable_data_path, "bundy-config.db")
         self.assertRaises(ConfigManagerDataEmpty,
                           ConfigManagerData.read_from_file,
-                          "doesnotexist", "b10-config.db")
+                          "doesnotexist", "bundy-config.db")
         self.assertRaises(ConfigManagerDataReadError,
                           ConfigManagerData.read_from_file,
-                          self.data_path, "b10-config-bad1.db")
+                          self.data_path, "bundy-config-bad1.db")
         self.assertRaises(ConfigManagerDataReadError,
                           ConfigManagerData.read_from_file,
-                          self.data_path, "b10-config-bad2.db")
+                          self.data_path, "bundy-config-bad2.db")
         self.assertRaises(ConfigManagerDataReadError,
                           ConfigManagerData.read_from_file,
-                          self.data_path, "b10-config-bad3.db")
+                          self.data_path, "bundy-config-bad3.db")
         self.assertRaises(ConfigManagerDataReadError,
                           ConfigManagerData.read_from_file,
-                          self.data_path, "b10-config-bad4.db")
+                          self.data_path, "bundy-config-bad4.db")
 
     def test_write_to_file(self):
-        output_file_name = "b10-config-write-test"
+        output_file_name = "bundy-config-write-test"
         self.config_manager_data.write_to_file(output_file_name)
         new_config = ConfigManagerData(self.data_path, output_file_name)
         self.assertEqual(self.config_manager_data, new_config)
@@ -132,10 +132,10 @@ class TestConfigManagerData(unittest.TestCase):
 
     def test_rename_config_file(self):
         # test file names, put in array for easy cleanup
-        filenames = [ "b10-config-rename-test",
-                      "b10-config-rename-test.bak",
-                      "b10-config-rename-test.bak.1",
-                      "b10-config-rename-test.bak.2" ]
+        filenames = [ "bundy-config-rename-test",
+                      "bundy-config-rename-test.bak",
+                      "bundy-config-rename-test.bak.1",
+                      "bundy-config-rename-test.bak.2" ]
 
         for filename in filenames:
             if os.path.exists(filename):
@@ -176,8 +176,8 @@ class TestConfigManagerData(unittest.TestCase):
         # by equality of the .data element. If data_path or db_filename
         # are different, but the contents are the same, it's still
         # considered equal
-        cfd1 = ConfigManagerData(self.data_path, file_name="b10-config.db")
-        cfd2 = ConfigManagerData(self.data_path, file_name="b10-config.db")
+        cfd1 = ConfigManagerData(self.data_path, file_name="bundy-config.db")
+        cfd2 = ConfigManagerData(self.data_path, file_name="bundy-config.db")
         self.assertEqual(cfd1, cfd2)
         cfd2.data_path = "some/unknown/path"
         self.assertEqual(cfd1, cfd2)
@@ -194,7 +194,7 @@ class TestConfigManager(unittest.TestCase):
         self.writable_data_path = os.environ['CONFIG_WR_TESTDATA_PATH']
         self.fake_session = FakeModuleCCSession()
         self.cm = ConfigManager(self.writable_data_path,
-                                database_filename="b10-config.db",
+                                database_filename="bundy-config.db",
                                 session=self.fake_session)
         self.name = "TestModule"
         self.spec = isc.config.module_spec_from_file(self.data_path + os.sep + "/spec2.spec")
@@ -220,8 +220,8 @@ class TestConfigManager(unittest.TestCase):
         self.assertTrue(self.fake_session.has_subscription("Init", "ConfigManager"))
         self.assertFalse(self.cm.running)
 
-    def test_notify_b10_init(self):
-        self.cm.notify_b10_init()
+    def test_notify_bundy_init(self):
+        self.cm.notify_bundy_init()
         msg = self.fake_session.get_message("Init", None)
         self.assertTrue(msg)
         # this one is actually wrong, but 'current status quo'
@@ -332,10 +332,10 @@ class TestConfigManager(unittest.TestCase):
         self.assertEqual(statistics_spec['Spec2'], module_spec.get_statistics_spec())
 
     def test_read_config(self):
-        self.assertEqual(self.cm.config.data, {'version': config_data.BIND10_CONFIG_DATA_VERSION})
+        self.assertEqual(self.cm.config.data, {'version': config_data.BUNDY_CONFIG_DATA_VERSION})
         self.cm.data_path = "/no_such_path"
         self.cm.read_config()
-        self.assertEqual(self.cm.config.data, {'version': config_data.BIND10_CONFIG_DATA_VERSION})
+        self.assertEqual(self.cm.config.data, {'version': config_data.BUNDY_CONFIG_DATA_VERSION})
 
     def test_write_config(self):
         # tested in ConfigManagerData tests
@@ -371,11 +371,11 @@ class TestConfigManager(unittest.TestCase):
                                                'get_module_spec command']})
         self._handle_msg_helper({ "command": [ "get_config" ] },
                                 { 'result': [ 0, { 'version':
-                                    config_data.BIND10_CONFIG_DATA_VERSION }]})
+                                    config_data.BUNDY_CONFIG_DATA_VERSION }]})
         self._handle_msg_helper({ "command": [ "get_config",
                                     { "module_name": "nosuchmodule" } ] },
                                 {'result': [0, { 'version':
-                                    config_data.BIND10_CONFIG_DATA_VERSION }]})
+                                    config_data.BUNDY_CONFIG_DATA_VERSION }]})
         self._handle_msg_helper({ "command": [ "get_config", 1 ] },
                                 {'result': [1, 'Bad get_config command, '+
                                                'argument not a dict']})
@@ -430,7 +430,7 @@ class TestConfigManager(unittest.TestCase):
         # Send the 'ok' that cfgmgr expects back to the fake queue first
         self.fake_session.group_sendmsg(my_ok_answer, "ConfigManager")
 
-        config_version = config_data.BIND10_CONFIG_DATA_VERSION
+        config_version = config_data.BUNDY_CONFIG_DATA_VERSION
         self._handle_msg_helper({ "command": [ "set_config",
                                                [ { "version": config_version,
                                                  self.name: new_config } ] ] },
@@ -472,7 +472,7 @@ class TestConfigManager(unittest.TestCase):
         # Config should not be updated due to the error
         self.cm.read_config()
         self.assertEqual(self.cm.config.data, { self.name: {'test': 126},
-                            'version': config_data.BIND10_CONFIG_DATA_VERSION})
+                            'version': config_data.BUNDY_CONFIG_DATA_VERSION})
 
         self.assertEqual(len(self.fake_session.message_queue), 0)
 
@@ -582,27 +582,27 @@ class TestConfigManager(unittest.TestCase):
     def test_set_config_all(self):
         my_ok_answer = { 'result': [ 0 ] }
 
-        self.assertEqual({"version": config_data.BIND10_CONFIG_DATA_VERSION},
+        self.assertEqual({"version": config_data.BUNDY_CONFIG_DATA_VERSION},
                          self.cm.config.data)
 
         self.fake_session.group_sendmsg(my_ok_answer, "ConfigManager")
         self.cm.handle_msg(ccsession.create_command(
             ccsession.COMMAND_SET_CONFIG, ["test", { "value1": 123 }]))
-        self.assertEqual({"version": config_data.BIND10_CONFIG_DATA_VERSION,
+        self.assertEqual({"version": config_data.BUNDY_CONFIG_DATA_VERSION,
                           "test": { "value1": 123 }
                          }, self.cm.config.data)
 
         self.fake_session.group_sendmsg(my_ok_answer, "ConfigManager")
         self.cm.handle_msg(ccsession.create_command(
             ccsession.COMMAND_SET_CONFIG, ["test", { "value1": 124 }]))
-        self.assertEqual({"version": config_data.BIND10_CONFIG_DATA_VERSION,
+        self.assertEqual({"version": config_data.BUNDY_CONFIG_DATA_VERSION,
                           "test": { "value1": 124 }
                          }, self.cm.config.data)
 
         self.fake_session.group_sendmsg(my_ok_answer, "ConfigManager")
         self.cm.handle_msg(ccsession.create_command(
             ccsession.COMMAND_SET_CONFIG, ["test", { "value2": True }]))
-        self.assertEqual({"version": config_data.BIND10_CONFIG_DATA_VERSION,
+        self.assertEqual({"version": config_data.BUNDY_CONFIG_DATA_VERSION,
                           "test": { "value1": 124,
                                     "value2": True
                                   }
@@ -611,7 +611,7 @@ class TestConfigManager(unittest.TestCase):
         self.fake_session.group_sendmsg(my_ok_answer, "ConfigManager")
         self.cm.handle_msg(ccsession.create_command(
             ccsession.COMMAND_SET_CONFIG, ["test", { "value3": [ 1, 2, 3 ] }]))
-        self.assertEqual({"version": config_data.BIND10_CONFIG_DATA_VERSION,
+        self.assertEqual({"version": config_data.BUNDY_CONFIG_DATA_VERSION,
                           "test": { "value1": 124,
                                     "value2": True,
                                     "value3": [ 1, 2, 3 ]
@@ -621,7 +621,7 @@ class TestConfigManager(unittest.TestCase):
         self.fake_session.group_sendmsg(my_ok_answer, "ConfigManager")
         self.cm.handle_msg(ccsession.create_command(
             ccsession.COMMAND_SET_CONFIG, ["test", { "value2": False }]))
-        self.assertEqual({"version": config_data.BIND10_CONFIG_DATA_VERSION,
+        self.assertEqual({"version": config_data.BUNDY_CONFIG_DATA_VERSION,
                           "test": { "value1": 124,
                                     "value2": False,
                                     "value3": [ 1, 2, 3 ]
@@ -631,7 +631,7 @@ class TestConfigManager(unittest.TestCase):
         self.fake_session.group_sendmsg(my_ok_answer, "ConfigManager")
         self.cm.handle_msg(ccsession.create_command(
             ccsession.COMMAND_SET_CONFIG, ["test", { "value1": None }]))
-        self.assertEqual({"version": config_data.BIND10_CONFIG_DATA_VERSION,
+        self.assertEqual({"version": config_data.BUNDY_CONFIG_DATA_VERSION,
                           "test": { "value2": False,
                                     "value3": [ 1, 2, 3 ]
                                   }
@@ -640,7 +640,7 @@ class TestConfigManager(unittest.TestCase):
         self.fake_session.group_sendmsg(my_ok_answer, "ConfigManager")
         self.cm.handle_msg(ccsession.create_command(
             ccsession.COMMAND_SET_CONFIG, ["test", { "value3": [ 1 ] }]))
-        self.assertEqual({"version": config_data.BIND10_CONFIG_DATA_VERSION,
+        self.assertEqual({"version": config_data.BUNDY_CONFIG_DATA_VERSION,
                           "test": { "value2": False,
                                     "value3": [ 1 ]
                                   }

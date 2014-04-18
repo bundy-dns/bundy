@@ -2,26 +2,26 @@ SUBDIRS = . tests
 
 AM_CPPFLAGS = -I$(top_srcdir)/src/lib -I$(top_builddir)/src/lib
 AM_CPPFLAGS += $(BOOST_INCLUDES)
-AM_CXXFLAGS = $(B10_CXXFLAGS)
+AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 
 # The core library
-lib_LTLIBRARIES = libb10-acl.la
-libb10_acl_la_SOURCES  = acl.h
-libb10_acl_la_SOURCES += check.h
-libb10_acl_la_SOURCES += ip_check.h ip_check.cc
-libb10_acl_la_SOURCES += logic_check.h
-libb10_acl_la_SOURCES += loader.h loader.cc
+lib_LTLIBRARIES = libbundy-acl.la
+libbundy_acl_la_SOURCES  = acl.h
+libbundy_acl_la_SOURCES += check.h
+libbundy_acl_la_SOURCES += ip_check.h ip_check.cc
+libbundy_acl_la_SOURCES += logic_check.h
+libbundy_acl_la_SOURCES += loader.h loader.cc
 
-libb10_acl_la_LIBADD = $(top_builddir)/src/lib/exceptions/libb10-exceptions.la
-libb10_acl_la_LIBADD += $(top_builddir)/src/lib/cc/libb10-cc.la
-libb10_acl_la_LIBADD += $(top_builddir)/src/lib/util/libb10-util.la
+libbundy_acl_la_LIBADD = $(top_builddir)/src/lib/exceptions/libbundy-exceptions.la
+libbundy_acl_la_LIBADD += $(top_builddir)/src/lib/cc/libbundy-cc.la
+libbundy_acl_la_LIBADD += $(top_builddir)/src/lib/util/libbundy-util.la
 
 # DNS specialized one
-lib_LTLIBRARIES += libb10-dnsacl.la
+lib_LTLIBRARIES += libbundy-dnsacl.la
 
-libb10_dnsacl_la_SOURCES = dns.h dns.cc dnsname_check.h
+libbundy_dnsacl_la_SOURCES = dns.h dns.cc dnsname_check.h
 
-libb10_dnsacl_la_LIBADD = libb10-acl.la
-libb10_dnsacl_la_LIBADD += $(top_builddir)/src/lib/dns/libb10-dns++.la
+libbundy_dnsacl_la_LIBADD = libbundy-acl.la
+libbundy_dnsacl_la_LIBADD += $(top_builddir)/src/lib/dns/libbundy-dns++.la
 
 CLEANFILES = *.gcno *.gcda

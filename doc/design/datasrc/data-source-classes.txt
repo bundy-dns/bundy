@@ -11,7 +11,7 @@ architecture and some specific details of how these classes are expected
 to be used.
 
 Before reading, the higher level inter-module protocol should be understood:
-http://bind10.isc.org/wiki/SharedMemoryIPC
+http://bundy.isc.org/wiki/SharedMemoryIPC
 
 Overall relationships between classes
 -------------------------------------
@@ -130,7 +130,7 @@ The following give a summarized description of these classes.
 
 * `ZoneTableHeader`, `ZoneTable`: top-level interface to actual
   in-memory data.  These were separated based on a prior version of
-  the design (http://bind10.isc.org/wiki/ScalableZoneLoadDesign) where
+  the design (http://bundy.isc.org/wiki/ScalableZoneLoadDesign) where
   `ZoneTableHeader` may contain multiple `ZoneTable`s.  It's
   one-to-one relationship in the latest version (of implementation),
   so we could probably unify them as a cleanup.

@@ -13,12 +13,12 @@
 # NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
 # WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-"""BIND 10 statistics counters module for DNS
+"""BUNDY statistics counters module for DNS
 
-This module handles the statistics counters for BIND 10 modules for a
+This module handles the statistics counters for BUNDY modules for a
 DNS-specific purpose.  For using the module `counter.py`, first a
-counters object should be created in each module (like b10-xfrin or
-b10-xfrout) after importing this module. A spec file can be specified as
+counters object should be created in each module (like bundy-xfrin or
+bundy-xfrout) after importing this module. A spec file can be specified as
 an argument when creating the counters object:
 
   from isc.statistics.dns import Counters
@@ -30,7 +30,7 @@ statistics counters can be accessed from each module. For example, in
 case that the item `xfrreqdone` is defined in statistics_spec in
 xfrout.spec, the following methods are callable. Since these methods
 require the string of the zone name in the first argument, if we have
-the following code in b10-xfrout:
+the following code in bundy-xfrout:
 
   self.counters.inc('zones', zone_name, 'xfrreqdone')
 
@@ -50,7 +50,7 @@ item `axfr_running`, an argument like zone name is not required:
 
 These methods are effective in other modules. For example, in case that
 this module `counters.py` is once imported in a main module such as
-b10-xfrout, then for the item `notifyoutv4`, the `inc()` method can be
+bundy-xfrout, then for the item `notifyoutv4`, the `inc()` method can be
 invoked in another module such as notify_out.py, which is firstly
 imported in the main module.
 

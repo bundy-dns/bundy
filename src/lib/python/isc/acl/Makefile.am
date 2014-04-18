@@ -2,7 +2,7 @@ SUBDIRS = . tests
 
 AM_CPPFLAGS = -I$(top_srcdir)/src/lib -I$(top_builddir)/src/lib
 AM_CPPFLAGS += $(BOOST_INCLUDES)
-AM_CXXFLAGS = $(B10_CXXFLAGS)
+AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 
 python_PYTHON = __init__.py dns.py
 pythondir = $(PYTHON_SITEPKG_DIR)/isc/acl
@@ -27,13 +27,13 @@ _dns_la_CXXFLAGS = $(AM_CXXFLAGS) $(PYTHON_CXXFLAGS)
 # Python prefers .so, while some OSes (specifically MacOS) use a different
 # suffix for dynamic objects.  -module is necessary to work this around.
 acl_la_LDFLAGS += -module -avoid-version
-acl_la_LIBADD = $(top_builddir)/src/lib/acl/libb10-acl.la
-acl_la_LIBADD += $(top_builddir)/src/lib/exceptions/libb10-exceptions.la
+acl_la_LIBADD = $(top_builddir)/src/lib/acl/libbundy-acl.la
+acl_la_LIBADD += $(top_builddir)/src/lib/exceptions/libbundy-exceptions.la
 acl_la_LIBADD += $(PYTHON_LIB)
 
 _dns_la_LDFLAGS += -module -avoid-version
-_dns_la_LIBADD = $(top_builddir)/src/lib/acl/libb10-dnsacl.la
-_dns_la_LIBADD += $(top_builddir)/src/lib/cc/libb10-cc.la
+_dns_la_LIBADD = $(top_builddir)/src/lib/acl/libbundy-dnsacl.la
+_dns_la_LIBADD += $(top_builddir)/src/lib/cc/libbundy-cc.la
 _dns_la_LIBADD += $(PYTHON_LIB)
 
 EXTRA_DIST = acl.py _dns.py

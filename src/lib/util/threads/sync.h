@@ -12,8 +12,8 @@
 // OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 // PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef B10_THREAD_SYNC_H
-#define B10_THREAD_SYNC_H
+#ifndef BUNDY_THREAD_SYNC_H
+#define BUNDY_THREAD_SYNC_H
 
 #include <exceptions/exceptions.h>
 
@@ -196,7 +196,7 @@ private:
 ///
 /// Right now there is no equivalent to pthread_cond_broadcast() or
 /// pthread_cond_timedwait() in this class, because this class is meant
-/// for internal development of BIND 10 and we don't need these at the
+/// for internal development of BUNDY and we don't need these at the
 /// moment.  If and when we need these interfaces they can be added at that
 /// point.
 ///

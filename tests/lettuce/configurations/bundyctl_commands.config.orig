@@ -1,0 +1,37 @@
+{
+    "version": 3,
+    "Logging": {
+        "loggers": [ {
+            "debuglevel": 99,
+            "severity": "DEBUG",
+            "name": "*"
+        } ]
+    },
+    "Auth": {
+        "database_file": "data/example.org.sqlite3",
+        "listen_on": [ {
+            "port": 56176,
+            "address": "127.0.0.1"
+        } ]
+    },
+    "data_sources": {
+        "classes": {}
+    },
+    "StatsHttpd": {
+        "listen_on": [ {
+            "port": 47811,
+            "address": "127.0.0.1"
+        } ]
+    },
+    "Init": {
+        "components": {
+            "bundy-auth": { "kind": "dispensable", "special": "auth" },
+            "bundy-xfrin": { "address": "Xfrin", "kind": "dispensable" },
+            "bundy-xfrout": { "address": "Xfrout", "kind": "dispensable" },
+            "bundy-zonemgr": { "address": "Zonemgr", "kind": "dispensable" },
+            "bundy-stats": { "address": "Stats", "kind": "dispensable" },
+            "bundy-stats-httpd": { "address": "StatsHttpd", "kind": "dispensable" },
+            "bundy-cmdctl": { "special": "cmdctl", "kind": "needed" }
+        }
+    }
+}

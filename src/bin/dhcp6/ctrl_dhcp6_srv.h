@@ -29,7 +29,7 @@ namespace dhcp {
 /// This is a class that is responsible for establishing connection
 /// with msqg (receving commands and configuration). This is an extended
 /// version of Dhcpv6Srv class that is purely a DHCPv6 server, without
-/// external control. ControlledDhcpv6Srv should be used in typical BIND10
+/// external control. ControlledDhcpv6Srv should be used in typical BUNDY
 /// (i.e. featuring msgq) environment, while Dhcpv6Srv should be used in
 /// embedded environments.
 ///
@@ -49,7 +49,7 @@ public:
     /// @brief Establishes msgq session.
     ///
     /// Creates session that will be used to receive commands and updated
-    /// configuration from cfgmgr (or indirectly from user via bindctl).
+    /// configuration from cfgmgr (or indirectly from user via bundyctl).
     void establishSession();
 
     /// @brief Terminates existing msgq session.

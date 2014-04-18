@@ -48,9 +48,9 @@ static PyMethodDef fdshare_Methods[] = {
 };
 
 
-static PyModuleDef bind10_fdshare_python = {
+static PyModuleDef bundy_fdshare_python = {
     { PyObject_HEAD_INIT(NULL) NULL, 0, NULL},
-    "bind10_fdshare",
+    "bundy_fdshare",
     "Python bindings for fdshare",
     -1,
     fdshare_Methods,
@@ -62,7 +62,7 @@ static PyModuleDef bind10_fdshare_python = {
 
 PyMODINIT_FUNC
 PyInit_libutil_io_python(void) {
-    PyObject *mod = PyModule_Create(&bind10_fdshare_python);
+    PyObject *mod = PyModule_Create(&bundy_fdshare_python);
     if (mod == NULL) {
         return (NULL);
     }

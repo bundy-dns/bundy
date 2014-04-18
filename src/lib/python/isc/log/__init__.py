@@ -19,8 +19,8 @@
 # But as nobody gives us the builddir explicitly (and we can't use generation
 # from .in file, as it would put us into the builddir and we wouldn't be found)
 # we guess from current directory. Any idea for something better? This should
-# be enough for the tests, but would it work for B10_FROM_SOURCE as well?
-# Should we look there? Or define something in bind10_config?
+# be enough for the tests, but would it work for BUNDY_FROM_SOURCE as well?
+# Should we look there? Or define something in bundy_config?
 
 import os
 import sys

@@ -2,7 +2,7 @@ SUBDIRS = . tests
 
 AM_CPPFLAGS  = -I$(top_builddir)/src/lib -I$(top_srcdir)/src/lib
 AM_CPPFLAGS += $(BOOST_INCLUDES) $(BOTAN_INCLUDES)
-AM_CXXFLAGS  = $(B10_CXXFLAGS)
+AM_CXXFLAGS  = $(BUNDY_CXXFLAGS)
 
 # Some versions of GCC warn about some versions of Boost regarding
 # missing initializer for members in its posix_time.
@@ -28,34 +28,34 @@ EXTRA_DIST = dhcp_ddns_messages.mes libdhcp_ddns.dox
 # Get rid of generated message files on a clean
 CLEANFILES = *.gcno *.gcda dhcp_ddns_messages.h dhcp_ddns_messages.cc s-messages
 
-lib_LTLIBRARIES = libb10-dhcp_ddns.la
-libb10_dhcp_ddns_la_SOURCES  =
-libb10_dhcp_ddns_la_SOURCES += dhcp_ddns_log.cc dhcp_ddns_log.h
-libb10_dhcp_ddns_la_SOURCES += ncr_io.cc ncr_io.h
-libb10_dhcp_ddns_la_SOURCES += ncr_msg.cc ncr_msg.h
-libb10_dhcp_ddns_la_SOURCES += ncr_udp.cc ncr_udp.h
-libb10_dhcp_ddns_la_SOURCES += watch_socket.cc watch_socket.h
+lib_LTLIBRARIES = libbundy-dhcp_ddns.la
+libbundy_dhcp_ddns_la_SOURCES  =
+libbundy_dhcp_ddns_la_SOURCES += dhcp_ddns_log.cc dhcp_ddns_log.h
+libbundy_dhcp_ddns_la_SOURCES += ncr_io.cc ncr_io.h
+libbundy_dhcp_ddns_la_SOURCES += ncr_msg.cc ncr_msg.h
+libbundy_dhcp_ddns_la_SOURCES += ncr_udp.cc ncr_udp.h
+libbundy_dhcp_ddns_la_SOURCES += watch_socket.cc watch_socket.h
 
-nodist_libb10_dhcp_ddns_la_SOURCES = dhcp_ddns_messages.cc dhcp_ddns_messages.h
+nodist_libbundy_dhcp_ddns_la_SOURCES = dhcp_ddns_messages.cc dhcp_ddns_messages.h
 
-libb10_dhcp_ddns_la_CXXFLAGS = $(AM_CXXFLAGS)
-libb10_dhcp_ddns_la_CPPFLAGS = $(AM_CPPFLAGS) $(LOG4CPLUS_INCLUDES)
-libb10_dhcp_ddns_la_LDFLAGS  = $(AM_LDFLAGS)
-libb10_dhcp_ddns_la_LDFLAGS += ${BOTAN_LDFLAGS}
-libb10_dhcp_ddns_la_LIBADD  =
-libb10_dhcp_ddns_la_LIBADD += $(top_builddir)/src/lib/cc/libb10-cc.la
-libb10_dhcp_ddns_la_LIBADD += $(top_builddir)/src/lib/cryptolink/libb10-cryptolink.la
-libb10_dhcp_ddns_la_LIBADD += $(top_builddir)/src/lib/dhcp/libb10-dhcp++.la
-libb10_dhcp_ddns_la_LIBADD += $(top_builddir)/src/lib/log/libb10-log.la
-libb10_dhcp_ddns_la_LIBADD += $(top_builddir)/src/lib/util/libb10-util.la
-libb10_dhcp_ddns_la_LIBADD += $(top_builddir)/src/lib/exceptions/libb10-exceptions.la
-libb10_dhcp_ddns_la_LIBADD += $(top_builddir)/src/lib/config/libb10-cfgclient.la
-libb10_dhcp_ddns_la_LIBADD += $(top_builddir)/src/lib/cc/libb10-cc.la
-libb10_dhcp_ddns_la_LIBADD += ${BOTAN_LIBS} ${BOTAN_RPATH}
+libbundy_dhcp_ddns_la_CXXFLAGS = $(AM_CXXFLAGS)
+libbundy_dhcp_ddns_la_CPPFLAGS = $(AM_CPPFLAGS) $(LOG4CPLUS_INCLUDES)
+libbundy_dhcp_ddns_la_LDFLAGS  = $(AM_LDFLAGS)
+libbundy_dhcp_ddns_la_LDFLAGS += ${BOTAN_LDFLAGS}
+libbundy_dhcp_ddns_la_LIBADD  =
+libbundy_dhcp_ddns_la_LIBADD += $(top_builddir)/src/lib/cc/libbundy-cc.la
+libbundy_dhcp_ddns_la_LIBADD += $(top_builddir)/src/lib/cryptolink/libbundy-cryptolink.la
+libbundy_dhcp_ddns_la_LIBADD += $(top_builddir)/src/lib/dhcp/libbundy-dhcp++.la
+libbundy_dhcp_ddns_la_LIBADD += $(top_builddir)/src/lib/log/libbundy-log.la
+libbundy_dhcp_ddns_la_LIBADD += $(top_builddir)/src/lib/util/libbundy-util.la
+libbundy_dhcp_ddns_la_LIBADD += $(top_builddir)/src/lib/exceptions/libbundy-exceptions.la
+libbundy_dhcp_ddns_la_LIBADD += $(top_builddir)/src/lib/config/libbundy-cfgclient.la
+libbundy_dhcp_ddns_la_LIBADD += $(top_builddir)/src/lib/cc/libbundy-cc.la
+libbundy_dhcp_ddns_la_LIBADD += ${BOTAN_LIBS} ${BOTAN_RPATH}
 
 if USE_CLANGPP
 # Disable unused parameter warning caused by some of the
 # Boost headers when compiling with clang.
-libb10_dhcp_ddns_la_CXXFLAGS += -Wno-unused-parameter
+libbundy_dhcp_ddns_la_CXXFLAGS += -Wno-unused-parameter
 endif
 

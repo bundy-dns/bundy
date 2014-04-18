@@ -42,7 +42,7 @@ import isc.cc
 
 isc.util.process.rename()
 
-isc.log.init("b10-msgq", buffer=True)
+isc.log.init("bundy-msgq", buffer=True)
 # Logger that is used in the actual msgq handling - startup, shutdown and the
 # poller thread.
 logger = isc.log.Logger("msgq")
@@ -56,14 +56,14 @@ TRACE_DETAIL = logger.DBGLVL_TRACE_DETAIL
 
 # This is the version that gets displayed to the user.
 # The VERSION string consists of the module name, the module version
-# number, and the overall BIND 10 version number (set in configure.ac).
-VERSION = "b10-msgq 20110127 (BIND 10 @PACKAGE_VERSION@)"
+# number, and the overall BUNDY version number (set in configure.ac).
+VERSION = "bundy-msgq 20110127 (BUNDY @PACKAGE_VERSION@)"
 
-# If B10_FROM_BUILD is set in the environment, we use data files
+# If BUNDY_FROM_BUILD is set in the environment, we use data files
 # from a directory relative to that, otherwise we use the ones
 # installed on the system
-if "B10_FROM_SOURCE" in os.environ:
-    SPECFILE_PATH = os.environ["B10_FROM_SOURCE"] + "/src/bin/msgq"
+if "BUNDY_FROM_SOURCE" in os.environ:
+    SPECFILE_PATH = os.environ["BUNDY_FROM_SOURCE"] + "/src/bin/msgq"
 else:
     PREFIX = "@prefix@"
     DATAROOTDIR = "@datarootdir@"
@@ -169,7 +169,7 @@ class MsgQ:
 
         The socket_file specifies the path to the UNIX domain socket
         that the msgq process listens on. If it is None, the
-        environment variable BIND10_MSGQ_SOCKET_FILE is used. If that
+        environment variable BUNDY_MSGQ_SOCKET_FILE is used. If that
         is not set, it will default to
         @localstatedir@/@PACKAGE_NAME@/msg_socket.
         If verbose is True, then the MsgQ reports
@@ -177,8 +177,8 @@ class MsgQ:
         """
 
         if socket_file is None:
-            if "BIND10_MSGQ_SOCKET_FILE" in os.environ:
-                self.socket_file = os.environ["BIND10_MSGQ_SOCKET_FILE"]
+            if "BUNDY_MSGQ_SOCKET_FILE" in os.environ:
+                self.socket_file = os.environ["BUNDY_MSGQ_SOCKET_FILE"]
             else:
                 self.socket_file = self.SOCKET_FILE
         else:
@@ -284,7 +284,7 @@ class MsgQ:
             if existing_msgq:
                 existing_msgq.close()
                 logger.fatal(MSGQ_ALREADY_RUNNING)
-                raise MsgQRunningError("b10-msgq already running")
+                raise MsgQRunningError("bundy-msgq already running")
 
             os.remove(self.socket_file)
 

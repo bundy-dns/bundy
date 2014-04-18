@@ -1,6 +1,6 @@
 @startuml
 
-participant memmgr as ":b10-memmgr"
+participant memmgr as ":bundy-memmgr"
 [-> memmgr: reload\n(zonename)
 activate memmgr
 

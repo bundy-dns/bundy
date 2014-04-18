@@ -21,12 +21,12 @@ Debug information. The SQLite data source is closing the database file.
 
 % DATASRC_SQLITE_COMPATIBLE_VERSION database schema V%1.%2 not up to date (expecting V%3.%4) but is compatible
 The version of the SQLite3 database schema used to hold the zone data
-is not the latest one - the current version of BIND 10 was written
+is not the latest one - the current version of BUNDY was written
 with a later schema version in mind.  However, the database is
-compatible with the current version of BIND 10, and BIND 10 will run
+compatible with the current version of BUNDY, and BUNDY will run
 without any problems.
 
-Consult the release notes for your version of BIND 10.  Depending on
+Consult the release notes for your version of BUNDY.  Depending on
 the changes made to the database schema, it is possible that improved
 performance could result if the database were upgraded.
 
@@ -100,8 +100,8 @@ But it doesn't contain that zone.
 
 % DATASRC_SQLITE_INCOMPATIBLE_VERSION database schema V%1.%2 incompatible with version (V%3.%4) expected
 The version of the SQLite3 database schema used to hold the zone data
-is incompatible with the version expected by BIND 10.  As a result,
-BIND 10 is unable to run using the database file as the data source.
+is incompatible with the version expected by BUNDY.  As a result,
+BUNDY is unable to run using the database file as the data source.
 
 The database should be updated using the means described in the BIND
 10 documentation.
@@ -131,7 +131,7 @@ processing of the query.
 The database for SQLite data source was found empty. It is assumed this is the
 first run and it is being initialized with current schema.  It'll still contain
 no data, but it will be ready for use. If this is indeed the first run of
-BIND 10, it is to be expected and completely harmless. If you just configured
+BUNDY, it is to be expected and completely harmless. If you just configured
 a data source to point to an existing file and you see this, you may have
 misspelled the file name.
 

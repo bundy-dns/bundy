@@ -16,11 +16,11 @@
 // and is used to prevent a clash with symbols in any other Doxygen file.
 
 /**
-@page logBind10Logging BIND 10 Logging
+@page logBundyLogging BUNDY Logging
 
 @section logBasicIdeas Basic Ideas
 
-The BIND 10 logging system is based on the log4J logging system
+The BUNDY logging system is based on the log4J logging system
 common in Java development, and includes the following ideas:
 
 - A set of severity levels.
@@ -28,7 +28,7 @@ common in Java development, and includes the following ideas:
 - Separation of message use from message text.
 
 @subsection logSeverity Message Severity
-Each message logged by BIND 10 has a severity associated with it, ranging
+Each message logged by BUNDY has a severity associated with it, ranging
 from FATAL - the most severe - to DEBUG - messages output as the code
 executes to facilitate debugging.  In order of decreasing severity,
 the levels are:
@@ -120,16 +120,16 @@ The loggers are hierarchical in that each logger is the child of another
 logger.  The top of the hierarchy is the root logger; this does not
 have a parent.  The reason for this hierarchy is that unless a logger
 explicitly assigns a value to an attribute (such as severity of messages
-it should log), it picks it up the value from the parent.  In BIND 10,
-each component (b10-auth, b10-resolver etc.)  has a root logger (named
+it should log), it picks it up the value from the parent.  In BUNDY,
+each component (bundy-auth, bundy-resolver etc.)  has a root logger (named
 after the program) and every other logger in the component is a child
 of that.  So in the example above, the error/syslog attributes could be
-associated with the b10-resolver logger while the logger associated with
+associated with the bundy-resolver logger while the logger associated with
 the cache sets its own values for the debug/file attributes.
 
 More information about the logging hierarchy can be found in the section
 on Logging configuration in the <a
-href="http://bind10.isc.org/docs/bind10-guide.html#logging">BIND 10
+href="http://bundy.isc.org/docs/bundy-guide.html#logging">BUNDY
 Guide</a>.
 
 @subsection logSeparationUseText Separation of Messages Use from Message Text
@@ -148,20 +148,20 @@ associated with it (e.g. "unable to open %1 for input"), after which it
 substitutes any message parameters (in this example, the name of the file
 where the write operation failed) and logs the result to the destination.
 
-In BIND 10, a the default text for each message is linked into the
+In BUNDY, a the default text for each message is linked into the
 program.  Each program is able to read a locally-defined message file
 when it starts, updating the stored definitions with site-specific text.
 When the message is logged, the updated text is output. However, the
 message identifier is always included in the output so that the origin
 of the message can be identified even if the text has been changed.
 
-@note Local message files have not yet been implemented in BIND 10.
+@note Local message files have not yet been implemented in BUNDY.
 
 
 
-@section logDeveloperUse Using Logging in a BIND 10 Component
+@section logDeveloperUse Using Logging in a BUNDY Component
 
-The steps in using the logging system in a BIND 10 component (such as
+The steps in using the logging system in a BUNDY component (such as
 an executable or library) are:
 
 <ol>
@@ -171,9 +171,9 @@ file should have a file type of ".mes".</li>
 
 <li>Run it through the message compiler to produce the files for your
 module.  This step should be included in the build process.  The message
-compiler is a BIND10 program and is one of the first programs built and
+compiler is a BUNDY program and is one of the first programs built and
 linked in the build process. As a result, it should be available for
-compiling the message files of all BIND 10 components and libraries.
+compiling the message files of all BUNDY components and libraries.
 
 For C++ development, the message compiler produces two files in the
 default directory, having the same name as the input file but with file
@@ -195,7 +195,7 @@ The following sections describe these steps in more detail.
 @subsection logMessageFiles Create a Message File
 
 A message file contains message definitions.  Typically there
-will be one message file for each component that uses BIND 10 logging.
+will be one message file for each component that uses BUNDY logging.
 An example file could be:
 
 @code
@@ -318,16 +318,16 @@ has the inbuilt assumption of one line per message. Splitting a message
 across multiple lines makes it awkward to search the file for messages
 and associated information.</li>
 
-<li>The message identifier should be unique across the entire BIND 10
+<li>The message identifier should be unique across the entire BUNDY
 system.  (An error will be reported at system start-up if an identifier
 is repeated.)</li>
 
 <li>A particular message identifier should only be used at one place in
-the BIND 10 code. In this way, if the message indicates a problem, the
+the BUNDY code. In this way, if the message indicates a problem, the
 code in question can be quickly identified.</li>
 
 <li>The explanation of the message - the free-form text following the
-message identification - appears in the BIND 10 message manual.  It
+message identification - appears in the BUNDY message manual.  It
 should:
 
 <ul>
@@ -434,7 +434,7 @@ in a similar way to C++ using the Python logging library.
 The source file for the messages is the ".mes" file, but the files used
 by the code (which, in the case of C++, must be compiled and linked)
 are the output of the message compiler.  (The compiler is produced very
-early on in the BIND 10 build sequence, so is available for use in the
+early on in the BUNDY build sequence, so is available for use in the
 building of subsequent components.)  To allow this, certain dependencies
 must be included in the Makefile.am for each component that uses logging.
 
@@ -529,8 +529,8 @@ in file scope.  The string passed to the constructor is the name of
 the logger (it can be any string) and is used when configuring it.
 (Remember though that the name of root logger for the program will be
 prepended to the name chosen.  So if, for example, the name "cache"
-is chosen and the model is included in the "b10-resolver" program, the
-full name of the logger will be "b10-resolver.cache".)  Loggers with
+is chosen and the model is included in the "bundy-resolver" program, the
+full name of the logger will be "bundy-resolver.cache".)  Loggers with
 the same name share the same configuration.  For this reason if, as is
 usual, messages logged in different files in the same component (e.g.
 hooks module, nameserver address store, etc.) originate from loggers
@@ -615,7 +615,7 @@ Arguments are:
 <dl>
 <dt><code>root</code></dt>
 <dd>Name of the root logger.  This should be the name of the program
-(e.g. "b10-auth") and is used when configuring logging.</dd>
+(e.g. "bundy-auth") and is used when configuring logging.</dd>
 
 <dt><code>severity</code></dt>
 <dd>Default severity that the program will start logging with.  Although
@@ -672,24 +672,24 @@ operation is affected by inadvertently-defined environment variables. The
 environment variables are:
 
 <dl>
-<dt>B10_LOGGER_ROOT</dt>
-<dd>Sets the "root" for the unit test.  If not defined, the name "bind10"
+<dt>BUNDY_LOGGER_ROOT</dt>
+<dd>Sets the "root" for the unit test.  If not defined, the name "bundy"
 is used.</dd>
 
-<dt>B10_LOGGER_SEVERITY</dt>
+<dt>BUNDY_LOGGER_SEVERITY</dt>
 <dd>The severity to set for the root logger in the unit test.
 Valid values are "DEBUG", "INFO", "WARN", "ERROR", "FATAL" and "NONE".
 If not defined, "INFO" is used.</dd>
 
-<dt>B10_LOGGER_DBGLEVEL</dt>
-<dd>If B10_LOGGER_SEVERITY is set to "DEBUG", the debug level.  This can
+<dt>BUNDY_LOGGER_DBGLEVEL</dt>
+<dd>If BUNDY_LOGGER_SEVERITY is set to "DEBUG", the debug level.  This can
 be a number between 0 and 99, and defaults to 0.</dd>
 
-<dt>B10_LOGGER_LOCALMSG</dt>
+<dt>BUNDY_LOGGER_LOCALMSG</dt>
 <dd>If defined, points to a local message file.  The default is not to
 use a local message file.</dd>
 
-<dt>B10_LOGGER_DESTINATION</dt>
+<dt>BUNDY_LOGGER_DESTINATION</dt>
 <dd>The location to which log message are written.  This can be one of:
 <ul>
 <li><b>stdout</b> Message are written to stdout.</li>

@@ -31,12 +31,12 @@ from datetime import timedelta
 isc.util.process.rename()
 
 # These are needed for logger settings
-import bind10_config
+import bundy_config
 import json
 from isc.config import module_spec_from_file
 from isc.config.ccsession import path_search
 
-isc.log.init("b10-loadzone")
+isc.log.init("bundy-loadzone")
 logger = isc.log.Logger("loadzone")
 
 # The default value for the interval of progress report in terms of the
@@ -96,7 +96,7 @@ class LoadZoneRunner:
         # system-wide log configuration.  We need to configure logging this
         # way so that the logging policy applies to underlying libraries, too.
         self.__log_spec = json.dumps(isc.config.module_spec_from_file(
-                path_search('logging.spec', bind10_config.PLUGIN_PATHS)).
+                path_search('logging.spec', bundy_config.PLUGIN_PATHS)).
                                      get_full_spec())
         # "severity" and "debuglevel" are the tunable parameters, which will
         # be set in _config_log().
@@ -213,7 +213,7 @@ class LoadZoneRunner:
             raise BadArgument('default config is not available for ' +
                               datasrc_type)
 
-        default_db_file = bind10_config.DATA_PATH + '/zone.sqlite3'
+        default_db_file = bundy_config.DATA_PATH + '/zone.sqlite3'
         logger.info(LOADZONE_SQLITE3_USING_DEFAULT_CONFIG, default_db_file)
         return '{"database_file": "' + default_db_file + '"}'
 

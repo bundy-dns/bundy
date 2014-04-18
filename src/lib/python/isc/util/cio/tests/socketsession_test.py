@@ -20,7 +20,7 @@ from isc.util.cio.socketsession import *
 
 TESTDATA_OBJDIR = os.getenv("TESTDATAOBJDIR")
 TEST_UNIX_FILE = TESTDATA_OBJDIR + '/ssessiontest.unix'
-TEST_DATA = b'BIND10 test'
+TEST_DATA = b'BUNDY test'
 TEST_PORT = 53535
 TEST_PORT2 = 53536
 TEST_PORT3 = 53537

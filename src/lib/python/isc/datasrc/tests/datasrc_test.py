@@ -952,6 +952,6 @@ class JournalRead(unittest.TestCase):
         self.assertRaises(TypeError, ZoneJournalReader)
 
 if __name__ == "__main__":
-    isc.log.init("bind10")
+    isc.log.init("bundy")
     isc.log.resetUnitTestRootLogger()
     unittest.main()

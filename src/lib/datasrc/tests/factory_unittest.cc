@@ -56,7 +56,7 @@ TEST(FactoryTest, paths) {
     // With the current implementation, we can safely assume this has
     // been set for this test (as the loader would otherwise also fail
     // unless the loadable backend library happens to be installed)
-    const std::string builddir(getenv("B10_FROM_BUILD"));
+    const std::string builddir(getenv("BUNDY_FROM_BUILD"));
 
     // Absolute and ending with .so should have no change
     pathtestHelper("/no_such_file.so", error + "/no_such_file.so");
@@ -65,7 +65,7 @@ TEST(FactoryTest, paths) {
     pathtestHelper("/no_such_file", error + "/no_such_file_ds.so");
 
     // If not starting with /, path should be added. For this test that
-    // means the build directory as set in B10_FROM_BUILD
+    // means the build directory as set in BUNDY_FROM_BUILD
     pathtestHelper("no_such_file.so", error + builddir +
                    "/src/lib/datasrc/.libs/no_such_file.so");
     pathtestHelper("no_such_file", error + builddir +
@@ -83,13 +83,13 @@ TEST(FactoryTest, paths) {
     pathtestHelper("no_such_file.so.something", error + builddir +
                    "/src/lib/datasrc/.libs/no_such_file.so.something_ds.so");
 
-    // Temporarily unset B10_FROM_BUILD to see that BACKEND_LIBRARY_PATH
+    // Temporarily unset BUNDY_FROM_BUILD to see that BACKEND_LIBRARY_PATH
     // is used
-    unsetenv("B10_FROM_BUILD");
+    unsetenv("BUNDY_FROM_BUILD");
     pathtestHelper("no_such_file.so", error + BACKEND_LIBRARY_PATH +
                    "no_such_file.so");
     // Put it back just in case
-    setenv("B10_FROM_BUILD", builddir.c_str(), 1);
+    setenv("BUNDY_FROM_BUILD", builddir.c_str(), 1);
 
     // Test some bad input values
     ASSERT_THROW(DataSourceClientContainer("test", "", ElementPtr()),

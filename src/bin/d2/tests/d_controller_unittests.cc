@@ -238,7 +238,7 @@ TEST_F(DStubControllerTest, launchRuntimeError) {
 
 /// @brief Tests launch with a session establishment failure.
 /// This test launches with a valid command line for integrated mode and no.
-/// Attempting to connect to BIND10 should fail, even if BIND10 is running
+/// Attempting to connect to BUNDY should fail, even if BUNDY is running
 /// UNLESS the test is run as root.  Launch should throw SessionStartError.
 TEST_F(DStubControllerTest, launchSessionFailure) {
     // Command line to run integrated

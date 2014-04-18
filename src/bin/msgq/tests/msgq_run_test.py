@@ -45,8 +45,8 @@ from isc.cc.proto_defs import *
 
 # Due to problems with too long path on build bots, we place the socket
 # into the top-level build directory. That is ugly, but works.
-SOCKET_PATH = os.path.abspath(os.environ['B10_FROM_BUILD'] + '/msgq.sock')
-MSGQ_PATH = os.environ['B10_FROM_BUILD'] + '/src/bin/msgq/run_msgq.sh'
+SOCKET_PATH = os.path.abspath(os.environ['BUNDY_FROM_BUILD'] + '/msgq.sock')
+MSGQ_PATH = os.environ['BUNDY_FROM_BUILD'] + '/src/bin/msgq/run_msgq.sh'
 TIMEOUT = 15 # Some long time (seconds), for single test.
 
 class MsgqRunTest(unittest.TestCase):
@@ -308,7 +308,7 @@ class MsgqRunTest(unittest.TestCase):
         conn.group_reply(env, {'result': [0, {}]})
         # Synchronization - make sure the session is running before
         # we continue, so we get the notification. Similar synchronisation
-        # as in b10-init, but we don't have full ccsession here, so we
+        # as in bundy-init, but we don't have full ccsession here, so we
         # do so manually.
         synchronised = False
         attempts = 100

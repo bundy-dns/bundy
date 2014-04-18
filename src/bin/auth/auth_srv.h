@@ -246,18 +246,18 @@ public:
     /// \brief Create the internal forwarder for DDNS update messages
     ///
     /// Until this method is called (it is called when the
-    /// start_ddns_forwarder command is sent to b10-auth), b10-auth will
+    /// start_ddns_forwarder command is sent to bundy-auth), bundy-auth will
     /// respond to UPDATE messages with a NOTIMP rcode.
     /// If the internal forwarder was already created, it is destroyed and
-    /// created again. This is useful for instance when b10-ddns is shut
+    /// created again. This is useful for instance when bundy-ddns is shut
     /// down and restarted.
     void createDDNSForwarder();
 
     /// \brief Destroy the internal forwarder for DDNS update messages
     ///
     /// After this method has been called (it is called when the
-    /// stop_ddns_forwarder command is sent to b10-auth), DDNS Update
-    /// messages are no longer forwarded internally, but b10-auth will
+    /// stop_ddns_forwarder command is sent to bundy-auth), DDNS Update
+    /// messages are no longer forwarded internally, but bundy-auth will
     /// immediately respond with a NOTIMP rcode.
     /// If there was no forwarder yet, this method does nothing.
     void destroyDDNSForwarder();

@@ -13,11 +13,11 @@
 # NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
 # WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-"""BIND 10 statistics counters module
+"""BUNDY statistics counters module
 
-This module handles the statistics counters for BIND 10 modules.  For
+This module handles the statistics counters for BUNDY modules.  For
 using the module `counter.py`, first a counters object should be created
-in each module like b10-foo after importing this module. A spec file can
+in each module like bundy-foo after importing this module. A spec file can
 be specified as an argument when creating the counters object:
 
   from isc.statistics import Counters

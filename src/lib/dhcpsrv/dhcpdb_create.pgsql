@@ -13,7 +13,7 @@
 -- NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
 -- WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
--- This is the BIND 10 DHCP schema specification for PostgreSQL.
+-- This is the BUNDY DHCP schema specification for PostgreSQL.
 
 -- The schema is reasonably portable (with the exception of some field types
 -- specification, which are PostgreSQL-specific).  Minor changes might be needed
@@ -88,7 +88,7 @@ COMMIT;
 
 -- Finally, the version of the schema.  We start at 0.1 during development.
 -- This table is only modified during schema upgrades.  For historical reasons
--- (related to the names of the columns in the BIND 10 DNS database file), the
+-- (related to the names of the columns in the BUNDY DNS database file), the
 -- first column is called "version" and not "major".
 
 -- NOTE: this MUST be kept in step with src/lib/dhcpsrv/tests/schema_copy.h,

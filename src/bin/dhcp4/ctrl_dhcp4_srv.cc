@@ -189,8 +189,8 @@ void ControlledDhcpv4Srv::sessionReader(void) {
 void ControlledDhcpv4Srv::establishSession() {
 
     string specfile;
-    if (getenv("B10_FROM_BUILD")) {
-        specfile = string(getenv("B10_FROM_BUILD")) +
+    if (getenv("BUNDY_FROM_BUILD")) {
+        specfile = string(getenv("BUNDY_FROM_BUILD")) +
             "/src/bin/dhcp4/dhcp4.spec";
     } else {
         specfile = string(DHCP4_SPECFILE_LOCATION);
@@ -234,7 +234,7 @@ void ControlledDhcpv4Srv::establishSession() {
 
     }
 
-    /// Integrate the asynchronous I/O model of BIND 10 configuration
+    /// Integrate the asynchronous I/O model of BUNDY configuration
     /// control with the "select" model of the DHCP server.  This is
     /// fully explained in \ref dhcpv4Session.
     int ctrl_socket = cc_session_->getSocketDesc();

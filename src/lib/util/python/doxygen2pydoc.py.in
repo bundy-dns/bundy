@@ -29,11 +29,11 @@ documentation) with minimizing error-prone and boring manual conversion.
 
 HOW TO USE IT
 
-1. Generate XML output by doxygen.  Use bind10/doc/Doxyfile-xml:
+1. Generate XML output by doxygen.  Use bundy/doc/Doxyfile-xml:
 
-  % cd bind10/doc
+  % cd bundy/doc
   % doxygen Doxyfile-xml
-  (XML files will be generated under bind10/doc/html/xml)
+  (XML files will be generated under bundy/doc/html/xml)
 
 2. Identify the xml file of the conversion target (C++ class, function, etc)
 
@@ -41,7 +41,7 @@ HOW TO USE IT
   For example, to identify the xml file for a C++ class
   isc::datasrc::memory::ZoneWriter, you might do:
 
-  % cd bind10/doc/html/xml
+  % cd bundy/doc/html/xml
   % grep ZoneWriter *.xml | grep 'kind="class"'
   index.xml:  <compound refid="d4/d3c/classisc_1_1datasrc_1_1memory_1_1ZoneWriter" kind="class"><name>isc::datasrc::memory::ZoneWriter</name>
 
@@ -62,7 +62,7 @@ HOW TO USE IT
     resetMemorySegment => reset_memory_segment
     getConfiguration => get_configuration
 
-  In BIND 10 naming convention for methods is different for C++ and
+  In BUNDY naming convention for methods is different for C++ and
   Python.  This script uses some heuristic guess to convert the
   C++-style method names to likely Python-style ones, and the converted
   method names are used in the dumped template.  In many cases the guessed

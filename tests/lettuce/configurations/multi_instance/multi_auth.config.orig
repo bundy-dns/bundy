@@ -26,9 +26,9 @@
     },
     "Init": {
         "components": {
-            "b10-auth-2": {"kind": "dispensable", "special": "auth"},
-            "b10-auth": {"kind": "dispensable", "special": "auth"},
-            "b10-cmdctl": {"kind": "needed", "special": "cmdctl"}
+            "bundy-auth-2": {"kind": "dispensable", "special": "auth"},
+            "bundy-auth": {"kind": "dispensable", "special": "auth"},
+            "bundy-cmdctl": {"kind": "needed", "special": "cmdctl"}
         }
     }
 }

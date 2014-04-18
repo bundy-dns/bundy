@@ -20,9 +20,9 @@
 import unittest
 import os
 from isc.config.ccsession import *
-from isc.config.config_data import BIND10_CONFIG_DATA_VERSION
+from isc.config.config_data import BUNDY_CONFIG_DATA_VERSION
 from unittest_fakesession import FakeModuleCCSession, WouldBlockForever
-import bind10_config
+import bundy_config
 import isc.log
 
 class TestHelperFunctions(unittest.TestCase):
@@ -1007,7 +1007,7 @@ class TestModuleCCSession(unittest.TestCase):
         self.assertRaises(TypeError, default_logconfig_handler, 1);
 
         spec = isc.config.module_spec_from_file(
-            path_search('logging.spec', bind10_config.PLUGIN_PATHS))
+            path_search('logging.spec', bundy_config.PLUGIN_PATHS))
         config_data = ConfigData(spec)
 
         self.assertRaises(TypeError, default_logconfig_handler, 1, config_data)
@@ -1030,8 +1030,8 @@ class TestModuleCCSession(unittest.TestCase):
 
         # Try a correct config
         log_conf = {"loggers":
-                       [{"name": "b10-xfrout", "output_options":
-                           [{"output": "/tmp/bind10.log",
+                       [{"name": "bundy-xfrout", "output_options":
+                           [{"output": "/tmp/bundy.log",
                                        "destination": "file",
                                        "flush": True}]}]}
         default_logconfig_handler(log_conf, config_data)
@@ -1081,32 +1081,32 @@ class TestUIModuleCCSession(unittest.TestCase):
     def create_uccs(self, fake_conn, specfile="spec2.spec"):
         module_spec = isc.config.module_spec_from_file(self.spec_file(specfile))
         fake_conn.set_get_answer('/module_spec', { module_spec.get_module_name(): module_spec.get_full_spec()})
-        fake_conn.set_get_answer('/config_data', { 'version': BIND10_CONFIG_DATA_VERSION })
+        fake_conn.set_get_answer('/config_data', { 'version': BUNDY_CONFIG_DATA_VERSION })
         return UIModuleCCSession(fake_conn)
 
     def create_uccs_named_set(self, fake_conn):
         module_spec = isc.config.module_spec_from_file(self.spec_file("spec32.spec"))
         fake_conn.set_get_answer('/module_spec', { module_spec.get_module_name(): module_spec.get_full_spec()})
-        fake_conn.set_get_answer('/config_data', { 'version': BIND10_CONFIG_DATA_VERSION })
+        fake_conn.set_get_answer('/config_data', { 'version': BUNDY_CONFIG_DATA_VERSION })
         return UIModuleCCSession(fake_conn)
 
     def create_uccs_listtest(self, fake_conn):
         module_spec = isc.config.module_spec_from_file(self.spec_file("spec39.spec"))
         fake_conn.set_get_answer('/module_spec', { module_spec.get_module_name(): module_spec.get_full_spec()})
-        fake_conn.set_get_answer('/config_data', { 'version': BIND10_CONFIG_DATA_VERSION })
+        fake_conn.set_get_answer('/config_data', { 'version': BUNDY_CONFIG_DATA_VERSION })
         return UIModuleCCSession(fake_conn)
 
     def test_init(self):
         fake_conn = fakeUIConn()
         fake_conn.set_get_answer('/module_spec', {})
-        fake_conn.set_get_answer('/config_data', { 'version': BIND10_CONFIG_DATA_VERSION })
+        fake_conn.set_get_answer('/config_data', { 'version': BUNDY_CONFIG_DATA_VERSION })
         uccs = UIModuleCCSession(fake_conn)
         self.assertEqual({}, uccs._specifications)
-        self.assertEqual({ 'version': BIND10_CONFIG_DATA_VERSION}, uccs._current_config)
+        self.assertEqual({ 'version': BUNDY_CONFIG_DATA_VERSION}, uccs._current_config)
 
         module_spec = isc.config.module_spec_from_file(self.spec_file("spec2.spec"))
         fake_conn.set_get_answer('/module_spec', { module_spec.get_module_name(): module_spec.get_full_spec()})
-        fake_conn.set_get_answer('/config_data', { 'version': BIND10_CONFIG_DATA_VERSION })
+        fake_conn.set_get_answer('/config_data', { 'version': BUNDY_CONFIG_DATA_VERSION })
         uccs = UIModuleCCSession(fake_conn)
         self.assertEqual(module_spec._module_spec, uccs._specifications['Spec2']._module_spec)
 
@@ -1125,7 +1125,7 @@ class TestUIModuleCCSession(unittest.TestCase):
         # Set the first one in the answer
         fake_conn.set_get_answer('/module_spec', module_spec_dict1)
         fake_conn.set_get_answer('/config_data',
-                                 { 'version': BIND10_CONFIG_DATA_VERSION })
+                                 { 'version': BUNDY_CONFIG_DATA_VERSION })
         uccs = UIModuleCCSession(fake_conn)
 
         # We should now have the first one, but not the second.
@@ -1353,6 +1353,6 @@ class TestUIModuleCCSession(unittest.TestCase):
         uccs.commit()
 
 if __name__ == '__main__':
-    isc.log.init("bind10")
+    isc.log.init("bundy")
     unittest.main()
 

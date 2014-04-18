@@ -93,7 +93,7 @@ public:
     /// Execute a single control command.
     ///
     /// Specific derived methods can throw exceptions.  When called via
-    /// \c execAuthServerCommand(), all BIND 10 exceptions are caught
+    /// \c execAuthServerCommand(), all BUNDY exceptions are caught
     /// and converted into an error code.
     /// The derived method may also throw an exception of class
     /// \c AuthCommandError when it encounters an internal error, such as

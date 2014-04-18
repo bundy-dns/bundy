@@ -52,7 +52,7 @@ Configuration for the global data sources is updated, but the update
 cannot be applied to memmgr.  The memmgr module will still keep running
 with the previous configuration, but the cause of the failure and
 other log messages must be carefully examined because if only memmgr
-rejects the new configuration then the entire BIND 10 system will have
+rejects the new configuration then the entire BUNDY system will have
 inconsistent state among different modules.  If other modules accept
 the update but memmgr produces this error, it's quite likely that the
 system isn't working as expected, and is probably better to be shut down
@@ -97,7 +97,7 @@ readers were notified.
 % MEMMGR_NO_DATASRC_CONF failed to add data source configuration: %1
 The memmgr daemon tried to incorporate data source configuration on
 its startup but failed to do so.  Due to internal implementation
-details this shouldn't happen as long as the BIND 10 system has been
+details this shouldn't happen as long as the BUNDY system has been
 installed correctly.  So, if this error message is logged, you should
 probably reinstall the entire system, preferably from the scratch, and
 see if it still happens.  The memmgr daemon cannot do any meaningful

@@ -26,12 +26,12 @@
   <refmeta>
     <refentrytitle>isc-sysinfo</refentrytitle>
     <manvolnum>1</manvolnum>
-    <refmiscinfo>BIND10</refmiscinfo>
+    <refmiscinfo>BUNDY</refmiscinfo>
   </refmeta>
 
   <refnamediv>
     <refname>isc-sysinfo</refname>
-    <refpurpose>BIND 10 system information display tool</refpurpose>
+    <refpurpose>BUNDY system information display tool</refpurpose>
   </refnamediv>
 
   <docinfo>
@@ -51,7 +51,7 @@
     <title>DESCRIPTION</title>
     <para>
       The <command>isc-sysinfo</command> program collects and outputs a
-      variety of information about the system that BIND 10 is running
+      variety of information about the system that BUNDY is running
       on. This information can be useful to people involved in debugging
       and technical support.
     </para>
@@ -86,9 +86,9 @@
     <title>SEE ALSO</title>
     <para>
       <citerefentry>
-        <refentrytitle>bind10</refentrytitle><manvolnum>8</manvolnum>
+        <refentrytitle>bundy</refentrytitle><manvolnum>8</manvolnum>
       </citerefentry>,
-      <citetitle>BIND 10 Guide</citetitle>.
+      <citetitle>BUNDY Guide</citetitle>.
     </para>
   </refsect1>
 

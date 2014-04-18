@@ -1,10 +1,10 @@
 
-This is the 1.2.0 version release of BIND 10.  Corresponding with
+This is the 1.2.0 version release of BUNDY.  Corresponding with
 this release, ISC has concluded its development work on the BIND
 10 code base and it will be maintained and hosted by an outside
 group.  ISC will continue to develop BIND 9 and its DHCP software.
 
-BIND 10 provides an authoritative DNS server (with in-memory and
+BUNDY provides an authoritative DNS server (with in-memory and
 SQLite3 backends), DNSSEC support, dynamic DNS, zone transfers.
 Supplementary components are included for statistics collection
 and reporting and remote configuration and control are included,
@@ -19,10 +19,10 @@ ISC.
 Since the June 2013 1.1.0 release, the new DNS highlights include
 incoming zone transfer statistics, support for CAA and TLSA resource
 records, and the zone loader now supports the zone file $GENERATE
-directive.  Note that the b10-xfrin "use_ixfr" configuration item
+directive.  Note that the bundy-xfrin "use_ixfr" configuration item
 is deprecated and a new configuration "zones/request_ixfr" may be
 used to replace it.  Also use "database_file" under the "data_sources"
-module for b10-xfrin inbound transfers and use b10-loadzone -e
+module for bundy-xfrin inbound transfers and use bundy-loadzone -e
 option to create an empty zone prior to the first transfer.
 
 The suite also provides DHCPv4 and DHCPv6 servers, a dynamic DNS
@@ -52,26 +52,26 @@ For the full commit history, please see the ChangeLog and the git
 Log.  This release doesn't introduce any code changes since last
 week's release candidate.
 
-The bind10-1.2.0 source may be downloaded from:
+The bundy-1.2.0 source may be downloaded from:
 
-  ftp://ftp.isc.org/isc/bind10/1.2.0/bind10-1.2.0.tar.gz
+  ftp://ftp.isc.org/isc/bundy/1.2.0/bundy-1.2.0.tar.gz
 
 A PGP signature of the distribution is at
 
-  ftp://ftp.isc.org/isc/bind10/1.2.0/bind10-1.2.0.tar.gz.sha512.asc
+  ftp://ftp.isc.org/isc/bundy/1.2.0/bundy-1.2.0.tar.gz.sha512.asc
 
 The signature was generated with the ISC code signing key which is
 available at https://www.isc.org/about/openpgp
 
 Installation details are documented in the Guide.  In addition,
 installation suggestions for various operating systems are available
-via our wiki http://bind10.isc.org/wiki/InstallStartPage.  (Please
+via our wiki http://bundy.isc.org/wiki/InstallStartPage.  (Please
 note that there are build regressions on Solaris platforms for the
 DNS code.)  The ./configure options --disable-dns and --disable-dhcp
 may be used to provide an optional DHCP- or DNS-only build and
 installation.
 
-BIND 10 was a sponsored development project, and would not be possible
+BUNDY was a sponsored development project, and would not be possible
 without the generous support of the past sponsors:  AFNIC, Afilias,
 CIRA, CNNIC, CZ.NIC, DENIC eG, Google, IIS.SE, JPRS, Nominet, .nz Registry
 Services, RIPE NCC, Registro.br, SIDN, and Technical Center of Internet.
