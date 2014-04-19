@@ -25,6 +25,15 @@ The MemorySegmentBuilder was unable to get a ZoneWriter for the
 specified zone when handling the load command. This zone will be
 skipped.
 
+% LIBMEMMGR_BUILDER_RECEIVED_COMMAND received command '%1'
+Informational message.  The MemorySegmentBuilder thread received a
+command from the main memmgr thread.
+
+% LIBMEMMGR_BUILDER_SEGMENT_OPEND opened memory segment for update with data source '%1/%2'
+Informational message.  The MemorySegmentBuilder thread opened a
+memory segment used with the shown data source in the read-write mode
+for further updates.
+
 % LIBMEMMGR_BUILDER_ZONE_WRITER_LOAD_1_ERROR Error loading zone '%1', data source '%2': '%3'
 The MemorySegmentBuilder failed to load the specified zone when handling
 the load command. This zone will be skipped.
