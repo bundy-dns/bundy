@@ -288,10 +288,6 @@ TEST_F(CacheConfigTest, getLoaderCreatorWithMock) {
     EXPECT_THROW(cache_conf.getLoaderCreator(RRClass::IN(),
                                              Name("example.net")),
                  NoSuchZone);
-
-    // buggy data source client: it returns a null pointer from getIterator.
-    EXPECT_THROW(cache_conf.getLoaderCreator(RRClass::IN(), Name("null.org")),
-                 bundy::Unexpected);
 }
 
 TEST_F(CacheConfigTest, getSegmentType) {

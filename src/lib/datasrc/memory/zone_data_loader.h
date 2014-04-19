@@ -62,6 +62,9 @@ public:
     /// \brief Constructor for loading from a given data source.
     ///
     /// Most of the parameters are the same as the other version.
+    /// The caller is responsible for keeping \c datasrc_client valid while
+    /// the constructed \c ZoneDataLoader is used.  This should be the case
+    /// in the main usage, but test code could easily break the assumption.
     ///
     /// \param datasrc_client A client for the data source from which new
     /// zone data should be loaded.

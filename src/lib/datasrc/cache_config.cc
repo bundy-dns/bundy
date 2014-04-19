@@ -14,6 +14,7 @@
 
 #include <datasrc/cache_config.h>
 #include <datasrc/client.h>
+#include <datasrc/result.h>
 #include <datasrc/memory/loader_creator.h>
 #include <datasrc/memory/zone_data_loader.h>
 
@@ -165,15 +166,10 @@ CacheConfig::getLoaderCreator(const dns::RRClass& rrclass,
     assert(datasrc_client_);
 
     // If the specified zone name does not exist in our client of the source,
-    // NoSuchZone is thrown, which is exactly the result what we
-    // want, so no need to handle it.
-    ZoneIteratorPtr iterator(datasrc_client_->getIterator(zone_name));
-    if (!iterator) {
-        // This shouldn't happen for a compliant implementation of
-        // DataSourceClient, but we'll protect ourselves from buggy
-        // implementations.
-        bundy_throw(Unexpected, "getting loader creator for " << zone_name
-                  << "/" << rrclass << " resulted in Null zone iterator");
+    // it will be detected in the actual load phase.  But we'll detect it
+    // at this point as the caller expects the early detection.
+    if (datasrc_client_->findZone(zone_name).code != result::SUCCESS) {
+        bundy_throw(NoSuchZone, "getLoaderCreator failed to find a zone");
     }
 
     // Wrap the iterator into the correct functor (which keeps it alive as
