@@ -102,7 +102,7 @@ is not larger than the older version of in-memory data.  The new
 version will be used anyway, but it may fail to transfer to secondary
 servers.
 
-% DATASRC_MEMORY_LOAD_SAME_SERIAL in-memory data for %1/%2 has the same serial %4 as that in data source '%4', skipping load.
+% DATASRC_MEMORY_LOAD_SAME_SERIAL in-memory data for %1/%2 has the same serial %3 as that in data source '%4', skipping load.
 An attempt of loading zone data into memory from a data source was
 requested, but in-memory data already had SOA of the same serial as
 that in the data source.  As an optimization actual load was skipped,

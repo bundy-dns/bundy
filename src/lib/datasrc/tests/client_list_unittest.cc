@@ -227,6 +227,9 @@ public:
         // data source.
         mock_client->enableA();
         mock_client->enableBadIterator();
+
+        // update serial
+        mock_client->incrementSerial();
     }
     // Check the positive result is as we expect it.
     void positiveResult(const ClientList::FindResult& result,

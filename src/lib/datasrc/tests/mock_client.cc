@@ -76,7 +76,7 @@ private:
 
 class Iterator : public ZoneIterator {
 public:
-    Iterator(const Name& origin, bool include_a) :
+    Iterator(const Name& origin, bool include_a, uint32_t serial) :
         origin_(origin),
         soa_(new RRset(origin_, RRClass::IN(), RRType::SOA(),
                        RRTTL(3600)))
@@ -85,7 +85,7 @@ public:
         // just needs to be some.
         soa_->addRdata(rdata::generic::SOA(Name::ROOT_NAME(),
                                            Name::ROOT_NAME(),
-                                           0, 0, 0, 0, 0));
+                                           serial, 0, 0, 0, 0));
         rrsets_.push_back(soa_);
 
         RRsetPtr rrset(new RRset(origin_, RRClass::IN(), RRType::NS(),
@@ -126,7 +126,7 @@ private:
 // A test data source. It pretends it has some zones.
 
 MockDataSourceClient::MockDataSourceClient(const char* zone_names[]) :
-    DataSourceClient("mock"), have_a_(true), use_baditerator_(true)
+    DataSourceClient("mock"), have_a_(true), use_baditerator_(true), serial_(0)
 {
     for (const char** zone = zone_names; *zone; ++zone) {
         zones.insert(Name(*zone));
@@ -186,7 +186,7 @@ MockDataSourceClient::getIterator(const Name& name, bool) const {
     } else {
         FindResult result(findZone(name));
         if (result.code == bundy::datasrc::result::SUCCESS) {
-            return (ZoneIteratorPtr(new Iterator(name, have_a_)));
+            return (ZoneIteratorPtr(new Iterator(name, have_a_, serial_)));
         } else {
             bundy_throw(NoSuchZone, "No such zone");
         }

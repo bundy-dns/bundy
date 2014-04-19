@@ -53,7 +53,8 @@ struct ZoneWriter::Impl {
         origin_(origin),
         rrclass_(rrclass),
         state_(ZW_UNUSED),
-        catch_load_error_(throw_on_load_error)
+        catch_load_error_(throw_on_load_error),
+        destroy_old_data_(true)
     {
         while (true) {
             try {
@@ -79,6 +80,7 @@ struct ZoneWriter::Impl {
     typedef detail::SegmentObjectHolder<ZoneData, dns::RRClass> ZoneDataHolder;
     boost::scoped_ptr<ZoneDataHolder> data_holder_;
     boost::scoped_ptr<ZoneDataLoader> loader_;
+    bool destroy_old_data_;
 };
 
 ZoneWriter::ZoneWriter(ZoneTableSegment& segment,
@@ -98,20 +100,39 @@ ZoneWriter::~ZoneWriter() {
     delete impl_;
 }
 
+namespace {
+ZoneTable*
+getZoneTable(ZoneTableSegment& table_sgmt) {
+    ZoneTable* const table = table_sgmt.getHeader().getTable();
+    if (!table) {
+        // This can only happen for buggy ZoneTableSegment implementation.
+        bundy_throw(bundy::Unexpected, "No zone table present");
+    }
+    return (table);
+}
+}
+
 void
 ZoneWriter::load(std::string* error_msg) {
     if (impl_->state_ != Impl::ZW_UNUSED) {
         bundy_throw(bundy::InvalidOperation, "Trying to load twice");
     }
 
+    ZoneTable* const table = getZoneTable(impl_->segment_);
+    const ZoneTable::MutableFindResult ztresult =
+        table->findZone(impl_->origin_);
+    ZoneData* const old_data =
+        (ztresult.code == result::SUCCESS) ? ztresult.zone_data : NULL;
+
     try {
         impl_->loader_.reset(impl_->loader_creator_(
-                                 impl_->segment_.getMemorySegment(), NULL));
+                                 impl_->segment_.getMemorySegment(), old_data));
         const ZoneDataLoader::LoadResult result = impl_->loader_->load();
         ZoneData* const zone_data = result.first;
+        impl_->destroy_old_data_ = result.second;
 
         if (!zone_data) {
-            // Bug inside impl_->load_action_.
+            // Bug inside ZoneDataLoader.
             bundy_throw(bundy::InvalidOperation,
                         "No data returned from load action");
         }
@@ -141,23 +162,24 @@ ZoneWriter::install() {
 
     while (impl_->state_ != Impl::ZW_INSTALLED) {
         try {
-            ZoneTableHeader& header = impl_->segment_.getHeader();
-            ZoneTable* table(header.getTable());
-            if (!table) {
-                bundy_throw(bundy::Unexpected, "No zone table present");
-            }
+            ZoneTable* const table = getZoneTable(impl_->segment_);
             // We still need to hold the zone data until we return from
             // addZone in case it throws, but we then need to immediately
             // release it as the ownership is transferred to the zone table.
-            // we release this by (re)set it to the old data; that way we can
-            // use the holder for the final cleanup.
+            // In case we are also to destroy old data, we release the new
+            // data by (re)setting it to the old; that way we can use the
+            // holder for the final cleanup.
             const ZoneTable::AddResult result(
                 impl_->data_holder_->get() ?
                 table->addZone(impl_->segment_.getMemorySegment(),
                                impl_->origin_, impl_->data_holder_->get()) :
                 table->addEmptyZone(impl_->segment_.getMemorySegment(),
                                     impl_->origin_));
-            impl_->data_holder_->set(result.zone_data);
+            if (impl_->destroy_old_data_) {
+                impl_->data_holder_->set(result.zone_data);
+            } else {
+                impl_->data_holder_->release();
+            }
             impl_->state_ = Impl::ZW_INSTALLED;
         } catch (const bundy::util::MemorySegmentGrown&) {}
     }
