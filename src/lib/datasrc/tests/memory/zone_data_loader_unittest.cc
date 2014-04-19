@@ -19,6 +19,7 @@
 #include <datasrc/memory/zone_data.h>
 #include <datasrc/memory/zone_data_updater.h>
 #include <datasrc/memory/segment_object_holder.h>
+#include <datasrc/client.h>
 #include <datasrc/zone_iterator.h>
 
 #include <util/buffer.h>
@@ -36,6 +37,7 @@
 #include <gtest/gtest.h>
 
 using namespace bundy::dns;
+using namespace bundy::datasrc;
 using namespace bundy::datasrc::memory;
 #ifdef USE_SHARED_MEMORY
 using bundy::util::MemorySegmentMapped;
@@ -43,6 +45,22 @@ using bundy::util::MemorySegmentMapped;
 using bundy::datasrc::memory::detail::SegmentObjectHolder;
 
 namespace {
+
+// Emulate broken DataSourceClient implementation: it returns a null iterator
+// from getIterator()
+class BadDataSourceClient : public DataSourceClient {
+public:
+    BadDataSourceClient() : DataSourceClient("bad") {}
+    virtual FindResult findZone(const Name&) const { throw 0; }
+    virtual ZoneIteratorPtr getIterator(const Name&, bool) const {
+        return (ZoneIteratorPtr());
+    }
+    virtual ZoneUpdaterPtr getUpdater(const Name&, bool, bool) const {
+        throw 0;
+    }
+    virtual std::pair<ZoneJournalReader::Result, ZoneJournalReaderPtr>
+    getJournalReader(const Name&, uint32_t, uint32_t) const { throw 0; }
+};
 
 class ZoneDataLoaderTest : public ::testing::Test {
 protected:
@@ -85,6 +103,13 @@ TEST_F(ZoneDataLoaderTest, zoneMinTTL) {
                                 "/example.org-nsec3-signed.zone").load();
     bundy::util::InputBuffer b(zone_data_->getMinTTLData(), sizeof(uint32_t));
     EXPECT_EQ(RRTTL(1200), RRTTL(b));
+}
+
+TEST_F(ZoneDataLoaderTest, loadFromBadDataSource) {
+    // Even if getIterator() returns NULL, it shouldn't cause a crash.
+    BadDataSourceClient bdsc;
+    ZoneDataLoader loader(mem_sgmt_, zclass_, Name("example.org"), bdsc);
+    EXPECT_THROW(loader.load(), bundy::Unexpected);
 }
 
 // Load bunch of small zones, hoping some of the relocation will happen

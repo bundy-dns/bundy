@@ -247,6 +247,15 @@ ZoneData*
 ZoneDataLoader::ZoneDataLoaderImpl::doLoad() {
     if (datasrc_client_) {
         ZoneIteratorPtr iterator =  datasrc_client_->getIterator(zone_name_);
+        if (!iterator) {
+            // This shouldn't happen for a compliant implementation of
+            // DataSourceClient, but we'll protect ourselves from buggy
+            // implementations.
+            bundy_throw(Unexpected, "getting loader creator for " << zone_name_
+                        << "/" << rrclass_ <<
+                        " resulted in Null zone iterator");
+        }
+
         /* TODO: compare the iterator's SOA and in-memory SOA */
         return (doLoadCommon(boost::bind(generateRRsetFromIterator,
                                          iterator.get(), _1)));
