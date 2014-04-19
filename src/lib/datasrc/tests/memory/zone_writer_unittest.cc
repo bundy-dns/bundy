@@ -57,10 +57,10 @@ public:
     MockLoader(bundy::util::MemorySegment& segment,
                bool* load_called, const bool* load_throw,
                const bool* load_loader_throw, const bool* load_null,
-               const bool* load_data) :
+               const bool* load_data, ZoneData* old_data) :
         load_called_(load_called), load_throw_(load_throw),
         load_loader_throw_(load_loader_throw), load_null_(load_null),
-        load_data_(load_data), segment_(segment)
+        load_data_(load_data), segment_(segment), old_data_(old_data)
     {}
     virtual ~MockLoader() {}
     virtual LoadResult load() {
@@ -76,6 +76,9 @@ public:
         if (*load_null_) {
             // Be nasty to the caller and return NULL, which is forbidden
             return (LoadResult(NULL, true));
+        }
+        if (old_data_) { // if non-NULL, it means we'll reuse it for test
+            return (LoadResult(old_data_, false));
         }
         ZoneData* data = ZoneData::create(segment_, Name("example.org"));
         if (*load_data_) {
@@ -95,6 +98,7 @@ public:
     const bool* const load_data_;
 private:
     bundy::util::MemorySegment& segment_;
+    ZoneData* const old_data_;
 };
 
 class ZoneWriterTest : public ::testing::Test {
@@ -105,6 +109,7 @@ protected:
         load_loader_throw_(false),
         load_null_(false),
         load_data_(false),
+        reuse_old_data_(false),
         zt_segment_(new ZoneTableSegmentMock(RRClass::IN(), mem_sgmt_)),
         writer_(new
             ZoneWriter(*zt_segment_,
@@ -121,20 +126,24 @@ protected:
     bool load_loader_throw_;
     bool load_null_;
     bool load_data_;
+    bool reuse_old_data_;
     MemorySegmentMock mem_sgmt_;
     boost::scoped_ptr<ZoneTableSegmentMock> zt_segment_;
     boost::scoped_ptr<ZoneWriter> writer_;
 public:
     ZoneDataLoader* loaderCreator(bundy::util::MemorySegment& mem_sgmt,
-                                  ZoneData*)
+                                  ZoneData* old_data)
     {
         // Make sure it is the correct segment passed. We know the
         // exact instance, can compare pointers to them.
         EXPECT_EQ(&zt_segment_->getMemorySegment(), &mem_sgmt);
 
+        if (!reuse_old_data_) {
+            old_data = NULL;
+        }
         return (new MockLoader(mem_sgmt_, &load_called_, &load_throw_,
                                &load_loader_throw_, &load_null_,
-                               &load_data_));
+                               &load_data_, old_data));
     }
 };
 
@@ -186,6 +195,34 @@ TEST_F(ZoneWriterTest, correctCall) {
     // We don't check explicitly how this works, but call it to free memory. If
     // everything is freed should be checked inside the TearDown.
     EXPECT_NO_THROW(writer_->cleanup());
+}
+
+TEST_F(ZoneWriterTest, reloadOverridden) {
+    const Name zname("example.org");
+    reuse_old_data_ = true;
+
+    // First load.  New data should be created.
+    writer_->load();
+    writer_->install();
+    writer_->cleanup();
+    const ZoneData* const zd1 =
+        zt_segment_->getHeader().getTable()->findZone(zname).zone_data;
+    EXPECT_TRUE(zd1);
+
+    // Second load with a new writer.
+    writer_.reset(new ZoneWriter(*zt_segment_,
+                                 boost::bind(&ZoneWriterTest::loaderCreator,
+                                             this, _1, _2),
+                                 zname, RRClass::IN(), false));
+    writer_->load();
+    writer_->install();
+    writer_->cleanup();
+
+    // The same data should still be used (we didn't modify it, so the
+    // pointers should be same)
+    const ZoneData* const zd2 =
+        zt_segment_->getHeader().getTable()->findZone(zname).zone_data;
+    EXPECT_EQ(zd1, zd2);
 }
 
 TEST_F(ZoneWriterTest, loadTwice) {
@@ -339,7 +376,7 @@ TEST_F(ZoneWriterTest, retry) {
 
     // The rest still works correctly
     EXPECT_NO_THROW(writer_->install());
-    ZoneTable* const table(zt_segment_->getHeader().getTable());
+    const ZoneTable* const table(zt_segment_->getHeader().getTable());
     const ZoneTable::FindResult found(table->findZone(Name("example.org")));
     ASSERT_EQ(bundy::datasrc::result::SUCCESS, found.code);
     // For some reason it doesn't seem to work by the ZoneNode typedef, using
@@ -428,8 +465,8 @@ TEST_F(ZoneWriterTest, manyWrites) {
         writer.cleanup();
 
         // Confirm it's been successfully added and can be actually found.
-        const ZoneTable::FindResult result =
-            zt_segment->getHeader().getTable()->findZone(origin);
+        const ZoneTable* ztable = zt_segment->getHeader().getTable();
+        const ZoneTable::FindResult result = ztable->findZone(origin);
         EXPECT_EQ(bundy::datasrc::result::SUCCESS, result.code);
         EXPECT_NE(static_cast<const ZoneData*>(NULL), result.zone_data) <<
             "unexpected find result: " + origin.toText();

@@ -101,7 +101,8 @@ const char* rrset_data_sigseparated[] = {
 
 class MockIterator : public ZoneIterator {
 private:
-    MockIterator(const char** rrset_data_ptr, bool pass_empty_rrsig) :
+    MockIterator(const char** rrset_data_ptr, bool pass_empty_rrsig,
+                 uint32_t serial) :
         pass_empty_rrsig_(pass_empty_rrsig)
     {
         assert(rrset_data_ptr);
@@ -109,7 +110,16 @@ private:
             rrsets_.push_back(textToRRset(*rrset_data_ptr,
                                           RRClass::IN(), Name("example.org")));
             if (rrsets_.back()->getType() == RRType::SOA()) {
+                // If SOA is given, we fake it for getSOA() so the serial will
+                // increase.  RDATA will differ between getSOA() and the
+                // iterator, for the tests that doesn't matter.
                 soa_ = rrsets_.back();
+                RRsetPtr newsoa(new RRset(soa_->getName(), soa_->getClass(),
+                                          soa_->getType(), soa_->getTTL()));
+                newsoa->addRdata(generic::SOA(Name::ROOT_NAME(),
+                                              Name::ROOT_NAME(), serial,
+                                              0, 0, 0, 0));
+                soa_ = newsoa;
             }
             ++rrset_data_ptr;
         }
@@ -123,6 +133,8 @@ private:
     std::vector<ConstRRsetPtr> rrsets_;
     std::vector<ConstRRsetPtr>::const_iterator it_;
     ConstRRsetPtr soa_;
+
+    static uint32_t serial_;
 
 public:
     virtual ConstRRsetPtr getNextRRset() {
@@ -144,10 +156,14 @@ public:
     static ZoneIteratorPtr makeIterator(const char** rrset_data_ptr,
                                         bool pass_empty_rrsig = false)
     {
+        serial_++;
         return (ZoneIteratorPtr(new MockIterator(rrset_data_ptr,
-                                                 pass_empty_rrsig)));
+                                                 pass_empty_rrsig, serial_)));
     }
 };
+
+
+uint32_t MockIterator::serial_ = 0;
 
 bool
 matchSOA(ConstRRsetPtr rrset) {

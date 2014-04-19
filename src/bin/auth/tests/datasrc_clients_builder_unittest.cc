@@ -413,7 +413,8 @@ DataSrcClientsBuilderTest::checkLoadOrUpdateZone(CommandID cmdid) {
               find(Name("www.example.org"), RRType::A())->code);
 
     // Add the record to the underlying sqlite database, by loading/updating
-    // it as a separate datasource, and updating it
+    // it as a separate datasource, and updating it.  Also need to update the
+    // SOA serial; otherwise load will be skipped.
     ConstElementPtr sql_cfg = Element::fromJSON("{ \"type\": \"sqlite3\","
                                                 "\"database_file\": \""
                                                 + test_db + "\"}");
@@ -422,6 +423,12 @@ DataSrcClientsBuilderTest::checkLoadOrUpdateZone(CommandID cmdid) {
         sql_ds.getInstance().getUpdater(Name("example.org"), false);
     sql_updater->addRRset(
         *textToRRset("www.example.org. 60 IN A 192.0.2.1"));
+    sql_updater->deleteRRset(
+        *textToRRset("example.org. 3600 IN SOA . . 0 0 0 0 0",
+                     RRClass::IN(), Name("example.org")));
+    sql_updater->addRRset(
+        *textToRRset("example.org. 3600 IN SOA . . 1 0 0 0 0",
+                     RRClass::IN(), Name("example.org")));
     sql_updater->commit();
 
     EXPECT_EQ(ZoneFinder::NXDOMAIN,

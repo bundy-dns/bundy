@@ -134,13 +134,19 @@ ZoneTable::addZoneInternal(util::MemorySegment& mem_sgmt,
     }
 }
 
-ZoneTable::FindResult
-ZoneTable::findZone(const Name& name) const {
-    const ZoneTableNode* node(NULL);
+namespace {
+// templated for unifying const/mutable versions of findZone().
+template <typename ResultType, typename TreeType,
+          typename NodeType, typename DataType>
+ResultType
+findCommon(const Name& name, TreeType& zones, NodeType** nodep) {
     result::Result my_result;
 
+    typedef DomainTree<ZoneData> ZoneTableTree;
+    typedef DomainTreeNode<ZoneData> ZoneTableNode;
+
     // Translate the return codes
-    switch (zones_->find(name, &node)) {
+    switch (zones.find(name, nodep)) {
     case ZoneTableTree::EXACTMATCH:
         my_result = result::SUCCESS;
         break;
@@ -149,25 +155,41 @@ ZoneTable::findZone(const Name& name) const {
         break;
     case ZoneTableTree::NOTFOUND:
         // We have no data there, so translate the pointer to NULL as well
-        return (FindResult(result::NOTFOUND, NULL));
+        return (ResultType(result::NOTFOUND, NULL));
     default:
         // Can Not Happen
         assert(0);
         // Because of warning
-        return (FindResult(result::NOTFOUND, NULL));
+        return (ResultType(result::NOTFOUND, NULL));
     }
 
     // Can Not Happen (remember, NOTFOUND is handled).  node should also have
     // data because the tree is constructed in the way empty nodes would
     // be "invisible" for find().
-    assert(node != NULL);
+    assert(*nodep != NULL);
 
-    const ZoneData* zone_data = node->getData();
+    DataType* zone_data = (*nodep)->getData();
     assert(zone_data);
     const result::ResultFlags flags =
         zone_data->isEmpty() ? result::ZONE_EMPTY : result::FLAGS_DEFAULT;
-    return (FindResult(my_result, zone_data->isEmpty() ? NULL : zone_data,
+    return (ResultType(my_result, zone_data->isEmpty() ? NULL : zone_data,
                        flags));
+}
+}
+
+ZoneTable::FindResult
+ZoneTable::findZone(const Name& name) const {
+    const ZoneTableNode* node(NULL);
+    return (findCommon<FindResult, const ZoneTableTree,
+            const ZoneTableNode, const ZoneData>(
+                name, *zones_, &node));
+}
+
+ZoneTable::MutableFindResult
+ZoneTable::findZone(const Name& name) {
+    ZoneTableNode* node(NULL);
+    return (findCommon<MutableFindResult, ZoneTableTree,
+            ZoneTableNode, ZoneData>(name, *zones_, &node));
 }
 
 } // end of namespace memory
