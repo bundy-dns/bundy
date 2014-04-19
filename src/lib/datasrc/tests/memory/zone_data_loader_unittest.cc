@@ -27,6 +27,7 @@
 #include <dns/name.h>
 #include <dns/rrclass.h>
 #include <dns/rdataclass.h>
+#include <dns/rrset.h>
 #ifdef USE_SHARED_MEMORY
 #include <util/memory_segment_mapped.h>
 #endif
@@ -35,6 +36,8 @@
 #include <datasrc/tests/memory/memory_segment_mock.h>
 
 #include <gtest/gtest.h>
+
+#include <vector>
 
 using namespace bundy::dns;
 using namespace bundy::datasrc;
@@ -46,20 +49,74 @@ using bundy::datasrc::memory::detail::SegmentObjectHolder;
 
 namespace {
 
+class MockIterator : public ZoneIterator {
+public:
+    MockIterator(const Name& zone_name, uint32_t serial,
+                 bool use_null_soa, bool use_broken_soa) :
+        soa_(new RRset(zone_name, RRClass::IN(), RRType::SOA(), RRTTL(3600))),
+        ns_(new RRset(zone_name, RRClass::IN(), RRType::NS(), RRTTL(3600)))
+    {
+        soa_->addRdata(rdata::generic::SOA(zone_name, zone_name, serial,
+                                           3600, 3600, 3600, 3600));
+        rrsets_.push_back(soa_);
+        ns_->addRdata(rdata::generic::NS(Name("ns.example")));
+        rrsets_.push_back(ns_);
+        rrsets_.push_back(ConstRRsetPtr());
+        it_ = rrsets_.begin();
+
+        if (use_null_soa) {
+            soa_.reset();
+        } else if (use_broken_soa) {
+            EXPECT_FALSE(use_null_soa); // these two shouldn't coexist
+            soa_.reset(new RRset(zone_name, RRClass::IN(), RRType::SOA(),
+                                 RRTTL(3600))); // reset it to an empty RRset
+        }
+    }
+    virtual ConstRRsetPtr getNextRRset() {
+        const ConstRRsetPtr result = *it_;
+        ++it_;
+        return (result);
+    }
+    virtual bundy::dns::ConstRRsetPtr getSOA() const {
+        return (soa_);
+    }
+private:
+    RRsetPtr soa_;
+    const RRsetPtr ns_;
+    std::vector<ConstRRsetPtr> rrsets_;
+    std::vector<ConstRRsetPtr>::const_iterator it_;
+};
+
 // Emulate broken DataSourceClient implementation: it returns a null iterator
 // from getIterator()
-class BadDataSourceClient : public DataSourceClient {
+class MockDataSourceClient : public DataSourceClient {
 public:
-    BadDataSourceClient() : DataSourceClient("bad") {}
+    MockDataSourceClient() :
+        DataSourceClient("test"), use_null_iterator_(false),
+        use_null_soa_(false), use_broken_soa_(false), serial_(1)
+    {}
     virtual FindResult findZone(const Name&) const { throw 0; }
     virtual ZoneIteratorPtr getIterator(const Name&, bool) const {
-        return (ZoneIteratorPtr());
+        if (use_null_iterator_) {
+            return (ZoneIteratorPtr());
+        } else {
+            return (ZoneIteratorPtr(new MockIterator(Name("example.com"),
+                                                     serial_,
+                                                     use_null_soa_,
+                                                     use_broken_soa_)));
+        }
     }
     virtual ZoneUpdaterPtr getUpdater(const Name&, bool, bool) const {
         throw 0;
     }
     virtual std::pair<ZoneJournalReader::Result, ZoneJournalReaderPtr>
     getJournalReader(const Name&, uint32_t, uint32_t) const { throw 0; }
+
+    // Allow direct access from tests for convenience
+    bool use_null_iterator_;
+    bool use_null_soa_;
+    bool use_broken_soa_;
+    uint32_t serial_;
 };
 
 class ZoneDataLoaderTest : public ::testing::Test {
@@ -83,7 +140,7 @@ TEST_F(ZoneDataLoaderTest, loadRRSIGFollowsNothing) {
     zone_data_ = ZoneDataLoader(mem_sgmt_, zclass_, Name("example.org"),
                                 TEST_DATA_DIR
                                 "/example.org-rrsig-follows-nothing.zone").
-        load();
+        load().first;
     ZoneNode* node = NULL;
     zone_data_->insertName(mem_sgmt_, Name("ns1.example.org"), &node);
     ASSERT_NE(static_cast<ZoneNode*>(NULL), node);
@@ -100,16 +157,93 @@ TEST_F(ZoneDataLoaderTest, zoneMinTTL) {
     // This should hold outside of the loader class, but we do double check.
     zone_data_ = ZoneDataLoader(mem_sgmt_, zclass_, Name("example.org"),
                                 TEST_DATA_DIR
-                                "/example.org-nsec3-signed.zone").load();
+                                "/example.org-nsec3-signed.zone").load().first;
     bundy::util::InputBuffer b(zone_data_->getMinTTLData(), sizeof(uint32_t));
     EXPECT_EQ(RRTTL(1200), RRTTL(b));
 }
 
+TEST_F(ZoneDataLoaderTest, loadFromDataSource) {
+    const Name origin("example.com");
+    MockDataSourceClient dsc;
+
+    // First load: Load should succeed, and the ZoneData should be newly created
+    ZoneDataLoader loader1(mem_sgmt_, zclass_, origin, dsc);
+    const ZoneDataLoader::LoadResult result1 = loader1.load();
+    zone_data_ = result1.first;
+    EXPECT_TRUE(zone_data_);
+    EXPECT_TRUE(result1.second);
+
+    // Next, the serial doesn't change, so the actual load is skipped,
+    // same ZoneData will be returned.
+    ZoneDataLoader loader2(mem_sgmt_, zclass_, origin, dsc, zone_data_);
+    const ZoneDataLoader::LoadResult result2 = loader2.load();
+    zone_data_ = result2.first;
+    EXPECT_TRUE(zone_data_);
+    EXPECT_FALSE(result2.second);
+    EXPECT_EQ(result1.first, result2.first);
+
+    // Normal update case: the serial of the new version is larger than current.
+    // It'll be loaded just like the initial case.
+    dsc.serial_ = 10;
+    ZoneDataLoader loader3(mem_sgmt_, zclass_, origin, dsc, zone_data_);
+    const ZoneDataLoader::LoadResult result3 = loader3.load();
+    zone_data_ = result3.first;
+    EXPECT_TRUE(zone_data_);
+    EXPECT_TRUE(result3.second);
+    EXPECT_NE(result2.first, zone_data_);
+    ZoneData::destroy(mem_sgmt_, result2.first, zclass_);
+
+    // Even if the new version has a smaller serial, it will be loaded
+    // (but it'll internally trigger a warning log message).
+    dsc.serial_ = 9;
+    ZoneDataLoader loader4(mem_sgmt_, zclass_, origin, dsc, zone_data_);
+    const ZoneDataLoader::LoadResult result4 = loader4.load();
+    zone_data_ = result4.first;
+    EXPECT_TRUE(zone_data_);
+    EXPECT_TRUE(result4.second);
+    EXPECT_NE(result3.first, zone_data_);
+    ZoneData::destroy(mem_sgmt_, zone_data_, zclass_);
+    ZoneData::destroy(mem_sgmt_, result3.first, zclass_);
+
+    // Unusual case: old data don't contain SOA.  It should itself be an issue,
+    // but for ZoneDataLoader this is no different from loading new data.
+    ZoneData* old_data = ZoneData::create(mem_sgmt_, origin); // empty zone
+    ZoneDataLoader loader5(mem_sgmt_, zclass_, origin, dsc, old_data);
+    const ZoneDataLoader::LoadResult result5 = loader5.load();
+    zone_data_ = result5.first;
+    EXPECT_TRUE(zone_data_);
+    EXPECT_TRUE(result5.second);
+    EXPECT_NE(old_data, zone_data_);
+    ZoneData::destroy(mem_sgmt_, old_data, zclass_);
+}
+
 TEST_F(ZoneDataLoaderTest, loadFromBadDataSource) {
     // Even if getIterator() returns NULL, it shouldn't cause a crash.
-    BadDataSourceClient bdsc;
-    ZoneDataLoader loader(mem_sgmt_, zclass_, Name("example.org"), bdsc);
-    EXPECT_THROW(loader.load(), bundy::Unexpected);
+    MockDataSourceClient dsc;
+    dsc.use_null_iterator_ = true;
+    EXPECT_THROW(ZoneDataLoader(mem_sgmt_, zclass_, Name("example.com"),
+                                dsc).load(), bundy::Unexpected);
+
+    // If iterator doesn't return SOA, load should fail.
+    dsc.use_null_iterator_ = false;
+    dsc.use_null_soa_ = true;
+    EXPECT_THROW(ZoneDataLoader(mem_sgmt_, zclass_, Name("example.com"),
+                                dsc).load(), ZoneValidationError);
+
+    // If an empty SOA is returned, it will be considered an implementation
+    // error.
+    dsc.use_null_soa_ = false;
+    dsc.use_broken_soa_ = true;
+    EXPECT_THROW(ZoneDataLoader(mem_sgmt_, zclass_, Name("example.com"),
+                                dsc).load(), bundy::Unexpected);
+
+    // Not really a bad data source, but a buggy case: given old data don't
+    // have the correct origin name.
+    dsc.use_broken_soa_ = false;
+    ZoneData* old_data = ZoneData::create(mem_sgmt_, Name("example.org"));
+    EXPECT_THROW(ZoneDataLoader(mem_sgmt_, zclass_, Name("example.com"),
+                                dsc, old_data), bundy::BadValue);
+    ZoneData::destroy(mem_sgmt_, old_data, zclass_);
 }
 
 // Load bunch of small zones, hoping some of the relocation will happen
@@ -131,7 +265,7 @@ TEST(ZoneDataLoaterTest, relocate) {
                                         Name("example.org"),
                                         TEST_DATA_DIR
                                         "/example.org-nsec3-signed.zone").
-            load();
+            load().first;
         // Store it, so it is cleaned up later
         zones.push_back(HolderPtr(new Holder(segment, RRClass::IN())));
         zones.back()->set(data);

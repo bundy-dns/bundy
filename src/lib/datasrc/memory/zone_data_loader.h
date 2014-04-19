@@ -21,6 +21,8 @@
 #include <dns/dns_fwd.h>
 #include <util/memory_segment.h>
 
+#include <utility>
+
 namespace bundy {
 namespace datasrc {
 class DataSourceClient;
@@ -52,7 +54,8 @@ public:
     /// \param rrclass The RRClass.
     /// \param zone_name The name of the zone that is being loaded.
     /// \param zone_file Filename which contains the zone data for \c zone_name.
-    /// \param old_data If non-NULL, zone data currently being used.
+    /// \param old_data If non-NULL, zone data currently being used.  Also
+    /// in that case, its origin name must be equal to \c zone_name.
     ZoneDataLoader(util::MemorySegment& mem_sgmt,
                    const dns::RRClass& rrclass,
                    const dns::Name& zone_name,
@@ -77,6 +80,8 @@ public:
     /// Destructor.
     virtual ~ZoneDataLoader();
 
+    typedef std::pair<ZoneData*, bool> LoadResult;
+
     /// \brief Create and return a ZoneData instance populated from the
     /// source passed on construction.
     ///
@@ -87,7 +92,7 @@ public:
     ///         implementation).
     ///
     /// \return A \c ZoneData containing zone data loaded from the source.
-    virtual ZoneData* load();
+    virtual LoadResult load();
 
 private:
     class ZoneDataLoaderImpl;

@@ -92,6 +92,22 @@ tried).
 Debug information.  A specific type RRset is requested at a zone origin
 of an in-memory zone and it is found.
 
+% DATASRC_MEMORY_LOADED zone %1/%2 loaded serial %3%4.
+Informational message.  A new version of zone data with shown SOA
+serial has been loaded into memory.
+
+% DATASRC_MEMORY_LOADED_SERIAL_NOT_INCREASED zone serial for %1/%2 hasn't increased or has gone backwards (from %3 to %4).
+A new version of zone data was loaded into memory, but its SOA serial
+is not larger than the older version of in-memory data.  The new
+version will be used anyway, but it may fail to transfer to secondary
+servers.
+
+% DATASRC_MEMORY_LOAD_SAME_SERIAL in-memory data for %1/%2 has the same serial %4 as that in data source '%4', skipping load.
+An attempt of loading zone data into memory from a data source was
+requested, but in-memory data already had SOA of the same serial as
+that in the data source.  As an optimization actual load was skipped,
+and old data will continue to be used.
+
 % DATASRC_MEMORY_MEM_ADD_EMPTY_ZONE adding an empty zone '%1/%2'
 Debug information. An "empty" zone is being added into the in-memory
 data source.  This is conceptual data indicating the state where the

@@ -19,8 +19,10 @@
 #include <datasrc/memory/segment_object_holder.h>
 #include <datasrc/memory/util_internal.h>
 #include <datasrc/memory/rrset_collection.h>
+#include <datasrc/memory/treenode_rrset.h>
 #include <datasrc/client.h>
 
+#include <dns/labelsequence.h>
 #include <dns/master_loader.h>
 #include <dns/rrcollator.h>
 #include <dns/rdataclass.h>
@@ -29,6 +31,7 @@
 
 #include <boost/foreach.hpp>
 #include <boost/bind.hpp>
+#include <boost/optional.hpp>
 #include <boost/noncopyable.hpp>
 
 #include <map>
@@ -210,6 +213,50 @@ generateRRsetFromIterator(ZoneIterator* iterator, LoadCallback callback) {
     }
 }
 
+boost::optional<dns::Serial>
+getSerialFromRRset(const dns::AbstractRRset& rrset) {
+    if (rrset.getRdataCount() != 1) {
+        // This is basically a bug of the data source implementation, but we
+        // should at least crash ourselves.
+        bundy_throw(Unexpected,
+                    "broken SOA RRset is given to zone data loader: " <<
+                    rrset.getRdataCount() << " RDATAs (should be 1)");
+    }
+    dns::RdataIteratorPtr rdit = rrset.getRdataIterator();
+    const dns::rdata::generic::SOA& soa =
+        dynamic_cast<const dns::rdata::generic::SOA&>(rdit->getCurrent());
+    return (soa.getSerial());
+}
+
+boost::optional<dns::Serial>
+getSerialFromZoneData(RRClass rrclass, ZoneData* zone_data) {
+    if (zone_data) {
+        const ZoneNode* origin_node = zone_data->getOriginNode();
+        const RdataSet* rdataset = origin_node->getData();
+        rdataset = RdataSet::find(rdataset, RRType::SOA());
+        if (rdataset) {
+            return (getSerialFromRRset(
+                        TreeNodeRRset(rrclass, origin_node, rdataset, false)));
+        }
+    }
+    return (boost::optional<dns::Serial>());
+}
+
+void
+validateOldData(const Name& origin, ZoneData* old_data) {
+    if (!old_data) {  // need validation only when old data are given.
+        return;
+    }
+
+    uint8_t buf[LabelSequence::MAX_SERIALIZED_LENGTH];
+    const LabelSequence old_name =
+        old_data->getOriginNode()->getAbsoluteLabels(buf);
+    if (!(old_name == LabelSequence(origin))) {
+        bundy_throw(BadValue, "zone data loader is given bad old data: "
+                    "origin=" << old_name << ", expecting " << origin);
+    }
+}
+
 } // end of unnamed namespace
 
 class ZoneDataLoader::ZoneDataLoaderImpl {
@@ -217,36 +264,46 @@ public:
     ZoneDataLoaderImpl(util::MemorySegment& mem_sgmt,
                        const dns::RRClass& rrclass,
                        const dns::Name& zone_name,
-                       const std::string& zone_file) :
+                       const std::string& zone_file,
+                       ZoneData* old_data) :
         mem_sgmt_(mem_sgmt), rrclass_(rrclass), zone_name_(zone_name),
-        zone_file_(zone_file), datasrc_client_(NULL)
-    {}
+        zone_file_(zone_file), datasrc_client_(NULL), old_data_(old_data),
+        old_serial_(getSerialFromZoneData(rrclass, old_data))
+    {
+        validateOldData(zone_name, old_data);
+    }
 
     ZoneDataLoaderImpl(util::MemorySegment& mem_sgmt,
                        const dns::RRClass& rrclass,
                        const dns::Name& zone_name,
-                       const DataSourceClient& datasrc_client) :
+                       const DataSourceClient& datasrc_client,
+                       ZoneData* old_data) :
         mem_sgmt_(mem_sgmt), rrclass_(rrclass), zone_name_(zone_name),
-        datasrc_client_(&datasrc_client)
-    {}
+        datasrc_client_(&datasrc_client), old_data_(old_data),
+        old_serial_(getSerialFromZoneData(rrclass, old_data))
+    {
+        validateOldData(zone_name, old_data);
+    }
 
-    ZoneData* doLoad();
+    LoadResult doLoad();
 
 private:
     typedef boost::function<void(LoadCallback)> RRsetInstaller;
-    ZoneData* doLoadCommon(RRsetInstaller installer);
+    LoadResult doLoadCommon(RRsetInstaller installer);
 
     util::MemorySegment& mem_sgmt_;
     const dns::RRClass rrclass_;
     const dns::Name zone_name_;
     const std::string zone_file_;
     const DataSourceClient* const datasrc_client_;
+    ZoneData* const old_data_;
+    const boost::optional<dns::Serial> old_serial_;
 };
 
-ZoneData*
+ZoneDataLoader::LoadResult
 ZoneDataLoader::ZoneDataLoaderImpl::doLoad() {
     if (datasrc_client_) {
-        ZoneIteratorPtr iterator =  datasrc_client_->getIterator(zone_name_);
+        ZoneIteratorPtr iterator = datasrc_client_->getIterator(zone_name_);
         if (!iterator) {
             // This shouldn't happen for a compliant implementation of
             // DataSourceClient, but we'll protect ourselves from buggy
@@ -256,7 +313,23 @@ ZoneDataLoader::ZoneDataLoaderImpl::doLoad() {
                         " resulted in Null zone iterator");
         }
 
-        /* TODO: compare the iterator's SOA and in-memory SOA */
+        const dns::ConstRRsetPtr new_soarrset = iterator->getSOA();
+        if (!new_soarrset) {
+            // If the source data source doesn't contain SOA, post-load check
+            // will fail anyway, so rejecting loading at this point makes sense.
+            bundy_throw(ZoneValidationError, "No SOA found for "
+                        << zone_name_ << "/" << rrclass_ << "in " <<
+                        datasrc_client_->getDataSourceName());
+        }
+        const boost::optional<dns::Serial> new_serial =
+            getSerialFromRRset(*new_soarrset);
+        if (old_serial_ && (*old_serial_ == *new_serial)) {
+            LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_LOAD_SAME_SERIAL).
+                arg(zone_name_).arg(rrclass_).arg(old_serial_->getValue()).
+                arg(datasrc_client_->getDataSourceName());
+            return (LoadResult(old_data_, false));
+        }
+
         return (doLoadCommon(boost::bind(generateRRsetFromIterator,
                                          iterator.get(), _1)));
     } else {
@@ -266,7 +339,7 @@ ZoneDataLoader::ZoneDataLoaderImpl::doLoad() {
     }
 }
 
-ZoneData*
+ZoneDataLoader::LoadResult
 ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon(RRsetInstaller installer) {
     while (true) { // Try as long as it takes to load and grow the segment
         bool created = false;
@@ -295,7 +368,8 @@ ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon(RRsetInstaller installer) {
                 }
             }
 
-            RRsetCollection collection(*(holder.get()), rrclass_);
+            ZoneData* const loaded_data = holder.get();
+            RRsetCollection collection(*loaded_data, rrclass_);
             const dns::ZoneCheckerCallbacks
                 callbacks(boost::bind(&logError, &zone_name_, &rrclass_, _1),
                           boost::bind(&logWarning, &zone_name_, &rrclass_, _1));
@@ -305,7 +379,20 @@ ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon(RRsetInstaller installer) {
                             << zone_name_ << "/" << rrclass_);
             }
 
-            return (holder.release());
+            // Check loaded serial.  Note that if checkZone() passed, we
+            // should have SOA in the ZoneData.
+            const dns::Serial new_serial =
+                *getSerialFromZoneData(rrclass_, loaded_data);
+            if (old_serial_ && *old_serial_ >= new_serial) {
+                LOG_WARN(logger, DATASRC_MEMORY_LOADED_SERIAL_NOT_INCREASED).
+                    arg(zone_name_).arg(rrclass_).
+                    arg(old_serial_->getValue()).arg(new_serial.getValue());
+            }
+            LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_LOADED).
+                arg(zone_name_).arg(rrclass_).arg(new_serial.getValue()).
+                arg(loaded_data->isSigned() ? " (DNSSEC signed)" : "");
+
+            return (LoadResult(holder.release(), true));
         } catch (const util::MemorySegmentGrown&) {
             assert(!created);
         }
@@ -316,34 +403,35 @@ ZoneDataLoader::ZoneDataLoader(util::MemorySegment& mem_sgmt,
                                const dns::RRClass& rrclass,
                                const dns::Name& zone_name,
                                const std::string& zone_file,
-                               ZoneData*) :
+                               ZoneData* old_data) :
     impl_(NULL)                 // defer until logging to avoid leak
 {
     LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_MEM_LOAD_FROM_FILE).
         arg(zone_name).arg(rrclass).arg(zone_file);
 
-    impl_ = new ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name, zone_file);
+    impl_ = new ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name, zone_file,
+                                   old_data);
 }
 
 ZoneDataLoader::ZoneDataLoader(util::MemorySegment& mem_sgmt,
                                const dns::RRClass& rrclass,
                                const dns::Name& zone_name,
                                const DataSourceClient& datasrc_client,
-                               ZoneData*) :
+                               ZoneData* old_data) :
     impl_(NULL)
 {
     LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_MEM_LOAD_FROM_DATASRC).
         arg(zone_name).arg(rrclass).arg(datasrc_client.getDataSourceName());
 
     impl_ = new ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name,
-                                   datasrc_client);
+                                   datasrc_client, old_data);
 }
 
 ZoneDataLoader::~ZoneDataLoader() {
     delete impl_;
 }
 
-ZoneData*
+ZoneDataLoader::LoadResult
 ZoneDataLoader::load() {
     return (impl_->doLoad());
 }

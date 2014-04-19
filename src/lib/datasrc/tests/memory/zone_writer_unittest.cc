@@ -63,7 +63,7 @@ public:
         load_data_(load_data), segment_(segment)
     {}
     virtual ~MockLoader() {}
-    virtual ZoneData *load() {
+    virtual LoadResult load() {
         // We got called
         *load_called_ = true;
         if (*load_throw_) {
@@ -75,7 +75,7 @@ public:
 
         if (*load_null_) {
             // Be nasty to the caller and return NULL, which is forbidden
-            return (NULL);
+            return (LoadResult(NULL, true));
         }
         ZoneData* data = ZoneData::create(segment_, Name("example.org"));
         if (*load_data_) {
@@ -85,7 +85,7 @@ public:
             data->insertName(segment_, Name("subdomain.example.org"), &node);
             EXPECT_NE(static_cast<ZoneNode*>(NULL), node);
         }
-        return (data);
+        return (LoadResult(data, true));
     }
 
     bool* const load_called_;

@@ -46,7 +46,9 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
 
+#include <algorithm>
 #include <new>                  // for bad_alloc
+#include <vector>
 
 using namespace bundy::data;
 using namespace bundy::dns;
@@ -100,34 +102,43 @@ const char* rrset_data_sigseparated[] = {
 class MockIterator : public ZoneIterator {
 private:
     MockIterator(const char** rrset_data_ptr, bool pass_empty_rrsig) :
-        rrset_data_ptr_(rrset_data_ptr),
         pass_empty_rrsig_(pass_empty_rrsig)
-    {}
+    {
+        assert(rrset_data_ptr);
+        while (*rrset_data_ptr) {
+            rrsets_.push_back(textToRRset(*rrset_data_ptr,
+                                          RRClass::IN(), Name("example.org")));
+            if (rrsets_.back()->getType() == RRType::SOA()) {
+                soa_ = rrsets_.back();
+            }
+            ++rrset_data_ptr;
+        }
+        rrsets_.push_back(ConstRRsetPtr());
+        it_ = rrsets_.begin();
+    }
 
-    const char** rrset_data_ptr_;
     // If true, emulate an unexpected bogus case where an RRSIG RRset is
     // returned without the RDATA.  For brevity allow tests tweak it directly.
     bool pass_empty_rrsig_;
+    std::vector<ConstRRsetPtr> rrsets_;
+    std::vector<ConstRRsetPtr>::const_iterator it_;
+    ConstRRsetPtr soa_;
 
 public:
     virtual ConstRRsetPtr getNextRRset() {
-        if (*rrset_data_ptr_ == NULL) {
-             return (ConstRRsetPtr());
-        }
-
-        ConstRRsetPtr result(textToRRset(*rrset_data_ptr_,
-                                         RRClass::IN(), Name("example.org")));
-        if (pass_empty_rrsig_ && result->getType() == RRType::RRSIG()) {
+        ConstRRsetPtr result = *it_;
+        if (pass_empty_rrsig_ && result &&
+            result->getType() == RRType::RRSIG()) {
             result.reset(new RRset(result->getName(), result->getClass(),
                                    result->getType(), result->getTTL()));
         }
-        ++rrset_data_ptr_;
+        ++it_;
 
         return (result);
     }
 
     virtual ConstRRsetPtr getSOA() const {
-        bundy_throw(bundy::NotImplemented, "Not implemented");
+        return (soa_);
     }
 
     static ZoneIteratorPtr makeIterator(const char** rrset_data_ptr,
@@ -138,14 +149,26 @@ public:
     }
 };
 
+bool
+matchSOA(ConstRRsetPtr rrset) {
+    return (rrset->getType() == RRType::SOA());
+}
+
 class MockVectorIterator : public ZoneIterator {
 private:
     MockVectorIterator(const vector<ConstRRsetPtr>& rrsets) :
         rrsets_(rrsets),
         counter_(0)
-    {}
+    {
+        std::vector<ConstRRsetPtr>::const_iterator it =
+            std::find_if(rrsets.begin(), rrsets.end(), matchSOA);
+        if (it != rrsets.end()) {
+            soa_ = *it;
+        }
+    }
 
     const vector<ConstRRsetPtr> rrsets_;
+    ConstRRsetPtr soa_;
     int counter_;
 
 public:
@@ -158,7 +181,7 @@ public:
     }
 
     virtual ConstRRsetPtr getSOA() const {
-        bundy_throw(bundy::NotImplemented, "Not implemented");
+        return (soa_);
     }
 
     static ZoneIteratorPtr makeIterator(const vector<ConstRRsetPtr>& rrsets) {
@@ -265,7 +288,7 @@ TEST_F(MemoryClientTest, load) {
     ZoneData* zone_data = ZoneDataLoader(mem_sgmt_, zclass_,
                                          Name("example.org"),
                                          TEST_DATA_DIR
-                                         "/example.org.zone").load();
+                                         "/example.org.zone").load().first;
     ASSERT_NE(static_cast<const ZoneData*>(NULL), zone_data);
     EXPECT_FALSE(zone_data->isSigned());
     EXPECT_FALSE(zone_data->isNSEC3Signed());
