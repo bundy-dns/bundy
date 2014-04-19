@@ -77,7 +77,8 @@ public:
        zone_data_(&zone_data)
     {
         if (mem_sgmt_.getNamedAddress("updater_zone_data").first) {
-            bundy_throw(bundy::InvalidOperation, "A ZoneDataUpdater already exists"
+            bundy_throw(bundy::InvalidOperation,
+                        "A ZoneDataUpdater already exists"
                       " on this memory segment. Destroy it first.");
         }
         if (mem_sgmt_.setNamedAddress("updater_zone_data", zone_data_)) {
