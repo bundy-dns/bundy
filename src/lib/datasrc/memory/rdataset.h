@@ -247,7 +247,8 @@ public:
     /// to be present in the result. Can be NULL if rrset is not.
     /// \param old_rdataset The data from which to subtract.
     ///
-    /// \return A pointer to the created \c RdataSet.
+    /// \return A pointer to the created \c RdataSet.  NULL if the
+    /// result RdataSet becomes empty.
     static RdataSet* subtract(util::MemorySegment& mem_sgmt,
                               RdataEncoder& encoder,
                               const dns::ConstRRsetPtr& rrset,
