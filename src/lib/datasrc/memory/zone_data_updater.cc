@@ -535,6 +535,10 @@ ZoneDataUpdater::remove(const ConstRRsetPtr& rrset,
     const RRType& rrtype = rrset ? rrset->getType() :
         getCoveredType(sig_rrset);
 
+    LOG_DEBUG(logger, DBG_TRACE_DATA, DATASRC_MEMORY_MEM_REMOVE_RRS).arg(name).
+        arg(rrset ? rrtype.toText() : "RRSIG(" + rrtype.toText() + ")").
+        arg(zone_name_);
+
     while (true) {
         try {
             if (rrtype == RRType::NSEC3()) {
