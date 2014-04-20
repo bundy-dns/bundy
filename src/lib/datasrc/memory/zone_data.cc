@@ -157,6 +157,13 @@ NSEC3Data::removeNode(util::MemorySegment& mem_sgmt, ZoneNode* node) {
         bundy_throw(bundy::InvalidParameter,
                     "NSEC3Data::remove is called for a non-empty node");
     }
+    // In practice, it's less likely to be called in this condition for
+    // NSEC3Data, but we'll check it to be sure.  NSEC3Data doesn't expose
+    // the origin node, but the following condition should be a cheap
+    // alternative.
+    if (!node->getUpperNode()) {
+        return;
+    }
     nsec3_tree_->remove(mem_sgmt, node, nullDeleter);
 }
 
@@ -252,6 +259,11 @@ ZoneData::removeNode(util::MemorySegment& mem_sgmt, ZoneNode* node) {
     if (!node->isEmpty()) {
         bundy_throw(bundy::InvalidParameter,
                     "ZoneData::remove is called for a non-empty node");
+    }
+    // We shouldn't remove the origin node.  Since DomainTree::remove() doesn't
+    // take care of the case, we need to do the check here.
+    if (node == origin_node_) {
+        return;
     }
     zone_tree_->remove(mem_sgmt, node, nullDeleter);
 }
