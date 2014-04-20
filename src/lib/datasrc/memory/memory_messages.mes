@@ -168,6 +168,10 @@ It was attempted to add the domain into a zone that shouldn't have it
 (eg. the domain is not subdomain of the zone origin). This indicates a
 problem with provided data.
 
+% DATASRC_MEMORY_MEM_REMOVE_RRS removing RRs of '%1/%2' from zone '%3'
+Debug information. A set of RRs are being removed from the in-memory data
+source.
+
 % DATASRC_MEMORY_MEM_SINGLETON trying to add multiple RRs for domain '%1' and type '%2'
 Some resource types are singletons -- only one is allowed in a domain
 (for example CNAME or SOA). This indicates a problem with provided data.
