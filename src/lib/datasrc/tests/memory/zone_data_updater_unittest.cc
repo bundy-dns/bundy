@@ -77,8 +77,7 @@ protected:
     {
         ZoneData* data = ZoneData::create(*mem_sgmt_, zname_);
         mem_sgmt_->setNamedAddress("Test zone data", data);
-        updater_.reset(new ZoneDataUpdater(*mem_sgmt_, zclass_, zname_,
-                                           *data));
+        updater_.reset(new ZoneDataUpdater(*mem_sgmt_, zclass_, zname_, *data));
     }
 
     ~ZoneDataUpdaterTest() {
@@ -176,6 +175,8 @@ TEST_P(ZoneDataUpdaterTest, bothNull) {
     // At least either covered RRset or RRSIG must be non NULL.
     EXPECT_THROW(updater_->add(ConstRRsetPtr(), ConstRRsetPtr()),
                  ZoneDataUpdater::NullRRset);
+    EXPECT_THROW(updater_->remove(ConstRRsetPtr(), ConstRRsetPtr()),
+                 ZoneDataUpdater::NullRRset);
 }
 
 TEST_P(ZoneDataUpdaterTest, zoneMinTTL) {
@@ -184,7 +185,8 @@ TEST_P(ZoneDataUpdaterTest, zoneMinTTL) {
                       "example.org. 3600 IN SOA . . 0 0 0 0 1200",
                       zclass_, zname_),
                   ConstRRsetPtr());
-    bundy::util::InputBuffer b(getZoneData()->getMinTTLData(), sizeof(uint32_t));
+    bundy::util::InputBuffer b(getZoneData()->getMinTTLData(),
+                               sizeof(uint32_t));
     EXPECT_EQ(RRTTL(1200), RRTTL(b));
 }
 
@@ -306,20 +308,27 @@ TEST_P(ZoneDataUpdaterTest, rrsigForNSEC3Only) {
                  bundy::NotImplemented);
 }
 
-// Generate many small RRsets. This tests that the underlying memory segment
+// Add/remove many small RRsets. This tests that the underlying memory segment
 // can grow during the execution and that the updater handles that well.
 //
-// Some of the grows will happen inserting the RRSIG, some with the TXT. Or,
-// at least we hope so.
+// Some of the grows will happen inserting/removing the RRSIG, some with the
+// TXT. Or, at least we hope so.
 TEST_P(ZoneDataUpdaterTest, manySmallRRsets) {
+    const std::string txtspec(" 3600 IN TXT " + std::string(30, 'X'));
+    const std::string rrsigspec(" 3600 IN RRSIG TXT 5 3 3600 "
+                                "20150420235959 20051021000000 1 "
+                                "example.org. FAKE");
+
     for (size_t i = 0; i < 32768; ++i) {
         const std::string name(boost::lexical_cast<std::string>(i) +
                                ".example.org.");
-        updater_->add(textToRRset(name + " 3600 IN TXT " +
-                                  std::string(30, 'X')),
-                      textToRRset(name + " 3600 IN RRSIG TXT 5 3 3600 "
-                                  "20150420235959 20051021000000 1 "
-                                  "example.org. FAKE"));
+        updater_->add(textToRRset(name + txtspec),
+                      textToRRset(name + rrsigspec));
+        updater_->remove(textToRRset(name + txtspec), ConstRRsetPtr());
+        updater_->remove(ConstRRsetPtr(), textToRRset(name + rrsigspec));
+        updater_->add(textToRRset(name + txtspec),
+                      textToRRset(name + rrsigspec));
+
         ZoneNode* node = getNode(*mem_sgmt_,
                                  Name(boost::lexical_cast<std::string>(i) +
                                       ".example.org"), getZoneData());
@@ -339,6 +348,175 @@ TEST_P(ZoneDataUpdaterTest, updaterCollision) {
                                  Name("another.example.com."), *zone_data),
                  bundy::InvalidOperation);
     ZoneData::destroy(*mem_sgmt_, zone_data, RRClass::IN());
+}
+
+namespace {
+// A simple check of the existence (or not) of a specific type of RdataSet
+// of a given name.
+void
+checkRdataSet(const ZoneData& zone_data, const Name& name, const RRType type,
+              size_t expected_num, size_t expected_sig_num)
+{
+    const ZoneNode* node = NULL;
+    const ZoneTree::Result result = zone_data.getZoneTree().find(name, &node);
+
+    EXPECT_EQ(ZoneTree::EXACTMATCH, result);
+    const RdataSet* rdataset = node->getData();
+    while (rdataset) {
+        if (rdataset->type == type) {
+            EXPECT_EQ(expected_num, rdataset->getRdataCount());
+            EXPECT_EQ(expected_sig_num, rdataset->getSigRdataCount());
+            return;
+        }
+        rdataset = rdataset->getNext();
+    }
+    // No rdataset of the type was found.
+    EXPECT_EQ(0, expected_num);
+    EXPECT_EQ(0, expected_sig_num);
+}
+}
+
+TEST_P(ZoneDataUpdaterTest, remove) {
+    const Name name("a.example.org");
+    const std::string sigspec(" 5 IN RRSIG AAAA 5 3 3600 "
+                              "20150420235959 20051021000000 1 "
+                              "example.org. FAKE");
+
+    updater_->add(textToRRset("a.example.org. 5 IN AAAA 2001:db8::1\n"
+                              "a.example.org. 5 IN AAAA 2001:db8::2"),
+                  textToRRset("a.example.org." + sigspec + "\n"
+                              "a.example.org." + sigspec + "FAKE"));
+    updater_->add(textToRRset("a.example.org. 5 IN A 192.0.2.1\n"
+                              "a.example.org. 5 IN A 192.0.2.2"),
+                  ConstRRsetPtr());
+    updater_->add(textToRRset("a.example.org. 5 IN TXT text-data1\n"
+                              "a.example.org. 5 IN TXT text-data2"),
+                  ConstRRsetPtr());
+
+    // Removing a middle rdataset, one remaining
+    updater_->remove(textToRRset("a.example.org. 5 IN A 192.0.2.1"),
+                     ConstRRsetPtr());
+    checkRdataSet(*getZoneData(), name, RRType::AAAA(), 2, 2);
+    checkRdataSet(*getZoneData(), name, RRType::A(), 1, 0);
+    checkRdataSet(*getZoneData(), name, RRType::TXT(), 2, 0);
+
+    // Removing a middle rdataset, all gone for that type
+    updater_->remove(textToRRset("a.example.org. 5 IN A 192.0.2.2"),
+                     ConstRRsetPtr());
+    checkRdataSet(*getZoneData(), name, RRType::AAAA(), 2, 2);
+    checkRdataSet(*getZoneData(), name, RRType::A(), 0, 0);
+    checkRdataSet(*getZoneData(), name, RRType::TXT(), 2, 0);
+
+    // Removing a head rdataset, one remaining
+    updater_->remove(textToRRset("a.example.org. 5 IN TXT text-data2"),
+                     ConstRRsetPtr());
+    checkRdataSet(*getZoneData(), name, RRType::AAAA(), 2, 2);
+    checkRdataSet(*getZoneData(), name, RRType::TXT(), 1, 0);
+
+    // Removing a head rdataset, all gone for that type
+    updater_->remove(textToRRset("a.example.org. 5 IN TXT text-data1"),
+                     ConstRRsetPtr());
+    checkRdataSet(*getZoneData(), name, RRType::AAAA(), 2, 2);
+    checkRdataSet(*getZoneData(), name, RRType::TXT(), 0, 0);
+
+    // even if RDATA don't match, remove() doesn't complain (this is not
+    // expected in our usage, but this API is lenient).
+    updater_->remove(textToRRset("a.example.org. 5 IN AAAA 2001:db8::3"),
+                     ConstRRsetPtr());
+    checkRdataSet(*getZoneData(), name, RRType::AAAA(), 2, 2);
+
+    // Removing RRSIG only
+    updater_->remove(ConstRRsetPtr(),
+                     textToRRset("a.example.org." + sigspec));
+    checkRdataSet(*getZoneData(), name, RRType::AAAA(), 2, 1);
+
+    // Removing these make the rdataset as RRSIG only
+    updater_->remove(textToRRset("a.example.org. 5 IN AAAA 2001:db8::2\n"
+                                 "a.example.org. 5 IN AAAA 2001:db8::1"),
+                     ConstRRsetPtr());
+    checkRdataSet(*getZoneData(), name, RRType::AAAA(), 0, 1);
+    // Removing the rest of the rdataset.  Then the node will also be removed.
+    // This also exercises the case of removing RRSIG-only rdataset.
+    updater_->remove(ConstRRsetPtr(),
+                     textToRRset("a.example.org." + sigspec + "FAKE"));
+    const ZoneNode* node = NULL;
+    const ZoneTree::Result result =
+        getZoneData()->getZoneTree().find(name, &node);
+    EXPECT_EQ(ZoneTree::PARTIALMATCH, result); // should match origin
+}
+
+TEST_P(ZoneDataUpdaterTest, badRemove) {
+    const Name name("a.example.org");
+
+    // no such name
+    EXPECT_THROW(updater_->remove(
+                     textToRRset("a.example.org. 5 IN A 192.0.2.1"),
+                     ConstRRsetPtr()), ZoneDataUpdater::RemoveError);
+
+    // no such type of rdataset
+    updater_->add(textToRRset("a.example.org. 5 IN AAAA 2001:db8::1"),
+                  ConstRRsetPtr());
+    EXPECT_THROW(updater_->remove(
+                     textToRRset("a.example.org. 5 IN A 192.0.2.1"),
+                     ConstRRsetPtr()), ZoneDataUpdater::RemoveError);
+
+    // empty RRset
+    EXPECT_THROW(updater_->remove(ConstRRsetPtr(new RRset(name, zclass_,
+                                                          RRType::AAAA(),
+                                                          RRTTL(10))),
+                                  ConstRRsetPtr()),
+                 ZoneDataUpdater::RemoveError);
+    EXPECT_THROW(updater_->remove(ConstRRsetPtr(),
+                                  ConstRRsetPtr(new RRset(name, zclass_,
+                                                          RRType::RRSIG(),
+                                                          RRTTL(10)))),
+                 ZoneDataUpdater::RemoveError);
+}
+
+// Note: test data do not really make sense as valid NSEC3 data, but they are
+// valid and sufficient for this test.
+TEST_P(ZoneDataUpdaterTest, removeNSEC3) {
+    const ZoneNode* found = NULL;
+    const Name name("n3.example.org");
+    const std::string sigspec(" 5 IN RRSIG NSEC3 5 3 3600 "
+                              "20150420235959 20051021000000 1 "
+                              "example.org. FAKE");
+    const std::string nsec3spec(" 5 IN NSEC3 1 0 12 aabbccdd TDK23RP6 A");
+
+    // Invalid case: removing when there's even no NSEC3 data.
+    EXPECT_THROW(updater_->remove(textToRRset("n3.example.org." + nsec3spec),
+                                  textToRRset("n3.example.org." + sigspec)),
+                 ZoneDataUpdater::RemoveError);
+
+    // Add NSEC3 and its RRSIG, then remove both.
+    updater_->add(textToRRset("n3.example.org." + nsec3spec),
+                  textToRRset("n3.example.org." + sigspec));
+    updater_->remove(textToRRset("n3.example.org." + nsec3spec),
+                     textToRRset("n3.example.org." + sigspec));
+    EXPECT_EQ(ZoneTree::PARTIALMATCH,
+              getZoneData()->getNSEC3Data()->getNSEC3Tree().find(name, &found));
+
+    // Readd them, and remove NSEC3 only.
+    updater_->add(textToRRset("n3.example.org." + nsec3spec),
+                  textToRRset("n3.example.org." + sigspec));
+    updater_->remove(textToRRset("n3.example.org." + nsec3spec),
+                     ConstRRsetPtr());
+    EXPECT_EQ(ZoneTree::EXACTMATCH,
+              getZoneData()->getNSEC3Data()->getNSEC3Tree().find(name, &found));
+
+    // Readd them, and remove RRSIG only.
+    updater_->add(textToRRset("n3.example.org." + nsec3spec),
+                  textToRRset("n3.example.org." + sigspec));
+    updater_->remove(ConstRRsetPtr(), textToRRset("n3.example.org." + sigspec));
+    EXPECT_EQ(ZoneTree::EXACTMATCH,
+              getZoneData()->getNSEC3Data()->getNSEC3Tree().find(name, &found));
+
+    // Specified name doesn't exist.
+    updater_->add(textToRRset("n3.example.org." + nsec3spec),
+                  textToRRset("n3.example.org." + sigspec));
+    EXPECT_THROW(updater_->remove(textToRRset("not.example.org." + nsec3spec),
+                                  textToRRset("not.example.org." + sigspec)),
+                 ZoneDataUpdater::RemoveError);
 }
 
 }
