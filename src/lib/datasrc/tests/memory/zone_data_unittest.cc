@@ -325,6 +325,12 @@ ZoneDataTest::removeCommon(DataType& data, ZoneNode* origin_node) {
     EXPECT_EQ(nodec, data.findName(Name("www.example.com.")));
     EXPECT_EQ(origin_node, data.findName(zname_));
 
+    // Make the subtree empty, mainly to see it doesn't cause disruption.
+    data.removeNode(mem_sgmt_, nodea);
+    data.removeNode(mem_sgmt_, nodec);
+    EXPECT_EQ(origin_node, data.findName(zname_)); // origin should still exist
+    data.insertName(mem_sgmt_, Name("www.example.com."), &nodec); // for below
+
     // Removing the origin node is no-op.
     data.removeNode(mem_sgmt_, data.findName(zname_));
     EXPECT_EQ(origin_node, data.findName(zname_));
