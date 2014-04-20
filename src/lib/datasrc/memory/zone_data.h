@@ -213,6 +213,18 @@ public:
     void insertName(util::MemorySegment& mem_sgmt, const dns::Name& name,
                     ZoneNode** node);
 
+    /// \brief Find an internal NSEC3 node for the given name for update.
+    ///
+    /// This works just like ZoneData::findName() but in the NSEC3Data.
+    /// See ZoneData version of the method for other details.
+    ZoneNode* findName(const dns::Name& name);
+
+    /// \brief Remove the given NSEC3 node from the zone.
+    ///
+    /// This works just like ZoneData::removeNode() but in the NSEC3Data.
+    /// See ZoneData version of the method for other details.
+    void removeNode(util::MemorySegment& mem_sgmt, ZoneNode* node);
+
 private:
     // Common subroutine for the public versions of create().
     static NSEC3Data* create(util::MemorySegment& mem_sgmt,
@@ -588,6 +600,33 @@ public:
     /// not check that condition).
     void insertName(util::MemorySegment& mem_sgmt, const dns::Name& name,
                     ZoneNode** node);
+
+    /// \brief Find an internal zone node for the given name for update.
+    ///
+    /// This is similar to \c insertName(), but does not create a new node
+    /// if the specified name doesn't exist in the zone.  This method performs
+    /// exact match only; it doesn't return a node that partially matches
+    /// the given name.
+    ///
+    /// Note that this is a non-const method.  The main purpose for this method
+    /// is to subsequently modify the return node.  For read-only search, use
+    /// \c getZoneTree() and \c find() on the tree.
+    ///
+    /// \throw none
+    /// \param name The name to be found.
+    /// \return The node of the given name; NULL if not found.
+    ZoneNode* findName(const dns::Name& name);
+
+    /// \brief Remove the given node from the zone.
+    ///
+    /// The caller is responsible for ensuring that the node belong to
+    /// the \c ZoneData.  \c node must be empty, i.e, must not have data.
+    /// Unless given an invalid parameter, this method is exception free.
+    ///
+    /// \throw InvalidParameter node is not empty
+    /// \param mem_sgmt Memory segment in which node was allocated.
+    /// \param node The node to be removed.
+    void removeNode(util::MemorySegment& mem_sgmt, ZoneNode* node);
 
     /// \brief Specify whether or not the zone is signed in terms of DNSSEC.
     ///
