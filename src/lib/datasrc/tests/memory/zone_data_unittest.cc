@@ -21,6 +21,7 @@
 #include <exceptions/exceptions.h>
 
 #include <util/buffer.h>
+#include <util/memory_segment.h>
 
 #include <dns/name.h>
 #include <dns/labelsequence.h>
@@ -71,6 +72,9 @@ protected:
         // detect any memory leak in the test memory segment
         EXPECT_TRUE(mem_sgmt_.allMemoryDeallocated());
     }
+
+    template <typename DataType>
+    void removeCommon(DataType& data, ZoneNode* origin_node);
 
     MemorySegmentMock mem_sgmt_;
     NSEC3Data* nsec3_data_;
@@ -138,9 +142,11 @@ TEST_F(ZoneDataTest, addNSEC3) {
     nsec3_data_ = NSEC3Data::create(mem_sgmt_, zname_, param_rdata_);
 
     ZoneNode* node = NULL;
+    EXPECT_FALSE(nsec3_data_->findName(nsec3_rrset_->getName()));
     nsec3_data_->insertName(mem_sgmt_, nsec3_rrset_->getName(), &node);
     ASSERT_NE(static_cast<ZoneNode*>(NULL), node);
     EXPECT_TRUE(node->isEmpty()); // initially it should be empty
+    EXPECT_EQ(node, nsec3_data_->findName(nsec3_rrset_->getName()));
 
     RdataSet* rdataset_nsec3 =
         RdataSet::create(mem_sgmt_, encoder_, nsec3_rrset_, ConstRRsetPtr());
@@ -188,9 +194,11 @@ TEST_F(ZoneDataTest, addRdataSets) {
     // to the corresponding node.
 
     ZoneNode* node = NULL;
+    EXPECT_FALSE(zone_data_->findName(a_rrset_->getName()));
     zone_data_->insertName(mem_sgmt_, a_rrset_->getName(), &node);
     ASSERT_NE(static_cast<ZoneNode*>(NULL), node);
     EXPECT_TRUE(node->isEmpty()); // initially it should be empty
+    EXPECT_EQ(node, zone_data_->findName(a_rrset_->getName()));
 
     RdataSet* rdataset_a =
         RdataSet::create(mem_sgmt_, encoder_, a_rrset_, ConstRRsetPtr());
@@ -287,4 +295,55 @@ TEST_F(ZoneDataTest, emptyData) {
     EXPECT_TRUE(empty_data->isEmpty());
     ZoneData::destroy(mem_sgmt_, empty_data, RRClass::IN());
 }
+
+// unified test logic for ZoneData and NSEC3Data  removeNode().
+// Some of the used data are semantically invalid for the NSEC3Data, but
+// such validation is out of scope of NSEC3Data class, and the test works
+// as intended.
+template <typename DataType>
+void
+ZoneDataTest::removeCommon(DataType& data, ZoneNode* origin_node) {
+    const Name origin_name("example.com");
+    ZoneNode* nodea = NULL;
+    ZoneNode* nodeb = NULL;
+    ZoneNode* nodec = NULL;
+    ZoneNode* node_child = NULL;
+
+    // Create 2-level tree of trees.
+    data.insertName(mem_sgmt_, Name("a.example.com."), &nodea);
+    data.insertName(mem_sgmt_, Name("b.example.com."), &nodeb);
+    data.insertName(mem_sgmt_, Name("www.example.com."), &nodec);
+    data.insertName(mem_sgmt_, Name("b.b.example.com."), &node_child);
+
+    // remove the lower most node.  It internally upper empty nodes, too.
+    // Other nodes should be intact.  Origin node should be kept, too, even if
+    // it's empty.
+    data.removeNode(mem_sgmt_, node_child);
+    EXPECT_FALSE(data.findName(Name("b.b.example.com.")));
+    EXPECT_FALSE(data.findName(Name("b.example.com.")));
+    EXPECT_EQ(nodea, data.findName(Name("a.example.com.")));
+    EXPECT_EQ(nodec, data.findName(Name("www.example.com.")));
+    EXPECT_EQ(origin_node, data.findName(zname_));
+
+    // Removing the origin node is no-op.
+    data.removeNode(mem_sgmt_, data.findName(zname_));
+    EXPECT_EQ(origin_node, data.findName(zname_));
+
+    // Removing a non-empty node is prohibited.
+    RdataSet* rdataset_a =
+        RdataSet::create(mem_sgmt_, encoder_, a_rrset_, ConstRRsetPtr());
+    nodec->setData(rdataset_a);
+    EXPECT_THROW(data.removeNode(mem_sgmt_, nodec), bundy::InvalidParameter);
+}
+
+TEST_F(ZoneDataTest, removeNode) {
+    removeCommon<ZoneData>(*zone_data_, zone_data_->findName(zname_));
+}
+
+TEST_F(ZoneDataTest, removeNSEC3Node) {
+    NSEC3Data* nsec3_data = NSEC3Data::create(mem_sgmt_, zname_, param_rdata_);
+    zone_data_->setNSEC3Data(nsec3_data); // for auto delete in teardown
+    removeCommon<NSEC3Data>(*nsec3_data, nsec3_data->findName(zname_));
+}
+
 }
