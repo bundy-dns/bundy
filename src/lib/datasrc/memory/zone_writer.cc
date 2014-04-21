@@ -227,9 +227,15 @@ ZoneWriter::install() {
         } catch (const bundy::util::MemorySegmentGrown&) {
             ;                   // just retry with the grown segment
         } catch (const bundy::Exception& ex) {
+            // In this case, this is most likely a bug of other module (feeding
+            // a bad diff sequence), so it's probably better to proceed, just
+            // invalidating the zone.
             impl_->installFailed(&ex);
             break;
         } catch (const std::exception& ex) {
+            // Other exceptions are really unexpected, and we should probably
+            // let the process die.  But we'll try to make one final cleanup
+            // (making the zone bad) before that.
             impl_->installFailed(&ex);
             throw;
         } catch (...) {
