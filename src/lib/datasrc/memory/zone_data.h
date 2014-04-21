@@ -131,6 +131,16 @@ public:
                              const dns::Name& zone_origin,
                              const dns::rdata::generic::NSEC3& rdata);
 
+    /// \brief Return NSEC3Data has no NSEC3 RRs.
+    ///
+    /// \note Implementation note: due to the simplified structure of
+    /// NSEC3Data, we can assume it's empty iff its internal tree only has
+    /// the very root, which is for the origin.
+    ///
+    /// \throw none.
+    /// \return true if NSEC3Data has no NSEC3 RRs; otherwise false.
+    bool isEmpty() const { return (nsec3_tree_->getNodeCount() == 1); }
+
     /// \brief Destruct and deallocate \c NSEC3Data.
     ///
     /// It releases all resources allocated for the internal NSEC3 name space

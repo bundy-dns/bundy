@@ -180,6 +180,11 @@ handling lookups with NSEC3 in this data source, so it accepts the given
 content of the zone.  Nevertheless the administrator should look into
 the integrity of the zone data.
 
+% DATASRC_MEMORY_MEM_NSEC3_UNSIGNED Zone %1/%2 is becoming NSEC3-signed to unsigned.
+In-memory zone data have been updated, and it was found that a previously
+NSEC3-signed zone is now no-NSEC3 zone, i.e., there is no NSEC3 or
+NSEC3PARAM RRs.
+
 % DATASRC_MEMORY_MEM_OUT_OF_ZONE domain '%1' doesn't belong to zone '%2'
 It was attempted to add the domain into a zone that shouldn't have it
 (eg. the domain is not subdomain of the zone origin). This indicates a

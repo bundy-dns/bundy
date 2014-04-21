@@ -54,15 +54,22 @@ namespace {
 class MockIterator : public ZoneIterator {
 public:
     MockIterator(const Name& zone_name, uint32_t serial,
-                 bool use_null_soa, bool use_broken_soa) :
-        soa_(new RRset(zone_name, RRClass::IN(), RRType::SOA(), RRTTL(3600))),
-        ns_(new RRset(zone_name, RRClass::IN(), RRType::NS(), RRTTL(3600)))
+                 bool use_null_soa, bool use_broken_soa, bool nsec3) :
+        soa_(new RRset(zone_name, RRClass::IN(), RRType::SOA(), RRTTL(3600)))
     {
         soa_->addRdata(rdata::generic::SOA(zone_name, zone_name, serial,
                                            3600, 3600, 3600, 3600));
         rrsets_.push_back(soa_);
-        ns_->addRdata(rdata::generic::NS(Name("ns.example")));
-        rrsets_.push_back(ns_);
+        const RRsetPtr ns(new RRset(zone_name, RRClass::IN(), RRType::NS(),
+                                    RRTTL(3600)));
+        ns->addRdata(rdata::generic::NS(Name("ns.example")));
+        rrsets_.push_back(ns);
+        if (nsec3) { // making NSEC3-signed zone.  adding NSEC3PARAM is enough.
+            const RRsetPtr nsec3p(new RRset(zone_name, RRClass::IN(),
+                                            RRType::NSEC3PARAM(), RRTTL(3600)));
+            nsec3p->addRdata(rdata::generic::NSEC3PARAM("1 1 1 D399EAAB"));
+            rrsets_.push_back(nsec3p);
+        }
         rrsets_.push_back(ConstRRsetPtr());
         it_ = rrsets_.begin();
 
@@ -84,7 +91,6 @@ public:
     }
 private:
     RRsetPtr soa_;
-    const RRsetPtr ns_;
     std::vector<ConstRRsetPtr> rrsets_;
     std::vector<ConstRRsetPtr>::const_iterator it_;
 };
@@ -92,7 +98,7 @@ private:
 class MockJournalReader : public ZoneJournalReader {
 public:
     MockJournalReader(const Name& zone_name, uint32_t beg_serial,
-                      uint32_t end_serial, bool broken)
+                      uint32_t end_serial, bool broken, bool remove_nsec3)
     {
         EXPECT_TRUE(beg_serial < end_serial);
 
@@ -106,6 +112,13 @@ public:
                                               3600, 3600, 3600, 3600));
             diffs_.push_back(soa); // delete old SOA
             diffs_.push_back(ns); // delete old NS
+            if (remove_nsec3 && s == beg_serial) {
+                const RRsetPtr nsec3p(new RRset(zone_name, RRClass::IN(),
+                                                RRType::NSEC3PARAM(),
+                                                RRTTL(3600)));
+                nsec3p->addRdata(rdata::generic::NSEC3PARAM("1 1 1 D399EAAB"));
+                diffs_.push_back(nsec3p);
+            }
             soa.reset(new RRset(zone_name, RRClass::IN(), RRType::SOA(),
                                 RRTTL(3600)));
             soa->addRdata(rdata::generic::SOA(zone_name, zone_name, s + 1,
@@ -141,7 +154,8 @@ public:
     MockDataSourceClient() :
         DataSourceClient("test"), use_journal_(false),
         use_null_iterator_(false), use_null_soa_(false),
-        use_broken_soa_(false), use_broken_journal_(false), serial_(1)
+        use_broken_soa_(false), use_broken_journal_(false), use_nsec3_(false),
+        remove_nsec3_(false), serial_(1)
     {}
     virtual FindResult findZone(const Name&) const { throw 0; }
     virtual ZoneIteratorPtr getIterator(const Name& zname, bool) const {
@@ -150,7 +164,8 @@ public:
         } else {
             return (ZoneIteratorPtr(new MockIterator(zname, serial_,
                                                      use_null_soa_,
-                                                     use_broken_soa_)));
+                                                     use_broken_soa_,
+                                                     use_nsec3_)));
         }
     }
     virtual ZoneUpdaterPtr getUpdater(const Name&, bool, bool) const {
@@ -161,7 +176,8 @@ public:
         if (use_journal_) {
             ZoneJournalReaderPtr reader(new MockJournalReader(
                                             zname, beg, end,
-                                            use_broken_journal_));
+                                            use_broken_journal_,
+                                            remove_nsec3_));
             return (std::pair<ZoneJournalReader::Result, ZoneJournalReaderPtr>(
                         ZoneJournalReader::SUCCESS, reader));
         }
@@ -174,6 +190,8 @@ public:
     bool use_null_soa_;
     bool use_broken_soa_;
     bool use_broken_journal_;
+    bool use_nsec3_;
+    bool remove_nsec3_;
     uint32_t serial_;
 };
 
@@ -320,6 +338,26 @@ TEST_F(ZoneDataLoaderTest, loadFromBadDataSource) {
     EXPECT_THROW(ZoneDataLoader(mem_sgmt_, zclass_, Name("example.com"),
                                 dsc, old_data), bundy::BadValue);
     ZoneData::destroy(mem_sgmt_, old_data, zclass_);
+}
+
+TEST_F(ZoneDataLoaderTest, loadToBeNSEC3Unsigned) {
+    const Name origin("example.com");
+    MockDataSourceClient dsc;
+
+    // First load.  Make the zone NSEC3-signed by adding NSEC3PARAM.
+    dsc.use_nsec3_ = true;
+    zone_data_ = ZoneDataLoader(mem_sgmt_, zclass_, origin, dsc).load().first;
+    EXPECT_TRUE(zone_data_);
+    EXPECT_TRUE(zone_data_->isNSEC3Signed());
+
+    // Perform diff-based load, removing the NSEC3PARAM.
+    ++dsc.serial_;
+    dsc.use_journal_ = true;
+    dsc.remove_nsec3_ = true;
+    ZoneDataLoader loader(mem_sgmt_, zclass_, origin, dsc, zone_data_);
+    EXPECT_EQ(zone_data_, loader.load().first);
+    EXPECT_EQ(zone_data_, loader.commit(zone_data_));
+    EXPECT_FALSE(zone_data_->isNSEC3Signed());
 }
 
 // Load bunch of small zones, hoping some of the relocation will happen
