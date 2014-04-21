@@ -108,6 +108,12 @@ requested, but in-memory data already had SOA of the same serial as
 that in the data source.  As an optimization actual load was skipped,
 and old data will continue to be used.
 
+% DATASRC_MEMORY_LOAD_USE_JOURNAL applying diff for %1/%2 (serial %3=>%4) from data source '%5'
+When loading zone data into memory from a data source, journal data
+were found between the current in-memory version and the latest data
+source version of the zone.  Instead of loading the full zone data,
+the differences were going to be applied to the current zone data.
+
 % DATASRC_MEMORY_MEM_ADD_EMPTY_ZONE adding an empty zone '%1/%2'
 Debug information. An "empty" zone is being added into the in-memory
 data source.  This is conceptual data indicating the state where the
