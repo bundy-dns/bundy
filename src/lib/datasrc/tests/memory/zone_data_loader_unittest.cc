@@ -22,6 +22,8 @@
 #include <datasrc/client.h>
 #include <datasrc/zone_iterator.h>
 
+#include <exceptions/exceptions.h>
+
 #include <util/buffer.h>
 
 #include <dns/name.h>
@@ -74,7 +76,7 @@ public:
     }
     virtual ConstRRsetPtr getNextRRset() {
         const ConstRRsetPtr result = *it_;
-        ++it_;
+        ++it_;       // should be safe as long as caller stops at NULL
         return (result);
     }
     virtual bundy::dns::ConstRRsetPtr getSOA() const {
@@ -87,21 +89,66 @@ private:
     std::vector<ConstRRsetPtr>::const_iterator it_;
 };
 
+class MockJournalReader : public ZoneJournalReader {
+public:
+    MockJournalReader(const Name& zone_name, uint32_t beg_serial,
+                      uint32_t end_serial, bool broken)
+    {
+        EXPECT_TRUE(beg_serial < end_serial);
+
+        RRsetPtr ns(new RRset(zone_name, RRClass::IN(), RRType::NS(),
+                              RRTTL(3600)));
+        ns->addRdata(rdata::generic::NS(Name("ns.example")));
+        for (size_t s = beg_serial; s < end_serial; ++s) {
+            RRsetPtr soa(new RRset(zone_name, RRClass::IN(), RRType::SOA(),
+                                   RRTTL(3600)));
+            soa->addRdata(rdata::generic::SOA(zone_name, zone_name, s,
+                                              3600, 3600, 3600, 3600));
+            diffs_.push_back(soa); // delete old SOA
+            diffs_.push_back(ns); // delete old NS
+            soa.reset(new RRset(zone_name, RRClass::IN(), RRType::SOA(),
+                                RRTTL(3600)));
+            soa->addRdata(rdata::generic::SOA(zone_name, zone_name, s + 1,
+                                              3600, 3600, 3600, 3600));
+            if (broken) {
+                // intentionally adding non-existent RRset.  update will fail.
+                RRsetPtr badset(new RRset(zone_name, RRClass::IN(), RRType::A(),
+                                          RRTTL(3600)));
+                badset->addRdata(rdata::in::A("192.0.2.1"));
+                diffs_.push_back(badset);
+            }
+            diffs_.push_back(soa); // add new SOA
+            diffs_.push_back(ns); // add new NS
+            it_ = diffs_.begin();
+        }
+        diffs_.push_back(ConstRRsetPtr());
+    }
+    virtual ConstRRsetPtr getNextDiff() {
+        const ConstRRsetPtr result = *it_;
+        ++it_;
+        return (result);
+    }
+
+private:
+    std::vector<ConstRRsetPtr> diffs_;
+    std::vector<ConstRRsetPtr>::const_iterator it_;
+};
+
 // Emulate broken DataSourceClient implementation: it returns a null iterator
 // from getIterator()
 class MockDataSourceClient : public DataSourceClient {
 public:
     MockDataSourceClient() :
-        DataSourceClient("test"), use_null_iterator_(false),
-        use_null_soa_(false), use_broken_soa_(false), serial_(1)
+        DataSourceClient("test"), use_journal_(false),
+        use_null_iterator_(false), use_null_soa_(false),
+        use_broken_soa_(false), use_broken_journal_(false), serial_(1)
     {}
     virtual FindResult findZone(const Name&) const { throw 0; }
-    virtual ZoneIteratorPtr getIterator(const Name&, bool) const {
+    virtual ZoneIteratorPtr getIterator(const Name& zname, bool) const {
         if (use_null_iterator_) {
             return (ZoneIteratorPtr());
         } else {
-            return (ZoneIteratorPtr(new MockIterator(Name("example.com"),
-                                                     serial_,
+            return (ZoneIteratorPtr(new MockIterator(zname, serial_,
                                                      use_null_soa_,
                                                      use_broken_soa_)));
         }
@@ -110,12 +157,23 @@ public:
         throw 0;
     }
     virtual std::pair<ZoneJournalReader::Result, ZoneJournalReaderPtr>
-    getJournalReader(const Name&, uint32_t, uint32_t) const { throw 0; }
+    getJournalReader(const Name& zname, uint32_t beg, uint32_t end) const {
+        if (use_journal_) {
+            ZoneJournalReaderPtr reader(new MockJournalReader(
+                                            zname, beg, end,
+                                            use_broken_journal_));
+            return (std::pair<ZoneJournalReader::Result, ZoneJournalReaderPtr>(
+                        ZoneJournalReader::SUCCESS, reader));
+        }
+        bundy_throw(bundy::NotImplemented, "not implemented");
+    }
 
     // Allow direct access from tests for convenience
+    bool use_journal_;
     bool use_null_iterator_;
     bool use_null_soa_;
     bool use_broken_soa_;
+    bool use_broken_journal_;
     uint32_t serial_;
 };
 
@@ -215,6 +273,24 @@ TEST_F(ZoneDataLoaderTest, loadFromDataSource) {
     EXPECT_TRUE(result5.second);
     EXPECT_NE(old_data, zone_data_);
     ZoneData::destroy(mem_sgmt_, old_data, zclass_);
+
+    // enable diff based loading
+    dsc.serial_ = 12;
+    dsc.use_journal_ = true;
+    ZoneDataLoader loader6(mem_sgmt_, zclass_, origin, dsc, zone_data_);
+    const ZoneDataLoader::LoadResult result6 = loader6.load();
+    EXPECT_EQ(zone_data_, result6.first);
+    EXPECT_FALSE(result6.second);
+    EXPECT_EQ(zone_data_, loader6.commit(zone_data_));
+
+    // broken data from journal.  commit() propagates the exception.
+    dsc.serial_ = 15;
+    dsc.use_broken_journal_ = true;
+    ZoneDataLoader loader7(mem_sgmt_, zclass_, origin, dsc, zone_data_);
+    const ZoneDataLoader::LoadResult result7 = loader7.load();
+    EXPECT_EQ(zone_data_, result7.first);
+    EXPECT_FALSE(result7.second);
+    EXPECT_THROW(loader7.commit(zone_data_), ZoneDataUpdater::RemoveError);
 }
 
 TEST_F(ZoneDataLoaderTest, loadFromBadDataSource) {

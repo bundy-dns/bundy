@@ -94,6 +94,40 @@ public:
     /// \return A \c ZoneData containing zone data loaded from the source.
     virtual LoadResult load();
 
+    /// \brief Complete any remaining loading task that deferred in load().
+    ///
+    /// Specifically, if load() found diffs of zone data to be applied later,
+    /// this method now completes the task.  Therefore if the updated data
+    /// are shared by multiple threads, call to this method must be protected
+    /// in a critical section.
+    ///
+    /// This method propagates any internal exceptions.  The only expected
+    /// exception in normal condition is MemorySegmentMapped.  The caller is
+    /// expected to catch it and re-try calling this method after resetting
+    /// the segment.  In this case this method provides strong exception
+    /// guarantee.
+    ///
+    /// For all other cases it does not provide strong exception guarantee; if
+    /// it throws, the passed data might have been modified and may not be
+    /// recoverable to the original data.  In general, this API assumes data
+    /// applied in this method have been validated at a higher layer and this
+    /// method does not fail except for unexpected system errors, which would
+    /// normally be considered a fatal condition.  So the caller is expected to
+    /// consider the data invalid and rebuild it from the scratch on exception.
+    ///
+    /// In any case, this method does not destroy the given data.  It's the
+    /// caller's responsibility.
+    ///
+    /// \throw MemorySegmentMapped shared-type memory segment was remapped
+    /// (see above).
+    /// \throw Other (see above)
+    ///
+    /// \param update_data Currently available zone data (usually the returned
+    /// pointer from load()).
+    /// \return final zone data after applying any deferred operation.  This
+    /// can be different from the passed pointer, but is never NULL.
+    virtual ZoneData* commit(ZoneData* update_data);
+
 private:
     class ZoneDataLoaderImpl;
     ZoneDataLoaderImpl* impl_;
