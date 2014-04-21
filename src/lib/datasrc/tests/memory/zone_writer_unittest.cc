@@ -40,6 +40,7 @@
 #include <boost/format.hpp>
 
 #include <string>
+#include <stdexcept>
 #include <unistd.h>
 
 using bundy::dns::RRClass;
@@ -57,10 +58,12 @@ public:
     MockLoader(bundy::util::MemorySegment& segment,
                bool* load_called, const bool* load_throw,
                const bool* load_loader_throw, const bool* load_null,
-               const bool* load_data, ZoneData* old_data) :
+               const bool* load_data, const int* throw_on_commit,
+               ZoneData* old_data) :
         load_called_(load_called), load_throw_(load_throw),
         load_loader_throw_(load_loader_throw), load_null_(load_null),
-        load_data_(load_data), segment_(segment), old_data_(old_data)
+        load_data_(load_data), throw_on_commit_(throw_on_commit),
+        num_committed_(0), segment_(segment), old_data_(old_data)
     {}
     virtual ~MockLoader() {}
     virtual LoadResult load() {
@@ -90,12 +93,29 @@ public:
         }
         return (LoadResult(data, true));
     }
+    virtual ZoneData* commit(ZoneData* update_data) {
+        // If so specified, throw MemorySegmentGrown once.
+        if (*throw_on_commit_ == 1 && num_committed_++ < 1) {
+            bundy_throw(bundy::util::MemorySegmentGrown, "test grown");
+        } else if (*throw_on_commit_ == 2) {
+            bundy_throw(bundy::Unexpected, "test unexpected");
+        } else if (*throw_on_commit_ == 3) {
+            throw std::runtime_error("test unexpected");
+        } else if (*throw_on_commit_ == 4) {
+            throw 42;           // not even type of std::exception
+        }
+        // should be called at most twice, also for preventing infinite loop.
+        EXPECT_GE(2, num_committed_);
+        return (update_data);
+    }
 
     bool* const load_called_;
     const bool* const load_throw_;
     const bool* const load_loader_throw_;
     const bool* const load_null_;
     const bool* const load_data_;
+    const int* const throw_on_commit_;
+    unsigned int num_committed_;
 private:
     bundy::util::MemorySegment& segment_;
     ZoneData* const old_data_;
@@ -109,6 +129,7 @@ protected:
         load_loader_throw_(false),
         load_null_(false),
         load_data_(false),
+        throw_on_commit_(0),
         reuse_old_data_(false),
         zt_segment_(new ZoneTableSegmentMock(RRClass::IN(), mem_sgmt_)),
         writer_(new
@@ -126,6 +147,10 @@ protected:
     bool load_loader_throw_;
     bool load_null_;
     bool load_data_;
+    // whether to throw from ZoneDataLoader::commit(). 0=none,
+    // 1=MemorySegmentGrown, 2=Unexpected, 3=other std exception,
+    // 4=even not std derived exception
+    int throw_on_commit_;
     bool reuse_old_data_;
     MemorySegmentMock mem_sgmt_;
     boost::scoped_ptr<ZoneTableSegmentMock> zt_segment_;
@@ -143,8 +168,11 @@ public:
         }
         return (new MockLoader(mem_sgmt_, &load_called_, &load_throw_,
                                &load_loader_throw_, &load_null_,
-                               &load_data_, old_data));
+                               &load_data_, &throw_on_commit_, old_data));
     }
+protected:
+    void reloadCommon(bool grow_on_commit);
+    void commitFailCommon(int exception_type);
 };
 
 class ReadOnlySegment : public ZoneTableSegmentMock {
@@ -197,7 +225,8 @@ TEST_F(ZoneWriterTest, correctCall) {
     EXPECT_NO_THROW(writer_->cleanup());
 }
 
-TEST_F(ZoneWriterTest, reloadOverridden) {
+void
+ZoneWriterTest::reloadCommon(bool grow_on_commit) {
     const Name zname("example.org");
     reuse_old_data_ = true;
 
@@ -209,7 +238,11 @@ TEST_F(ZoneWriterTest, reloadOverridden) {
         zt_segment_->getHeader().getTable()->findZone(zname).zone_data;
     EXPECT_TRUE(zd1);
 
-    // Second load with a new writer.
+    // Second load with a new writer.  If so specified, let ZoneData::commit
+    // throw the exception.
+    if (grow_on_commit) {
+        throw_on_commit_ = 1;
+    }
     writer_.reset(new ZoneWriter(*zt_segment_,
                                  boost::bind(&ZoneWriterTest::loaderCreator,
                                              this, _1, _2),
@@ -223,6 +256,65 @@ TEST_F(ZoneWriterTest, reloadOverridden) {
     const ZoneData* const zd2 =
         zt_segment_->getHeader().getTable()->findZone(zname).zone_data;
     EXPECT_EQ(zd1, zd2);
+}
+
+TEST_F(ZoneWriterTest, reloadOverridden) {
+    reloadCommon(false);
+}
+
+TEST_F(ZoneWriterTest, growOnCommit) {
+    reloadCommon(true);
+}
+
+// Common test logic for the case where ZoneDataLoader::commit() throws
+// unexpected exceptions.  See thrown_on_commit_ above for exception_type.
+void
+ZoneWriterTest::commitFailCommon(int exception_type) {
+
+    const Name zname("example.org");
+    reuse_old_data_ = true;
+    
+    // First load.  New data should be created.
+    writer_->load();
+    writer_->install();
+    writer_->cleanup();
+
+    // Second load with a new writer.  If so specified, let ZoneData::commit
+    // throw the exception.
+    throw_on_commit_ = exception_type;
+    writer_.reset(new ZoneWriter(*zt_segment_,
+                                 boost::bind(&ZoneWriterTest::loaderCreator,
+                                             this, _1, _2),
+                                 zname, RRClass::IN(), false));
+    writer_->load();
+    try {
+        writer_->install();
+        EXPECT_EQ(2, exception_type); // we should reach here only in this case
+    } catch (const std::exception&) {
+        EXPECT_EQ(3, exception_type);
+    } catch (...) {
+        EXPECT_EQ(4, exception_type);
+    }
+    writer_->cleanup();
+
+    // The zone data have become broken, so it's replaced with empty data.
+    const ZoneTable::FindResult result =
+        static_cast<const ZoneTableSegment&>(*zt_segment_).getHeader().
+        getTable()->findZone(zname);
+    EXPECT_EQ(bundy::datasrc::result::SUCCESS, result.code);
+    EXPECT_TRUE((result.flags & bundy::datasrc::result::ZONE_EMPTY) != 0);
+}
+
+TEST_F(ZoneWriterTest, exceptionOnCommit) {
+    commitFailCommon(2);
+}
+
+TEST_F(ZoneWriterTest, stdExceptionOnCommit) {
+    commitFailCommon(3);
+}
+
+TEST_F(ZoneWriterTest, intExceptionOnCommit) {
+    commitFailCommon(4);
 }
 
 TEST_F(ZoneWriterTest, loadTwice) {

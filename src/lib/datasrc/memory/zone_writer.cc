@@ -12,6 +12,7 @@
 // OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 // PERFORMANCE OF THIS SOFTWARE.
 
+#include <datasrc/memory/logger.h>
 #include <datasrc/memory/zone_writer.h>
 #include <datasrc/memory/zone_data.h>
 #include <datasrc/memory/zone_data_loader.h>
@@ -25,6 +26,7 @@
 #include <datasrc/exceptions.h>
 
 #include <memory>
+#include <stdexcept>
 
 using std::auto_ptr;
 
@@ -64,6 +66,9 @@ struct ZoneWriter::Impl {
             } catch (const bundy::util::MemorySegmentGrown&) {}
         }
     }
+
+    void installToTable();
+    void installFailed(const std::exception* ex);
 
     ZoneTableSegment& segment_;
     const ZoneDataLoaderCreator loader_creator_;
@@ -150,6 +155,53 @@ ZoneWriter::load(std::string* error_msg) {
     impl_->state_ = Impl::ZW_LOADED;
 }
 
+// This is called when ZoneDataLoader::commit() fails in install() other
+// than due to MemorySegmentGrown.  Based on our assumption that the
+// application should have validated zone data before this stage, and since
+// the current zone data may have been modified and are mostly impossible to
+// recover from that anyway, we'll only try to make it fail as cleanly as
+// possible.  First, resetting the data to NULL will make the now-invalid zone
+// unusable.  In this context, installToTable() should succeed without an
+// exception, so it should be safe until at that point.  We'll also try to
+// leave a log message as it's extremely unexpected.  This attempt could
+// result in further exception in a very unlucky and rare case, in which case
+// we'll simply let the process die.
+void
+ZoneWriter::Impl::installFailed(const std::exception* ex) {
+    data_holder_->set(NULL);
+    installToTable();
+    LOG_ERROR(logger, DATASRC_MEMORY_MEM_LOAD_UNEXPECTED_ERROR).
+        arg(origin_).arg(rrclass_).arg(ex ? ex->what() : "(unknown)");
+}
+
+// A commonly used subroutine of install(), installing the final zone data
+// to the zone table.
+void
+ZoneWriter::Impl::installToTable() {
+    while (state_ != Impl::ZW_INSTALLED) {
+        try {
+            ZoneTable* const table = getZoneTable(segment_);
+            // We still need to hold the zone data until we return from
+            // addZone in case it throws, but we then need to immediately
+            // release it as the ownership is transferred to the zone table.
+            // In case we are also to destroy old data, we release the new
+            // data by (re)setting it to the old; that way we can use the
+            // holder for the final cleanup.
+            const ZoneTable::AddResult result(
+                data_holder_->get() ?
+                table->addZone(segment_.getMemorySegment(),
+                               origin_, data_holder_->get()) :
+                table->addEmptyZone(segment_.getMemorySegment(), origin_));
+            if (destroy_old_data_) {
+                data_holder_->set(result.zone_data);
+            } else {
+                data_holder_->release();
+            }
+            state_ = Impl::ZW_INSTALLED;
+        } catch (const bundy::util::MemorySegmentGrown&) {}
+    }
+}
+
 void
 ZoneWriter::install() {
     if (impl_->state_ != Impl::ZW_LOADED) {
@@ -160,28 +212,30 @@ ZoneWriter::install() {
     // zone data or we've allowed load error to create an empty zone.
     assert(impl_->data_holder_.get() || impl_->catch_load_error_);
 
-    while (impl_->state_ != Impl::ZW_INSTALLED) {
+    while (true) {
         try {
-            ZoneTable* const table = getZoneTable(impl_->segment_);
-            // We still need to hold the zone data until we return from
-            // addZone in case it throws, but we then need to immediately
-            // release it as the ownership is transferred to the zone table.
-            // In case we are also to destroy old data, we release the new
-            // data by (re)setting it to the old; that way we can use the
-            // holder for the final cleanup.
-            const ZoneTable::AddResult result(
-                impl_->data_holder_->get() ?
-                table->addZone(impl_->segment_.getMemorySegment(),
-                               impl_->origin_, impl_->data_holder_->get()) :
-                table->addEmptyZone(impl_->segment_.getMemorySegment(),
-                                    impl_->origin_));
-            if (impl_->destroy_old_data_) {
-                impl_->data_holder_->set(result.zone_data);
-            } else {
-                impl_->data_holder_->release();
+            // Let the loader do any final work.  commit() can throw
+            // MemorySegmentGrown, so we need another while-try-catch here.
+            ZoneData* zone_data = impl_->data_holder_->get();
+            if (zone_data) {
+                impl_->loader_->commit(impl_->data_holder_->get());
+                assert(zone_data);  // API ensures this
             }
-            impl_->state_ = Impl::ZW_INSTALLED;
-        } catch (const bundy::util::MemorySegmentGrown&) {}
+            impl_->data_holder_->set(zone_data);
+            impl_->installToTable();
+            break;
+        } catch (const bundy::util::MemorySegmentGrown&) {
+            ;                   // just retry with the grown segment
+        } catch (const bundy::Exception& ex) {
+            impl_->installFailed(&ex);
+            break;
+        } catch (const std::exception& ex) {
+            impl_->installFailed(&ex);
+            throw;
+        } catch (...) {
+            impl_->installFailed(NULL);
+            throw;
+        }
     }
 }
 

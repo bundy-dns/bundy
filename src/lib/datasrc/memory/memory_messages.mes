@@ -161,6 +161,17 @@ into the memory.
 % DATASRC_MEMORY_MEM_LOAD_FROM_FILE loading zone '%1/%2' from file '%3'
 Debug information. The content of master file is being loaded into the memory.
 
+% DATASRC_MEMORY_MEM_LOAD_UNEXPECTED_ERROR committing load result for zone %1/%2 failed unexpectedly, zone invalidated: %3
+Loading new zone data into memory failed at the very last stage.
+This is generally unexpected, and should be most likely to mean some
+software bug or corruptted memory-mapped file.  In some case, the process
+performing the load will still run, but it's advisable to check the
+entire system.  If memory-mapped files are used, they may have to be
+removed and rebuilt from the scratch.  Also, difference information of
+zones stored in non-volatile data sources may also have to be cleared.
+The in-memory zone data will be invalidated and will effectively be unusable
+(in the case of authoritative DNS server, it will result in SERVFAIL).
+
 % DATASRC_MEMORY_MEM_NO_NSEC3PARAM NSEC3PARAM is missing for NSEC3-signed zone %1/%2
 The in-memory data source has loaded a zone signed with NSEC3 RRs,
 but it doesn't have a NSEC3PARAM RR at the zone origin.  It's likely that

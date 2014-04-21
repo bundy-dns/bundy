@@ -1006,6 +1006,7 @@ TEST_P(ListTest, BadMasterFile) {
         // errors.
         list_->configure(elem, true);
     });
+    list_->configure(elem, true);
 
     positiveResult(list_->find(Name("example.com."), true), ds_[0],
                    Name("example.com."), true, "example.com", true);
