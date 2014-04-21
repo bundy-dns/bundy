@@ -481,15 +481,25 @@ ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon(
 
             const ZoneNode* origin_node = data_holder->get()->getOriginNode();
             const RdataSet* rdataset = origin_node->getData();
-            // If the zone is NSEC3-signed, check if it has NSEC3PARAM
-            if (data_holder->get()->isNSEC3Signed()) {
-                if (RdataSet::find(rdataset, RRType::NSEC3PARAM()) == NULL) {
+            ZoneData* const loaded_data = data_holder->get();
+            // If the zone is and NSEC3-signed, check if it has NSEC3PARAM.
+            // If not, it may either just go to NSEC3-unsigned, or there's an
+            // operational error in that step, depending on whether there's any
+            // NSEC3 RRs in the zone.
+            if (loaded_data->isNSEC3Signed() &&
+                RdataSet::find(rdataset, RRType::NSEC3PARAM()) == NULL) {
+                if (loaded_data->getNSEC3Data()->isEmpty()) {
+                    // becoming NSEC3-unsigned.
+                    LOG_INFO(logger, DATASRC_MEMORY_MEM_NSEC3_UNSIGNED).
+                        arg(zone_name_).arg(rrclass_);
+                    NSEC3Data* old_n3data = loaded_data->setNSEC3Data(NULL);
+                    NSEC3Data::destroy(mem_sgmt_, old_n3data, rrclass_);
+                } else {
                     LOG_WARN(logger, DATASRC_MEMORY_MEM_NO_NSEC3PARAM).
                         arg(zone_name_).arg(rrclass_);
                 }
             }
 
-            ZoneData* const loaded_data = data_holder->get();
             RRsetCollection collection(*loaded_data, rrclass_);
             const dns::ZoneCheckerCallbacks
                 callbacks(boost::bind(&logError, &zone_name_, &rrclass_, _1),

@@ -325,6 +325,10 @@ ZoneDataTest::removeCommon(DataType& data, ZoneNode* origin_node) {
     EXPECT_EQ(nodec, data.findName(Name("www.example.com.")));
     EXPECT_EQ(origin_node, data.findName(zname_));
 
+    // The data are not considered empty (mainly testing for NSEC3Data,
+    // but works for the main data, too)
+    EXPECT_FALSE(data.isEmpty());
+
     // Make the subtree empty, mainly to see it doesn't cause disruption.
     data.removeNode(mem_sgmt_, nodea);
     data.removeNode(mem_sgmt_, nodec);
@@ -348,7 +352,9 @@ TEST_F(ZoneDataTest, removeNode) {
 
 TEST_F(ZoneDataTest, removeNSEC3Node) {
     NSEC3Data* nsec3_data = NSEC3Data::create(mem_sgmt_, zname_, param_rdata_);
+    EXPECT_TRUE(nsec3_data->isEmpty());   // initially it's considered empty
     zone_data_->setNSEC3Data(nsec3_data); // for auto delete in teardown
+    EXPECT_TRUE(nsec3_data->isEmpty());   // considered empty after removing all
     removeCommon<NSEC3Data>(*nsec3_data, nsec3_data->findName(zname_));
 }
 
