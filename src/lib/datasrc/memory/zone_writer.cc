@@ -218,7 +218,7 @@ ZoneWriter::install() {
             // MemorySegmentGrown, so we need another while-try-catch here.
             ZoneData* zone_data = impl_->data_holder_->get();
             if (zone_data) {
-                impl_->loader_->commit(impl_->data_holder_->get());
+                zone_data = impl_->loader_->commit(impl_->data_holder_->get());
                 assert(zone_data);  // API ensures this
             }
             impl_->data_holder_->set(zone_data);
