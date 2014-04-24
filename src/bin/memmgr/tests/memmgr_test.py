@@ -384,7 +384,9 @@ class TestMemmgr(unittest.TestCase):
         self.__mgr._init_segments(dsrc_info)
 
         # all readers should have been added to the segment(s).
-        self.assertEqual(['reader1', 'reader2'], sgmt_info.added_readers)
+        added_readers = sgmt_info.added_readers
+        added_readers.sort()
+        self.assertEqual(['reader1', 'reader2'], added_readers)
 
         # The event was pushed into the segment info
         command = ('load', None, dsrc_info, bundy.dns.RRClass.IN, 'name')
