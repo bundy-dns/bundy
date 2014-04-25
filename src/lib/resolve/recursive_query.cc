@@ -42,20 +42,20 @@
 #include <resolve/response_classifier.h>
 #include <resolve/recursive_query.h>
 
-using namespace isc::dns;
-using namespace isc::nsas;
-using namespace isc::util;
-using namespace isc::asiolink;
-using namespace isc::resolve;
+using namespace bundy::dns;
+using namespace bundy::nsas;
+using namespace bundy::util;
+using namespace bundy::asiolink;
+using namespace bundy::resolve;
 
-namespace isc {
+namespace bundy {
 namespace asiodns {
 
 namespace {
 // Function to check if the given name/class has any address in the cache
 bool
 hasAddress(const Name& name, const RRClass& rrClass,
-      const isc::cache::ResolverCache& cache)
+      const bundy::cache::ResolverCache& cache)
 {
     // FIXME: If we are single-stack and we get only the other type of
     // address, what should we do? In that case, it will be considered
@@ -70,7 +70,7 @@ hasAddress(const Name& name, const RRClass& rrClass,
 // a trailing newline in its output, which makes it awkward to embed in a
 // message.  This just strips that newline from it.
 std::string
-questionText(const isc::dns::Question& question) {
+questionText(const bundy::dns::Question& question) {
     std::string text = question.toText();
     if (!text.empty()) {
         text.erase(text.size() - 1);
@@ -90,7 +90,7 @@ questionText(const isc::dns::Question& question) {
 /// \param cache The place too look for known delegations.
 std::string
 deepestDelegation(Name name, RRClass rrclass,
-                  isc::cache::ResolverCache& cache)
+                  bundy::cache::ResolverCache& cache)
 {
     RRsetPtr cachedNS;
     // Look for delegation point from bottom, until we find one with
@@ -128,8 +128,8 @@ deepestDelegation(Name name, RRClass rrclass,
 // We can probably use a typedef, but need to move it to a central
 // location and use it consistently.
 RecursiveQuery::RecursiveQuery(DNSServiceBase& dns_service,
-    isc::nsas::NameserverAddressStore& nsas,
-    isc::cache::ResolverCache& cache,
+    bundy::nsas::NameserverAddressStore& nsas,
+    bundy::cache::ResolverCache& cache,
     const std::vector<std::pair<std::string, uint16_t> >& upstream,
     const std::vector<std::pair<std::string, uint16_t> >& upstream_root,
     int query_timeout, int client_timeout, int lookup_timeout,
@@ -148,7 +148,7 @@ RecursiveQuery::RecursiveQuery(DNSServiceBase& dns_service,
 // Set the test server - only used for unit testing.
 void
 RecursiveQuery::setTestServer(const std::string& address, uint16_t port) {
-    LOG_WARN(isc::resolve::logger, RESLIB_TEST_SERVER).arg(address).arg(port);
+    LOG_WARN(bundy::resolve::logger, RESLIB_TEST_SERVER).arg(address).arg(port);
     test_server_.first = address;
     test_server_.second = port;
 }
@@ -171,13 +171,13 @@ typedef std::pair<std::string, uint16_t> addr_t;
  */
 class RunningQuery : public IOFetch::Callback, public AbstractRunningQuery {
 
-class ResolverNSASCallback : public isc::nsas::AddressRequestCallback {
+class ResolverNSASCallback : public bundy::nsas::AddressRequestCallback {
 public:
     ResolverNSASCallback(RunningQuery* rq) : rq_(rq) {}
 
-    void success(const isc::nsas::NameserverAddress& address) {
+    void success(const bundy::nsas::NameserverAddress& address) {
         // Success callback, send query to found namesever
-        LOG_DEBUG(isc::resolve::logger, RESLIB_DBG_CB, RESLIB_RUNQ_SUCCESS)
+        LOG_DEBUG(bundy::resolve::logger, RESLIB_DBG_CB, RESLIB_RUNQ_SUCCESS)
                   .arg(address.getAddress().toText());
         rq_->nsasCallbackCalled();
         rq_->sendTo(address);
@@ -185,7 +185,7 @@ public:
 
     void unreachable() {
         // Nameservers unreachable: drop query or send servfail?
-        LOG_DEBUG(isc::resolve::logger, RESLIB_DBG_CB, RESLIB_RUNQ_FAIL);
+        LOG_DEBUG(bundy::resolve::logger, RESLIB_DBG_CB, RESLIB_RUNQ_FAIL);
         rq_->nsasCallbackCalled();
         rq_->makeSERVFAIL();
         rq_->callCallback(true);
@@ -219,7 +219,7 @@ private:
 
     // The callback will be called when we have either decided we
     // are done, or when we give up
-    isc::resolve::ResolverInterface::CallbackPtr resolvercallback_;
+    bundy::resolve::ResolverInterface::CallbackPtr resolvercallback_;
 
     // Protocol used for the last query.  This is set to IOFetch::UDP when a
     // new upstream query is initiated, and changed to IOFetch::TCP if a
@@ -259,10 +259,10 @@ private:
     bool callback_called_;
 
     // Reference to our NSAS
-    isc::nsas::NameserverAddressStore& nsas_;
+    bundy::nsas::NameserverAddressStore& nsas_;
 
     // Reference to our cache
-    isc::cache::ResolverCache& cache_;
+    bundy::cache::ResolverCache& cache_;
 
     // the 'current' zone we are in (i.e.) we start out at the root,
     // and for each delegation this gets updated with the zone the
@@ -284,7 +284,7 @@ private:
 
     // This is the nameserver we have an outstanding query to.
     // It is used to update the RTT once the query returns
-    isc::nsas::NameserverAddress current_ns_address;
+    bundy::nsas::NameserverAddress current_ns_address;
 
     // The moment in time we sent a query to the nameserver above.
     struct timeval current_ns_qsent_time;
@@ -309,15 +309,15 @@ private:
     // if we have a response for our query stored already. if
     // so, call handlerecursiveresponse(), if not, we call send()
     void doLookup() {
-        LOG_DEBUG(isc::resolve::logger, RESLIB_DBG_CACHE, RESLIB_RUNQ_CACHE_LOOKUP)
+        LOG_DEBUG(bundy::resolve::logger, RESLIB_DBG_CACHE, RESLIB_RUNQ_CACHE_LOOKUP)
                   .arg(questionText(question_));
 
         Message cached_message(Message::RENDER);
-        isc::resolve::initResponseMessage(question_, cached_message);
+        bundy::resolve::initResponseMessage(question_, cached_message);
         if (cache_.lookup(question_.getName(), question_.getType(),
                           question_.getClass(), cached_message)) {
 
-            LOG_DEBUG(isc::resolve::logger, RESLIB_DBG_CACHE, RESLIB_RUNQ_CACHE_FIND)
+            LOG_DEBUG(bundy::resolve::logger, RESLIB_DBG_CACHE, RESLIB_RUNQ_CACHE_FIND)
                       .arg(questionText(question_));
             // Should these be set by the cache too?
             cached_message.setOpcode(Opcode::QUERY());
@@ -330,7 +330,7 @@ private:
         } else {
             cur_zone_ = deepestDelegation(question_.getName(),
                                           question_.getClass(), cache_);
-            LOG_DEBUG(isc::resolve::logger, RESLIB_DBG_CACHE, RESLIB_DEEPEST)
+            LOG_DEBUG(bundy::resolve::logger, RESLIB_DBG_CACHE, RESLIB_DEEPEST)
                       .arg(questionText(question_)).arg(cur_zone_);
             send();
         }
@@ -338,7 +338,7 @@ private:
     }
 
     // Send the current question to the given nameserver address
-    void sendTo(const isc::nsas::NameserverAddress& address) {
+    void sendTo(const bundy::nsas::NameserverAddress& address) {
         // We need to keep track of the Address, so that we can update
         // the RTT
         current_ns_address = address;
@@ -365,7 +365,7 @@ private:
         edns_ = edns;
         if (test_server_.second != 0) {
             // Send query to test server
-            LOG_DEBUG(isc::resolve::logger,
+            LOG_DEBUG(bundy::resolve::logger,
                       RESLIB_DBG_TRACE, RESLIB_TEST_UPSTREAM)
                 .arg(questionText(question_)).arg(test_server_.first);
             gettimeofday(&current_ns_qsent_time, NULL);
@@ -379,7 +379,7 @@ private:
         } else {
             // Ask the NSAS for an address for the current zone,
             // the callback will call the actual sendTo()
-            LOG_DEBUG(isc::resolve::logger,
+            LOG_DEBUG(bundy::resolve::logger,
                       RESLIB_DBG_TRACE, RESLIB_NSAS_LOOKUP)
                 .arg(cur_zone_);
 
@@ -416,24 +416,24 @@ private:
         // the cname chain to verify it).
         Name cname_target(question_.getName());
 
-        isc::resolve::ResponseClassifier::Category category =
-            isc::resolve::ResponseClassifier::classify(
+        bundy::resolve::ResponseClassifier::Category category =
+            bundy::resolve::ResponseClassifier::classify(
                 question_, incoming, cname_target, cname_count_);
 
         bool found_ns = false;
 
         switch (category) {
-        case isc::resolve::ResponseClassifier::ANSWER:
-        case isc::resolve::ResponseClassifier::ANSWERCNAME:
+        case bundy::resolve::ResponseClassifier::ANSWER:
+        case bundy::resolve::ResponseClassifier::ANSWERCNAME:
             // Answer received - copy and return.
-            LOG_DEBUG(isc::resolve::logger, RESLIB_DBG_RESULTS, RESLIB_ANSWER)
+            LOG_DEBUG(bundy::resolve::logger, RESLIB_DBG_RESULTS, RESLIB_ANSWER)
                       .arg(questionText(question_));
-            isc::resolve::copyResponseMessage(incoming, answer_message_);
+            bundy::resolve::copyResponseMessage(incoming, answer_message_);
             cache_.update(*answer_message_);
             return (true);
             break;
 
-        case isc::resolve::ResponseClassifier::CNAME:
+        case bundy::resolve::ResponseClassifier::CNAME:
             // CNAME received.
 
             // (unfinished) CNAME. We set our question_ to the CNAME
@@ -441,13 +441,13 @@ private:
             // is, we reset our 'current servers' to the root servers).
             if (cname_count_ >= RESOLVER_MAX_CNAME_CHAIN) {
                 // CNAME chain too long - just give up
-                LOG_DEBUG(isc::resolve::logger, RESLIB_DBG_RESULTS, RESLIB_LONG_CHAIN)
+                LOG_DEBUG(bundy::resolve::logger, RESLIB_DBG_RESULTS, RESLIB_LONG_CHAIN)
                           .arg(questionText(question_));
                 makeSERVFAIL();
                 return (true);
             }
 
-            LOG_DEBUG(isc::resolve::logger, RESLIB_DBG_RESULTS, RESLIB_CNAME)
+            LOG_DEBUG(bundy::resolve::logger, RESLIB_DBG_RESULTS, RESLIB_CNAME)
                       .arg(questionText(question_));
 
             answer_message_->appendSection(Message::SECTION_ANSWER,
@@ -457,26 +457,26 @@ private:
                                  question_.getType());
 
             // Follow CNAME chain.
-            LOG_DEBUG(isc::resolve::logger, RESLIB_DBG_RESULTS, RESLIB_FOLLOW_CNAME)
+            LOG_DEBUG(bundy::resolve::logger, RESLIB_DBG_RESULTS, RESLIB_FOLLOW_CNAME)
                       .arg(questionText(question_));
             doLookup();
             return (false);
             break;
 
-        case isc::resolve::ResponseClassifier::NXDOMAIN:
-        case isc::resolve::ResponseClassifier::NXRRSET:
+        case bundy::resolve::ResponseClassifier::NXDOMAIN:
+        case bundy::resolve::ResponseClassifier::NXRRSET:
             // Received NXDOMAIN or NXRRSET, just copy and return
-            LOG_DEBUG(isc::resolve::logger, RESLIB_DBG_RESULTS, RESLIB_NXDOM_NXRR)
+            LOG_DEBUG(bundy::resolve::logger, RESLIB_DBG_RESULTS, RESLIB_NXDOM_NXRR)
                       .arg(questionText(question_));
-            isc::resolve::copyResponseMessage(incoming, answer_message_);
+            bundy::resolve::copyResponseMessage(incoming, answer_message_);
             // no negcache yet
             //cache_.update(*answer_message_);
             return (true);
             break;
 
-        case isc::resolve::ResponseClassifier::REFERRAL:
+        case bundy::resolve::ResponseClassifier::REFERRAL:
             // Response is a referral
-            LOG_DEBUG(isc::resolve::logger, RESLIB_DBG_RESULTS, RESLIB_REFERRAL)
+            LOG_DEBUG(bundy::resolve::logger, RESLIB_DBG_RESULTS, RESLIB_REFERRAL)
                       .arg(questionText(question_));
 
             cache_.update(incoming);
@@ -497,7 +497,7 @@ private:
                         // (this requires a few API changes in related
                         // libraries, so as not to need many conversions)
                         cur_zone_ = rrs->getName().toText();
-                        LOG_DEBUG(isc::resolve::logger, RESLIB_DBG_RESULTS, RESLIB_REFER_ZONE)
+                        LOG_DEBUG(bundy::resolve::logger, RESLIB_DBG_RESULTS, RESLIB_REFER_ZONE)
                                   .arg(cur_zone_);
                         found_ns = true;
                         break;
@@ -523,20 +523,20 @@ private:
                 return (false);
             } else {
                 // Referral was received but did not contain an NS RRset.
-                LOG_DEBUG(isc::resolve::logger, RESLIB_DBG_RESULTS, RESLIB_NO_NS_RRSET)
+                LOG_DEBUG(bundy::resolve::logger, RESLIB_DBG_RESULTS, RESLIB_NO_NS_RRSET)
                           .arg(questionText(question_));
 
                 // TODO this will result in answering with the delegation. oh well
-                isc::resolve::copyResponseMessage(incoming, answer_message_);
+                bundy::resolve::copyResponseMessage(incoming, answer_message_);
                 return (true);
             }
             break;
 
-        case isc::resolve::ResponseClassifier::TRUNCATED:
+        case bundy::resolve::ResponseClassifier::TRUNCATED:
             // Truncated packet.  If the protocol we used for the last one is
             // UDP, re-query using TCP.  Otherwise regard it as an error.
             if (protocol_ == IOFetch::UDP) {
-                LOG_DEBUG(isc::resolve::logger, RESLIB_DBG_RESULTS,
+                LOG_DEBUG(bundy::resolve::logger, RESLIB_DBG_RESULTS,
                           RESLIB_TRUNCATED).arg(questionText(question_));
                 send(IOFetch::TCP);
                 return (false);
@@ -547,7 +547,7 @@ private:
             // error code.
             goto SERVFAIL;
 
-        case isc::resolve::ResponseClassifier::RCODE:
+        case bundy::resolve::ResponseClassifier::RCODE:
             // see if it's a FORMERR and a potential EDNS problem
             if (incoming.getRcode() == Rcode::FORMERR()) {
                 if (protocol_ == IOFetch::UDP && edns_) {
@@ -610,7 +610,7 @@ SERVFAIL:
 
         } else {
 
-            isc::log::MessageID message_id;
+            bundy::log::MessageID message_id;
             switch (category) {
             case ResponseClassifier::TRUNCATED:
                 message_id = RESLIB_TCP_TRUNCATED;
@@ -671,11 +671,11 @@ public:
         MessagePtr answer_message,
         std::pair<std::string, uint16_t>& test_server,
         OutputBufferPtr buffer,
-        isc::resolve::ResolverInterface::CallbackPtr cb,
+        bundy::resolve::ResolverInterface::CallbackPtr cb,
         int query_timeout, int client_timeout, int lookup_timeout,
         unsigned retries,
-        isc::nsas::NameserverAddressStore& nsas,
-        isc::cache::ResolverCache& cache,
+        bundy::nsas::NameserverAddressStore& nsas,
+        bundy::cache::ResolverCache& cache,
         boost::shared_ptr<RttRecorder>& recorder)
         :
         io_(io),
@@ -821,7 +821,7 @@ public:
                 rtt = 1000 * (cur_time.tv_sec - current_ns_qsent_time.tv_sec);
                 rtt += (cur_time.tv_usec - current_ns_qsent_time.tv_usec) / 1000;
             }
-            LOG_DEBUG(isc::resolve::logger, RESLIB_DBG_RESULTS, RESLIB_RTT).arg(rtt);
+            LOG_DEBUG(bundy::resolve::logger, RESLIB_DBG_RESULTS, RESLIB_RTT).arg(rtt);
             current_ns_address.updateRTT(rtt);
             if (rtt_recorder_) {
                 rtt_recorder_->addRtt(rtt);
@@ -839,21 +839,21 @@ public:
                     callCallback(true);
                     stop();
                 }
-            } catch (const isc::dns::DNSProtocolError& dpe) {
+            } catch (const bundy::dns::DNSProtocolError& dpe) {
                 // Right now, we treat this similar to timeouts
                 // (except we don't store RTT)
                 // We probably want to make this an integral part
                 // of the fetch data process. (TODO)
                 if (retries_--) {
                     // Retry
-                    LOG_DEBUG(isc::resolve::logger, RESLIB_DBG_RESULTS,
+                    LOG_DEBUG(bundy::resolve::logger, RESLIB_DBG_RESULTS,
                               RESLIB_PROTOCOL_RETRY)
                               .arg(questionText(question_)).arg(dpe.what())
                               .arg(retries_);
                     send();
                 } else {
                     // Give up
-                    LOG_DEBUG(isc::resolve::logger, RESLIB_DBG_RESULTS,
+                    LOG_DEBUG(bundy::resolve::logger, RESLIB_DBG_RESULTS,
                               RESLIB_PROTOCOL)
                               .arg(questionText(question_)).arg(dpe.what());
                     if (!callback_called_) {
@@ -865,18 +865,18 @@ public:
             }
         } else if (!done_ && retries_--) {
             // Query timed out, but we have some retries, so send again
-            LOG_DEBUG(isc::resolve::logger, RESLIB_DBG_RESULTS, RESLIB_TIMEOUT_RETRY)
+            LOG_DEBUG(bundy::resolve::logger, RESLIB_DBG_RESULTS, RESLIB_TIMEOUT_RETRY)
                       .arg(questionText(question_))
                       .arg(current_ns_address.getAddress().toText()).arg(retries_);
-            current_ns_address.updateRTT(isc::nsas::AddressEntry::UNREACHABLE);
+            current_ns_address.updateRTT(bundy::nsas::AddressEntry::UNREACHABLE);
             send();
         } else {
             // We are either already done, or out of retries
             if (result == IOFetch::TIME_OUT) {
-                LOG_DEBUG(isc::resolve::logger, RESLIB_DBG_RESULTS, RESLIB_TIMEOUT)
+                LOG_DEBUG(bundy::resolve::logger, RESLIB_DBG_RESULTS, RESLIB_TIMEOUT)
                           .arg(questionText(question_))
                           .arg(current_ns_address.getAddress().toText());
-                current_ns_address.updateRTT(isc::nsas::AddressEntry::UNREACHABLE);
+                current_ns_address.updateRTT(bundy::nsas::AddressEntry::UNREACHABLE);
             }
             if (!callback_called_) {
                 makeSERVFAIL();
@@ -890,7 +890,7 @@ public:
     // to servfail
     void makeSERVFAIL() {
         if (answer_message_) {
-            isc::resolve::makeErrorMessage(answer_message_, Rcode::SERVFAIL());
+            bundy::resolve::makeErrorMessage(answer_message_, Rcode::SERVFAIL());
         }
     }
 };
@@ -913,7 +913,7 @@ private:
     OutputBufferPtr buffer_;
 
     // This will be notified when we succeed or fail
-    isc::resolve::ResolverInterface::CallbackPtr resolvercallback_;
+    bundy::resolve::ResolverInterface::CallbackPtr resolvercallback_;
 
     /*
      * TODO Do something more clever with timeouts. In the long term, some
@@ -941,7 +941,7 @@ private:
         buffer_->clear();
         int serverIndex = rand() % uc;
         ConstQuestionPtr question = *(query_message_->beginQuestion());
-        LOG_DEBUG(isc::resolve::logger, RESLIB_DBG_TRACE, RESLIB_UPSTREAM)
+        LOG_DEBUG(bundy::resolve::logger, RESLIB_DBG_TRACE, RESLIB_UPSTREAM)
             .arg(questionText(*question))
             .arg(upstream_->at(serverIndex).first);
 
@@ -963,7 +963,7 @@ public:
         MessagePtr answer_message,
         boost::shared_ptr<AddressVector> upstream,
         OutputBufferPtr buffer,
-        isc::resolve::ResolverInterface::CallbackPtr cb,
+        bundy::resolve::ResolverInterface::CallbackPtr cb,
         int query_timeout, int client_timeout, int lookup_timeout) :
         io_(io),
         query_message_(query_message),
@@ -1059,7 +1059,7 @@ public:
             Message incoming(Message::PARSE);
             InputBuffer ibuf(buffer_->getData(), buffer_->getLength());
             incoming.fromWire(ibuf);
-            isc::resolve::copyResponseMessage(incoming, answer_message_);
+            bundy::resolve::copyResponseMessage(incoming, answer_message_);
             callCallback(true);
         }
 
@@ -1069,7 +1069,7 @@ public:
     // Clear the answer parts of answer_message, and set the rcode
     // to servfail
     void makeSERVFAIL() {
-        isc::resolve::makeErrorMessage(answer_message_, Rcode::SERVFAIL());
+        bundy::resolve::makeErrorMessage(answer_message_, Rcode::SERVFAIL());
     }
 };
 
@@ -1077,23 +1077,23 @@ public:
 
 AbstractRunningQuery*
 RecursiveQuery::resolve(const QuestionPtr& question,
-    const isc::resolve::ResolverInterface::CallbackPtr callback)
+    const bundy::resolve::ResolverInterface::CallbackPtr callback)
 {
     IOService& io = dns_service_.getIOService();
 
     MessagePtr answer_message(new Message(Message::RENDER));
-    isc::resolve::initResponseMessage(*question, *answer_message);
+    bundy::resolve::initResponseMessage(*question, *answer_message);
 
     OutputBufferPtr buffer(new OutputBuffer(0));
 
     // First try to see if we have something cached in the messagecache
-    LOG_DEBUG(isc::resolve::logger, RESLIB_DBG_TRACE, RESLIB_RESOLVE)
+    LOG_DEBUG(bundy::resolve::logger, RESLIB_DBG_TRACE, RESLIB_RESOLVE)
               .arg(questionText(*question)).arg(1);
     if (cache_.lookup(question->getName(), question->getType(),
                       question->getClass(), *answer_message) &&
         answer_message->getRRCount(Message::SECTION_ANSWER) > 0) {
         // Message found, return that
-        LOG_DEBUG(isc::resolve::logger, RESLIB_DBG_CACHE, RESLIB_RECQ_CACHE_FIND)
+        LOG_DEBUG(bundy::resolve::logger, RESLIB_DBG_CACHE, RESLIB_RECQ_CACHE_FIND)
                   .arg(questionText(*question)).arg(1);
 
         // TODO: err, should cache set rcode as well?
@@ -1107,7 +1107,7 @@ RecursiveQuery::resolve(const QuestionPtr& question,
                                               question->getClass());
         if (cached_rrset) {
             // Found single RRset in cache
-            LOG_DEBUG(isc::resolve::logger, RESLIB_DBG_CACHE, RESLIB_RRSET_FOUND)
+            LOG_DEBUG(bundy::resolve::logger, RESLIB_DBG_CACHE, RESLIB_RRSET_FOUND)
                       .arg(questionText(*question)).arg(1);
             answer_message->addRRset(Message::SECTION_ANSWER,
                                      cached_rrset);
@@ -1116,7 +1116,7 @@ RecursiveQuery::resolve(const QuestionPtr& question,
         } else {
             // Message not found in cache, start recursive query.  It will
             // delete itself when it is done
-            LOG_DEBUG(isc::resolve::logger, RESLIB_DBG_TRACE, RESLIB_RECQ_CACHE_NO_FIND)
+            LOG_DEBUG(bundy::resolve::logger, RESLIB_DBG_TRACE, RESLIB_RECQ_CACHE_NO_FIND)
                       .arg(questionText(*question)).arg(1);
             return (new RunningQuery(io, *question, answer_message,
                                      test_server_, buffer, callback,
@@ -1140,15 +1140,15 @@ RecursiveQuery::resolve(const Question& question,
     // we're only going to handle UDP.
     IOService& io = dns_service_.getIOService();
 
-    isc::resolve::ResolverInterface::CallbackPtr crs(
-        new isc::resolve::ResolverCallbackServer(server));
+    bundy::resolve::ResolverInterface::CallbackPtr crs(
+        new bundy::resolve::ResolverCallbackServer(server));
 
     // TODO: general 'prepareinitialanswer'
-    answer_message->setOpcode(isc::dns::Opcode::QUERY());
+    answer_message->setOpcode(bundy::dns::Opcode::QUERY());
     answer_message->addQuestion(question);
 
     // First try to see if we have something cached in the messagecache
-    LOG_DEBUG(isc::resolve::logger, RESLIB_DBG_TRACE, RESLIB_RESOLVE)
+    LOG_DEBUG(bundy::resolve::logger, RESLIB_DBG_TRACE, RESLIB_RESOLVE)
               .arg(questionText(question)).arg(2);
 
     if (cache_.lookup(question.getName(), question.getType(),
@@ -1156,7 +1156,7 @@ RecursiveQuery::resolve(const Question& question,
         answer_message->getRRCount(Message::SECTION_ANSWER) > 0) {
 
         // Message found, return that
-        LOG_DEBUG(isc::resolve::logger, RESLIB_DBG_CACHE, RESLIB_RECQ_CACHE_FIND)
+        LOG_DEBUG(bundy::resolve::logger, RESLIB_DBG_CACHE, RESLIB_RECQ_CACHE_FIND)
                   .arg(questionText(question)).arg(2);
         // TODO: err, should cache set rcode as well?
         answer_message->setRcode(Rcode::NOERROR());
@@ -1169,7 +1169,7 @@ RecursiveQuery::resolve(const Question& question,
                                               question.getClass());
         if (cached_rrset) {
             // Found single RRset in cache
-            LOG_DEBUG(isc::resolve::logger, RESLIB_DBG_CACHE, RESLIB_RRSET_FOUND)
+            LOG_DEBUG(bundy::resolve::logger, RESLIB_DBG_CACHE, RESLIB_RRSET_FOUND)
                       .arg(questionText(question)).arg(2);
             answer_message->addRRset(Message::SECTION_ANSWER,
                                      cached_rrset);
@@ -1179,7 +1179,7 @@ RecursiveQuery::resolve(const Question& question,
         } else {
             // Message not found in cache, start recursive query.  It will
             // delete itself when it is done
-            LOG_DEBUG(isc::resolve::logger, RESLIB_DBG_TRACE, RESLIB_RECQ_CACHE_NO_FIND)
+            LOG_DEBUG(bundy::resolve::logger, RESLIB_DBG_TRACE, RESLIB_RECQ_CACHE_NO_FIND)
                       .arg(questionText(question)).arg(2);
             return (new RunningQuery(io, question, answer_message,
                                      test_server_, buffer, crs, query_timeout_,
@@ -1195,7 +1195,7 @@ RecursiveQuery::forward(ConstMessagePtr query_message,
     MessagePtr answer_message,
     OutputBufferPtr buffer,
     DNSServer* server,
-    isc::resolve::ResolverInterface::CallbackPtr callback)
+    bundy::resolve::ResolverInterface::CallbackPtr callback)
 {
     // XXX: eventually we will need to be able to determine whether
     // the message should be sent via TCP or UDP, or sent initially via
@@ -1204,11 +1204,11 @@ RecursiveQuery::forward(ConstMessagePtr query_message,
     IOService& io = dns_service_.getIOService();
 
     if (!callback) {
-        callback.reset(new isc::resolve::ResolverCallbackServer(server));
+        callback.reset(new bundy::resolve::ResolverCallbackServer(server));
     }
 
     // TODO: general 'prepareinitialanswer'
-    answer_message->setOpcode(isc::dns::Opcode::QUERY());
+    answer_message->setOpcode(bundy::dns::Opcode::QUERY());
     ConstQuestionPtr question = *query_message->beginQuestion();
     answer_message->addQuestion(*question);
 
@@ -1222,4 +1222,4 @@ RecursiveQuery::forward(ConstMessagePtr query_message,
 }
 
 } // namespace asiodns
-} // namespace isc
+} // namespace bundy

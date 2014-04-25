@@ -47,7 +47,7 @@
 
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace io {
 
@@ -97,12 +97,12 @@ SocketSessionForwarder::SocketSessionForwarder(const std::string& unix_file) :
     // We need to filter SIGPIPE for subsequent push().  See the class
     // description.
     if (signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
-        isc_throw(Unexpected, "Failed to filter SIGPIPE: " << strerror(errno));
+        bundy_throw(Unexpected, "Failed to filter SIGPIPE: " << strerror(errno));
     }
 
     ForwarderImpl impl;
     if (sizeof(impl.sock_un_.sun_path) - 1 < unix_file.length()) {
-        isc_throw(SocketSessionError,
+        bundy_throw(SocketSessionError,
                   "File name for a UNIX domain socket is too long: " <<
                   unix_file);
     }
@@ -134,13 +134,13 @@ SocketSessionForwarder::~SocketSessionForwarder() {
 void
 SocketSessionForwarder::connectToReceiver() {
     if (impl_->fd_ != -1) {
-        isc_throw(BadValue, "Duplicate connect to UNIX domain "
+        bundy_throw(BadValue, "Duplicate connect to UNIX domain "
                   "endpoint " << impl_->sock_un_.sun_path);
     }
 
     impl_->fd_ = socket(AF_UNIX, SOCK_STREAM, 0);
     if (impl_->fd_ == -1) {
-        isc_throw(SocketSessionError, "Failed to create a UNIX domain socket: "
+        bundy_throw(SocketSessionError, "Failed to create a UNIX domain socket: "
                   << strerror(errno));
     }
     // Make the socket non blocking
@@ -151,7 +151,7 @@ SocketSessionForwarder::connectToReceiver() {
     }
     if (fcntl_flags == -1) {
         close();   // note: this is the internal method, not ::close()
-        isc_throw(SocketSessionError,
+        bundy_throw(SocketSessionError,
                   "Failed to make UNIX domain socket non blocking: " <<
                   strerror(errno));
     }
@@ -165,7 +165,7 @@ SocketSessionForwarder::connectToReceiver() {
         if (setsockopt(impl_->fd_, SOL_SOCKET, SO_SNDBUF, &SOCKSESSION_BUFSIZE,
                        sizeof(SOCKSESSION_BUFSIZE)) == -1) {
             close();
-            isc_throw(SocketSessionError,
+            bundy_throw(SocketSessionError,
                       "Failed to set send buffer size to " <<
                           SOCKSESSION_BUFSIZE);
         }
@@ -173,7 +173,7 @@ SocketSessionForwarder::connectToReceiver() {
     if (connect(impl_->fd_, convertSockAddr(&impl_->sock_un_),
                 impl_->sock_un_len_) == -1) {
         close();
-        isc_throw(SocketSessionError, "Failed to connect to UNIX domain "
+        bundy_throw(SocketSessionError, "Failed to connect to UNIX domain "
                   "endpoint " << impl_->sock_un_.sun_path << ": " <<
                   strerror(errno));
     }
@@ -182,7 +182,7 @@ SocketSessionForwarder::connectToReceiver() {
 void
 SocketSessionForwarder::close() {
     if (impl_->fd_ == -1) {
-        isc_throw(BadValue, "Attempt of close before connect");
+        bundy_throw(BadValue, "Attempt of close before connect");
     }
     ::close(impl_->fd_);
     impl_->fd_ = -1;
@@ -195,32 +195,32 @@ SocketSessionForwarder::push(int sock, int family, int type, int protocol,
                              const void* data, size_t data_len)
 {
     if (impl_->fd_ == -1) {
-        isc_throw(BadValue, "Attempt of push before connect");
+        bundy_throw(BadValue, "Attempt of push before connect");
     }
     if ((local_end.sa_family != AF_INET && local_end.sa_family != AF_INET6) ||
         (remote_end.sa_family != AF_INET && remote_end.sa_family != AF_INET6))
     {
-        isc_throw(BadValue, "Invalid address family: must be "
+        bundy_throw(BadValue, "Invalid address family: must be "
                   "AF_INET or AF_INET6; " <<
                   static_cast<int>(local_end.sa_family) << ", " <<
                   static_cast<int>(remote_end.sa_family) << " given");
     }
     if (family != local_end.sa_family || family != remote_end.sa_family) {
-        isc_throw(BadValue, "Inconsistent address family: must be "
+        bundy_throw(BadValue, "Inconsistent address family: must be "
                   << static_cast<int>(family) << "; "
                   << static_cast<int>(local_end.sa_family) << ", "
                   << static_cast<int>(remote_end.sa_family) << " given");
     }
     if (data_len == 0 || data == NULL) {
-        isc_throw(BadValue, "Data for a socket session must not be empty");
+        bundy_throw(BadValue, "Data for a socket session must not be empty");
     }
     if (data_len > MAX_DATASIZE) {
-        isc_throw(BadValue, "Invalid socket session data size: " <<
+        bundy_throw(BadValue, "Invalid socket session data size: " <<
                   data_len << ", must not exceed " << MAX_DATASIZE);
     }
 
     if (send_fd(impl_->fd_, sock) != 0) {
-        isc_throw(SocketSessionError, "FD passing failed: " <<
+        bundy_throw(SocketSessionError, "FD passing failed: " <<
                   strerror(errno));
     }
 
@@ -251,11 +251,11 @@ SocketSessionForwarder::push(int sock, int family, int type, int protocol,
     const int cc = writev(impl_->fd_, iov, 2);
     if (cc != impl_->buf_.getLength() + data_len) {
         if (cc < 0) {
-            isc_throw(SocketSessionError,
+            bundy_throw(SocketSessionError,
                       "Write failed in forwarding a socket session: " <<
                       strerror(errno));
         }
-        isc_throw(SocketSessionError,
+        bundy_throw(SocketSessionError,
                   "Incomplete write in forwarding a socket session: " << cc <<
                   "/" << (impl_->buf_.getLength() + data_len));
     }
@@ -270,13 +270,13 @@ SocketSession::SocketSession(int sock, int family, int type, int protocol,
     data_(data), data_len_(data_len)
 {
     if (local_end == NULL || remote_end == NULL) {
-        isc_throw(BadValue, "sockaddr must be non NULL for SocketSession");
+        bundy_throw(BadValue, "sockaddr must be non NULL for SocketSession");
     }
     if (data_len == 0) {
-        isc_throw(BadValue, "data_len must be non 0 for SocketSession");
+        bundy_throw(BadValue, "data_len must be non 0 for SocketSession");
     }
     if (data == NULL) {
-        isc_throw(BadValue, "data must be non NULL for SocketSession");
+        bundy_throw(BadValue, "data must be non NULL for SocketSession");
     }
 }
 
@@ -289,7 +289,7 @@ struct SocketSessionReceiver::ReceiverImpl {
     {
         if (setsockopt(fd_, SOL_SOCKET, SO_RCVBUF, &SOCKSESSION_BUFSIZE,
                        sizeof(SOCKSESSION_BUFSIZE)) == -1) {
-            isc_throw(SocketSessionError,
+            bundy_throw(SocketSessionError,
                       "Failed to set receive buffer size to " <<
                           SOCKSESSION_BUFSIZE);
         }
@@ -320,10 +320,10 @@ namespace {
 void
 readFail(int actual_len, int expected_len) {
     if (expected_len < 0) {
-        isc_throw(SocketSessionError, "Failed to receive data from "
+        bundy_throw(SocketSessionError, "Failed to receive data from "
                   "SocketSessionForwarder: " << strerror(errno));
     }
-    isc_throw(SocketSessionError, "Incomplete data from "
+    bundy_throw(SocketSessionError, "Incomplete data from "
               "SocketSessionForwarder: " << actual_len << "/" <<
               expected_len);
 }
@@ -351,10 +351,10 @@ SocketSession
 SocketSessionReceiver::pop() {
     ScopedSocket passed_sock(recv_fd(impl_->fd_));
     if (passed_sock.fd_ == FD_SYSTEM_ERROR) {
-        isc_throw(SocketSessionError, "Receiving a forwarded FD failed: " <<
+        bundy_throw(SocketSessionError, "Receiving a forwarded FD failed: " <<
                   strerror(errno));
     } else if (passed_sock.fd_ < 0) {
-        isc_throw(SocketSessionError, "No FD forwarded");
+        bundy_throw(SocketSessionError, "No FD forwarded");
     }
 
     uint16_t header_len;
@@ -365,7 +365,7 @@ SocketSessionReceiver::pop() {
     }
     header_len = InputBuffer(&header_len, sizeof(header_len)).readUint16();
     if (header_len > DEFAULT_HEADER_BUFLEN) {
-        isc_throw(SocketSessionError, "Too large header length: " <<
+        bundy_throw(SocketSessionError, "Too large header length: " <<
                   header_len);
     }
     impl_->header_buf_.clear();
@@ -380,7 +380,7 @@ SocketSessionReceiver::pop() {
     try {
         const int family = static_cast<int>(ibuffer.readUint32());
         if (family != AF_INET && family != AF_INET6) {
-            isc_throw(SocketSessionError,
+            bundy_throw(SocketSessionError,
                       "Unsupported address family is passed: " << family);
         }
         const int type = static_cast<int>(ibuffer.readUint32());
@@ -390,27 +390,27 @@ SocketSessionReceiver::pop() {
             sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6);
         if (local_end_len < endpoint_minlen ||
             local_end_len > sizeof(impl_->ss_local_)) {
-            isc_throw(SocketSessionError, "Invalid local SA length: " <<
+            bundy_throw(SocketSessionError, "Invalid local SA length: " <<
                       local_end_len);
         }
         ibuffer.readData(&impl_->ss_local_, local_end_len);
         const socklen_t remote_end_len = ibuffer.readUint32();
         if (remote_end_len < endpoint_minlen ||
             remote_end_len > sizeof(impl_->ss_remote_)) {
-            isc_throw(SocketSessionError, "Invalid remote SA length: " <<
+            bundy_throw(SocketSessionError, "Invalid remote SA length: " <<
                       remote_end_len);
         }
         ibuffer.readData(&impl_->ss_remote_, remote_end_len);
         if (family != impl_->sa_local_->sa_family ||
             family != impl_->sa_remote_->sa_family) {
-            isc_throw(SocketSessionError, "SA family inconsistent: " <<
+            bundy_throw(SocketSessionError, "SA family inconsistent: " <<
                       static_cast<int>(impl_->sa_local_->sa_family) << ", " <<
                       static_cast<int>(impl_->sa_remote_->sa_family) <<
                       " given, must be " << family);
         }
         const size_t data_len = ibuffer.readUint32();
         if (data_len == 0 || data_len > MAX_DATASIZE) {
-            isc_throw(SocketSessionError,
+            bundy_throw(SocketSessionError,
                       "Invalid socket session data size: " << data_len <<
                       ", must be > 0 and <= " << MAX_DATASIZE);
         }
@@ -429,7 +429,7 @@ SocketSessionReceiver::pop() {
     } catch (const InvalidBufferPosition& ex) {
         // We catch the case where the given header is too short and convert
         // the exception to SocketSessionError.
-        isc_throw(SocketSessionError, "bogus socket session header: " <<
+        bundy_throw(SocketSessionError, "bogus socket session header: " <<
                   ex.what());
     }
 }

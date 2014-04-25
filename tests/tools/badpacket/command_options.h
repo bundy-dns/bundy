@@ -21,7 +21,7 @@
 
 #include "option_info.h"
 
-namespace isc {
+namespace bundy {
 namespace badpacket {
 
 /// \brief Command Options
@@ -157,6 +157,6 @@ private:
 };
 
 } // namespace badpacket
-} // namespace isc
+} // namespace bundy
 
 #endif // COMMAND_OPTIONS_H

@@ -26,9 +26,9 @@
 #include "nsas_test.h"
 
 using namespace std;
-using namespace isc::dns;
+using namespace bundy::dns;
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 
 // Utility function to count the number of unique values in a vector
@@ -192,4 +192,4 @@ TEST_F(HashTest, Overlong) {
 }
 
 } // namespace nsas
-} // namespace isc
+} // namespace bundy

@@ -19,7 +19,7 @@
 #include <boost/shared_ptr.hpp>
 #include <stdint.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 class Option6IA;
@@ -51,7 +51,7 @@ public:
     /// byte after stored option.
     ///
     /// @param buf buffer (option will be stored here)
-    void pack(isc::util::OutputBuffer& buf);
+    void pack(bundy::util::OutputBuffer& buf);
 
     /// @brief Parses received buffer
     ///
@@ -120,7 +120,7 @@ protected:
     uint32_t t2_;
 };
 
-} // isc::dhcp namespace
-} // isc namespace
+} // bundy::dhcp namespace
+} // bundy namespace
 
 #endif // OPTION_IA_H

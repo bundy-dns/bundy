@@ -27,12 +27,12 @@
 
 #include <map>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// An exception that is thrown when allocation module fails (e.g. due to
 /// lack of available addresses)
-class AllocFailed : public isc::Exception {
+class AllocFailed : public bundy::Exception {
 public:
 
     /// @brief constructor
@@ -41,7 +41,7 @@ public:
     /// @param line line of the file, where exception occurred
     /// @param what text description of the issue that caused exception
     AllocFailed(const char* file, size_t line, const char* what)
-        : isc::Exception(file, line, what) {}
+        : bundy::Exception(file, line, what) {}
 };
 
 /// @brief DHCPv4 and DHCPv6 allocation engine
@@ -83,9 +83,9 @@ protected:
         /// @param hint client's hint
         ///
         /// @return the next address
-        virtual isc::asiolink::IOAddress
+        virtual bundy::asiolink::IOAddress
         pickAddress(const SubnetPtr& subnet, const DuidPtr& duid,
-                    const isc::asiolink::IOAddress& hint) = 0;
+                    const bundy::asiolink::IOAddress& hint) = 0;
 
         /// @brief Default constructor.
         ///
@@ -128,10 +128,10 @@ protected:
         /// @param duid Client's DUID (ignored)
         /// @param hint client's hint (ignored)
         /// @return the next address
-        virtual isc::asiolink::IOAddress
+        virtual bundy::asiolink::IOAddress
             pickAddress(const SubnetPtr& subnet,
                         const DuidPtr& duid,
-                        const isc::asiolink::IOAddress& hint);
+                        const bundy::asiolink::IOAddress& hint);
     protected:
 
         /// @brief Returns an address increased by one
@@ -141,8 +141,8 @@ protected:
         ///
         /// @param addr address to be increased
         /// @return address increased by one
-        static isc::asiolink::IOAddress
-        increaseAddress(const isc::asiolink::IOAddress& addr);
+        static bundy::asiolink::IOAddress
+        increaseAddress(const bundy::asiolink::IOAddress& addr);
 
         /// @brief Returns the next prefix
         ///
@@ -154,8 +154,8 @@ protected:
         /// @param prefix prefix to be increased
         /// @param prefix_len length of the prefix to be increased
         /// @return result prefix
-        static isc::asiolink::IOAddress
-        increasePrefix(const isc::asiolink::IOAddress& prefix,
+        static bundy::asiolink::IOAddress
+        increasePrefix(const bundy::asiolink::IOAddress& prefix,
                        const uint8_t prefix_len);
     };
 
@@ -177,9 +177,9 @@ protected:
         /// @param duid Client's DUID
         /// @param hint a hint (last address that was picked)
         /// @return selected address
-        virtual isc::asiolink::IOAddress pickAddress(const SubnetPtr& subnet,
+        virtual bundy::asiolink::IOAddress pickAddress(const SubnetPtr& subnet,
                                                      const DuidPtr& duid,
-                                                     const isc::asiolink::IOAddress& hint);
+                                                     const bundy::asiolink::IOAddress& hint);
     };
 
     /// @brief Random allocator that picks address randomly
@@ -200,9 +200,9 @@ protected:
         /// @param duid Client's DUID (ignored)
         /// @param hint the last address that was picked (ignored)
         /// @return a random address from the pool
-        virtual isc::asiolink::IOAddress
+        virtual bundy::asiolink::IOAddress
         pickAddress(const SubnetPtr& subnet, const DuidPtr& duid,
-                    const isc::asiolink::IOAddress& hint);
+                    const bundy::asiolink::IOAddress& hint);
     };
 
     public:
@@ -277,10 +277,10 @@ protected:
     Lease4Ptr
     allocateLease4(const SubnetPtr& subnet, const ClientIdPtr& clientid,
                    const HWAddrPtr& hwaddr,
-                   const isc::asiolink::IOAddress& hint,
+                   const bundy::asiolink::IOAddress& hint,
                    const bool fwd_dns_update, const bool rev_dns_update,
                    const std::string& hostname, bool fake_allocation,
-                   const isc::hooks::CalloutHandlePtr& callout_handle,
+                   const bundy::hooks::CalloutHandlePtr& callout_handle,
                    Lease4Ptr& old_lease);
 
     /// @brief Renews a IPv4 lease
@@ -313,7 +313,7 @@ protected:
                 const bool rev_dns_update,
                 const std::string& hostname,
                 const Lease4Ptr& lease,
-                const isc::hooks::CalloutHandlePtr& callout_handle,
+                const bundy::hooks::CalloutHandlePtr& callout_handle,
                 bool fake_allocation /* = false */);
 
     /// @brief Allocates an IPv6 lease
@@ -348,10 +348,10 @@ protected:
     Lease6Collection
     allocateLeases6(const Subnet6Ptr& subnet, const DuidPtr& duid,
                     const uint32_t iaid,
-                    const isc::asiolink::IOAddress& hint, Lease::Type type,
+                    const bundy::asiolink::IOAddress& hint, Lease::Type type,
                     const bool fwd_dns_update, const bool rev_dns_update,
                     const std::string& hostname, bool fake_allocation,
-                    const isc::hooks::CalloutHandlePtr& callout_handle,
+                    const bundy::hooks::CalloutHandlePtr& callout_handle,
                     Lease6Collection& old_leases);
 
     /// @brief returns allocator for a given pool type
@@ -388,11 +388,11 @@ private:
     ///        becomed unavailable)
     Lease4Ptr createLease4(const SubnetPtr& subnet, const DuidPtr& clientid,
                            const HWAddrPtr& hwaddr,
-                           const isc::asiolink::IOAddress& addr,
+                           const bundy::asiolink::IOAddress& addr,
                            const bool fwd_dns_update,
                            const bool rev_dns_update,
                            const std::string& hostname,
-                           const isc::hooks::CalloutHandlePtr& callout_handle,
+                           const bundy::hooks::CalloutHandlePtr& callout_handle,
                            bool fake_allocation = false);
 
     /// @brief creates a lease and inserts it in LeaseMgr if necessary
@@ -424,11 +424,11 @@ private:
     /// @return allocated lease (or NULL in the unlikely case of the lease just
     ///         became unavailable)
     Lease6Ptr createLease6(const Subnet6Ptr& subnet, const DuidPtr& duid,
-                           const uint32_t iaid, const isc::asiolink::IOAddress& addr,
+                           const uint32_t iaid, const bundy::asiolink::IOAddress& addr,
                            const uint8_t prefix_len, const Lease::Type type,
                            const bool fwd_dns_update, const bool rev_dns_update,
                            const std::string& hostname,
-                           const isc::hooks::CalloutHandlePtr& callout_handle,
+                           const bundy::hooks::CalloutHandlePtr& callout_handle,
                            bool fake_allocation = false);
 
     /// @brief Reuses expired IPv4 lease
@@ -459,7 +459,7 @@ private:
                                 const bool fwd_dns_update,
                                 const bool rev_dns_update,
                                 const std::string& hostname,
-                                const isc::hooks::CalloutHandlePtr& callout_handle,
+                                const bundy::hooks::CalloutHandlePtr& callout_handle,
                                 bool fake_allocation = false);
 
     /// @brief Reuses expired IPv6 lease
@@ -493,7 +493,7 @@ private:
                                 const bool fwd_dns_update,
                                 const bool rev_dns_update,
                                 const std::string& hostname,
-                                const isc::hooks::CalloutHandlePtr& callout_handle,
+                                const bundy::hooks::CalloutHandlePtr& callout_handle,
                                 bool fake_allocation = false);
 
     /// @brief Updates FQDN data for a collection of leases.
@@ -532,7 +532,7 @@ private:
     int hook_index_lease6_select_; ///< index for lease6_select hook
 };
 
-}; // namespace isc::dhcp
-}; // namespace isc
+}; // namespace bundy::dhcp
+}; // namespace bundy
 
 #endif // ALLOC_ENGINE_H

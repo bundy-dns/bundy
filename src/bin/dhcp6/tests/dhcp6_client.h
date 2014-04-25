@@ -22,7 +22,7 @@
 #include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 namespace test {
 
@@ -115,7 +115,7 @@ public:
     /// - not relayed
     ///
     /// @param srv Object representing server under test.
-    Dhcp6Client(boost::shared_ptr<isc::test::NakedDhcpv6Srv>& srv);
+    Dhcp6Client(boost::shared_ptr<bundy::test::NakedDhcpv6Srv>& srv);
 
     /// @brief Performs a 4-way echange between the client and the server.
     ///
@@ -222,7 +222,7 @@ public:
     }
 
     /// @brief Returns the server that the client is communicating with.
-    boost::shared_ptr<isc::test::NakedDhcpv6Srv> getServer() const {
+    boost::shared_ptr<bundy::test::NakedDhcpv6Srv> getServer() const {
         return (srv_);
     }
 
@@ -378,15 +378,15 @@ private:
     asiolink::IOAddress link_local_;
 
     /// @brief Pointer to the server that the client is communicating with.
-    boost::shared_ptr<isc::test::NakedDhcpv6Srv> srv_;
+    boost::shared_ptr<bundy::test::NakedDhcpv6Srv> srv_;
 
     bool use_na_;    ///< Enable address assignment.
     bool use_pd_;    ///< Enable prefix delegation.
     bool use_relay_; ///< Enable relaying messages to the server.
 };
 
-} // end of namespace isc::dhcp::test
-} // end of namespace isc::dhcp
-} // end of namespace isc
+} // end of namespace bundy::dhcp::test
+} // end of namespace bundy::dhcp
+} // end of namespace bundy
 
 #endif // DHCP6_CLIENT

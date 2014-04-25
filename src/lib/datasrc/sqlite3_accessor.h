@@ -27,7 +27,7 @@
 
 #include <cc/data.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 class RRClass;
 }
@@ -48,7 +48,7 @@ public:
 class IncompatibleDbVersion : public Exception {
 public:
     IncompatibleDbVersion(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// \brief Too Much Data
@@ -242,8 +242,8 @@ public:
     /// The SQLite3 implementation of this method returns a string starting
     /// with a fixed prefix of "sqlite3_" followed by the DB file name
     /// removing any path name.  For example, for the DB file
-    /// /somewhere/in/the/system/bind10.sqlite3, this method will return
-    /// "sqlite3_bind10.sqlite3".
+    /// /somewhere/in/the/system/bundy.sqlite3, this method will return
+    /// "sqlite3_bundy.sqlite3".
     virtual const std::string& getDBName() const { return (database_name_); }
 
     /// \brief Concrete implementation of the pure virtual method
@@ -286,12 +286,14 @@ private:
 /// This configuration setup is currently under discussion and will change in
 /// the near future.
 ///
+/// \param datasrc_name A name of the underlying data source.
 /// \param config The configuration for the datasource instance
 /// \param error This string will be set to an error message if an error occurs
 ///              during initialization
 /// \return An instance of the sqlite3 datasource client, or NULL if there was
 ///         an error
-extern "C" DataSourceClient* createInstance(isc::data::ConstElementPtr config,
+extern "C" DataSourceClient* createInstance(const std::string& datasrc_name,
+                                            bundy::data::ConstElementPtr config,
                                             std::string& error);
 
 /// \brief Destroy the instance created by createInstance()

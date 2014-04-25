@@ -51,7 +51,7 @@ class ResolverImpl;
  * answer. It doesn't really know about chasing referrals and similar, it
  * simply plugs the parts that know into the network handling code.
  */
-class Resolver : public isc::resolve::ResolverInterface {
+class Resolver : public bundy::resolve::ResolverInterface {
     ///
     /// \name Constructors, Assignment Operator and Destructor.
     ///
@@ -68,8 +68,8 @@ public:
     //@}
 
     virtual void resolve(
-        const isc::dns::QuestionPtr& question,
-        const isc::resolve::ResolverInterface::CallbackPtr& callback);
+        const bundy::dns::QuestionPtr& question,
+        const bundy::resolve::ResolverInterface::CallbackPtr& callback);
 
     /// \brief Process an incoming DNS message, then signal 'server' to resume 
     ///
@@ -85,51 +85,51 @@ public:
     /// shall return to the client
     /// \param buffer Pointer to an \c OutputBuffer for the resposne
     /// \param server Pointer to the \c DNSServer
-    void processMessage(const isc::asiolink::IOMessage& io_message,
-                        isc::dns::MessagePtr query_message,
-                        isc::dns::MessagePtr answer_message,
-                        isc::util::OutputBufferPtr buffer,
-                        isc::asiodns::DNSServer* server);
+    void processMessage(const bundy::asiolink::IOMessage& io_message,
+                        bundy::dns::MessagePtr query_message,
+                        bundy::dns::MessagePtr answer_message,
+                        bundy::util::OutputBufferPtr buffer,
+                        bundy::asiodns::DNSServer* server);
 
     /// \brief Set and get the config session
-    isc::config::ModuleCCSession* getConfigSession() const;
-    void setConfigSession(isc::config::ModuleCCSession* config_session);
+    bundy::config::ModuleCCSession* getConfigSession() const;
+    void setConfigSession(bundy::config::ModuleCCSession* config_session);
 
     /// \brief Handle commands from the config session.
     ///
     /// By default, or if \c startup is set to false explicitly, this method
     /// will ignore any other configuration parameters if listen_on fails;
     /// if \c startup is true, it will install as many parameters as possible.
-    isc::data::ConstElementPtr updateConfig(isc::data::ConstElementPtr config,
+    bundy::data::ConstElementPtr updateConfig(bundy::data::ConstElementPtr config,
                                             bool startup = false);
 
     /// \brief Assign an ASIO IO Service queue to this Resolver object
-    void setDNSService(isc::asiodns::DNSServiceBase& dnss);
+    void setDNSService(bundy::asiodns::DNSServiceBase& dnss);
 
     /// \brief Assign a NameserverAddressStore to this Resolver object
-    void setNameserverAddressStore(isc::nsas::NameserverAddressStore &nsas);
+    void setNameserverAddressStore(bundy::nsas::NameserverAddressStore &nsas);
 
     /// \brief Assign a cache to this Resolver object
-    void setCache(isc::cache::ResolverCache& cache);
+    void setCache(bundy::cache::ResolverCache& cache);
 
     /// \brief Return this object's ASIO IO Service queue
-    isc::asiodns::DNSServiceBase& getDNSService() const { return (*dnss_); }
+    bundy::asiodns::DNSServiceBase& getDNSService() const { return (*dnss_); }
 
     /// \brief Returns this object's NSAS
-    isc::nsas::NameserverAddressStore& getNameserverAddressStore() const {
+    bundy::nsas::NameserverAddressStore& getNameserverAddressStore() const {
         return *nsas_;
     };
 
     /// \brief Returns this object's ResolverCache
-    isc::cache::ResolverCache& getResolverCache() const {
+    bundy::cache::ResolverCache& getResolverCache() const {
         return *cache_;
     };
 
     /// \brief Return pointer to the DNS Lookup callback function
-    isc::asiodns::DNSLookup* getDNSLookupProvider() { return (dns_lookup_); }
+    bundy::asiodns::DNSLookup* getDNSLookupProvider() { return (dns_lookup_); }
 
     /// \brief Return pointer to the DNS Answer callback function
-    isc::asiodns::DNSAnswer* getDNSAnswerProvider() { return (dns_answer_); }
+    bundy::asiodns::DNSAnswer* getDNSAnswerProvider() { return (dns_answer_); }
 
     /**
      * \brief Specify the list of upstream servers.
@@ -237,7 +237,7 @@ public:
     /// Get the query ACL.
     ///
     /// \exception None
-    const isc::acl::dns::RequestACL& getQueryACL() const;
+    const bundy::acl::dns::RequestACL& getQueryACL() const;
 
     /// Set the new query ACL.
     ///
@@ -250,16 +250,16 @@ public:
     /// \exception InvalidParameter The given pointer is NULL
     ///
     /// \param new_acl The new ACL to replace the existing one.
-    void setQueryACL(boost::shared_ptr<const isc::acl::dns::RequestACL>
+    void setQueryACL(boost::shared_ptr<const bundy::acl::dns::RequestACL>
                      new_acl);
 
 private:
     ResolverImpl* impl_;
-    isc::asiodns::DNSServiceBase* dnss_;
-    isc::asiodns::DNSLookup* dns_lookup_;
-    isc::asiodns::DNSAnswer* dns_answer_;
-    isc::nsas::NameserverAddressStore* nsas_;
-    isc::cache::ResolverCache* cache_;
+    bundy::asiodns::DNSServiceBase* dnss_;
+    bundy::asiodns::DNSLookup* dns_lookup_;
+    bundy::asiodns::DNSAnswer* dns_answer_;
+    bundy::nsas::NameserverAddressStore* nsas_;
+    bundy::cache::ResolverCache* cache_;
 };
 
 #endif // RESOLVER_H

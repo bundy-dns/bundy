@@ -39,13 +39,13 @@
 #include <sstream>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::data;
-using namespace isc::datasrc;
-using namespace isc::asiodns;
-using namespace isc::auth::unittest;
-using namespace isc::util::unittests;
-using namespace isc::testutils;
+using namespace bundy::dns;
+using namespace bundy::data;
+using namespace bundy::datasrc;
+using namespace bundy::asiodns;
+using namespace bundy::auth::unittest;
+using namespace bundy::util::unittests;
+using namespace bundy::testutils;
 
 namespace {
 class AuthConfigTest : public ::testing::Test {
@@ -66,9 +66,9 @@ protected:
     MockXfroutClient xfrout;
     MockSocketSessionForwarder ddns_forwarder;
     AuthSrv server;
-    isc::server_common::portconfig::AddressList address_store_;
+    bundy::server_common::portconfig::AddressList address_store_;
 private:
-    isc::testutils::TestSocketRequestor sock_requestor_;
+    bundy::testutils::TestSocketRequestor sock_requestor_;
 };
 
 TEST_F(AuthConfigTest, versionConfig) {
@@ -79,7 +79,7 @@ TEST_F(AuthConfigTest, versionConfig) {
 }
 
 TEST_F(AuthConfigTest, exceptionGuarantee) {
-    using namespace isc::server_common::portconfig;
+    using namespace bundy::server_common::portconfig;
     AddressList a;
     a.push_back(AddressPair("127.0.0.1", 53210));
     server.setListenAddresses(a);
@@ -126,12 +126,12 @@ TEST_F(AuthConfigTest, exceptionFromCommit) {
 // Test invalid address configs are rejected
 TEST_F(AuthConfigTest, invalidListenAddressConfig) {
     // This currently passes simply because the config doesn't know listen_on
-    isc::testutils::portconfig::invalidListenAddressConfig(server);
+    bundy::testutils::portconfig::invalidListenAddressConfig(server);
 }
 
 // Try setting addresses through config
 TEST_F(AuthConfigTest, listenAddressConfig) {
-    isc::testutils::portconfig::listenAddressConfig(server);
+    bundy::testutils::portconfig::listenAddressConfig(server);
 
     // listenAddressConfig should have attempted to create 4 DNS server
     // objects: two IP addresses, TCP and UDP for each.  For UDP, the "SYNC_OK"

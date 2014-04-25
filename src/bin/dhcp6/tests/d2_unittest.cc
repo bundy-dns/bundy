@@ -21,11 +21,11 @@
 
 #include <string>
 
-using namespace isc;
-using namespace isc::asiolink;
-using namespace isc::data;
+using namespace bundy;
+using namespace bundy::asiolink;
+using namespace bundy::data;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 namespace test {
 
@@ -379,5 +379,5 @@ TEST_F(Dhcp6SrvD2Test, queueMaxError) {
 
 } // namespace test
 } // namespace dhcp
-} // namespace isc
+} // namespace bundy
 

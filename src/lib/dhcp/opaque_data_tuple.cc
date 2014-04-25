@@ -14,7 +14,7 @@
 
 #include <dhcp/opaque_data_tuple.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 OpaqueDataTuple::OpaqueDataTuple(LengthFieldType length_field_type)
@@ -56,12 +56,12 @@ OpaqueDataTuple::getText() const {
 }
 
 void
-OpaqueDataTuple::pack(isc::util::OutputBuffer& buf) const {
+OpaqueDataTuple::pack(bundy::util::OutputBuffer& buf) const {
     if (getLength() == 0) {
-        isc_throw(OpaqueDataTupleError, "failed to create on-wire format of the"
+        bundy_throw(OpaqueDataTupleError, "failed to create on-wire format of the"
                   " opaque data field, because the field appears to be empty");
     } else if ((1 << (getDataFieldSize() * 8)) <= getLength()) {
-        isc_throw(OpaqueDataTupleError, "failed to create on-wire format of the"
+        bundy_throw(OpaqueDataTupleError, "failed to create on-wire format of the"
                   " opaque data field, because current data length "
                   << getLength() << " exceeds the maximum size for the length"
                   << " field size " << getDataFieldSize());

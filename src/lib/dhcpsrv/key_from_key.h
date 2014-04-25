@@ -17,7 +17,7 @@
 
 #include <functional>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief Utility class which cascades two key extractors.
@@ -76,7 +76,7 @@ private:
     KeyExtractor2 key2_;
 };
 
-} // end of isc::dhcp namespace
-} // end of isc namespace
+} // end of bundy::dhcp namespace
+} // end of bundy namespace
 
 #endif // KEY_FROM_KEY_H

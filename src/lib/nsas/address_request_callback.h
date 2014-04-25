@@ -17,7 +17,7 @@
 
 #include "nameserver_address.h"
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 
 /// \brief Callback When Address Obtained
@@ -66,6 +66,6 @@ public:
 };
 
 } // namespace nsas
-} // namespace isc
+} // namespace bundy
 
 #endif // ADDRESS_REQUEST_CALLBACK_H

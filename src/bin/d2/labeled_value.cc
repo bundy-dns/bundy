@@ -14,7 +14,7 @@
 
 #include <d2/labeled_value.h>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 /**************************** LabeledValue ****************************/
@@ -22,7 +22,7 @@ namespace d2 {
 LabeledValue::LabeledValue(const int value, const std::string& label)
     : value_(value), label_(label) {
     if (label.empty()) {
-        isc_throw(LabeledValueError, "labels cannot be empty");
+        bundy_throw(LabeledValueError, "labels cannot be empty");
     }
 }
 
@@ -72,12 +72,12 @@ LabeledValueSet::~LabeledValueSet() {
 void
 LabeledValueSet::add(LabeledValuePtr entry) {
     if (!entry) {
-        isc_throw(LabeledValueError, "cannot add an null entry to set");
+        bundy_throw(LabeledValueError, "cannot add an null entry to set");
     }
 
     const int value = entry->getValue();
     if (isDefined(value)) {
-        isc_throw(LabeledValueError,
+        bundy_throw(LabeledValueError,
                   "value: " << value << " is already defined as: "
                   << getLabel(value));
         }
@@ -119,5 +119,5 @@ LabeledValueSet::getLabel(const int value) const {
     return (std::string(UNDEFINED_LABEL));
 }
 
-} // namespace isc::d2
-} // namespace isc
+} // namespace bundy::d2
+} // namespace bundy

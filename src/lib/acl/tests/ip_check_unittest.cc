@@ -21,8 +21,8 @@
 
 #include "sockaddr.h"
 
-using namespace isc::acl;
-using namespace isc::acl::internal;
+using namespace bundy::acl;
+using namespace bundy::acl::internal;
 using namespace std;
 
 namespace {
@@ -70,7 +70,7 @@ struct GeneralAddress {
                                                      addr(address)
     {
         if (address.size() != IPV6_SIZE) {
-            isc_throw(isc::InvalidParameter, "vector passed to GeneralAddress "
+            bundy_throw(bundy::InvalidParameter, "vector passed to GeneralAddress "
                       "constructor is " << address.size() << " bytes long - it "
                       "should be " << IPV6_SIZE << " bytes instead");
         }
@@ -103,14 +103,14 @@ struct GeneralAddress {
 // Provide a specialisation of the IPCheck::matches() method for the
 // GeneralAddress class.
 
-namespace isc  {
+namespace bundy  {
 namespace acl {
 template <>
 bool IPCheck<GeneralAddress>::matches(const GeneralAddress& address) const {
     return (compare(&address.addr[0], address.family));
 }
 } // namespace acl
-} // namespace isc
+} // namespace bundy
 
 namespace {
 /// *** Free Function Tests ***
@@ -119,7 +119,7 @@ namespace {
 TEST(IPFunctionCheck, CreateMask) {
 
     // Invalid arguments should throw.
-    EXPECT_THROW(createMask(9), isc::OutOfRange);
+    EXPECT_THROW(createMask(9), bundy::OutOfRange);
 
     // Check on all possible 8-bit values.
     uint16_t expected = 0xff00;
@@ -148,16 +148,16 @@ TEST(IPFunctionCheck, SplitIPAddress) {
     EXPECT_EQ(string("192.0.2.1"), result.first);
     EXPECT_EQ(0, result.second);
 
-    EXPECT_THROW(splitIPAddress("192.0.2.43/27 "), isc::InvalidParameter);
-    EXPECT_THROW(splitIPAddress("192.0.2.43/-1"), isc::InvalidParameter);
-    EXPECT_THROW(splitIPAddress("192.0.2.43//1"), isc::InvalidParameter);
-    EXPECT_THROW(splitIPAddress("192.0.2.43/1/"), isc::InvalidParameter);
-    EXPECT_THROW(splitIPAddress("/192.0.2.43/1"), isc::InvalidParameter);
-    EXPECT_THROW(splitIPAddress("2001:db8::/xxxx"), isc::InvalidParameter);
-    EXPECT_THROW(splitIPAddress("2001:db8::/32/s"), isc::InvalidParameter);
-    EXPECT_THROW(splitIPAddress("1/"), isc::InvalidParameter);
-    EXPECT_THROW(splitIPAddress("/1"), isc::InvalidParameter);
-    EXPECT_THROW(splitIPAddress(" 1/ "), isc::InvalidParameter);
+    EXPECT_THROW(splitIPAddress("192.0.2.43/27 "), bundy::InvalidParameter);
+    EXPECT_THROW(splitIPAddress("192.0.2.43/-1"), bundy::InvalidParameter);
+    EXPECT_THROW(splitIPAddress("192.0.2.43//1"), bundy::InvalidParameter);
+    EXPECT_THROW(splitIPAddress("192.0.2.43/1/"), bundy::InvalidParameter);
+    EXPECT_THROW(splitIPAddress("/192.0.2.43/1"), bundy::InvalidParameter);
+    EXPECT_THROW(splitIPAddress("2001:db8::/xxxx"), bundy::InvalidParameter);
+    EXPECT_THROW(splitIPAddress("2001:db8::/32/s"), bundy::InvalidParameter);
+    EXPECT_THROW(splitIPAddress("1/"), bundy::InvalidParameter);
+    EXPECT_THROW(splitIPAddress("/1"), bundy::InvalidParameter);
+    EXPECT_THROW(splitIPAddress(" 1/ "), bundy::InvalidParameter);
 }
 
 TEST(IPAddress, constructIPv4) {
@@ -181,7 +181,7 @@ TEST(IPAddress, constructIPv6) {
 TEST(IPAddress, badConstruct) {
     struct sockaddr sa;
     sa.sa_family = AF_UNSPEC;
-    EXPECT_THROW(IPAddress ipaddr(sa), isc::BadValue);
+    EXPECT_THROW(IPAddress ipaddr(sa), bundy::BadValue);
 }
 
 // *** IPv4 Tests ***
@@ -238,17 +238,17 @@ TEST(IPCheck, V4StringConstructor) {
     EXPECT_TRUE(expected5.equals(stored5));
 
     // Invalid prefix lengths
-    EXPECT_THROW(IPCheck<GeneralAddress>("192.0.2.0/33"), isc::OutOfRange);
+    EXPECT_THROW(IPCheck<GeneralAddress>("192.0.2.0/33"), bundy::OutOfRange);
 
     // ... and invalid strings
     EXPECT_THROW(IPCheck<GeneralAddress>("192.0.2.0/-1"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(IPCheck<GeneralAddress>("192.0.2.0/24/3"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(IPCheck<GeneralAddress>("192.0.2.0/ww"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(IPCheck<GeneralAddress>("aa.255.255.0/ww"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 TEST(IPCheck, V4CopyConstructor) {
@@ -441,13 +441,13 @@ TEST(IPCheck, V6StringConstructor) {
     EXPECT_TRUE(equal(address.begin(), address.end(), V6ADDR_4));
 
     // Some invalid strings
-    EXPECT_THROW(IPCheck<GeneralAddress>("::1/129"), isc::OutOfRange);
-    EXPECT_THROW(IPCheck<GeneralAddress>("::1/24/3"), isc::InvalidParameter);
-    EXPECT_THROW(IPCheck<GeneralAddress>(":::1/24"), isc::InvalidParameter);
+    EXPECT_THROW(IPCheck<GeneralAddress>("::1/129"), bundy::OutOfRange);
+    EXPECT_THROW(IPCheck<GeneralAddress>("::1/24/3"), bundy::InvalidParameter);
+    EXPECT_THROW(IPCheck<GeneralAddress>(":::1/24"), bundy::InvalidParameter);
     EXPECT_THROW(IPCheck<GeneralAddress>("2001:0db8::abcd/ww"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(IPCheck<GeneralAddress>("2xx1:0db8::abcd/32"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 TEST(IPCheck, V6CopyConstructor) {

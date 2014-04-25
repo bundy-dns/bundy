@@ -22,7 +22,7 @@
 #include "address_entry.h"
 #include "nsas_types.h"
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 
 class ZoneEntry;
@@ -32,11 +32,11 @@ class NameserverEntry;
 ///
 /// Thrown if the the \c NameservrEntry pointer in the \c boost::shared_ptr that passed
 /// into \c NameserverAddress' constructor is NULL
-class NullNameserverEntryPointer : public isc::Exception {
+class NullNameserverEntryPointer : public bundy::Exception {
 public:
     NullNameserverEntryPointer(const char* file, size_t line,
         const char* what) :
-        isc::Exception(file, line, what)
+        bundy::Exception(file, line, what)
     {}
 };
 
@@ -69,7 +69,7 @@ public:
         ns_(nameserver), address_(address), family_(family)
     {
         if(!ns_) {
-            isc_throw(NullNameserverEntryPointer, "NULL NameserverEntry pointer.");
+            bundy_throw(NullNameserverEntryPointer, "NULL NameserverEntry pointer.");
         }
     }
 
@@ -111,6 +111,6 @@ private:
 };
 
 } // namespace nsas
-} // namespace isc
+} // namespace bundy
 
 #endif//NAMESERVER_ADDRESS_H

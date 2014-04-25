@@ -16,9 +16,9 @@
 # Make sure we can load the module, put it into path
 import sys
 import os
-sys.path.extend(os.environ["B10_TEST_PLUGIN_DIR"].split(':'))
+sys.path.extend(os.environ["BUNDY_TEST_PLUGIN_DIR"].split(':'))
 
-import b10logging
+import bundylogging
 import unittest
 
 class LoggingConfCheckTest(unittest.TestCase):
@@ -26,15 +26,15 @@ class LoggingConfCheckTest(unittest.TestCase):
         """
         Checks the entry point returns the correct values.
         """
-        (spec, check) = b10logging.load()
+        (spec, check) = bundylogging.load()
         # It returns the checking function
-        self.assertEqual(check, b10logging.check)
+        self.assertEqual(check, bundylogging.check)
         # The plugin stores it's spec
-        self.assertEqual(spec, b10logging.spec)
+        self.assertEqual(spec, bundylogging.spec)
 
     def test_logger_conf(self):
         self.assertEqual(None,
-                         b10logging.check({'loggers':
+                         bundylogging.check({'loggers':
                                           [{'name': '*',
                                             'severity': 'DEBUG',
                                             'debuglevel': 50,
@@ -43,7 +43,7 @@ class LoggingConfCheckTest(unittest.TestCase):
                                               'output': '/some/file'
                                             }]
                                            },
-                                           {'name': 'b10-resolver',
+                                           {'name': 'bundy-resolver',
                                             'severity': 'WARN',
                                             'additive': True,
                                             'output_options':
@@ -52,7 +52,7 @@ class LoggingConfCheckTest(unittest.TestCase):
                                               'flush': True
                                             }]
                                            },
-                                           {'name': 'b10-resolver.resolver',
+                                           {'name': 'bundy-resolver.resolver',
                                             'severity': 'ERROR',
                                             'output_options': []
                                            },
@@ -65,7 +65,7 @@ class LoggingConfCheckTest(unittest.TestCase):
                   "used instead of the full first-level name, e.g. "\
                   "'*' or '*.subsystem'"
         self.assertEqual(err_str,
-                         b10logging.check({'loggers':
+                         bundylogging.check({'loggers':
                                           [{'name': name,
                                             'severity': 'DEBUG'},
                                           ]}))
@@ -79,13 +79,13 @@ class LoggingConfCheckTest(unittest.TestCase):
 
     def test_logger_bad_severity(self):
         self.assertEqual('bad severity value for logger *: BADVAL',
-                         b10logging.check({'loggers':
+                         bundylogging.check({'loggers':
                                           [{'name': '*',
                                             'severity': 'BADVAL'}]}))
 
     def test_logger_bad_destination(self):
         self.assertEqual('bad destination for logger *: baddest',
-                         b10logging.check({'loggers':
+                         bundylogging.check({'loggers':
                                           [{'name': '*',
                                             'severity': 'INFO',
                                             'output_options': [
@@ -94,7 +94,7 @@ class LoggingConfCheckTest(unittest.TestCase):
 
     def test_logger_bad_console_output(self):
         self.assertEqual('bad output for logger *: bad_output, must be stdout or stderr',
-                         b10logging.check({'loggers':
+                         bundylogging.check({'loggers':
                                           [{'name': '*',
                                             'severity': 'INFO',
                                             'output_options': [
@@ -105,7 +105,7 @@ class LoggingConfCheckTest(unittest.TestCase):
 
     def test_logger_bad_file_output(self):
         self.assertEqual('destination set to file but output not set to any filename for logger *',
-                         b10logging.check({'loggers':
+                         bundylogging.check({'loggers':
                                           [{'name': '*',
                                             'severity': 'INFO',
                                             'output_options': [
@@ -114,7 +114,7 @@ class LoggingConfCheckTest(unittest.TestCase):
 
     def test_logger_bad_syslog_output(self):
         self.assertEqual('destination set to syslog but output not set to any facility for logger *',
-                         b10logging.check({'loggers':
+                         bundylogging.check({'loggers':
                                           [{'name': '*',
                                             'severity': 'INFO',
                                             'output_options': [
@@ -123,12 +123,12 @@ class LoggingConfCheckTest(unittest.TestCase):
 
     def test_logger_bad_type(self):
         self.assertEqual('123 should be a string',
-                         b10logging.check({'loggers':
+                         bundylogging.check({'loggers':
                                           [{'name': 123,
                                             'severity': 'INFO'}]}))
         self.assertEqual('123 should be a string',
-                         b10logging.check({'loggers':
-                                          [{'name': 'bind10',
+                         bundylogging.check({'loggers':
+                                          [{'name': 'bundy',
                                             'severity': 123}]}))
 
 if __name__ == '__main__':

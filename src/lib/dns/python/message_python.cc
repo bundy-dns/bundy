@@ -36,10 +36,10 @@
 #include "pydnspp_common.h"
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::dns::python;
-using namespace isc::util;
-using namespace isc::util::python;
+using namespace bundy::dns;
+using namespace bundy::dns::python;
+using namespace bundy::util;
+using namespace bundy::util::python;
 
 // Import pydoc text
 #include "message_python_inc.cc"
@@ -47,7 +47,7 @@ using namespace isc::util::python;
 namespace {
 class s_Message : public PyObject {
 public:
-    isc::dns::Message* cppobj;
+    bundy::dns::Message* cppobj;
 };
 
 int Message_init(s_Message* self, PyObject* args);
@@ -214,7 +214,7 @@ Message_getHeaderFlag(s_Message* self, PyObject* args) {
         } else {
             Py_RETURN_FALSE;
         }
-    } catch (const isc::InvalidParameter& ip) {
+    } catch (const bundy::InvalidParameter& ip) {
         PyErr_Clear();
         PyErr_SetString(po_InvalidParameter, ip.what());
     } catch (const exception& ex) {
@@ -250,7 +250,7 @@ Message_setHeaderFlag(s_Message* self, PyObject* args) {
     } catch (const InvalidMessageOperation& imo) {
         PyErr_Clear();
         PyErr_SetString(po_InvalidMessageOperation, imo.what());
-    } catch (const isc::InvalidParameter& ip) {
+    } catch (const bundy::InvalidParameter& ip) {
         PyErr_Clear();
         PyErr_SetString(po_InvalidParameter, ip.what());
     } catch (const exception& ex) {
@@ -445,7 +445,7 @@ Message_getRRCount(s_Message* self, PyObject* args) {
     try {
         return (Py_BuildValue("I", self->cppobj->getRRCount(
                                   static_cast<Message::Section>(section))));
-    } catch (const isc::OutOfRange& ex) {
+    } catch (const bundy::OutOfRange& ex) {
         PyErr_SetString(PyExc_OverflowError, ex.what());
     } catch (const exception& ex) {
         const string ex_what = "Error in Message.get_rr_count(): " + string(ex.what());
@@ -469,7 +469,7 @@ public:
     void operator()(ItemType item) {
         if (PyList_Append(pylist_, PyObjectContainer(creator_(*item)).get())
             == -1) {
-            isc_throw(PyCPPWrapperException, "PyList_Append failed, "
+            bundy_throw(PyCPPWrapperException, "PyList_Append failed, "
                       "probably due to short memory");
         }
     }
@@ -524,7 +524,7 @@ Message_getSection(PyObject* po_self, PyObject* args) {
                  self->cppobj->endSection(msgsection),
                  RRsetInserter(list_container.get(), createRRsetObject));
         return (list_container.release());
-    } catch (const isc::OutOfRange& ex) {
+    } catch (const bundy::OutOfRange& ex) {
         PyErr_SetString(PyExc_OverflowError, ex.what());
     } catch (const InvalidMessageSection& ex) {
         PyErr_SetString(po_InvalidMessageSection, ex.what());
@@ -581,7 +581,7 @@ Message_addRRset(s_Message* self, PyObject* args) {
         Py_RETURN_NONE;
     } catch (const InvalidMessageOperation& imo) {
         PyErr_SetString(po_InvalidMessageOperation, imo.what());
-    } catch (const isc::OutOfRange& ex) {
+    } catch (const bundy::OutOfRange& ex) {
         PyErr_SetString(PyExc_OverflowError, ex.what());
     } catch (const exception& ex) {
         const string ex_what = "Error in Message.add_rrset(): " + string(ex.what());
@@ -635,7 +635,7 @@ Message_clearSection(PyObject* pyself, PyObject* args) {
         Py_RETURN_NONE;
     } catch (const InvalidMessageOperation& imo) {
         PyErr_SetString(po_InvalidMessageOperation, imo.what());
-    } catch (const isc::OutOfRange& ex) {
+    } catch (const bundy::OutOfRange& ex) {
         PyErr_SetString(PyExc_OverflowError, ex.what());
     } catch (const exception& ex) {
         const string ex_what = "Error in Message.clear_section(): " + string(ex.what());
@@ -776,7 +776,7 @@ Message_fromWire(PyObject* pyself, PyObject* args) {
 
 } // end of unnamed namespace
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace python {
 
@@ -845,4 +845,4 @@ PyTypeObject message_type = {
 
 } // end python namespace
 } // end dns namespace
-} // end isc namespace
+} // end bundy namespace

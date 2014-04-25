@@ -25,7 +25,7 @@ import json
 import signal
 import socket
 
-import isc.config.cfgmgr
+import bundy.config.cfgmgr
 import stats
 import stats_httpd
 
@@ -87,8 +87,8 @@ INIT_SPEC_STR = """\
         "item_type": "named_set",
         "item_optional": false,
         "item_default": {
-          "b10-stats": { "address": "Stats", "kind": "dispensable" },
-          "b10-cmdctl": { "special": "cmdctl", "kind": "needed" }
+          "bundy-stats": { "address": "Stats", "kind": "dispensable" },
+          "bundy-cmdctl": { "special": "cmdctl", "kind": "needed" }
         },
         "named_set_item_spec": {
           "item_name": "component",
@@ -140,17 +140,17 @@ INIT_SPEC_STR = """\
     "commands": [
       {
         "command_name": "shutdown",
-        "command_description": "Shut down BIND 10",
+        "command_description": "Shut down BUNDY",
         "command_args": []
       },
       {
         "command_name": "ping",
-        "command_description": "Ping the b10-init process",
+        "command_description": "Ping the bundy-init process",
         "command_args": []
       },
       {
         "command_name": "show_processes",
-        "command_description": "List the running BIND 10 processes",
+        "command_description": "List the running BUNDY processes",
         "command_args": []
       }
     ],
@@ -161,7 +161,7 @@ INIT_SPEC_STR = """\
         "item_optional": false,
         "item_default": "1970-01-01T00:00:00Z",
         "item_title": "Boot time",
-        "item_description": "A date time when bind10 process starts initially",
+        "item_description": "A date time when bundy process starts initially",
         "item_format": "date-time"
       }
     ]
@@ -296,7 +296,7 @@ AUTH_SPEC_STR = """\
 }
 """
 
-class MyModuleCCSession(isc.config.ConfigData):
+class MyModuleCCSession(bundy.config.ConfigData):
     """Mocked ModuleCCSession class.
 
     This class incorporates the module spec directly from the file,
@@ -305,8 +305,8 @@ class MyModuleCCSession(isc.config.ConfigData):
 
     """
     def __init__(self, spec_file, config_handler, command_handler):
-        module_spec = isc.config.module_spec_from_file(spec_file)
-        isc.config.ConfigData.__init__(self, module_spec)
+        module_spec = bundy.config.module_spec_from_file(spec_file)
+        bundy.config.ConfigData.__init__(self, module_spec)
         self._session = self
         self.stopped = False
         self.closed = False
@@ -349,7 +349,7 @@ class MyStats(stats.Stats):
         # it's a list of tuples, each of which is of (answer, envelope).
         self._answers = []
         # the default answer from faked recvmsg if _answers is empty
-        self.__default_answer = isc.config.ccsession.create_answer(
+        self.__default_answer = bundy.config.ccsession.create_answer(
             0, {'Init':
                     json.loads(INIT_SPEC_STR)['module_spec']['statistics'],
                 'Auth':
@@ -392,13 +392,13 @@ class MyStats(stats.Stats):
               'queries.perzone' : self._queries_per_zone,
               'nds_queries.perzone' : {
                 'test10.example': {
-                    'queries.tcp': isc.cc.data.find(
+                    'queries.tcp': bundy.cc.data.find(
                         self._nds_queries_per_zone,
                         'test10.example/queries.tcp')
                     }
                 },
               'nds_queries.perzone/test10.example/queries.udp' :
-                  isc.cc.data.find(self._nds_queries_per_zone,
+                  bundy.cc.data.find(self._nds_queries_per_zone,
                                    'test10.example/queries.udp')
               }
 
@@ -438,7 +438,7 @@ class MyStats(stats.Stats):
 
         """
         answer, _ = self.__group_recvmsg(None, None)
-        return isc.config.ccsession.parse_answer(answer)[1]
+        return bundy.config.ccsession.parse_answer(answer)[1]
 
 class MyStatsHttpd(stats_httpd.StatsHttpd):
     """A faked StatsHttpd class for unit tests.

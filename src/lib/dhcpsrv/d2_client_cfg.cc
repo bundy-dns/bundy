@@ -20,7 +20,7 @@
 
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 const char *D2ClientConfig::DFT_SERVER_IP = "127.0.0.1";
@@ -35,7 +35,7 @@ const char *D2ClientConfig::DFT_GENERATED_PREFIX = "myhost";
 const char *D2ClientConfig::DFT_QUALIFYING_SUFFIX = "example.com";
 
 D2ClientConfig::D2ClientConfig(const  bool enable_updates,
-                               const isc::asiolink::IOAddress& server_ip,
+                               const bundy::asiolink::IOAddress& server_ip,
                                const size_t server_port,
                                const dhcp_ddns::
                                      NameChangeProtocol& ncr_protocol,
@@ -63,7 +63,7 @@ D2ClientConfig::D2ClientConfig(const  bool enable_updates,
 
 D2ClientConfig::D2ClientConfig()
     : enable_updates_(false),
-      server_ip_(isc::asiolink::IOAddress("0.0.0.0")),
+      server_ip_(bundy::asiolink::IOAddress("0.0.0.0")),
       server_port_(0),
       ncr_protocol_(dhcp_ddns::NCR_UDP),
       ncr_format_(dhcp_ddns::FMT_JSON),
@@ -86,13 +86,13 @@ D2ClientConfig::enableUpdates(bool enable) {
 void
 D2ClientConfig::validateContents() {
     if (ncr_format_ != dhcp_ddns::FMT_JSON) {
-        isc_throw(D2ClientError, "D2ClientConfig: NCR Format:"
+        bundy_throw(D2ClientError, "D2ClientConfig: NCR Format:"
                     << dhcp_ddns::ncrFormatToString(ncr_format_)
                     << " is not yet supported");
     }
 
     if (ncr_protocol_ != dhcp_ddns::NCR_UDP) {
-        isc_throw(D2ClientError, "D2ClientConfig: NCR Protocol:"
+        bundy_throw(D2ClientError, "D2ClientConfig: NCR Protocol:"
                     << dhcp_ddns::ncrProtocolToString(ncr_protocol_)
                     << " is not yet supported");
     }
@@ -154,4 +154,4 @@ operator<<(std::ostream& os, const D2ClientConfig& config) {
 
 };  // namespace dhcp
 
-};  // namespace isc
+};  // namespace bundy

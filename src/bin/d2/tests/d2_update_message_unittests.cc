@@ -25,11 +25,11 @@
 #include <gtest/gtest.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::d2;
-using namespace isc::dns;
-using namespace isc::dns::rdata;
-using namespace isc::util;
+using namespace bundy;
+using namespace bundy::d2;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
+using namespace bundy::util;
 
 namespace {
 
@@ -294,7 +294,7 @@ TEST_F(D2UpdateMessageTest, fromWireInvalidOpcode) {
     D2UpdateMessage msg(D2UpdateMessage::INBOUND);
     // When using invalid Opcode, the fromWire function should
     // throw NotUpdateMessage exception.
-    EXPECT_THROW(msg.fromWire(buf), isc::d2::NotUpdateMessage);
+    EXPECT_THROW(msg.fromWire(buf), bundy::d2::NotUpdateMessage);
 }
 
 // This test verifies that the fromWire function throws appropriate exception
@@ -318,7 +318,7 @@ TEST_F(D2UpdateMessageTest, fromWireInvalidQRFlag) {
     D2UpdateMessage msg(D2UpdateMessage::INBOUND);
     // When using invalid QR flag, the fromWire function should
     // throw InvalidQRFlag exception.
-    EXPECT_THROW(msg.fromWire(buf), isc::d2::InvalidQRFlag);
+    EXPECT_THROW(msg.fromWire(buf), bundy::d2::InvalidQRFlag);
 }
 
 // This test verifies that the fromWire function throws appropriate exception
@@ -357,7 +357,7 @@ TEST_F(D2UpdateMessageTest, fromWireTooManyZones) {
     D2UpdateMessage msg(D2UpdateMessage::INBOUND);
     // When parsing a message with more than one Zone record,
     // exception should be thrown.
-    EXPECT_THROW(msg.fromWire(buf), isc::d2::InvalidZoneSection);
+    EXPECT_THROW(msg.fromWire(buf), bundy::d2::InvalidZoneSection);
 }
 
 // This test verifies that the wire format of the message is produced
@@ -585,7 +585,7 @@ TEST_F(D2UpdateMessageTest, toWireInvalidQRFlag) {
     // An attempt to call toWire on the Response message should
     // result in the InvalidQRFlag exception.
     MessageRenderer renderer;
-    EXPECT_THROW(msg.toWire(renderer), isc::d2::InvalidQRFlag);
+    EXPECT_THROW(msg.toWire(renderer), bundy::d2::InvalidQRFlag);
 }
 
 } // End of anonymous namespace

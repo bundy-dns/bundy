@@ -9,12 +9,12 @@ AM_CPPFLAGS += $(BOOST_INCLUDES) $(MULTITHREADING_FLAG)
 # But older GCC compilers don't have the flag.     
 AM_CXXFLAGS  = $(WARNING_NO_MISSING_FIELD_INITIALIZERS_CFLAG)
 
-# BIND 10 libraries against which the test user libraries are linked.
-HOOKS_LIB      = $(top_builddir)/src/lib/hooks/libb10-hooks.la
-LOG_LIB        = $(top_builddir)/src/lib/log/libb10-log.la
-EXCEPTIONS_LIB = $(top_builddir)/src/lib/exceptions/libb10-exceptions.la
-UTIL_LIB       = $(top_builddir)/src/lib/util/libb10-util.la
-THREADS_LIB    = $(top_builddir)/src/lib/util/threads/libb10-threads.la
+# BUNDY libraries against which the test user libraries are linked.
+HOOKS_LIB      = $(top_builddir)/src/lib/hooks/libbundy-hooks.la
+LOG_LIB        = $(top_builddir)/src/lib/log/libbundy-log.la
+EXCEPTIONS_LIB = $(top_builddir)/src/lib/exceptions/libbundy-exceptions.la
+UTIL_LIB       = $(top_builddir)/src/lib/util/libbundy-util.la
+THREADS_LIB    = $(top_builddir)/src/lib/util/threads/libbundy-threads.la
 
 ALL_LIBS       = $(HOOKS_LIB) $(LOG_LIB) $(EXCEPTIONS_LIB) $(UTIL_LIB) $(THREADS_LIB)
 
@@ -38,7 +38,7 @@ if HAVE_GTEST
 # .libs folder and they can be dlopened.
 #
 # Note that the shared libraries with callouts should not be used together with
-# the --enable-static-link option. With this option, the bind10 libraries are
+# the --enable-static-link option. With this option, the bundy libraries are
 # statically linked with the program and if the callout invokes the methods
 # which belong to these libraries, the library with the callout will get its
 # own copy of the static objects (e.g. logger, ServerHooks) and that will lead

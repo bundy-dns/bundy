@@ -34,18 +34,18 @@
 #include <boost/bind.hpp>
 #include <boost/scoped_ptr.hpp>
 
-using namespace isc::data;
-using namespace isc::dns;
+using namespace bundy::data;
+using namespace bundy::dns;
 using namespace std;
-using isc::util::MemorySegment;
+using bundy::util::MemorySegment;
 using boost::lexical_cast;
 using boost::shared_ptr;
 using boost::dynamic_pointer_cast;
-using isc::datasrc::memory::InMemoryClient;
-using isc::datasrc::memory::ZoneTableSegment;
-using isc::datasrc::memory::ZoneDataUpdater;
+using bundy::datasrc::memory::InMemoryClient;
+using bundy::datasrc::memory::ZoneTableSegment;
+using bundy::datasrc::memory::ZoneDataUpdater;
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 
 ConfigurableClientList::DataSourceInfo::DataSourceInfo(
@@ -61,7 +61,7 @@ ConfigurableClientList::DataSourceInfo::DataSourceInfo(
     if (cache_conf_ && cache_conf_->isEnabled()) {
         ztable_segment_.reset(ZoneTableSegment::create(
                                   rrclass, cache_conf_->getSegmentType()));
-        cache_.reset(new InMemoryClient(ztable_segment_, rrclass));
+        cache_.reset(new InMemoryClient(name_, ztable_segment_, rrclass));
     }
 }
 
@@ -72,7 +72,7 @@ ConfigurableClientList::DataSourceInfo::getCacheClient() const {
 
 ConfigurableClientList::ConfigurableClientList(const RRClass& rrclass) :
     rrclass_(rrclass),
-    configuration_(new isc::data::ListElement),
+    configuration_(new bundy::data::ListElement),
     allow_cache_(false)
 {}
 
@@ -81,7 +81,7 @@ ConfigurableClientList::configure(const ConstElementPtr& config,
                                   bool allow_cache)
 {
     if (!config) {
-        isc_throw(isc::BadValue, "NULL configuration passed");
+        bundy_throw(bundy::BadValue, "NULL configuration passed");
     }
 
     // TODO: Implement recycling from the old configuration.
@@ -94,7 +94,7 @@ ConfigurableClientList::configure(const ConstElementPtr& config,
             const ConstElementPtr dconf(config->get(i));
             const ConstElementPtr type_elem(dconf->get("type"));
             if (type_elem == ConstElementPtr()) {
-                isc_throw(ConfigurationError, "Missing the type option in "
+                bundy_throw(ConfigurationError, "Missing the type option in "
                           "data source no " << i);
             }
             const string type(type_elem->stringValue());
@@ -107,7 +107,7 @@ ConfigurableClientList::configure(const ConstElementPtr& config,
             const string datasrc_name =
                 name_elem ? name_elem->stringValue() : type;
             if (!used_names.insert(datasrc_name).second) {
-                isc_throw(ConfigurationError, "Duplicate name in client list: "
+                bundy_throw(ConfigurationError, "Duplicate name in client list: "
                           << datasrc_name);
             }
 
@@ -118,7 +118,7 @@ ConfigurableClientList::configure(const ConstElementPtr& config,
                 // this is essentially no-op.  In the latter case, it's
                 // of no use unless cache is allowed; we simply skip
                 // building it in that case.
-                dsrc_pair = getDataSourceClient(type, param_conf);
+                dsrc_pair = getDataSourceClient(datasrc_name, type, param_conf);
             } catch (const DataSourceLibraryError& ex) {
                 LOG_ERROR(logger, DATASRC_LIBRARY_ERROR).
                     arg(datasrc_name).arg(rrclass_).arg(ex.what());
@@ -195,11 +195,11 @@ ConfigurableClientList::configure(const ConstElementPtr& config,
         configuration_ = config;
         allow_cache_ = allow_cache;
     } catch (const TypeError& te) {
-        isc_throw(ConfigurationError, "Malformed configuration at data source "
+        bundy_throw(ConfigurationError, "Malformed configuration at data source "
                   "no. " << i << ": " << te.what());
     } catch (const internal::CacheConfigError& ex) {
         // convert to the "public" exception type.
-        isc_throw(ConfigurationError, ex.what());
+        bundy_throw(ConfigurationError, ex.what());
     }
 }
 
@@ -405,7 +405,8 @@ ConfigurableClientList::getCachedZoneWriter(const Name& name,
 // purpose of the function is to provide a very thin wrapper to be able to
 // replace the call to DataSourceClientContainer constructor in tests.
 ConfigurableClientList::DataSourcePair
-ConfigurableClientList::getDataSourceClient(const string& type,
+ConfigurableClientList::getDataSourceClient(const string& datasrc_name,
+                                            const string& type,
                                             const ConstElementPtr&
                                             configuration)
 {
@@ -414,7 +415,8 @@ ConfigurableClientList::getDataSourceClient(const string& type,
     }
 
     DataSourceClientContainerPtr
-        container(new DataSourceClientContainer(type, configuration));
+        container(new DataSourceClientContainer(datasrc_name, type,
+                                                configuration));
     return (DataSourcePair(&container->getInstance(), container));
 }
 
@@ -440,7 +442,7 @@ ConfigurableClientList::getZoneTableAccessor(const std::string& datasrc_name,
                                              bool use_cache) const
 {
     if (!use_cache) {
-        isc_throw(isc::NotImplemented,
+        bundy_throw(bundy::NotImplemented,
               "getZoneTableAccessor only implemented for cache");
     }
 

@@ -30,7 +30,7 @@
 
 #include <gtest/gtest.h>
 
-namespace isc {
+namespace bundy {
 namespace testutils {
 ///
 /// \name Header flags
@@ -79,8 +79,8 @@ extern const unsigned int CD_FLAG;
 /// \param nscount The expected value of NSCOUNT
 /// \param arcount The expected value of ARCOUNT
 void
-headerCheck(const isc::dns::Message& message, const isc::dns::qid_t qid,
-            const isc::dns::Rcode& rcode,
+headerCheck(const bundy::dns::Message& message, const bundy::dns::qid_t qid,
+            const bundy::dns::Rcode& rcode,
             const uint16_t opcodeval, const unsigned int flags,
             const unsigned int qdcount,
             const unsigned int ancount, const unsigned int nscount,
@@ -111,8 +111,8 @@ headerCheck(const isc::dns::Message& message, const isc::dns::qid_t qid,
 ///
 /// \param expected_rrset The expected RRset
 /// \param actual_rrset The RRset to be tested
-void rrsetCheck(isc::dns::ConstRRsetPtr expected_rrset,
-                isc::dns::ConstRRsetPtr actual_rrset);
+void rrsetCheck(bundy::dns::ConstRRsetPtr expected_rrset,
+                bundy::dns::ConstRRsetPtr actual_rrset);
 
 /// The definitions in this name space are not supposed to be used publicly,
 /// but are given here because they are used in templated functions.
@@ -123,42 +123,42 @@ namespace detail {
 // 'type covered' are different.  For simplicity, we only compare the types
 // of the first RRSIG RDATAs (and only check when they exist); if there's
 // further difference in the RDATA, the main comparison checks will detect it.
-struct RRsetMatch : public std::unary_function<isc::dns::ConstRRsetPtr, bool> {
-    RRsetMatch(isc::dns::ConstRRsetPtr target) : target_(target) {}
-    bool operator()(isc::dns::ConstRRsetPtr rrset) const {
+struct RRsetMatch : public std::unary_function<bundy::dns::ConstRRsetPtr, bool> {
+    RRsetMatch(bundy::dns::ConstRRsetPtr target) : target_(target) {}
+    bool operator()(bundy::dns::ConstRRsetPtr rrset) const {
         if (rrset->getType() != target_->getType() ||
             rrset->getClass() != target_->getClass() ||
             rrset->getName() != target_->getName()) {
             return (false);
         }
-        if (rrset->getType() != isc::dns::RRType::RRSIG()) {
+        if (rrset->getType() != bundy::dns::RRType::RRSIG()) {
             return (true);
         }
         if (rrset->getRdataCount() == 0 || target_->getRdataCount() == 0) {
             return (true);
         }
-        isc::dns::RdataIteratorPtr rdit = rrset->getRdataIterator();
-        isc::dns::RdataIteratorPtr targetit = target_->getRdataIterator();
-        return (dynamic_cast<const isc::dns::rdata::generic::RRSIG&>(
+        bundy::dns::RdataIteratorPtr rdit = rrset->getRdataIterator();
+        bundy::dns::RdataIteratorPtr targetit = target_->getRdataIterator();
+        return (dynamic_cast<const bundy::dns::rdata::generic::RRSIG&>(
                     rdit->getCurrent()).typeCovered() ==
-                dynamic_cast<const isc::dns::rdata::generic::RRSIG&>(
+                dynamic_cast<const bundy::dns::rdata::generic::RRSIG&>(
                     targetit->getCurrent()).typeCovered());
     }
-    const isc::dns::ConstRRsetPtr target_;
+    const bundy::dns::ConstRRsetPtr target_;
 };
 
 // Helper callback functor for masterLoad() used in rrsetsCheck (stream
 // version)
 class RRsetInserter {
 public:
-    RRsetInserter(std::vector<isc::dns::ConstRRsetPtr>& rrsets) :
+    RRsetInserter(std::vector<bundy::dns::ConstRRsetPtr>& rrsets) :
         rrsets_(rrsets)
     {}
-    void operator()(isc::dns::ConstRRsetPtr rrset) const {
+    void operator()(bundy::dns::ConstRRsetPtr rrset) const {
         rrsets_.push_back(rrset);
     }
 private:
-    std::vector<isc::dns::ConstRRsetPtr>& rrsets_;
+    std::vector<bundy::dns::ConstRRsetPtr>& rrsets_;
 };
 }
 
@@ -169,7 +169,7 @@ private:
 ///
 /// An RRset consisting of multiple RRs can be constructed, but only one
 /// RRset is allowed.  If the given string contains mixed types of RRs
-/// it throws an \c isc::Unexpected exception.
+/// it throws an \c bundy::Unexpected exception.
 ///
 /// \param text_rrset A complete textual representation of an RRset.
 ///  It must meets the assumption of the \c dns::masterLoad() function.
@@ -179,11 +179,11 @@ private:
 /// parameter normally doesn't have to be specified, but for an SOA RR it
 /// must be set to its owner name, due to the internal check of
 /// \c dns::masterLoad().
-isc::dns::RRsetPtr textToRRset(const std::string& text_rrset,
-                               const isc::dns::RRClass& rrclass =
-                               isc::dns::RRClass::IN(),
-                               const isc::dns::Name& origin =
-                               isc::dns::Name::ROOT_NAME());
+bundy::dns::RRsetPtr textToRRset(const std::string& text_rrset,
+                               const bundy::dns::RRClass& rrclass =
+                               bundy::dns::RRClass::IN(),
+                               const bundy::dns::Name& origin =
+                               bundy::dns::Name::ROOT_NAME());
 
 /// \brief Pull out signatures and convert to text
 ///
@@ -203,7 +203,7 @@ isc::dns::RRsetPtr textToRRset(const std::string& text_rrset,
 /// \param end The end of the rrsets iterator
 template <typename ITERATOR>
 void
-pullSigs(std::vector<isc::dns::ConstRRsetPtr>& rrsets,
+pullSigs(std::vector<bundy::dns::ConstRRsetPtr>& rrsets,
          std::string& text, ITERATOR begin, ITERATOR end)
 {
     for (ITERATOR it = begin; it != end; ++it) {
@@ -256,7 +256,7 @@ rrsetsCheck(EXPECTED_ITERATOR expected_begin, EXPECTED_ITERATOR expected_end,
     // iterators, and pull out the signature sets, and add them as
     // separate RRsets (rrsetCheck() later does not check signatures
     // attached to rrsets)
-    std::vector<isc::dns::ConstRRsetPtr> expected_rrsets, actual_rrsets;
+    std::vector<bundy::dns::ConstRRsetPtr> expected_rrsets, actual_rrsets;
     std::string expected_text, actual_text;
 
     pullSigs(expected_rrsets, expected_text, expected_begin, expected_end);
@@ -271,9 +271,9 @@ rrsetsCheck(EXPECTED_ITERATOR expected_begin, EXPECTED_ITERATOR expected_end,
 
     // Now we check if all RRsets from the actual_rrsets are in
     // expected_rrsets, and that actual_rrsets has no duplicates.
-    std::vector<isc::dns::ConstRRsetPtr> checked_rrsets; // for duplicate check
+    std::vector<bundy::dns::ConstRRsetPtr> checked_rrsets; // for duplicate check
 
-    std::vector<isc::dns::ConstRRsetPtr>::const_iterator it;
+    std::vector<bundy::dns::ConstRRsetPtr>::const_iterator it;
     for (it = actual_rrsets.begin(); it != actual_rrsets.end(); ++it) {
         // Make sure there's no duplicate RRset in actual (using a naive
         // search).  By guaranteeing the actual set is unique, and the
@@ -285,7 +285,7 @@ rrsetsCheck(EXPECTED_ITERATOR expected_begin, EXPECTED_ITERATOR expected_end,
                                  detail::RRsetMatch(*it)));
         checked_rrsets.push_back(*it);
 
-        std::vector<isc::dns::ConstRRsetPtr>::const_iterator found_rrset_it =
+        std::vector<bundy::dns::ConstRRsetPtr>::const_iterator found_rrset_it =
             std::find_if(expected_rrsets.begin(), expected_rrsets.end(),
                          detail::RRsetMatch(*it));
         if (found_rrset_it != expected_rrsets.end()) {
@@ -348,11 +348,11 @@ template<typename ACTUAL_ITERATOR>
 void
 rrsetsCheck(std::istream& expected_stream,
             ACTUAL_ITERATOR actual_begin, ACTUAL_ITERATOR actual_end,
-            const isc::dns::Name& origin = isc::dns::Name::ROOT_NAME(),
-            const isc::dns::RRClass& rrclass = isc::dns::RRClass::IN())
+            const bundy::dns::Name& origin = bundy::dns::Name::ROOT_NAME(),
+            const bundy::dns::RRClass& rrclass = bundy::dns::RRClass::IN())
 {
-    std::vector<isc::dns::ConstRRsetPtr> expected;
-    isc::dns::masterLoad(expected_stream, origin, rrclass,
+    std::vector<bundy::dns::ConstRRsetPtr> expected;
+    bundy::dns::masterLoad(expected_stream, origin, rrclass,
                          detail::RRsetInserter(expected));
     rrsetsCheck(expected.begin(), expected.end(), actual_begin, actual_end);
 }
@@ -361,7 +361,7 @@ rrsetsCheck(std::istream& expected_stream,
 /// expected data as string.
 ///
 /// This function is a wrapper for the input stream version:
-/// \c rrsetsCheck(std::istream&, ACTUAL_ITERATOR, ACTUAL_ITERATOR, const isc::dns::Name&, const isc::dns::RRClass&)(),
+/// \c rrsetsCheck(std::istream&, ACTUAL_ITERATOR, ACTUAL_ITERATOR, const bundy::dns::Name&, const bundy::dns::RRClass&)(),
 /// and takes a string object instead of a stream.
 /// While the stream version is more generic, this version would be more
 /// convenient for tests using hardcoded expected data.  Using this version,
@@ -380,8 +380,8 @@ template<typename ACTUAL_ITERATOR>
 void
 rrsetsCheck(const std::string& expected,
             ACTUAL_ITERATOR actual_begin, ACTUAL_ITERATOR actual_end,
-            const isc::dns::Name& origin = isc::dns::Name::ROOT_NAME(),
-            const isc::dns::RRClass& rrclass = isc::dns::RRClass::IN())
+            const bundy::dns::Name& origin = bundy::dns::Name::ROOT_NAME(),
+            const bundy::dns::RRClass& rrclass = bundy::dns::RRClass::IN())
 {
     std::stringstream expected_stream(expected);
     rrsetsCheck(expected_stream, actual_begin, actual_end, origin,
@@ -389,7 +389,7 @@ rrsetsCheck(const std::string& expected,
 }
 
 } // end of namespace testutils
-} // end of namespace isc
+} // end of namespace bundy
 #endif  // ISC_TESTUTILS_DNSMESSAGETEST_H
 
 // Local Variables:

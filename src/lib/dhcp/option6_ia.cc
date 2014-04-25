@@ -23,9 +23,9 @@
 #include <stdint.h>
 
 using namespace std;
-using namespace isc::util;
+using namespace bundy::util;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 Option6IA::Option6IA(uint16_t type, uint32_t iaid)
@@ -33,7 +33,7 @@ Option6IA::Option6IA(uint16_t type, uint32_t iaid)
 
     // IA_TA has different layout than IA_NA and IA_PD. We can't sue this class
     if (type == D6O_IA_TA) {
-        isc_throw(BadValue, "Can't use Option6IA for IA_TA as it has "
+        bundy_throw(BadValue, "Can't use Option6IA for IA_TA as it has "
                   "a different layout");
     }
 
@@ -46,7 +46,7 @@ Option6IA::Option6IA(uint16_t type, OptionBufferConstIter begin,
 
     // IA_TA has different layout than IA_NA and IA_PD. We can't use this class
     if (type == D6O_IA_TA) {
-        isc_throw(BadValue, "Can't use Option6IA for IA_TA as it has "
+        bundy_throw(BadValue, "Can't use Option6IA for IA_TA as it has "
                   "a different layout");
     }
 
@@ -55,7 +55,7 @@ Option6IA::Option6IA(uint16_t type, OptionBufferConstIter begin,
     unpack(begin, end);
 }
 
-void Option6IA::pack(isc::util::OutputBuffer& buf) {
+void Option6IA::pack(bundy::util::OutputBuffer& buf) {
     buf.writeUint16(type_);
     buf.writeUint16(len() - OPTION6_HDR_LEN);
     buf.writeUint32(iaid_);
@@ -70,7 +70,7 @@ void Option6IA::unpack(OptionBufferConstIter begin,
     // IA_NA and IA_PD have 12 bytes content (iaid, t1, t2 fields)
     // followed by 0 or more sub-options.
     if (distance(begin, end) < OPTION6_IA_LEN) {
-        isc_throw(OutOfRange, "Option " << type_ << " truncated");
+        bundy_throw(OutOfRange, "Option " << type_ << " truncated");
     }
     iaid_ = readUint32(&(*begin), distance(begin, end));
     begin += sizeof(uint32_t);
@@ -125,5 +125,5 @@ uint16_t Option6IA::len() {
     return (length);
 }
 
-} // end of isc::dhcp namespace
-} // end of isc namespace
+} // end of bundy::dhcp namespace
+} // end of bundy namespace

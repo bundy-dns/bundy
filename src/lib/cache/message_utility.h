@@ -19,7 +19,7 @@
 
 #include <dns/message.h>
 
-namespace isc {
+namespace bundy {
 namespace cache {
 
 /// \brief Some utility functions to extract info from message
@@ -34,14 +34,14 @@ namespace MessageUtility{
 ///
 /// \param msg The response message to be checked
 /// \param type The RR type that need to check
-bool hasTheRecordInAuthoritySection(const isc::dns::Message& msg,
-                                    const isc::dns::RRType& type);
+bool hasTheRecordInAuthoritySection(const bundy::dns::Message& msg,
+                                    const bundy::dns::RRType& type);
 
 /// \brief Check whetehr the message is a negative response
 ///        (NXDOMAIN or NOERROR_NODATA)
 ///
 /// \param msg The response message
-bool isNegativeResponse(const isc::dns::Message& msg);
+bool isNegativeResponse(const bundy::dns::Message& msg);
 
 /// \brief Check whether the message can be cached
 ///        Negative responses without SOA records SHOULD NOT be cached as there
@@ -56,11 +56,11 @@ bool isNegativeResponse(const isc::dns::Message& msg);
 ///        servers involved. (Sec 5, RFC2308)
 ///
 /// \param msg The response message
-bool canMessageBeCached(const isc::dns::Message& msg);
+bool canMessageBeCached(const bundy::dns::Message& msg);
 
 } // namespace MessageUtility
 } // namespace cache
-} // namespace isc
+} // namespace bundy
 
 
 #endif//MESSAGE_UTILITY_H

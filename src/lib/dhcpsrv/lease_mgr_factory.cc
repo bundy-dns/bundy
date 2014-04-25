@@ -37,7 +37,7 @@
 
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 boost::scoped_ptr<LeaseMgr>&
@@ -66,7 +66,7 @@ LeaseMgrFactory::parse(const std::string& dbaccess) {
                 mapped_tokens.insert(make_pair(name, value));
             } else {
                 LOG_ERROR(dhcpsrv_logger, DHCPSRV_INVALID_ACCESS).arg(dbaccess);
-                isc_throw(InvalidParameter, "Cannot parse " << token
+                bundy_throw(InvalidParameter, "Cannot parse " << token
                           << ", expected format is name=value");
             }
         }
@@ -115,7 +115,7 @@ LeaseMgrFactory::create(const std::string& dbaccess) {
     // Is "type" present?
     if (parameters.find(type) == parameters.end()) {
         LOG_ERROR(dhcpsrv_logger, DHCPSRV_NOTYPE_DB).arg(dbaccess);
-        isc_throw(InvalidParameter, "Database configuration parameters do not "
+        bundy_throw(InvalidParameter, "Database configuration parameters do not "
                   "contain the 'type' keyword");
     }
 
@@ -143,7 +143,7 @@ LeaseMgrFactory::create(const std::string& dbaccess) {
 
     // Get here on no match
     LOG_ERROR(dhcpsrv_logger, DHCPSRV_UNKNOWN_DB).arg(parameters[type]);
-    isc_throw(InvalidType, "Database access parameter 'type' does "
+    bundy_throw(InvalidType, "Database access parameter 'type' does "
               "not specify a supported database backend");
 }
 
@@ -162,11 +162,11 @@ LeaseMgr&
 LeaseMgrFactory::instance() {
     LeaseMgr* lmptr = getLeaseMgrPtr().get();
     if (lmptr == NULL) {
-        isc_throw(NoLeaseManager, "no current lease manager is available");
+        bundy_throw(NoLeaseManager, "no current lease manager is available");
     }
     return (*lmptr);
 }
 
 
 }; // namespace dhcp
-}; // namespace isc
+}; // namespace bundy

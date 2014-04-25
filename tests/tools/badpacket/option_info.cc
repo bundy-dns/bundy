@@ -32,7 +32,7 @@ namespace {
 // * Minimum value specified on command line
 // * Maximum value specified on command line
 
-isc::badpacket::OptionInfo::Parameter option_information[] = {
+bundy::badpacket::OptionInfo::Parameter option_information[] = {
     {'Q', "qr",  2, 0x8000,  15,  0, 0,      1},
     {'O', "op",  2, 0x7800,  11,  0, 0,     15},
     {'A', "aa",  2, 0x0400,  10,  0, 0,      1},
@@ -52,7 +52,7 @@ isc::badpacket::OptionInfo::Parameter option_information[] = {
 
 }   // Anonymous namespace
 
-namespace isc {
+namespace bundy {
 namespace badpacket {
 
 // Locate the index of the information in the array from the short switch.
@@ -63,7 +63,7 @@ OptionInfo::getIndex(int c) {
             return (i);
         }
     }
-    isc_throw(isc::BadValue, "unknown option: " << c);
+    bundy_throw(bundy::BadValue, "unknown option: " << c);
 }
 
 // Methods to return values from the array
@@ -111,4 +111,4 @@ OptionInfo::maxval(int i) {
 }
 
 } // namespace badpacket
-} // namespace isc
+} // namespace bundy

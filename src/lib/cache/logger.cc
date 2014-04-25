@@ -14,10 +14,10 @@
 
 #include <cache/logger.h>
 
-namespace isc {
+namespace bundy {
 namespace cache {
 
-isc::log::Logger logger("cache");
+bundy::log::Logger logger("cache");
 
 }
 }

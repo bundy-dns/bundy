@@ -22,7 +22,7 @@
 
 #include <stdint.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// Forward declaration of OptionIntArray.
@@ -71,13 +71,13 @@ public:
     /// @param u universe (V4 or V6).
     /// @param type option type.
     ///
-    /// @throw isc::dhcp::InvalidDataType if data field type provided
+    /// @throw bundy::dhcp::InvalidDataType if data field type provided
     /// as template parameter is not a supported integer type.
     OptionIntArray(const Option::Universe u, const uint16_t type)
         : Option(u, type),
           values_(0) {
         if (!OptionDataTypeTraits<T>::integer_type) {
-            isc_throw(dhcp::InvalidDataType, "non-integer type");
+            bundy_throw(dhcp::InvalidDataType, "non-integer type");
         }
     }
 
@@ -87,15 +87,15 @@ public:
     /// @param type option type.
     /// @param buf buffer with option data (must not be empty).
     ///
-    /// @throw isc::OutOfRange if provided buffer is empty or its length
+    /// @throw bundy::OutOfRange if provided buffer is empty or its length
     /// is not multiple of size of the data type in bytes.
-    /// @throw isc::dhcp::InvalidDataType if data field type provided
+    /// @throw bundy::dhcp::InvalidDataType if data field type provided
     /// as template parameter is not a supported integer type.
     OptionIntArray(const Option::Universe u, const uint16_t type,
                    const OptionBuffer& buf)
         : Option(u, type) {
         if (!OptionDataTypeTraits<T>::integer_type) {
-            isc_throw(dhcp::InvalidDataType, "non-integer type");
+            bundy_throw(dhcp::InvalidDataType, "non-integer type");
         }
         unpack(buf.begin(), buf.end());
     }
@@ -111,15 +111,15 @@ public:
     /// @param begin iterator to first byte of option data.
     /// @param end iterator to end of option data (first byte after option end).
     ///
-    /// @throw isc::OutOfRange if provided buffer is empty or its length
+    /// @throw bundy::OutOfRange if provided buffer is empty or its length
     /// is not multiple of size of the data type in bytes.
-    /// @throw isc::dhcp::InvalidDataType if data field type provided
+    /// @throw bundy::dhcp::InvalidDataType if data field type provided
     /// as template parameter is not a supported integer type.
     OptionIntArray(const Option::Universe u, const uint16_t type,
                    OptionBufferConstIter begin, OptionBufferConstIter end)
         : Option(u, type) {
         if (!OptionDataTypeTraits<T>::integer_type) {
-            isc_throw(dhcp::InvalidDataType, "non-integer type");
+            bundy_throw(dhcp::InvalidDataType, "non-integer type");
         }
         unpack(begin, end);
     }
@@ -136,10 +136,10 @@ public:
     ///
     /// @param [out] buf buffer (option will be stored here)
     ///
-    /// @throw isc::dhcp::InvalidDataType if size of a data fields type is not
+    /// @throw bundy::dhcp::InvalidDataType if size of a data fields type is not
     /// equal to 1, 2 or 4 bytes. The data type is not checked in this function
     /// because it is checked in a constructor.
-    void pack(isc::util::OutputBuffer& buf) {
+    void pack(bundy::util::OutputBuffer& buf) {
         // Pack option header.
         packHeader(buf);
         // Pack option data.
@@ -160,7 +160,7 @@ public:
                 buf.writeUint32(values_[i]);
                 break;
             default:
-                isc_throw(dhcp::InvalidDataType, "non-integer type");
+                bundy_throw(dhcp::InvalidDataType, "non-integer type");
             }
         }
         // We don't pack sub-options here because we have array-type option.
@@ -176,15 +176,15 @@ public:
     /// @param begin iterator to first byte of option data
     /// @param end iterator to end of option data (first byte after option end)
     ///
-    /// @throw isc::dhcp::InvalidDataType if size of a data fields type is not
+    /// @throw bundy::dhcp::InvalidDataType if size of a data fields type is not
     /// equal to 1, 2 or 4 bytes. The data type is not checked in this function
     /// because it is checked in a constructor.
     virtual void unpack(OptionBufferConstIter begin, OptionBufferConstIter end) {
         if (distance(begin, end) == 0) {
-            isc_throw(OutOfRange, "option " << getType() << " empty");
+            bundy_throw(OutOfRange, "option " << getType() << " empty");
         }
         if (distance(begin, end) % sizeof(T) != 0) {
-            isc_throw(OutOfRange, "option " << getType() << " truncated");
+            bundy_throw(OutOfRange, "option " << getType() << " truncated");
         }
         // @todo consider what to do if buffer is longer than data type.
 
@@ -201,15 +201,15 @@ public:
                 values_.push_back(*begin);
                 break;
             case 2:
-                values_.push_back(isc::util::readUint16(&(*begin),
+                values_.push_back(bundy::util::readUint16(&(*begin),
                                       std::distance(begin, end)));
                 break;
             case 4:
-                values_.push_back(isc::util::readUint32(&(*begin),
+                values_.push_back(bundy::util::readUint32(&(*begin),
                                       std::distance(begin, end)));
                 break;
             default:
-                isc_throw(dhcp::InvalidDataType, "non-integer type");
+                bundy_throw(dhcp::InvalidDataType, "non-integer type");
             }
             // Use local variable to set a new value for this iterator.
             // When using OptionDataTypeTraits<T>::len directly some versions
@@ -254,7 +254,7 @@ private:
     std::vector<T> values_;
 };
 
-} // isc::dhcp namespace
-} // isc namespace
+} // bundy::dhcp namespace
+} // bundy namespace
 
 #endif // OPTION_INT_ARRAY_H

@@ -25,7 +25,7 @@
 
 #include <stdint.h>
 
-namespace isc {
+namespace bundy {
 namespace util {
 class InputBuffer;
 class OutputBuffer;
@@ -115,10 +115,10 @@ const unsigned int MAX_CHARSTRING_LEN = 255;
 /// recommended to prepend at least some part of the namespace because the
 /// same class name can be used in different namespaces.
 /// So, instead of doing
-/// \code using namespace isc::dns::rdata::in;
+/// \code using namespace bundy::dns::rdata::in;
 /// A& rdata_type_a; \endcode
 /// it is advisable to prepend at least \c in from the namespace:
-/// \code using namespace isc::dns::rdata;
+/// \code using namespace bundy::dns::rdata;
 /// in::A& rdata_type_a; \endcode
 ///
 /// In many cases, however, an application doesn't have to care about such
@@ -175,7 +175,7 @@ public:
     /// should be explicitly defined in the derived class.
     ///
     /// \param buffer An output buffer to store the wire data.
-    virtual void toWire(isc::util::OutputBuffer& buffer) const = 0;
+    virtual void toWire(bundy::util::OutputBuffer& buffer) const = 0;
 
     /// \brief Render the \c Rdata in the wire format into a
     /// \c MessageRenderer object.
@@ -296,7 +296,7 @@ public:
     /// \param buffer A reference to an \c InputBuffer object storing the
     /// \c Rdata to parse.
     /// \param rdata_len The length in buffer of the \c Rdata.  In bytes.
-    Generic(isc::util::InputBuffer& buffer, size_t rdata_len);
+    Generic(bundy::util::InputBuffer& buffer, size_t rdata_len);
 
     /// \brief Constructor from master lexer.
     ///
@@ -349,7 +349,7 @@ public:
     /// be thrown.
     ///
     /// \param buffer An output buffer to store the wire data.
-    virtual void toWire(isc::util::OutputBuffer& buffer) const;
+    virtual void toWire(bundy::util::OutputBuffer& buffer) const;
 
     /// \brief Render the \c generic::Generic in the wire format into a
     /// \c MessageRenderer object.
@@ -482,7 +482,7 @@ RdataPtr createRdata(const RRType& rrtype, const RRClass& rrclass,
 /// \return An \c RdataPtr object pointing to the created \c Rdata
 /// object.
 RdataPtr createRdata(const RRType& rrtype, const RRClass& rrclass,
-                     isc::util::InputBuffer& buffer, size_t len);
+                     bundy::util::InputBuffer& buffer, size_t len);
 
 /// \brief Create RDATA of a given pair of RR type and class, copying
 /// of another RDATA of same kind.

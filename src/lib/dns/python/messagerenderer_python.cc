@@ -22,10 +22,10 @@
 #include "pydnspp_common.h"
 #include "messagerenderer_python.h"
 
-using namespace isc::dns;
-using namespace isc::dns::python;
-using namespace isc::util;
-using namespace isc::util::python;
+using namespace bundy::dns;
+using namespace bundy::dns::python;
+using namespace bundy::util;
+using namespace bundy::util::python;
 
 namespace {
 // The s_* Class simply covers one instantiation of the object.
@@ -177,7 +177,7 @@ MessageRenderer_clear(s_MessageRenderer* self) {
 }
 } // end of unnamed namespace
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace python {
 PyTypeObject messagerenderer_type = {
@@ -242,7 +242,7 @@ PyTypeObject messagerenderer_type = {
 bool
 PyMessageRenderer_Check(PyObject* obj) {
     if (obj == NULL) {
-        isc_throw(PyCPPWrapperException, "obj argument NULL in typecheck");
+        bundy_throw(PyCPPWrapperException, "obj argument NULL in typecheck");
     }
     return (PyObject_TypeCheck(obj, &messagerenderer_type));
 }
@@ -250,7 +250,7 @@ PyMessageRenderer_Check(PyObject* obj) {
 MessageRenderer&
 PyMessageRenderer_ToMessageRenderer(PyObject* messagerenderer_obj) {
     if (messagerenderer_obj == NULL) {
-        isc_throw(PyCPPWrapperException,
+        bundy_throw(PyCPPWrapperException,
                   "obj argument NULL in MessageRenderer PyObject conversion");
     }
     s_MessageRenderer* messagerenderer = static_cast<s_MessageRenderer*>(messagerenderer_obj);
@@ -260,4 +260,4 @@ PyMessageRenderer_ToMessageRenderer(PyObject* messagerenderer_obj) {
 
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy

@@ -23,12 +23,12 @@
 
 #include <util/buffer.h>
 
-using namespace isc;
+using namespace bundy;
 
 namespace {
 
-using isc::util::InputBuffer;
-using isc::util::OutputBuffer;
+using bundy::util::InputBuffer;
+using bundy::util::OutputBuffer;
 
 class BufferTest : public ::testing::Test {
 protected:
@@ -69,20 +69,20 @@ TEST_F(BufferTest, inputBufferRead) {
 }
 
 TEST_F(BufferTest, inputBufferException) {
-    EXPECT_THROW(ibuffer.setPosition(6), isc::util::InvalidBufferPosition);
+    EXPECT_THROW(ibuffer.setPosition(6), bundy::util::InvalidBufferPosition);
 
     ibuffer.setPosition(sizeof(testdata));
-    EXPECT_THROW(ibuffer.readUint8(), isc::util::InvalidBufferPosition);
+    EXPECT_THROW(ibuffer.readUint8(), bundy::util::InvalidBufferPosition);
 
     ibuffer.setPosition(sizeof(testdata) - 1);
-    EXPECT_THROW(ibuffer.readUint16(), isc::util::InvalidBufferPosition);
+    EXPECT_THROW(ibuffer.readUint16(), bundy::util::InvalidBufferPosition);
 
     ibuffer.setPosition(sizeof(testdata) - 3);
-    EXPECT_THROW(ibuffer.readUint32(), isc::util::InvalidBufferPosition);
+    EXPECT_THROW(ibuffer.readUint32(), bundy::util::InvalidBufferPosition);
 
     ibuffer.setPosition(sizeof(testdata) - 4);
     EXPECT_THROW(ibuffer.readData(vdata, sizeof(vdata)),
-                 isc::util::InvalidBufferPosition);
+                 bundy::util::InvalidBufferPosition);
 }
 
 TEST_F(BufferTest, outputBufferExtend) {
@@ -150,15 +150,15 @@ TEST_F(BufferTest, outputBufferWriteat) {
     EXPECT_EQ(3, *(cp + 3));
 
     EXPECT_THROW(obuffer.writeUint8At(data16, 5),
-                 isc::util::InvalidBufferPosition);
+                 bundy::util::InvalidBufferPosition);
     EXPECT_THROW(obuffer.writeUint8At(data16, 4),
-                 isc::util::InvalidBufferPosition);
+                 bundy::util::InvalidBufferPosition);
     EXPECT_THROW(obuffer.writeUint16At(data16, 3),
-                 isc::util::InvalidBufferPosition);
+                 bundy::util::InvalidBufferPosition);
     EXPECT_THROW(obuffer.writeUint16At(data16, 4),
-                 isc::util::InvalidBufferPosition);
+                 bundy::util::InvalidBufferPosition);
     EXPECT_THROW(obuffer.writeUint16At(data16, 5),
-                 isc::util::InvalidBufferPosition);
+                 bundy::util::InvalidBufferPosition);
 }
 
 TEST_F(BufferTest, outputBufferSkip) {
@@ -189,9 +189,9 @@ TEST_F(BufferTest, outputBufferReadat) {
     }
 #ifdef EXPECT_DEATH
     // We use assert now, so we check it dies
-    if (!isc::util::unittests::runningOnValgrind()) {
+    if (!bundy::util::unittests::runningOnValgrind()) {
         EXPECT_DEATH({
-            isc::util::unittests::dontCreateCoreDumps();
+            bundy::util::unittests::dontCreateCoreDumps();
 
             try {
                 obuffer[sizeof(testdata)];
@@ -275,7 +275,7 @@ TEST_F(BufferTest, inputBufferReadVectorAll) {
     // ibuffer is 5 bytes long. Can't read past it.
     EXPECT_THROW(
         ibuffer.readVector(vec, 1),
-        isc::util::InvalidBufferPosition
+        bundy::util::InvalidBufferPosition
     );
 }
 

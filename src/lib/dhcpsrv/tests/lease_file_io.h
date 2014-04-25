@@ -17,7 +17,7 @@
 
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 namespace test {
 

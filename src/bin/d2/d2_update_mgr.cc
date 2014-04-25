@@ -20,7 +20,7 @@
 #include <iostream>
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 const size_t D2UpdateMgr::MAX_TRANSACTIONS_DEFAULT;
@@ -30,16 +30,16 @@ D2UpdateMgr::D2UpdateMgr(D2QueueMgrPtr& queue_mgr, D2CfgMgrPtr& cfg_mgr,
                          const size_t max_transactions)
     :queue_mgr_(queue_mgr), cfg_mgr_(cfg_mgr), io_service_(io_service) {
     if (!queue_mgr_) {
-        isc_throw(D2UpdateMgrError, "D2UpdateMgr queue manager cannot be null");
+        bundy_throw(D2UpdateMgrError, "D2UpdateMgr queue manager cannot be null");
     }
 
     if (!cfg_mgr_) {
-        isc_throw(D2UpdateMgrError,
+        bundy_throw(D2UpdateMgrError,
                   "D2UpdateMgr configuration manager cannot be null");
     }
 
     if (!io_service_) {
-        isc_throw(D2UpdateMgrError, "IOServicePtr cannot be null");
+        bundy_throw(D2UpdateMgrError, "IOServicePtr cannot be null");
     }
 
     // Use setter to do validation.
@@ -128,7 +128,7 @@ D2UpdateMgr::makeTransaction(dhcp_ddns::NameChangeRequestPtr& next_ncr) {
     const TransactionKey& key = next_ncr->getDhcid();
     if (findTransaction(key) != transactionListEnd()) {
         // This is programmatic error.  Caller(s) should be checking this.
-        isc_throw(D2UpdateMgrError, "Transaction already in progress for: "
+        bundy_throw(D2UpdateMgrError, "Transaction already in progress for: "
             << key.toStr());
     }
 
@@ -247,13 +247,13 @@ void
 D2UpdateMgr::setMaxTransactions(const size_t new_trans_max) {
     // Obviously we need at room for at least one transaction.
     if (new_trans_max < 1) {
-        isc_throw(D2UpdateMgrError, "D2UpdateMgr"
+        bundy_throw(D2UpdateMgrError, "D2UpdateMgr"
                   " maximum transactions limit must be greater than zero");
     }
 
     // Do not allow the list maximum to be set to less then current list size.
     if (new_trans_max < getTransactionCount()) {
-        isc_throw(D2UpdateMgrError, "D2UpdateMgr maximum transaction limit "
+        bundy_throw(D2UpdateMgrError, "D2UpdateMgr maximum transaction limit "
                   "cannot be less than the current transaction count :"
                   << getTransactionCount());
     }
@@ -272,5 +272,5 @@ D2UpdateMgr::getTransactionCount() const {
 }
 
 
-} // namespace isc::d2
-} // namespace isc
+} // namespace bundy::d2
+} // namespace bundy

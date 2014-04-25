@@ -30,9 +30,9 @@
 #include "nsas_test.h"
 
 using namespace std;
-using namespace isc::dns;
+using namespace bundy::dns;
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 
 /// \brief Text Fixture Class
@@ -252,4 +252,4 @@ TEST_F(HashTableTest, ClassTest) {
 
 
 } // namespace nsas
-} // namespace isc
+} // namespace bundy

@@ -35,11 +35,11 @@
 #include <sys/socket.h>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::util;
-using namespace isc::dns::rdata;
-using isc::UnitTestUtil;
-using isc::util::unittests::matchWireData;
+using namespace bundy::dns;
+using namespace bundy::util;
+using namespace bundy::dns::rdata;
+using bundy::UnitTestUtil;
+using bundy::util::unittests::matchWireData;
 
 namespace {
 class Rdata_IN_A_Test : public RdataTest {
@@ -61,7 +61,7 @@ const uint8_t wiredata_in_a[] = { 192, 0, 2, 1 };
 TEST_F(Rdata_IN_A_Test, createFromText) {
     // Normal case: no exception for either case, so the exception type
     // doesn't matter.
-    checkFromText<in::A, isc::Exception, isc::Exception>("192.0.2.1",
+    checkFromText<in::A, bundy::Exception, bundy::Exception>("192.0.2.1",
                                                          rdata_in_a, false,
                                                          false);
 

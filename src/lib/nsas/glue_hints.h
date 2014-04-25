@@ -22,7 +22,7 @@
 #include "nsas_types.h"
 #include "nameserver_address.h"
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 
 class GlueHints {
@@ -38,7 +38,7 @@ public:
     /// \param zone_name The name of the zone to find glue for
     /// \param delegation_message The Message that may contain glue
     GlueHints(const std::string& zone_name,
-              const isc::dns::Message& delegation_message);
+              const bundy::dns::Message& delegation_message);
 
     /// \brief Check if there is glue for the given AddressFamily
     ///
@@ -55,10 +55,10 @@ public:
     NameserverAddress getGlue(AddressFamily family) const;
 
 private:
-    void addGlueForName(const isc::dns::Name& name,
-                        const isc::dns::Message& message);
-    void addGlueForRRset(const isc::dns::RRsetPtr rrset,
-                         const isc::dns::Message& message);
+    void addGlueForName(const bundy::dns::Name& name,
+                        const bundy::dns::Message& message);
+    void addGlueForRRset(const bundy::dns::RRsetPtr rrset,
+                         const bundy::dns::Message& message);
 
     std::vector<NameserverAddress> addresses_v4;
     std::vector<NameserverAddress> addresses_v6;

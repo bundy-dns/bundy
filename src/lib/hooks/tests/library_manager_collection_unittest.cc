@@ -27,8 +27,8 @@
 #include <string>
 
 
-using namespace isc;
-using namespace isc::hooks;
+using namespace bundy;
+using namespace bundy::hooks;
 using namespace std;
 
 namespace {
@@ -45,7 +45,7 @@ class LibraryManagerCollectionTest : public ::testing::Test,
 /// protected methods made public for test purposes.
 
 class PublicLibraryManagerCollection
-                : public isc::hooks::LibraryManagerCollection {
+                : public bundy::hooks::LibraryManagerCollection {
 public:
     /// @brief Constructor
     ///

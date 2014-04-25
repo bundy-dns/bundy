@@ -16,33 +16,33 @@
 #include <dhcp6/tests/dhcp6_test_utils.h>
 #include <dhcp6/config_parser.h>
 
-using namespace isc::data;
-using namespace isc::dhcp;
-using namespace isc::asiolink;
+using namespace bundy::data;
+using namespace bundy::dhcp;
+using namespace bundy::asiolink;
 
-namespace isc {
+namespace bundy {
 namespace test {
 
 Dhcpv6SrvTest::Dhcpv6SrvTest()
 :srv_(0) {
-    subnet_ = isc::dhcp::Subnet6Ptr
-        (new isc::dhcp::Subnet6(isc::asiolink::IOAddress("2001:db8:1::"),
+    subnet_ = bundy::dhcp::Subnet6Ptr
+        (new bundy::dhcp::Subnet6(bundy::asiolink::IOAddress("2001:db8:1::"),
                                 48, 1000, 2000, 3000, 4000));
     subnet_->setIface("eth0");
 
-    pool_ = isc::dhcp::Pool6Ptr
-        (new isc::dhcp::Pool6(isc::dhcp::Lease::TYPE_NA,
-                              isc::asiolink::IOAddress("2001:db8:1:1::"),
+    pool_ = bundy::dhcp::Pool6Ptr
+        (new bundy::dhcp::Pool6(bundy::dhcp::Lease::TYPE_NA,
+                              bundy::asiolink::IOAddress("2001:db8:1:1::"),
                               64));
     subnet_->addPool(pool_);
 
-    isc::dhcp::CfgMgr::instance().deleteSubnets6();
-    isc::dhcp::CfgMgr::instance().addSubnet6(subnet_);
+    bundy::dhcp::CfgMgr::instance().deleteSubnets6();
+    bundy::dhcp::CfgMgr::instance().addSubnet6(subnet_);
 
     // configure PD pool
-    pd_pool_ = isc::dhcp::Pool6Ptr
-        (new isc::dhcp::Pool6(isc::dhcp::Lease::TYPE_PD,
-                              isc::asiolink::IOAddress("2001:db8:1:2::"),
+    pd_pool_ = bundy::dhcp::Pool6Ptr
+        (new bundy::dhcp::Pool6(bundy::dhcp::Lease::TYPE_PD,
+                              bundy::asiolink::IOAddress("2001:db8:1:2::"),
                               64, 80));
     subnet_->addPool(pd_pool_);
 }
@@ -122,8 +122,8 @@ Dhcpv6SrvTest::checkLease(const DuidPtr& duid, const OptionPtr& ia_na,
     return (lease);
 }
 
-isc::dhcp::Lease6Ptr
-Dhcpv6SrvTest::checkLease(const isc::dhcp::Lease6& lease) {
+bundy::dhcp::Lease6Ptr
+Dhcpv6SrvTest::checkLease(const bundy::dhcp::Lease6& lease) {
     Lease6Ptr lease_db = LeaseMgrFactory::instance().getLease6(lease.type_,
                                                                lease.addr_);
     if (!lease_db) {
@@ -168,8 +168,8 @@ Dhcpv6SrvTest::createMessage(uint8_t message_type, Lease::Type lease_type,
 }
 
 Option6IAPtr
-Dhcpv6SrvTest::createIA(isc::dhcp::Lease::Type lease_type,
-                        const isc::asiolink::IOAddress& addr,
+Dhcpv6SrvTest::createIA(bundy::dhcp::Lease::Type lease_type,
+                        const bundy::asiolink::IOAddress& addr,
                         const uint8_t prefix_len, const uint32_t iaid) {
     uint16_t code;
     OptionPtr subopt;
@@ -184,7 +184,7 @@ Dhcpv6SrvTest::createIA(isc::dhcp::Lease::Type lease_type,
                                          300, 500));
         break;
     default:
-        isc_throw(BadValue, "Invalid lease type specified "
+        bundy_throw(BadValue, "Invalid lease type specified "
                   << static_cast<int>(lease_type));
     }
 
@@ -278,7 +278,7 @@ Dhcpv6SrvTest::testRenewBasic(Lease::Type type, const std::string& existing_addr
         break;
     }
     default:
-        isc_throw(BadValue, "Invalid lease type");
+        bundy_throw(BadValue, "Invalid lease type");
     }
 
     // Check that T1, T2, preferred, valid and cltt were really updated
@@ -314,7 +314,7 @@ Dhcpv6SrvTest::testRenewReject(Lease::Type type, const IOAddress& addr) {
         code = D6O_IA_PD;
         prefix_len = pd_pool_->getLength();
     } else {
-        isc_throw(BadValue, "Invalid lease type");
+        bundy_throw(BadValue, "Invalid lease type");
     }
 
     // Quick sanity check that the address we're about to use is ok
@@ -418,7 +418,7 @@ Dhcpv6SrvTest::testReleaseBasic(Lease::Type type, const IOAddress& existing,
         code = D6O_IA_PD;
         prefix_len = pd_pool_->getLength();
     } else {
-        isc_throw(BadValue, "Invalid lease type");
+        bundy_throw(BadValue, "Invalid lease type");
     }
 
     // Generate client-id also duid_
@@ -494,7 +494,7 @@ Dhcpv6SrvTest::testReleaseReject(Lease::Type type, const IOAddress& addr) {
         code = D6O_IA_PD;
         prefix_len = pd_pool_->getLength();
     } else {
-        isc_throw(BadValue, "Invalid lease type");
+        bundy_throw(BadValue, "Invalid lease type");
     }
 
     // Quick sanity check that the address we're about to use is ok
@@ -613,5 +613,5 @@ NakedDhcpv6SrvTest::generateIA(uint16_t type, uint32_t iaid, uint32_t t1,
     return (ia);
 }
 
-}; // end of isc::test namespace
-}; // end of isc namespace
+}; // end of bundy::test namespace
+}; // end of bundy namespace

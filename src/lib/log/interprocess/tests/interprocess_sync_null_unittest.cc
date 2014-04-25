@@ -16,7 +16,7 @@
 #include <gtest/gtest.h>
 
 using namespace std;
-using namespace isc::log::interprocess;
+using namespace bundy::log::interprocess;
 
 namespace {
 

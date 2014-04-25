@@ -37,13 +37,13 @@
 #include <boost/foreach.hpp>
 #include <boost/scoped_ptr.hpp>
 
-using namespace isc::dns;
+using namespace bundy::dns;
 using namespace std;
-using namespace isc::dns::rdata;
+using namespace bundy::dns::rdata;
 using boost::lexical_cast;
 using boost::scoped_ptr;
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 // RAII-style transaction holder; roll back the transaction unless explicitly
 // committed
@@ -82,13 +82,13 @@ private:
 } // end unnamed namespace
 
 
-DatabaseClient::DatabaseClient(RRClass rrclass,
+DatabaseClient::DatabaseClient(const std::string& datasrc_name, RRClass rrclass,
                                boost::shared_ptr<DatabaseAccessor>
                                accessor) :
-    rrclass_(rrclass), accessor_(accessor)
+    DataSourceClient(datasrc_name), rrclass_(rrclass), accessor_(accessor)
 {
     if (!accessor_) {
-        isc_throw(isc::InvalidParameter,
+        bundy_throw(bundy::InvalidParameter,
                   "No database provided to DatabaseClient");
     }
 }
@@ -105,7 +105,7 @@ DatabaseClient::findZone(const Name& name) const {
     // Then super domains
     // Start from 1, as 0 is covered above
     for (size_t i = 1; i < name.getLabelCount(); ++i) {
-        isc::dns::Name superdomain(name.split(i));
+        bundy::dns::Name superdomain(name.split(i));
         zone = accessor_->getZone(superdomain.toText());
         if (zone.first) {
             return (FindResult(result::PARTIALMATCH,
@@ -143,7 +143,7 @@ DatabaseClient::deleteZone(const Name& zone_name) {
 }
 
 DatabaseClient::Finder::Finder(boost::shared_ptr<DatabaseAccessor> accessor,
-                               int zone_id, const isc::dns::Name& origin) :
+                               int zone_id, const bundy::dns::Name& origin) :
     accessor_(accessor),
     zone_id_(zone_id),
     origin_(origin)
@@ -165,17 +165,17 @@ namespace {
 // The DatabaseAccessor is passed to print the
 // database name in the log message if the TTL is
 // modified
-void addOrCreate(isc::dns::RRsetPtr& rrset,
-                    const isc::dns::Name& name,
-                    const isc::dns::RRClass& cls,
-                    const isc::dns::RRType& type,
-                    const isc::dns::RRTTL& ttl,
+void addOrCreate(bundy::dns::RRsetPtr& rrset,
+                    const bundy::dns::Name& name,
+                    const bundy::dns::RRClass& cls,
+                    const bundy::dns::RRType& type,
+                    const bundy::dns::RRTTL& ttl,
                     const std::string& rdata_str,
                     const DatabaseAccessor& db
                 )
 {
     if (!rrset) {
-        rrset.reset(new isc::dns::RRset(name, cls, type, ttl));
+        rrset.reset(new bundy::dns::RRset(name, cls, type, ttl));
     } else {
         // This is a check to make sure find() is not messing things up
         assert(type == rrset->getType());
@@ -189,12 +189,12 @@ void addOrCreate(isc::dns::RRsetPtr& rrset,
         }
     }
     try {
-        rrset->addRdata(isc::dns::rdata::createRdata(type, cls, rdata_str));
-    } catch (const isc::dns::rdata::InvalidRdataText& ivrt) {
+        rrset->addRdata(bundy::dns::rdata::createRdata(type, cls, rdata_str));
+    } catch (const bundy::dns::rdata::InvalidRdataText& ivrt) {
         // at this point, rrset may have been initialised for no reason,
         // and won't be used. But the caller would drop the shared_ptr
         // on such an error anyway, so we don't care.
-        isc_throw(DataSourceError,
+        bundy_throw(DataSourceError,
                     "bad rdata in database for " << name << " "
                     << type << ": " << ivrt.what());
     }
@@ -215,21 +215,21 @@ public:
     // NOTE: if we move this class to a public namespace,
     // we should add a type_covered argument, so as not
     // to have to do this cast here.
-    void addSig(isc::dns::rdata::RdataPtr sig_rdata) {
-        const isc::dns::RRType& type_covered =
-            static_cast<isc::dns::rdata::generic::RRSIG*>(
+    void addSig(bundy::dns::rdata::RdataPtr sig_rdata) {
+        const bundy::dns::RRType& type_covered =
+            static_cast<bundy::dns::rdata::generic::RRSIG*>(
                 sig_rdata.get())->typeCovered();
         sigs_[type_covered].push_back(sig_rdata);
     }
 
     // If the store contains signatures for the type of the given
     // rrset, they are appended to it.
-    void appendSignatures(isc::dns::RRsetPtr& rrset) const {
-        std::map<isc::dns::RRType,
-                 std::vector<isc::dns::rdata::RdataPtr> >::const_iterator
+    void appendSignatures(bundy::dns::RRsetPtr& rrset) const {
+        std::map<bundy::dns::RRType,
+                 std::vector<bundy::dns::rdata::RdataPtr> >::const_iterator
             found = sigs_.find(rrset->getType());
         if (found != sigs_.end()) {
-            BOOST_FOREACH(isc::dns::rdata::RdataPtr sig, found->second) {
+            BOOST_FOREACH(bundy::dns::rdata::RdataPtr sig, found->second) {
                 rrset->addRRsig(sig);
             }
         }
@@ -240,7 +240,7 @@ public:
     }
 
 private:
-    std::map<isc::dns::RRType, std::vector<isc::dns::rdata::RdataPtr> > sigs_;
+    std::map<bundy::dns::RRType, std::vector<bundy::dns::rdata::RdataPtr> > sigs_;
 };
 }
 
@@ -260,7 +260,7 @@ DatabaseClient::Finder::getRRsets(const string& name, const WantedTypes& types,
     }
     // It must not return NULL, that's a bug of the implementation
     if (!context) {
-        isc_throw(isc::Unexpected, "Iterator context null at " + name);
+        bundy_throw(bundy::Unexpected, "Iterator context null at " + name);
     }
 
     std::string columns[DatabaseAccessor::COLUMN_COUNT];
@@ -326,21 +326,21 @@ DatabaseClient::Finder::getRRsets(const string& name, const WantedTypes& types,
                 seen_other = true;
             }
         } catch (const InvalidRRType&) {
-            isc_throw(DataSourceError, "Invalid RRType in database for " <<
+            bundy_throw(DataSourceError, "Invalid RRType in database for " <<
                       name << ": " << columns[DatabaseAccessor::
                       TYPE_COLUMN]);
         } catch (const InvalidRRTTL&) {
-            isc_throw(DataSourceError, "Invalid TTL in database for " <<
+            bundy_throw(DataSourceError, "Invalid TTL in database for " <<
                       name << ": " << columns[DatabaseAccessor::
                       TTL_COLUMN]);
         } catch (const rdata::InvalidRdataText&) {
-            isc_throw(DataSourceError, "Invalid rdata in database for " <<
+            bundy_throw(DataSourceError, "Invalid rdata in database for " <<
                       name << ": " << columns[DatabaseAccessor::
                       RDATA_COLUMN]);
         }
     }
     if (seen_cname && seen_other) {
-        isc_throw(DataSourceError, "CNAME shares domain " << name <<
+        bundy_throw(DataSourceError, "CNAME shares domain " << name <<
                   " with something else");
     }
     if (!sig_store.empty()) {
@@ -365,7 +365,7 @@ DatabaseClient::Finder::hasSubdomains(const std::string& name) {
         context(accessor_->getRecords(name, zone_id_, true));
     // It must not return NULL, that's a bug of the implementation
     if (!context) {
-        isc_throw(isc::Unexpected, "Iterator context null at " + name);
+        bundy_throw(bundy::Unexpected, "Iterator context null at " + name);
     }
 
     std::string columns[DatabaseAccessor::COLUMN_COUNT];
@@ -444,8 +444,8 @@ FINAL_TYPES() {
 }
 
 ZoneFinderContextPtr
-DatabaseClient::Finder::findAll(const isc::dns::Name& name,
-                                std::vector<isc::dns::ConstRRsetPtr>& target,
+DatabaseClient::Finder::findAll(const bundy::dns::Name& name,
+                                std::vector<bundy::dns::ConstRRsetPtr>& target,
                                 const FindOptions options)
 {
     return (ZoneFinderContextPtr(new GenericContext(
@@ -456,12 +456,12 @@ DatabaseClient::Finder::findAll(const isc::dns::Name& name,
 }
 
 ZoneFinderContextPtr
-DatabaseClient::Finder::find(const isc::dns::Name& name,
-                             const isc::dns::RRType& type,
+DatabaseClient::Finder::find(const bundy::dns::Name& name,
+                             const bundy::dns::RRType& type,
                              const FindOptions options)
 {
     if (type == RRType::ANY()) {
-        isc_throw(isc::Unexpected, "Use findAll to answer ANY");
+        bundy_throw(bundy::Unexpected, "Use findAll to answer ANY");
     }
     return (ZoneFinderContextPtr(new GenericContext(
                                      *this, options,
@@ -470,11 +470,11 @@ DatabaseClient::Finder::find(const isc::dns::Name& name,
 }
 
 DatabaseClient::Finder::DelegationSearchResult
-DatabaseClient::Finder::findDelegationPoint(const isc::dns::Name& name,
+DatabaseClient::Finder::findDelegationPoint(const bundy::dns::Name& name,
                                             const FindOptions options)
 {
     // Result of search
-    isc::dns::ConstRRsetPtr result_rrset;
+    bundy::dns::ConstRRsetPtr result_rrset;
     ZoneFinder::Result result_status = SUCCESS;
 
     // Are we searching for glue?
@@ -492,7 +492,7 @@ DatabaseClient::Finder::findDelegationPoint(const isc::dns::Name& name,
     // case, we return the delegation instead (see RFC 1034, section 4.3.3).
     // To save a new search, we record the location of the delegation cut when
     // we encounter it here.
-    isc::dns::ConstRRsetPtr first_ns;
+    bundy::dns::ConstRRsetPtr first_ns;
 
     // We want to search from the apex down.  We are given the full domain
     // name so we have to do some manipulation to ensure that when we start
@@ -568,7 +568,7 @@ DatabaseClient::Finder::findDelegationPoint(const isc::dns::Name& name,
                 result_rrset = dni->second;
                 result_status = DNAME;
                 if (result_rrset->getRdataCount() != 1) {
-                    isc_throw(DataSourceError, "DNAME at " << superdomain <<
+                    bundy_throw(DataSourceError, "DNAME at " << superdomain <<
                               " has " << result_rrset->getRdataCount() <<
                               " rdata, 1 expected");
                 }
@@ -665,7 +665,7 @@ DatabaseClient::Finder::findWildcardMatch(
                 // About to use first_ns.  The only way this can be set is if
                 // we are searching for glue, so do a sanity check.
                 if ((options & FIND_GLUE_OK) == 0) {
-                    isc_throw(Unexpected, "Inconsistent conditions during "
+                    bundy_throw(Unexpected, "Inconsistent conditions during "
                               "cancel of wilcard search for " <<
                               name.toText() << ": find_ns non-null when not "
                               "processing glue request");
@@ -713,7 +713,7 @@ ZoneFinder::ResultContext
 DatabaseClient::Finder::logAndCreateResult(
     const Name& name, const string* wildname, const RRType& type,
     ZoneFinder::Result code, ConstRRsetPtr rrset,
-    const isc::log::MessageID& log_id, FindResultFlags flags) const
+    const bundy::log::MessageID& log_id, FindResultFlags flags) const
 {
     if (rrset) {
         if (wildname == NULL) {
@@ -796,7 +796,7 @@ DatabaseClient::Finder::FindDNSSECContext::isNSEC() {
     return (is_nsec_);
 }
 
-isc::dns::ConstRRsetPtr
+bundy::dns::ConstRRsetPtr
 DatabaseClient::Finder::FindDNSSECContext::getDNSSECRRset(
     const FoundRRsets& found_set)
 {
@@ -812,7 +812,7 @@ DatabaseClient::Finder::FindDNSSECContext::getDNSSECRRset(
     }
 }
 
-isc::dns::ConstRRsetPtr
+bundy::dns::ConstRRsetPtr
 DatabaseClient::Finder::FindDNSSECContext::getDNSSECRRset(const Name &name,
                                                           bool covering)
 {
@@ -829,7 +829,7 @@ DatabaseClient::Finder::FindDNSSECContext::getDNSSECRRset(const Name &name,
         if (nci != found.second.end()) {
             return (nci->second);
         }
-    } catch (const isc::NotImplemented&) {
+    } catch (const bundy::NotImplemented&) {
         // This happens when the underlying database accessor doesn't support
         // findPreviousName() (it probably doesn't support DNSSEC at all) but
         // there is somehow an NSEC RR at the zone apex.  We log the fact but
@@ -859,7 +859,7 @@ DatabaseClient::Finder::findOnNameResult(const Name& name,
                                          const bool is_origin,
                                          const FoundRRsets& found,
                                          const string* wildname,
-                                         std::vector<isc::dns::ConstRRsetPtr>*
+                                         std::vector<bundy::dns::ConstRRsetPtr>*
                                          target, FindDNSSECContext& dnssec_ctx)
 {
     const bool wild = (wildname != NULL);
@@ -896,7 +896,7 @@ DatabaseClient::Finder::findOnNameResult(const Name& name,
         // canonical name and the original RR type.) First though, do a sanity
         // check to ensure that there is only one RR in the CNAME RRset.
         if (cni->second->getRdataCount() != 1) {
-            isc_throw(DataSourceError, "CNAME with " <<
+            bundy_throw(DataSourceError, "CNAME with " <<
                       cni->second->getRdataCount() << " rdata at " << name <<
                       ", expected 1");
         }
@@ -970,7 +970,7 @@ ZoneFinder::ResultContext
 DatabaseClient::Finder::findNoNameResult(const Name& name, const RRType& type,
                                          FindOptions options,
                                          const DelegationSearchResult& dresult,
-                                         std::vector<isc::dns::ConstRRsetPtr>*
+                                         std::vector<bundy::dns::ConstRRsetPtr>*
                                          target, FindDNSSECContext& dnssec_ctx)
 {
     // On entry to this method, we know that the database doesn't have any
@@ -1022,7 +1022,7 @@ DatabaseClient::Finder::findInternal(const Name& name, const RRType& type,
         name.compare(getOrigin()).getRelation();
     if (reln != NameComparisonResult::SUBDOMAIN &&
         reln != NameComparisonResult::EQUAL) {
-        isc_throw(OutOfZone, name.toText() << " not in " << getOrigin());
+        bundy_throw(OutOfZone, name.toText() << " not in " << getOrigin());
     }
 
     // First, go through all superdomains from the origin down, searching for
@@ -1079,7 +1079,7 @@ DatabaseClient::Finder::findNSEC3(const Name& name, bool recursive) {
     const NameComparisonResult cmp_result(name.compare(getOrigin()));
     if (cmp_result.getRelation() != NameComparisonResult::EQUAL &&
         cmp_result.getRelation() != NameComparisonResult::SUBDOMAIN) {
-        isc_throw(OutOfZone, "findNSEC3 attempt for out-of-zone name: " <<
+        bundy_throw(OutOfZone, "findNSEC3 attempt for out-of-zone name: " <<
                   name << ", zone: " << getOrigin() << "/" << getClass());
     }
 
@@ -1091,7 +1091,7 @@ DatabaseClient::Finder::findNSEC3(const Name& name, bool recursive) {
     const FoundIterator param(nsec3param.second.find(RRType::NSEC3PARAM()));
     if (!nsec3param.first || param == nsec3param.second.end()) {
         // No NSEC3 params? :-(
-        isc_throw(DataSourceError, "findNSEC3 attempt for non NSEC3 signed " <<
+        bundy_throw(DataSourceError, "findNSEC3 attempt for non NSEC3 signed " <<
                   "zone: " << getOrigin() << "/" << getClass());
     }
     // This takes the RRset received from the find method, takes the first RR
@@ -1125,7 +1125,7 @@ DatabaseClient::Finder::findNSEC3(const Name& name, bool recursive) {
             context(accessor_->getNSEC3Records(hash, zone_id_));
 
         if (!context) {
-            isc_throw(Unexpected, "Iterator context null for hash " + hash);
+            bundy_throw(Unexpected, "Iterator context null for hash " + hash);
         }
 
         const FoundRRsets nsec3(getRRsets(hash + "." + otext, NSEC3_TYPES(),
@@ -1136,7 +1136,7 @@ DatabaseClient::Finder::findNSEC3(const Name& name, bool recursive) {
             // We found an exact match against the current label.
             const FoundIterator it(nsec3.second.find(RRType::NSEC3()));
             if (it == nsec3.second.end()) {
-                isc_throw(DataSourceError, "Hash " + hash +
+                bundy_throw(DataSourceError, "Hash " + hash +
                           "exists, but no NSEC3 there");
             }
 
@@ -1160,13 +1160,13 @@ DatabaseClient::Finder::findNSEC3(const Name& name, bool recursive) {
                                                    context));
 
             if (!prev_nsec3.first) {
-                isc_throw(DataSourceError, "Hash " + prevHash + " returned "
+                bundy_throw(DataSourceError, "Hash " + prevHash + " returned "
                           "from findPreviousNSEC3Hash, but it is empty");
             }
             const FoundIterator
                 prev_it(prev_nsec3.second.find(RRType::NSEC3()));
             if (prev_it == prev_nsec3.second.end()) {
-                isc_throw(DataSourceError, "The previous hash " + prevHash +
+                bundy_throw(DataSourceError, "The previous hash " + prevHash +
                           "exists, but does not contain the NSEC3");
             }
 
@@ -1186,7 +1186,7 @@ DatabaseClient::Finder::findNSEC3(const Name& name, bool recursive) {
 
     // The zone must contain at least the apex and that one should match
     // exactly. If that doesn't happen, we have a problem.
-    isc_throw(DataSourceError, "recursive findNSEC3 mode didn't stop, likely a "
+    bundy_throw(DataSourceError, "recursive findNSEC3 mode didn't stop, likely a "
               "broken NSEC3 zone: " << otext << "/" << getClass());
 }
 
@@ -1196,8 +1196,8 @@ DatabaseClient::Finder::findPreviousName(const Name& name) const {
                                                  name.reverse().toText()));
     try {
         return (Name(str));
-    } catch (const isc::dns::NameParserException&) {
-        isc_throw(DataSourceError, "Bad name " + str +
+    } catch (const bundy::dns::NameParserException&) {
+        bundy_throw(DataSourceError, "Bad name " + str +
                   " from findPreviousName");
     }
 }
@@ -1207,10 +1207,10 @@ DatabaseClient::Finder::getOrigin() const {
     return (origin_);
 }
 
-isc::dns::RRClass
+bundy::dns::RRClass
 DatabaseClient::Finder::getClass() const {
     // TODO Implement
-    return isc::dns::RRClass::IN();
+    return bundy::dns::RRClass::IN();
 }
 
 namespace {
@@ -1236,7 +1236,7 @@ public:
         const pair<bool, int> zone(accessor_->getZone(zone_name.toText()));
         if (!zone.first) {
             // No such zone, can't continue
-            isc_throw(NoSuchZone, "Zone " + zone_name.toText() +
+            bundy_throw(NoSuchZone, "Zone " + zone_name.toText() +
                       " can not be iterated, because it doesn't exist "
                       "in this data source");
         }
@@ -1253,7 +1253,7 @@ public:
         context_ = accessor_->getAllRecords(zone.second);
         // It must not return NULL, that's a bug of the implementation
         if (!context_) {
-            isc_throw(isc::Unexpected, "Iterator context null at " +
+            bundy_throw(bundy::Unexpected, "Iterator context null at " +
                       zone_name.toText());
         }
 
@@ -1271,9 +1271,9 @@ public:
         return (soa_);
     }
 
-    virtual isc::dns::ConstRRsetPtr getNextRRset() {
+    virtual bundy::dns::ConstRRsetPtr getNextRRset() {
         if (!ready_) {
-            isc_throw(isc::Unexpected, "Iterating past the zone end");
+            bundy_throw(bundy::Unexpected, "Iterating past the zone end");
         }
         if (!data_ready_) {
             // At the end of zone
@@ -1376,7 +1376,7 @@ private:
 }
 
 ZoneIteratorPtr
-DatabaseClient::getIterator(const isc::dns::Name& name,
+DatabaseClient::getIterator(const bundy::dns::Name& name,
                             bool separate_rrs) const
 {
     ZoneIteratorPtr iterator = ZoneIteratorPtr(new DatabaseIterator(
@@ -1389,11 +1389,11 @@ DatabaseClient::getIterator(const isc::dns::Name& name,
 }
 
 /// \brief Database implementation of RRsetCollectionBase.
-class RRsetCollection : public isc::datasrc::RRsetCollectionBase {
+class RRsetCollection : public bundy::datasrc::RRsetCollectionBase {
 public:
     /// \brief Constructor.
-    RRsetCollection(ZoneUpdater& updater, const isc::dns::RRClass& rrclass) :
-        isc::datasrc::RRsetCollectionBase(updater, rrclass)
+    RRsetCollection(ZoneUpdater& updater, const bundy::dns::RRClass& rrclass) :
+        bundy::datasrc::RRsetCollectionBase(updater, rrclass)
     {}
 
     /// \brief A wrapper around \c disable() so that it can be used as a
@@ -1442,7 +1442,7 @@ public:
 
     virtual ZoneFinder& getFinder() { return (*finder_); }
 
-    virtual isc::dns::RRsetCollectionBase& getRRsetCollection() {
+    virtual bundy::dns::RRsetCollectionBase& getRRsetCollection() {
         if (!rrset_collection_) {
             // This is only assigned the first time and remains for the
             // lifetime of the DatabaseUpdater.
@@ -1475,7 +1475,7 @@ private:
     DiffPhase diff_phase_;
     Serial serial_;
     boost::scoped_ptr<DatabaseClient::Finder> finder_;
-    boost::shared_ptr<isc::datasrc::RRsetCollection> rrset_collection_;
+    boost::shared_ptr<bundy::datasrc::RRsetCollection> rrset_collection_;
 
     // This is a set of validation checks commonly used for addRRset() and
     // deleteRRset to minimize duplicate code logic and to make the main
@@ -1493,33 +1493,33 @@ DatabaseUpdater::validateAddOrDelete(const char* const op_str,
                                      DiffPhase current_phase) const
 {
     if (committed_) {
-        isc_throw(DataSourceError, op_str << " attempt after commit to zone: "
+        bundy_throw(DataSourceError, op_str << " attempt after commit to zone: "
                   << zone_name_ << "/" << zone_class_);
     }
     if (rrset.getRdataCount() == 0) {
-        isc_throw(DataSourceError, op_str << " attempt with an empty RRset: "
+        bundy_throw(DataSourceError, op_str << " attempt with an empty RRset: "
                   << rrset.getName() << "/" << zone_class_ << "/"
                   << rrset.getType());
     }
     if (rrset.getClass() != zone_class_) {
-        isc_throw(DataSourceError, op_str << " attempt for a different class "
+        bundy_throw(DataSourceError, op_str << " attempt for a different class "
                   << zone_name_ << "/" << zone_class_ << ": "
                   << rrset.toText());
     }
     if (rrset.getRRsig()) {
-        isc_throw(DataSourceError, op_str << " attempt for RRset with RRSIG "
+        bundy_throw(DataSourceError, op_str << " attempt for RRset with RRSIG "
                   << zone_name_ << "/" << zone_class_ << ": "
                   << rrset.toText());
     }
     if (journaling_) {
         const RRType rrtype(rrset.getType());
         if (rrtype == RRType::SOA() && diff_phase_ != prev_phase) {
-            isc_throw(isc::BadValue, op_str << " attempt in an invalid "
+            bundy_throw(bundy::BadValue, op_str << " attempt in an invalid "
                       << "diff phase: " << diff_phase_ << ", rrset: " <<
                       rrset.toText());
         }
         if (rrtype != RRType::SOA() && diff_phase_ != current_phase) {
-            isc_throw(isc::BadValue, "diff state change by non SOA: "
+            bundy_throw(bundy::BadValue, "diff state change by non SOA: "
                       << rrset.toText());
         }
     }
@@ -1607,7 +1607,7 @@ isNSEC3KindType(RRType rrtype, const Rdata& rdata) {
 void
 DatabaseUpdater::addRRset(const AbstractRRset& rrset) {
     if (rrset_collection_) {
-        isc_throw(InvalidOperation,
+        bundy_throw(InvalidOperation,
                   "Cannot add RRset after an RRsetCollection has been "
                   "requested for ZoneUpdater for "
                   << zone_name_ << "/" << zone_class_ << " on "
@@ -1671,7 +1671,7 @@ DatabaseUpdater::addRRset(const AbstractRRset& rrset) {
 void
 DatabaseUpdater::deleteRRset(const AbstractRRset& rrset) {
     if (rrset_collection_) {
-        isc_throw(InvalidOperation,
+        bundy_throw(InvalidOperation,
                   "Cannot delete RRset after an RRsetCollection has been "
                   "requested for ZoneUpdater for "
                   << zone_name_ << "/" << zone_class_ << " on "
@@ -1730,12 +1730,12 @@ DatabaseUpdater::deleteRRset(const AbstractRRset& rrset) {
 void
 DatabaseUpdater::commit() {
     if (committed_) {
-        isc_throw(DataSourceError, "Duplicate commit attempt for "
+        bundy_throw(DataSourceError, "Duplicate commit attempt for "
                   << zone_name_ << "/" << zone_class_ << " on "
                   << db_name_);
     }
     if (journaling_ && diff_phase_ == DELETE) {
-        isc_throw(isc::BadValue, "Update sequence not complete");
+        bundy_throw(bundy::BadValue, "Update sequence not complete");
     }
     accessor_->commit();
     committed_ = true; // make sure the destructor won't trigger rollback
@@ -1755,11 +1755,11 @@ DatabaseUpdater::commit() {
 
 // The updater factory
 ZoneUpdaterPtr
-DatabaseClient::getUpdater(const isc::dns::Name& name, bool replace,
+DatabaseClient::getUpdater(const bundy::dns::Name& name, bool replace,
                            bool journaling) const
 {
     if (replace && journaling) {
-        isc_throw(isc::BadValue, "Can't store journal and replace the whole "
+        bundy_throw(bundy::BadValue, "Can't store journal and replace the whole "
                   "zone at the same time");
     }
     boost::shared_ptr<DatabaseAccessor> update_accessor(accessor_->clone());
@@ -1793,7 +1793,7 @@ public:
     virtual ~DatabaseJournalReader() {}
     virtual ConstRRsetPtr getNextDiff() {
         if (finished_) {
-            isc_throw(InvalidOperation,
+            bundy_throw(InvalidOperation,
                       "Diff read attempt past the end of sequence on "
                       << accessor_->getDBName());
         }
@@ -1824,7 +1824,7 @@ public:
             LOG_ERROR(logger, DATASRC_DATABASE_JOURNALREADER_BADDATA).
                 arg(zone_).arg(rrclass_).arg(accessor_->getDBName()).
                 arg(begin_).arg(end_).arg(ex.what());
-            isc_throw(DataSourceError, "Failed to create RRset from diff on "
+            bundy_throw(DataSourceError, "Failed to create RRset from diff on "
                       << accessor_->getDBName());
         }
     }
@@ -1841,7 +1841,7 @@ private:
 
 // The JournalReader factory
 pair<ZoneJournalReader::Result, ZoneJournalReaderPtr>
-DatabaseClient::getJournalReader(const isc::dns::Name& zone,
+DatabaseClient::getJournalReader(const bundy::dns::Name& zone,
                                  uint32_t begin_serial,
                                  uint32_t end_serial) const
 {

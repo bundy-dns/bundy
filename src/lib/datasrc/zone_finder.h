@@ -25,7 +25,7 @@
 #include <utility>
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 
 /// \brief Out of zone exception
@@ -125,20 +125,20 @@ protected:
     /// ZoneFinder implementations.  This is therefore defined as protected.
     struct ResultContext {
         ResultContext(Result code_param,
-                      isc::dns::ConstRRsetPtr rrset_param,
+                      bundy::dns::ConstRRsetPtr rrset_param,
                       FindResultFlags flags_param = RESULT_DEFAULT) :
             code(code_param), rrset(rrset_param), flags(flags_param)
         {}
         const Result code;
-        const isc::dns::ConstRRsetPtr rrset;
+        const bundy::dns::ConstRRsetPtr rrset;
         const FindResultFlags flags;
     };
 
 public:
     /// \brief A helper function to strip RRSIGs when FIND_DNSSEC is not
     /// requested.
-    static isc::dns::ConstRRsetPtr
-    stripRRsigs(isc::dns::ConstRRsetPtr rp, const FindOptions options);
+    static bundy::dns::ConstRRsetPtr
+    stripRRsigs(bundy::dns::ConstRRsetPtr rp, const FindOptions options);
 
     /// \brief Context of the result of a find() call.
     ///
@@ -194,7 +194,7 @@ public:
         virtual ~Context() {}
 
         const Result code;
-        const isc::dns::ConstRRsetPtr rrset;
+        const bundy::dns::ConstRRsetPtr rrset;
 
         /// Return true iff find() results in a wildcard match.
         bool isWildcard() const { return ((flags_ & RESULT_WILDCARD) != 0); }
@@ -257,8 +257,8 @@ public:
         /// \param result A vector to which any found additional RRsets are
         /// to be inserted.
         void getAdditional(
-            const std::vector<isc::dns::RRType>& requested_types,
-            std::vector<isc::dns::ConstRRsetPtr>& result)
+            const std::vector<bundy::dns::RRType>& requested_types,
+            std::vector<bundy::dns::ConstRRsetPtr>& result)
         {
             // Perform common checks, and delegate the process to the default
             // or specialized implementation.
@@ -297,7 +297,7 @@ public:
         /// was not transferred to the caller; it cannot be assumed to be
         /// valid after the originating \c Context object is destroyed.
         /// Also, the caller must not try to delete the returned object.
-        virtual const std::vector<isc::dns::ConstRRsetPtr>*
+        virtual const std::vector<bundy::dns::ConstRRsetPtr>*
         getAllRRsets() const = 0;
 
         /// \brief Actual implementation of getAdditional().
@@ -309,8 +309,8 @@ public:
         /// The default version of this implementation requires both
         /// \c getFinder() and \c getAllRRsets() return valid results.
         virtual void getAdditionalImpl(
-            const std::vector<isc::dns::RRType>& requested_types,
-            std::vector<isc::dns::ConstRRsetPtr>& result);
+            const std::vector<bundy::dns::RRType>& requested_types,
+            std::vector<bundy::dns::ConstRRsetPtr>& result);
 
     private:
         const FindResultFlags flags_;
@@ -359,20 +359,20 @@ public:
         ///       \c findAll(), storing the RRsets to be returned.
         GenericContext(ZoneFinder& finder, FindOptions options,
                        const ResultContext& result,
-                       const std::vector<isc::dns::ConstRRsetPtr>& all_set) :
+                       const std::vector<bundy::dns::ConstRRsetPtr>& all_set) :
             Context(options, result), finder_(finder), all_set_(all_set)
         {}
 
     protected:
         virtual ZoneFinder* getFinder() { return (&finder_); }
-        virtual const std::vector<isc::dns::ConstRRsetPtr>*
+        virtual const std::vector<bundy::dns::ConstRRsetPtr>*
         getAllRRsets() const {
             return (&all_set_);
         }
 
     private:
         ZoneFinder& finder_;
-        std::vector<isc::dns::ConstRRsetPtr> all_set_;
+        std::vector<bundy::dns::ConstRRsetPtr> all_set_;
     };
 
     ///
@@ -396,10 +396,10 @@ public:
     /// These methods should never throw an exception.
     //@{
     /// Return the origin name of the zone.
-    virtual isc::dns::Name getOrigin() const = 0;
+    virtual bundy::dns::Name getOrigin() const = 0;
 
     /// Return the RR class of the zone.
-    virtual isc::dns::RRClass getClass() const = 0;
+    virtual bundy::dns::RRClass getClass() const = 0;
     //@}
 
     ///
@@ -573,8 +573,8 @@ public:
     /// \param options The search options.
     /// \return A \c FindContext object enclosing the search result
     ///         (see above).
-    virtual boost::shared_ptr<Context> find(const isc::dns::Name& name,
-                                            const isc::dns::RRType& type,
+    virtual boost::shared_ptr<Context> find(const bundy::dns::Name& name,
+                                            const bundy::dns::RRType& type,
                                             const FindOptions options
                                             = FIND_DEFAULT) = 0;
 
@@ -632,7 +632,7 @@ public:
     /// \return A \c FindContext object enclosing the search result.
     ///         See \c find().
     virtual boost::shared_ptr<Context> findAtOrigin(
-        const isc::dns::RRType& type, bool use_minttl,
+        const bundy::dns::RRType& type, bool use_minttl,
         FindOptions options);
 
 public:
@@ -653,8 +653,8 @@ public:
     /// \param options see find(), parameter options
     /// \return see find() and its result
     virtual boost::shared_ptr<Context> findAll(
-        const isc::dns::Name& name,
-        std::vector<isc::dns::ConstRRsetPtr> &target,
+        const bundy::dns::Name& name,
+        std::vector<bundy::dns::ConstRRsetPtr> &target,
         const FindOptions options = FIND_DEFAULT) = 0;
 
     /// A helper structure to represent the search result of \c findNSEC3().
@@ -664,8 +664,8 @@ public:
     /// represent the result.
     struct FindNSEC3Result {
         FindNSEC3Result(bool param_matched, uint8_t param_closest_labels,
-                        isc::dns::ConstRRsetPtr param_closest_proof,
-                        isc::dns::ConstRRsetPtr param_next_proof) :
+                        bundy::dns::ConstRRsetPtr param_closest_proof,
+                        bundy::dns::ConstRRsetPtr param_next_proof) :
             matched(param_matched), closest_labels(param_closest_labels),
             closest_proof(param_closest_proof),
             next_proof(param_next_proof)
@@ -679,10 +679,10 @@ public:
 
         /// Either the NSEC3 for the closest provable encloser of the given
         /// name or NSEC3 that covers the name
-        const isc::dns::ConstRRsetPtr closest_proof;
+        const bundy::dns::ConstRRsetPtr closest_proof;
 
         /// When non NULL, NSEC3 for the next closer name.
-        const isc::dns::ConstRRsetPtr next_proof;
+        const bundy::dns::ConstRRsetPtr next_proof;
     };
 
     /// Search the zone for the NSEC3 RR(s) that prove existence or non
@@ -756,7 +756,7 @@ public:
     /// \return The search result and whether or not the closest_proof is
     /// a matching NSEC3, in the form of \c FindNSEC3Result object.
     virtual FindNSEC3Result
-    findNSEC3(const isc::dns::Name& name, bool recursive) = 0;
+    findNSEC3(const bundy::dns::Name& name, bool recursive) = 0;
     //@}
 };
 

@@ -25,8 +25,8 @@
 #include <string.h>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::dns::master_lexer_internal;
+using namespace bundy::dns;
+using namespace bundy::dns::master_lexer_internal;
 
 namespace {
 

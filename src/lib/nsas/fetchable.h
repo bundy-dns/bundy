@@ -20,7 +20,7 @@
  * \short Interface of information that can be fetched.
  */
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 
 /**
@@ -61,6 +61,6 @@ class Fetchable {
 };
 
 } // namespace nsas
-} // namespace isc
+} // namespace bundy
 
 #endif // FETCHABLE_H

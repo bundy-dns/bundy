@@ -30,9 +30,9 @@
 
 using namespace std;
 using namespace boost::posix_time;
-using namespace isc;
-using namespace isc::dhcp;
-using namespace isc::perfdhcp;
+using namespace bundy;
+using namespace bundy::dhcp;
+using namespace bundy::perfdhcp;
 
 /// \brief Test Control class with protected members made public.
 ///
@@ -722,7 +722,7 @@ public:
 
         // Make sure that exception is thrown if the Reply message is NULL.
         EXPECT_THROW(tc.createMessageFromReply(msg_type, Pkt6Ptr()),
-                     isc::BadValue);
+                     bundy::BadValue);
 
     }
 
@@ -823,8 +823,8 @@ public:
     /// \brief Parse command line string with CommandOptions.
     ///
     /// \param cmdline command line string to be parsed.
-    /// \throw isc::Unexpected if unexpected error occured.
-    /// \throw isc::InvalidParameter if command line is invalid.
+    /// \throw bundy::Unexpected if unexpected error occured.
+    /// \throw bundy::InvalidParameter if command line is invalid.
     void processCmdLine(const std::string& cmdline) const {
         CommandOptionsHelper::process(cmdline);
     }
@@ -939,11 +939,11 @@ TEST_F(TestControlTest, MisMatchVerionServer) {
 
     // make sure we catch -6 paired with v4 address
     ASSERT_NO_THROW(processCmdLine("perfdhcp -l 127.0.0.1 -6 192.168.1.1"));
-    EXPECT_THROW(tc.openSocket(), isc::InvalidParameter);
+    EXPECT_THROW(tc.openSocket(), bundy::InvalidParameter);
 
     // make sure we catch -4 paired with v6 address
     ASSERT_NO_THROW(processCmdLine("perfdhcp -l 127.0.0.1 -4 ff02::1:2"));
-    EXPECT_THROW(tc.openSocket(), isc::InvalidParameter);
+    EXPECT_THROW(tc.openSocket(), bundy::InvalidParameter);
 }
 
 TEST_F(TestControlTest, GenerateMacAddress) {
@@ -958,7 +958,7 @@ TEST_F(TestControlTest, GenerateMacAddress) {
 }
 
 TEST_F(TestControlTest, Options4) {
-    using namespace isc::dhcp;
+    using namespace bundy::dhcp;
     NakedTestControl tc;
     // By default the IP version mode is V4 so there is no need to
     // parse command line to override the IP version. Note that
@@ -1010,7 +1010,7 @@ TEST_F(TestControlTest, Options4) {
 }
 
 TEST_F(TestControlTest, Options6) {
-    using namespace isc::dhcp;
+    using namespace bundy::dhcp;
 
     // Lets override the IP version to test V6 options (-6 parameter)
     ASSERT_NO_THROW(processCmdLine("perfdhcp -l 127.0.0.1 -6 all"));
@@ -1044,7 +1044,7 @@ TEST_F(TestControlTest, Options6) {
     EXPECT_THROW(
         Option::factory(Option::V6, D6O_ELAPSED_TIME,
                         OptionBuffer(elapsed_time_buf_size, elapsed_time_pattern)),
-        isc::BadValue
+        bundy::BadValue
     );
 
     // Validate the option type and universe.
@@ -1062,7 +1062,7 @@ TEST_F(TestControlTest, Options6) {
     EXPECT_EQ(Option::V6, opt_rapid_commit->getUniverse());
     EXPECT_EQ(D6O_RAPID_COMMIT, opt_rapid_commit->getType());
     // Rapid commit has no data payload.
-    EXPECT_THROW(opt_rapid_commit->getUint8(), isc::OutOfRange);
+    EXPECT_THROW(opt_rapid_commit->getUint8(), bundy::OutOfRange);
 
     // Validate the D6O_CLIENTID option.
     OptionBuffer duid(CommandOptions::instance().getDuidTemplate());
@@ -1420,7 +1420,7 @@ TEST_F(TestControlTest, PacketTemplates) {
     ASSERT_NO_THROW(
         processCmdLine("perfdhcp -l 127.0.0.1 -T " + file3 + " all")
     );
-    EXPECT_THROW(tc.initPacketTemplates(), isc::OutOfRange);
+    EXPECT_THROW(tc.initPacketTemplates(), bundy::OutOfRange);
 
     // Try to read empty file.
     std::string file4("test4.hex");
@@ -1428,7 +1428,7 @@ TEST_F(TestControlTest, PacketTemplates) {
     ASSERT_NO_THROW(
         processCmdLine("perfdhcp -l 127.0.0.1 -T " + file4 + " all")
     );
-    EXPECT_THROW(tc.initPacketTemplates(), isc::OutOfRange);
+    EXPECT_THROW(tc.initPacketTemplates(), bundy::OutOfRange);
 
     // Try reading file with non hexadecimal characters.
     std::string file5("test5.hex");
@@ -1436,7 +1436,7 @@ TEST_F(TestControlTest, PacketTemplates) {
     ASSERT_NO_THROW(
         processCmdLine("perfdhcp -l 127.0.0.1 -T " + file5 + " all")
     );
-    EXPECT_THROW(tc.initPacketTemplates(), isc::BadValue);
+    EXPECT_THROW(tc.initPacketTemplates(), bundy::BadValue);
 }
 
 TEST_F(TestControlTest, processRenew) {

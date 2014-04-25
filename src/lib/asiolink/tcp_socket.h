@@ -40,7 +40,7 @@
 #include <asiolink/io_service.h>
 #include <asiolink/tcp_endpoint.h>
 
-namespace isc {
+namespace bundy {
 namespace asiolink {
 
 /// \brief Buffer Too Large
@@ -155,7 +155,7 @@ public:
     virtual bool processReceivedData(const void* staging, size_t length,
                                      size_t& cumulative, size_t& offset,
                                      size_t& expected,
-                                     isc::util::OutputBufferPtr& outbuff);
+                                     bundy::util::OutputBufferPtr& outbuff);
 
     /// \brief Cancel I/O On Socket
     virtual void cancel();
@@ -178,14 +178,14 @@ private:
     // ASIO should really be just about sending and receiving data, the TCP
     // code should not do this.  If the protocol using this requires a two-byte
     // count, it should add it before calling this code.  (This may be best
-    // achieved by altering isc::dns::buffer to have pairs of methods:
+    // achieved by altering bundy::dns::buffer to have pairs of methods:
     // getLength()/getTCPLength(), getData()/getTCPData(), with the getTCPXxx()
     // methods taking into account a two-byte count field.)
     //
     // The option of sending the data in two operations, the count followed by
     // the data was discounted as that would lead to two callbacks which would
     // cause problems with the stackless coroutine code.
-    isc::util::OutputBufferPtr   send_buffer_;   ///< Send buffer
+    bundy::util::OutputBufferPtr   send_buffer_;   ///< Send buffer
 };
 
 // Constructor - caller manages socket
@@ -268,7 +268,7 @@ TCPSocket<C>::asyncSend(const void* data, size_t length,
             uint16_t count = boost::numeric_cast<uint16_t>(length);
 
             // Copy data into a buffer preceded by the count field.
-            send_buffer_.reset(new isc::util::OutputBuffer(length + 2));
+            send_buffer_.reset(new bundy::util::OutputBuffer(length + 2));
             send_buffer_->writeUint16(count);
             send_buffer_->writeData(data, length);
 
@@ -276,12 +276,12 @@ TCPSocket<C>::asyncSend(const void* data, size_t length,
             socket_.async_send(asio::buffer(send_buffer_->getData(),
                                send_buffer_->getLength()), callback);
         } catch (boost::numeric::bad_numeric_cast&) {
-            isc_throw(BufferTooLarge,
+            bundy_throw(BufferTooLarge,
                       "attempt to send buffer larger than 64kB");
         }
 
     } else {
-        isc_throw(SocketNotOpen,
+        bundy_throw(SocketNotOpen,
             "attempt to send on a TCP socket that is not open");
     }
 }
@@ -313,7 +313,7 @@ TCPSocket<C>::asyncReceive(void* data, size_t length, size_t offset,
         // Ensure we can write into the buffer and if so, set the pointer to
         // where the data will be written.
         if (offset >= length) {
-            isc_throw(BufferOverflow, "attempt to read into area beyond end of "
+            bundy_throw(BufferOverflow, "attempt to read into area beyond end of "
                                       "TCP receive buffer");
         }
         void* buffer_start = static_cast<void*>(static_cast<uint8_t*>(data) + offset);
@@ -322,7 +322,7 @@ TCPSocket<C>::asyncReceive(void* data, size_t length, size_t offset,
         socket_.async_receive(asio::buffer(buffer_start, length - offset), callback);
 
     } else {
-        isc_throw(SocketNotOpen,
+        bundy_throw(SocketNotOpen,
             "attempt to receive from a TCP socket that is not open");
     }
 }
@@ -333,7 +333,7 @@ template <typename C> bool
 TCPSocket<C>::processReceivedData(const void* staging, size_t length,
                                   size_t& cumulative, size_t& offset,
                                   size_t& expected,
-                                  isc::util::OutputBufferPtr& outbuff)
+                                  bundy::util::OutputBufferPtr& outbuff)
 {
     // Point to the data in the staging buffer and note how much there is.
     const uint8_t* data = static_cast<const uint8_t*>(staging);
@@ -358,7 +358,7 @@ TCPSocket<C>::processReceivedData(const void* staging, size_t length,
         }
 
         // Have enough data to interpret the packet count, so do so now.
-        expected = isc::util::readUint16(data, cumulative);
+        expected = bundy::util::readUint16(data, cumulative);
 
         // We have two bytes less of data to process.  Point to the start of the
         // data and adjust the packet size.  Note that at this point,
@@ -412,6 +412,6 @@ TCPSocket<C>::close() {
 }
 
 } // namespace asiolink
-} // namespace isc
+} // namespace bundy
 
 #endif // TCP_SOCKET_H

@@ -20,7 +20,7 @@
 ///
 /// Defines a set of types used within the Network Address Store.
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 
 /**

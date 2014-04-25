@@ -1,5 +1,5 @@
-/b10-dhcp6
-/b10-dhcp6.8
+/bundy-dhcp6
+/bundy-dhcp6.8
 /dhcp6_messages.cc
 /dhcp6_messages.h
 /spec_config.h

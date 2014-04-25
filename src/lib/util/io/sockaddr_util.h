@@ -25,7 +25,7 @@
 // implementation and test code, and are not intended to be used publicly.
 // The namespace "internal" indicates the intent.
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace io {
 namespace internal {

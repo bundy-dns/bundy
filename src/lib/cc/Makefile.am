@@ -4,7 +4,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/src/lib -I$(top_builddir)/src/lib
 AM_CPPFLAGS += $(BOOST_INCLUDES)
 AM_CPPFLAGS += -I$(top_srcdir)/src/lib/dns -I$(top_builddir)/src/lib/dns
 
-AM_CXXFLAGS = $(B10_CXXFLAGS)
+AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 if USE_GXX
 # ASIO header files used in session.cc will trigger the "unused-parameter"
 # warning.  Unfortunately there doesn't seem to be an easy way to selectively
@@ -14,13 +14,13 @@ AM_CXXFLAGS += -Wno-unused-parameter
 AM_CXXFLAGS += -fno-strict-aliasing
 endif
 
-lib_LTLIBRARIES = libb10-cc.la
-libb10_cc_la_SOURCES = data.cc data.h session.cc session.h
-libb10_cc_la_SOURCES += logger.cc logger.h
-nodist_libb10_cc_la_SOURCES = cc_messages.cc cc_messages.h
-libb10_cc_la_SOURCES += proto_defs.cc
-nodist_libb10_cc_la_SOURCES += proto_defs.h
-libb10_cc_la_LIBADD = $(top_builddir)/src/lib/log/libb10-log.la
+lib_LTLIBRARIES = libbundy-cc.la
+libbundy_cc_la_SOURCES = data.cc data.h session.cc session.h
+libbundy_cc_la_SOURCES += logger.cc logger.h
+nodist_libbundy_cc_la_SOURCES = cc_messages.cc cc_messages.h
+libbundy_cc_la_SOURCES += proto_defs.cc
+nodist_libbundy_cc_la_SOURCES += proto_defs.h
+libbundy_cc_la_LIBADD = $(top_builddir)/src/lib/log/libbundy-log.la
 
 CLEANFILES = *.gcno *.gcda session_config.h cc_messages.cc cc_messages.h \
 	proto_defs.h s-messages

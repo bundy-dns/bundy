@@ -15,7 +15,7 @@
 #include "memory_segment_local.h"
 #include <exceptions/exceptions.h>
 
-namespace isc {
+namespace bundy {
 namespace util {
 
 void*
@@ -38,7 +38,7 @@ MemorySegmentLocal::deallocate(void* ptr, size_t size) {
     }
 
     if (size > allocated_size_) {
-      isc_throw(OutOfRange, "Invalid size to deallocate: " << size
+      bundy_throw(OutOfRange, "Invalid size to deallocate: " << size
                 << "; currently allocated size: " << allocated_size_);
     }
 
@@ -74,4 +74,4 @@ MemorySegmentLocal::clearNamedAddressImpl(const char* name) {
 }
 
 } // namespace util
-} // namespace isc
+} // namespace bundy

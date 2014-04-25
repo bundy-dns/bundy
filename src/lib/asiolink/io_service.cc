@@ -21,7 +21,7 @@
 #include <asio.hpp>
 #include <asiolink/io_service.h>
 
-namespace isc {
+namespace bundy {
 namespace asiolink {
 
 namespace {
@@ -75,7 +75,7 @@ public:
 
     /// \brief Return the native \c io_service object used in this wrapper.
     ///
-    /// This is a short term work around to support other BIND 10 modules
+    /// This is a short term work around to support other BUNDY modules
     /// that share the same \c io_service with the authoritative server.
     /// It will eventually be removed once the wrapper interface is
     /// generalized.
@@ -123,4 +123,4 @@ IOService::post(const boost::function<void ()>& callback) {
 }
 
 } // namespace asiolink
-} // namespace isc
+} // namespace bundy

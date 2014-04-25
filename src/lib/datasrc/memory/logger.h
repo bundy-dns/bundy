@@ -25,12 +25,12 @@
 /// private header and should not be included in any publicly used
 /// header, only in local cc files.
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 
 /// \brief The logger for this library
-extern isc::log::Logger logger;
+extern bundy::log::Logger logger;
 
 /// \brief Trace basic operations
 const int DBG_TRACE_BASIC = DBGLVL_TRACE_BASIC;
@@ -43,7 +43,7 @@ const int DBG_TRACE_DETAILED = DBGLVL_TRACE_DETAIL;
 
 } // namespace memory
 } // namespace datasrc
-} // namespace isc
+} // namespace bundy
 
 #endif // DATASRC_MEMORY_LOGGER_H
 

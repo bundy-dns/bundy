@@ -29,23 +29,23 @@ namespace asio {
 class io_service;
 }
 
-namespace isc {
+namespace bundy {
     namespace cc {
         class SessionImpl;
 
-        class SessionError : public isc::Exception {
+        class SessionError : public bundy::Exception {
         public:
             SessionError(const char* file, size_t line, const char* what) :
-                isc::Exception(file, line, what) {}
+                bundy::Exception(file, line, what) {}
         };
 
         /// \brief A standard Exception class that is thrown when a
         /// blocking readData call does not read the given number of
         /// bytes before the timeout expires
-        class SessionTimeout : public isc::Exception {
+        class SessionTimeout : public bundy::Exception {
         public:
             SessionTimeout(const char* file, size_t line, const char* what) :
-                isc::Exception(file, line, what) {}
+                bundy::Exception(file, line, what) {}
         };
 
         /// \brief The AbstractSession class is an abstract base class that
@@ -80,14 +80,14 @@ namespace isc {
             //@}
             virtual void establish(const char* socket_file) = 0;
             virtual void disconnect() = 0;
-            virtual int group_sendmsg(isc::data::ConstElementPtr msg,
+            virtual int group_sendmsg(bundy::data::ConstElementPtr msg,
                                       std::string group,
                                       std::string instance =
                                           CC_INSTANCE_WILDCARD,
                                       std::string to = CC_TO_WILDCARD,
                                       bool want_answer = false) = 0;
-            virtual bool group_recvmsg(isc::data::ConstElementPtr& envelope,
-                                       isc::data::ConstElementPtr& msg,
+            virtual bool group_recvmsg(bundy::data::ConstElementPtr& envelope,
+                                       bundy::data::ConstElementPtr& msg,
                                        bool nonblock = true,
                                        int seq = -1) = 0;
             virtual void subscribe(std::string group,
@@ -95,8 +95,8 @@ namespace isc {
             virtual void unsubscribe(std::string group,
                              std::string instance = "*") = 0;
             virtual void startRead(boost::function<void()> read_callback) = 0;
-            virtual int reply(isc::data::ConstElementPtr envelope,
-                               isc::data::ConstElementPtr newmsg) = 0;
+            virtual int reply(bundy::data::ConstElementPtr envelope,
+                               bundy::data::ConstElementPtr newmsg) = 0;
             virtual bool hasQueuedMsgs() const = 0;
 
             /// \brief Sets the default timeout for blocking reads
@@ -145,18 +145,18 @@ namespace isc {
             ///     instead.
             /// \return The squence number of the message sent. It can be used
             ///     to wait for an answer by group_recvmsg.
-            virtual int group_sendmsg(isc::data::ConstElementPtr msg,
+            virtual int group_sendmsg(bundy::data::ConstElementPtr msg,
                                       std::string group,
                                       std::string instance = "*",
                                       std::string to = "*",
                                       bool want_answer = false);
 
-            virtual bool group_recvmsg(isc::data::ConstElementPtr& envelope,
-                                       isc::data::ConstElementPtr& msg,
+            virtual bool group_recvmsg(bundy::data::ConstElementPtr& envelope,
+                                       bundy::data::ConstElementPtr& msg,
                                        bool nonblock = true,
                                        int seq = -1);
-            virtual int reply(isc::data::ConstElementPtr envelope,
-                              isc::data::ConstElementPtr newmsg);
+            virtual int reply(bundy::data::ConstElementPtr envelope,
+                              bundy::data::ConstElementPtr newmsg);
             virtual bool hasQueuedMsgs() const;
             virtual void setTimeout(size_t milliseconds);
             virtual size_t getTimeout() const;
@@ -170,20 +170,20 @@ namespace isc {
             // replace them. It is not expected to be specialized by a derived
             // class. Actually, it is not expected to inherit from this class
             // to begin with.
-            virtual void sendmsg(isc::data::ConstElementPtr header);
-            virtual void sendmsg(isc::data::ConstElementPtr header,
-                                 isc::data::ConstElementPtr payload);
+            virtual void sendmsg(bundy::data::ConstElementPtr header);
+            virtual void sendmsg(bundy::data::ConstElementPtr header,
+                                 bundy::data::ConstElementPtr payload);
 
-            bool recvmsg(isc::data::ConstElementPtr& msg,
+            bool recvmsg(bundy::data::ConstElementPtr& msg,
                          bool nonblock = true,
                          int seq = -1);
-            bool recvmsg(isc::data::ConstElementPtr& env,
-                         isc::data::ConstElementPtr& msg,
+            bool recvmsg(bundy::data::ConstElementPtr& env,
+                         bundy::data::ConstElementPtr& msg,
                          bool nonblock = true,
                          int seq = -1);
         };
     } // namespace cc
-} // namespace isc
+} // namespace bundy
 
 #endif // ISC_SESSION_H
 

@@ -23,7 +23,7 @@
 #include <vector>
 #include <sstream>
 
-using namespace isc::asiolink;
+using namespace bundy::asiolink;
 
 TEST(IOAddressTest, fromText) {
     IOAddress io_address_v4("192.0.2.1");

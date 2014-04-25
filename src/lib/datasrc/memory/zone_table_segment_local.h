@@ -20,7 +20,7 @@
 
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 
@@ -40,7 +40,7 @@ protected:
     /// Instances are expected to be created by the factory method
     /// (\c ZoneTableSegment::create()), so this constructor is
     /// protected.
-    ZoneTableSegmentLocal(const isc::dns::RRClass& rrclass);
+    ZoneTableSegmentLocal(const bundy::dns::RRClass& rrclass);
 
 public:
     /// \brief Destructor
@@ -58,7 +58,7 @@ public:
 
     /// \brief Return the \c MemorySegment for the local zone table
     /// segment implementation (a \c MemorySegmentLocal instance).
-    virtual isc::util::MemorySegment& getMemorySegment();
+    virtual bundy::util::MemorySegment& getMemorySegment();
 
     /// \brief Return true if the segment is writable.
     ///
@@ -73,16 +73,16 @@ public:
     /// Resetting a local \c ZoneTableSegment is not supported at this
     /// time.
     ///
-    /// \throw isc::NotImplemented
+    /// \throw bundy::NotImplemented
     virtual void reset(MemorySegmentOpenMode mode,
-                       isc::data::ConstElementPtr params);
+                       bundy::data::ConstElementPtr params);
 
     /// \brief This method is not implemented.
     ///
     /// Clearing a local \c ZoneTableSegment is not supported at this
     /// time.
     ///
-    /// \throw isc::NotImplemented
+    /// \throw bundy::NotImplemented
     virtual void clear();
 
     /// \brief Return true if the segment is usable.
@@ -95,12 +95,12 @@ public:
 
 private:
     std::string impl_type_;
-    isc::util::MemorySegmentLocal mem_sgmt_;
+    bundy::util::MemorySegmentLocal mem_sgmt_;
     ZoneTableHeader header_;
 };
 
 } // namespace memory
 } // namespace datasrc
-} // namespace isc
+} // namespace bundy
 
 #endif // ZONE_TABLE_SEGMENT_LOCAL_H

@@ -24,7 +24,7 @@
 #include <string>
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief buffer types used in DHCP code.
@@ -110,7 +110,7 @@ public:
     ///
     /// @return instance of option.
     ///
-    /// @throw isc::InvalidOperation if there is no factory function
+    /// @throw bundy::InvalidOperation if there is no factory function
     ///        registered for specified option type.
     static OptionPtr factory(Option::Universe u,
                              uint16_t type,
@@ -129,7 +129,7 @@ public:
     ///
     /// @return instance of option.
     ///
-    /// @throw isc::InvalidOperation if there is no factory function
+    /// @throw bundy::InvalidOperation if there is no factory function
     ///        registered for specified option type.
     static OptionPtr factory(Option::Universe u, uint16_t type) {
         return factory(u, type, OptionBuffer());
@@ -190,7 +190,7 @@ public:
     /// @param buf pointer to a buffer
     ///
     /// @throw BadValue Universe of the option is neither V4 nor V6.
-    virtual void pack(isc::util::OutputBuffer& buf);
+    virtual void pack(bundy::util::OutputBuffer& buf);
 
     /// @brief Parses received buffer.
     ///
@@ -272,21 +272,21 @@ public:
 
     /// @brief Returns content of first byte.
     ///
-    /// @throw isc::OutOfRange Thrown if the option has a length of 0.
+    /// @throw bundy::OutOfRange Thrown if the option has a length of 0.
     ///
     /// @return value of the first byte
     uint8_t getUint8();
 
     /// @brief Returns content of first word.
     ///
-    /// @throw isc::OutOfRange Thrown if the option has a length less than 2.
+    /// @throw bundy::OutOfRange Thrown if the option has a length less than 2.
     ///
     /// @return uint16_t value stored on first two bytes
     uint16_t getUint16();
 
     /// @brief Returns content of first double word.
     ///
-    /// @throw isc::OutOfRange Thrown if the option has a length less than 4.
+    /// @throw bundy::OutOfRange Thrown if the option has a length less than 4.
     ///
     /// @return uint32_t value stored on first four bytes
     uint32_t getUint32();
@@ -381,7 +381,7 @@ protected:
     /// directly by other classes.
     ///
     /// @param [out] buf output buffer.
-    void packHeader(isc::util::OutputBuffer& buf);
+    void packHeader(bundy::util::OutputBuffer& buf);
 
     /// @brief Store sub options in a buffer.
     ///
@@ -396,7 +396,7 @@ protected:
     /// exceptions thrown by pack methods invoked on objects
     /// representing sub options. We should consider whether to aggregate
     /// those into one exception which can be documented here.
-    void packOptions(isc::util::OutputBuffer& buf);
+    void packOptions(bundy::util::OutputBuffer& buf);
 
     /// @brief Builds a collection of sub options from the buffer.
     ///
@@ -441,7 +441,7 @@ protected:
     /// options) and v6 (options with the same type can repeat)
 };
 
-} // namespace isc::dhcp
-} // namespace isc
+} // namespace bundy::dhcp
+} // namespace bundy
 
 #endif // OPTION_H

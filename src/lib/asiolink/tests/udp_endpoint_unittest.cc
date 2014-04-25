@@ -22,7 +22,7 @@
 #include <asiolink/io_address.h>
 #include <asiolink/udp_endpoint.h>
 
-using namespace isc::asiolink;
+using namespace bundy::asiolink;
 using namespace std;
 
 // This test checks that the endpoint can manage its own internal

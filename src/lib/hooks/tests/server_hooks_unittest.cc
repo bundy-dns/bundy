@@ -20,8 +20,8 @@
 #include <string>
 #include <vector>
 
-using namespace isc;
-using namespace isc::hooks;
+using namespace bundy;
+using namespace bundy::hooks;
 using namespace std;
 
 namespace {

@@ -17,7 +17,7 @@
 
 #include <Python.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace python {
 namespace internal {
@@ -27,7 +27,7 @@ PyObject* pyCheckZone(PyObject* self, PyObject* args);
 } // namespace python
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 #endif // PYTHON_ZONE_CHECKER_H
 
 // Local Variables:

@@ -24,7 +24,7 @@
 
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 class Dhcpv6Srv;
@@ -46,15 +46,15 @@ class Dhcpv6Srv;
 /// @param config_set a new configuration for DHCPv6 server.
 /// @return answer that contains result of the reconfiguration.
 /// @throw Dhcp6ConfigError if trying to create a parser for NULL config.
-isc::data::ConstElementPtr
-configureDhcp6Server(Dhcpv6Srv& server, isc::data::ConstElementPtr config_set);
+bundy::data::ConstElementPtr
+configureDhcp6Server(Dhcpv6Srv& server, bundy::data::ConstElementPtr config_set);
 
 /// @brief Returns the global context
 ///
 /// @returns a reference to the global context
 ParserContextPtr& globalContext();
 
-}; // end of isc::dhcp namespace
-}; // end of isc namespace
+}; // end of bundy::dhcp namespace
+}; // end of bundy namespace
 
 #endif // DHCP6_CONFIG_PARSER_H

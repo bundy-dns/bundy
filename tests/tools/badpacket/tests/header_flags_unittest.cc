@@ -19,7 +19,7 @@
 #include "../option_info.h"
 #include "../header_flags.h"
 
-using namespace isc::badpacket;
+using namespace bundy::badpacket;
 
 // Test fixture class
 

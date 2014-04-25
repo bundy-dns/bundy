@@ -19,7 +19,7 @@
 #include <cc/data.h>
 #include <server_common/portconfig.h>
 
-namespace isc {
+namespace bundy {
 namespace testutils {
 /**
  * \brief Bits of tests for server port configuration.
@@ -45,7 +45,7 @@ namespace portconfig {
 template<class Server>
 void
 listenAddresses(Server& server) {
-    using namespace isc::server_common::portconfig;
+    using namespace bundy::server_common::portconfig;
     // In this test we assume the address list is originally empty.
     EXPECT_TRUE(server.getListenAddresses().empty());
 
@@ -80,7 +80,7 @@ listenAddresses(Server& server) {
 template<class Server>
 void
 listenAddressConfig(Server& server) {
-    using namespace isc::data;
+    using namespace bundy::data;
     // Try putting there some address
     ElementPtr config(Element::fromJSON("{"
                                         "\"listen_on\": ["
@@ -91,7 +91,7 @@ listenAddressConfig(Server& server) {
                                         "]"
                                         "}"));
     ConstElementPtr result(server.updateConfig(config));
-    EXPECT_EQ(result->toWire(), isc::config::createAnswer()->toWire());
+    EXPECT_EQ(result->toWire(), bundy::config::createAnswer()->toWire());
     ASSERT_EQ(1, server.getListenAddresses().size());
     EXPECT_EQ("127.0.0.1", server.getListenAddresses()[0].first);
     EXPECT_EQ(53210, server.getListenAddresses()[0].second);
@@ -106,7 +106,7 @@ listenAddressConfig(Server& server) {
                                "]"
                                "}");
     result = server.updateConfig(config);
-    EXPECT_FALSE(result->equals(*isc::config::createAnswer()));
+    EXPECT_FALSE(result->equals(*bundy::config::createAnswer()));
     ASSERT_EQ(1, server.getListenAddresses().size());
     EXPECT_EQ("127.0.0.1", server.getListenAddresses()[0].first);
     EXPECT_EQ(53210, server.getListenAddresses()[0].second);
@@ -137,10 +137,10 @@ configRejected(Server& server, const std::string& JSON,
 {
     SCOPED_TRACE(name);
 
-    using namespace isc::data;
+    using namespace bundy::data;
     ElementPtr config(Element::fromJSON(JSON));
     EXPECT_FALSE(server.updateConfig(config)->
-                 equals(*isc::config::createAnswer())) <<
+                 equals(*bundy::config::createAnswer())) <<
         "Accepted invalid config " << JSON;
 }
 

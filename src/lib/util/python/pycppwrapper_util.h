@@ -53,16 +53,16 @@
  * troubles only for a small utility feature).
  */
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace python {
 
 /// This is thrown inside this utility when it finds a NULL pointer is passed
 /// when it should not be NULL.
-class PyCPPWrapperException : public isc::Exception {
+class PyCPPWrapperException : public bundy::Exception {
 public:
     PyCPPWrapperException(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// This helper class is similar to the standard autoptr and manages PyObject
@@ -185,7 +185,7 @@ struct PyObjectContainer {
     PyObjectContainer() : obj_(NULL) {}
     PyObjectContainer(PyObject* obj) : obj_(obj) {
         if (obj_ == NULL) {
-            isc_throw(PyCPPWrapperException, "Unexpected NULL PyObject, "
+            bundy_throw(PyCPPWrapperException, "Unexpected NULL PyObject, "
                       "probably due to short memory");
         }
     }
@@ -196,7 +196,7 @@ struct PyObjectContainer {
     }
     void reset(PyObject* obj) {
         if (obj == NULL) {
-            isc_throw(PyCPPWrapperException, "Unexpected NULL PyObject, "
+            bundy_throw(PyCPPWrapperException, "Unexpected NULL PyObject, "
                       "probably due to short memory");
         }
         if (obj_ != NULL) {
@@ -217,7 +217,7 @@ struct PyObjectContainer {
     // as a variable named 'name'.
     void installAsClassVariable(PyTypeObject& pyclass, const char* name) {
         if (PyDict_SetItemString(pyclass.tp_dict, name, obj_) < 0) {
-            isc_throw(PyCPPWrapperException, "Failed to set a class variable, "
+            bundy_throw(PyCPPWrapperException, "Failed to set a class variable, "
                       "probably due to short memory");
         }
         // Ownership successfully transferred to the class object.  We'll let
@@ -234,7 +234,7 @@ struct PyObjectContainer {
                          bool keep_ref = true)
     {
         if (PyModule_AddObject(mod, name, obj_) < 0) {
-            isc_throw(PyCPPWrapperException, "Failed to add an object to "
+            bundy_throw(PyCPPWrapperException, "Failed to add an object to "
                       "module, probably due to short memory");
         }
         // PyModule_AddObject has "stolen" the reference, so unless we
@@ -299,7 +299,7 @@ struct CPPPyObjectContainer : public PyObjectContainer {
     // object enclosed in this class.
     void set(CPPCLASS* value) {
         if (value == NULL) {
-            isc_throw(PyCPPWrapperException, "Unexpected NULL C++ object, "
+            bundy_throw(PyCPPWrapperException, "Unexpected NULL C++ object, "
                       "probably due to short memory");
         }
         static_cast<PYSTRUCT*>(obj_)->cppobj = value;
@@ -327,7 +327,7 @@ installClassVariable(PyTypeObject& pyclass, const char* name, PyObject* obj) {
 
 } // namespace python
 } // namespace util
-} // namespace isc
+} // namespace bundy
 #endif // PYCPPWRAPPER_UTIL_H
 
 // Local Variables:

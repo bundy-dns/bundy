@@ -35,10 +35,10 @@
 #include <vector>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::data;
-using namespace isc::datasrc;
-using namespace isc::server_common::portconfig;
+using namespace bundy::dns;
+using namespace bundy::data;
+using namespace bundy::datasrc;
+using namespace bundy::server_common::portconfig;
 
 namespace {
 
@@ -125,7 +125,7 @@ public:
         if (config->intValue() >= 0) {
             timeout_ = config->intValue();
         } else {
-            isc_throw(AuthConfigError, "tcp_recv_timeout must be 0 or higher");
+            bundy_throw(AuthConfigError, "tcp_recv_timeout must be 0 or higher");
         }
     }
 
@@ -171,7 +171,7 @@ createAuthConfigParser(AuthSrv& server, const std::string& config_id) {
     } else if (config_id == "tcp_recv_timeout") {
         return (new TCPRecvTimeoutConfig(server));
     } else {
-        isc_throw(AuthConfigError, "Unknown configuration identifier: " <<
+        bundy_throw(AuthConfigError, "Unknown configuration identifier: " <<
                   config_id);
     }
 }
@@ -179,7 +179,7 @@ createAuthConfigParser(AuthSrv& server, const std::string& config_id) {
 void
 configureAuthServer(AuthSrv& server, ConstElementPtr config_set) {
     if (!config_set) {
-        isc_throw(AuthConfigError,
+        bundy_throw(AuthConfigError,
                   "Null pointer is passed to configuration parser");
     }
 
@@ -202,8 +202,8 @@ configureAuthServer(AuthSrv& server, ConstElementPtr config_set) {
         }
     } catch (const AuthConfigError& ex) {
         throw;                  // simply rethrowing it
-    } catch (const isc::Exception& ex) {
-        isc_throw(AuthConfigError, "Server configuration failed: " <<
+    } catch (const bundy::Exception& ex) {
+        bundy_throw(AuthConfigError, "Server configuration failed: " <<
                   ex.what());
     }
 

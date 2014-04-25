@@ -1,9 +1,9 @@
 
-This is an implementation of the python wrappers for isc::dns.
+This is an implementation of the python wrappers for bundy::dns.
 
 When compiled the module is called pydnspp. If we
 decide to always need it we can add a default import under
-lib/python/isc.
+lib/python/bundy.
 
 To use it from the source tree, you must add src/lib/dns/python/.libs
 to your PYTHONPATH environment variable. Within python you can then use

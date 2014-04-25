@@ -19,9 +19,9 @@
 
 using namespace std;
 using namespace boost;
-using namespace isc::acl;
-using namespace isc::acl::tests;
-using isc::data::Element;
+using namespace bundy::acl;
+using namespace bundy::acl::tests;
+using bundy::data::Element;
 
 namespace {
 

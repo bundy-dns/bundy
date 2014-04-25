@@ -24,8 +24,8 @@
 
 #include <gtest/gtest.h>
 
-using namespace isc::datasrc;
-using namespace isc::data;
+using namespace bundy::datasrc;
+using namespace bundy::data;
 
 std::string SQLITE_DBFILE_EXAMPLE_ORG = TEST_DATA_DIR "/example.org.sqlite3";
 const std::string ROOT_ZONE_FILE = TEST_DATA_DIR "/root.zone";
@@ -41,7 +41,7 @@ pathtestHelper(const std::string& file, const std::string& expected_error) {
     try {
         // cppcheck-suppress unusedScopedObject We just check if it throws
         // to create, not use it. That's OK.
-        DataSourceClientContainer(file, ElementPtr());
+        DataSourceClientContainer("test", file, ElementPtr());
     } catch (const DataSourceLibraryError& dsle) {
         error = dsle.what();
     }
@@ -56,7 +56,7 @@ TEST(FactoryTest, paths) {
     // With the current implementation, we can safely assume this has
     // been set for this test (as the loader would otherwise also fail
     // unless the loadable backend library happens to be installed)
-    const std::string builddir(getenv("B10_FROM_BUILD"));
+    const std::string builddir(getenv("BUNDY_FROM_BUILD"));
 
     // Absolute and ending with .so should have no change
     pathtestHelper("/no_such_file.so", error + "/no_such_file.so");
@@ -65,7 +65,7 @@ TEST(FactoryTest, paths) {
     pathtestHelper("/no_such_file", error + "/no_such_file_ds.so");
 
     // If not starting with /, path should be added. For this test that
-    // means the build directory as set in B10_FROM_BUILD
+    // means the build directory as set in BUNDY_FROM_BUILD
     pathtestHelper("no_such_file.so", error + builddir +
                    "/src/lib/datasrc/.libs/no_such_file.so");
     pathtestHelper("no_such_file", error + builddir +
@@ -83,18 +83,18 @@ TEST(FactoryTest, paths) {
     pathtestHelper("no_such_file.so.something", error + builddir +
                    "/src/lib/datasrc/.libs/no_such_file.so.something_ds.so");
 
-    // Temporarily unset B10_FROM_BUILD to see that BACKEND_LIBRARY_PATH
+    // Temporarily unset BUNDY_FROM_BUILD to see that BACKEND_LIBRARY_PATH
     // is used
-    unsetenv("B10_FROM_BUILD");
+    unsetenv("BUNDY_FROM_BUILD");
     pathtestHelper("no_such_file.so", error + BACKEND_LIBRARY_PATH +
                    "no_such_file.so");
     // Put it back just in case
-    setenv("B10_FROM_BUILD", builddir.c_str(), 1);
+    setenv("BUNDY_FROM_BUILD", builddir.c_str(), 1);
 
     // Test some bad input values
-    ASSERT_THROW(DataSourceClientContainer("", ElementPtr()),
+    ASSERT_THROW(DataSourceClientContainer("test", "", ElementPtr()),
                  DataSourceLibraryError);
-    ASSERT_THROW(DataSourceClientContainer(".so", ElementPtr()),
+    ASSERT_THROW(DataSourceClientContainer("test", ".so", ElementPtr()),
                  DataSourceLibraryError);
 }
 
@@ -104,65 +104,65 @@ TEST(FactoryTest, sqlite3ClientBadConfig) {
     // Then we do some very basic operation on the client (detailed
     // tests are left to the implementation-specific backends)
     ElementPtr config;
-    ASSERT_THROW(DataSourceClientContainer("sqlite3", config),
+    ASSERT_THROW(DataSourceClientContainer("sqlite3", "sqlite3", config),
                  DataSourceError);
 
     config = Element::create("asdf");
-    ASSERT_THROW(DataSourceClientContainer("sqlite3", config),
+    ASSERT_THROW(DataSourceClientContainer("sqlite3", "sqlite3", config),
                  DataSourceError);
 
     config = Element::createMap();
-    ASSERT_THROW(DataSourceClientContainer("sqlite3", config),
+    ASSERT_THROW(DataSourceClientContainer("sqlite3", "sqlite3", config),
                  DataSourceError);
 
     config->set("class", ElementPtr());
-    ASSERT_THROW(DataSourceClientContainer("sqlite3", config),
+    ASSERT_THROW(DataSourceClientContainer("sqlite3", "sqlite3", config),
                  DataSourceError);
 
     config->set("class", Element::create(1));
-    ASSERT_THROW(DataSourceClientContainer("sqlite3", config),
+    ASSERT_THROW(DataSourceClientContainer("sqlite3", "sqlite3", config),
                  DataSourceError);
 
     config->set("class", Element::create("FOO"));
-    ASSERT_THROW(DataSourceClientContainer("sqlite3", config),
+    ASSERT_THROW(DataSourceClientContainer("sqlite3", "sqlite3", config),
                  DataSourceError);
 
     config->set("class", Element::create("IN"));
-    ASSERT_THROW(DataSourceClientContainer("sqlite3", config),
+    ASSERT_THROW(DataSourceClientContainer("sqlite3", "sqlite3", config),
                  DataSourceError);
 
     config->set("database_file", ElementPtr());
-    ASSERT_THROW(DataSourceClientContainer("sqlite3", config),
+    ASSERT_THROW(DataSourceClientContainer("sqlite3", "sqlite3", config),
                  DataSourceError);
 
     config->set("database_file", Element::create(1));
-    ASSERT_THROW(DataSourceClientContainer("sqlite3", config),
+    ASSERT_THROW(DataSourceClientContainer("sqlite3", "sqlite3", config),
                  DataSourceError);
 
     config->set("database_file", Element::create("/foo/bar/doesnotexist"));
-    ASSERT_THROW(DataSourceClientContainer("sqlite3", config),
+    ASSERT_THROW(DataSourceClientContainer("sqlite3", "sqlite3", config),
                  DataSourceError);
 
     config->set("database_file", Element::create(SQLITE_DBFILE_EXAMPLE_ORG));
-    DataSourceClientContainer dsc("sqlite3", config);
+    DataSourceClientContainer dsc("sqlite3", "sqlite3", config);
 
     DataSourceClient::FindResult result1(
-        dsc.getInstance().findZone(isc::dns::Name("example.org.")));
+        dsc.getInstance().findZone(bundy::dns::Name("example.org.")));
     ASSERT_EQ(result::SUCCESS, result1.code);
 
     DataSourceClient::FindResult result2(
-        dsc.getInstance().findZone(isc::dns::Name("no.such.zone.")));
+        dsc.getInstance().findZone(bundy::dns::Name("no.such.zone.")));
     ASSERT_EQ(result::NOTFOUND, result2.code);
 
     ZoneIteratorPtr iterator(dsc.getInstance().getIterator(
-        isc::dns::Name("example.org.")));
+        bundy::dns::Name("example.org.")));
 
     ZoneUpdaterPtr updater(dsc.getInstance().getUpdater(
-        isc::dns::Name("example.org."), false));
+        bundy::dns::Name("example.org."), false));
 }
 
 TEST(FactoryTest, badType) {
-    ASSERT_THROW(DataSourceClientContainer("foo", ElementPtr()),
+    ASSERT_THROW(DataSourceClientContainer("foo", "foo", ElementPtr()),
                                            DataSourceError);
 }
 

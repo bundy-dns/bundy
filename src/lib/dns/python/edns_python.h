@@ -17,7 +17,7 @@
 
 #include <Python.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 class EDNS;
 
@@ -56,7 +56,7 @@ const EDNS& PyEDNS_ToEDNS(const PyObject* edns_obj);
 
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 #endif // PYTHON_EDNS_H
 
 // Local Variables:

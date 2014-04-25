@@ -17,14 +17,14 @@
 
 #include <cc/data.h>
 
-namespace isc {
+namespace bundy {
 namespace auth {
 namespace unittest {
 
 // Test if the counters has expected values specified in expect and the others
 // are zero.
 void
-checkStatisticsCounters(const isc::data::ConstElementPtr counters,
+checkStatisticsCounters(const bundy::data::ConstElementPtr counters,
                         const std::map<std::string, int>& expect);
 
 } // end of unittest

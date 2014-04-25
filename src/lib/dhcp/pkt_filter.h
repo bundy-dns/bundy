@@ -19,14 +19,14 @@
 #include <asiolink/io_address.h>
 #include <boost/shared_ptr.hpp>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief Exception thrown when invalid packet filter object specified.
 class InvalidPacketFilter : public Exception {
 public:
     InvalidPacketFilter(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// Forward declaration to the structure describing a socket.
@@ -77,7 +77,7 @@ public:
     /// - a fallback socket which is optionally opened if there is a need for
     /// the presence of the socket which can be bound to a specific IP address
     /// and UDP port (e.g. raw primary socket can't be). For the details, see
-    /// the documentation of @c isc::dhcp::SocketInfo.
+    /// the documentation of @c bundy::dhcp::SocketInfo.
     ///
     /// @param iface Interface descriptor.
     /// @param addr Address on the interface to be used to send packets.
@@ -87,7 +87,7 @@ public:
     ///
     /// @return A structure describing a primary and fallback socket.
     virtual SocketInfo openSocket(const Iface& iface,
-                                  const isc::asiolink::IOAddress& addr,
+                                  const bundy::asiolink::IOAddress& addr,
                                   const uint16_t port,
                                   const bool receive_bcast,
                                   const bool send_bcast) = 0;
@@ -125,23 +125,23 @@ protected:
     /// (a.k.a. primary socket) used to receive and handle DHCPv4 traffic. The
     /// traffic received through the fallback should be dropped. The reasoning
     /// behind opening the fallback socket is explained in the documentation of
-    /// @c isc::dhcp::SocketInfo structure.
+    /// @c bundy::dhcp::SocketInfo structure.
     ///
     /// @param addr An IPv4 address to bind the socket to.
     /// @param port A port number to bind socket to.
     ///
     /// @return A fallback socket descriptor. This descriptor should be assigned
-    /// to the @c fallbackfd_ field of the @c isc::dhcp::SocketInfo structure.
-    /// @throw isc::dhcp::SocketConfigError if socket opening, binding or
+    /// to the @c fallbackfd_ field of the @c bundy::dhcp::SocketInfo structure.
+    /// @throw bundy::dhcp::SocketConfigError if socket opening, binding or
     /// configuration fails.
-    virtual int openFallbackSocket(const isc::asiolink::IOAddress& addr,
+    virtual int openFallbackSocket(const bundy::asiolink::IOAddress& addr,
                                    const uint16_t port);
 };
 
 /// Pointer to a PktFilter object.
 typedef boost::shared_ptr<PktFilter> PktFilterPtr;
 
-} // namespace isc::dhcp
-} // namespace isc
+} // namespace bundy::dhcp
+} // namespace bundy
 
 #endif // PKT_FILTER_H

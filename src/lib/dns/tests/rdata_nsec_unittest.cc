@@ -29,11 +29,11 @@
 #include <util/unittests/wiredata.h>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::util;
-using namespace isc::dns::rdata;
-using isc::UnitTestUtil;
-using isc::util::unittests::matchWireData;
+using namespace bundy::dns;
+using namespace bundy::util;
+using namespace bundy::dns::rdata;
+using bundy::UnitTestUtil;
+using bundy::util::unittests::matchWireData;
 
 namespace {
 class Rdata_NSEC_Test : public RdataTest {
@@ -82,7 +82,7 @@ TEST_F(Rdata_NSEC_Test, createFromLexer_NSEC) {
 
     // Exceptions cause NULL to be returned.
     EXPECT_FALSE(test::createRdataUsingLexer(RRType::NSEC(), RRClass::IN(),
-                                             "www.isc.org."));
+                                             "www.bundy.org."));
 }
 
 TEST_F(Rdata_NSEC_Test, toWireRenderer_NSEC) {

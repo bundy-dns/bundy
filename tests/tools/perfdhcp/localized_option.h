@@ -19,7 +19,7 @@
 #include <dhcp/option6_ia.h>
 #include <util/buffer.h>
 
-namespace isc {
+namespace bundy {
 namespace perfdhcp {
 
 /// \brief DHCP option at specific offset
@@ -144,7 +144,7 @@ private:
 };
 
 
-} // namespace isc::perfdhcp
-} // namespace isc
+} // namespace bundy::perfdhcp
+} // namespace bundy
 
 #endif // LOCALIZED_OPTION_H

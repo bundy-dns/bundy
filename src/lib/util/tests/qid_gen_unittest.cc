@@ -34,7 +34,7 @@
 
 #include <util/random/qid_gen.h>
 
-using namespace isc::util::random;
+using namespace bundy::util::random;
 
 // Tests the operation of the Qid generator
 

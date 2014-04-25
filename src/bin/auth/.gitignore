@@ -2,11 +2,11 @@
 /auth.spec.pre
 /auth_messages.cc
 /auth_messages.h
-/b10-auth
+/bundy-auth
 /spec_config.h
 /spec_config.h.pre
-/b10-auth.8
-/b10-auth.xml
+/bundy-auth.8
+/bundy-auth.xml
 /gen-statisticsitems.py
 /gen-statisticsitems.py.pre
 /statistics.cc

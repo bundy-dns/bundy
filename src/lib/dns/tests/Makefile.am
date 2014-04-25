@@ -6,7 +6,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/src/lib/dns -I$(top_builddir)/src/lib/dns
 AM_CPPFLAGS += -I$(top_srcdir)/src/lib/util -I$(top_builddir)/src/lib/util
 AM_CPPFLAGS += -DTEST_DATA_SRCDIR=\"$(abs_top_srcdir)/src/lib/dns/tests/testdata\"
 AM_CPPFLAGS += -DTEST_DATA_BUILDDIR=\"$(abs_top_builddir)/src/lib/dns/tests/testdata\"
-AM_CXXFLAGS = $(B10_CXXFLAGS)
+AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 
 if USE_STATIC_LINK
 AM_LDFLAGS = -static
@@ -88,10 +88,10 @@ run_unittests_CPPFLAGS = $(AM_CPPFLAGS) $(GTEST_INCLUDES)
 # an older version of botan, and somehow that version gets
 # linked if we don't
 run_unittests_LDFLAGS = $(BOTAN_LDFLAGS) $(GTEST_LDFLAGS) $(AM_LDFLAGS)
-run_unittests_LDADD = $(top_builddir)/src/lib/dns/libb10-dns++.la
-run_unittests_LDADD += $(top_builddir)/src/lib/util/libb10-util.la
+run_unittests_LDADD = $(top_builddir)/src/lib/dns/libbundy-dns++.la
+run_unittests_LDADD += $(top_builddir)/src/lib/util/libbundy-util.la
 run_unittests_LDADD += $(top_builddir)/src/lib/util/unittests/libutil_unittests.la
-run_unittests_LDADD += $(top_builddir)/src/lib/exceptions/libb10-exceptions.la
+run_unittests_LDADD += $(top_builddir)/src/lib/exceptions/libbundy-exceptions.la
 run_unittests_LDADD += $(BOTAN_LIBS) $(GTEST_LDADD)
 endif
 

@@ -23,40 +23,52 @@ import socket
 import threading
 
 sys.path.append('@@PYTHONPATH@@')
-import isc.log
-from isc.config import ModuleSpecError, ModuleCCSessionError
-from isc.log_messages.memmgr_messages import *
-from isc.server_common.bind10_server import BIND10Server, BIND10ServerFatal
-from isc.server_common.datasrc_clients_mgr \
+import bundy.dns
+import bundy.log
+from bundy.config import ModuleSpecError, ModuleCCSessionError
+from bundy.log_messages.memmgr_messages import *
+from bundy.server_common.bundy_server import BUNDYServer, BUNDYServerFatal
+from bundy.server_common.datasrc_clients_mgr \
     import DataSrcClientsMgr, ConfigError
-from isc.memmgr.datasrc_info import DataSrcInfo, SegmentInfo
-from isc.memmgr.builder import MemorySegmentBuilder
-import isc.util.process
-import isc.util.traceback_handler
+from bundy.memmgr.datasrc_info import DataSrcInfo, SegmentInfo
+from bundy.memmgr.builder import MemorySegmentBuilder
+import bundy.util.process
+import bundy.util.traceback_handler
 
 MODULE_NAME = 'memmgr'
+SEGMENT_READER_GROUP = 'SegmentReader'
 
-isc.log.init('b10-memmgr', buffer=True)
-logger = isc.log.Logger(MODULE_NAME)
+bundy.log.init('bundy-memmgr', buffer=True)
+logger = bundy.log.Logger(MODULE_NAME)
 
-isc.util.process.rename()
+bundy.util.process.rename()
 
 class ConfigError(Exception):
     """An exception class raised for configuration errors of Memmgr."""
     pass
 
-class Memmgr(BIND10Server):
+class _LoadZoneError(Exception):
+    "Internal error in parsing loadzone command."
+
+class Memmgr(BUNDYServer):
     def __init__(self):
-        BIND10Server.__init__(self)
+        BUNDYServer.__init__(self)
+
+        # The following attributes are defined as "protected" so tests can
+        # inspect it; others shouldn't use them directly.
+
         # Running configurable parameters: on initial configuration this will
         # be a dict: str=>config_value.
-        # This is defined as "protected" so tests can inspect it; others
-        # shouldn't use it directly.
         self._config_params = None
 
         # The manager to keep track of data source configuration.  Allow
         # tests to inspect/tweak it.
         self._datasrc_clients_mgr = DataSrcClientsMgr(use_cache=True)
+
+        # Diect: string=>dict, mapping 'lname' of segment readers to another
+        # dict, which maps segment info to the number of outstanding
+        # segment_info_update for the reader.
+        self._segment_readers = {}
 
         # List of DataSrcInfo.  Used as a queue to maintain info for all
         # active configuration generations.  Allow tests to inspec it.
@@ -66,8 +78,99 @@ class Memmgr(BIND10Server):
         self._builder_command_queue = []
         self._builder_response_queue = []
 
+    def _mod_command_handler(self, cmd, args):
+        if cmd == 'segment_info_update_ack':
+            # We usually expect the following to succeed, as long as the
+            # sender is implemented correctly.  But a buggy module could
+            # still send a bogus message, and since we cannot raise an
+            # exception due to API contract, we catch everything and log it.
+            # Whether it succeeds or fail, this command isn't exected to
+            # be returned with an answer, so we return either None or False
+            # (separating these for testing purposes).
+            try:
+                # TODO: we should eventually handle multiple generations
+                dsrc_info = self._datasrc_info_list[-1]
+                rrclass = bundy.dns.RRClass(args['data-source-class'])
+                dsrc_name = args['data-source-name']
+                sgmt_info = dsrc_info.segment_info_map[(rrclass, dsrc_name)]
+                reader = args['reader']
+                if not reader in self._segment_readers:
+                    logger.info(MEMMGR_DATASRC_SGMTINFO_ACK_NOREADER, reader)
+                    return False
+                self._segment_readers[reader][sgmt_info] -= 1
+                if self._segment_readers[reader][sgmt_info] == 0:
+                    del self._segment_readers[reader][sgmt_info]
+                    bcmd = sgmt_info.sync_reader(reader)
+                    if bcmd is not None:
+                        self._cmd_to_builder(bcmd)
+            except Exception as ex:
+                logger.error(MEMMGR_DATASRC_SGMTINFO_ACK_FAIL, str(ex))
+                return None
+            logger.debug(logger.DBGLVL_TRACE_BASIC, MEMMGR_SGMTINFO_ACK,
+                         dsrc_name, rrclass)
+            return False
+        elif cmd == 'loadzone':
+            return self.__update_zone(cmd, args)
+        else:
+            return bundy.config.create_answer(1, 'unknown command: ' + cmd)
+
+    def __update_zone(self, cmd, args):
+        "Unified helper to load/update zone."
+
+        try:
+            dsrc_info, rrclass, dsrc_name, zone_name, sgmt_info = \
+                self.__handle_loadzone_args(args)
+            # If it's manually invoked, it will be helpeful to consider
+            # missing segment info an error; if it's update notification,
+            # this is a normal condition for a 'local' segment.
+            if sgmt_info is None and cmd == 'loadzone':
+                raise _LoadZoneError("no memory segment in '%s' for"
+                                     "RR class %s" % (dsrc_name, rrclass))
+            elif sgmt_info is None:
+                return
+        except _LoadZoneError as ex:
+            # Note: basically this can only happen for user-invoked command;
+            # otherwise it's internal bug.  So we simply say 'loadzone' here.
+            logger.error(MEMMGR_LOADZONE_FAIL, str(ex))
+            return bundy.config.create_answer(1, 'bad loadzone parameters: '
+                                            + str(ex))
+        sgmt_info.add_event(('load', zone_name, dsrc_info, rrclass, dsrc_name))
+        bcmd = sgmt_info.start_update()
+        if bcmd is not None:
+            self._cmd_to_builder(bcmd)
+        if cmd == 'loadzone':
+            logger.info(MEMMGR_LOADZONE, zone_name, rrclass, dsrc_name)
+            return bundy.config.create_answer(0)
+        else:
+            logger.debug(logger.DBGLVL_TRACE_BASIC, MEMMGR_UPDATE_ZONE,
+                         zone_name, rrclass, dsrc_name)
+
+    def __handle_loadzone_args(self, args):
+        "Parse loadzone args and return helpful error on failure"
+
+        if len(self._datasrc_info_list) == 0:
+            raise _LoadZoneError('no data source is configured')
+        dsrc_info = self._datasrc_info_list[-1]
+        if (not 'class' in args or not 'datasource' in args or
+            not 'origin' in args):
+            raise _LoadZoneError('missing parameters')
+        try:
+            rrclass = bundy.dns.RRClass(args['class'])
+        except bundy.dns.InvalidRRClass as ex:
+            raise _LoadZoneError('bad class: ' + str(ex))
+        try:
+            zone_name = bundy.dns.Name(args['origin'])
+        except Exception as ex: # there can be many types of error
+            raise _LoadZoneError('bad zone origin:' + str(ex))
+        dsrc_name = args['datasource']
+        try:
+            sgmt_info = dsrc_info.segment_info_map[(rrclass, dsrc_name)]
+        except KeyError as ex:
+            sgmt_info = None    # not necessarily an error, maybe it's 'local'
+        return dsrc_info, rrclass, dsrc_name, zone_name, sgmt_info
+
     def _config_handler(self, new_config):
-        """Configuration handler, called via BIND10Server.
+        """Configuration handler, called via BUNDYServer.
 
         This method must be exception free.  We assume minimum validity
         about the parameter, though: it should be a valid dict, and conform
@@ -77,7 +180,7 @@ class Memmgr(BIND10Server):
         logger.debug(logger.DBGLVL_TRACE_BASIC, MEMMGR_CONFIG_UPDATE)
 
         # Default answer:
-        answer = isc.config.create_answer(0)
+        answer = bundy.config.create_answer(0)
 
         # If this is the first time, initialize the local attributes with the
         # latest full config data, which consist of the defaults with
@@ -89,7 +192,7 @@ class Memmgr(BIND10Server):
             self.__update_config(new_config)
         except Exception as ex:
             logger.error(MEMMGR_CONFIG_FAIL, ex)
-            answer = isc.config.create_answer(
+            answer = bundy.config.create_answer(
                 1, 'Memmgr failed to apply configuration updates: ' + str(ex))
 
         return answer
@@ -134,6 +237,33 @@ class Memmgr(BIND10Server):
             self._builder_command_queue.append(cmd)
             self._builder_cv.notify_all()
 
+    def __notify_readers(self, rrclass, dsrc_name, sgmt_info, readers,
+                         skip_ok=False):
+        """Helper to form and send segment_info_update message to readers.
+
+        Unless 'skip_ok' is explicitly set to True a segment for readers
+        must be available.
+
+        """
+
+        reset_param = sgmt_info.get_reset_param(SegmentInfo.READER)
+        if reset_param is None:
+            assert(skip_ok)
+            return
+        params = {
+            'data-source-class': str(rrclass),
+            'data-source-name': dsrc_name,
+            'segment-params': reset_param
+        }
+        for reader in readers:
+            params['reader'] = reader
+            rcmd = bundy.config.create_command('segment_info_update', params)
+            self.mod_ccsession._session.group_sendmsg(
+                rcmd, SEGMENT_READER_GROUP, to=reader)
+            if not sgmt_info in self._segment_readers[reader]:
+                self._segment_readers[reader][sgmt_info] = 0
+            self._segment_readers[reader][sgmt_info] += 1
+
     def _notify_from_builder(self):
         """
         Read the notifications from the builder thread.
@@ -159,13 +289,25 @@ class Memmgr(BIND10Server):
                 # synchronizing with the readers.
                 if cmd is not None:
                     self._cmd_to_builder(cmd)
-                else:
-                    pass
-                    # TODO: Send to the readers, #2858
+
+                # If there are readers of the old version of this segment,
+                # notify them so they'll move to the newly loaded version.
+                old_readers = sgmt_info.get_old_readers()
+                if old_readers:
+                    self.__notify_readers(rrclass, dsrc_name, sgmt_info,
+                                          old_readers)
+                logger.debug(logger.DBGLVL_TRACE_BASIC, MEMMGR_LOAD_COMPLETED,
+                             dsrc_name, rrclass,
+                             'without' if cmd is None else 'with',
+                             len(old_readers))
             else:
                 raise ValueError('Unknown notification name: ' + notif_name)
 
-    def __create_builder_thread(self):
+    def _create_builder_thread(self):
+        # This is a "private" method, but defined as if it were "protected",
+        # so tests can override it.  This shouldn't be overridden for other
+        # purposes.
+
         # We get responses from the builder thread on this socket pair.
         (self._master_sock, self._builder_sock) = \
             socket.socketpair(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -202,9 +344,100 @@ class Memmgr(BIND10Server):
         self._master_sock.close()
         self._builder_sock.close()
 
-    def _setup_module(self):
-        """Module specific initialization for BIND10Server."""
+    def _zone_update_notification(self, ev_name, params):
+        """Callback of zone update notification.
+
+        Defined as 'protected' only for testing purposes.  Shouldn't be called
+        directly otherwise.
+
+        """
+        if ev_name != 'zone_updated':
+            return
+        self.__update_zone(ev_name, params)
+
+    def _reader_notification(self, ev_name, params):
+        """Callback of module membership notification.
+
+        Defined as 'protected' only for testing purposes.  Shouldn't be called
+        directly otherwise.
+
+        """
+        # We're only interested in subscribe/unsucribe notifications for
+        # the segment reader group.  Note that 'group' param must be included
+        # for (un)subscribe.
+        if ((ev_name != 'subscribed' and ev_name != 'unsubscribed') or
+            params['group'] != SEGMENT_READER_GROUP):
+            return
+
+        reader = params['client']
+        logger.info(MEMMGR_CCMEMBER_NOTIFY, ev_name, reader)
         try:
+            self.__update_reader(ev_name, reader)
+        except Exception as ex:
+            # An unexpected error, but propagating it will kill memmgr, and
+            # it may not necessarily a defect of memmgr itself, so we'll keep
+            # running.
+            logger.error(MEMMGR_CCMEMBER_NOTIFY_FAIL, ex)
+
+    def __update_reader(self, ev_name, reader):
+        "Helper of _reader_notification, handling notifications in detail."
+
+        if ev_name == 'subscribed':
+            if reader in self._segment_readers:
+                logger.info(MEMMGR_CCMEMBER_DUP_SUBSCRIBED, reader)
+            else:
+                self._segment_readers[reader] = {}
+                for dsrc_info in self._datasrc_info_list:
+                    for key, sgmt_info in dsrc_info.segment_info_map.items():
+                        sgmt_info.add_reader(reader)
+                        rrclass, dsrc_name = key
+                        # If a reader segment is ready, we should tell the
+                        # reader about it.  It's possible a readable segment
+                        # isn't ready yet, so set skip_ok to True.
+                        self.__notify_readers(rrclass, dsrc_name, sgmt_info,
+                                              [reader], skip_ok=True)
+        else:                   # must be 'unsubscribed'
+            if not reader in self._segment_readers:
+                logger.warn(MEMMGR_CCMEMBER_DUP_UNSUBSCRIBED, reader)
+            else:
+                del self._segment_readers[reader]
+                for dsrc_info in self._datasrc_info_list:
+                    for sgmt_info in dsrc_info.segment_info_map.values():
+                        bcmd = sgmt_info.remove_reader(reader)
+                        if bcmd is not None:
+                            self._cmd_to_builder(bcmd)
+
+    def _setup_module(self):
+        """Module specific initialization for BUNDYServer."""
+        try:
+            # If self._config_params is None, it means the initial call to
+            # __update_config() failed.  We cannot fail at that point due to
+            # API contract, but this is the time to terminate.
+            if self._config_params is None:
+                raise BUNDYServerFatal('memmgr failed in ' +
+                                        'initial configuration')
+
+            # Now is the time to start the builder thread;
+            # _datasrc_config_handler will expect it to be running.
+            self._create_builder_thread()
+
+            # subscribe to the group to be notified of updates to zones.
+            self.mod_ccsession.subscribe_notification(
+                'ZoneUpdateListener', self._zone_update_notification)
+
+            # populate and maintain segment readers.  We first subscribe to
+            # the membership notification group, and then get the set of
+            # readers at this point.  This ordering is critical; otherwise
+            # we could miss a new reader that appears immediately after we
+            # populate the initial list.
+            self.mod_ccsession.subscribe_notification('cc_members',
+                                                      self._reader_notification)
+            # This rpc_call should either return a list or raise an exception.
+            readers = self.mod_ccsession.rpc_call(
+                'members', 'Msgq', params={'group': SEGMENT_READER_GROUP})
+            for r in readers:
+                self._segment_readers[r] = {}
+
             # memmgr isn't usable if data source is not configured, and
             # as long as cfgmgr is ready there's no timing issue.  So we
             # immediately shut it down if it's missing.  See ddns.py.in
@@ -213,9 +446,7 @@ class Memmgr(BIND10Server):
                 'data_sources', self._datasrc_config_handler)
         except (ModuleSpecError, ModuleCCSessionError) as ex:
             logger.error(MEMMGR_NO_DATASRC_CONF, ex)
-            raise BIND10ServerFatal('failed to setup memmgr module')
-
-        self.__create_builder_thread()
+            raise BUNDYServerFatal('failed to setup memmgr module')
 
     def _shutdown_module(self):
         """Module specific finalization."""
@@ -240,13 +471,15 @@ class Memmgr(BIND10Server):
             # at the info level.
             logger.info(MEMMGR_DATASRC_RECONFIGURED, genid)
 
-        except isc.server_common.datasrc_clients_mgr.ConfigError as ex:
+        except bundy.server_common.datasrc_clients_mgr.ConfigError as ex:
             logger.error(MEMMGR_DATASRC_CONFIG_ERROR, ex)
 
     def _init_segments(self, datasrc_info):
         for key, sgmt_info in datasrc_info.segment_info_map.items():
             rrclass, dsrc_name = key
             cmd = ('load', None, datasrc_info, rrclass, dsrc_name)
+            for reader in self._segment_readers.keys():
+                sgmt_info.add_reader(reader)
             sgmt_info.add_event(cmd)
             send_cmd = sgmt_info.start_update()
             assert cmd == send_cmd and sgmt_info.get_state() == \
@@ -258,4 +491,4 @@ def main():
     sys.exit(mgr.run(MODULE_NAME))
 
 if '__main__' == __name__:
-    isc.util.traceback_handler.traceback_handler(main)
+    bundy.util.traceback_handler.traceback_handler(main)

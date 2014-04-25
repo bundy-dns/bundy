@@ -32,12 +32,12 @@
 #include <util/unittests/wiredata.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dns;
-using namespace isc::util;
-using namespace isc::dns::rdata;
-using isc::UnitTestUtil;
-using isc::util::unittests::matchWireData;
+using namespace bundy;
+using namespace bundy::dns;
+using namespace bundy::util;
+using namespace bundy::dns::rdata;
+using bundy::UnitTestUtil;
+using bundy::util::unittests::matchWireData;
 
 namespace {
 
@@ -63,7 +63,7 @@ protected:
     {}
 
     void checkFromText_None(const string& rdata_str) {
-        checkFromText<any::TSIG, isc::Exception, isc::Exception>(
+        checkFromText<any::TSIG, bundy::Exception, bundy::Exception>(
             rdata_str, rdata_tsig, false, false);
     }
 
@@ -95,7 +95,7 @@ protected:
 
     void checkFromText_BadString(const string& rdata_str) {
         checkFromText
-            <any::TSIG, InvalidRdataText, isc::Exception>(
+            <any::TSIG, InvalidRdataText, bundy::Exception>(
                 rdata_str, rdata_tsig, true, false);
     }
 
@@ -308,19 +308,19 @@ TEST_F(Rdata_TSIG_Test, createFromParams) {
 
     EXPECT_THROW(any::TSIG(Name("hmac-sha256"), 1ULL << 48, 300, 12,
                            fake_data, 16020, 18, 6, fake_data2),
-                 isc::OutOfRange);
+                 bundy::OutOfRange);
     EXPECT_THROW(any::TSIG(Name("hmac-sha256"), 0, 300, 0, fake_data, 16020,
                            18, 0, NULL),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(any::TSIG(Name("hmac-sha256"), 0, 300, 12, NULL, 16020,
                            18, 0, NULL),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(any::TSIG(Name("hmac-sha256"), 0, 300, 0, NULL, 16020,
                            18, 0, fake_data),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(any::TSIG(Name("hmac-sha256"), 0, 300, 0, NULL, 16020,
                            18, 6, NULL),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 TEST_F(Rdata_TSIG_Test, assignment) {

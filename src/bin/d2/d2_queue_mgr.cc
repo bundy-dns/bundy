@@ -16,7 +16,7 @@
 #include <d2/d2_queue_mgr.h>
 #include <dhcp_ddns/ncr_udp.h>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 // Makes constant visible to Google test macros.
@@ -26,7 +26,7 @@ D2QueueMgr::D2QueueMgr(IOServicePtr& io_service, const size_t max_queue_size)
     : io_service_(io_service), max_queue_size_(max_queue_size),
       mgr_state_(NOT_INITTED), target_stop_state_(NOT_INITTED) {
     if (!io_service_) {
-        isc_throw(D2QueueMgrError, "IOServicePtr cannot be null");
+        bundy_throw(D2QueueMgrError, "IOServicePtr cannot be null");
     }
 
     // Use setter to do validation.
@@ -97,13 +97,13 @@ D2QueueMgr::operator()(const dhcp_ddns::NameChangeListener::Result result,
 }
 
 void
-D2QueueMgr::initUDPListener(const isc::asiolink::IOAddress& ip_address,
+D2QueueMgr::initUDPListener(const bundy::asiolink::IOAddress& ip_address,
                             const uint32_t port,
                             const dhcp_ddns::NameChangeFormat format,
                             const bool reuse_address) {
 
     if (listener_) {
-        isc_throw(D2QueueMgrError,
+        bundy_throw(D2QueueMgrError,
                   "D2QueueMgr listener is already initialized");
     }
 
@@ -119,14 +119,14 @@ void
 D2QueueMgr::startListening() {
     // We can't listen if we haven't initialized the listener yet.
     if (!listener_) {
-        isc_throw(D2QueueMgrError, "D2QueueMgr "
+        bundy_throw(D2QueueMgrError, "D2QueueMgr "
                   "listener is not initialized, cannot start listening");
     }
 
     // If we are already listening, we do not want to "reopen" the listener
     // and really we shouldn't be trying.
     if (mgr_state_ == RUNNING) {
-        isc_throw(D2QueueMgrError, "D2QueueMgr "
+        bundy_throw(D2QueueMgrError, "D2QueueMgr "
                   "cannot call startListening from the RUNNING state");
     }
 
@@ -134,8 +134,8 @@ D2QueueMgr::startListening() {
     try {
         listener_->startListening(*io_service_);
         mgr_state_ = RUNNING;
-    } catch (const isc::Exception& ex) {
-        isc_throw(D2QueueMgrError, "D2QueueMgr listener start failed: "
+    } catch (const bundy::Exception& ex) {
+        bundy_throw(D2QueueMgrError, "D2QueueMgr listener start failed: "
                   << ex.what());
     }
 
@@ -150,7 +150,7 @@ D2QueueMgr::stopListening(const State target_stop_state) {
         if (target_stop_state != STOPPED &&
             target_stop_state != STOPPED_QUEUE_FULL &&
             target_stop_state != STOPPED_RECV_ERROR) {
-            isc_throw(D2QueueMgrError,
+            bundy_throw(D2QueueMgrError,
                       "D2QueueMgr invalid value for stop state: "
                       << target_stop_state);
         }
@@ -182,7 +182,7 @@ void
 D2QueueMgr::removeListener() {
     // Force our managing layer(s) to stop us properly first.
     if (mgr_state_ == RUNNING) {
-        isc_throw(D2QueueMgrError,
+        bundy_throw(D2QueueMgrError,
                   "D2QueueMgr cannot delete listener while state is RUNNING");
     }
 
@@ -193,7 +193,7 @@ D2QueueMgr::removeListener() {
 const dhcp_ddns::NameChangeRequestPtr&
 D2QueueMgr::peek() const {
     if (getQueueSize() ==  0) {
-        isc_throw(D2QueueMgrQueueEmpty,
+        bundy_throw(D2QueueMgrQueueEmpty,
                   "D2QueueMgr peek attempted on an empty queue");
     }
 
@@ -203,7 +203,7 @@ D2QueueMgr::peek() const {
 const dhcp_ddns::NameChangeRequestPtr&
 D2QueueMgr::peekAt(const size_t index) const {
     if (index >= getQueueSize()) {
-        isc_throw(D2QueueMgrInvalidIndex,
+        bundy_throw(D2QueueMgrInvalidIndex,
                   "D2QueueMgr peek beyond end of queue attempted"
                   << " index: " << index << " queue size: " << getQueueSize());
     }
@@ -214,7 +214,7 @@ D2QueueMgr::peekAt(const size_t index) const {
 void
 D2QueueMgr::dequeueAt(const size_t index) {
     if (index >= getQueueSize()) {
-        isc_throw(D2QueueMgrInvalidIndex,
+        bundy_throw(D2QueueMgrInvalidIndex,
                   "D2QueueMgr dequeue beyond end of queue attempted"
                   << " index: " << index << " queue size: " << getQueueSize());
     }
@@ -227,7 +227,7 @@ D2QueueMgr::dequeueAt(const size_t index) {
 void
 D2QueueMgr::dequeue() {
     if (getQueueSize() ==  0) {
-        isc_throw(D2QueueMgrQueueEmpty,
+        bundy_throw(D2QueueMgrQueueEmpty,
                   "D2QueueMgr dequeue attempted on an empty queue");
     }
 
@@ -247,17 +247,17 @@ D2QueueMgr::clearQueue() {
 void
 D2QueueMgr::setMaxQueueSize(const size_t new_queue_max) {
     if (new_queue_max < 1) {
-        isc_throw(D2QueueMgrError,
+        bundy_throw(D2QueueMgrError,
                   "D2QueueMgr maximum queue size must be greater than zero");
     }
 
     if (new_queue_max < getQueueSize()) {
-        isc_throw(D2QueueMgrError, "D2QueueMgr maximum queue size value cannot"
+        bundy_throw(D2QueueMgrError, "D2QueueMgr maximum queue size value cannot"
                   " be less than the current queue size :" << getQueueSize());
     }
 
     max_queue_size_ = new_queue_max;
 }
 
-} // namespace isc::d2
-} // namespace isc
+} // namespace bundy::d2
+} // namespace bundy

@@ -20,7 +20,7 @@
 #include <dns/rrclass.h>
 #include <dns/name.h>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 
@@ -53,7 +53,7 @@ public:
     /// This calls the load_action (passed to constructor) and stores the
     /// data for future use.
     ///
-    /// \throw isc::InvalidOperation if it is called the second time in
+    /// \throw bundy::InvalidOperation if it is called the second time in
     ///     lifetime of the object.
     /// \throw Whatever the load_action throws, it is propagated up.
     virtual void load();
@@ -63,7 +63,7 @@ public:
     /// It modifies the zone table accessible through the segment (passed to
     /// constructor).
     ///
-    /// \throw isc::InvalidOperation if it is called the second time in
+    /// \throw bundy::InvalidOperation if it is called the second time in
     ///     lifetime of the object or if load() was not called previously or if
     ///     cleanup() was already called.
     virtual void install();

@@ -17,7 +17,7 @@
 
 #include <asiolink/io_message.h>
 
-namespace isc {
+namespace bundy {
 namespace asiolink {
 
 /// \brief The \c SimpleCallback class is an abstract base class for a
@@ -71,5 +71,5 @@ private:
 };
 
 } // namespace asiolink
-} // namespace isc
+} // namespace bundy
 #endif // ASIOLINK_SIMPLE_CALLBACK_H

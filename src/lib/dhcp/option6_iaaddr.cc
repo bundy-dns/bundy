@@ -25,19 +25,19 @@
 #include <arpa/inet.h>
 
 using namespace std;
-using namespace isc::asiolink;
-using namespace isc::util;
+using namespace bundy::asiolink;
+using namespace bundy::util;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
-Option6IAAddr::Option6IAAddr(uint16_t type, const isc::asiolink::IOAddress& addr,
+Option6IAAddr::Option6IAAddr(uint16_t type, const bundy::asiolink::IOAddress& addr,
                              uint32_t pref, uint32_t valid)
     :Option(V6, type), addr_(addr), preferred_(pref),
      valid_(valid) {
     setEncapsulatedSpace("dhcp6");
     if (!addr.isV6()) {
-        isc_throw(isc::BadValue, addr_ << " is not an IPv6 address");
+        bundy_throw(bundy::BadValue, addr_ << " is not an IPv6 address");
     }
 }
 
@@ -48,7 +48,7 @@ Option6IAAddr::Option6IAAddr(uint32_t type, OptionBuffer::const_iterator begin,
     unpack(begin, end);
 }
 
-void Option6IAAddr::pack(isc::util::OutputBuffer& buf) {
+void Option6IAAddr::pack(bundy::util::OutputBuffer& buf) {
 
     buf.writeUint16(type_);
 
@@ -57,9 +57,9 @@ void Option6IAAddr::pack(isc::util::OutputBuffer& buf) {
     buf.writeUint16(len() - getHeaderLen());
 
     if (!addr_.isV6()) {
-        isc_throw(isc::BadValue, addr_ << " is not an IPv6 address");
+        bundy_throw(bundy::BadValue, addr_ << " is not an IPv6 address");
     }
-    buf.writeData(&addr_.toBytes()[0], isc::asiolink::V6ADDRESS_LEN);
+    buf.writeData(&addr_.toBytes()[0], bundy::asiolink::V6ADDRESS_LEN);
 
     buf.writeUint32(preferred_);
     buf.writeUint32(valid_);
@@ -71,7 +71,7 @@ void Option6IAAddr::pack(isc::util::OutputBuffer& buf) {
 void Option6IAAddr::unpack(OptionBuffer::const_iterator begin,
                       OptionBuffer::const_iterator end) {
     if ( distance(begin, end) < OPTION6_IAADDR_LEN) {
-        isc_throw(OutOfRange, "Option " << type_ << " truncated");
+        bundy_throw(OutOfRange, "Option " << type_ << " truncated");
     }
 
     // 16 bytes: IPv6 address
@@ -119,5 +119,5 @@ uint16_t Option6IAAddr::len() {
     return (length);
 }
 
-} // end of namespace isc::dhcp
-} // end of namespace isc
+} // end of namespace bundy::dhcp
+} // end of namespace bundy

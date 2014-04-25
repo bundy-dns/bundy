@@ -24,7 +24,7 @@
 #include <dns/rrclass.h>
 #include <dns/rrtype.h>
 
-namespace isc {
+namespace bundy {
 namespace util {
 class InputBuffer;
 class OutputBuffer;
@@ -122,7 +122,7 @@ public:
     /// classes fails.
     ///
     /// \param buffer A buffer storing the wire format data.
-    Question(isc::util::InputBuffer& buffer);
+    Question(bundy::util::InputBuffer& buffer);
 
     /// \brief Constructor from fixed parameters of the \c Question.
     ///
@@ -232,7 +232,7 @@ public:
     ///
     /// \param buffer An output buffer to store the wire data.
     /// \return 1
-    unsigned int toWire(isc::util::OutputBuffer& buffer) const;
+    unsigned int toWire(bundy::util::OutputBuffer& buffer) const;
     //@}
 
     ///
@@ -291,7 +291,7 @@ private:
 /// parameter \c os after the insertion operation.
 std::ostream& operator<<(std::ostream& os, const Question& question);
 } // end of namespace dns
-} // end of namespace isc
+} // end of namespace bundy
 #endif  // QUESTION_H
 
 // Local Variables: 

@@ -14,10 +14,10 @@
 
 #include <cc/logger.h>
 
-namespace isc {
+namespace bundy {
 namespace cc {
 
-isc::log::Logger logger("cc");
+bundy::log::Logger logger("cc");
 
 }
 }

@@ -18,7 +18,7 @@
 #include <log/macros.h>
 #include "resolve_messages.h"
 
-namespace isc {
+namespace bundy {
 namespace resolve {
 
 /// \brief Resolver Library Logging
@@ -45,9 +45,9 @@ const int RESLIB_DBG_CB = DBGLVL_TRACE_DETAIL_DATA + 10;
 /// Define the logger used to log messages.  We could define it in multiple
 /// modules, but defining in a single module and linking to it saves time and
 /// space.
-extern isc::log::Logger logger;
+extern bundy::log::Logger logger;
 
 } // namespace resolve
-} // namespace isc
+} // namespace bundy
 
 #endif // RESOLVE_LOG_H

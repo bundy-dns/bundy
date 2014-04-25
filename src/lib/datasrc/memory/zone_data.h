@@ -28,7 +28,7 @@
 
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace rdata {
 namespace generic {
@@ -670,7 +670,7 @@ private:
 
 } // namespace memory
 } // namespace datasrc
-} // namespace isc
+} // namespace bundy
 
 #endif // DATASRC_MEMORY_ZONE_DATA_H
 

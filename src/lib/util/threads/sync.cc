@@ -27,7 +27,7 @@
 
 using std::auto_ptr;
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace thread {
 
@@ -73,7 +73,7 @@ Mutex::Mutex() :
         case ENOMEM:
             throw std::bad_alloc();
         default:
-            isc_throw(isc::InvalidOperation, std::strerror(result));
+            bundy_throw(bundy::InvalidOperation, std::strerror(result));
     }
     Deinitializer deinitializer(attributes);
 
@@ -87,7 +87,7 @@ Mutex::Mutex() :
     result = pthread_mutexattr_settype(&attributes, PTHREAD_MUTEX_NORMAL);
 #endif // ENABLE_DEBUG
     if (result != 0) {
-        isc_throw(isc::InvalidOperation, std::strerror(result));
+        bundy_throw(bundy::InvalidOperation, std::strerror(result));
     }
 
     auto_ptr<Impl> impl(new Impl);
@@ -100,7 +100,7 @@ Mutex::Mutex() :
         case EAGAIN:
             throw std::bad_alloc();
         default:
-            isc_throw(isc::InvalidOperation, std::strerror(result));
+            bundy_throw(bundy::InvalidOperation, std::strerror(result));
     }
 }
 
@@ -141,7 +141,7 @@ void
 Mutex::preUnlockAction(bool throw_ok) {
     if (impl_->locked_count == 0) {
         if (throw_ok) {
-            isc_throw(isc::InvalidOperation,
+            bundy_throw(bundy::InvalidOperation,
                       "Unlock attempt for unlocked mutex");
         } else {
             assert(false);
@@ -162,7 +162,7 @@ Mutex::lock() {
     assert(impl_ != NULL);
     const int result = pthread_mutex_lock(&impl_->mutex);
     if (result != 0) {
-        isc_throw(isc::InvalidOperation, std::strerror(result));
+        bundy_throw(bundy::InvalidOperation, std::strerror(result));
     }
 #ifdef ENABLE_DEBUG
     postLockAction();           // Only in debug mode
@@ -181,7 +181,7 @@ Mutex::tryLock() {
     if (result == EBUSY || result == EDEADLK) {
         return (false);
     } else if (result != 0) {
-        isc_throw(isc::InvalidOperation, std::strerror(result));
+        bundy_throw(bundy::InvalidOperation, std::strerror(result));
     }
 #ifdef ENABLE_DEBUG
     postLockAction();           // Only in debug mode
@@ -204,7 +204,7 @@ public:
     Impl() {
         const int result = pthread_cond_init(&cond_, NULL);
         if (result != 0) {
-            isc_throw(isc::Unexpected, "pthread_cond_init failed: "
+            bundy_throw(bundy::Unexpected, "pthread_cond_init failed: "
                       << std::strerror(result));
         }
     }
@@ -241,7 +241,7 @@ CondVar::wait(Mutex& mutex) {
     // pthread_cond_wait should normally succeed unless mutex is completely
     // broken.
     if (result != 0) {
-        isc_throw(isc::BadValue, "pthread_cond_wait failed unexpectedly: " <<
+        bundy_throw(bundy::BadValue, "pthread_cond_wait failed unexpectedly: " <<
                   std::strerror(result));
     }
 }

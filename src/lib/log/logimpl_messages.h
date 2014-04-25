@@ -5,14 +5,14 @@
 
 #include <log/message_types.h>
 
-namespace isc {
+namespace bundy {
 namespace log {
 
-extern const isc::log::MessageID LOGIMPL_ABOVE_MAX_DEBUG;
-extern const isc::log::MessageID LOGIMPL_BAD_DEBUG_STRING;
-extern const isc::log::MessageID LOGIMPL_BELOW_MIN_DEBUG;
+extern const bundy::log::MessageID LOGIMPL_ABOVE_MAX_DEBUG;
+extern const bundy::log::MessageID LOGIMPL_BAD_DEBUG_STRING;
+extern const bundy::log::MessageID LOGIMPL_BELOW_MIN_DEBUG;
 
 } // namespace log
-} // namespace isc
+} // namespace bundy
 
 #endif // LOGIMPL_MESSAGES_H

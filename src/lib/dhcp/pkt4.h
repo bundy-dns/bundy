@@ -31,7 +31,7 @@
 
 #include <time.h>
 
-namespace isc {
+namespace bundy {
 
 namespace dhcp {
 
@@ -168,53 +168,53 @@ public:
     /// @brief Returns ciaddr field.
     ///
     /// @return ciaddr field
-    const isc::asiolink::IOAddress&
+    const bundy::asiolink::IOAddress&
     getCiaddr() const { return (ciaddr_); };
 
     /// @brief Sets ciaddr field.
     ///
     /// @param ciaddr value to be set
     void
-    setCiaddr(const isc::asiolink::IOAddress& ciaddr) { ciaddr_ = ciaddr; };
+    setCiaddr(const bundy::asiolink::IOAddress& ciaddr) { ciaddr_ = ciaddr; };
 
 
     /// @brief Returns siaddr field.
     ///
     /// @return siaddr field
-    const isc::asiolink::IOAddress&
+    const bundy::asiolink::IOAddress&
     getSiaddr() const { return (siaddr_); };
 
     /// @brief Sets siaddr field.
     ///
     /// @param siaddr value to be set
     void
-    setSiaddr(const isc::asiolink::IOAddress& siaddr) { siaddr_ = siaddr; };
+    setSiaddr(const bundy::asiolink::IOAddress& siaddr) { siaddr_ = siaddr; };
 
 
     /// @brief Returns yiaddr field.
     ///
     /// @return yiaddr field
-    const isc::asiolink::IOAddress&
+    const bundy::asiolink::IOAddress&
     getYiaddr() const { return (yiaddr_); };
 
     /// @brief Sets yiaddr field.
     ///
     /// @param yiaddr value to be set
     void
-    setYiaddr(const isc::asiolink::IOAddress& yiaddr) { yiaddr_ = yiaddr; };
+    setYiaddr(const bundy::asiolink::IOAddress& yiaddr) { yiaddr_ = yiaddr; };
 
 
     /// @brief Returns giaddr field.
     ///
     /// @return giaddr field
-    const isc::asiolink::IOAddress&
+    const bundy::asiolink::IOAddress&
     getGiaddr() const { return (giaddr_); };
 
     /// @brief Sets giaddr field.
     ///
     /// @param giaddr value to be set
     void
-    setGiaddr(const isc::asiolink::IOAddress& giaddr) { giaddr_ = giaddr; };
+    setGiaddr(const bundy::asiolink::IOAddress& giaddr) { giaddr_ = giaddr; };
 
     /// @brief Sets transaction-id value
     ///
@@ -315,7 +315,7 @@ public:
     /// framework (and user's callouts) can modify them if needed
     ///
     /// @return reference to output buffer
-    isc::util::OutputBuffer&
+    bundy::util::OutputBuffer&
     getBuffer() { return (buffer_out_); };
 
     /// @brief Add an option.
@@ -441,28 +441,28 @@ public:
     /// @brief Sets remote address.
     ///
     /// @param remote specifies remote address
-    void setRemoteAddr(const isc::asiolink::IOAddress& remote) {
+    void setRemoteAddr(const bundy::asiolink::IOAddress& remote) {
         remote_addr_ = remote;
     }
 
     /// @brief Returns remote address
     ///
     /// @return remote address
-    const isc::asiolink::IOAddress& getRemoteAddr() const {
+    const bundy::asiolink::IOAddress& getRemoteAddr() const {
         return (remote_addr_);
     }
 
     /// @brief Sets local address.
     ///
     /// @param local specifies local address
-    void setLocalAddr(const isc::asiolink::IOAddress& local) {
+    void setLocalAddr(const bundy::asiolink::IOAddress& local) {
         local_addr_ = local;
     }
 
     /// @brief Returns local address.
     ///
     /// @return local address
-    const isc::asiolink::IOAddress& getLocalAddr() const {
+    const bundy::asiolink::IOAddress& getLocalAddr() const {
         return (local_addr_);
     }
 
@@ -500,7 +500,7 @@ public:
     ///
     /// @return Boolean value which indicates whether the message is relayed
     /// (true) or non-relayed (false).
-    /// @throw isc::BadValue if invalid combination of Giaddr and Hops values is
+    /// @throw bundy::BadValue if invalid combination of Giaddr and Hops values is
     /// found.
     bool isRelayed() const;
 
@@ -517,7 +517,7 @@ public:
     /// Updates packet timestamp. This method is invoked
     /// by interface manager just before sending or
     /// just after receiving it.
-    /// @throw isc::Unexpected if timestamp update failed
+    /// @throw bundy::Unexpected if timestamp update failed
     void updateTimestamp();
 
     /// Output buffer (used during message transmission)
@@ -532,7 +532,7 @@ public:
     /// but we expect to also have them in Python, so any accesibility
     /// methods would overly complicate things here and degrade
     /// performance).
-    isc::util::OutputBuffer buffer_out_;
+    bundy::util::OutputBuffer buffer_out_;
 
     /// @brief That's the data of input buffer used in RX packet.
     ///
@@ -556,7 +556,7 @@ public:
     ///
     /// @param client_class name of the class
     /// @return true if belongs
-    bool inClass(const isc::dhcp::ClientClass& client_class);
+    bool inClass(const bundy::dhcp::ClientClass& client_class);
 
     /// @brief Adds packet to a specified class
     ///
@@ -573,7 +573,7 @@ public:
     /// so I decided to stick with addClass().
     ///
     /// @param client_class name of the class to be added
-    void addClass(const isc::dhcp::ClientClass& client_class);
+    void addClass(const bundy::dhcp::ClientClass& client_class);
 
     /// @brief Classes this packet belongs to.
     ///
@@ -595,7 +595,7 @@ private:
     /// @param mac_addr pointer to actual hardware address.
     /// @param [out] hw_addr pointer to a class member to be modified.
     ///
-    /// @trow isc::OutOfRange if invalid HW address specified.
+    /// @trow bundy::OutOfRange if invalid HW address specified.
     void setHWAddrMember(const uint8_t htype, const uint8_t hlen,
                          const std::vector<uint8_t>& mac_addr,
                          HWAddrPtr& hw_addr);
@@ -617,10 +617,10 @@ protected:
     HWAddrPtr remote_hwaddr_;
 
     /// local address (dst if receiving packet, src if sending packet)
-    isc::asiolink::IOAddress local_addr_;
+    bundy::asiolink::IOAddress local_addr_;
 
     /// remote address (src if receiving packet, dst if sending packet)
-    isc::asiolink::IOAddress remote_addr_;
+    bundy::asiolink::IOAddress remote_addr_;
 
     /// name of the network interface the packet was received/to be sent over
     std::string iface_;
@@ -666,16 +666,16 @@ protected:
     uint16_t flags_;
 
     /// ciaddr field (32 bits): Client's IP address
-    isc::asiolink::IOAddress ciaddr_;
+    bundy::asiolink::IOAddress ciaddr_;
 
     /// yiaddr field (32 bits): Client's IP address ("your"), set by server
-    isc::asiolink::IOAddress yiaddr_;
+    bundy::asiolink::IOAddress yiaddr_;
 
     /// siaddr field (32 bits): next server IP address in boot process(e.g.TFTP)
-    isc::asiolink::IOAddress siaddr_;
+    bundy::asiolink::IOAddress siaddr_;
 
     /// giaddr field (32 bits): Gateway IP address
-    isc::asiolink::IOAddress giaddr_;
+    bundy::asiolink::IOAddress giaddr_;
 
     /// sname field (64 bytes)
     uint8_t sname_[MAX_SNAME_LEN];
@@ -693,7 +693,7 @@ protected:
     /// behavior must be taken into consideration before making
     /// changes to this member such as access scope restriction or
     /// data format change etc.
-    isc::dhcp::OptionCollection options_;
+    bundy::dhcp::OptionCollection options_;
 
     /// packet timestamp
     boost::posix_time::ptime timestamp_;
@@ -705,8 +705,8 @@ protected:
 
 typedef boost::shared_ptr<Pkt4> Pkt4Ptr;
 
-} // isc::dhcp namespace
+} // bundy::dhcp namespace
 
-} // isc namespace
+} // bundy namespace
 
 #endif

@@ -5,7 +5,7 @@ AM_CPPFLAGS += $(BOOST_INCLUDES) $(MULTITHREADING_FLAG)
 AM_CPPFLAGS += -I$(top_srcdir)/src/lib/dns -I$(top_builddir)/src/lib/dns
 AM_CPPFLAGS += -I$(top_srcdir)/src/lib/util -I$(top_builddir)/src/lib/util
 AM_CPPFLAGS += -I$(top_srcdir)/src/lib/nsas -I$(top_builddir)/src/lib/nsas
-AM_CXXFLAGS = $(B10_CXXFLAGS)
+AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 
 AM_LDFLAGS = $(PTHREAD_LDFLAGS)
 if USE_STATIC_LINK
@@ -49,13 +49,13 @@ run_unittests_CPPFLAGS = $(AM_CPPFLAGS) $(GTEST_INCLUDES)
 run_unittests_LDFLAGS  = $(AM_LDFLAGS)  $(GTEST_LDFLAGS)
 run_unittests_LDADD    = $(GTEST_LDADD)
 
-run_unittests_LDADD += $(top_builddir)/src/lib/nsas/libb10-nsas.la
-run_unittests_LDADD += $(top_builddir)/src/lib/util/libb10-util.la
-run_unittests_LDADD += $(top_builddir)/src/lib/log/libb10-log.la
-run_unittests_LDADD += $(top_builddir)/src/lib/dns/libb10-dns++.la
-run_unittests_LDADD += $(top_builddir)/src/lib/asiolink/libb10-asiolink.la
+run_unittests_LDADD += $(top_builddir)/src/lib/nsas/libbundy-nsas.la
+run_unittests_LDADD += $(top_builddir)/src/lib/util/libbundy-util.la
+run_unittests_LDADD += $(top_builddir)/src/lib/log/libbundy-log.la
+run_unittests_LDADD += $(top_builddir)/src/lib/dns/libbundy-dns++.la
+run_unittests_LDADD += $(top_builddir)/src/lib/asiolink/libbundy-asiolink.la
 run_unittests_LDADD += $(top_builddir)/src/lib/util/unittests/libutil_unittests.la
-run_unittests_LDADD += $(top_builddir)/src/lib/exceptions/libb10-exceptions.la
+run_unittests_LDADD += $(top_builddir)/src/lib/exceptions/libbundy-exceptions.la
 endif
 
 noinst_PROGRAMS = $(TESTS)

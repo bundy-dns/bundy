@@ -21,11 +21,11 @@
 #include <nsas/hash_table.h>
 #include <nsas/hash_deleter.h>
 
-using namespace isc::nsas;
-using namespace isc::dns;
+using namespace bundy::nsas;
+using namespace bundy::dns;
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace cache {
 
 RRsetCache::RRsetCache(uint32_t cache_size,
@@ -40,8 +40,8 @@ RRsetCache::RRsetCache(uint32_t cache_size,
 }
 
 RRsetEntryPtr
-RRsetCache::lookup(const isc::dns::Name& qname,
-                   const isc::dns::RRType& qtype)
+RRsetCache::lookup(const bundy::dns::Name& qname,
+                   const bundy::dns::RRType& qtype)
 {
     LOG_DEBUG(logger, DBG_TRACE_DATA, CACHE_RRSET_LOOKUP).arg(qname).
         arg(qtype).arg(RRClass(class_));
@@ -70,7 +70,7 @@ RRsetCache::lookup(const isc::dns::Name& qname,
 }
 
 RRsetEntryPtr
-RRsetCache::update(const isc::dns::AbstractRRset& rrset,
+RRsetCache::update(const bundy::dns::AbstractRRset& rrset,
                    const RRsetTrustLevel& level)
 {
     LOG_DEBUG(logger, DBG_TRACE_DATA, CACHE_RRSET_UPDATE).arg(rrset.getName()).
@@ -101,5 +101,5 @@ RRsetCache::update(const isc::dns::AbstractRRset& rrset,
 }
 
 } // namespace cache
-} // namespace isc
+} // namespace bundy
 

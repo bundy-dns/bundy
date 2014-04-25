@@ -21,17 +21,17 @@
 #include "pydnspp_common.h"
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::dns::python;
-using namespace isc::util;
-using namespace isc::util::python;
+using namespace bundy::dns;
+using namespace bundy::dns::python;
+using namespace bundy::util;
+using namespace bundy::util::python;
 
 namespace {
 // The s_* Class simply covers one instantiation of the object
 class s_Serial : public PyObject {
 public:
     s_Serial() : cppobj(NULL) {};
-    isc::dns::Serial* cppobj;
+    bundy::dns::Serial* cppobj;
 };
 
 typedef CPPPyObjectContainer<s_Serial, Serial> SerialContainer;
@@ -187,7 +187,7 @@ Serial_add(PyObject *left, PyObject *right) {
 
 } // end anonymous namespace
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace python {
 // This defines the complete type for reflection in python and
@@ -270,4 +270,4 @@ PySerial_ToSerial(const PyObject* serial_obj) {
 
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy

@@ -27,7 +27,7 @@
 #include <sys/socket.h>
 #include <stdint.h>
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace unittests {
 
@@ -37,7 +37,7 @@ namespace unittests {
 /// network communication, and allowing the tester to customize the behavior
 /// and to examine forwarded data afterwards.
 class MockSocketSessionForwarder :
-    public isc::util::io::BaseSocketSessionForwarder
+    public bundy::util::io::BaseSocketSessionForwarder
 {
 public:
     MockSocketSessionForwarder() :
@@ -52,17 +52,17 @@ public:
 
     virtual void connectToReceiver() {
         if (!connect_ok_) {
-            isc_throw(isc::util::io::SocketSessionError, "socket session "
+            bundy_throw(bundy::util::io::SocketSessionError, "socket session "
                       "forwarding connection disabled for test");
         }
         if (is_connected_) {
-            isc_throw(isc::util::io::SocketSessionError, "duplicate connect");
+            bundy_throw(bundy::util::io::SocketSessionError, "duplicate connect");
         }
         is_connected_ = true;
     }
     virtual void close() {
         if (!is_connected_) {
-            isc_throw(isc::util::io::SocketSessionError, "duplicate close");
+            bundy_throw(bundy::util::io::SocketSessionError, "duplicate close");
         }
         is_connected_ = false;
     }
@@ -77,11 +77,11 @@ public:
                       const void* data, size_t data_len)
     {
         if (!push_ok_) {
-            isc_throw(isc::util::io::SocketSessionError,
+            bundy_throw(bundy::util::io::SocketSessionError,
                        "socket session forwarding is disabled for test");
         }
         if (!is_connected_) {
-            isc_throw(isc::util::io::SocketSessionError,
+            bundy_throw(bundy::util::io::SocketSessionError,
                        "socket session is being pushed before connected");
         }
 

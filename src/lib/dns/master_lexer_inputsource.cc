@@ -21,7 +21,7 @@
 #include <cerrno>
 #include <cstring>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace master_lexer_internal {
 
@@ -41,7 +41,7 @@ getStreamSize(std::istream& is) {
     if (is.bad()) {
         // This means the istream has an integrity error.  It doesn't make
         // sense to continue from this point, so we treat it as a fatal error.
-        isc_throw(InputSource::OpenError,
+        bundy_throw(InputSource::OpenError,
                   "failed to seek end of input source");
     } else if (is.fail() || errno != 0) {
         // This is an error specific to seekg().  There can be several
@@ -70,12 +70,12 @@ getStreamSize(std::istream& is) {
             // behavior.  We treat such cases as an unknown size.
             ret = MasterLexer::SOURCE_SIZE_UNKNOWN;
         } else {
-            isc_throw(InputSource::OpenError, "failed to get input size");
+            bundy_throw(InputSource::OpenError, "failed to get input size");
         }
     }
     is.seekg(0, std::ios::beg);
     if (is.fail()) {
-        isc_throw(InputSource::OpenError,
+        bundy_throw(InputSource::OpenError,
                   "failed to seek beginning of input source");
     }
     assert(len >= 0 || ret == MasterLexer::SOURCE_SIZE_UNKNOWN);
@@ -113,7 +113,7 @@ openFileStream(std::ifstream& file_stream, const char* filename) {
             error_txt += "; possible cause: ";
             error_txt += std::strerror(errno);
         }
-        isc_throw(InputSource::OpenError, error_txt);
+        bundy_throw(InputSource::OpenError, error_txt);
     }
 
     return (file_stream);
@@ -159,7 +159,7 @@ InputSource::getChar() {
         // This has to come after the .eof() check as some
         // implementations seem to check the eofbit also in .fail().
         if (input_.fail()) {
-            isc_throw(MasterLexer::ReadError,
+            bundy_throw(MasterLexer::ReadError,
                       "Error reading from the input stream: " << getName());
         }
         buffer_.push_back(c);
@@ -180,7 +180,7 @@ InputSource::ungetChar() {
     if (at_eof_) {
         at_eof_ = false;
     } else if (buffer_pos_ == 0) {
-        isc_throw(UngetBeforeBeginning,
+        bundy_throw(UngetBeforeBeginning,
                   "Cannot skip before the start of buffer");
     } else {
         --buffer_pos_;
@@ -224,4 +224,4 @@ InputSource::mark() {
 
 } // namespace master_lexer_internal
 } // namespace dns
-} // namespace isc
+} // namespace bundy

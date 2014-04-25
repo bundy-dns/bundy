@@ -64,7 +64,7 @@ if advised of the possibility of such damage.
 
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 
 // Constructor.
@@ -87,7 +87,7 @@ Hash::Hash(uint32_t tablesize, uint32_t maxkeylen, bool randomise) :
     hash_accum_t overflow_limit =
         1 << (((sizeof(hash_accum_t) - sizeof(hash_random_t))) * 8);
     if (overflow_limit < (maxkeylen_ + sizeof(uint16_t) + 1) * 0xff) {
-        isc_throw(KeyLengthTooLong, "Hash key length too long for Hash class");
+        bundy_throw(KeyLengthTooLong, "Hash key length too long for Hash class");
     }
 
     // Initialize the random number generator with the current time.
@@ -164,4 +164,4 @@ uint32_t Hash::operator()(const HashKey& key, bool ignorecase) const
 }
 
 } // namespace nsas
-} // namespace isc
+} // namespace bundy

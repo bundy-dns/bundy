@@ -17,7 +17,7 @@
 #include <stdint.h>
 
 // see util/time_utilities.h
-namespace isc {
+namespace bundy {
 namespace util {
 namespace detail {
 extern int64_t (*gettimeFunction)();
@@ -37,10 +37,10 @@ PyObject*
 fixCurrentTime(PyObject*, PyObject* args) {
     PyObject* maybe_none;
     if (PyArg_ParseTuple(args, "L", &fake_current_time)) {
-        isc::util::detail::gettimeFunction = getFakeTime;
+        bundy::util::detail::gettimeFunction = getFakeTime;
     } else if (PyArg_ParseTuple(args, "O", &maybe_none) &&
                maybe_none == Py_None) {
-        isc::util::detail::gettimeFunction = NULL;
+        bundy::util::detail::gettimeFunction = NULL;
     } else {
          PyErr_SetString(PyExc_TypeError, "Invalid arguments to "
                          "pyunittests_util.fix_current_time");
@@ -68,7 +68,7 @@ PyModuleDef pyunittests_util = {
     { PyObject_HEAD_INIT(NULL) NULL, 0, NULL},
     "pyunittests_util",
     "This module is a collection of utilities useful for testing "
-    "the BIND 10 C++ binding modules.",
+    "the BUNDY C++ binding modules.",
     -1,
     PyUnittestsUtilMethods,
     NULL,

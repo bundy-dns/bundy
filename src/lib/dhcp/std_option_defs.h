@@ -19,7 +19,7 @@
 #include <dhcp/dhcp4.h>
 #include <dhcp/dhcp6.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 namespace {
@@ -340,6 +340,6 @@ const int OPTION_DEF_PARAMS_SIZE6  =
 } // unnamed namespace
 
 } // namespace dhcp
-} // namespace isc
+} // namespace bundy
 
 #endif // STD_OPTION_DEFS_H

@@ -21,8 +21,8 @@
 #include <log/message_exception.h>
 #include <log/message_reader.h>
 
-using namespace isc;
-using namespace isc::log;
+using namespace bundy;
+using namespace bundy::log;
 using namespace std;
 
 class MessageReaderTest : public ::testing::Test {
@@ -159,16 +159,16 @@ TEST_F(MessageReaderTest, Namespace) {
     processLineException(reader_, "$namespace ab[cd", LOG_NAMESPACE_INVALID_ARG);
 
     // A valid $NAMESPACE should be accepted
-    EXPECT_NO_THROW(reader_.processLine("$NAMESPACE isc"));
-    EXPECT_EQ(string("isc"), reader_.getNamespace());
+    EXPECT_NO_THROW(reader_.processLine("$NAMESPACE bundy"));
+    EXPECT_EQ(string("bundy"), reader_.getNamespace());
 
     // (Check that we can clear the namespace)
     reader_.clearNamespace();
     EXPECT_EQ(string(""), reader_.getNamespace());
 
     // Check that a valid namespace can include colons
-    EXPECT_NO_THROW(reader_.processLine("$NAMESPACE isc::log"));
-    EXPECT_EQ(string("isc::log"), reader_.getNamespace());
+    EXPECT_NO_THROW(reader_.processLine("$NAMESPACE bundy::log"));
+    EXPECT_EQ(string("bundy::log"), reader_.getNamespace());
 
     // Check that the indication of the anonymous namespace will be recognised.
     reader_.clearNamespace();

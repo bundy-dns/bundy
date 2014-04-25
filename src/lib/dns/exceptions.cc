@@ -15,7 +15,7 @@
 #include <dns/exceptions.h>
 #include <dns/rcode.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 const Rcode&
@@ -29,4 +29,4 @@ DNSMessageBADVERS::getRcode() const {
 }
 
 } // end of namespace dns
-} // end of namespace isc
+} // end of namespace bundy

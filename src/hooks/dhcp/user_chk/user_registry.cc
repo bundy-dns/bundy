@@ -26,12 +26,12 @@ UserRegistry::~UserRegistry(){
 void
 UserRegistry::addUser(UserPtr& user) {
     if (!user) {
-        isc_throw (UserRegistryError, "UserRegistry cannot add blank user");
+        bundy_throw (UserRegistryError, "UserRegistry cannot add blank user");
     }
 
     UserPtr found_user;
     if ((found_user = findUser(user->getUserId()))) {
-        isc_throw (UserRegistryError, "UserRegistry duplicate user: "
+        bundy_throw (UserRegistryError, "UserRegistry duplicate user: "
                    << user->getUserId());
     }
 
@@ -60,20 +60,20 @@ UserRegistry::removeUser(const UserId& id) {
 }
 
 const UserPtr&
-UserRegistry::findUser(const isc::dhcp::HWAddr& hwaddr) const {
+UserRegistry::findUser(const bundy::dhcp::HWAddr& hwaddr) const {
     UserId id(UserId::HW_ADDRESS, hwaddr.hwaddr_);
     return (findUser(id));
 }
 
 const UserPtr&
-UserRegistry::findUser(const isc::dhcp::DUID& duid) const {
+UserRegistry::findUser(const bundy::dhcp::DUID& duid) const {
     UserId id(UserId::DUID, duid.getDuid());
     return (findUser(id));
 }
 
 void UserRegistry::refresh() {
     if (!source_) {
-        isc_throw(UserRegistryError,
+        bundy_throw(UserRegistryError,
                   "UserRegistry: cannot refresh, no data source");
     }
 
@@ -97,7 +97,7 @@ void UserRegistry::refresh() {
         users_ = backup;
         // Close the source.
         source_->close();
-        isc_throw (UserRegistryError, "UserRegistry: refresh failed during read"
+        bundy_throw (UserRegistryError, "UserRegistry: refresh failed during read"
                    << ex.what());
     }
 
@@ -111,7 +111,7 @@ void UserRegistry::clearall() {
 
 void UserRegistry::setSource(UserDataSourcePtr& source) {
     if (!source) {
-        isc_throw (UserRegistryError,
+        bundy_throw (UserRegistryError,
                    "UserRegistry: data source cannot be set to null");
     }
 

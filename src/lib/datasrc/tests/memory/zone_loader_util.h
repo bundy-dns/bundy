@@ -22,7 +22,7 @@
 
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 namespace test {
@@ -53,7 +53,7 @@ loadZoneIntoTable(ZoneTableSegment& zt_sgmt, const dns::Name& zname,
 } // namespace test
 } // namespace memory
 } // namespace datasrc
-} // namespace isc
+} // namespace bundy
 
 #endif // DATASRC_MEMORY_TEST_ZONE_LOADER_UTIL_H
 

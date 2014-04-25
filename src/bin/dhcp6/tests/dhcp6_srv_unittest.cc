@@ -47,15 +47,15 @@
 #include <iostream>
 #include <sstream>
 
-using namespace isc;
-using namespace isc::data;
-using namespace isc::config;
-using namespace isc::test;
-using namespace isc::asiolink;
-using namespace isc::dhcp;
-using namespace isc::dhcp::test;
-using namespace isc::util;
-using namespace isc::hooks;
+using namespace bundy;
+using namespace bundy::data;
+using namespace bundy::config;
+using namespace bundy::test;
+using namespace bundy::asiolink;
+using namespace bundy::dhcp;
+using namespace bundy::dhcp::test;
+using namespace bundy::util;
+using namespace bundy::hooks;
 using namespace std;
 
 namespace {
@@ -1097,7 +1097,7 @@ TEST_F(Dhcpv6SrvTest, testServerID) {
 
     // diud_llt constructed with: time = 0, macaddress = 00:00:00:00:00:00
     // it's necessary to generate server identifier option
-    isc::util::encode::decodeHex("0001000100000000000000000000", bin);
+    bundy::util::encode::decodeHex("0001000100000000000000000000", bin);
     // Now create server identifier option
     OptionPtr serverid = OptionPtr(new Option(Option::V6, D6O_SERVERID, bin));
 

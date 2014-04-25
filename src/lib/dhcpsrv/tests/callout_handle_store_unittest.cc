@@ -22,9 +22,9 @@
 
 #include <gtest/gtest.h>
 
-using namespace isc;
-using namespace isc::dhcp;
-using namespace isc::hooks;
+using namespace bundy;
+using namespace bundy::dhcp;
+using namespace bundy::hooks;
 
 namespace {
 
@@ -115,7 +115,7 @@ TEST(CalloutHandleStoreTest, SeparateCompilationUnit) {
     ASSERT_TRUE(chptr_1);
 
     // Access it from within another compilation unit.
-    CalloutHandlePtr chptr_2 = isc::dhcp::test::testGetCalloutHandle(pktptr_1);
+    CalloutHandlePtr chptr_2 = bundy::dhcp::test::testGetCalloutHandle(pktptr_1);
     EXPECT_TRUE(chptr_1 == chptr_2);
 }
 

@@ -4,7 +4,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/src/lib -I$(top_builddir)/src/lib
 AM_CPPFLAGS += -I$(top_srcdir)/src/bin -I$(top_builddir)/src/bin
 AM_CPPFLAGS += $(BOOST_INCLUDES)
 
-AM_CXXFLAGS = $(B10_CXXFLAGS)
+AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 if USE_CLANGPP
 # Disable unused parameter warning caused by some Boost headers when compiling with clang
 AM_CXXFLAGS += -Wno-unused-parameter
@@ -18,21 +18,21 @@ pkglibexecdir = $(libexecdir)/@PACKAGE@
 
 CLEANFILES  = *.gcno *.gcda spec_config.h d2_messages.h d2_messages.cc s-messages
 
-man_MANS = b10-dhcp-ddns.8
+man_MANS = bundy-dhcp-ddns.8
 DISTCLEANFILES = $(man_MANS)
-EXTRA_DIST = $(man_MANS) b10-dhcp-ddns.xml dhcp-ddns.spec
+EXTRA_DIST = $(man_MANS) bundy-dhcp-ddns.xml dhcp-ddns.spec
 
 if GENERATE_DOCS
-b10-dhcp-ddns.8: b10-dhcp-ddns.xml
+bundy-dhcp-ddns.8: bundy-dhcp-ddns.xml
 	@XSLTPROC@ --novalid --xinclude --nonet -o $@ \
         http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl \
-	$(srcdir)/b10-dhcp-ddns.xml
+	$(srcdir)/bundy-dhcp-ddns.xml
 
 else
 
 $(man_MANS):
 	@echo Man generation disabled.  Creating dummy $@.  Configure with --enable-generate-docs to enable it.
-	@echo Man generation disabled.  Remove this file, configure with --enable-generate-docs, and rebuild BIND 10 > $@
+	@echo Man generation disabled.  Remove this file, configure with --enable-generate-docs, and rebuild BUNDY > $@
 
 endif
 
@@ -47,43 +47,43 @@ s-messages: d2_messages.mes
 
 BUILT_SOURCES = spec_config.h d2_messages.h d2_messages.cc
 
-pkglibexec_PROGRAMS = b10-dhcp-ddns
+pkglibexec_PROGRAMS = bundy-dhcp-ddns
 
-b10_dhcp_ddns_SOURCES  = main.cc
-b10_dhcp_ddns_SOURCES += d2_asio.h
-b10_dhcp_ddns_SOURCES += d2_log.cc d2_log.h
-b10_dhcp_ddns_SOURCES += d2_process.cc d2_process.h
-b10_dhcp_ddns_SOURCES += d_controller.cc d_controller.h
-b10_dhcp_ddns_SOURCES += d2_controller.cc d2_controller.h
-b10_dhcp_ddns_SOURCES += d_cfg_mgr.cc d_cfg_mgr.h
-b10_dhcp_ddns_SOURCES += d2_config.cc d2_config.h
-b10_dhcp_ddns_SOURCES += d2_cfg_mgr.cc d2_cfg_mgr.h
-b10_dhcp_ddns_SOURCES += d2_queue_mgr.cc d2_queue_mgr.h
-b10_dhcp_ddns_SOURCES += d2_update_message.cc d2_update_message.h
-b10_dhcp_ddns_SOURCES += d2_update_mgr.cc d2_update_mgr.h
-b10_dhcp_ddns_SOURCES += d2_zone.cc d2_zone.h
-b10_dhcp_ddns_SOURCES += dns_client.cc dns_client.h
-b10_dhcp_ddns_SOURCES += labeled_value.cc labeled_value.h
-b10_dhcp_ddns_SOURCES += nc_add.cc nc_add.h
-b10_dhcp_ddns_SOURCES += nc_remove.cc nc_remove.h
-b10_dhcp_ddns_SOURCES += nc_trans.cc nc_trans.h
-b10_dhcp_ddns_SOURCES += state_model.cc state_model.h
+bundy_dhcp_ddns_SOURCES  = main.cc
+bundy_dhcp_ddns_SOURCES += d2_asio.h
+bundy_dhcp_ddns_SOURCES += d2_log.cc d2_log.h
+bundy_dhcp_ddns_SOURCES += d2_process.cc d2_process.h
+bundy_dhcp_ddns_SOURCES += d_controller.cc d_controller.h
+bundy_dhcp_ddns_SOURCES += d2_controller.cc d2_controller.h
+bundy_dhcp_ddns_SOURCES += d_cfg_mgr.cc d_cfg_mgr.h
+bundy_dhcp_ddns_SOURCES += d2_config.cc d2_config.h
+bundy_dhcp_ddns_SOURCES += d2_cfg_mgr.cc d2_cfg_mgr.h
+bundy_dhcp_ddns_SOURCES += d2_queue_mgr.cc d2_queue_mgr.h
+bundy_dhcp_ddns_SOURCES += d2_update_message.cc d2_update_message.h
+bundy_dhcp_ddns_SOURCES += d2_update_mgr.cc d2_update_mgr.h
+bundy_dhcp_ddns_SOURCES += d2_zone.cc d2_zone.h
+bundy_dhcp_ddns_SOURCES += dns_client.cc dns_client.h
+bundy_dhcp_ddns_SOURCES += labeled_value.cc labeled_value.h
+bundy_dhcp_ddns_SOURCES += nc_add.cc nc_add.h
+bundy_dhcp_ddns_SOURCES += nc_remove.cc nc_remove.h
+bundy_dhcp_ddns_SOURCES += nc_trans.cc nc_trans.h
+bundy_dhcp_ddns_SOURCES += state_model.cc state_model.h
 
-nodist_b10_dhcp_ddns_SOURCES = d2_messages.h d2_messages.cc
+nodist_bundy_dhcp_ddns_SOURCES = d2_messages.h d2_messages.cc
 EXTRA_DIST += d2_messages.mes
 
-b10_dhcp_ddns_LDADD = $(top_builddir)/src/lib/log/libb10-log.la
-b10_dhcp_ddns_LDADD += $(top_builddir)/src/lib/exceptions/libb10-exceptions.la
-b10_dhcp_ddns_LDADD += $(top_builddir)/src/lib/cc/libb10-cc.la
-b10_dhcp_ddns_LDADD += $(top_builddir)/src/lib/asiodns/libb10-asiodns.la
-b10_dhcp_ddns_LDADD += $(top_builddir)/src/lib/asiolink/libb10-asiolink.la
-b10_dhcp_ddns_LDADD += $(top_builddir)/src/lib/config/libb10-cfgclient.la
-b10_dhcp_ddns_LDADD += $(top_builddir)/src/lib/dhcp_ddns/libb10-dhcp_ddns.la
-b10_dhcp_ddns_LDADD += $(top_builddir)/src/lib/dhcp/libb10-dhcp++.la
-b10_dhcp_ddns_LDADD += $(top_builddir)/src/lib/dhcpsrv/libb10-dhcpsrv.la
-b10_dhcp_ddns_LDADD += $(top_builddir)/src/lib/dns/libb10-dns++.la
-b10_dhcp_ddns_LDADD += $(top_builddir)/src/lib/util/libb10-util.la
-b10_dhcp_ddns_LDADD += $(top_builddir)/src/lib/hooks/libb10-hooks.la
+bundy_dhcp_ddns_LDADD = $(top_builddir)/src/lib/log/libbundy-log.la
+bundy_dhcp_ddns_LDADD += $(top_builddir)/src/lib/exceptions/libbundy-exceptions.la
+bundy_dhcp_ddns_LDADD += $(top_builddir)/src/lib/cc/libbundy-cc.la
+bundy_dhcp_ddns_LDADD += $(top_builddir)/src/lib/asiodns/libbundy-asiodns.la
+bundy_dhcp_ddns_LDADD += $(top_builddir)/src/lib/asiolink/libbundy-asiolink.la
+bundy_dhcp_ddns_LDADD += $(top_builddir)/src/lib/config/libbundy-cfgclient.la
+bundy_dhcp_ddns_LDADD += $(top_builddir)/src/lib/dhcp_ddns/libbundy-dhcp_ddns.la
+bundy_dhcp_ddns_LDADD += $(top_builddir)/src/lib/dhcp/libbundy-dhcp++.la
+bundy_dhcp_ddns_LDADD += $(top_builddir)/src/lib/dhcpsrv/libbundy-dhcpsrv.la
+bundy_dhcp_ddns_LDADD += $(top_builddir)/src/lib/dns/libbundy-dns++.la
+bundy_dhcp_ddns_LDADD += $(top_builddir)/src/lib/util/libbundy-util.la
+bundy_dhcp_ddns_LDADD += $(top_builddir)/src/lib/hooks/libbundy-hooks.la
 
-b10_dhcp_ddnsdir = $(pkgdatadir)
-b10_dhcp_ddns_DATA = dhcp-ddns.spec
+bundy_dhcp_ddnsdir = $(pkgdatadir)
+bundy_dhcp_ddns_DATA = dhcp-ddns.spec

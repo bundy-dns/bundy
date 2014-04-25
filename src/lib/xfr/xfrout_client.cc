@@ -24,10 +24,10 @@
 #include <xfr/xfrout_client.h>
 
 using namespace std;
-using namespace isc::util::io;
+using namespace bundy::util::io;
 using asio::local::stream_protocol;
 
-namespace isc {
+namespace bundy {
 namespace xfr {
 
 struct XfroutClientImpl {
@@ -55,7 +55,7 @@ XfroutClient::connect() {
     try {
         impl_->socket_.connect(stream_protocol::endpoint(impl_->file_path_));
     } catch (const asio::system_error& err) {
-        isc_throw(XfroutError, "socket connect failed for " <<
+        bundy_throw(XfroutError, "socket connect failed for " <<
                   impl_->file_path_ << ": " << err.what());
     }
 }
@@ -65,7 +65,7 @@ XfroutClient::disconnect() {
     asio::error_code err;
     impl_->socket_.close(err);
     if (err) {
-        isc_throw(XfroutError, "close socket failed: " << err.message());
+        bundy_throw(XfroutError, "close socket failed: " << err.message());
     }
 }
 
@@ -75,7 +75,7 @@ XfroutClient::sendXfroutRequestInfo(const int tcp_sock,
                                     const uint16_t msg_len)
 {
     if (send_fd(impl_->socket_.native(), tcp_sock) < 0) {
-        isc_throw(XfroutError,
+        bundy_throw(XfroutError,
                   "Failed to send the socket file descriptor "
                   "to xfrout module");
     }
@@ -92,11 +92,11 @@ XfroutClient::sendXfroutRequestInfo(const int tcp_sock,
                                 static_cast<uint8_t>(msg_len & 0xff) };
     if (send(impl_->socket_.native(), lenbuf, sizeof(lenbuf), 0) !=
         sizeof(lenbuf)) {
-        isc_throw(XfroutError,
+        bundy_throw(XfroutError,
                   "failed to send XFR request length to xfrout module");
     }
     if (send(impl_->socket_.native(), msg_data, msg_len, 0) != msg_len) {
-        isc_throw(XfroutError,
+        bundy_throw(XfroutError,
                   "failed to send XFR request data to xfrout module");
     }
 

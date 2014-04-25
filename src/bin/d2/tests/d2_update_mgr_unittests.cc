@@ -26,9 +26,9 @@
 #include <vector>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dhcp_ddns;
-using namespace isc::d2;
+using namespace bundy;
+using namespace bundy::dhcp_ddns;
+using namespace bundy::d2;
 
 namespace {
 
@@ -258,7 +258,7 @@ public:
 /// 4. Default construction works and max transactions is defaulted properly
 /// 5. Construction with custom max transactions works properly
 TEST(D2UpdateMgr, construction) {
-    IOServicePtr io_service(new isc::asiolink::IOService());
+    IOServicePtr io_service(new bundy::asiolink::IOService());
     D2QueueMgrPtr queue_mgr;
     D2CfgMgrPtr cfg_mgr;
     D2UpdateMgrPtr update_mgr;
@@ -280,7 +280,7 @@ TEST(D2UpdateMgr, construction) {
     io_service.reset();
     EXPECT_THROW(D2UpdateMgr(queue_mgr, cfg_mgr, io_service),
                  D2UpdateMgrError);
-    io_service.reset(new isc::asiolink::IOService());
+    io_service.reset(new bundy::asiolink::IOService());
 
     // Verify that max transactions cannot be zero.
     EXPECT_THROW(D2UpdateMgr(queue_mgr, cfg_mgr, io_service, 0),

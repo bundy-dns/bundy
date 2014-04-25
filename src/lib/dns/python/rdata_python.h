@@ -19,7 +19,7 @@
 
 #include <dns/rdata.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace python {
 
@@ -36,7 +36,7 @@ extern PyTypeObject rdata_type;
 /// returns a NULL pointer).
 /// This function is expected to be called within a try block
 /// followed by necessary setup for python exception.
-PyObject* createRdataObject(isc::dns::rdata::ConstRdataPtr source);
+PyObject* createRdataObject(bundy::dns::rdata::ConstRdataPtr source);
 
 /// \brief Checks if the given python object is a Rdata object
 ///
@@ -56,11 +56,11 @@ bool PyRdata_Check(PyObject* obj);
 /// may be destroyed, the caller must copy it itself.
 ///
 /// \param rdata_obj The rdata object to convert
-const isc::dns::rdata::Rdata& PyRdata_ToRdata(const PyObject* rdata_obj);
+const bundy::dns::rdata::Rdata& PyRdata_ToRdata(const PyObject* rdata_obj);
 
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 #endif // PYTHON_RDATA_H
 
 // Local Variables:

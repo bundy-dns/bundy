@@ -25,7 +25,7 @@
 
 #include <utility>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 
 /// \brief A forward declaration
@@ -96,7 +96,7 @@ public:
     /// Return an RRsetCollection for the updater.
     ///
     /// This method returns an \c RRsetCollection for the updater,
-    /// implementing the \c isc::dns::RRsetCollectionBase
+    /// implementing the \c bundy::dns::RRsetCollectionBase
     /// interface. Typically, the returned \c RRsetCollection is a
     /// singleton for its \c ZoneUpdater. The returned RRsetCollection
     /// object must not be used after its corresponding \c ZoneUpdater
@@ -149,8 +149,8 @@ public:
     /// the transaction is committed anything that relies on it won't be valid.
     /// If an \c RRsetCollection is disabled, using methods such as \c find()
     /// and using its iterator would cause an exception to be thrown. See
-    /// \c isc::datasrc::RRsetCollectionBase for details.
-    virtual isc::dns::RRsetCollectionBase& getRRsetCollection() = 0;
+    /// \c bundy::datasrc::RRsetCollectionBase for details.
+    virtual bundy::dns::RRsetCollectionBase& getRRsetCollection() = 0;
 
     /// Add an RRset to a zone via the updater
     ///
@@ -206,7 +206,7 @@ public:
     ///
     /// If journaling was requested when getting this updater, it will reject
     /// to add the RRset if the squence doesn't look like and IXFR (see
-    /// DataSourceClient::getUpdater). In such case isc::BadValue is thrown.
+    /// DataSourceClient::getUpdater). In such case bundy::BadValue is thrown.
     ///
     /// \todo As noted above we may have to revisit the design details as we
     /// gain experiences:
@@ -224,12 +224,12 @@ public:
     ///
     /// \exception DataSourceError Called after \c commit(), RRset is invalid
     /// (see above), internal data source error
-    /// \exception isc::BadValue Journaling is enabled and the current RRset
+    /// \exception bundy::BadValue Journaling is enabled and the current RRset
     ///   doesn't fit into the IXFR sequence (see above).
     /// \exception std::bad_alloc Resource allocation failure
     ///
     /// \param rrset The RRset to be added
-    virtual void addRRset(const isc::dns::AbstractRRset& rrset) = 0;
+    virtual void addRRset(const bundy::dns::AbstractRRset& rrset) = 0;
 
     /// Delete an RRset from a zone via the updater
     ///
@@ -282,7 +282,7 @@ public:
     ///
     /// If journaling was requested when getting this updater, it will reject
     /// to add the RRset if the squence doesn't look like and IXFR (see
-    /// DataSourceClient::getUpdater). In such case isc::BadValue is thrown.
+    /// DataSourceClient::getUpdater). In such case bundy::BadValue is thrown.
     ///
     /// \todo As noted above we may have to revisit the design details as we
     /// gain experiences:
@@ -301,12 +301,12 @@ public:
     ///
     /// \exception DataSourceError Called after \c commit(), RRset is invalid
     /// (see above), internal data source error
-    /// \exception isc::BadValue Journaling is enabled and the current RRset
+    /// \exception bundy::BadValue Journaling is enabled and the current RRset
     ///   doesn't fit into the IXFR sequence (see above).
     /// \exception std::bad_alloc Resource allocation failure
     ///
     /// \param rrset The RRset to be deleted
-    virtual void deleteRRset(const isc::dns::AbstractRRset& rrset) = 0;
+    virtual void deleteRRset(const bundy::dns::AbstractRRset& rrset) = 0;
 
     /// Commit the updates made in the updater to the zone
     ///
@@ -323,7 +323,7 @@ public:
     ///
     /// \exception DataSourceError Duplicate call of the method,
     /// internal data source error
-    /// \exception isc::BadValue Journaling is enabled and the update is not
+    /// \exception bundy::BadValue Journaling is enabled and the update is not
     ///    complete IXFR sequence.
     virtual void commit() = 0;
 };
@@ -417,7 +417,7 @@ public:
     ///
     /// \return An \c RRset that contains one RDATA corresponding to the
     /// next difference in the sequences.
-    virtual isc::dns::ConstRRsetPtr getNextDiff() = 0;
+    virtual bundy::dns::ConstRRsetPtr getNextDiff() = 0;
 };
 
 /// \brief A pointer-like type pointing to a \c ZoneUpdater object.

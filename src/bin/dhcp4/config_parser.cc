@@ -34,10 +34,10 @@
 #include <map>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dhcp;
-using namespace isc::data;
-using namespace isc::asiolink;
+using namespace bundy;
+using namespace bundy::dhcp;
+using namespace bundy::data;
+using namespace bundy::asiolink;
 
 namespace {
 
@@ -92,7 +92,7 @@ protected:
             LibDHCP::isStandardOption(Option::V4, option_code)) {
             def = LibDHCP::getOptionDef(Option::V4, option_code);
         } else if (option_space == "dhcp6") {
-            isc_throw(DhcpConfigError, "'dhcp6' option space name is reserved"
+            bundy_throw(DhcpConfigError, "'dhcp6' option space name is reserved"
                      << " for DHCPv6 server");
         } else {
             // Check if this is a vendor-option. If it is, get vendor-specific
@@ -174,7 +174,7 @@ public:
             Subnet4Ptr sub4ptr = boost::dynamic_pointer_cast<Subnet4>(subnet_);
             if (!sub4ptr) {
                 // If we hit this, it is a programming error.
-                isc_throw(Unexpected,
+                bundy_throw(Unexpected,
                           "Invalid cast in Subnet4ConfigParser::commit");
             }
 
@@ -183,7 +183,7 @@ public:
                 sub4ptr->setRelayInfo(*relay_info_);
             }
 
-            isc::dhcp::CfgMgr::instance().addSubnet4(sub4ptr);
+            bundy::dhcp::CfgMgr::instance().addSubnet4(sub4ptr);
         }
     }
 
@@ -195,7 +195,7 @@ protected:
     ///
     /// @return parser object for specified entry name. Note the caller is
     /// responsible for deleting the parser created.
-    /// @throw isc::dhcp::DhcpConfigError if trying to create a parser
+    /// @throw bundy::dhcp::DhcpConfigError if trying to create a parser
     /// for unknown config element
     DhcpConfigParser* createSubnetConfigParser(const std::string& config_id) {
         DhcpConfigParser* parser = NULL;
@@ -218,7 +218,7 @@ protected:
                                              global_context_,
                                              Dhcp4OptionDataParser::factory);
         } else {
-            isc_throw(NotImplemented,
+            bundy_throw(NotImplemented,
                 "parser error: Subnet4 parameter not supported: " << config_id);
         }
 
@@ -253,7 +253,7 @@ protected:
     /// @todo a means to know the correct logger and perhaps a common
     /// message would allow this method to be emitted by the base class.
     virtual void duplicate_option_warning(uint32_t code,
-                                         isc::asiolink::IOAddress& addr) {
+                                         bundy::asiolink::IOAddress& addr) {
         LOG_WARN(dhcp4_logger, DHCP4_CONFIG_OPTION_DUPLICATE)
             .arg(code).arg(addr.toText());
     }
@@ -263,7 +263,7 @@ protected:
     ///
     /// @param addr is IPv4 address of the subnet.
     /// @param len is the prefix length
-    void initSubnet(isc::asiolink::IOAddress addr, uint8_t len) {
+    void initSubnet(bundy::asiolink::IOAddress addr, uint8_t len) {
         // Get all 'time' parameters using inheritance.
         // If the subnet-specific value is defined then use it, else
         // use the global value. The global value must always be
@@ -376,7 +376,7 @@ public:
 
 } // anonymous namespace
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief creates global parsers
@@ -420,7 +420,7 @@ DhcpConfigParser* createGlobalDhcp4ConfigParser(const std::string& config_id) {
     } else if (config_id.compare("dhcp-ddns") == 0) {
         parser = new D2ClientConfigParser(config_id);
     } else {
-        isc_throw(NotImplemented,
+        bundy_throw(NotImplemented,
                 "Parser error: Global configuration parameter not supported: "
                 << config_id);
     }
@@ -442,10 +442,10 @@ void commitGlobalOptions() {
     }
 }
 
-isc::data::ConstElementPtr
-configureDhcp4Server(Dhcpv4Srv&, isc::data::ConstElementPtr config_set) {
+bundy::data::ConstElementPtr
+configureDhcp4Server(Dhcpv4Srv&, bundy::data::ConstElementPtr config_set) {
     if (!config_set) {
-        ConstElementPtr answer = isc::config::createAnswer(1,
+        ConstElementPtr answer = bundy::config::createAnswer(1,
                                  string("Can't parse NULL config"));
         return (answer);
     }
@@ -545,10 +545,10 @@ configureDhcp4Server(Dhcpv4Srv&, isc::data::ConstElementPtr config_set) {
             subnet_parser->build(subnet_config->second);
         }
 
-    } catch (const isc::Exception& ex) {
+    } catch (const bundy::Exception& ex) {
         LOG_ERROR(dhcp4_logger, DHCP4_PARSER_FAIL)
                   .arg(config_pair.first).arg(ex.what());
-        answer = isc::config::createAnswer(1,
+        answer = bundy::config::createAnswer(1,
                      string("Configuration parsing failed: ") + ex.what());
 
         // An error occured, so make sure that we restore original data.
@@ -557,7 +557,7 @@ configureDhcp4Server(Dhcpv4Srv&, isc::data::ConstElementPtr config_set) {
     } catch (...) {
         // For things like bad_cast in boost::lexical_cast
         LOG_ERROR(dhcp4_logger, DHCP4_PARSER_EXCEPTION).arg(config_pair.first);
-        answer = isc::config::createAnswer(1,
+        answer = bundy::config::createAnswer(1,
                      string("Configuration parsing failed"));
 
         // An error occured, so make sure that we restore original data.
@@ -588,15 +588,15 @@ configureDhcp4Server(Dhcpv4Srv&, isc::data::ConstElementPtr config_set) {
                 hooks_parser->commit();
             }
         }
-        catch (const isc::Exception& ex) {
+        catch (const bundy::Exception& ex) {
             LOG_ERROR(dhcp4_logger, DHCP4_PARSER_COMMIT_FAIL).arg(ex.what());
-            answer = isc::config::createAnswer(2,
+            answer = bundy::config::createAnswer(2,
                          string("Configuration commit failed: ") + ex.what());
             rollback = true;
         } catch (...) {
             // For things like bad_cast in boost::lexical_cast
             LOG_ERROR(dhcp4_logger, DHCP4_PARSER_COMMIT_EXCEPTION);
-            answer = isc::config::createAnswer(2,
+            answer = bundy::config::createAnswer(2,
                          string("Configuration commit failed"));
             rollback = true;
         }
@@ -611,7 +611,7 @@ configureDhcp4Server(Dhcpv4Srv&, isc::data::ConstElementPtr config_set) {
     LOG_INFO(dhcp4_logger, DHCP4_CONFIG_COMPLETE).arg(config_details);
 
     // Everything was fine. Configuration is successful.
-    answer = isc::config::createAnswer(0, "Configuration committed.");
+    answer = bundy::config::createAnswer(0, "Configuration committed.");
     return (answer);
 }
 
@@ -622,5 +622,5 @@ ParserContextPtr& globalContext() {
 
 
 
-}; // end of isc::dhcp namespace
-}; // end of isc namespace
+}; // end of bundy::dhcp namespace
+}; // end of bundy namespace

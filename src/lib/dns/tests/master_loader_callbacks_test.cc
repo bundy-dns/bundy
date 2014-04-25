@@ -26,7 +26,7 @@
 namespace {
 
 using std::string;
-using namespace isc::dns;
+using namespace bundy::dns;
 
 class MasterLoaderCallbacksTest : public ::testing::Test {
 protected:
@@ -61,10 +61,10 @@ protected:
 // Check the constructor rejects empty callbacks, but accepts non-empty ones
 TEST_F(MasterLoaderCallbacksTest, constructor) {
     EXPECT_THROW(MasterLoaderCallbacks(MasterLoaderCallbacks::IssueCallback(),
-                                       warning_), isc::InvalidParameter);
+                                       warning_), bundy::InvalidParameter);
     EXPECT_THROW(MasterLoaderCallbacks(error_,
                                        MasterLoaderCallbacks::IssueCallback()),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_NO_THROW(MasterLoaderCallbacks(error_, warning_));
 }
 

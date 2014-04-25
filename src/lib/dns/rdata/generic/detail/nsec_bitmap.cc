@@ -26,7 +26,7 @@
 
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace rdata {
 namespace generic {
@@ -43,31 +43,31 @@ checkRRTypeBitmaps(const char* const rrtype_name,
 
     while (i < total_len) {
         if (i + 2 > total_len) {
-            isc_throw(DNSMessageFORMERR, rrtype_name <<
+            bundy_throw(DNSMessageFORMERR, rrtype_name <<
                       " RDATA from wire: incomplete bit map field");
         }
         const unsigned int block = typebits[i];
         const size_t len = typebits[i + 1];
         // Check that bitmap window blocks are in the correct order.
         if (!first && block <= lastblock) {
-            isc_throw(DNSMessageFORMERR, rrtype_name <<
+            bundy_throw(DNSMessageFORMERR, rrtype_name <<
                       " RDATA from wire: Disordered window blocks found: "
                       << lastblock << " then " << block);
         }
         // Check for legal length
         if (len < 1 || len > 32) {
-            isc_throw(DNSMessageFORMERR, rrtype_name <<
+            bundy_throw(DNSMessageFORMERR, rrtype_name <<
                       " RDATA from wire: Invalid bitmap length: " << len);
         }
         // Check for overflow.
         i += 2;
         if (i + len > total_len) {
-            isc_throw(DNSMessageFORMERR, rrtype_name <<
+            bundy_throw(DNSMessageFORMERR, rrtype_name <<
                       " RDATA from wire: bitmap length too large: " << len);
         }
         // The last octet of the bitmap must be non zero.
         if (typebits[i + len - 1] == 0) {
-            isc_throw(DNSMessageFORMERR, rrtype_name <<
+            bundy_throw(DNSMessageFORMERR, rrtype_name <<
                       " RDATA from wire: bitmap ending an all-zero byte");
         }
 
@@ -103,7 +103,7 @@ buildBitmapsFromLexer(const char* const rrtype_name,
             const int code = RRType(type_str).getCode();
             bitmap[code / 8] |= (0x80 >> (code % 8));
         } catch (const InvalidRRType&) {
-            isc_throw(InvalidRdataText, "Invalid RRtype in "
+            bundy_throw(InvalidRdataText, "Invalid RRtype in "
                       << rrtype_name << " bitmap: " << type_str);
         }
     }
@@ -114,7 +114,7 @@ buildBitmapsFromLexer(const char* const rrtype_name,
          if (allow_empty) {
               return;
          }
-         isc_throw(InvalidRdataText,
+         bundy_throw(InvalidRdataText,
                    rrtype_name <<
                    " record does not end with RR type mnemonic");
     }

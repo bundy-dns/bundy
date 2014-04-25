@@ -32,7 +32,7 @@
 #include <map>
 
 
-namespace isc {
+namespace bundy {
 namespace perfdhcp {
 
 /// \brief Statistics Manager
@@ -146,11 +146,11 @@ public:
         /// used for unordered packets search with multi index container.
         ///
         /// \param packet packet which transaction id is to be hashed.
-        /// \throw isc::BadValue if packet is null.
+        /// \throw bundy::BadValue if packet is null.
         /// \return transaction id hash.
         static uint32_t hashTransid(const boost::shared_ptr<T>& packet) {
             if (!packet) {
-                isc_throw(BadValue, "Packet is null");
+                bundy_throw(BadValue, "Packet is null");
             }
             return(packet->getTransid() & 1023);
         }
@@ -297,10 +297,10 @@ public:
         /// Method adds new packet to list of sent packets.
         ///
         /// \param packet packet object to be added.
-        /// \throw isc::BadValue if packet is null.
+        /// \throw bundy::BadValue if packet is null.
         void appendSent(const boost::shared_ptr<T>& packet) {
             if (!packet) {
-                isc_throw(BadValue, "Packet is null");
+                bundy_throw(BadValue, "Packet is null");
             }
             ++sent_packets_num_;
             sent_packets_.template get<0>().push_back(packet);
@@ -311,10 +311,10 @@ public:
         /// Method adds new packet to list of received packets.
         ///
         /// \param packet packet object to be added.
-        /// \throw isc::BadValue if packet is null.
+        /// \throw bundy::BadValue if packet is null.
         void appendRcvd(const boost::shared_ptr<T>& packet) {
             if (!packet) {
-                isc_throw(BadValue, "Packet is null");
+                bundy_throw(BadValue, "Packet is null");
             }
             rcvd_packets_.push_back(packet);
         }
@@ -326,15 +326,15 @@ public:
         ///
         /// \param sent_packet sent packet
         /// \param rcvd_packet received packet
-        /// \throw isc::BadValue if sent or received packet is null.
-        /// \throw isc::Unexpected if failed to calculate timestamps
+        /// \throw bundy::BadValue if sent or received packet is null.
+        /// \throw bundy::Unexpected if failed to calculate timestamps
         void updateDelays(const boost::shared_ptr<T>& sent_packet,
                           const boost::shared_ptr<T>& rcvd_packet) {
             if (!sent_packet) {
-                isc_throw(BadValue, "Sent packet is null");
+                bundy_throw(BadValue, "Sent packet is null");
             }
             if (!rcvd_packet) {
-                isc_throw(BadValue, "Received packet is null");
+                bundy_throw(BadValue, "Received packet is null");
             }
 
             boost::posix_time::ptime sent_time = sent_packet->getTimestamp();
@@ -342,7 +342,7 @@ public:
 
             if (sent_time.is_not_a_date_time() ||
                 rcvd_time.is_not_a_date_time()) {
-                isc_throw(Unexpected,
+                bundy_throw(Unexpected,
                           "Timestamp must be set for sent and "
                           "received packet to measure RTT");
             }
@@ -354,7 +354,7 @@ public:
                 static_cast<double>(period.length().total_nanoseconds()) / 1e9;
 
             if (delta < 0) {
-                isc_throw(Unexpected, "Sent packet's timestamp must not be "
+                bundy_throw(Unexpected, "Sent packet's timestamp must not be "
                           "greater than received packet's timestamp");
             }
 
@@ -384,7 +384,7 @@ public:
         /// packet search time significantly.
         ///
         /// \param rcvd_packet received packet to be matched with sent packet.
-        /// \throw isc::BadValue if received packet is null.
+        /// \throw bundy::BadValue if received packet is null.
         /// \return packet having specified transaction or NULL if packet
         /// not found
         boost::shared_ptr<T>
@@ -392,7 +392,7 @@ public:
             using namespace boost::posix_time;
 
             if (!rcvd_packet) {
-                isc_throw(BadValue, "Received packet is null");
+                bundy_throw(BadValue, "Received packet is null");
             }
 
             if (sent_packets_.size() == 0) {
@@ -515,12 +515,12 @@ public:
         /// received for this exchange avg delay can't be calculated and
         /// thus method throws exception.
         ///
-        /// \throw isc::InvalidOperation if no packets for this exchange
+        /// \throw bundy::InvalidOperation if no packets for this exchange
         /// have been received yet.
         /// \return average packet delay.
         double getAvgDelay() const {
             if (rcvd_packets_num_  == 0) {
-                isc_throw(InvalidOperation, "no packets received");
+                bundy_throw(InvalidOperation, "no packets received");
             }
             return(sum_delay_ / rcvd_packets_num_);
         }
@@ -532,12 +532,12 @@ public:
         /// deviation can't be calculated and thus method throws
         /// exception.
         ///
-        /// \throw isc::InvalidOperation if number of received packets
+        /// \throw bundy::InvalidOperation if number of received packets
         /// for the exchange is equal to zero.
         /// \return standard deviation of packet delay.
         double getStdDevDelay() const {
             if (rcvd_packets_num_ == 0) {
-                isc_throw(InvalidOperation, "no packets received");
+                bundy_throw(InvalidOperation, "no packets received");
             }
             return(sqrt(sum_delay_squared_ / rcvd_packets_num_ -
                         getAvgDelay() * getAvgDelay()));
@@ -569,12 +569,12 @@ public:
         /// This value changes every time \ref ExchangeStats::matchPackets
         /// function performs unordered packet lookup.
         ///
-        /// \throw isc::InvalidOperation if there have been no unordered
+        /// \throw bundy::InvalidOperation if there have been no unordered
         /// lookups yet.
         /// \return average unordered lookup set size.
         double getAvgUnorderedLookupSetSize() const {
             if (unordered_lookups_ == 0) {
-                isc_throw(InvalidOperation, "no unordered lookups");
+                bundy_throw(InvalidOperation, "no unordered lookups");
             }
             return(static_cast<double>(unordered_lookup_size_sum_) /
                    static_cast<double>(unordered_lookups_));
@@ -678,13 +678,13 @@ public:
         /// Otherwise sent packets are not stored during tests execution
         /// and this method has no ability to get and print their timestamps.
         ///
-        /// \throw isc::InvalidOperation if found packet with no timestamp or
+        /// \throw bundy::InvalidOperation if found packet with no timestamp or
         /// if packets archive mode is disabled.
         void printTimestamps() {
             // If archive mode is disabled there is no sense to proceed
             // because we don't have packets and their timestamps.
             if (!archive_enabled_) {
-                isc_throw(isc::InvalidOperation,
+                bundy_throw(bundy::InvalidOperation,
                           "packets archive mode is disabled");
             }
             if (rcvd_packets_num_ == 0) {
@@ -717,7 +717,7 @@ public:
                         // not have timestamp we want to catch this here.
                         if (sent_time.is_not_a_date_time() ||
                             rcvd_time.is_not_a_date_time()) {
-                            isc_throw(InvalidOperation,
+                            bundy_throw(InvalidOperation,
                                       "packet time is not set");
                         }
                         // Calculate durations of packets from beginning of epoch.
@@ -866,11 +866,11 @@ public:
     /// \param xchg_type exchange type.
     /// \param drop_time maximum time elapsed before packet is
     /// assumed dropped. Negative value disables it.
-    /// \throw isc::BadValue if exchange of specified type exists.
+    /// \throw bundy::BadValue if exchange of specified type exists.
     void addExchangeStats(const ExchangeType xchg_type,
                           const double drop_time = -1) {
         if (exchanges_.find(xchg_type) != exchanges_.end()) {
-            isc_throw(BadValue, "Exchange of specified type already added.");
+            bundy_throw(BadValue, "Exchange of specified type already added.");
         }
         exchanges_[xchg_type] =
             ExchangeStatsPtr(new ExchangeStats(xchg_type,
@@ -903,7 +903,7 @@ public:
     void addCustomCounter(const std::string& short_name,
                           const std::string& long_name) {
         if (custom_counters_.find(short_name) != custom_counters_.end()) {
-            isc_throw(BadValue,
+            bundy_throw(BadValue,
                       "Custom counter " << short_name << " already added.");
         }
         custom_counters_[short_name] =
@@ -934,7 +934,7 @@ public:
     CustomCounterPtr getCounter(const std::string& counter_key) {
         CustomCountersMapIterator it = custom_counters_.find(counter_key);
         if (it == custom_counters_.end()) {
-            isc_throw(BadValue,
+            bundy_throw(BadValue,
                       "Custom counter " << counter_key << "does not exist");
         }
         return(it->second);
@@ -962,7 +962,7 @@ public:
     ///
     /// \param xchg_type exchange type.
     /// \param packet packet to be added to the list
-    /// \throw isc::BadValue if invalid exchange type specified or
+    /// \throw bundy::BadValue if invalid exchange type specified or
     /// packet is null.
     void passSentPacket(const ExchangeType xchg_type,
                         const boost::shared_ptr<T>& packet) {
@@ -979,9 +979,9 @@ public:
     ///
     /// \param xchg_type exchange type.
     /// \param packet received packet
-    /// \throw isc::BadValue if invalid exchange type specified
+    /// \throw bundy::BadValue if invalid exchange type specified
     /// or packet is null.
-    /// \throw isc::Unexpected if corresponding packet was not
+    /// \throw bundy::Unexpected if corresponding packet was not
     /// found on the list of sent packets.
     boost::shared_ptr<T>
     passRcvdPacket(const ExchangeType xchg_type,
@@ -1005,7 +1005,7 @@ public:
     /// for specified exchange type.
     ///
     /// \param xchg_type exchange type.
-    /// \throw isc::BadValue if invalid exchange type specified.
+    /// \throw bundy::BadValue if invalid exchange type specified.
     /// \return minimum delay between packets.
     double getMinDelay(const ExchangeType xchg_type) const {
         ExchangeStatsPtr xchg_stats = getExchangeStats(xchg_type);
@@ -1018,7 +1018,7 @@ public:
     /// for specified exchange type.
     ///
     /// \param xchg_type exchange type.
-    /// \throw isc::BadValue if invalid exchange type specified.
+    /// \throw bundy::BadValue if invalid exchange type specified.
     /// \return maximum delay between packets.
     double getMaxDelay(const ExchangeType xchg_type) const {
         ExchangeStatsPtr xchg_stats = getExchangeStats(xchg_type);
@@ -1053,7 +1053,7 @@ public:
     /// exchange type.
     ///
     /// \param xchg_type exchange type.
-    /// \throw isc::BadValue if invalid exchange type specified.
+    /// \throw bundy::BadValue if invalid exchange type specified.
     /// \return number of orphant packets so far.
     uint64_t getOrphans(const ExchangeType xchg_type) const {
         ExchangeStatsPtr xchg_stats = getExchangeStats(xchg_type);
@@ -1067,7 +1067,7 @@ public:
     /// function performs unordered packet lookup.
     ///
     /// \param xchg_type exchange type.
-    /// \throw isc::BadValue if invalid exchange type specified.
+    /// \throw bundy::BadValue if invalid exchange type specified.
     /// \return average unordered lookup set size.
     double getAvgUnorderedLookupSetSize(const ExchangeType xchg_type) const {
         ExchangeStatsPtr xchg_stats = getExchangeStats(xchg_type);
@@ -1082,7 +1082,7 @@ public:
     /// packet does not match transaction id of next sent packet.
     ///
     /// \param xchg_type exchange type.
-    /// \throw isc::BadValue if invalid exchange type specified.
+    /// \throw bundy::BadValue if invalid exchange type specified.
     /// \return number of unordered lookups.
     uint64_t getUnorderedLookups(const ExchangeType xchg_type) const {
         ExchangeStatsPtr xchg_stats = getExchangeStats(xchg_type);
@@ -1098,7 +1098,7 @@ public:
     /// function will use unordered lookup (with hash table).
     ///
     /// \param xchg_type exchange type.
-    /// \throw isc::BadValue if invalid exchange type specified.
+    /// \throw bundy::BadValue if invalid exchange type specified.
     /// \return number of ordered lookups.
     uint64_t getOrderedLookups(const ExchangeType xchg_type) const {
         ExchangeStatsPtr xchg_stats = getExchangeStats(xchg_type);
@@ -1111,7 +1111,7 @@ public:
     /// exchange type.
     ///
     /// \param xchg_type exchange type.
-    /// \throw isc::BadValue if invalid exchange type specified.
+    /// \throw bundy::BadValue if invalid exchange type specified.
     /// \return number of sent packets.
     uint64_t getSentPacketsNum(const ExchangeType xchg_type) const {
         ExchangeStatsPtr xchg_stats = getExchangeStats(xchg_type);
@@ -1124,7 +1124,7 @@ public:
     /// exchange type.
     ///
     /// \param xchg_type exchange type.
-    /// \throw isc::BadValue if invalid exchange type specified.
+    /// \throw bundy::BadValue if invalid exchange type specified.
     /// \return number of received packets.
     uint64_t getRcvdPacketsNum(const ExchangeType xchg_type) const {
         ExchangeStatsPtr xchg_stats = getExchangeStats(xchg_type);
@@ -1137,7 +1137,7 @@ public:
     /// exchange type.
     ///
     /// \param xchg_type exchange type.
-    /// \throw isc::BadValue if invalid exchange type specified.
+    /// \throw bundy::BadValue if invalid exchange type specified.
     /// \return number of dropped packets.
     uint64_t getDroppedPacketsNum(const ExchangeType xchg_type) const {
         ExchangeStatsPtr xchg_stats = getExchangeStats(xchg_type);
@@ -1152,7 +1152,7 @@ public:
     /// response is greater than value specified with -d<value>
     /// command line argument.
     ///
-    /// \throw isc::BadValue if invalid exchange type specified.
+    /// \throw bundy::BadValue if invalid exchange type specified.
     /// \return number of garbage collected packets.
     uint64_t getCollectedNum(const ExchangeType xchg_type) const {
         ExchangeStatsPtr xchg_stats = getExchangeStats(xchg_type);
@@ -1211,11 +1211,11 @@ public:
     /// - maximum packets delay,
     /// - standard deviation of packets delay.
     ///
-    /// \throw isc::InvalidOperation if no exchange type added to
+    /// \throw bundy::InvalidOperation if no exchange type added to
     /// track statistics.
      void printStats() const {
         if (exchanges_.empty()) {
-            isc_throw(isc::InvalidOperation,
+            bundy_throw(bundy::InvalidOperation,
                       "no exchange type added for tracking");
         }
         for (ExchangesMapIterator it = exchanges_.begin();
@@ -1262,15 +1262,15 @@ public:
     /// Method prints timestamps of all sent and received
     /// packets for all defined exchange types.
     ///
-    /// \throw isc::InvalidOperation if one of the packets has
+    /// \throw bundy::InvalidOperation if one of the packets has
     /// no timestamp value set or if packets archive mode is
     /// disabled.
     ///
-    /// \throw isc::InvalidOperation if no exchange type added to
+    /// \throw bundy::InvalidOperation if no exchange type added to
     /// track statistics or packets archive mode is disabled.
     void printTimestamps() const {
         if (exchanges_.empty()) {
-            isc_throw(isc::InvalidOperation,
+            bundy_throw(bundy::InvalidOperation,
                       "no exchange type added for tracking");
         }
         for (ExchangesMapIterator it = exchanges_.begin();
@@ -1290,10 +1290,10 @@ public:
     /// Method prints names and values of custom counters. Custom counters
     /// are defined by client class for tracking different statistics.
     ///
-    /// \throw isc::InvalidOperation if no custom counters added for tracking.
+    /// \throw bundy::InvalidOperation if no custom counters added for tracking.
     void printCustomCounters() const {
         if (custom_counters_.empty()) {
-            isc_throw(isc::InvalidOperation, "no custom counters specified");
+            bundy_throw(bundy::InvalidOperation, "no custom counters specified");
         }
         for (CustomCountersMapIterator it = custom_counters_.begin();
              it != custom_counters_.end();
@@ -1311,12 +1311,12 @@ private:
     /// Method returns exchange stats object for given exchange type.
     ///
     /// \param xchg_type exchange type.
-    /// \throw isc::BadValue if invalid exchange type specified.
+    /// \throw bundy::BadValue if invalid exchange type specified.
     /// \return exchange stats object.
     ExchangeStatsPtr getExchangeStats(const ExchangeType xchg_type) const {
         ExchangesMapIterator it = exchanges_.find(xchg_type);
         if (it == exchanges_.end()) {
-            isc_throw(BadValue, "Packets exchange not specified");
+            bundy_throw(BadValue, "Packets exchange not specified");
         }
         ExchangeStatsPtr xchg_stats = it->second;
         return(xchg_stats);
@@ -1339,6 +1339,6 @@ private:
 };
 
 } // namespace perfdhcp
-} // namespace isc
+} // namespace bundy
 
 #endif // STATS_MGR_H

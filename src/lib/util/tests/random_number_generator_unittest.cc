@@ -22,7 +22,7 @@
 #include <iostream>
 
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace random {
 
@@ -308,4 +308,4 @@ TEST_F(WeightedRandomIntegerGeneratorTest, ResetProbabilities) {
 
 } // namespace random
 } // namespace util
-} // namespace isc
+} // namespace bundy

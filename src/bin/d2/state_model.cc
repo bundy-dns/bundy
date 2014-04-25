@@ -17,7 +17,7 @@
 
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 /********************************** State *******************************/
@@ -47,7 +47,7 @@ StateSet::add(const int value, const std::string& label, StateHandler handler) {
     try {
         LabeledValueSet::add(LabeledValuePtr(new State(value, label, handler)));
     } catch (const std::exception& ex) {
-        isc_throw(StateModelError, "StateSet: cannot add state :" << ex.what());
+        bundy_throw(StateModelError, "StateSet: cannot add state :" << ex.what());
     }
 
 }
@@ -55,7 +55,7 @@ StateSet::add(const int value, const std::string& label, StateHandler handler) {
 const StatePtr
 StateSet::getState(int value) {
     if (!isDefined(value)) {
-        isc_throw(StateModelError," StateSet: state is undefined");
+        bundy_throw(StateModelError," StateSet: state is undefined");
     }
 
     // Since we have to use dynamic casting, to get a state pointer
@@ -142,7 +142,7 @@ StateModel::initDictionaries() {
         defineEvents();
         verifyEvents();
     } catch (const std::exception& ex) {
-        isc_throw(StateModelError, "Event set is invalid: " << ex.what());
+        bundy_throw(StateModelError, "Event set is invalid: " << ex.what());
     }
 
     // Next let's build and verify the dictionary of states.
@@ -150,7 +150,7 @@ StateModel::initDictionaries() {
         defineStates();
         verifyStates();
     } catch (const std::exception& ex) {
-        isc_throw(StateModelError, "State set is invalid: " << ex.what());
+        bundy_throw(StateModelError, "State set is invalid: " << ex.what());
     }
 
     // Record that we are good to go.
@@ -161,7 +161,7 @@ void
 StateModel::defineEvent(unsigned int event_value, const std::string& label) {
     if (!isModelNew()) {
         // Don't allow for self-modifying models.
-        isc_throw(StateModelError, "Events may only be added to a new model."
+        bundy_throw(StateModelError, "Events may only be added to a new model."
                    << event_value << " - " << label);
     }
 
@@ -169,14 +169,14 @@ StateModel::defineEvent(unsigned int event_value, const std::string& label) {
     try {
         events_.add(event_value, label);
     } catch (const std::exception& ex) {
-        isc_throw(StateModelError, "Error adding event: " << ex.what());
+        bundy_throw(StateModelError, "Error adding event: " << ex.what());
     }
 }
 
 const EventPtr&
 StateModel::getEvent(unsigned int event_value) {
     if (!events_.isDefined(event_value)) {
-        isc_throw(StateModelError,
+        bundy_throw(StateModelError,
                   "Event value is not defined:" << event_value);
     }
 
@@ -188,7 +188,7 @@ StateModel::defineState(unsigned int state_value, const std::string& label,
     StateHandler handler) {
     if (!isModelNew()) {
         // Don't allow for self-modifying maps.
-        isc_throw(StateModelError, "States may only be added to a new model."
+        bundy_throw(StateModelError, "States may only be added to a new model."
                    << state_value << " - " << label);
     }
 
@@ -196,14 +196,14 @@ StateModel::defineState(unsigned int state_value, const std::string& label,
     try {
         states_.add(state_value, label, handler);
     } catch (const std::exception& ex) {
-        isc_throw(StateModelError, "Error adding state: " << ex.what());
+        bundy_throw(StateModelError, "Error adding state: " << ex.what());
     }
 }
 
 const StatePtr
 StateModel::getState(unsigned int state_value) {
     if (!states_.isDefined(state_value)) {
-        isc_throw(StateModelError,
+        bundy_throw(StateModelError,
                   "State value is not defined:" << state_value);
     }
 
@@ -268,7 +268,7 @@ StateModel::abortModel(const std::string& explanation) {
 void
 StateModel::setState(unsigned int state) {
     if (state != END_ST && !states_.isDefined(state)) {
-        isc_throw(StateModelError,
+        bundy_throw(StateModelError,
                   "Attempt to set state to an undefined value: " << state );
     }
 
@@ -287,7 +287,7 @@ StateModel::postNextEvent(unsigned int event_value) {
     // Check for FAIL_EVT as special case of model error before events are
     // defined.
     if (event_value != FAIL_EVT && !events_.isDefined(event_value)) {
-        isc_throw(StateModelError,
+        bundy_throw(StateModelError,
                   "Attempt to post an undefined event, value: " << event_value);
     }
 
@@ -383,5 +383,5 @@ StateModel::getPrevContextStr() const {
     return(stream.str());
 }
 
-} // namespace isc::d2
-} // namespace isc
+} // namespace bundy::d2
+} // namespace bundy

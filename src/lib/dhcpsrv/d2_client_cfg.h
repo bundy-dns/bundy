@@ -17,7 +17,7 @@
 
 /// @file d2_client_cfg.h Defines the D2ClientConfig class.
 /// This file defines the classes Kea uses to manage configuration needed to
-/// act as a client of the b10-dhcp-ddns module (aka D2).
+/// act as a client of the bundy-dhcp-ddns module (aka D2).
 ///
 #include <asiolink/io_address.h>
 #include <dhcp_ddns/ncr_io.h>
@@ -29,13 +29,13 @@
 #include <string>
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 
 /// An exception that is thrown if an error occurs while configuring
 /// the D2 DHCP DDNS client.
-class D2ClientError : public isc::Exception {
+class D2ClientError : public bundy::Exception {
 public:
 
     /// @brief constructor
@@ -44,7 +44,7 @@ public:
     /// @param line line of the file, where exception occurred
     /// @param what text description of the issue that caused exception
     D2ClientError(const char* file, size_t line, const char* what)
-        : isc::Exception(file, line, what) {}
+        : bundy::Exception(file, line, what) {}
 };
 
 /// @brief Acts as a storage vault for D2 client configuration
@@ -74,11 +74,11 @@ public:
     /// @brief Constructor
     ///
     /// @param enable_updates Enables DHCP-DDNS updates
-    /// @param server_ip IP address of the b10-dhcp-ddns server (IPv4 or IPv6)
-    /// @param server_port IP port of the b10-dhcp-ddns server
-    /// @param ncr_protocol Socket protocol to use with b10-dhcp-ddns
+    /// @param server_ip IP address of the bundy-dhcp-ddns server (IPv4 or IPv6)
+    /// @param server_port IP port of the bundy-dhcp-ddns server
+    /// @param ncr_protocol Socket protocol to use with bundy-dhcp-ddns
     /// Currently only UDP is supported.
-    /// @param ncr_format Format of the b10-dhcp-ddns requests.
+    /// @param ncr_format Format of the bundy-dhcp-ddns requests.
     /// Currently only JSON format is supported.
     /// @param always_include_fqdn Enables always including the FQDN option in
     /// DHCP responses.
@@ -93,7 +93,7 @@ public:
     ///
     /// @throw D2ClientError if given an invalid protocol or format.
     D2ClientConfig(const bool enable_updates,
-                   const isc::asiolink::IOAddress& server_ip,
+                   const bundy::asiolink::IOAddress& server_ip,
                    const size_t server_port,
                    const dhcp_ddns::NameChangeProtocol& ncr_protocol,
                    const dhcp_ddns::NameChangeFormat& ncr_format,
@@ -116,22 +116,22 @@ public:
         return(enable_updates_);
     }
 
-    /// @brief Return the IP address of b10-dhcp-ddns (IPv4 or IPv6).
-    const isc::asiolink::IOAddress& getServerIp() const {
+    /// @brief Return the IP address of bundy-dhcp-ddns (IPv4 or IPv6).
+    const bundy::asiolink::IOAddress& getServerIp() const {
         return(server_ip_);
     }
 
-    /// @brief Return the IP port of b10-dhcp-ddns.
+    /// @brief Return the IP port of bundy-dhcp-ddns.
     size_t getServerPort() const {
         return(server_port_);
     }
 
-    /// @brief Return the socket protocol to use with b10-dhcp-ddns.
+    /// @brief Return the socket protocol to use with bundy-dhcp-ddns.
     const dhcp_ddns::NameChangeProtocol& getNcrProtocol() const {
          return(ncr_protocol_);
     }
 
-    /// @brief Return the b10-dhcp-ddns request format.
+    /// @brief Return the bundy-dhcp-ddns request format.
     const dhcp_ddns::NameChangeFormat& getNcrFormat() const {
         return(ncr_format_);
     }
@@ -196,17 +196,17 @@ private:
     /// @brief Indicates whether or not DHCP DDNS updating is enabled.
     bool enable_updates_;
 
-    /// @brief IP address of the b10-dhcp-ddns server (IPv4 or IPv6).
-    isc::asiolink::IOAddress server_ip_;
+    /// @brief IP address of the bundy-dhcp-ddns server (IPv4 or IPv6).
+    bundy::asiolink::IOAddress server_ip_;
 
-    /// @brief IP port of the b10-dhcp-ddns server.
+    /// @brief IP port of the bundy-dhcp-ddns server.
     size_t server_port_;
 
-    /// @brief The socket protocol to use with b10-dhcp-ddns.
+    /// @brief The socket protocol to use with bundy-dhcp-ddns.
     /// Currently only UDP is supported.
     dhcp_ddns::NameChangeProtocol ncr_protocol_;
 
-    /// @brief Format of the b10-dhcp-ddns requests.
+    /// @brief Format of the bundy-dhcp-ddns requests.
     /// Currently only JSON format is supported.
     dhcp_ddns::NameChangeFormat ncr_format_;
 
@@ -236,7 +236,7 @@ operator<<(std::ostream& os, const D2ClientConfig& config);
 /// @brief Defines a pointer for D2ClientConfig instances.
 typedef boost::shared_ptr<D2ClientConfig> D2ClientConfigPtr;
 
-} // namespace isc
+} // namespace bundy
 } // namespace dhcp
 
 #endif

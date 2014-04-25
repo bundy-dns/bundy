@@ -41,23 +41,23 @@
     },
     "Init": {
         "components": {
-            "b10-xfrout": {
+            "bundy-xfrout": {
                 "kind": "dispensable",
                 "address": "Xfrout"
             },
-            "b10-zonemgr": {
+            "bundy-zonemgr": {
                 "kind": "dispensable",
                 "address": "ZoneMgr"
             },
-            "b10-ddns": {
+            "bundy-ddns": {
                 "kind": "dispensable",
                 "address": "DDNS"
             },
-            "b10-auth": {
+            "bundy-auth": {
                 "kind": "needed",
                 "special": "auth"
             },
-            "b10-cmdctl": {
+            "bundy-cmdctl": {
                 "kind": "needed",
                 "special": "cmdctl"
             }

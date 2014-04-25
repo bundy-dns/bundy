@@ -27,8 +27,8 @@
  * the tsig_keys configuration section and keeping them up to date
  * on updates.
  *
- * You simply initialize/load the keyring with isc::server_common::initKeyring
- * and then just use the key ring referred to by isc::server_common::keyring. It
+ * You simply initialize/load the keyring with bundy::server_common::initKeyring
+ * and then just use the key ring referred to by bundy::server_common::keyring. It
  * is automatically reloaded, when the configuration updates, so you no longer
  * needs to care about it.
  *
@@ -44,7 +44,7 @@
  * shorter code, not a goal.
  */
 
-namespace isc {
+namespace bundy {
 
 namespace server_common {
 

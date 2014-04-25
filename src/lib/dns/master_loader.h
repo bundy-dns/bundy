@@ -19,7 +19,7 @@
 
 #include <boost/noncopyable.hpp>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 class Name;
@@ -27,7 +27,7 @@ class RRClass;
 
 /// \brief Error while loading by MasterLoader without specifying the
 ///     MANY_ERRORS option.
-class MasterLoaderError : public isc::Exception {
+class MasterLoaderError : public bundy::Exception {
 public:
     MasterLoaderError(const char* file, size_t line, const char* what) :
         Exception(file, line, what)
@@ -77,7 +77,7 @@ public:
     ///     included, the parser tries to continue past errors. If it
     ///     is not included, it stops at first encountered error.
     /// \throw std::bad_alloc when there's not enough memory.
-    /// \throw isc::InvalidParameter if add_callback is empty.
+    /// \throw bundy::InvalidParameter if add_callback is empty.
     MasterLoader(const char* master_file,
                  const Name& zone_origin,
                  const RRClass& zone_class,
@@ -111,7 +111,7 @@ public:
     /// \param count_limit Upper limit on the number of RRs loaded.
     /// \return In case it stops because of the count limit, it returns false.
     ///     It returns true if the loading is done.
-    /// \throw isc::InvalidOperation when called after loading was done
+    /// \throw bundy::InvalidOperation when called after loading was done
     ///     already.
     /// \throw MasterLoaderError when there's an error in the input master
     ///     file and the MANY_ERRORS is not specified. It never throws this
@@ -121,7 +121,7 @@ public:
     /// \brief Load everything
     ///
     /// This simply calls loadIncremental until the loading is done.
-    /// \throw isc::InvalidOperation when called after loading was done
+    /// \throw bundy::InvalidOperation when called after loading was done
     ///     already.
     /// \throw MasterLoaderError when there's an error in the input master
     ///     file and the MANY_ERRORS is not specified. It never throws this
@@ -186,7 +186,7 @@ private:
 };
 
 } // end namespace dns
-} // end namespace isc
+} // end namespace bundy
 
 #endif // MASTER_LOADER_H
 

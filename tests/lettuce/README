@@ -1,12 +1,12 @@
-BIND10 system testing with Lettuce
+BUNDY system testing with Lettuce
 or: to BDD or not to BDD
 
-In this directory, we define a set of behavioral tests for BIND 10. Currently,
-these tests are specific for BIND10, but we are keeping in mind that RFC-related
+In this directory, we define a set of behavioral tests for BUNDY. Currently,
+these tests are specific for BUNDY, but we are keeping in mind that RFC-related
 tests could be separated, so that we can test other systems as well.
 
 Prerequisites:
-- BIND 10 must be compiled or installed (even when testing in-tree build;
+- BUNDY must be compiled or installed (even when testing in-tree build;
   see below) with both DNS and DHCP components enabled
 - dig
 - lettuce (http://lettuce.it)
@@ -30,12 +30,12 @@ do some on-the-fly available port finding)
 You can run the lettuce tests with the provided run_lettuce.sh script.
 
 By default it will use the build tree, but you can use an installed version
-of bind10 by passing -I as the first argument of run_lettuce.sh
+of bundy by passing -I as the first argument of run_lettuce.sh
 
 The tool 'dig' must be in the default search path of your environment. If
-you specified -I, so must the main BIND 10 programs.  And, with or without
--I, some BIND 10 programs still have to be installed as they are invoked
-from test tools.  Those include bindctl and b10-loadzone.
+you specified -I, so must the main BUNDY programs.  And, with or without
+-I, some BUNDY programs still have to be installed as they are invoked
+from test tools.  Those include bundyctl and bundy-loadzone.
 
 Due to the default way lettuce prints its output, it is advisable to run it
 in a terminal that is wide than the default. If you see a lot of lines twice
@@ -57,7 +57,7 @@ What to do when a test fails
 First of all, look at the error it printed and see what step it occurred in.
 If written well, the output should explain most of what went wrong.
 
-The stacktrace that is printed is *not* of bind10, but of the testing
+The stacktrace that is printed is *not* of bundy, but of the testing
 framework; this helps in finding more information about what exactly the test
 tried to achieve when it failed (as well as help debug the tests themselves).
 
@@ -66,8 +66,8 @@ will be stored in the directory output/. The name of the files will be
 <Feature name>-<Scenario name>-<Process name>.stdout and
 <Feature name>-<Scenario name>-<Process name>.stderr
 Where spaces and other non-standard characters are replaced by an underscore.
-The process name is either the standard name for said process (e.g. 'bind10'),
-or the name given to it by the test ('when i run bind10 as <name>').
+The process name is either the standard name for said process (e.g. 'bundy'),
+or the name given to it by the test ('when i run bundy as <name>').
 
 These files *will* be overwritten or deleted if the same scenarios are run
 again, so if you want to inspect them after a failed test, either do so
@@ -103,7 +103,7 @@ steps and terrain must be below or at the same level of the feature files.
 Long-running processes should be started through the world.RunningProcesses
 instance. If you want to add a process (e.g. bind9), create start, stop and
 control steps in terrain/<base_name>_control.py, and let it use the
-RunningProcesses API (defined in terrain.py). See bind10_control.py for an
+RunningProcesses API (defined in terrain.py). See bundy_control.py for an
 example.
 
 For sending queries and checking the results, steps have been defined in

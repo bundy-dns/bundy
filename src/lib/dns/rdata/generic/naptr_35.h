@@ -22,7 +22,7 @@
 #include <dns/rdata.h>
 #include <util/buffer.h>
 
-// BEGIN_ISC_NAMESPACE
+// BEGIN_BUNDY_NAMESPACE
 
 // BEGIN_COMMON_DECLARATIONS
 // END_COMMON_DECLARATIONS
@@ -64,7 +64,7 @@ private:
 };
 
 // END_RDATA_NAMESPACE
-// END_ISC_NAMESPACE
+// END_BUNDY_NAMESPACE
 // END_HEADER_GUARD
 
 // Local Variables:

@@ -29,13 +29,13 @@
 #include <boost/pointer_cast.hpp>
 #include <gtest/gtest.h>
 
-using namespace isc;
-using namespace isc::test;
-using namespace isc::asiolink;
-using namespace isc::dhcp;
-using namespace isc::dhcp_ddns;
-using namespace isc::util;
-using namespace isc::hooks;
+using namespace bundy;
+using namespace bundy::test;
+using namespace bundy::asiolink;
+using namespace bundy::dhcp;
+using namespace bundy::dhcp_ddns;
+using namespace bundy::util;
+using namespace bundy::hooks;
 using namespace std;
 
 namespace {
@@ -109,7 +109,7 @@ public:
         D2ClientConfigPtr cfg;
 
         ASSERT_NO_THROW(cfg.reset(new D2ClientConfig(true,
-                                  isc::asiolink::IOAddress("127.0.0.1"), 53001,
+                                  bundy::asiolink::IOAddress("127.0.0.1"), 53001,
                                   dhcp_ddns::NCR_UDP, dhcp_ddns::FMT_JSON,
                                   (mask & ALWAYS_INCLUDE_FQDN),
                                   (mask & OVERRIDE_NO_UPDATE),
@@ -480,7 +480,7 @@ public:
     /// NameChangeRequest expires.
     /// @param len A valid lifetime of the lease associated with the
     /// NameChangeRequest.
-    void verifyNameChangeRequest(const isc::dhcp_ddns::NameChangeType type,
+    void verifyNameChangeRequest(const bundy::dhcp_ddns::NameChangeType type,
                                  const bool reverse, const bool forward,
                                  const std::string& addr,
                                  const std::string& dhcid,
@@ -497,7 +497,7 @@ public:
         EXPECT_EQ(dhcid, ncr->getDhcid().toStr());
         EXPECT_EQ(expires, ncr->getLeaseExpiresOn());
         EXPECT_EQ(len, ncr->getLeaseLength());
-        EXPECT_EQ(isc::dhcp_ddns::ST_NEW, ncr->getStatus());
+        EXPECT_EQ(bundy::dhcp_ddns::ST_NEW, ncr->getStatus());
 
         // Process the message off the queue
         ASSERT_NO_THROW(d2_mgr_.runReadyIO());
@@ -578,7 +578,7 @@ TEST_F(FqdnDhcpv6SrvTest, createNameChangeRequestsNoAnswer) {
     Pkt6Ptr answer;
 
     EXPECT_THROW(srv_->createNameChangeRequests(answer),
-                 isc::Unexpected);
+                 bundy::Unexpected);
 
 }
 
@@ -591,7 +591,7 @@ TEST_F(FqdnDhcpv6SrvTest, createNameChangeRequestsNoDUID) {
                                                  Option6ClientFqdn::FULL);
     answer->addOption(fqdn);
 
-    EXPECT_THROW(srv_->createNameChangeRequests(answer), isc::Unexpected);
+    EXPECT_THROW(srv_->createNameChangeRequests(answer), bundy::Unexpected);
 
 }
 
@@ -650,7 +650,7 @@ TEST_F(FqdnDhcpv6SrvTest, createNameChangeRequests) {
     ASSERT_EQ(1, d2_mgr_.getQueueSize());
 
     // Verify that NameChangeRequest is correct.
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_ADD, true, true,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_ADD, true, true,
                             "2001:db8:1::1",
                             "000201415AA33D1187D148275136FA30300478"
                             "FAAAA3EBD29826B5C907B2C9268A6F52",
@@ -696,7 +696,7 @@ TEST_F(FqdnDhcpv6SrvTest, createRemovalNameChangeRequestFwdRev) {
     ASSERT_NO_THROW(srv_->createRemovalNameChangeRequest(lease_));
 
     ASSERT_EQ(1, d2_mgr_.getQueueSize());
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_REMOVE, true, true,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_REMOVE, true, true,
                             "2001:db8:1::1",
                             "000201415AA33D1187D148275136FA30300478"
                             "FAAAA3EBD29826B5C907B2C9268A6F52",
@@ -733,7 +733,7 @@ TEST_F(FqdnDhcpv6SrvTest, createRemovalNameChangeRequestRev) {
 
     ASSERT_EQ(1, d2_mgr_.getQueueSize());
 
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_REMOVE, true, false,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_REMOVE, true, false,
                             "2001:db8:1::1",
                             "000201415AA33D1187D148275136FA30300478"
                             "FAAAA3EBD29826B5C907B2C9268A6F52",
@@ -802,7 +802,7 @@ TEST_F(FqdnDhcpv6SrvTest, processTwoRequests) {
     testProcessMessage(DHCPV6_REQUEST, "myhost.example.com",
                        "myhost.example.com.");
     ASSERT_EQ(1, d2_mgr_.getQueueSize());
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_ADD, true, true,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_ADD, true, true,
                             "2001:db8:1:1::dead:beef",
                             "000201415AA33D1187D148275136FA30300478"
                             "FAAAA3EBD29826B5C907B2C9268A6F52",
@@ -818,12 +818,12 @@ TEST_F(FqdnDhcpv6SrvTest, processTwoRequests) {
     testProcessMessage(DHCPV6_REQUEST, "otherhost.example.com",
                        "otherhost.example.com.");
     ASSERT_EQ(2, d2_mgr_.getQueueSize());
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_REMOVE, true, true,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_REMOVE, true, true,
                             "2001:db8:1:1::dead:beef",
                             "000201415AA33D1187D148275136FA30300478"
                             "FAAAA3EBD29826B5C907B2C9268A6F52",
                             0, 4000);
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_ADD, true, true,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_ADD, true, true,
                             "2001:db8:1:1::dead:beef",
                             "000201D422AA463306223D269B6CB7AFE7AAD265FC"
                             "EA97F93623019B2E0D14E5323D5A",
@@ -844,7 +844,7 @@ TEST_F(FqdnDhcpv6SrvTest, processRequestSolicit) {
     testProcessMessage(DHCPV6_REQUEST, "myhost.example.com",
                        "myhost.example.com.");
     ASSERT_EQ(1, d2_mgr_.getQueueSize());
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_ADD, true, true,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_ADD, true, true,
                             "2001:db8:1:1::dead:beef",
                             "000201415AA33D1187D148275136FA30300478"
                             "FAAAA3EBD29826B5C907B2C9268A6F52",
@@ -874,7 +874,7 @@ TEST_F(FqdnDhcpv6SrvTest, processRequestRenew) {
     testProcessMessage(DHCPV6_REQUEST, "myhost.example.com",
                        "myhost.example.com.");
     ASSERT_EQ(1, d2_mgr_.getQueueSize());
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_ADD, true, true,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_ADD, true, true,
                             "2001:db8:1:1::dead:beef",
                             "000201415AA33D1187D148275136FA30300478"
                             "FAAAA3EBD29826B5C907B2C9268A6F52",
@@ -890,12 +890,12 @@ TEST_F(FqdnDhcpv6SrvTest, processRequestRenew) {
     testProcessMessage(DHCPV6_RENEW, "otherhost.example.com",
                        "otherhost.example.com.");
     ASSERT_EQ(2, d2_mgr_.getQueueSize());
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_REMOVE, true, true,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_REMOVE, true, true,
                             "2001:db8:1:1::dead:beef",
                             "000201415AA33D1187D148275136FA30300478"
                             "FAAAA3EBD29826B5C907B2C9268A6F52",
                             0, 4000);
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_ADD, true, true,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_ADD, true, true,
                             "2001:db8:1:1::dead:beef",
                             "000201D422AA463306223D269B6CB7AFE7AAD265FC"
                             "EA97F93623019B2E0D14E5323D5A",
@@ -911,7 +911,7 @@ TEST_F(FqdnDhcpv6SrvTest, processRequestRelease) {
     testProcessMessage(DHCPV6_REQUEST, "myhost.example.com",
                        "myhost.example.com.");
     ASSERT_EQ(1, d2_mgr_.getQueueSize());
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_ADD, true, true,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_ADD, true, true,
                             "2001:db8:1:1::dead:beef",
                             "000201415AA33D1187D148275136FA30300478"
                             "FAAAA3EBD29826B5C907B2C9268A6F52",
@@ -924,7 +924,7 @@ TEST_F(FqdnDhcpv6SrvTest, processRequestRelease) {
     testProcessMessage(DHCPV6_RELEASE, "otherhost.example.com",
                        "otherhost.example.com.");
     ASSERT_EQ(1, d2_mgr_.getQueueSize());
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_REMOVE, true, true,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_REMOVE, true, true,
                             "2001:db8:1:1::dead:beef",
                             "000201415AA33D1187D148275136FA30300478"
                             "FAAAA3EBD29826B5C907B2C9268A6F52",
@@ -941,7 +941,7 @@ TEST_F(FqdnDhcpv6SrvTest, processRequestWithoutFqdn) {
     testProcessMessage(DHCPV6_REQUEST, "myhost.example.com",
                        "myhost.example.com.", Option6ClientFqdn::FLAG_S, false);
     ASSERT_EQ(1, d2_mgr_.getQueueSize());
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_ADD, true, true,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_ADD, true, true,
                             "2001:db8:1:1::dead:beef",
                             "000201415AA33D1187D148275136FA30300478"
                             "FAAAA3EBD29826B5C907B2C9268A6F52",
@@ -955,7 +955,7 @@ TEST_F(FqdnDhcpv6SrvTest, processRequestEmptyFqdn) {
                        "myhost-2001-db8-1-1--dead-beef.example.com.",
                        Option6ClientFqdn::FLAG_S, false);
     ASSERT_EQ(1, d2_mgr_.getQueueSize());
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_ADD, true, true,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_ADD, true, true,
                             "2001:db8:1:1::dead:beef",
                             "000201C905E54BE12DE6AF92ADE72752B9F362"
                             "13B5A8BC9D217548CD739B4CF31AFB1B",
@@ -985,7 +985,7 @@ TEST_F(FqdnDhcpv6SrvTest, processRequestReuseExpiredLease) {
                        "myhost.example.com.");
     // Test that the appropriate NameChangeRequest has been generated.
     ASSERT_EQ(1, d2_mgr_.getQueueSize());
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_ADD, true, true,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_ADD, true, true,
                             "2001:db8:1:1::dead:beef",
                             "000201415AA33D1187D148275136FA30300478"
                             "FAAAA3EBD29826B5C907B2C9268A6F52",
@@ -1019,14 +1019,14 @@ TEST_F(FqdnDhcpv6SrvTest, processRequestReuseExpiredLease) {
     ASSERT_EQ(2, d2_mgr_.getQueueSize());
     // The first name change request generated, should remove a DNS
     // mapping for an expired lease.
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_REMOVE, true, true,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_REMOVE, true, true,
                             "2001:db8:1:1::dead:beef",
                             "000201D422AA463306223D269B6CB7AFE7AAD2"
                             "65FCEA97F93623019B2E0D14E5323D5A",
                             0, 5);
     // The second name change request should add a DNS mapping for
     // a new lease.
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_ADD, true, true,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_ADD, true, true,
                             "2001:db8:1:1::dead:beef",
                             "000201415AA33D1187D148275136FA30300478"
                             "FAAAA3EBD29826B5C907B2C9268A6F52",
@@ -1038,7 +1038,7 @@ TEST_F(FqdnDhcpv6SrvTest, processClientDelegation) {
     testProcessMessage(DHCPV6_REQUEST, "myhost.example.com",
                        "myhost.example.com.", 0);
     ASSERT_EQ(1, d2_mgr_.getQueueSize());
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_ADD, true, false,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_ADD, true, false,
                             "2001:db8:1:1::dead:beef",
                             "000201415AA33D1187D148275136FA30300478"
                             "FAAAA3EBD29826B5C907B2C9268A6F52",

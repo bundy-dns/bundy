@@ -56,7 +56,7 @@ struct to_5_bit {
         if((unsigned)t < sizeof(lookup_table))
             value = lookup_table[(unsigned)t];
         if(-1 == value) { 
-            isc_throw(isc::BadValue,
+            bundy_throw(bundy::BadValue,
                       "attempt to decode a value not in base32hex char set");
         }
         return (value);

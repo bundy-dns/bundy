@@ -19,7 +19,7 @@
 
 #include <log/message_initializer.h>
 
-using namespace isc::log;
+using namespace bundy::log;
 
 // Declare a set of messages to go into the global dictionary.
 

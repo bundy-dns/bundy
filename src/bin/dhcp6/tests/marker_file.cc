@@ -19,7 +19,7 @@
 #include <fstream>
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 namespace test {
 
@@ -63,4 +63,4 @@ checkMarkerFileExists(const char* name) {
 
 } // namespace test
 } // namespace dhcp
-} // namespace isc
+} // namespace bundy

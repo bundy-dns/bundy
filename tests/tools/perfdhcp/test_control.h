@@ -32,7 +32,7 @@
 #include <string>
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace perfdhcp {
 
 /// Default transaction id offset in the packet template.
@@ -61,7 +61,7 @@ static const size_t DHCPV6_IA_NA_OFFSET = 40;
 class OptionNotFound : public Exception {
 public:
     OptionNotFound(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// \brief Test Control class.
@@ -180,7 +180,7 @@ public:
         /// This method initializes members of the class that Interface
         /// Manager holds: interface name, local address.
         ///
-        /// \throw isc::BadValue if interface for specified socket
+        /// \throw bundy::BadValue if interface for specified socket
         /// descriptor does not exist.
         void initSocketData();
     };
@@ -253,8 +253,8 @@ public:
     /// be parsed prior to running this function. Otherwise function will
     /// throw exception.
     ///
-    /// \throw isc::InvalidOperation if command line options are not parsed.
-    /// \throw isc::Unexpected if internal Test Controller error occured.
+    /// \throw bundy::InvalidOperation if command line options are not parsed.
+    /// \throw bundy::Unexpected if internal Test Controller error occured.
     /// \return error_code, 3 if number of received packets is not equal
     /// to number of sent packets, 0 if everything is ok.
     int run();
@@ -325,9 +325,9 @@ protected:
     /// be used to create an instance of the new message.
     ///
     /// \return created Release or Renew message
-    /// \throw isc::BadValue if the msg_type is neither DHCPV6_RENEW nor
+    /// \throw bundy::BadValue if the msg_type is neither DHCPV6_RENEW nor
     /// DHCPV6_RELEASE or if the reply is NULL.
-    /// \throw isc::Unexpected if mandatory options are missing in the
+    /// \throw bundy::Unexpected if mandatory options are missing in the
     /// Reply message.
     dhcp::Pkt6Ptr createMessageFromReply(const uint16_t msg_type,
                                          const dhcp::Pkt6Ptr& reply);
@@ -453,7 +453,7 @@ protected:
     ///
     /// \param [out] randomized number of bytes randomized (initial value
     /// is ignored).
-    /// \throw isc::BadValue if \ref generateMacAddress throws.
+    /// \throw bundy::BadValue if \ref generateMacAddress throws.
     /// \return vector representing DUID.
     std::vector<uint8_t> generateDuid(uint8_t& randomized) const;
 
@@ -468,7 +468,7 @@ protected:
     ///
     /// \param [out] randomized number of bytes randomized (initial
     /// value is ignored).
-    /// \throw isc::BadValue if MAC address template (default or specified
+    /// \throw bundy::BadValue if MAC address template (default or specified
     /// from the command line) has invalid size (expected 6 octets).
     /// \return generated MAC address.
     std::vector<uint8_t> generateMacAddress(uint8_t& randomized) const;
@@ -497,7 +497,7 @@ protected:
     /// Method returns template buffer at specified index.
     ///
     /// \param idx index of template buffer.
-    /// \throw isc::OutOfRange if buffer index out of bounds.
+    /// \throw bundy::OutOfRange if buffer index out of bounds.
     /// \return reference to template buffer.
     TemplateBuffer getTemplateBuffer(const size_t idx) const;
 
@@ -507,7 +507,7 @@ protected:
     /// their content and stores it in class internal buffers. Template
     /// file names are specified from the command line with -T option.
     ///
-    /// \throw isc::BadValue if any of the template files does not exist,
+    /// \throw bundy::BadValue if any of the template files does not exist,
     /// contains characters other than hexadecimal digits or spaces.
     /// \throw OutOfRange if any of the template files is empty or has
     /// odd number of hexadecimal digits.
@@ -530,12 +530,12 @@ protected:
     /// (for DHCPv6) than broadcast or multicast option is set on
     /// the socket. Opened socket is registered and managed by IfaceMgr.
     ///
-    /// \throw isc::BadValue if socket can't be created for given
+    /// \throw bundy::BadValue if socket can't be created for given
     /// interface, local address or remote address.
-    /// \throw isc::InvalidOperation if broadcast option can't be
+    /// \throw bundy::InvalidOperation if broadcast option can't be
     /// set for the v4 socket or if multicast option can't be set
     /// for the v6 socket.
-    /// \throw isc::Unexpected if interal unexpected error occured.
+    /// \throw bundy::Unexpected if interal unexpected error occured.
     /// \return socket descriptor.
     int openSocket() const;
 
@@ -553,7 +553,7 @@ protected:
     /// \brief Print performance statistics.
     ///
     /// Method prints performance statistics.
-    /// \throws isc::InvalidOperation if Statistics Manager was
+    /// \throws bundy::InvalidOperation if Statistics Manager was
     /// not initialized.
     void printStats() const;
 
@@ -569,8 +569,8 @@ protected:
     ///
     /// \param [in] socket socket to be used.
     /// \param [in] pkt4 object representing DHCPv4 packet received.
-    /// \throw isc::BadValue if unknown message type received.
-    /// \throw isc::Unexpected if unexpected error occured.
+    /// \throw bundy::BadValue if unknown message type received.
+    /// \throw bundy::Unexpected if unexpected error occured.
     void processReceivedPacket4(const TestControlSocket& socket,
                                 const dhcp::Pkt4Ptr& pkt4);
 
@@ -586,8 +586,8 @@ protected:
     ///
     /// \param [in] socket socket to be used.
     /// \param [in] pkt6 object representing DHCPv6 packet received.
-    /// \throw isc::BadValue if unknown message type received.
-    /// \throw isc::Unexpected if unexpected error occured.
+    /// \throw bundy::BadValue if unknown message type received.
+    /// \throw bundy::Unexpected if unexpected error occured.
     void processReceivedPacket6(const TestControlSocket& socket,
                                 const dhcp::Pkt6Ptr& pkt6);
 
@@ -602,8 +602,8 @@ protected:
     /// valid. Ensure that it is valid prior to calling it.
     ///
     /// \param socket socket to be used.
-    /// \throw isc::BadValue if unknown message type received.
-    /// \throw isc::Unexpected if unexpected error occured.
+    /// \throw bundy::BadValue if unknown message type received.
+    /// \throw bundy::Unexpected if unexpected error occured.
     /// \return number of received packets.
     uint64_t receivePackets(const TestControlSocket& socket);
 
@@ -684,9 +684,9 @@ protected:
     /// \param socket socket to be used to send the message.
     /// \param preload preload mode, packets not included in statistics.
     ///
-    /// \throw isc::Unexpected if failed to create new packet instance.
-    /// \throw isc::BadValue if MAC address has invalid length.
-    /// \throw isc::dhcp::SocketWriteError if failed to send the packet.
+    /// \throw bundy::Unexpected if failed to create new packet instance.
+    /// \throw bundy::BadValue if MAC address has invalid length.
+    /// \throw bundy::dhcp::SocketWriteError if failed to send the packet.
     void sendDiscover4(const TestControlSocket& socket,
                        const bool preload = false);
 
@@ -703,8 +703,8 @@ protected:
     /// \param template_buf buffer holding template packet.
     /// \param preload preload mode, packets not included in statistics.
     ///
-    /// \throw isc::OutOfRange if randomization offset is out of bounds.
-    /// \throw isc::dhcp::SocketWriteError if failed to send the packet.
+    /// \throw bundy::OutOfRange if randomization offset is out of bounds.
+    /// \throw bundy::dhcp::SocketWriteError if failed to send the packet.
     void sendDiscover4(const TestControlSocket& socket,
                        const std::vector<uint8_t>& template_buf,
                        const bool preload = false);
@@ -727,9 +727,9 @@ protected:
     /// \param socket socket to be used to send packets.
     /// \param packets_num number of packets to be sent.
     /// \param preload preload mode, packets not included in statistics.
-    /// \throw isc::Unexpected if thrown by packet sending method.
-    /// \throw isc::InvalidOperation if thrown by packet sending method.
-    /// \throw isc::OutOfRange if thrown by packet sending method.
+    /// \throw bundy::Unexpected if thrown by packet sending method.
+    /// \throw bundy::InvalidOperation if thrown by packet sending method.
+    /// \throw bundy::OutOfRange if thrown by packet sending method.
     void sendPackets(const TestControlSocket &socket,
                      const uint64_t packets_num,
                      const bool preload = false);
@@ -771,10 +771,10 @@ protected:
     /// \param discover_pkt4 DISCOVER packet sent.
     /// \param offer_pkt4 OFFER packet object.
     ///
-    /// \throw isc::Unexpected if unexpected error occured.
-    /// \throw isc::InvalidOperation if Statistics Manager has not been
+    /// \throw bundy::Unexpected if unexpected error occured.
+    /// \throw bundy::InvalidOperation if Statistics Manager has not been
     /// initialized.
-    /// \throw isc::dhcp::SocketWriteError if failed to send the packet.
+    /// \throw bundy::dhcp::SocketWriteError if failed to send the packet.
     void sendRequest4(const TestControlSocket& socket,
                       const dhcp::Pkt4Ptr& discover_pkt4,
                       const dhcp::Pkt4Ptr& offer_pkt4);
@@ -790,7 +790,7 @@ protected:
     /// \param discover_pkt4 DISCOVER packet sent.
     /// \param offer_pkt4 OFFER packet received.
     ///
-    /// \throw isc::dhcp::SocketWriteError if failed to send the packet.
+    /// \throw bundy::dhcp::SocketWriteError if failed to send the packet.
     void sendRequest4(const TestControlSocket& socket,
                       const std::vector<uint8_t>& template_buf,
                       const dhcp::Pkt4Ptr& discover_pkt4,
@@ -808,11 +808,11 @@ protected:
     ///
     /// \param socket socket to be used to send message.
     /// \param advertise_pkt6 ADVERTISE packet object.
-    /// \throw isc::Unexpected if unexpected error occured.
-    /// \throw isc::InvalidOperation if Statistics Manager has not been
+    /// \throw bundy::Unexpected if unexpected error occured.
+    /// \throw bundy::InvalidOperation if Statistics Manager has not been
     /// initialized.
     ///
-    /// \throw isc::dhcp::SocketWriteError if failed to send the packet.
+    /// \throw bundy::dhcp::SocketWriteError if failed to send the packet.
     void sendRequest6(const TestControlSocket& socket,
                       const dhcp::Pkt6Ptr& advertise_pkt6);
 
@@ -826,7 +826,7 @@ protected:
     /// \param template_buf packet template buffer.
     /// \param advertise_pkt6 ADVERTISE packet object.
     ///
-    /// \throw isc::dhcp::SocketWriteError if failed to send the packet.
+    /// \throw bundy::dhcp::SocketWriteError if failed to send the packet.
     void sendRequest6(const TestControlSocket& socket,
                       const std::vector<uint8_t>& template_buf,
                       const dhcp::Pkt6Ptr& advertise_pkt6);
@@ -846,8 +846,8 @@ protected:
     /// \param socket socket to be used to send the message.
     /// \param preload mode, packets not included in statistics.
     ///
-    /// \throw isc::Unexpected if failed to create new packet instance.
-    /// \throw isc::dhcp::SocketWriteError if failed to send the packet.
+    /// \throw bundy::Unexpected if failed to create new packet instance.
+    /// \throw bundy::dhcp::SocketWriteError if failed to send the packet.
     void sendSolicit6(const TestControlSocket& socket,
                       const bool preload = false);
 
@@ -861,7 +861,7 @@ protected:
     /// \param template_buf packet template buffer.
     /// \param preload mode, packets not included in statistics.
     ///
-    /// \throw isc::dhcp::SocketWriteError if failed to send the packet.
+    /// \throw bundy::dhcp::SocketWriteError if failed to send the packet.
     void sendSolicit6(const TestControlSocket& socket,
                       const std::vector<uint8_t>& template_buf,
                       const bool preload = false);
@@ -927,9 +927,9 @@ protected:
     /// \param [in] pkt_from A packet from which options should be copied.
     /// \param [out] pkt_to A packet to which options should be copied.
     ///
-    /// \throw isc::perfdhcp::OptionNotFound if a required option is not
+    /// \throw bundy::perfdhcp::OptionNotFound if a required option is not
     /// found in the packet from which options should be copied.
-    /// \throw isc::BadValue if any of the specified pointers to packets
+    /// \throw bundy::BadValue if any of the specified pointers to packets
     /// is NULL.
     void copyIaOptions(const dhcp::Pkt6Ptr& pkt_from, dhcp::Pkt6Ptr& pkt_to);
 
@@ -1041,9 +1041,9 @@ protected:
     /// to template_buffers_ vector.
     ///
     /// \param file_name name of the packet template file.
-    /// \throw isc::OutOfRange if file is empty or has odd number
+    /// \throw bundy::OutOfRange if file is empty or has odd number
     /// of hexadecimal digits.
-    /// \throw isc::BadValue if file contains characters other than
+    /// \throw bundy::BadValue if file contains characters other than
     /// spaces or hexadecimal digits.
     void readPacketTemplate(const std::string& file_name);
 
@@ -1093,6 +1093,6 @@ protected:
 };
 
 } // namespace perfdhcp
-} // namespace isc
+} // namespace bundy
 
 #endif // TEST_CONTROL_H

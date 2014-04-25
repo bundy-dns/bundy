@@ -21,8 +21,8 @@
 #include <list>
 #include <fstream>
 
-using namespace isc::dns;
-using namespace isc::dns::rdata;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
 using namespace std;
 
 namespace {
@@ -122,7 +122,7 @@ doAddAndRemove(RRsetCollection& collection, const RRClass& rrclass) {
     // Adding a duplicate RRset must throw.
     EXPECT_THROW({
         collection.addRRset(rrset);
-    }, isc::InvalidParameter);
+    }, bundy::InvalidParameter);
 
     // Remove foo.example.org/A, which should pass
     EXPECT_TRUE(collection.removeRRset(Name("foo.example.org"),
@@ -180,13 +180,13 @@ public:
     MyRRsetCollection()
     {}
 
-    virtual isc::dns::ConstRRsetPtr find(const isc::dns::Name&,
-                                         const isc::dns::RRClass&,
-                                         const isc::dns::RRType&) const {
+    virtual bundy::dns::ConstRRsetPtr find(const bundy::dns::Name&,
+                                         const bundy::dns::RRClass&,
+                                         const bundy::dns::RRType&) const {
         return (ConstRRsetPtr());
     }
 
-    typedef std::list<isc::dns::RRset> MyCollection;
+    typedef std::list<bundy::dns::RRset> MyCollection;
 
 protected:
     class MyIter : public RRsetCollectionBase::Iter {
@@ -195,7 +195,7 @@ protected:
             iter_(iter)
         {}
 
-        virtual const isc::dns::AbstractRRset& getValue() {
+        virtual const bundy::dns::AbstractRRset& getValue() {
             return (*iter_);
         }
 

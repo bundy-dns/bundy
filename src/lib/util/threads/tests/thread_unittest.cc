@@ -30,7 +30,7 @@
 // started in parallel (the other tests wait for the previous one to terminate
 // before starting new one).
 
-using namespace isc::util::thread;
+using namespace bundy::util::thread;
 
 namespace {
 const size_t iterations = 200;
@@ -42,7 +42,7 @@ doSomething(int*) { }
 // We just test that we can forget about the thread and nothing
 // bad will happen on our side.
 TEST(ThreadTest, detached) {
-    if (!isc::util::unittests::runningOnValgrind()) {
+    if (!bundy::util::unittests::runningOnValgrind()) {
         int x;
         for (size_t i = 0; i < detached_iterations; ++i) {
             Thread thread(boost::bind(&doSomething, &x));
@@ -58,14 +58,14 @@ markRun(bool* mark) {
 
 // Wait for a thread to end first. The variable must be set at the time.
 TEST(ThreadTest, wait) {
-    if (!isc::util::unittests::runningOnValgrind()) {
+    if (!bundy::util::unittests::runningOnValgrind()) {
         for (size_t i = 0; i < iterations; ++i) {
             bool mark = false;
             Thread thread(boost::bind(markRun, &mark));
             thread.wait();
             ASSERT_TRUE(mark) << "Not finished yet in " << i << "th iteration";
             // Can't wait second time
-            ASSERT_THROW(thread.wait(), isc::InvalidOperation);
+            ASSERT_THROW(thread.wait(), bundy::InvalidOperation);
         }
     }
 }
@@ -82,7 +82,7 @@ throwException() {
 
 // Exception in the thread we forget about should not do anything to us
 TEST(ThreadTest, detachedException) {
-    if (!isc::util::unittests::runningOnValgrind()) {
+    if (!bundy::util::unittests::runningOnValgrind()) {
         for (size_t i = 0; i < detached_iterations; ++i) {
             Thread thread(throwSomething);
         }
@@ -94,7 +94,7 @@ TEST(ThreadTest, detachedException) {
 
 // An uncaught exception in the thread should propagate through wait
 TEST(ThreadTest, exception) {
-    if (!isc::util::unittests::runningOnValgrind()) {
+    if (!bundy::util::unittests::runningOnValgrind()) {
         for (size_t i = 0; i < iterations; ++i) {
             Thread thread(throwSomething);
             Thread thread2(throwException);

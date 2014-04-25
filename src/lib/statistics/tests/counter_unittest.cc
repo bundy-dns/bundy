@@ -26,12 +26,12 @@ enum CounterItems {
 };
 }
 
-using namespace isc::statistics;
+using namespace bundy::statistics;
 
 TEST(CounterCreateTest, invalidCounterSize) {
-    // Creating counter with 0 elements will cause an isc::InvalidParameter
+    // Creating counter with 0 elements will cause an bundy::InvalidParameter
     // exception
-    EXPECT_THROW(Counter counter(0), isc::InvalidParameter);
+    EXPECT_THROW(Counter counter(0), bundy::InvalidParameter);
 }
 
 // This fixture is for testing Counter.
@@ -81,10 +81,10 @@ TEST_F(CounterTest, incrementCounterItem) {
 }
 
 TEST_F(CounterTest, invalidCounterItem) {
-    // Incrementing out-of-bound counter will cause an isc::OutOfRange
+    // Incrementing out-of-bound counter will cause an bundy::OutOfRange
     // exception
-    EXPECT_THROW(counter.inc(NUMBER_OF_ITEMS), isc::OutOfRange);
-    // Trying to get out-of-bound counter will cause an isc::OutOfRange
+    EXPECT_THROW(counter.inc(NUMBER_OF_ITEMS), bundy::OutOfRange);
+    // Trying to get out-of-bound counter will cause an bundy::OutOfRange
     // exception
-    EXPECT_THROW(counter.get(NUMBER_OF_ITEMS), isc::OutOfRange);
+    EXPECT_THROW(counter.get(NUMBER_OF_ITEMS), bundy::OutOfRange);
 }

@@ -17,7 +17,7 @@
 
 #include <Python.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 class RRType;
 
@@ -60,7 +60,7 @@ const RRType& PyRRType_ToRRType(const PyObject* rrtype_obj);
 
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 #endif // PYTHON_RRTYPE_H
 
 // Local Variables:

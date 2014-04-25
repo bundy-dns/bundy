@@ -28,14 +28,14 @@
 #include <boost/shared_ptr.hpp>
 #include <map>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 /// @brief Thrown if the update manager encounters a general error.
-class D2UpdateMgrError : public isc::Exception {
+class D2UpdateMgrError : public bundy::Exception {
 public:
     D2UpdateMgrError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Defines a list of transactions.
@@ -167,7 +167,7 @@ protected:
     ///
     /// @throw D2UpdateMgrError if a transaction for this DHCID already
     /// exists. Note this would be programmatic error.
-    void makeTransaction(isc::dhcp_ddns::NameChangeRequestPtr& ncr);
+    void makeTransaction(bundy::dhcp_ddns::NameChangeRequestPtr& ncr);
 
 public:
     /// @brief Gets the D2UpdateMgr's IOService.
@@ -259,6 +259,6 @@ private:
 typedef boost::shared_ptr<D2UpdateMgr> D2UpdateMgrPtr;
 
 
-} // namespace isc::d2
-} // namespace isc
+} // namespace bundy::d2
+} // namespace bundy
 #endif

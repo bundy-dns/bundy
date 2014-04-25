@@ -18,7 +18,7 @@
 #include <log/interprocess/interprocess_sync.h>
 #include <exceptions/exceptions.h>
 
-namespace isc {
+namespace bundy {
 namespace log {
 namespace interprocess {
 
@@ -30,7 +30,7 @@ class InterprocessSyncFileError : public Exception {
 public:
     InterprocessSyncFileError(const char* file, size_t line,
                               const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// \brief File-based Interprocess Sync Class
@@ -88,6 +88,6 @@ private:
 
 } // namespace interprocess
 } // namespace log
-} // namespace isc
+} // namespace bundy
 
 #endif // INTERPROCESS_SYNC_FILE_H

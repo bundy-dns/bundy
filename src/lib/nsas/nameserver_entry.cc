@@ -42,18 +42,18 @@
 #include "nameserver_entry.h"
 #include "nsas_log.h"
 
-using namespace isc::asiolink;
-using namespace isc::nsas;
-using namespace isc::dns;
+using namespace bundy::asiolink;
+using namespace bundy::nsas;
+using namespace bundy::dns;
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 
 namespace {
 
 // Just shorter type alias
-typedef isc::util::locks::scoped_lock<isc::util::locks::recursive_mutex> Lock;
+typedef bundy::util::locks::scoped_lock<bundy::util::locks::recursive_mutex> Lock;
 
 }
 
@@ -211,7 +211,7 @@ NameserverEntry::setAddressUnreachable(const IOAddress& address) {
  * destroyed too soon.
  */
 class NameserverEntry::ResolverCallback :
-        public isc::resolve::ResolverInterface::Callback {
+        public bundy::resolve::ResolverInterface::Callback {
     public:
         ResolverCallback(boost::shared_ptr<NameserverEntry> entry,
             AddressFamily family, const RRType& type) :
@@ -237,23 +237,23 @@ class NameserverEntry::ResolverCallback :
                 failureInternal(lock);
                 return;
 
-            } else if (response_message->getRcode() != isc::dns::Rcode::NOERROR()) {
+            } else if (response_message->getRcode() != bundy::dns::Rcode::NOERROR()) {
                 LOG_DEBUG(nsas_logger, NSAS_DBG_RESULTS, NSAS_ERROR_RESPONSE).
                           arg(response_message->getRcode()).arg(entry_->getName());
                 failureInternal(lock);
                 return;
 
             } else if (
-                response_message->getRRCount(isc::dns::Message::SECTION_ANSWER) == 0) {
+                response_message->getRRCount(bundy::dns::Message::SECTION_ANSWER) == 0) {
                 LOG_DEBUG(nsas_logger, NSAS_DBG_RESULTS, NSAS_EMPTY_RESPONSE).
                           arg(entry_->getName());
                 failureInternal(lock);
                 return;
             }
             
-            isc::dns::RRsetIterator rrsi =
-                response_message->beginSection(isc::dns::Message::SECTION_ANSWER);
-            const isc::dns::RRsetPtr response = *rrsi;
+            bundy::dns::RRsetIterator rrsi =
+                response_message->beginSection(bundy::dns::Message::SECTION_ANSWER);
+            const bundy::dns::RRsetPtr response = *rrsi;
             
             vector<AddressEntry> entries;
 
@@ -409,7 +409,7 @@ class NameserverEntry::ResolverCallback :
 };
 
 void
-NameserverEntry::askIP(isc::resolve::ResolverInterface* resolver,
+NameserverEntry::askIP(bundy::resolve::ResolverInterface* resolver,
     const RRType& type, AddressFamily family)
 {
     QuestionPtr question(new Question(Name(getName()), RRClass(getClass()),
@@ -420,7 +420,7 @@ NameserverEntry::askIP(isc::resolve::ResolverInterface* resolver,
 }
 
 void
-NameserverEntry::askIP(isc::resolve::ResolverInterface* resolver,
+NameserverEntry::askIP(bundy::resolve::ResolverInterface* resolver,
     boost::shared_ptr<Callback> callback, AddressFamily family)
 {
     Lock lock(mutex_);
@@ -469,4 +469,4 @@ NameserverEntry::askIP(isc::resolve::ResolverInterface* resolver,
 }
 
 } // namespace dns
-} // namespace isc
+} // namespace bundy

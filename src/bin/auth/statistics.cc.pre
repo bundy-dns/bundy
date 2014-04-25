@@ -28,29 +28,29 @@
 
 #include <stdint.h>
 
-using namespace isc::dns;
-using namespace isc::auth;
-using namespace isc::statistics;
-using namespace isc::auth::statistics;
+using namespace bundy::dns;
+using namespace bundy::auth;
+using namespace bundy::statistics;
+using namespace bundy::auth::statistics;
 
 namespace {
 
-/// \brief Fill isc::data::ElementPtr with given counter.
+/// \brief Fill bundy::data::ElementPtr with given counter.
 /// \param counter Counter which stores values to fill
 /// \param type_tree CounterSpec corresponding to counter for building item
 ///                  name
-/// \param trees isc::data::ElementPtr to be filled in; caller has ownership of
-///              isc::data::ElementPtr
+/// \param trees bundy::data::ElementPtr to be filled in; caller has ownership of
+///              bundy::data::ElementPtr
 void
 fillNodes(const Counter& counter,
-          const struct isc::auth::statistics::CounterSpec type_tree[],
-          isc::data::ElementPtr& trees)
+          const struct bundy::auth::statistics::CounterSpec type_tree[],
+          bundy::data::ElementPtr& trees)
 {
-    using namespace isc::data;
+    using namespace bundy::data;
 
     for (int i = 0; type_tree[i].name != NULL; ++i) {
         if (type_tree[i].sub_counters != NULL) {
-            isc::data::ElementPtr sub_counters = Element::createMap();
+            bundy::data::ElementPtr sub_counters = Element::createMap();
             trees->set(type_tree[i].name, sub_counters);
             fillNodes(counter, type_tree[i].sub_counters, sub_counters);
         } else {
@@ -66,7 +66,7 @@ fillNodes(const Counter& counter,
 
 } // anonymous namespace
 
-namespace isc {
+namespace bundy {
 namespace auth {
 namespace statistics {
 
@@ -134,7 +134,7 @@ Counters::incRequest(const MessageAttributes& msgattrs) {
     }
 
     // Opcode
-    const boost::optional<isc::dns::Opcode>& opcode =
+    const boost::optional<bundy::dns::Opcode>& opcode =
         msgattrs.getRequestOpCode();
     // Increment opcode counter only if the opcode exists; opcode can be empty
     // if a short message which does not contain DNS header is received, or
@@ -209,10 +209,10 @@ Counters::incResponse(const MessageAttributes& msgattrs,
         server_msg_counter_.inc(MSG_REQUEST_BADEDNSVER);
     }
 
-    const boost::optional<isc::dns::Opcode>& opcode =
+    const boost::optional<bundy::dns::Opcode>& opcode =
         msgattrs.getRequestOpCode();
     if (!opcode) {
-        isc_throw(isc::Unexpected, "Opcode of the request is empty while it is"
+        bundy_throw(bundy::Unexpected, "Opcode of the request is empty while it is"
                                    " responded");
     }
     if (!msgattrs.requestHasBadSig() && opcode.get() == Opcode::QUERY()) {
@@ -267,14 +267,14 @@ Counters::inc(const MessageAttributes& msgattrs, const Message& response,
 
 Counters::ConstItemTreePtr
 Counters::get() const {
-    using namespace isc::data;
+    using namespace bundy::data;
 
-    isc::data::ElementPtr item_tree = Element::createMap();
+    bundy::data::ElementPtr item_tree = Element::createMap();
 
-    isc::data::ElementPtr zones = Element::createMap();
+    bundy::data::ElementPtr zones = Element::createMap();
     item_tree->set("zones", zones);
 
-    isc::data::ElementPtr server = Element::createMap();
+    bundy::data::ElementPtr server = Element::createMap();
     fillNodes(server_msg_counter_, msg_counter_tree, server);
     zones->set("_SERVER_", server);
 
@@ -283,4 +283,4 @@ Counters::get() const {
 
 } // namespace statistics
 } // namespace auth
-} // namespace isc
+} // namespace bundy

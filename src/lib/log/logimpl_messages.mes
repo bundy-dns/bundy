@@ -19,7 +19,7 @@
 # underlying implementation is changed.  For that reason, they have been put
 # in a separate file.
 
-$NAMESPACE isc::log
+$NAMESPACE bundy::log
 
 % LOGIMPL_ABOVE_MAX_DEBUG debug level of %1 is too high and will be set to the maximum of %2
 A message from the interface to the underlying logger implementation reporting

@@ -19,8 +19,8 @@
 #include <log/message_initializer.h>
 #include <log/message_types.h>
 
-using namespace isc;
-using namespace isc::log;
+using namespace bundy;
+using namespace bundy::log;
 using namespace std;
 
 // set up another message initializer.  This will add a symbol found in the

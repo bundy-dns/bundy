@@ -20,7 +20,7 @@
 
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief Invalid type exception
@@ -29,7 +29,7 @@ namespace dhcp {
 class InvalidType : public Exception {
 public:
     InvalidType(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// @brief No lease manager exception
@@ -39,7 +39,7 @@ public:
 class NoLeaseManager : public Exception {
 public:
     NoLeaseManager(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// @brief Lease Manager Factory
@@ -76,9 +76,9 @@ public:
     ///        -end specific, although must include the "type" keyword which
     ///        gives the backend in use.
     ///
-    /// @throw isc::InvalidParameter dbaccess string does not contain the "type"
+    /// @throw bundy::InvalidParameter dbaccess string does not contain the "type"
     ///        keyword.
-    /// @throw isc::dhcp::InvalidType The "type" keyword in dbaccess does not
+    /// @throw bundy::dhcp::InvalidType The "type" keyword in dbaccess does not
     ///        identify a supported backend.
     static void create(const std::string& dbaccess);
 
@@ -94,7 +94,7 @@ public:
     /// Returns an instance of the "current" lease manager.  An exception
     /// will be thrown if none is available.
     ///
-    /// @throw isc::dhcp::NoLeaseManager No lease manager is available: use
+    /// @throw bundy::dhcp::NoLeaseManager No lease manager is available: use
     ///        create() to create one before calling this method.
     static LeaseMgr& instance();
 
@@ -129,7 +129,7 @@ private:
 
 };
 
-}; // end of isc::dhcp namespace
-}; // end of isc namespace
+}; // end of bundy::dhcp namespace
+}; // end of bundy namespace
 
 #endif // LEASE_MGR_FACTORY_H

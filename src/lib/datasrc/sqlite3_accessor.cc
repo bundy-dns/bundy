@@ -31,7 +31,7 @@
 #include <util/filename.h>
 
 using namespace std;
-using namespace isc::data;
+using namespace bundy::data;
 
 namespace {
 // Expected schema.  The major version must match else there is an error.  If
@@ -48,7 +48,7 @@ const int SQLITE_SCHEMA_MAJOR_VERSION = 2;
 const int SQLITE_SCHEMA_MINOR_VERSION = 2;
 }
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 
 // The following enum and char* array define the SQL statements commonly
@@ -195,7 +195,7 @@ struct SQLite3Parameters {
             sqlite3_stmt* prepared = NULL;
             if (sqlite3_prepare_v2(db_, text_statements[id], -1, &prepared,
                                    NULL) != SQLITE_OK) {
-                isc_throw(SQLite3Error, "Could not prepare SQLite statement: "
+                bundy_throw(SQLite3Error, "Could not prepare SQLite statement: "
                           << text_statements[id] <<
                           ": " << sqlite3_errmsg(db_));
             }
@@ -257,7 +257,7 @@ public:
 
     void bindInt(int index, int val) {
         if (sqlite3_bind_int(stmt_, index, val) != SQLITE_OK) {
-            isc_throw(DataSourceError,
+            bundy_throw(DataSourceError,
                       "failed to bind SQLite3 parameter: " <<
                       sqlite3_errmsg(dbparameters_.db_));
         }
@@ -265,7 +265,7 @@ public:
 
     void bindInt64(int index, sqlite3_int64 val) {
         if (sqlite3_bind_int64(stmt_, index, val) != SQLITE_OK) {
-            isc_throw(DataSourceError,
+            bundy_throw(DataSourceError,
                       "failed to bind SQLite3 parameter: " <<
                       sqlite3_errmsg(dbparameters_.db_));
         }
@@ -277,7 +277,7 @@ public:
     void bindText(int index, const char* val, void(*destructor)(void*)) {
         if (sqlite3_bind_text(stmt_, index, val, -1, destructor)
             != SQLITE_OK) {
-            isc_throw(DataSourceError, "failed to bind SQLite3 parameter: " <<
+            bundy_throw(DataSourceError, "failed to bind SQLite3 parameter: " <<
                       sqlite3_errmsg(dbparameters_.db_));
         }
     }
@@ -285,7 +285,7 @@ public:
     void exec() {
         if (sqlite3_step(stmt_) != SQLITE_DONE) {
             sqlite3_reset(stmt_);
-            isc_throw(DataSourceError, "failed to " << desc_ << ": " <<
+            bundy_throw(DataSourceError, "failed to " << desc_ << ": " <<
                       sqlite3_errmsg(dbparameters_.db_));
         }
     }
@@ -302,7 +302,7 @@ SQLite3Accessor::SQLite3Accessor(const std::string& filename,
     filename_(filename),
     class_(rrclass),
     database_name_("sqlite3_" +
-                   isc::util::Filename(filename).nameAndExtension())
+                   bundy::util::Filename(filename).nameAndExtension())
 {
     LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_SQLITE_NEWCONN);
 
@@ -384,7 +384,7 @@ sqlite3_stmt*
 prepare(sqlite3* const db, const char* const statement) {
     sqlite3_stmt* prepared = NULL;
     if (sqlite3_prepare_v2(db, statement, -1, &prepared, NULL) != SQLITE_OK) {
-        isc_throw(SQLite3Error, "Could not prepare SQLite statement: " <<
+        bundy_throw(SQLite3Error, "Could not prepare SQLite statement: " <<
                   statement << ": " << sqlite3_errmsg(db));
     }
     return (prepared);
@@ -418,14 +418,14 @@ int checkSchemaVersionElement(sqlite3* db, const char* const query) {
             break;
         } else if (rc != SQLITE_BUSY || i == 50) {
             sqlite3_finalize(prepared);
-            isc_throw(SQLite3Error, "Unable to prepare version query: "
+            bundy_throw(SQLite3Error, "Unable to prepare version query: "
                         << rc << " " << sqlite3_errmsg(db));
         }
         doSleep();
     }
     if (sqlite3_step(prepared) != SQLITE_ROW) {
         sqlite3_finalize(prepared);
-        isc_throw(SQLite3Error,
+        bundy_throw(SQLite3Error,
                     "Unable to query version: " << sqlite3_errmsg(db));
     }
     int version = sqlite3_column_int(prepared, 0);
@@ -462,7 +462,7 @@ public:
             if (rc == SQLITE_OK) {
                 break;
             } else if (rc != SQLITE_BUSY || i == 50) {
-                isc_throw(SQLite3Error, "Unable to acquire exclusive lock "
+                bundy_throw(SQLite3Error, "Unable to acquire exclusive lock "
                           "for database creation: " << sqlite3_errmsg(db));
             }
             doSleep();
@@ -483,7 +483,7 @@ public:
     void commit() {
         if (sqlite3_exec(db_, "COMMIT TRANSACTION", NULL, NULL, NULL) !=
             SQLITE_OK) {
-            isc_throw(SQLite3Error, "Unable to commit newly created database "
+            bundy_throw(SQLite3Error, "Unable to commit newly created database "
                       "schema: " << sqlite3_errmsg(db_));
         }
         db_ = NULL;
@@ -506,7 +506,7 @@ createDatabase(sqlite3* db, const std::string& name) {
         for (int i = 0; SCHEMA_LIST[i] != NULL; ++i) {
             if (sqlite3_exec(db, SCHEMA_LIST[i], NULL, NULL, NULL) !=
                 SQLITE_OK) {
-                isc_throw(SQLite3Error,
+                bundy_throw(SQLite3Error,
                           "Failed to set up schema " << SCHEMA_LIST[i]);
             }
         }
@@ -532,7 +532,7 @@ checkAndSetupSchema(Initializer* initializer, const std::string& name) {
         LOG_ERROR(logger, DATASRC_SQLITE_INCOMPATIBLE_VERSION)
             .arg(schema_version.first).arg(schema_version.second)
             .arg(SQLITE_SCHEMA_MAJOR_VERSION).arg(SQLITE_SCHEMA_MINOR_VERSION);
-        isc_throw(IncompatibleDbVersion,
+        bundy_throw(IncompatibleDbVersion,
                   "incompatible SQLite3 database version: " <<
                   schema_version.first << "." << schema_version.second);
     } else if (schema_version.second < SQLITE_SCHEMA_MINOR_VERSION) {
@@ -552,13 +552,13 @@ SQLite3Accessor::open(const std::string& name) {
     LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_SQLITE_CONNOPEN).arg(name);
     if (dbparameters_->db_ != NULL) {
         // There shouldn't be a way to trigger this anyway
-        isc_throw(DataSourceError, "Duplicate SQLite open with " << name);
+        bundy_throw(DataSourceError, "Duplicate SQLite open with " << name);
     }
 
     Initializer initializer;
 
     if (sqlite3_open(name.c_str(), &initializer.params_.db_) != 0) {
-        isc_throw(SQLite3Error, "Cannot open SQLite database file: " << name);
+        bundy_throw(SQLite3Error, "Cannot open SQLite database file: " << name);
     }
 
     checkAndSetupSchema(&initializer, name);
@@ -577,7 +577,7 @@ void
 SQLite3Accessor::close(void) {
     LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_SQLITE_CONNCLOSE);
     if (dbparameters_->db_ == NULL) {
-        isc_throw(DataSourceError,
+        bundy_throw(DataSourceError,
                   "SQLite data source is being closed before open");
     }
 
@@ -596,12 +596,12 @@ SQLite3Accessor::getZone(const std::string& name) const {
     sqlite3_reset(stmt);
     rc = sqlite3_bind_text(stmt, 1, name.c_str(), -1, SQLITE_STATIC);
     if (rc != SQLITE_OK) {
-        isc_throw(SQLite3Error, "Could not bind " << name <<
+        bundy_throw(SQLite3Error, "Could not bind " << name <<
                   " to SQL statement (zone)");
     }
     rc = sqlite3_bind_text(stmt, 2, class_.c_str(), -1, SQLITE_STATIC);
     if (rc != SQLITE_OK) {
-        isc_throw(SQLite3Error, "Could not bind " << class_ <<
+        bundy_throw(SQLite3Error, "Could not bind " << class_ <<
                   " to SQL statement (zone)");
     }
 
@@ -618,9 +618,9 @@ SQLite3Accessor::getZone(const std::string& name) const {
     }
 
     sqlite3_reset(stmt);
-    isc_throw(DataSourceError, "Unexpected failure in sqlite3_step: " <<
+    bundy_throw(DataSourceError, "Unexpected failure in sqlite3_step: " <<
               sqlite3_errmsg(dbparameters_->db_));
-    // Compilers might not realize isc_throw always throws
+    // Compilers might not realize bundy_throw always throws
     return (std::pair<bool, int>(false, 0));
 }
 
@@ -628,7 +628,7 @@ int
 SQLite3Accessor::addZone(const std::string& name) {
     // Transaction should have been started by the caller
     if (!dbparameters_->in_transaction) {
-        isc_throw(DataSourceError, "performing addZone on SQLite3 "
+        bundy_throw(DataSourceError, "performing addZone on SQLite3 "
                   "data source without transaction");
     }
 
@@ -655,7 +655,7 @@ void
 SQLite3Accessor::deleteZone(int zone_id) {
     // Transaction should have been started by the caller
     if (!dbparameters_->in_transaction) {
-        isc_throw(InvalidOperation, "performing deleteZone on SQLite3 "
+        bundy_throw(InvalidOperation, "performing deleteZone on SQLite3 "
                   "data source without transaction");
     }
 
@@ -674,7 +674,7 @@ convertToPlainChar(const unsigned char* ucp, sqlite3 *db) {
         // empty string, or sqlite may have run out of memory, in
         // which case we raise an error
         if (sqlite3_errcode(db) == SQLITE_NOMEM) {
-            isc_throw(DataSourceError,
+            bundy_throw(DataSourceError,
                       "Sqlite3 backend encountered a memory allocation "
                       "error in sqlite3_column_text()");
         } else {
@@ -748,7 +748,7 @@ public:
                                      text_statements[ANY_SUB]);
                 bindZoneId(id);
                 // Done once, this should not be very inefficient.
-                bindName(isc::dns::Name(name_).reverse().toText() + "%");
+                bindName(bundy::dns::Name(name_).reverse().toText() + "%");
                 break;
             case QT_NSEC3:
                 statement_ = prepare(accessor->dbparameters_->db_,
@@ -760,7 +760,7 @@ public:
                 // Can Not Happen - there isn't any other type of query
                 // and all the calls to the constructor are from this
                 // file. Therefore no way to test it throws :-(.
-                isc_throw(Unexpected,
+                bundy_throw(Unexpected,
                           "Invalid qtype passed - unreachable code branch "
                           "reached");
         }
@@ -788,7 +788,7 @@ public:
                 }
                 return (true);
             } else if (rc_ != SQLITE_DONE) {
-                isc_throw(DataSourceError,
+                bundy_throw(DataSourceError,
                           "Unexpected failure in sqlite3_step: " <<
                           sqlite3_errmsg(accessor_->dbparameters_->db_));
             }
@@ -827,7 +827,7 @@ private:
     void bindZoneId(const int zone_id) {
         if (sqlite3_bind_int(statement_, 1, zone_id) != SQLITE_OK) {
             finalize();
-            isc_throw(SQLite3Error, "Could not bind int " << zone_id <<
+            bundy_throw(SQLite3Error, "Could not bind int " << zone_id <<
                       " to SQL statement: " <<
                       sqlite3_errmsg(accessor_->dbparameters_->db_));
         }
@@ -838,7 +838,7 @@ private:
                               SQLITE_TRANSIENT) != SQLITE_OK) {
             const char* errmsg = sqlite3_errmsg(accessor_->dbparameters_->db_);
             finalize();
-            isc_throw(SQLite3Error, "Could not bind text '" << name <<
+            bundy_throw(SQLite3Error, "Could not bind text '" << name <<
                       "' to SQL statement: " << errmsg);
         }
     }
@@ -967,7 +967,7 @@ public:
                 copyColumn(DIFF_RECS, data, RDATA_COLUMN);
 
             } else if (rc != SQLITE_DONE) {
-                isc_throw(DataSourceError,
+                bundy_throw(DataSourceError,
                           "Unexpected failure in sqlite3_step: " <<
                           sqlite3_errmsg(accessor_->dbparameters_->db_));
             }
@@ -988,7 +988,7 @@ private:
         sqlite3_stmt* stmt = accessor_->dbparameters_->getStatement(stindex);
         if ((sqlite3_reset(stmt) != SQLITE_OK) ||
             (sqlite3_clear_bindings(stmt) != SQLITE_OK)) {
-            isc_throw(SQLite3Error, "Could not clear statement bindings in '" <<
+            bundy_throw(SQLite3Error, "Could not clear statement bindings in '" <<
                       text_statements[stindex] << "': " <<
                       sqlite3_errmsg(accessor_->dbparameters_->db_));
         }
@@ -1005,7 +1005,7 @@ private:
     void bindInt(int stindex, int varindex, sqlite3_int64 value) {
         if (sqlite3_bind_int64(accessor_->dbparameters_->getStatement(stindex),
                              varindex, value) != SQLITE_OK) {
-            isc_throw(SQLite3Error, "Could not bind value to parameter " <<
+            bundy_throw(SQLite3Error, "Could not bind value to parameter " <<
                       varindex << " in statement '" <<
                       text_statements[stindex] << "': " <<
                       sqlite3_errmsg(accessor_->dbparameters_->db_));
@@ -1044,7 +1044,7 @@ private:
                 return (result);
 
             } else if (rc == SQLITE_ROW) {
-                isc_throw(TooMuchData, "request to return one value from "
+                bundy_throw(TooMuchData, "request to return one value from "
                           "diffs table returned multiple values");
             }
         } else if (rc == SQLITE_DONE) {
@@ -1052,11 +1052,11 @@ private:
             // No data in the table.  A bare exception with no explanation is
             // thrown, as it will be replaced by a more informative one by
             // the caller.
-            isc_throw(TooLittleData, "");
+            bundy_throw(TooLittleData, "");
         }
 
         // We get here on an error.
-        isc_throw(DataSourceError, "could not get data from diffs table: " <<
+        bundy_throw(DataSourceError, "could not get data from diffs table: " <<
                   sqlite3_errmsg(accessor_->dbparameters_->db_));
 
         // Keep the compiler happy with a return value.
@@ -1098,7 +1098,7 @@ private:
             // No data returned but the SQL query succeeded.  Only possibility
             // is that there is no entry in the differences table for the given
             // zone and version.
-            isc_throw(NoSuchSerial, "No entry in differences table for" <<
+            bundy_throw(NoSuchSerial, "No entry in differences table for" <<
                       " zone ID " << zone_id << ", serial number " << serial);
         }
 
@@ -1143,11 +1143,11 @@ SQLite3Accessor::getDiffs(int id, uint32_t start, uint32_t end) const {
 pair<bool, int>
 SQLite3Accessor::startUpdateZone(const string& zone_name, const bool replace) {
     if (dbparameters_->updating_zone) {
-        isc_throw(DataSourceError,
+        bundy_throw(DataSourceError,
                   "duplicate zone update on SQLite3 data source");
     }
     if (dbparameters_->in_transaction) {
-        isc_throw(DataSourceError,
+        bundy_throw(DataSourceError,
                   "zone update attempt in another SQLite3 transaction");
     }
 
@@ -1197,7 +1197,7 @@ SQLite3Accessor::startUpdateZone(const string& zone_name, const bool replace) {
 void
 SQLite3Accessor::startTransaction() {
     if (dbparameters_->in_transaction) {
-        isc_throw(DataSourceError,
+        bundy_throw(DataSourceError,
                   "duplicate transaction on SQLite3 data source");
     }
 
@@ -1209,7 +1209,7 @@ SQLite3Accessor::startTransaction() {
 void
 SQLite3Accessor::commit() {
     if (!dbparameters_->in_transaction) {
-        isc_throw(DataSourceError, "performing commit on SQLite3 "
+        bundy_throw(DataSourceError, "performing commit on SQLite3 "
                   "data source without transaction");
     }
 
@@ -1224,7 +1224,7 @@ SQLite3Accessor::commit() {
 void
 SQLite3Accessor::rollback() {
     if (!dbparameters_->in_transaction) {
-        isc_throw(DataSourceError, "performing rollback on SQLite3 "
+        bundy_throw(DataSourceError, "performing rollback on SQLite3 "
                   "data source without transaction");
     }
 
@@ -1262,7 +1262,7 @@ doUpdate(SQLite3Parameters& dbparams, StatementID stmt_id,
 void
 SQLite3Accessor::addRecordToZone(const string (&columns)[ADD_COLUMN_COUNT]) {
     if (!dbparameters_->updating_zone) {
-        isc_throw(DataSourceError, "adding record to SQLite3 "
+        bundy_throw(DataSourceError, "adding record to SQLite3 "
                   "data source without transaction");
     }
     doUpdate<const string (&)[ADD_COLUMN_COUNT]>(
@@ -1274,7 +1274,7 @@ SQLite3Accessor::addNSEC3RecordToZone(
     const string (&columns)[ADD_NSEC3_COLUMN_COUNT])
 {
     if (!dbparameters_->updating_zone) {
-        isc_throw(DataSourceError, "adding NSEC3-related record to SQLite3 "
+        bundy_throw(DataSourceError, "adding NSEC3-related record to SQLite3 "
                   "data source without transaction");
     }
 
@@ -1296,7 +1296,7 @@ SQLite3Accessor::addNSEC3RecordToZone(
 void
 SQLite3Accessor::deleteRecordInZone(const string (&params)[DEL_PARAM_COUNT]) {
     if (!dbparameters_->updating_zone) {
-        isc_throw(DataSourceError, "deleting record in SQLite3 "
+        bundy_throw(DataSourceError, "deleting record in SQLite3 "
                   "data source without transaction");
     }
     // We don't pass all the parameters to the query, one name (reserve one
@@ -1316,7 +1316,7 @@ SQLite3Accessor::deleteNSEC3RecordInZone(
     const string (&params)[DEL_NSEC3_PARAM_COUNT])
 {
     if (!dbparameters_->updating_zone) {
-        isc_throw(DataSourceError, "deleting NSEC3-related record in SQLite3 "
+        bundy_throw(DataSourceError, "deleting NSEC3-related record in SQLite3 "
                   "data source without transaction");
     }
     doUpdate<const string (&)[DEL_NSEC3_PARAM_COUNT]>(
@@ -1330,11 +1330,11 @@ SQLite3Accessor::addRecordDiff(int zone_id, uint32_t serial,
                                const std::string (&params)[DIFF_PARAM_COUNT])
 {
     if (!dbparameters_->updating_zone) {
-        isc_throw(DataSourceError, "adding record diff without update "
+        bundy_throw(DataSourceError, "adding record diff without update "
                   "transaction on " << getDBName());
     }
     if (zone_id != dbparameters_->updated_zone_id) {
-        isc_throw(DataSourceError, "bad zone ID for adding record diff on "
+        bundy_throw(DataSourceError, "bad zone ID for adding record diff on "
                   << getDBName() << ": " << zone_id << ", must be "
                   << dbparameters_->updated_zone_id);
     }
@@ -1360,13 +1360,13 @@ SQLite3Accessor::findPreviousName(int zone_id, const std::string& rname)
     sqlite3_clear_bindings(stmt);
 
     if (sqlite3_bind_int(stmt, 1, zone_id) != SQLITE_OK) {
-        isc_throw(SQLite3Error, "Could not bind zone ID " << zone_id <<
+        bundy_throw(SQLite3Error, "Could not bind zone ID " << zone_id <<
                   " to SQL statement (find previous): " <<
                   sqlite3_errmsg(dbparameters_->db_));
     }
     if (sqlite3_bind_text(stmt, 2, rname.c_str(), -1, SQLITE_STATIC) !=
         SQLITE_OK) {
-        isc_throw(SQLite3Error, "Could not bind name " << rname <<
+        bundy_throw(SQLite3Error, "Could not bind name " << rname <<
                   " to SQL statement (find previous): " <<
                   sqlite3_errmsg(dbparameters_->db_));
     }
@@ -1383,13 +1383,13 @@ SQLite3Accessor::findPreviousName(int zone_id, const std::string& rname)
     if (rc == SQLITE_DONE) {
         // No NSEC records here, this DB doesn't support DNSSEC or
         // we asked before the apex
-        isc_throw(isc::NotImplemented, "The zone doesn't support DNSSEC or "
+        bundy_throw(bundy::NotImplemented, "The zone doesn't support DNSSEC or "
                   "query before apex");
     }
 
     if (rc != SQLITE_ROW && rc != SQLITE_DONE) {
         // Some kind of error
-        isc_throw(SQLite3Error, "Could not get data for previous name");
+        bundy_throw(SQLite3Error, "Could not get data for previous name");
     }
 
     return (result);
@@ -1404,13 +1404,13 @@ SQLite3Accessor::findPreviousNSEC3Hash(int zone_id, const std::string& hash)
     sqlite3_clear_bindings(stmt);
 
     if (sqlite3_bind_int(stmt, 1, zone_id) != SQLITE_OK) {
-        isc_throw(SQLite3Error, "Could not bind zone ID " << zone_id <<
+        bundy_throw(SQLite3Error, "Could not bind zone ID " << zone_id <<
                   " to SQL statement (find previous NSEC3): " <<
                   sqlite3_errmsg(dbparameters_->db_));
     }
     if (sqlite3_bind_text(stmt, 2, hash.c_str(), -1, SQLITE_STATIC) !=
         SQLITE_OK) {
-        isc_throw(SQLite3Error, "Could not bind hash " << hash <<
+        bundy_throw(SQLite3Error, "Could not bind hash " << hash <<
                   " to SQL statement (find previous NSEC3): " <<
                   sqlite3_errmsg(dbparameters_->db_));
     }
@@ -1426,7 +1426,7 @@ SQLite3Accessor::findPreviousNSEC3Hash(int zone_id, const std::string& hash)
 
     if (rc != SQLITE_ROW && rc != SQLITE_DONE) {
         // Some kind of error
-        isc_throw(SQLite3Error, "Could not get data for previous hash");
+        bundy_throw(SQLite3Error, "Could not get data for previous hash");
     }
 
     if (rc == SQLITE_DONE) {
@@ -1437,7 +1437,7 @@ SQLite3Accessor::findPreviousNSEC3Hash(int zone_id, const std::string& hash)
         sqlite3_clear_bindings(stmt);
 
         if (sqlite3_bind_int(stmt, 1, zone_id) != SQLITE_OK) {
-            isc_throw(SQLite3Error, "Could not bind zone ID " << zone_id <<
+            bundy_throw(SQLite3Error, "Could not bind zone ID " << zone_id <<
                       " to SQL statement (find last NSEC3): " <<
                       sqlite3_errmsg(dbparameters_->db_));
         }
@@ -1452,13 +1452,13 @@ SQLite3Accessor::findPreviousNSEC3Hash(int zone_id, const std::string& hash)
 
         if (rc != SQLITE_ROW && rc != SQLITE_DONE) {
             // Some kind of error
-            isc_throw(SQLite3Error, "Could not get data for last hash");
+            bundy_throw(SQLite3Error, "Could not get data for last hash");
         }
 
         if (rc == SQLITE_DONE) {
             // No NSEC3 at all in the zone. Well, bad luck, but you should not
             // have asked in the first place.
-            isc_throw(DataSourceError, "No NSEC3 in this zone");
+            bundy_throw(DataSourceError, "No NSEC3 in this zone");
         }
     }
 
@@ -1466,4 +1466,4 @@ SQLite3Accessor::findPreviousNSEC3Hash(int zone_id, const std::string& hash)
 }
 
 } // end of namespace datasrc
-} // end of namespace isc
+} // end of namespace bundy

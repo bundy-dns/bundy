@@ -17,7 +17,7 @@
 #include <sys/select.h>
 #include <cstddef>
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace unittests {
 

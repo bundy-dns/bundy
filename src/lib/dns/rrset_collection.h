@@ -23,7 +23,7 @@
 
 #include <map>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 /// \brief libdns++ implementation of RRsetCollectionBase using an STL
@@ -49,8 +49,8 @@ public:
     /// the master file format (which may or may not form a valid zone).
     /// \param origin The zone origin.
     /// \param rrclass The zone class.
-    RRsetCollection(const char* filename, const isc::dns::Name& origin,
-                    const isc::dns::RRClass& rrclass);
+    RRsetCollection(const char* filename, const bundy::dns::Name& origin,
+                    const bundy::dns::RRClass& rrclass);
 
     /// \brief Constructor.
     ///
@@ -62,8 +62,8 @@ public:
     /// \param input_stream The input stream to load from.
     /// \param origin The zone origin.
     /// \param rrclass The zone class.
-    RRsetCollection(std::istream& input_stream, const isc::dns::Name& origin,
-                    const isc::dns::RRClass& rrclass);
+    RRsetCollection(std::istream& input_stream, const bundy::dns::Name& origin,
+                    const bundy::dns::RRClass& rrclass);
 
     /// \brief Destructor
     virtual ~RRsetCollection() {}
@@ -75,13 +75,13 @@ public:
     /// internally managed \c shared_ptr, so even if the caller's
     /// \c RRsetPtr is destroyed, the RRset it wrapped is still alive
     /// and managed by the \c RRsetCollection. It throws an
-    /// \c isc::InvalidParameter exception if an rrset with the same
+    /// \c bundy::InvalidParameter exception if an rrset with the same
     /// class, type and name already exists.
     ///
     /// Callers must not modify the RRset after adding it to the
     /// collection, as the rrset is indexed internally by the
     /// collection.
-    void addRRset(isc::dns::RRsetPtr rrset);
+    void addRRset(bundy::dns::RRsetPtr rrset);
 
     /// \brief Remove an RRset from the collection.
     ///
@@ -90,9 +90,9 @@ public:
     ///
     /// \return \c true if a matching RRset was deleted, \c false if no
     /// such RRset exists.
-    bool removeRRset(const isc::dns::Name& name,
-                     const isc::dns::RRClass& rrclass,
-                     const isc::dns::RRType& rrtype);
+    bool removeRRset(const bundy::dns::Name& name,
+                     const bundy::dns::RRClass& rrclass,
+                     const bundy::dns::RRType& rrtype);
 
     /// \brief Find a matching RRset in the collection.
     ///
@@ -104,27 +104,27 @@ public:
     /// \param rrclass The class of the RRset to search for.
     /// \param rrtype The type of the RRset to search for.
     /// \return The RRset if found, \c NULL otherwise.
-    virtual isc::dns::ConstRRsetPtr find(const isc::dns::Name& name,
-                                         const isc::dns::RRClass& rrclass,
-                                         const isc::dns::RRType& rrtype) const;
+    virtual bundy::dns::ConstRRsetPtr find(const bundy::dns::Name& name,
+                                         const bundy::dns::RRClass& rrclass,
+                                         const bundy::dns::RRType& rrtype) const;
 
     /// \brief Find a matching RRset in the collection (non-const
     /// variant).
     ///
     /// See above for a description of the method and arguments.
-    isc::dns::RRsetPtr find(const isc::dns::Name& name,
-                            const isc::dns::RRClass& rrclass,
-                            const isc::dns::RRType& rrtype);
+    bundy::dns::RRsetPtr find(const bundy::dns::Name& name,
+                            const bundy::dns::RRClass& rrclass,
+                            const bundy::dns::RRType& rrtype);
 
 private:
     template<typename T>
-    void constructHelper(T source, const isc::dns::Name& origin,
-                         const isc::dns::RRClass& rrclass);
+    void constructHelper(T source, const bundy::dns::Name& origin,
+                         const bundy::dns::RRClass& rrclass);
     void loaderCallback(const std::string&, size_t, const std::string&);
 
-    typedef boost::tuple<isc::dns::RRClass, isc::dns::RRType, isc::dns::Name>
+    typedef boost::tuple<bundy::dns::RRClass, bundy::dns::RRType, bundy::dns::Name>
         CollectionKey;
-    typedef std::map<CollectionKey, isc::dns::RRsetPtr> CollectionMap;
+    typedef std::map<CollectionKey, bundy::dns::RRsetPtr> CollectionMap;
 
     CollectionMap rrsets_;
 
@@ -135,8 +135,8 @@ protected:
             iter_(iter)
         {}
 
-        virtual const isc::dns::AbstractRRset& getValue() {
-            isc::dns::RRsetPtr& rrset = iter_->second;
+        virtual const bundy::dns::AbstractRRset& getValue() {
+            bundy::dns::RRsetPtr& rrset = iter_->second;
             return (*rrset);
         }
 
@@ -163,7 +163,7 @@ protected:
 };
 
 } // end of namespace dns
-} // end of namespace isc
+} // end of namespace bundy
 
 #endif  // RRSET_COLLECTION_H
 

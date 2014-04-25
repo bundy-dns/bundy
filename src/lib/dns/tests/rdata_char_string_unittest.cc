@@ -24,14 +24,14 @@
 #include <string>
 #include <vector>
 
-using namespace isc::dns;
-using namespace isc::dns::rdata;
-using isc::dns::rdata::generic::detail::CharString;
-using isc::dns::rdata::generic::detail::bufferToCharString;
-using isc::dns::rdata::generic::detail::stringToCharString;
-using isc::dns::rdata::generic::detail::charStringToString;
-using isc::dns::rdata::generic::detail::compareCharStrings;
-using isc::util::unittests::matchWireData;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
+using bundy::dns::rdata::generic::detail::CharString;
+using bundy::dns::rdata::generic::detail::bufferToCharString;
+using bundy::dns::rdata::generic::detail::stringToCharString;
+using bundy::dns::rdata::generic::detail::charStringToString;
+using bundy::dns::rdata::generic::detail::compareCharStrings;
+using bundy::util::unittests::matchWireData;
 
 namespace {
 const uint8_t test_charstr[] = {
@@ -177,7 +177,7 @@ TEST_F(CharStringTest, charStringToString) {
 
 TEST_F(CharStringTest, bufferToCharString) {
     const size_t chstr_size = sizeof(test_charstr);
-    isc::util::InputBuffer buf(test_charstr, chstr_size);
+    bundy::util::InputBuffer buf(test_charstr, chstr_size);
     size_t read = bufferToCharString(buf, chstr_size, chstr);
 
     EXPECT_EQ(chstr_size, read);
@@ -186,7 +186,7 @@ TEST_F(CharStringTest, bufferToCharString) {
 
 TEST_F(CharStringTest, bufferToCharString_bad) {
     const size_t chstr_size = sizeof(test_charstr);
-    isc::util::InputBuffer buf(test_charstr, chstr_size);
+    bundy::util::InputBuffer buf(test_charstr, chstr_size);
     // Set valid data in both so we can make sure the charstr is not
     // modified
     bufferToCharString(buf, chstr_size, chstr);
@@ -208,7 +208,7 @@ TEST_F(CharStringTest, bufferToCharString_bad) {
         sizeof("Test String") + 1,
         'T', 'e', 's', 't', ' ', 'S', 't', 'r', 'i', 'n', 'g'
     };
-    buf = isc::util::InputBuffer(test_charstr_err, sizeof(test_charstr_err));
+    buf = bundy::util::InputBuffer(test_charstr_err, sizeof(test_charstr_err));
     EXPECT_THROW(bufferToCharString(buf, chstr_size, chstr),
                  DNSMessageFORMERR);
     EXPECT_EQ("Test String", charStringToString(chstr));

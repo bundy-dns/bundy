@@ -31,12 +31,12 @@
 #include <boost/algorithm/string.hpp>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dns;
-using namespace isc::util;
-using namespace isc::dns::rdata;
-using isc::UnitTestUtil;
-using isc::util::unittests::matchWireData;
+using namespace bundy;
+using namespace bundy::dns;
+using namespace bundy::util;
+using namespace bundy::dns::rdata;
+using bundy::UnitTestUtil;
+using bundy::util::unittests::matchWireData;
 
 namespace {
 class Rdata_CAA_Test : public RdataTest {
@@ -47,7 +47,7 @@ protected:
     {}
 
     void checkFromText_None(const string& rdata_str) {
-        checkFromText<generic::CAA, isc::Exception, isc::Exception>(
+        checkFromText<generic::CAA, bundy::Exception, bundy::Exception>(
             rdata_str, rdata_caa, false, false);
     }
 
@@ -64,7 +64,7 @@ protected:
 
     void checkFromText_BadString(const string& rdata_str) {
         checkFromText
-            <generic::CAA, InvalidRdataText, isc::Exception>(
+            <generic::CAA, InvalidRdataText, bundy::Exception>(
                 rdata_str, rdata_caa, true, false);
     }
 
@@ -219,12 +219,12 @@ TEST_F(Rdata_CAA_Test, createFromParams) {
 
     // Tag is empty
     EXPECT_THROW(const generic::CAA rdata_caa3(0, "", "ca.example.net"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 
     // Tag is too long
     const std::string tag(256, 'a');
     EXPECT_THROW(const generic::CAA rdata_caa3(0, tag, "ca.example.net"),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 
     // Value is too long
     const std::string value(65536, 'a');

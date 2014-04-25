@@ -22,17 +22,17 @@
 
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief Exception thrown when 'type' keyword is missing from string
 ///
 /// This condition is checked, but should never occur because 'type' is marked
 /// as mandatory in the .spec file for the server.
-class TypeKeywordMissing : public isc::Exception {
+class TypeKeywordMissing : public bundy::Exception {
 public:
     TypeKeywordMissing(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// @brief Parse Lease Database Parameters
@@ -77,11 +77,11 @@ public:
     /// @param config_value The configuration value for the "lease-database"
     ///        identifier.
     ///
-    /// @throw isc::BadValue The 'type' keyword contains an unknown database
+    /// @throw bundy::BadValue The 'type' keyword contains an unknown database
     ///        type.
-    /// @throw isc::dhcp::MissingTypeKeyword The 'type' keyword is missing from
+    /// @throw bundy::dhcp::MissingTypeKeyword The 'type' keyword is missing from
     ///        the list of database access keywords.
-    virtual void build(isc::data::ConstElementPtr config_value);
+    virtual void build(bundy::data::ConstElementPtr config_value);
 
     /// @brief Apply the prepared configuration value to the server.
     ///
@@ -135,7 +135,7 @@ private:
 };
 
 };  // namespace dhcp
-};  // namespace isc
+};  // namespace bundy
 
 
 #endif // DBACCESS_PARSER_H

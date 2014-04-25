@@ -23,8 +23,8 @@
 #include <dns/rrttl.h>
 #include <dns/tsigrecord.h>
 
-using namespace isc::util;
-using namespace isc::dns::rdata;
+using namespace bundy::util;
+using namespace bundy::dns::rdata;
 
 namespace {
 // Internally used constants:
@@ -42,7 +42,7 @@ const size_t RR_COMMON_LEN = 10;
 const size_t RDATA_COMMON_LEN = 16;
 }
 
-namespace isc {
+namespace bundy {
 namespace dns {
 TSIGRecord::TSIGRecord(const Name& key_name,
                        const rdata::any::TSIG& tsig_rdata) :
@@ -62,7 +62,7 @@ castToTSIGRdata(const rdata::Rdata& rdata) {
     const any::TSIG* tsig_rdata =
         dynamic_cast<const any::TSIG*>(&rdata);
     if (!tsig_rdata) {
-        isc_throw(DNSMessageFORMERR,
+        bundy_throw(DNSMessageFORMERR,
                   "TSIG record is being constructed from "
                   "incompatible RDATA:" << rdata.toText());
     }
@@ -76,10 +76,10 @@ TSIGRecord::TSIGRecord(const Name& name, const RRClass& rrclass,
     key_name_(name), rdata_(castToTSIGRdata(rdata)), length_(length)
 {
     if (rrclass != getClass()) {
-        isc_throw(DNSMessageFORMERR, "Unexpected TSIG RR class: " << rrclass);
+        bundy_throw(DNSMessageFORMERR, "Unexpected TSIG RR class: " << rrclass);
     }
     if (ttl != RRTTL(TSIG_TTL)) {
-        isc_throw(DNSMessageFORMERR, "Unexpected TSIG TTL: " << ttl);
+        bundy_throw(DNSMessageFORMERR, "Unexpected TSIG TTL: " << ttl);
     }
 }
 
@@ -145,4 +145,4 @@ operator<<(std::ostream& os, const TSIGRecord& record) {
     return (os << record.toText());
 }
 } // namespace dns
-} // namespace isc
+} // namespace bundy

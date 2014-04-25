@@ -18,7 +18,7 @@
 import sys; sys.path.append ('@@PYTHONPATH@@')
 import os
 import signal
-import isc
+import bundy
 import asyncore
 import struct
 import threading
@@ -27,42 +27,41 @@ import random
 import time
 from functools import reduce
 from optparse import OptionParser, OptionValueError
-from isc.config.ccsession import *
-from isc.statistics.dns import Counters
-from isc.notify import notify_out
-import isc.util.process
-import isc.util.traceback_handler
-from isc.util.address_formatter import AddressFormatter
-from isc.datasrc import DataSourceClient, ZoneFinder
-import isc.net.parse
-from isc.xfrin.diff import Diff
-from isc.server_common.auth_command import auth_loadzone_command
-from isc.server_common.tsig_keyring import init_keyring, get_keyring
-from isc.server_common.datasrc_clients_mgr import DataSrcClientsMgr, ConfigError
-from isc.log_messages.xfrin_messages import *
-from isc.dns import *
+from bundy.config.ccsession import *
+from bundy.statistics.dns import Counters
+from bundy.notify import notify_out
+import bundy.util.process
+import bundy.util.traceback_handler
+from bundy.util.address_formatter import AddressFormatter
+from bundy.datasrc import DataSourceClient, ZoneFinder
+import bundy.net.parse
+from bundy.xfrin.diff import Diff
+from bundy.server_common.tsig_keyring import init_keyring, get_keyring
+from bundy.server_common.datasrc_clients_mgr import DataSrcClientsMgr, ConfigError
+from bundy.log_messages.xfrin_messages import *
+from bundy.dns import *
+from bundy.cc.proto_defs import CC_PAYLOAD_NOTIFICATION, CC_GROUP_NOTIFICATION_PREFIX
 
-isc.log.init("b10-xfrin", buffer=True)
-logger = isc.log.Logger("xfrin")
+bundy.log.init("bundy-xfrin", buffer=True)
+logger = bundy.log.Logger("xfrin")
 
 # Pending system-wide debug level definitions, the ones we
 # use here are hardcoded for now
 DBG_PROCESS = logger.DBGLVL_TRACE_BASIC
 DBG_COMMANDS = logger.DBGLVL_TRACE_DETAIL
 
-isc.util.process.rename()
+bundy.util.process.rename()
 
-# If B10_FROM_BUILD or B10_FROM_SOURCE is set in the environment, we
+# If BUNDY_FROM_BUILD or BUNDY_FROM_SOURCE is set in the environment, we
 # use data files from a directory relative to that, otherwise we use
 # the ones installed on the system
 SPECFILE_PATH = "@datadir@/@PACKAGE@"\
     .replace("${datarootdir}", "@datarootdir@")\
     .replace("${prefix}", "@prefix@")
-if "B10_FROM_SOURCE" in os.environ:
-    SPECFILE_PATH = os.environ["B10_FROM_SOURCE"] + "/src/bin/xfrin"
+if "BUNDY_FROM_SOURCE" in os.environ:
+    SPECFILE_PATH = os.environ["BUNDY_FROM_SOURCE"] + "/src/bin/xfrin"
 SPECFILE_LOCATION = SPECFILE_PATH + "/xfrin.spec"
 
-AUTH_MODULE_NAME = 'Auth'
 XFROUT_MODULE_NAME = 'Xfrout'
 
 # Remote module and identifiers (according to their spec files)
@@ -80,7 +79,7 @@ DBG_XFRIN_TRACE = logger.DBGLVL_TRACE_BASIC
 DEFAULT_MASTER_PORT = 53
 DEFAULT_ZONE_CLASS = RRClass.IN
 
-__version__ = 'BIND10'
+__version__ = 'BUNDY'
 
 # Internal result codes of an xfr session
 XFRIN_OK = 0                    # normal success
@@ -147,8 +146,8 @@ def format_zone_str(zone_name, zone_class):
     """Helper function to format a zone name and class as a string of
        the form '<name>/<class>'.
        Parameters:
-       zone_name (isc.dns.Name) name to format
-       zone_class (isc.dns.RRClass) class to format
+       zone_name (bundy.dns.Name) name to format
+       zone_class (bundy.dns.RRClass) class to format
     """
     return zone_name.to_text(True) + '/' + str(zone_class)
 
@@ -245,7 +244,7 @@ class XfrinState:
     the implementation logic here.  BIND 9 has been supporting IXFR
     for many years, so the fact that it still behaves this way
     probably means it at least doesn't cause a severe operational
-    problem in practice.  Second, especially because BIND 10 would
+    problem in practice.  Second, especially because BUNDY would
     often uses a database backend, a larger transaction could cause an
     undesirable effects, e.g. suspending normal lookups for a longer
     period depending on the characteristics of the database.  Even if
@@ -1260,7 +1259,8 @@ def __process_xfrin(server, zone_name, rrclass, datasrc_client, zone_soa,
     # Publish the zone transfer result news, so zonemgr can reset the
     # zone timer, and xfrout can notify the zone's slaves if the result
     # is success.
-    server.publish_xfrin_news(zone_name, rrclass, ret)
+    server.publish_xfrin_news(datasrc_client.get_datasource_name(), zone_name,
+                              rrclass, ret)
 
     if exception is not None:
         raise exception
@@ -1378,7 +1378,7 @@ class ZoneInfo:
             raise XfrinZoneInfoException("master address missing from config data")
         else:
             try:
-                self.master_addr = isc.net.parse.addr_parse(master_addr_str)
+                self.master_addr = bundy.net.parse.addr_parse(master_addr_str)
             except ValueError:
                 logger.error(XFRIN_BAD_MASTER_ADDR_FORMAT, master_addr_str)
                 errmsg = "bad format for zone's master: " + master_addr_str
@@ -1393,7 +1393,7 @@ class ZoneInfo:
             self.master_port = self._module_cc.get_default_value("zones/master_port")
         else:
             try:
-                self.master_port = isc.net.parse.port_parse(master_port_str)
+                self.master_port = bundy.net.parse.port_parse(master_port_str)
             except ValueError:
                 logger.error(XFRIN_BAD_MASTER_PORT_FORMAT, master_port_str)
                 errmsg = "bad format for zone's master port: " + master_port_str
@@ -1438,7 +1438,7 @@ class ZoneInfo:
         if self.tsig_key_name is None:
             return None
         result, key = get_keyring().find(self.tsig_key_name)
-        if result != isc.dns.TSIGKeyRing.SUCCESS:
+        if result != bundy.dns.TSIGKeyRing.SUCCESS:
             raise XfrinZoneInfoException("TSIG key not found in keyring: " +
                                          self.tsig_key_name.to_text())
         else:
@@ -1458,15 +1458,30 @@ class ZoneInfo:
         return (self.master_addr.family, socket.SOCK_STREAM,
                 (str(self.master_addr), self.master_port))
 
-def _do_auth_loadzone(server, zone_name, zone_class):
-    msg = auth_loadzone_command(server._module_cc, zone_name, zone_class)
-    if msg is not None:
-        param = msg['command'][1]
-        logger.debug(DBG_XFRIN_TRACE, XFRIN_AUTH_LOADZONE, param["origin"],
-                     param["class"])
-        seq = server._send_cc_session.group_sendmsg(msg, AUTH_MODULE_NAME,
-                                                    want_answer=True)
-        answer, env = server._send_cc_session.group_recvmsg(False, seq)
+def _notify_zoneupdate(server, dsrc_name, zone_name, zone_class):
+    """Helper for notifying interested modules of the update.
+
+    This is defined here so it can be used from tests.  It's essentially a
+    private function otherwise.
+
+    """
+
+    params = {
+        'origin': str(zone_name),
+        'class': str(zone_class),
+        'datasource': dsrc_name
+    }
+
+    # Unfortunately we cannot use ModuleCCSession.notify() (see
+    # publish_xfrin_news), so we need to build the low-level data ourselves.
+    notification = ['zone_updated', params]
+    # Our assumption is that group_sendmsg() doesn't block or fail as long
+    # as msgq is running and we don't request an answer, and if msgq dies
+    # it's a fatal system error.
+    server._send_cc_session.group_sendmsg({CC_PAYLOAD_NOTIFICATION:
+                                           notification},
+                                          CC_GROUP_NOTIFICATION_PREFIX +
+                                          'ZoneUpdateListener')
 
 class Xfrin:
     def __init__(self):
@@ -1496,8 +1511,8 @@ class Xfrin:
         without requiring a command channel.'''
         # Create one session for sending command to other modules, because the
         # listening session will block the send operation.
-        self._send_cc_session = isc.cc.Session()
-        self._module_cc = isc.config.ModuleCCSession(SPECFILE_LOCATION,
+        self._send_cc_session = bundy.cc.Session()
+        self._module_cc = bundy.config.ModuleCCSession(SPECFILE_LOCATION,
                                                      self.config_handler,
                                                      self.command_handler)
         self._module_cc.start()
@@ -1560,7 +1575,7 @@ class Xfrin:
         """
         try:
             self._datasrc_clients_mgr.reconfigure(new_config, config_data)
-        except isc.server_common.datasrc_clients_mgr.ConfigError as ex:
+        except bundy.server_common.datasrc_clients_mgr.ConfigError as ex:
             logger.error(XFRIN_DATASRC_CONFIG_ERROR, ex)
 
     def shutdown(self):
@@ -1668,14 +1683,14 @@ class Xfrin:
                 answer = self.__handle_xfr_command(args, True, addr_validator,
                                                    None)
             elif command == 'retransfer':
-                # retransfer from cmdctl (sent by bindctl).
+                # retransfer from cmdctl (sent by bundyctl).
                 # No need for address validation, skip SOA check, and always
                 # use AXFR.
                 answer = self.__handle_xfr_command(
                     args, False, lambda x, y, z: None,
                     ZoneInfo.REQUEST_IXFR_DISABLED)
             elif command == 'refresh':
-                # retransfer from cmdctl (sent by bindctl).  similar to
+                # retransfer from cmdctl (sent by bundyctl).  similar to
                 # retransfer, but do SOA check, and honor request_ixfr config.
                 answer = self.__handle_xfr_command(
                     args, True, lambda x, y, z: None, None)
@@ -1683,8 +1698,8 @@ class Xfrin:
             elif command == "getstats":
                 # The log level is here set to debug in order to avoid
                 # that a log becomes too verbose. Because the
-                # b10-stats daemon is periodically asking to the
-                # b10-xfrin daemon.
+                # bundy-stats daemon is periodically asking to the
+                # bundy-xfrin daemon.
                 answer = create_answer(0, self._counters.get_statistics())
 
             else:
@@ -1722,7 +1737,7 @@ class Xfrin:
                                      "configured for " + zone_name.to_text())
         else:
             try:
-                addr = isc.net.parse.addr_parse(addr_str)
+                addr = bundy.net.parse.addr_parse(addr_str)
             except ValueError as err:
                 raise XfrinException("failed to resolve master address %s: %s" %
                                      (addr_str, str(err)))
@@ -1735,22 +1750,30 @@ class Xfrin:
                 port = DEFAULT_MASTER_PORT
         else:
             try:
-                port = isc.net.parse.port_parse(port_str)
+                port = bundy.net.parse.port_parse(port_str)
             except ValueError as err:
                 raise XfrinException("failed to parse port=%s: %s" %
                                      (port_str, str(err)))
 
         return (addr.family, socket.SOCK_STREAM, (str(addr), port))
 
-    def publish_xfrin_news(self, zone_name, zone_class, xfr_result):
-        '''Send command to xfrout/zone manager module.
+    def publish_xfrin_news(self, dsrc_name, zone_name, zone_class, xfr_result):
+        """Send command to xfrout/zone manager module.
+
         If xfrin has finished successfully for one zone, tell the good
-        news(command: zone_new_data_ready) to zone manager and xfrout.
+        news(command: zone_new_data_ready) to interested modules.
         if xfrin failed, just tell the bad news to zone manager, so that
-        it can reset the refresh timer for that zone. '''
+        it can reset the refresh timer for that zone.
+
+        """
         param = {'zone_name': zone_name.to_text(),
                  'zone_class': zone_class.to_text()}
         if xfr_result == XFRIN_OK:
+            # Note: this mostly solves the FIXME below (except that it cannot
+            # use ModuleCCSession).  We should eventually migrate to the
+            # general notification for xfrout and zonemgr, too.
+            _notify_zoneupdate(self, dsrc_name, zone_name, zone_class)
+
             # FIXME: Due to the hack with two different CC sessions
             # (see the _cc_setup comment) and the fact the rpc_call
             # is a high-level call present only at ModuleCCSession,
@@ -1759,7 +1782,6 @@ class Xfrin:
             # do we do group_recvmsg when we don't need the answer?
             # And why is this direct RPC call if a notification would
             # be more appropriate?
-            _do_auth_loadzone(self, zone_name, zone_class)
             msg = create_command(notify_out.ZONE_NEW_DATA_READY_CMD, param)
             # catch the exception, in case msgq has been killed.
             try:
@@ -1769,7 +1791,7 @@ class Xfrin:
                 try:
                     answer, env = self._send_cc_session.group_recvmsg(False,
                                                                       seq)
-                except isc.cc.session.SessionTimeout:
+                except bundy.cc.session.SessionTimeout:
                     pass        # for now we just ignore the failure
                 seq = self._send_cc_session.group_sendmsg(msg,
                                                           ZONE_MANAGER_MODULE_NAME,
@@ -1777,7 +1799,7 @@ class Xfrin:
                 try:
                     answer, env = self._send_cc_session.group_recvmsg(False,
                                                                       seq)
-                except isc.cc.session.SessionTimeout:
+                except bundy.cc.session.SessionTimeout:
                     pass        # for now we just ignore the failure
             except socket.error as err:
                 logger.error(XFRIN_MSGQ_SEND_ERROR, self.tsig_key_name,
@@ -1792,7 +1814,7 @@ class Xfrin:
                 try:
                     answer, env = self._send_cc_session.group_recvmsg(False,
                                                                       seq)
-                except isc.cc.session.SessionTimeout:
+                except bundy.cc.session.SessionTimeout:
                     pass        # for now we just ignore the failure
             except socket.error as err:
                 logger.error(XFRIN_MSGQ_SEND_ERROR_ZONE_MANAGER, self.tsig_key_name,
@@ -1830,7 +1852,7 @@ class Xfrin:
                 return (1, 'data source to transfer %s to is unknown' %
                         format_zone_str(zone_name, rrclass))
             zone_soa = _get_zone_soa(datasrc_client, zone_name, rrclass)
-        except isc.datasrc.Error as ex:
+        except bundy.datasrc.Error as ex:
             # rare case error. re-raise as XfrinException so it'll be logged
             # in command_handler().
             raise XfrinException('unexpected failure in datasrc module: ' +
@@ -1926,7 +1948,7 @@ def main(xfrin_class, use_signal=True):
         xfrind.startup()
     except KeyboardInterrupt:
         logger.info(XFRIN_STOPPED_BY_KEYBOARD)
-    except isc.cc.session.SessionError as e:
+    except bundy.cc.session.SessionError as e:
         logger.error(XFRIN_CC_SESSION_ERROR, str(e))
     except Exception as e:
         logger.error(XFRIN_UNKNOWN_ERROR, str(e))
@@ -1937,4 +1959,4 @@ def main(xfrin_class, use_signal=True):
     logger.info(XFRIN_EXITING)
 
 if __name__ == '__main__':
-    isc.util.traceback_handler.traceback_handler(lambda: main(Xfrin))
+    bundy.util.traceback_handler.traceback_handler(lambda: main(Xfrin))

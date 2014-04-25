@@ -27,11 +27,11 @@
 #include <util/unittests/wiredata.h>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::util;
-using namespace isc::dns::rdata;
-using isc::UnitTestUtil;
-using isc::util::unittests::matchWireData;
+using namespace bundy::dns;
+using namespace bundy::util;
+using namespace bundy::dns::rdata;
+using bundy::UnitTestUtil;
+using bundy::util::unittests::matchWireData;
 
 namespace {
 class Rdata_IN_AAAA_Test : public RdataTest {
@@ -62,7 +62,7 @@ const uint8_t wiredata_in_aaaa[] = {
 TEST_F(Rdata_IN_AAAA_Test, createFromText) {
     // Normal case: no exception for either case, so the exception type
     // doesn't matter.
-    checkFromText<in::AAAA, isc::Exception, isc::Exception>(
+    checkFromText<in::AAAA, bundy::Exception, bundy::Exception>(
         "2001:db8::1234", rdata_in_aaaa, false, false);
 
     // should reject an IP4 address.

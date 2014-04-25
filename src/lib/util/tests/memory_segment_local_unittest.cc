@@ -21,7 +21,7 @@
 #include <limits.h>
 
 using namespace std;
-using namespace isc::util;
+using namespace bundy::util;
 
 namespace {
 
@@ -86,7 +86,7 @@ TEST(MemorySegmentLocal, TestBadDeallocate) {
 
     // This should throw as the size passed to deallocate() is larger
     // than what was allocated.
-    EXPECT_THROW(segment->deallocate(ptr, 2048), isc::OutOfRange);
+    EXPECT_THROW(segment->deallocate(ptr, 2048), bundy::OutOfRange);
 
     // This should not throw
     EXPECT_NO_THROW(segment->deallocate(ptr, 1024));
@@ -110,7 +110,7 @@ TEST(MemorySegmentLocal, TestNullDeallocate) {
 
 TEST(MemorySegmentLocal, namedAddress) {
     MemorySegmentLocal segment;
-    isc::util::test::checkSegmentNamedAddress(segment, true);
+    bundy::util::test::checkSegmentNamedAddress(segment, true);
 }
 
 } // anonymous namespace

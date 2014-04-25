@@ -41,9 +41,9 @@
 ///    contain whatever expansion level you have in the graphical tree.)
 
 using namespace std;
-using namespace isc::asiolink;
+using namespace bundy::asiolink;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 namespace test {
 
@@ -52,7 +52,7 @@ Pkt4Ptr Dhcpv4SrvTest::packetFromCapture(const std::string& hex_string) {
 
     // Decode the hex string and store it in bin (which happens
     // to be OptionBuffer format)
-    isc::util::encode::decodeHex(hex_string, bin);
+    bundy::util::encode::decodeHex(hex_string, bin);
 
     Pkt4Ptr pkt(new Pkt4(&bin[0], bin.size()));
     captureSetDefaultFields(pkt);
@@ -185,6 +185,6 @@ Bootstrap Protocol
     return (packetFromCapture(hex_string));
 }
 
-}; // end of isc::dhcp::test namespace
-}; // end of isc::dhcp namespace
-}; // end of isc namespace
+}; // end of bundy::dhcp::test namespace
+}; // end of bundy::dhcp namespace
+}; // end of bundy namespace

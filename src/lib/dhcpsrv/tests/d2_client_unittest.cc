@@ -21,10 +21,10 @@
 #include <gtest/gtest.h>
 
 using namespace std;
-using namespace isc::asiolink;
-using namespace isc::dhcp;
-using namespace isc::util;
-using namespace isc;
+using namespace bundy::asiolink;
+using namespace bundy::dhcp;
+using namespace bundy::util;
+using namespace bundy;
 
 namespace {
 
@@ -45,7 +45,7 @@ TEST(D2ClientConfigTest, constructorsAndAccessors) {
     d2_client_config.reset();
 
     bool enable_updates = true;
-    isc::asiolink::IOAddress server_ip("127.0.0.1");
+    bundy::asiolink::IOAddress server_ip("127.0.0.1");
     size_t server_port = 477;
     dhcp_ddns::NameChangeProtocol ncr_protocol = dhcp_ddns::NCR_UDP;
     dhcp_ddns::NameChangeFormat ncr_format = dhcp_ddns::FMT_JSON;
@@ -116,8 +116,8 @@ TEST(D2ClientConfigTest, equalityOperator) {
     D2ClientConfigPtr ref_config;
     D2ClientConfigPtr test_config;
 
-    isc::asiolink::IOAddress ref_address("127.0.0.1");
-    isc::asiolink::IOAddress test_address("127.0.0.2");
+    bundy::asiolink::IOAddress ref_address("127.0.0.1");
+    bundy::asiolink::IOAddress test_address("127.0.0.2");
 
     // Create an instance to use as a reference.
     ASSERT_NO_THROW(ref_config.reset(new D2ClientConfig(true,
@@ -262,7 +262,7 @@ TEST(D2ClientMgr, validConfig) {
 
     // Create a new, enabled config.
     ASSERT_NO_THROW(new_cfg.reset(new D2ClientConfig(true,
-                                  isc::asiolink::IOAddress("127.0.0.1"), 477,
+                                  bundy::asiolink::IOAddress("127.0.0.1"), 477,
                                   dhcp_ddns::NCR_UDP, dhcp_ddns::FMT_JSON,
                                   true, true, true, true,
                                   "pre-fix", "suf-fix")));
@@ -300,11 +300,11 @@ TEST(D2ClientMgr, analyzeFqdnInvalidCombination) {
 
     // client S=1 N=1 is invalid.  analyzeFqdn should throw.
     ASSERT_THROW(mgr.analyzeFqdn(true, true, server_s, server_n),
-                 isc::BadValue);
+                 bundy::BadValue);
 
     // Create enabled configuration with all controls off (no overrides).
     ASSERT_NO_THROW(cfg.reset(new D2ClientConfig(true,
-                                  isc::asiolink::IOAddress("127.0.0.1"), 477,
+                                  bundy::asiolink::IOAddress("127.0.0.1"), 477,
                                   dhcp_ddns::NCR_UDP, dhcp_ddns::FMT_JSON,
                                   false, false, false, false,
                                   "pre-fix", "suf-fix")));
@@ -313,7 +313,7 @@ TEST(D2ClientMgr, analyzeFqdnInvalidCombination) {
 
     // client S=1 N=1 is invalid.  analyzeFqdn should throw.
     ASSERT_THROW(mgr.analyzeFqdn(true, true, server_s, server_n),
-                 isc::BadValue);
+                 bundy::BadValue);
 }
 
 /// @brief Tests that analyzeFqdn generates correct server S and N flags when
@@ -326,7 +326,7 @@ TEST(D2ClientMgr, analyzeFqdnEnabledNoOverrides) {
     // Create enabled configuration with all controls off (no overrides).
     D2ClientConfigPtr cfg;
     ASSERT_NO_THROW(cfg.reset(new D2ClientConfig(true,
-                                  isc::asiolink::IOAddress("127.0.0.1"), 477,
+                                  bundy::asiolink::IOAddress("127.0.0.1"), 477,
                                   dhcp_ddns::NCR_UDP, dhcp_ddns::FMT_JSON,
                                   false, false, false, false,
                                   "pre-fix", "suf-fix")));
@@ -368,7 +368,7 @@ TEST(D2ClientMgr, analyzeFqdnEnabledOverrideNoUpdate) {
     // Create enabled configuration with OVERRIDE_NO_UPDATE on.
     D2ClientConfigPtr cfg;
     ASSERT_NO_THROW(cfg.reset(new D2ClientConfig(true,
-                                  isc::asiolink::IOAddress("127.0.0.1"), 477,
+                                  bundy::asiolink::IOAddress("127.0.0.1"), 477,
                                   dhcp_ddns::NCR_UDP, dhcp_ddns::FMT_JSON,
                                   false, true, false, false,
                                   "pre-fix", "suf-fix")));
@@ -409,7 +409,7 @@ TEST(D2ClientMgr, analyzeFqdnEnabledOverrideClientUpdate) {
     // Create enabled configuration with OVERRIDE_CLIENT_UPDATE on.
     D2ClientConfigPtr cfg;
     ASSERT_NO_THROW(cfg.reset(new D2ClientConfig(true,
-                                  isc::asiolink::IOAddress("127.0.0.1"), 477,
+                                  bundy::asiolink::IOAddress("127.0.0.1"), 477,
                                   dhcp_ddns::NCR_UDP, dhcp_ddns::FMT_JSON,
                                   false, false, true, false,
                                   "pre-fix", "suf-fix")));
@@ -451,7 +451,7 @@ TEST(D2ClientMgr, adjustFqdnFlagsV4) {
     // Create enabled configuration and override-no-update on.
     D2ClientConfigPtr cfg;
     ASSERT_NO_THROW(cfg.reset(new D2ClientConfig(true,
-                                  isc::asiolink::IOAddress("127.0.0.1"), 477,
+                                  bundy::asiolink::IOAddress("127.0.0.1"), 477,
                                   dhcp_ddns::NCR_UDP, dhcp_ddns::FMT_JSON,
                                   false, true, false, false,
                                   "pre-fix", "suf-fix")));
@@ -548,7 +548,7 @@ TEST(D2ClientMgr, qualifyName) {
     // Create enabled configuration.
     D2ClientConfigPtr cfg;
     ASSERT_NO_THROW(cfg.reset(new D2ClientConfig(true,
-                                  isc::asiolink::IOAddress("127.0.0.1"), 477,
+                                  bundy::asiolink::IOAddress("127.0.0.1"), 477,
                                   dhcp_ddns::NCR_UDP, dhcp_ddns::FMT_JSON,
                                   false, false, true, false,
                                   "prefix", "suffix.com")));
@@ -560,7 +560,7 @@ TEST(D2ClientMgr, qualifyName) {
     EXPECT_EQ("somehost.suffix.com.", qualified_name);
 
     ASSERT_NO_THROW(cfg.reset(new D2ClientConfig(true,
-                                  isc::asiolink::IOAddress("127.0.0.1"), 477,
+                                  bundy::asiolink::IOAddress("127.0.0.1"), 477,
                                   dhcp_ddns::NCR_UDP, dhcp_ddns::FMT_JSON,
                                   false, false, true, false,
                                   "prefix", "hasdot.com.")));
@@ -579,7 +579,7 @@ TEST(D2ClientMgr, generateFqdn) {
     // Create enabled configuration.
     D2ClientConfigPtr cfg;
     ASSERT_NO_THROW(cfg.reset(new D2ClientConfig(true,
-                                  isc::asiolink::IOAddress("127.0.0.1"), 477,
+                                  bundy::asiolink::IOAddress("127.0.0.1"), 477,
                                   dhcp_ddns::NCR_UDP, dhcp_ddns::FMT_JSON,
                                   false, false, true, false,
                                   "prefix", "suffix.com")));
@@ -611,7 +611,7 @@ TEST(D2ClientMgr, adjustDomainNameV4) {
     // Create enabled configuration.
     D2ClientConfigPtr cfg;
     ASSERT_NO_THROW(cfg.reset(new D2ClientConfig(true,
-                                  isc::asiolink::IOAddress("127.0.0.1"), 477,
+                                  bundy::asiolink::IOAddress("127.0.0.1"), 477,
                                   dhcp_ddns::NCR_UDP, dhcp_ddns::FMT_JSON,
                                   false, false, false, false,
                                   "prefix", "suffix.com")));
@@ -652,7 +652,7 @@ TEST(D2ClientMgr, adjustDomainNameV4) {
 
     // Create enabled configuration.
     ASSERT_NO_THROW(cfg.reset(new D2ClientConfig(true,
-                                  isc::asiolink::IOAddress("127.0.0.1"), 477,
+                                  bundy::asiolink::IOAddress("127.0.0.1"), 477,
                                   dhcp_ddns::NCR_UDP, dhcp_ddns::FMT_JSON,
                                   false, false, false, true,
                                   "prefix", "suffix.com")));
@@ -700,7 +700,7 @@ TEST(D2ClientMgr, adjustDomainNameV6) {
     // Create enabled configuration.
     D2ClientConfigPtr cfg;
     ASSERT_NO_THROW(cfg.reset(new D2ClientConfig(true,
-                                  isc::asiolink::IOAddress("127.0.0.1"), 477,
+                                  bundy::asiolink::IOAddress("127.0.0.1"), 477,
                                   dhcp_ddns::NCR_UDP, dhcp_ddns::FMT_JSON,
                                   false, false, false, false,
                                   "prefix", "suffix.com")));
@@ -738,7 +738,7 @@ TEST(D2ClientMgr, adjustDomainNameV6) {
 
     // Create enabled configuration.
     ASSERT_NO_THROW(cfg.reset(new D2ClientConfig(true,
-                                  isc::asiolink::IOAddress("127.0.0.1"), 477,
+                                  bundy::asiolink::IOAddress("127.0.0.1"), 477,
                                   dhcp_ddns::NCR_UDP, dhcp_ddns::FMT_JSON,
                                   false, false, false, true,
                                   "prefix", "suffix.com")));
@@ -786,7 +786,7 @@ TEST(D2ClientMgr, adjustFqdnFlagsV6) {
     // Create enabled configuration and override-no-update on.
     D2ClientConfigPtr cfg;
     ASSERT_NO_THROW(cfg.reset(new D2ClientConfig(true,
-                                  isc::asiolink::IOAddress("127.0.0.1"), 477,
+                                  bundy::asiolink::IOAddress("127.0.0.1"), 477,
                                   dhcp_ddns::NCR_UDP, dhcp_ddns::FMT_JSON,
                                   false, true, false, false,
                                   "pre-fix", "suf-fix")));

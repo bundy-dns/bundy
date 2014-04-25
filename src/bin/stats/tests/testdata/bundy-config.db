@@ -1,0 +1,14 @@
+{ "version": 2,
+  "Init": {
+    "components": {
+      "bundy-auth": {
+        "kind": "needed",
+        "special": "auth"
+      },
+      "bundy-auth-2": {
+        "kind": "needed",
+        "special": "auth"
+      }
+    }
+  }
+}

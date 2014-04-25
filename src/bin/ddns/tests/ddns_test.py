@@ -15,17 +15,17 @@
 
 '''Tests for the DDNS module'''
 
-from isc.ddns.session import *
-from isc.dns import *
-from isc.acl.acl import ACCEPT
-import isc.util.cio.socketsession
-from isc.cc.session import SessionTimeout, SessionError, ProtocolError
-from isc.datasrc import DataSourceClient
-from isc.config import module_spec_from_file
-from isc.config.config_data import ConfigData
-from isc.config.ccsession import create_answer, ModuleCCSessionError
-from isc.config.module_spec import ModuleSpecError
-from isc.server_common.dns_tcp import DNSTCPContext
+from bundy.ddns.session import *
+from bundy.dns import *
+from bundy.acl.acl import ACCEPT
+import bundy.util.cio.socketsession
+from bundy.cc.session import SessionTimeout, SessionError, ProtocolError
+from bundy.datasrc import DataSourceClient
+from bundy.config import module_spec_from_file
+from bundy.config.config_data import ConfigData
+from bundy.config.ccsession import create_answer, ModuleCCSessionError
+from bundy.config.module_spec import ModuleSpecError
+from bundy.server_common.dns_tcp import DNSTCPContext
 import ddns
 import errno
 import os
@@ -48,7 +48,7 @@ TEST_CLIENT6 = ('2001:db8::1', 53000, 0, 0)
 TEST_SERVER4 = ('192.0.2.53', 53)
 TEST_CLIENT4 = ('192.0.2.1', 53534)
 TEST_ZONE_RECORD = Question(TEST_ZONE_NAME, TEST_RRCLASS, UPDATE_RRTYPE)
-TEST_ACL_CONTEXT = isc.acl.dns.RequestContext(
+TEST_ACL_CONTEXT = bundy.acl.dns.RequestContext(
     socket.getaddrinfo("192.0.2.1", 1234, 0, socket.SOCK_DGRAM,
                        socket.IPPROTO_UDP, socket.AI_NUMERICHOST)[0][4])
 # TSIG key for tests when needed.  The key name is TEST_ZONE_NAME.
@@ -62,7 +62,7 @@ BAD_TSIG_KEY = TSIGKey("example.com:SFuWd/q99SzF8Yzd1QbB9g==")
 # Incorporate it so we can use the real default values of zonemgr config
 # in the tests.
 ZONEMGR_MODULE_SPEC = module_spec_from_file(
-    os.environ["B10_FROM_BUILD"] + "/src/bin/zonemgr/zonemgr.spec")
+    os.environ["BUNDY_FROM_BUILD"] + "/src/bin/zonemgr/zonemgr.spec")
 
 class FakeSocket:
     """
@@ -141,7 +141,7 @@ class FakeSessionReceiver:
         return self._socket
 
 class FakeUpdateSession:
-    '''A fake update session, emulating isc.ddns.session.UpdateSession.
+    '''A fake update session, emulating bundy.ddns.session.UpdateSession.
 
     It provides the same interfaces as UpdateSession with skipping complicated
     internal protocol processing and returning given faked results.  This
@@ -162,8 +162,8 @@ class FakeUpdateSession:
 
     def handle(self):
         if self.__faked_result == UPDATE_SUCCESS:
-            return self.__faked_result, TEST_ZONE_NAME, TEST_RRCLASS
-        return self.__faked_result, None, None
+            return self.__faked_result, TEST_ZONE_NAME, TEST_RRCLASS, 'testsrc'
+        return self.__faked_result, None, None, None
 
     def get_message(self):
         self.__msg.make_response()
@@ -175,7 +175,7 @@ class FakeUpdateSession:
         return self.__msg
 
 class FakeKeyringModule:
-    '''Fake the entire isc.server_common.tsig_keyring module.'''
+    '''Fake the entire bundy.server_common.tsig_keyring module.'''
 
     def init_keyring(self, cc):
         '''Set the instrumental attribute to True when called.
@@ -191,20 +191,18 @@ class FakeKeyringModule:
         '''Simply return the predefined TSIG keyring unconditionally.'''
         return TEST_TSIG_KEYRING
 
-class MyCCSession(isc.config.ModuleCCSession):
+class MyCCSession(bundy.config.ModuleCCSession):
     '''Fake session with minimal interface compliance.'''
 
     # faked CC sequence used in group_send/recvmsg
     FAKE_SEQUENCE = 53
 
     def __init__(self):
-        module_spec = isc.config.module_spec_from_file(
+        module_spec = bundy.config.module_spec_from_file(
             ddns.SPECFILE_LOCATION)
-        isc.config.ConfigData.__init__(self, module_spec)
+        bundy.config.ConfigData.__init__(self, module_spec)
         self._started = False
         self._stopped = False
-        # Used as the return value of get_remote_config_value.  Customizable.
-        self.auth_db_file = READ_ZONE_DB_FILE
         # Used as the return value of get_remote_config_value.  Customizable.
         self.auth_datasources = None
         # faked cc channel, providing group_send/recvmsg itself.  The following
@@ -258,15 +256,14 @@ class MyCCSession(isc.config.ModuleCCSession):
             if module_name in self.__callbacks:
                 self.__callbacks[module_name](self._zonemgr_config,
                                               ConfigData(ZONEMGR_MODULE_SPEC))
+        if module_name is 'data_sources':
+            class FakeConfigData():
+                def get_value(self, param):
+                    return [{}]
+            if update_callback is not None:
+                update_callback(None, FakeConfigData())
 
     def get_remote_config_value(self, module_name, item):
-        if module_name == "Auth" and item == "database_file":
-            return self.auth_db_file, False
-        if module_name == "Auth" and item == "datasources":
-            if self.auth_datasources is None:
-                return [], True # default
-            else:
-                return self.auth_datasources, False
         if module_name == 'Zonemgr' and item == 'secondary_zones':
             if item in self._zonemgr_config:
                 return self._zonemgr_config[item], False
@@ -280,7 +277,9 @@ class MyCCSession(isc.config.ModuleCCSession):
                       want_answer=False):
         # remember the passed parameter, and return dummy sequence
         self._sent_msg.append((msg, group))
-        if self._sendmsg_exception is not None:
+        # in our assumption, group_sendmsg() should never raise an exception
+        # unless an aswer is required, so we exclude that case in this hook.
+        if want_answer and self._sendmsg_exception is not None:
             raise self._sendmsg_exception
         return self.FAKE_SEQUENCE
 
@@ -333,8 +332,8 @@ class TestDDNSServer(unittest.TestCase):
     def setUp(self):
         cc_session = MyCCSession()
         self.assertFalse(cc_session._started)
-        self.orig_tsig_keyring = isc.server_common.tsig_keyring
-        isc.server_common.tsig_keyring = FakeKeyringModule()
+        self.orig_tsig_keyring = bundy.server_common.tsig_keyring
+        bundy.server_common.tsig_keyring = FakeKeyringModule()
         self.ddns_server = ddns.DDNSServer(cc_session)
         self.__cc_session = cc_session
         self.assertTrue(cc_session._started)
@@ -358,9 +357,9 @@ class TestDDNSServer(unittest.TestCase):
 
     def tearDown(self):
         ddns.select.select = select.select
-        ddns.isc.util.cio.socketsession.SocketSessionReceiver = \
-            isc.util.cio.socketsession.SocketSessionReceiver
-        isc.server_common.tsig_keyring = self.orig_tsig_keyring
+        ddns.bundy.util.cio.socketsession.SocketSessionReceiver = \
+            bundy.util.cio.socketsession.SocketSessionReceiver
+        bundy.server_common.tsig_keyring = self.orig_tsig_keyring
         ddns.add_pause = self.__orig_add_pause
 
     def test_listen(self):
@@ -399,7 +398,7 @@ class TestDDNSServer(unittest.TestCase):
                                     'class': TEST_RRCLASS_STR,
                                     'update_acl': [{'action': 'ACCEPT'}] } ] }
         answer = self.ddns_server.config_handler(new_config)
-        self.assertEqual((0, None), isc.config.parse_answer(answer))
+        self.assertEqual((0, None), bundy.config.parse_answer(answer))
         acl = self.ddns_server._zone_config[(TEST_ZONE_NAME, TEST_RRCLASS)]
         self.assertEqual(ACCEPT, acl.execute(TEST_ACL_CONTEXT))
 
@@ -415,7 +414,7 @@ class TestDDNSServer(unittest.TestCase):
                                     'class': 'CH',
                                     'update_acl': [{'action': 'DROP'}] } ] }
         answer = self.ddns_server.config_handler(new_config)
-        self.assertEqual((0, None), isc.config.parse_answer(answer))
+        self.assertEqual((0, None), bundy.config.parse_answer(answer))
         self.assertEqual(3, len(self.ddns_server._zone_config))
         acl = self.ddns_server._zone_config[(TEST_ZONE_NAME, TEST_RRCLASS)]
         self.assertEqual(ACCEPT, acl.execute(TEST_ACL_CONTEXT))
@@ -423,7 +422,7 @@ class TestDDNSServer(unittest.TestCase):
         # empty zone config
         new_config = { 'zones': [] }
         answer = self.ddns_server.config_handler(new_config)
-        self.assertEqual((0, None), isc.config.parse_answer(answer))
+        self.assertEqual((0, None), bundy.config.parse_answer(answer))
         self.assertEqual({}, self.ddns_server._zone_config)
 
         # bad zone config data: bad name.  The previous config shouls be kept.
@@ -431,7 +430,7 @@ class TestDDNSServer(unittest.TestCase):
                                     'class': TEST_RRCLASS_STR,
                                     'update_acl': [{'action': 'ACCEPT'}] } ] }
         answer = self.ddns_server.config_handler(bad_config)
-        self.assertEqual(1, isc.config.parse_answer(answer)[0])
+        self.assertEqual(1, bundy.config.parse_answer(answer)[0])
         self.assertEqual({}, self.ddns_server._zone_config)
 
         # bad zone config data: bad class.
@@ -439,7 +438,7 @@ class TestDDNSServer(unittest.TestCase):
                                     'class': 'badclass',
                                     'update_acl': [{'action': 'ACCEPT'}] } ] }
         answer = self.ddns_server.config_handler(bad_config)
-        self.assertEqual(1, isc.config.parse_answer(answer)[0])
+        self.assertEqual(1, bundy.config.parse_answer(answer)[0])
         self.assertEqual({}, self.ddns_server._zone_config)
 
         # bad zone config data: bad ACL.
@@ -447,7 +446,7 @@ class TestDDNSServer(unittest.TestCase):
                                     'class': TEST_RRCLASS_STR,
                                     'update_acl': [{'action': 'badaction'}]}]}
         answer = self.ddns_server.config_handler(bad_config)
-        self.assertEqual(1, isc.config.parse_answer(answer)[0])
+        self.assertEqual(1, bundy.config.parse_answer(answer)[0])
         self.assertEqual({}, self.ddns_server._zone_config)
 
         # the first zone config is valid, but not the second.  the first one
@@ -459,7 +458,7 @@ class TestDDNSServer(unittest.TestCase):
                                     'class': TEST_RRCLASS_STR,
                                     'update_acl': [{'action': 'ACCEPT'}] } ] }
         answer = self.ddns_server.config_handler(bad_config)
-        self.assertEqual(1, isc.config.parse_answer(answer)[0])
+        self.assertEqual(1, bundy.config.parse_answer(answer)[0])
         self.assertEqual({}, self.ddns_server._zone_config)
 
         # Half-broken case: 'origin, class' pair is duplicate.  For now we
@@ -471,39 +470,9 @@ class TestDDNSServer(unittest.TestCase):
                                     'class': TEST_RRCLASS_STR,
                                     'update_acl': [{'action': 'ACCEPT'}] } ] }
         answer = self.ddns_server.config_handler(dup_config)
-        self.assertEqual((0, None), isc.config.parse_answer(answer))
+        self.assertEqual((0, None), bundy.config.parse_answer(answer))
         acl = self.ddns_server._zone_config[(TEST_ZONE_NAME, TEST_RRCLASS)]
         self.assertEqual(ACCEPT, acl.execute(TEST_ACL_CONTEXT))
-
-    def test_datasrc_config(self):
-        # By default (in our faked config) it should be derived from the
-        # test data source
-        rrclass, datasrc_client = self.ddns_server._datasrc_info
-        self.assertEqual(RRClass.IN, rrclass)
-        self.assertEqual(DataSourceClient.SUCCESS,
-                         datasrc_client.find_zone(Name('example.org'))[0])
-
-        # emulating an update.  calling add_remote_config_by_name is a
-        # convenient faked way to invoke the callback.  We set the db file
-        # to a bogus one; the current implementation will create an unusable
-        # data source client.
-        self.__cc_session.auth_db_file = './notexistentdir/somedb.sqlite3'
-        self.__cc_session._auth_config = \
-            {'database_file': './notexistentdir/somedb.sqlite3'}
-        self.__cc_session.add_remote_config_by_name('Auth')
-        rrclass, datasrc_client = self.ddns_server._datasrc_info
-        self.assertEqual(RRClass.IN, rrclass)
-        self.assertRaises(isc.datasrc.Error,
-                          datasrc_client.find_zone, Name('example.org'))
-
-        # Check the current info isn't changed if the new config doesn't
-        # update it.
-        info_orig = self.ddns_server._datasrc_info
-        self.ddns_server._datasrc_info = 42 # dummy value, should be kept.
-        self.__cc_session._auth_config = {'other_config': 'value'}
-        self.__cc_session.add_remote_config_by_name('Auth')
-        self.assertEqual(42, self.ddns_server._datasrc_info)
-        self.ddns_server._datasrc_info = info_orig
 
     def test_secondary_zones_config(self):
         # By default it should be an empty list
@@ -570,14 +539,12 @@ class TestDDNSServer(unittest.TestCase):
         self.assertEqual([1 for i in range(0, num_ex)], added_pause)
 
     def test_remote_config_fail(self):
-        # If getting config of Auth or Zonemgr fails on construction of
+        # If getting config of Zonemgr fails on construction of
         # DDNServer, it should result in an exception and a few times
         # of retries.  We test all possible cases, changing the number of
         # raised exceptions and the type of exceptions that can happen,
         # which should also cover the fatal error case.
         for i in range(0, 4):
-            self.__check_remote_config_fail('Auth', i, ModuleCCSessionError)
-            self.__check_remote_config_fail('Auth', i, ModuleSpecError)
             self.__check_remote_config_fail('Zonemgr', i, ModuleCCSessionError)
             self.__check_remote_config_fail('Zonemgr', i, ModuleSpecError)
 
@@ -585,7 +552,7 @@ class TestDDNSServer(unittest.TestCase):
         '''Test whether the shutdown command works'''
         self.assertFalse(self.ddns_server._shutdown)
         answer = self.ddns_server.command_handler('shutdown', None)
-        self.assertEqual((0, None), isc.config.parse_answer(answer))
+        self.assertEqual((0, None), bundy.config.parse_answer(answer))
         self.assertTrue(self.ddns_server._shutdown)
 
     def test_command_handler(self):
@@ -593,7 +560,7 @@ class TestDDNSServer(unittest.TestCase):
         # this command should not exist
         answer = self.ddns_server.command_handler('bad_command', None)
         self.assertEqual((1, 'Unknown command: bad_command'),
-                         isc.config.parse_answer(answer))
+                         bundy.config.parse_answer(answer))
 
     def test_signal_handler(self):
         '''Test whether signal_handler calls shutdown()'''
@@ -664,7 +631,7 @@ class TestDDNSServer(unittest.TestCase):
         Test that we can accept a new connection.
         """
         # There's nothing before the accept
-        ddns.isc.util.cio.socketsession.SocketSessionReceiver = \
+        ddns.bundy.util.cio.socketsession.SocketSessionReceiver = \
             FakeSessionReceiver
         self.assertEqual({}, self.ddns_server._socksession_receivers)
         self.ddns_server.accept()
@@ -697,8 +664,8 @@ class TestDDNSServer(unittest.TestCase):
         # Now make the socket receiver fail
         self.ddns_server._listen_socket.accept = orig
         def receiver_failure(sock):
-            raise isc.util.cio.socketsession.SocketSessionError('Test error')
-        ddns.isc.util.cio.socketsession.SocketSessionReceiver = \
+            raise bundy.util.cio.socketsession.SocketSessionError('Test error')
+        ddns.bundy.util.cio.socketsession.SocketSessionReceiver = \
             receiver_failure
         # Doesn't raise the exception
         self.ddns_server.accept()
@@ -707,7 +674,7 @@ class TestDDNSServer(unittest.TestCase):
         # Check we don't catch everything, so raise just an exception
         def unexpected_failure(sock):
             raise Exception('Test error')
-        ddns.isc.util.cio.socketsession.SocketSessionReceiver = \
+        ddns.bundy.util.cio.socketsession.SocketSessionReceiver = \
             unexpected_failure
         # This one gets through
         self.assertRaises(Exception, self.ddns_server.accept)
@@ -764,7 +731,7 @@ class TestDDNSServer(unittest.TestCase):
         socket = FakeSocket(3)
         receiver = FakeSessionReceiver(socket)
         def pop():
-            raise isc.util.cio.socketsession.SocketSessionError('Test error')
+            raise bundy.util.cio.socketsession.SocketSessionError('Test error')
         receiver.pop = pop
         socket.close = self.__hook
         self.__hook_called = False
@@ -913,8 +880,8 @@ class TestDDNSSession(unittest.TestCase):
     def setUp(self):
         self.__cc_session = MyCCSession()
         self.assertFalse(self.__cc_session._started)
-        self.orig_tsig_keyring = isc.server_common.tsig_keyring
-        isc.server_common.tsig_keyring = FakeKeyringModule()
+        self.orig_tsig_keyring = bundy.server_common.tsig_keyring
+        bundy.server_common.tsig_keyring = FakeKeyringModule()
         self.server = ddns.DDNSServer(self.__cc_session)
         # Check that start_ddns_forwarder has been called upon
         # initialization (before we do anything else that might
@@ -925,8 +892,8 @@ class TestDDNSSession(unittest.TestCase):
         self.__sock = FakeSocket(-1)
 
     def tearDown(self):
-        self.assertTrue(isc.server_common.tsig_keyring.initialized)
-        isc.server_common.tsig_keyring = self.orig_tsig_keyring
+        self.assertTrue(bundy.server_common.tsig_keyring.initialized)
+        bundy.server_common.tsig_keyring = self.orig_tsig_keyring
 
     def __fake_session_creator(self, req_message, client_addr, zone_config):
         # remember the passed message for possible inspection later.
@@ -941,7 +908,7 @@ class TestDDNSSession(unittest.TestCase):
         In this implementation, zone/prerequisite/update sections should be
         empty in responses.
 
-        If tsig_ctx (isc.dns.TSIGContext) is not None, the response should
+        If tsig_ctx (bundy.dns.TSIGContext) is not None, the response should
         be TSIG signed and the signature should be verifiable with the context
         that has signed the corresponding request.
 
@@ -1134,16 +1101,19 @@ class TestDDNSSession(unittest.TestCase):
         num_rrsets = len(self.__req_message.get_section(SECTION_PREREQUISITE))
         self.assertEqual(2, num_rrsets)
 
-    def check_session_msg(self, result, expect_recv=2):
+    def check_session_msg(self, result, expect_recv=1):
         '''Check post update communication with other modules.'''
-        # iff the update succeeds, b10-ddns should tell interested other
-        # modules the information about the update zone.  Possible modules
-        # are xfrout and auth: for xfrout, the message format should be:
+        # iff the update succeeds, bundy-ddns should tell interested other
+        # modules the information about the update zone.  Eventually this should
+        # be conslidated into a single notify to the group 'ZoneUpdateListener'
+        # whose parameter should be:
+        # {'zone_updated': {'datasource': <data_source_name>,
+        #                   'origin': <updated_zone_name>,
+        #                   'class': <updated_zone_class>}}
+        # Until it's completed, we'll also notify specific modules, which is
+        # xfrout: for xfrout, the message format should be:
         # {'command': ['notify', {'zone_name': <updated_zone_name>,
         #                         'zone_class', <updated_zone_class>}]}
-        # for auth, it should be:
-        # {'command': ['loadzone', {'origin': <updated_zone_name>,
-        #                           'class', <updated_zone_class>}]}
         # and expect an answer by calling group_recvmsg().
         #
         # expect_recv indicates the expected number of calls to
@@ -1156,14 +1126,13 @@ class TestDDNSSession(unittest.TestCase):
             self.assertEqual(expect_recv, self.__cc_session._recvmsg_called)
             msg_cnt = 0
             sent_msg, sent_group = self.__cc_session._sent_msg[msg_cnt]
-            sent_cmd = sent_msg['command']
-            self.assertEqual('Auth', sent_group)
-            self.assertEqual('loadzone', sent_cmd[0])
-            self.assertEqual(2, len(sent_cmd[1]))
-            self.assertEqual(TEST_ZONE_NAME.to_text(),
-                             sent_cmd[1]['origin'])
-            self.assertEqual(TEST_RRCLASS.to_text(),
-                             sent_cmd[1]['class'])
+            sent_cmd = sent_msg['notification']
+            self.assertEqual('notifications/ZoneUpdateListener', sent_group)
+            self.assertEqual('zone_updated', sent_cmd[0])
+            self.assertEqual(3, len(sent_cmd[1]))
+            self.assertEqual(TEST_ZONE_NAME.to_text(), sent_cmd[1]['origin'])
+            self.assertEqual(TEST_RRCLASS.to_text(), sent_cmd[1]['class'])
+            self.assertEqual('testsrc', sent_cmd[1]['datasource'])
             msg_cnt += 1
             sent_msg, sent_group = self.__cc_session._sent_msg[msg_cnt]
             sent_cmd = sent_msg['command']
@@ -1287,14 +1256,24 @@ class TestDDNSSession(unittest.TestCase):
         '''
 
         # reset the session class to the real one
-        self.server._UpdateSessionClass = isc.ddns.session.UpdateSession
+        self.server._UpdateSessionClass = bundy.ddns.session.UpdateSession
+
+        # set up minimal faked data source clients
+        class FakeDataSourceClient:
+            def find_zone(self, zname):
+                return [DataSourceClient.SUCCESS] # this is enough here
+        class FakeDataSourceClientList:
+            def find(self, zname, want_exact_match, want_finder):
+                return FakeDataSourceClient(), None, None
+        self.server._datasrc_clients = {TEST_RRCLASS:
+                                        FakeDataSourceClientList()}
 
         # install all-drop ACL
         new_config = { 'zones': [ { 'origin': TEST_ZONE_NAME_STR,
                                     'class': TEST_RRCLASS_STR,
                                     'update_acl': [{'action': 'DROP'}] } ] }
         answer = self.server.config_handler(new_config)
-        self.assertEqual((0, None), isc.config.parse_answer(answer))
+        self.assertEqual((0, None), bundy.config.parse_answer(answer))
 
         # check the result
         self.check_session(UPDATE_DROP)
@@ -1368,10 +1347,10 @@ class TestMain(unittest.TestCase):
         ddns.main(self._server)
         self.assertTrue(self._server.exception_raised)
 
-        self.check_exception(isc.cc.SessionError("error"))
-        self.check_exception(isc.config.ModuleCCSessionError("error"))
+        self.check_exception(bundy.cc.SessionError("error"))
+        self.check_exception(bundy.config.ModuleCCSessionError("error"))
         self.check_exception(ddns.DDNSConfigError("error"))
-        self.check_exception(isc.cc.SessionTimeout("error"))
+        self.check_exception(bundy.cc.SessionTimeout("error"))
 
         # Add one that is not a subclass of Exception, and hence not
         # caught. Misuse BaseException for that.
@@ -1388,11 +1367,11 @@ class TestConfig(unittest.TestCase):
 
     def test_file_path(self):
         # Check some common paths
-        self.assertEqual(os.environ["B10_FROM_BUILD"] + "/ddns_socket",
+        self.assertEqual(os.environ["BUNDY_FROM_BUILD"] + "/ddns_socket",
                          ddns.SOCKET_FILE)
-        self.assertEqual(os.environ["B10_FROM_SOURCE"] +
+        self.assertEqual(os.environ["BUNDY_FROM_SOURCE"] +
                          "/src/bin/ddns/ddns.spec", ddns.SPECFILE_LOCATION)
 
 if __name__== "__main__":
-    isc.log.resetUnitTestRootLogger()
+    bundy.log.resetUnitTestRootLogger()
     unittest.main()

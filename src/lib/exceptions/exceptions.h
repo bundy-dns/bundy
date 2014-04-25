@@ -19,12 +19,12 @@
 #include <string>
 #include <sstream>
 
-namespace isc {
+namespace bundy {
 
 ///
 /// This is a base class for exceptions thrown from the DNS library module.
 /// Normally, the exceptions are thrown via a convenient shortcut macro,
-/// @ref isc_throw, which automatically gives trivial parameters for the
+/// @ref bundy_throw, which automatically gives trivial parameters for the
 /// exception such as the file name and line number where the exception is
 /// triggered.
 ///
@@ -106,7 +106,7 @@ private:
 class OutOfRange : public Exception {
 public:
     OutOfRange(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// \brief A generic exception that is thrown if a parameter given
@@ -115,7 +115,7 @@ public:
 class InvalidParameter : public Exception {
 public:
     InvalidParameter(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// \brief A generic exception that is thrown if a parameter given
@@ -123,7 +123,7 @@ public:
 class BadValue : public Exception {
 public:
     BadValue(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// \brief A generic exception that is thrown if a function is called
@@ -134,7 +134,7 @@ public:
 class InvalidOperation : public Exception {
 public:
     InvalidOperation(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 ///
@@ -144,7 +144,7 @@ public:
 class Unexpected : public Exception {
 public:
     Unexpected(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 ///
@@ -156,7 +156,7 @@ public:
 class NotImplemented : public Exception {
 public:
     NotImplemented(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 ///
@@ -165,7 +165,7 @@ public:
 /// It allows the \c stream argument to be part of a statement using an
 /// \c ostream object and its \c operator<<.  For example,
 /// \code int x = 10;
-/// isc_throw(SomeException, "Error happened, parameter: " << x);
+/// bundy_throw(SomeException, "Error happened, parameter: " << x);
 /// \endcode
 /// will throw an exception of class \c SomeException whose \c what string
 /// will be <code>"Error happened, parameter: 10"</code>.
@@ -180,7 +180,7 @@ public:
 /// this is defined as a macro.  The convenience for the ostream is a secondary
 /// purpose (if that were the only possible reason we should rather avoid
 /// using a macro).
-#define isc_throw(type, stream) \
+#define bundy_throw(type, stream) \
     do { \
         std::ostringstream oss__; \
         oss__ << stream; \
@@ -188,9 +188,9 @@ public:
     } while (1)
 
 ///
-/// Similar as isc_throw, but allows the exception to have one additional
+/// Similar as bundy_throw, but allows the exception to have one additional
 /// parameter (the stream/text goes first)
-#define isc_throw_1(type, stream, param1) \
+#define bundy_throw_1(type, stream, param1) \
     do { \
         std::ostringstream oss__; \
         oss__ << stream; \
@@ -198,9 +198,9 @@ public:
     } while (1)
 
 ///
-/// Similar as isc_throw, but allows the exception to have two additional
+/// Similar as bundy_throw, but allows the exception to have two additional
 /// parameters (the stream/text goes first)
-#define isc_throw_2(type, stream, param1, param2) \
+#define bundy_throw_2(type, stream, param1, param2) \
     do { \
         std::ostringstream oss__; \
         oss__ << stream; \
@@ -208,9 +208,9 @@ public:
     } while (1)
 
 ///
-/// Similar as isc_throw, but allows the exception to have three additional
+/// Similar as bundy_throw, but allows the exception to have three additional
 /// parameters (the stream/text goes first)
-#define isc_throw_3(type, stream, param1, param2, param3) \
+#define bundy_throw_3(type, stream, param1, param2, param3) \
     do { \
         std::ostringstream oss__; \
         oss__ << stream; \
@@ -219,9 +219,9 @@ public:
     } while (1)
 
 ///
-/// Similar as isc_throw, but allows the exception to have four additional
+/// Similar as bundy_throw, but allows the exception to have four additional
 /// parameters (the stream/text goes first)
-#define isc_throw_4(type, stream, param1, param2, param3, param4) \
+#define bundy_throw_4(type, stream, param1, param2, param3, param4) \
     do { \
         std::ostringstream oss__; \
         oss__ << stream; \

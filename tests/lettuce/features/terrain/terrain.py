@@ -47,14 +47,14 @@ KEEP_OUTPUT = 'LETTUCE_KEEP_OUTPUT'
 # The first element is the original, the second is the target that will be
 # used by the tests that need them
 copylist = [
-    ["configurations/bindctl_commands.config.orig",
-     "configurations/bindctl_commands.config"],
+    ["configurations/bundyctl_commands.config.orig",
+     "configurations/bundyctl_commands.config"],
     ["configurations/example.org.config.orig",
      "configurations/example.org.config"],
     ["configurations/generate.config.orig",
      "configurations/generate.config"],
-    ["configurations/bindctl/bindctl.config.orig",
-     "configurations/bindctl/bindctl.config"],
+    ["configurations/bundyctl/bundyctl.config.orig",
+     "configurations/bundyctl/bundyctl.config"],
     ["configurations/auth/auth_basic.config.orig",
      "configurations/auth/auth_basic.config"],
     ["configurations/auth/auth_badzone.config.orig",
@@ -309,8 +309,8 @@ class RunningProcess:
                                          strings, only_new, matches)
 
 # Container class for a number of running processes
-# i.e. servers like bind10, etc
-# one-shot programs like dig or bindctl are started and closed separately
+# i.e. servers like bundy, etc
+# one-shot programs like dig or bundyctl are started and closed separately
 class RunningProcesses:
     def __init__(self):
         """
@@ -455,6 +455,6 @@ def cleanup(scenario):
 if 'LETTUCE_SETUP_COMPLETED' not in os.environ:
     print("Environment check failure; LETTUCE_SETUP_COMPLETED not set")
     print("Please use the run_lettuce.sh script. If you want to test an")
-    print("installed version of bind10 with these tests, use")
+    print("installed version of bundy with these tests, use")
     print("run_lettuce.sh -I [lettuce arguments]")
     sys.exit(1)

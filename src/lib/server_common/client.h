@@ -22,7 +22,7 @@
 
 #include <acl/ip_check.h>
 
-namespace isc {
+namespace bundy {
 namespace asiolink {
 class IOMessage;
 class IOEndpoint;
@@ -89,7 +89,7 @@ public:
     /// \exception None
     /// \param request_message Refers to \c IOMessage corresponding to some
     /// DNS request message.
-    explicit Client(const isc::asiolink::IOMessage& request_message);
+    explicit Client(const bundy::asiolink::IOMessage& request_message);
 
     /// The destructor
     ~Client();
@@ -101,7 +101,7 @@ public:
     /// called on \c request_message passed to the constructor.
     ///
     /// \exception None
-    const isc::asiolink::IOEndpoint& getRequestSourceEndpoint() const;
+    const bundy::asiolink::IOEndpoint& getRequestSourceEndpoint() const;
 
     /// Return the IP address part of the client request's endpoint.
     ///
@@ -113,7 +113,7 @@ public:
     /// called multiple times in a complicated ACL with minimum cost.
     ///
     /// \exception None
-    const isc::acl::IPAddress& getRequestSourceIPAddress() const;
+    const bundy::acl::IPAddress& getRequestSourceIPAddress() const;
 
     /// Convert the Client to a string.
     ///

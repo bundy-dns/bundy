@@ -13,31 +13,31 @@
 // PERFORMANCE OF THIS SOFTWARE.
 
 /**
-@page hooksComponentDeveloperGuide Guide to Hooks for the BIND 10 Component Developer
+@page hooksComponentDeveloperGuide Guide to Hooks for the BUNDY Component Developer
 
 @section hooksComponentIntroduction Introduction
 
-The hooks framework is a BIND 10 system that simplifies the way that
-users can write code to modify the behavior of BIND 10.  Instead of
-altering the BIND 10 source code, they write functions that are compiled
-and linked into a shared library.  The library is specified in the BIND 10
-configuration database and run time, BIND 10 dynamically loads the library
+The hooks framework is a BUNDY system that simplifies the way that
+users can write code to modify the behavior of BUNDY.  Instead of
+altering the BUNDY source code, they write functions that are compiled
+and linked into a shared library.  The library is specified in the BUNDY
+configuration database and run time, BUNDY dynamically loads the library
 into its address space.  At various points in the processing, the component
 "calls out" to functions in the library, passing to them the data is it
 currently working on.  They can examine and modify the data as required.
 
-This guide is aimed at BIND 10 developers who want to write or modify a
-BIND 10 component to use hooks.  It shows how the component should be written
+This guide is aimed at BUNDY developers who want to write or modify a
+BUNDY component to use hooks.  It shows how the component should be written
 to load a shared library at run-time and how to call functions in it.
 
-For information about writing a hooks library containing functions called by BIND 10
+For information about writing a hooks library containing functions called by BUNDY
 during its execution, see the document @ref hooksdgDevelopersGuide.
 
 @subsection hooksComponentTerminology Terminology
 
 In the remainder of this guide, the following terminology is used:
 
-- Component - a BIND 10 process, e.g. the authoritative DNS server or the
+- Component - a BUNDY process, e.g. the authoritative DNS server or the
 DHCPv4 server.
 
 - Hook/Hook Point - used interchageably, this is a point in the code at
@@ -49,15 +49,15 @@ attached to it.
 point. This is so-named because the component "calls out" to the library
 to execute a user-written function.
 
-- User code/user library - non-BIND 10 code that is compiled into a
-shared library and loaded by BIND 10 into its address space.  Multiple
+- User code/user library - non-BUNDY code that is compiled into a
+shared library and loaded by BUNDY into its address space.  Multiple
 user libraries can be loaded at the same time, each containing callouts for
 the same hooks.  The hooks framework calls these libraries one after the
 other. (See the document @ref hooksdgDevelopersGuide for more details.)
 
 @subsection hooksComponentLanguages Languages
 
-The core of BIND 10 is written in C++ with some parts in Python.  While it is
+The core of BUNDY is written in C++ with some parts in Python.  While it is
 the intention to provide the hooks framework for all languages, the initial
 version is for C++.  All examples in this guide are in that language.
 
@@ -92,7 +92,7 @@ The following sections will describe these tasks in more detail.
 Before any other action takes place, the location of the hook points
 in the code need to be determined.  This of course depends on the
 component but as a general guideline, hook locations should be chosen
-where a callout is able to obtain useful information from BIND 10 and/or
+where a callout is able to obtain useful information from BUNDY and/or
 affect processing.  Typically this means at the start or end of a major
 step in the processing of a request, at a point where either useful
 information can be passed to a callout and/or the callout can affect
@@ -121,7 +121,7 @@ subject to certain restrictions (see below).
 Before the callouts at any hook point are called and any user libraries
 loaded - so typically during component initialization - the component must
 register the names of all the hooks.  The registration is done using
-the static method isc::hooks::HooksManager::registerHook():
+the static method bundy::hooks::HooksManager::registerHook():
 
 @code
 
@@ -142,7 +142,7 @@ unregistering a hook and there is no need to do so.
 In some components, it may be convenient to set up a single initialization
 function that registers all hooks.  For others, it may be more convenient
 for each module within the component to perform its own initialization.
-Since the isc::hooks::HooksManager object is a singleton and is created when first
+Since the bundy::hooks::HooksManager object is a singleton and is created when first
 accessed, a useful trick is to automatically register the hooks when
 the module is loaded.
 
@@ -197,7 +197,7 @@ However, the following guidelines should be observed:
 
 - The names <b>context_create</b> and <b>context_destroy</b> are reserved to
 the hooks system and are automatically registered: an attempt to register
-one of these will lead to a isc::hooks::DuplicateHook exception being thrown.
+one of these will lead to a bundy::hooks::DuplicateHook exception being thrown.
 
 - The hook name should be a valid "C" function name.  If a user gives a
 callout the same name as one of the hooks, the hooks framework will
@@ -209,7 +209,7 @@ the system libraries (e.g. naming a hook "sqrt" could lead to the
 square-root function in the system's maths library being attached to the hook
 as a callout).
 
-- Although hook names can be in any case (including mixed case), the BIND 10
+- Although hook names can be in any case (including mixed case), the BUNDY
 convention is that they are lower-case.
 
 @section hooksComponentCallingCallouts Calling Callouts on a Hook
@@ -221,10 +221,10 @@ how to pass data to it.
 
 Each user callout has the signature:
 @code
-int callout_name(isc::hooks::CalloutHandle& handle);
+int callout_name(bundy::hooks::CalloutHandle& handle);
 @endcode
 
-The isc::hooks::CalloutHandle object is the object used to pass data to
+The bundy::hooks::CalloutHandle object is the object used to pass data to
 and from the callout.  This holds the data as a set of name/value pairs,
 each pair being considered an argument to the callout.  If there are
 multiple callouts attached to a hook, the CalloutHandle is passed to
@@ -299,8 +299,8 @@ that its flow of control should be altered.  For example:
   the skip flag to indicate to the server that the packet should be dropped.
 
 For ease of processing, the CalloutHandle contains
-two methods, isc::hooks::CalloutHandle::getSkip() and
-isc::hooks::CalloutHandle::setSkip().  It is only meaningful for the
+two methods, bundy::hooks::CalloutHandle::getSkip() and
+bundy::hooks::CalloutHandle::setSkip().  It is only meaningful for the
 component to use the "get" method.  The skip flag is cleared by the hooks
 framework when the component requests that callouts be executed, so any
 value set by the component is lost.  Callouts can both inspect the flag (it
@@ -327,12 +327,12 @@ if (! handle_ptr->getSkip()) {
 
 The CalloutHandle object is linked to the loaded libraries
 for lifetime reasons (described below).  Components
-should retrieve a isc::hooks::CalloutHandle using
-isc::hooks::HooksManager::createCalloutHandle():
+should retrieve a bundy::hooks::CalloutHandle using
+bundy::hooks::HooksManager::createCalloutHandle():
 @code
     CalloutHandlePtr handle_ptr = HooksManager::createCalloutHandle();
 @endcode
-(isc::hooks::CalloutHandlePtr is a typedef for a Boost shared pointer to a
+(bundy::hooks::CalloutHandlePtr is a typedef for a Boost shared pointer to a
 CalloutHandle.)  The CalloutHandle so retrieved may be used for as
 long as the libraries are loaded.
 
@@ -350,14 +350,14 @@ in a future version.)
 @subsection hooksComponentCallingCallout Calling the Callout
 
 Calling the callout is a simple matter of executing the
-isc::hooks::HooksManager::callCallouts() method for the hook index in
+bundy::hooks::HooksManager::callCallouts() method for the hook index in
 question.  For example, with the hook index pkt_sent defined as above,
 the hook can be executed by:
 @code
     HooksManager::callCallouts(pkt_sent, *handle_ptr);
 @endcode
 ... where "*handle_ptr" is a reference (note: not a pointer) to the
-isc::hooks::CalloutHandle object holding the arguments.  No status code
+bundy::hooks::CalloutHandle object holding the arguments.  No status code
 is returned.  If a component needs to get data returned (other than that
 provided by the "skip" flag), it should define an argument through which
 the callout can do so.
@@ -367,7 +367,7 @@ the callout can do so.
 Most hooks in a component will not have callouts attached to them. To
 avoid the overhead of setting up arguments in the CalloutHandle, a
 component can check for callouts before doing that processing using
-isc::hooks::HooksManager::calloutsPresent().  Taking the index of a
+bundy::hooks::HooksManager::calloutsPresent().  Taking the index of a
 hook as its sole argument, the function returns true if there are any
 callouts attached to the hook and false otherwise.
 
@@ -391,15 +391,15 @@ if (HooksManager::calloutsPresent(lease_hook_index)) {
 Once hooks are defined, all the hooks code described above will
 work, even if no libraries are loaded (and even if the library
 loading method is not called).  The CalloutHandle returned by
-isc::hooks::HooksManager::createCalloutHandle() will be valid,
-isc::hooks::HooksManager::calloutsPresent() will return false for every
-index, and isc::hooks::HooksManager::callCallouts() will be a no-op.
+bundy::hooks::HooksManager::createCalloutHandle() will be valid,
+bundy::hooks::HooksManager::calloutsPresent() will return false for every
+index, and bundy::hooks::HooksManager::callCallouts() will be a no-op.
 
-However, if user libraries are specified in the BIND 10 configuration,
+However, if user libraries are specified in the BUNDY configuration,
 the component should load them.  (Note the term "libraries": the hooks
 framework allows multiple user libraries to be loaded.) This should take
 place after the component's configuration has been read, and is achieved
-by the isc::hooks::HooksManager::loadLibraries() method.  The method is
+by the bundy::hooks::HooksManager::loadLibraries() method.  The method is
 passed a vector of strings, each giving the full file specification of
 a user library:
 @code
@@ -415,7 +415,7 @@ should proceed in such circumstances.
 If loadLibraries() is called a second or subsequent time (as a result
 of a reconfiguration), all existing libraries are unloaded and a new
 set loaded.  Libraries can be explicitly unloaded either by calling
-isc::hooks::HooksManager::unloadLibraries() or by calling
+bundy::hooks::HooksManager::unloadLibraries() or by calling
 loadLibraries() with an empty vector as an argument.
 
 @subsection hooksComponentUnloadIssues Unload and Reload Issues
@@ -436,7 +436,7 @@ space.  For example, it is common for a DHCP callout to add "options"
 to a packet: the memory allocated for those options will most likely
 lie in library address space.
 
-The problem really arises because of the extensive use by BIND 10 of boost
+The problem really arises because of the extensive use by BUNDY of boost
 smart pointers.  When the pointer is destroyed, the pointed-to memory is
 deallocated.  If the pointer points to address space that is unmapped because
 a library has been unloaded, the deletion causes a segmentation fault.
@@ -467,16 +467,16 @@ found in @ref hooksdgDevelopersGuide.)
 
 A component can associate with a hook callouts that run either before
 user-registered callouts or after them.  Registration is done via a
-isc::hooks::LibraryHandle object, a reference to one being obtained
-through the methods isc::hooks::HooksManager::preCalloutLibraryHandle()
+bundy::hooks::LibraryHandle object, a reference to one being obtained
+through the methods bundy::hooks::HooksManager::preCalloutLibraryHandle()
 (for a handle to register callouts to run before the user library
-callouts) or isc::hooks::HooksManager::postCalloutLibraryHandle() (for
+callouts) or bundy::hooks::HooksManager::postCalloutLibraryHandle() (for
 a handle to register callouts to run after the user callouts).  Use of
 the LibraryHandle to register and deregister callouts is described in
 @ref hooksdgLibraryHandle.
 
 Finally, it should be noted that callouts registered in this way only
-remain registered until the next call to isc::hooks::loadLibraries().
+remain registered until the next call to bundy::hooks::loadLibraries().
 It is up to the component to re-register the callouts after this
 method has been called.
 

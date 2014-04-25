@@ -21,11 +21,11 @@
 namespace user_chk {
 
 /// @brief Thrown if UserDataSource encounters an error
-class UserDataSourceError : public isc::Exception {
+class UserDataSourceError : public bundy::Exception {
 public:
     UserDataSourceError(const char* file, size_t line,
                                const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Defines an interface for reading user data into a registry.

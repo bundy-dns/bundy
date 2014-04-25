@@ -18,8 +18,8 @@
 #include <gtest/gtest.h>
 #include <string>
 
-using namespace isc;
-using namespace isc::log;
+using namespace bundy;
+using namespace bundy::log;
 using namespace std;
 
 // Declare a set of messages to go into the global dictionary.

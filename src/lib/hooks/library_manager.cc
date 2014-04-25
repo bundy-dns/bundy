@@ -28,7 +28,7 @@
 
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace hooks {
 
 
@@ -39,7 +39,7 @@ LibraryManager::LibraryManager(const std::string& name, int index,
           library_name_(name)
 {
     if (!manager) {
-        isc_throw(NoCalloutManager, "must specify a CalloutManager when "
+        bundy_throw(NoCalloutManager, "must specify a CalloutManager when "
                   "instantiating a LibraryManager object");
     }
 }
@@ -111,7 +111,7 @@ LibraryManager::checkVersion() const {
     // Get the pointer to the "version" function.
     PointerConverter pc(dlsym(dl_handle_, VERSION_FUNCTION_NAME));
     if (pc.versionPtr() != NULL) {
-        int version = BIND10_HOOKS_VERSION - 1; // This is an invalid value
+        int version = BUNDY_HOOKS_VERSION - 1; // This is an invalid value
         try {
             version = (*pc.versionPtr())();
         } catch (...) {
@@ -119,7 +119,7 @@ LibraryManager::checkVersion() const {
             return (false);
         }
 
-        if (version == BIND10_HOOKS_VERSION) {
+        if (version == BUNDY_HOOKS_VERSION) {
             // All OK, version checks out
             LOG_DEBUG(hooks_logger, HOOKS_DBG_CALLS, HOOKS_LIBRARY_VERSION)
                       .arg(library_name_).arg(version);
@@ -127,7 +127,7 @@ LibraryManager::checkVersion() const {
 
         } else {
             LOG_ERROR(hooks_logger, HOOKS_INCORRECT_VERSION).arg(library_name_)
-                      .arg(version).arg(BIND10_HOOKS_VERSION);
+                      .arg(version).arg(BUNDY_HOOKS_VERSION);
         }
     } else {
         LOG_ERROR(hooks_logger, HOOKS_NO_VERSION).arg(library_name_);
@@ -180,7 +180,7 @@ LibraryManager::runLoad() {
         try {
             manager_->setLibraryIndex(index_);
             status = (*pc.loadPtr())(manager_->getLibraryHandle());
-        } catch (const isc::Exception& ex) {
+        } catch (const bundy::Exception& ex) {
             LOG_ERROR(hooks_logger, HOOKS_LOAD_FRAMEWORK_EXCEPTION)
                 .arg(library_name_).arg(ex.what());
             return (false);
@@ -222,7 +222,7 @@ LibraryManager::runUnload() {
         int status = -1;
         try {
             status = (*pc.unloadPtr())();
-        } catch (const isc::Exception& ex) {
+        } catch (const bundy::Exception& ex) {
             LOG_ERROR(hooks_logger, HOOKS_UNLOAD_FRAMEWORK_EXCEPTION)
                 .arg(library_name_).arg(ex.what());
             return (false);
@@ -359,4 +359,4 @@ LibraryManager::validateLibrary(const std::string& name) {
 }
 
 } // namespace hooks
-} // namespace isc
+} // namespace bundy

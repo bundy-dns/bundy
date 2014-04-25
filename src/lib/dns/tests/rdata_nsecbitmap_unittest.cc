@@ -31,11 +31,11 @@
 #include <vector>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::dns::rdata;
-using namespace isc::util;
-using isc::UnitTestUtil;
-using isc::util::unittests::matchWireData;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
+using namespace bundy::util;
+using bundy::UnitTestUtil;
+using bundy::util::unittests::matchWireData;
 using boost::lexical_cast;
 
 namespace {

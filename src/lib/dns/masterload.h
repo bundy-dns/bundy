@@ -23,17 +23,17 @@
 
 #include <dns/rrset.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 class Name;
 class RRClass;
 
 /// \brief An exception that is thrown if an error occurs while loading a
 /// master zone data.
-class MasterLoadError : public isc::Exception {
+class MasterLoadError : public bundy::Exception {
 public:
     MasterLoadError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// The type of the \c callback parameter of \c masterLoad().

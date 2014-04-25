@@ -12,14 +12,14 @@
 // OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 // PERFORMANCE OF THIS SOFTWARE.
 
-/// Defines the logger used by the top-level component of b10-auth.
+/// Defines the logger used by the top-level component of bundy-auth.
 
 #include "auth_log.h"
 
-namespace isc {
+namespace bundy {
 namespace auth {
 
-isc::log::Logger auth_logger("auth");
+bundy::log::Logger auth_logger("auth");
 
 const int DBG_AUTH_START = DBGLVL_START_SHUT;
 const int DBG_AUTH_SHUT = DBGLVL_START_SHUT;
@@ -28,5 +28,5 @@ const int DBG_AUTH_DETAIL = DBGLVL_TRACE_BASIC;
 const int DBG_AUTH_MESSAGES = DBGLVL_TRACE_DETAIL_DATA;
 
 } // namespace auth
-} // namespace isc
+} // namespace bundy
 

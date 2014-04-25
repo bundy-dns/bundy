@@ -21,7 +21,7 @@
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 class Name;
 class RRClass;
@@ -76,14 +76,14 @@ public:
     ///
     /// \param error The error callback to use.
     /// \param warning The warning callback to use.
-    /// \throw isc::InvalidParameter if any of the callbacks is empty.
+    /// \throw bundy::InvalidParameter if any of the callbacks is empty.
     MasterLoaderCallbacks(const IssueCallback& error,
                           const IssueCallback& warning) :
         error_(error),
         warning_(warning)
     {
         if (error_.empty() || warning_.empty()) {
-            isc_throw(isc::InvalidParameter,
+            bundy_throw(bundy::InvalidParameter,
                       "Empty function passed as callback");
         }
     }

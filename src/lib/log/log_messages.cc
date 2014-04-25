@@ -4,32 +4,32 @@
 #include <log/message_types.h>
 #include <log/message_initializer.h>
 
-namespace isc {
+namespace bundy {
 namespace log {
 
-extern const isc::log::MessageID LOG_BAD_DESTINATION = "LOG_BAD_DESTINATION";
-extern const isc::log::MessageID LOG_BAD_SEVERITY = "LOG_BAD_SEVERITY";
-extern const isc::log::MessageID LOG_BAD_STREAM = "LOG_BAD_STREAM";
-extern const isc::log::MessageID LOG_DUPLICATE_MESSAGE_ID = "LOG_DUPLICATE_MESSAGE_ID";
-extern const isc::log::MessageID LOG_DUPLICATE_NAMESPACE = "LOG_DUPLICATE_NAMESPACE";
-extern const isc::log::MessageID LOG_INPUT_OPEN_FAIL = "LOG_INPUT_OPEN_FAIL";
-extern const isc::log::MessageID LOG_INVALID_MESSAGE_ID = "LOG_INVALID_MESSAGE_ID";
-extern const isc::log::MessageID LOG_NAMESPACE_EXTRA_ARGS = "LOG_NAMESPACE_EXTRA_ARGS";
-extern const isc::log::MessageID LOG_NAMESPACE_INVALID_ARG = "LOG_NAMESPACE_INVALID_ARG";
-extern const isc::log::MessageID LOG_NAMESPACE_NO_ARGS = "LOG_NAMESPACE_NO_ARGS";
-extern const isc::log::MessageID LOG_NO_MESSAGE_ID = "LOG_NO_MESSAGE_ID";
-extern const isc::log::MessageID LOG_NO_MESSAGE_TEXT = "LOG_NO_MESSAGE_TEXT";
-extern const isc::log::MessageID LOG_NO_SUCH_MESSAGE = "LOG_NO_SUCH_MESSAGE";
-extern const isc::log::MessageID LOG_OPEN_OUTPUT_FAIL = "LOG_OPEN_OUTPUT_FAIL";
-extern const isc::log::MessageID LOG_PREFIX_EXTRA_ARGS = "LOG_PREFIX_EXTRA_ARGS";
-extern const isc::log::MessageID LOG_PREFIX_INVALID_ARG = "LOG_PREFIX_INVALID_ARG";
-extern const isc::log::MessageID LOG_READING_LOCAL_FILE = "LOG_READING_LOCAL_FILE";
-extern const isc::log::MessageID LOG_READ_ERROR = "LOG_READ_ERROR";
-extern const isc::log::MessageID LOG_UNRECOGNISED_DIRECTIVE = "LOG_UNRECOGNISED_DIRECTIVE";
-extern const isc::log::MessageID LOG_WRITE_ERROR = "LOG_WRITE_ERROR";
+extern const bundy::log::MessageID LOG_BAD_DESTINATION = "LOG_BAD_DESTINATION";
+extern const bundy::log::MessageID LOG_BAD_SEVERITY = "LOG_BAD_SEVERITY";
+extern const bundy::log::MessageID LOG_BAD_STREAM = "LOG_BAD_STREAM";
+extern const bundy::log::MessageID LOG_DUPLICATE_MESSAGE_ID = "LOG_DUPLICATE_MESSAGE_ID";
+extern const bundy::log::MessageID LOG_DUPLICATE_NAMESPACE = "LOG_DUPLICATE_NAMESPACE";
+extern const bundy::log::MessageID LOG_INPUT_OPEN_FAIL = "LOG_INPUT_OPEN_FAIL";
+extern const bundy::log::MessageID LOG_INVALID_MESSAGE_ID = "LOG_INVALID_MESSAGE_ID";
+extern const bundy::log::MessageID LOG_NAMESPACE_EXTRA_ARGS = "LOG_NAMESPACE_EXTRA_ARGS";
+extern const bundy::log::MessageID LOG_NAMESPACE_INVALID_ARG = "LOG_NAMESPACE_INVALID_ARG";
+extern const bundy::log::MessageID LOG_NAMESPACE_NO_ARGS = "LOG_NAMESPACE_NO_ARGS";
+extern const bundy::log::MessageID LOG_NO_MESSAGE_ID = "LOG_NO_MESSAGE_ID";
+extern const bundy::log::MessageID LOG_NO_MESSAGE_TEXT = "LOG_NO_MESSAGE_TEXT";
+extern const bundy::log::MessageID LOG_NO_SUCH_MESSAGE = "LOG_NO_SUCH_MESSAGE";
+extern const bundy::log::MessageID LOG_OPEN_OUTPUT_FAIL = "LOG_OPEN_OUTPUT_FAIL";
+extern const bundy::log::MessageID LOG_PREFIX_EXTRA_ARGS = "LOG_PREFIX_EXTRA_ARGS";
+extern const bundy::log::MessageID LOG_PREFIX_INVALID_ARG = "LOG_PREFIX_INVALID_ARG";
+extern const bundy::log::MessageID LOG_READING_LOCAL_FILE = "LOG_READING_LOCAL_FILE";
+extern const bundy::log::MessageID LOG_READ_ERROR = "LOG_READ_ERROR";
+extern const bundy::log::MessageID LOG_UNRECOGNISED_DIRECTIVE = "LOG_UNRECOGNISED_DIRECTIVE";
+extern const bundy::log::MessageID LOG_WRITE_ERROR = "LOG_WRITE_ERROR";
 
 } // namespace log
-} // namespace isc
+} // namespace bundy
 
 namespace {
 
@@ -57,7 +57,7 @@ const char* values[] = {
     NULL
 };
 
-const isc::log::MessageInitializer initializer(values);
+const bundy::log::MessageInitializer initializer(values);
 
 } // Anonymous namespace
 

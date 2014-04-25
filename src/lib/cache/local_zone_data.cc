@@ -19,17 +19,17 @@
 #include "logger.h"
 
 using namespace std;
-using namespace isc::dns;
+using namespace bundy::dns;
 
-namespace isc {
+namespace bundy {
 namespace cache {
 
 typedef pair<std::string, RRsetPtr> RRsetMapPair;
 typedef map<std::string, RRsetPtr>::iterator RRsetMapIterator;
 
-isc::dns::RRsetPtr
-LocalZoneData::lookup(const isc::dns::Name& name,
-                      const isc::dns::RRType& type)
+bundy::dns::RRsetPtr
+LocalZoneData::lookup(const bundy::dns::Name& name,
+                      const bundy::dns::RRType& type)
 {
     string key = genCacheEntryName(name, type);
     RRsetMapIterator iter = rrsets_map_.find(key);
@@ -43,7 +43,7 @@ LocalZoneData::lookup(const isc::dns::Name& name,
 }
 
 void
-LocalZoneData::update(const isc::dns::AbstractRRset& rrset) {
+LocalZoneData::update(const bundy::dns::AbstractRRset& rrset) {
     //TODO Do we really need to recreate the rrset again?
     string key = genCacheEntryName(rrset.getName(), rrset.getType());
     LOG_DEBUG(logger, DBG_TRACE_DATA, CACHE_LOCALZONE_UPDATE).arg(key);
@@ -56,5 +56,5 @@ LocalZoneData::update(const isc::dns::AbstractRRset& rrset) {
 }
 
 } // namespace cache
-} // namespace isc
+} // namespace bundy
 

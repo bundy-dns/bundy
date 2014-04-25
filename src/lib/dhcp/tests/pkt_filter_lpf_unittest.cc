@@ -26,9 +26,9 @@
 #include <linux/if_packet.h>
 #include <sys/socket.h>
 
-using namespace isc::asiolink;
-using namespace isc::dhcp;
-using namespace isc::util;
+using namespace bundy::asiolink;
+using namespace bundy::dhcp;
+using namespace bundy::util;
 
 namespace {
 
@@ -39,7 +39,7 @@ const size_t RECV_BUF_SIZE = 2048;
 
 // Test fixture class inherits from the class common for all packet
 // filter tests.
-class PktFilterLPFTest : public isc::dhcp::test::PktFilterTest {
+class PktFilterLPFTest : public bundy::dhcp::test::PktFilterTest {
 public:
     PktFilterLPFTest() : PktFilterTest(PORT) {
     }

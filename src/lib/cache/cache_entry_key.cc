@@ -17,10 +17,10 @@
 
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace cache {
 const std::string
-genCacheEntryName(const isc::dns::Name& name, const isc::dns::RRType& type) {
+genCacheEntryName(const bundy::dns::Name& name, const bundy::dns::RRType& type) {
     std::string keystr = name.toText();
     ostringstream stream;
     stream << type.getCode();
@@ -38,5 +38,5 @@ genCacheEntryName(const std::string& namestr, const uint16_t type) {
 }
 
 } // namespace cache
-} // namespace isc
+} // namespace bundy
 

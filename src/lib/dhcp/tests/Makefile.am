@@ -5,7 +5,7 @@ AM_CPPFLAGS += $(BOOST_INCLUDES)
 AM_CPPFLAGS += -DTEST_DATA_BUILDDIR=\"$(abs_top_builddir)/src/lib/dhcp/tests\"
 AM_CPPFLAGS += -DINSTALL_PROG=\"$(abs_top_srcdir)/install-sh\"
 
-AM_CXXFLAGS = $(B10_CXXFLAGS)
+AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 
 # Some versions of GCC warn about some versions of Boost regarding
 # missing initializer for members in its posix_time.
@@ -40,7 +40,7 @@ libdhcptest_la_SOURCES  += pkt_filter6_test_stub.cc pkt_filter6_test_stub.h
 libdhcptest_la_CXXFLAGS  = $(AM_CXXFLAGS)
 libdhcptest_la_CPPFLAGS  = $(AM_CPPFLAGS)
 libdhcptest_la_LDFLAGS   = $(AM_LDFLAGS)
-libdhcptest_la_LIBADD    = $(top_builddir)/src/lib/dhcp/libb10-dhcp++.la
+libdhcptest_la_LIBADD    = $(top_builddir)/src/lib/dhcp/libbundy-dhcp++.la
 
 TESTS += libdhcp++_unittests
 
@@ -97,12 +97,12 @@ if USE_CLANGPP
 libdhcp___unittests_CXXFLAGS += -Wno-unused-variable -Wno-unused-parameter
 endif
 
-libdhcp___unittests_LDADD  = $(top_builddir)/src/lib/dhcp/libb10-dhcp++.la
-libdhcp___unittests_LDADD += $(top_builddir)/src/lib/log/libb10-log.la
-libdhcp___unittests_LDADD += $(top_builddir)/src/lib/util/libb10-util.la
-libdhcp___unittests_LDADD += $(top_builddir)/src/lib/asiolink/libb10-asiolink.la
-libdhcp___unittests_LDADD += $(top_builddir)/src/lib/exceptions/libb10-exceptions.la
-libdhcp___unittests_LDADD += $(top_builddir)/src/lib/log/libb10-log.la
+libdhcp___unittests_LDADD  = $(top_builddir)/src/lib/dhcp/libbundy-dhcp++.la
+libdhcp___unittests_LDADD += $(top_builddir)/src/lib/log/libbundy-log.la
+libdhcp___unittests_LDADD += $(top_builddir)/src/lib/util/libbundy-util.la
+libdhcp___unittests_LDADD += $(top_builddir)/src/lib/asiolink/libbundy-asiolink.la
+libdhcp___unittests_LDADD += $(top_builddir)/src/lib/exceptions/libbundy-exceptions.la
+libdhcp___unittests_LDADD += $(top_builddir)/src/lib/log/libbundy-log.la
 libdhcp___unittests_LDADD += $(GTEST_LDADD)
 endif
 

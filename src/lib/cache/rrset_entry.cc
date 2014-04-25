@@ -20,13 +20,13 @@
 #include "rrset_entry.h"
 #include "rrset_copy.h"
 
-using namespace isc::dns;
-using namespace isc::nsas;
+using namespace bundy::dns;
+using namespace bundy::nsas;
 
-namespace isc {
+namespace bundy {
 namespace cache {
 
-RRsetEntry::RRsetEntry(const isc::dns::AbstractRRset& rrset,
+RRsetEntry::RRsetEntry(const bundy::dns::AbstractRRset& rrset,
                        const RRsetTrustLevel& level):
     entry_name_(genCacheEntryName(rrset.getName(), rrset.getType())),
     expire_time_(time(NULL) + rrset.getTTL().getValue()),
@@ -37,7 +37,7 @@ RRsetEntry::RRsetEntry(const isc::dns::AbstractRRset& rrset,
     rrsetCopy(rrset, *(rrset_.get()));
 }
 
-isc::dns::RRsetPtr
+bundy::dns::RRsetPtr
 RRsetEntry::getRRset() {
     updateTTL();
     return (rrset_);
@@ -63,6 +63,6 @@ RRsetEntry::updateTTL(){
 }
 
 } // namespace cache
-} // namespace isc
+} // namespace bundy
 
 

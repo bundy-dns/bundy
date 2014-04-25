@@ -22,9 +22,9 @@
 #include <dns/rdataclass.h>
 
 using namespace std;
-using namespace isc::util;
+using namespace bundy::util;
 
-// BEGIN_ISC_NAMESPACE
+// BEGIN_BUNDY_NAMESPACE
 // BEGIN_RDATA_NAMESPACE
 
 A::A(const std::string&) {
@@ -58,7 +58,7 @@ A::toWire(AbstractMessageRenderer&) const {
 string
 A::toText() const {
     // TBD
-    isc_throw(InvalidRdataText, "Not implemented yet");
+    bundy_throw(InvalidRdataText, "Not implemented yet");
 }
 
 int
@@ -67,4 +67,4 @@ A::compare(const Rdata&) const {
 }
 
 // END_RDATA_NAMESPACE
-// END_ISC_NAMESPACE
+// END_BUNDY_NAMESPACE

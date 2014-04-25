@@ -32,7 +32,7 @@
 
 #include <config.h>
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace unittests {
 
@@ -50,6 +50,6 @@ bool runningOnValgrind();
 
 } // end namespace unittests
 } // end namespace util
-} // end namespace isc
+} // end namespace bundy
 
 #endif // UTIL_UNITTESTS_CHECK_VALGRIND_H

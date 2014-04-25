@@ -39,11 +39,11 @@ using asio::ip::udp;
 using asio::ip::address;
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::util;
-using namespace isc::asiolink;
+using namespace bundy::dns;
+using namespace bundy::util;
+using namespace bundy::asiolink;
 
-namespace isc {
+namespace bundy {
 namespace asiodns {
 
 /*
@@ -83,7 +83,7 @@ struct UDPServer::Data {
          answer_callback_(answer)
     {
         if (af != AF_INET && af != AF_INET6) {
-            isc_throw(InvalidParameter, "Address family must be either AF_INET"
+            bundy_throw(InvalidParameter, "Address family must be either AF_INET"
                       " or AF_INET6, not " << af);
         }
         LOG_DEBUG(logger, DBGLVL_TRACE_BASIC, ASIODNS_FD_ADD_UDP).arg(fd);
@@ -93,7 +93,7 @@ struct UDPServer::Data {
         } catch (const std::exception& exception) {
             // Whatever the thing throws, it is something from ASIO and we
             // convert it
-            isc_throw(IOError, exception.what());
+            bundy_throw(IOError, exception.what());
         }
     }
 
@@ -152,13 +152,13 @@ struct UDPServer::Data {
     std::auto_ptr<asiolink::IOMessage> io_message_;
 
     // The original query as sent by the client
-    isc::dns::MessagePtr query_message_;
+    bundy::dns::MessagePtr query_message_;
 
     // The response message we are building
-    isc::dns::MessagePtr answer_message_;
+    bundy::dns::MessagePtr answer_message_;
 
     // The buffer into which the response is written
-    isc::util::OutputBufferPtr respbuf_;
+    bundy::util::OutputBufferPtr respbuf_;
 
     // The buffer into which the query packet is written
     boost::shared_array<char> data_;
@@ -343,4 +343,4 @@ UDPServer::resume(const bool done) {
 }
 
 } // namespace asiodns
-} // namespace isc
+} // namespace bundy

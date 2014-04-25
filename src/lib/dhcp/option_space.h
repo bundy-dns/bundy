@@ -21,7 +21,7 @@
 #include <stdint.h>
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief Exception to be thrown when invalid option space
@@ -29,7 +29,7 @@ namespace dhcp {
 class InvalidOptionSpace : public Exception {
 public:
     InvalidOptionSpace(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// OptionSpace forward declaration.
@@ -46,7 +46,7 @@ typedef std::map<std::string, OptionSpacePtr> OptionSpaceCollection;
 /// of the option space is so called "vendor specific option space".
 /// It groups sub-options being sent within Vendor Encapsulated Options.
 /// For DHCPv4 it is the option with code 43. The option spaces are
-/// assigned to option instances represented by isc::dhcp::Option and
+/// assigned to option instances represented by bundy::dhcp::Option and
 /// other classes derived from it. Each particular option may belong to
 /// multiple option spaces.
 /// This class may be used to represent any DHCPv4 option space. If the
@@ -78,7 +78,7 @@ public:
     /// @param vendor_space boolean value that indicates that the object
     /// describes the vendor specific option space.
     ///
-    /// @throw isc::dhcp::InvalidOptionSpace if given option space name
+    /// @throw bundy::dhcp::InvalidOptionSpace if given option space name
     /// contains invalid characters or is empty. This constructor uses
     /// \ref validateName function to check that the specified name is
     /// correct.
@@ -148,7 +148,7 @@ public:
     ///
     /// @param name option space name.
     ///
-    /// @throw isc::dhcp::InvalidOptionSpace if given option space name
+    /// @throw bundy::dhcp::InvalidOptionSpace if given option space name
     /// contains invalid characters or is empty. This constructor uses
     /// \ref OptionSpace::validateName function to check that the specified
     /// name is correct.
@@ -162,7 +162,7 @@ public:
     /// @param name option space name.
     /// @param enterprise_number enterprise number.
     ///
-    /// @throw isc::dhcp::InvalidOptionSpace if given option space name
+    /// @throw bundy::dhcp::InvalidOptionSpace if given option space name
     /// contains invalid characters or is empty. This constructor uses
     /// \ref OptionSpace::validateName function to check that the specified
     /// name is correct.
@@ -183,7 +183,7 @@ private:
     uint32_t enterprise_number_; ///< IANA assigned enterprise number.
 };
 
-} // namespace isc::dhcp
-} // namespace isc
+} // namespace bundy::dhcp
+} // namespace bundy
 
 #endif // OPTION_SPACE_H

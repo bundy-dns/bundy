@@ -45,8 +45,8 @@
 #include <asiolink/udp_socket.h>
 
 using namespace asio;
-using namespace isc::util;
-using namespace isc::asiolink;
+using namespace bundy::util;
+using namespace bundy::asiolink;
 using namespace std;
 
 namespace {

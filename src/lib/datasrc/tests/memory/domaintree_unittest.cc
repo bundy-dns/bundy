@@ -37,11 +37,11 @@
 #include <algorithm>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dns;
-using isc::UnitTestUtil;
-using namespace isc::datasrc::memory;
-using isc::util::random::UniformRandomIntegerGenerator;
+using namespace bundy;
+using namespace bundy::dns;
+using bundy::UnitTestUtil;
+using namespace bundy::datasrc::memory;
+using bundy::util::random::UniformRandomIntegerGenerator;
 
 // XXX: some compilers cannot find class static constants used in
 // EXPECT_xxx macros, for which we need an explicit empty definition.
@@ -465,7 +465,7 @@ TEST_F(DomainTreeTest, remove) {
                  EXPECT_EQ(i, *data);
             }
 
-            uint8_t buf[isc::dns::LabelSequence::MAX_SERIALIZED_LENGTH];
+            uint8_t buf[bundy::dns::LabelSequence::MAX_SERIALIZED_LENGTH];
             const LabelSequence ls(cnode->getAbsoluteLabels(buf));
             EXPECT_EQ(LabelSequence(ni), ls);
 
@@ -560,7 +560,7 @@ TEST_F(DomainTreeTest, removeEmpty) {
 
             ASSERT_NE(static_cast<void*>(NULL), cnode);
 
-            uint8_t buf[isc::dns::LabelSequence::MAX_SERIALIZED_LENGTH];
+            uint8_t buf[bundy::dns::LabelSequence::MAX_SERIALIZED_LENGTH];
             const LabelSequence ls(cnode->getAbsoluteLabels(buf));
             EXPECT_EQ(LabelSequence(ni), ls);
 
@@ -843,7 +843,7 @@ TEST_F(DomainTreeTest, flags) {
 
     // setting an unknown flag will trigger an exception
     EXPECT_THROW(dtnode->setFlag(static_cast<TestDomainTreeNode::Flags>(2), true),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 bool
@@ -944,7 +944,7 @@ TEST_F(DomainTreeTest, findInSubTree) {
     ls0.stripRight(1);
     EXPECT_THROW(dtree_expose_empty_node.find(ls0, &cdtnode, chain,
                                               testCallback, &flag),
-                 isc::BadValue);
+                 bundy::BadValue);
 
     // First, find a sub-tree node
     chain.clear();
@@ -961,7 +961,7 @@ TEST_F(DomainTreeTest, findInSubTree) {
     const LabelSequence ls2a(n2a);
     EXPECT_THROW(dtree_expose_empty_node.find(ls2a, &cdtnode, chain,
                                               testCallback, &flag),
-                 isc::BadValue);
+                 bundy::BadValue);
 
     // Now, find "o.w.y.d.e.f." by right-stripping the "w.y.d.e.f."
     // suffix to "o" (non-absolute).
@@ -1289,7 +1289,7 @@ previousWalk(TestDomainTree& dtree, const TestDomainTreeNode* node,
 TEST_F(DomainTreeTest, previousNode) {
     // First, iterate the whole tree from the end to the beginning.
     TestDomainTreeNodeChain node_path;
-    EXPECT_THROW(dtree.previousNode(node_path), isc::BadValue) <<
+    EXPECT_THROW(dtree.previousNode(node_path), bundy::BadValue) <<
         "Throw before a search was done on the path";
     const TestDomainTreeNode* node(NULL);
     {

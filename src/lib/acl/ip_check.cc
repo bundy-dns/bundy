@@ -22,9 +22,9 @@
 #include <acl/ip_check.h>
 
 using namespace std;
-using namespace isc;
+using namespace bundy;
 
-namespace isc {
+namespace bundy {
 namespace acl {
 namespace internal {
 
@@ -60,7 +60,7 @@ createMask(size_t prefixlen) {
 
     // Mask size is too large. (Note that prefixlen is unsigned, so can't be
     // negative.)
-    isc_throw(isc::OutOfRange, "prefixlen argument must be between 0 and 8");
+    bundy_throw(bundy::OutOfRange, "prefixlen argument must be between 0 and 8");
 }
 
 pair<string, int>
@@ -75,7 +75,7 @@ splitIPAddress(const string& ipprefix) {
     if ((ipprefix.size() == 0) || (slashpos == 0) ||
         (slashpos == (ipprefix.size() - 1))) {
         // Nothing in prefix, or it starts with or ends with a slash.
-        isc_throw(isc::InvalidParameter, "address prefix of " << ipprefix <<
+        bundy_throw(bundy::InvalidParameter, "address prefix of " << ipprefix <<
                                          " is not valid");
 
     } else if (slashpos != string::npos) {
@@ -98,11 +98,11 @@ splitIPAddress(const string& ipprefix) {
         try {
             prefix_size = boost::lexical_cast<int>(prefixlen);
             if (prefix_size < 0) {
-                isc_throw(isc::InvalidParameter, "address prefix of " <<
+                bundy_throw(bundy::InvalidParameter, "address prefix of " <<
                           ipprefix << " is not valid");
             }
         } catch (boost::bad_lexical_cast&) {
-            isc_throw(isc::InvalidParameter, "prefix length of '" <<
+            bundy_throw(bundy::InvalidParameter, "prefix length of '" <<
                       prefixlen << "' is not valid");
         }
     }
@@ -125,7 +125,7 @@ getSockAddrData(const struct sockaddr& sa) {
             static_cast<const struct sockaddr_in6*>(sa_ptr);
         data_ptr = &sin6->sin6_addr;
     } else {
-        isc_throw(BadValue, "Unsupported address family for IPAddress: " <<
+        bundy_throw(BadValue, "Unsupported address family for IPAddress: " <<
                   static_cast<int>(sa.sa_family));
     }
     return (static_cast<const uint8_t*>(data_ptr));
@@ -139,4 +139,4 @@ IPAddress::IPAddress(const struct sockaddr& sa) :
            sizeof(struct in_addr) : sizeof(struct in6_addr))
 {}
 } // namespace acl
-} // namespace isc
+} // namespace bundy

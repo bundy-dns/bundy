@@ -17,7 +17,7 @@
 
 #include <d2/d_controller.h>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 /// @brief Process Controller for D2 Process
@@ -47,7 +47,7 @@ public:
     static const char* d2_app_name_;
 
     /// @brief Defines the executable name. This is passed into the base class
-    /// by convention this should match the BIND10 module name.
+    /// by convention this should match the BUNDY module name.
     static const char* d2_bin_name_;
 
 private:
@@ -66,7 +66,7 @@ private:
     D2Controller();
 };
 
-}; // namespace isc::d2
-}; // namespace isc
+}; // namespace bundy::d2
+}; // namespace bundy
 
 #endif

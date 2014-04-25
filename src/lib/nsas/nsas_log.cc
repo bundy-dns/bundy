@@ -16,11 +16,11 @@
 
 #include "nsas/nsas_log.h"
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 
-isc::log::Logger nsas_logger("nsas");
+bundy::log::Logger nsas_logger("nsas");
 
 } // namespace nsas
-} // namespace isc
+} // namespace bundy
 

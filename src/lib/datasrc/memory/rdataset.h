@@ -27,7 +27,7 @@
 
 #include <stdint.h>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 class RdataEncoder;
@@ -167,7 +167,7 @@ public:
     /// relatively expensive, and if we end up comparing them twice the
     /// overhead can be non negligible).
     ///
-    /// If any of the above conditions isn't met, an isc::BadValue exception
+    /// If any of the above conditions isn't met, an bundy::BadValue exception
     /// will be thrown; basically, there should be a bug in the caller if this
     /// happens.
     ///
@@ -185,7 +185,7 @@ public:
     ///
     /// \throw util::MemorySegmentGrown The memory segment has grown, possibly
     ///     relocating data.
-    /// \throw isc::BadValue Given RRset(s) are invalid (see the description)
+    /// \throw bundy::BadValue Given RRset(s) are invalid (see the description)
     /// \throw RdataSetError Number of RDATAs exceed the limits
     /// \throw std::bad_alloc Memory allocation fails.
     ///
@@ -234,7 +234,7 @@ public:
     ///
     /// \throw util::MemorySegmentGrown The memory segment has grown, possibly
     ///     relocating data.
-    /// \throw isc::BadValue Given RRset(s) are invalid.
+    /// \throw bundy::BadValue Given RRset(s) are invalid.
     /// \throw std::bad_alloc Memory allocation fails.
     ///
     /// \param mem_sgmt A \c MemorySegment from which memory for the new
@@ -482,7 +482,7 @@ private:
 
 } // namespace memory
 } // namespace datasrc
-} // namespace isc
+} // namespace bundy
 
 #endif // DATASRC_MEMORY_RDATASET_H
 

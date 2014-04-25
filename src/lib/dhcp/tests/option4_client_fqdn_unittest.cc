@@ -21,8 +21,8 @@
 
 namespace {
 
-using namespace isc;
-using namespace isc::dhcp;
+using namespace bundy;
+using namespace bundy::dhcp;
 
 // This test verifies that constructor accepts empty partial domain-name but
 // does not accept empty fully qualified domain name.
@@ -656,7 +656,7 @@ TEST(Option4ClientFqdnTest, pack) {
     ASSERT_TRUE(option);
 
     // Prepare on-wire format of the option.
-    isc::util::OutputBuffer buf(10);
+    bundy::util::OutputBuffer buf(10);
     ASSERT_NO_THROW(option->pack(buf));
 
     // Prepare reference data.
@@ -689,7 +689,7 @@ TEST(Option4ClientFqdnTest, packASCII) {
     ASSERT_TRUE(option);
 
     // Prepare on-wire format of the option.
-    isc::util::OutputBuffer buf(10);
+    bundy::util::OutputBuffer buf(10);
     ASSERT_NO_THROW(option->pack(buf));
 
     // Prepare reference data.
@@ -726,7 +726,7 @@ TEST(Option4ClientFqdnTest, packPartial) {
     ASSERT_TRUE(option);
 
     // Prepare on-wire format of the option.
-    isc::util::OutputBuffer buf(10);
+    bundy::util::OutputBuffer buf(10);
     ASSERT_NO_THROW(option->pack(buf));
 
     // Prepare reference data.
@@ -758,7 +758,7 @@ TEST(Option4ClientFqdnTest, packEmpty) {
     ASSERT_TRUE(option);
 
     // Prepare on-wire format of the option.
-    isc::util::OutputBuffer buf(10);
+    bundy::util::OutputBuffer buf(10);
     ASSERT_NO_THROW(option->pack(buf));
 
     // Prepare reference data.

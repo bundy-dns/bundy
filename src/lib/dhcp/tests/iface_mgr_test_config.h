@@ -19,7 +19,7 @@
 #include <dhcp/iface_mgr.h>
 #include <boost/noncopyable.hpp>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 namespace test {
 
@@ -206,7 +206,7 @@ public:
     ///
     /// @param direct_resp Value to be set.
     ///
-    /// @throw isc::Unexpected if unable to set the property.
+    /// @throw bundy::Unexpected if unable to set the property.
     void setDirectResponse(const bool direct_resp);
 
     /// @brief Sets various flags on the specified interface.

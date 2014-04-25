@@ -33,9 +33,9 @@
 
 using boost::lexical_cast;
 using boost::scoped_ptr;
-using namespace isc::acl;
-using namespace isc::asiolink;
-using namespace isc::server_common;
+using namespace bundy::acl;
+using namespace bundy::asiolink;
+using namespace bundy::server_common;
 
 namespace {
 

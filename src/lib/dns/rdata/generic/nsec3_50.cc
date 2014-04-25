@@ -41,12 +41,12 @@
 #include <time.h>
 
 using namespace std;
-using namespace isc::dns::rdata::generic::detail::nsec;
-using namespace isc::dns::rdata::generic::detail::nsec3;
-using namespace isc::util::encode;
-using namespace isc::util;
+using namespace bundy::dns::rdata::generic::detail::nsec;
+using namespace bundy::dns::rdata::generic::detail::nsec3;
+using namespace bundy::util::encode;
+using namespace bundy::util;
 
-// BEGIN_ISC_NAMESPACE
+// BEGIN_BUNDY_NAMESPACE
 // BEGIN_RDATA_NAMESPACE
 
 struct NSEC3Impl {
@@ -100,11 +100,11 @@ NSEC3::NSEC3(const std::string& nsec3_str) :
         impl_ptr.reset(constructFromLexer(lexer));
 
         if (lexer.getNextToken().getType() != MasterToken::END_OF_FILE) {
-            isc_throw(InvalidRdataText,
+            bundy_throw(InvalidRdataText,
                       "Extra input text for NSEC3: " << nsec3_str);
         }
     } catch (const MasterLexer::LexerError& ex) {
-        isc_throw(InvalidRdataText,
+        bundy_throw(InvalidRdataText,
                   "Failed to construct NSEC3 from '" << nsec3_str << "': "
                   << ex.what());
     }
@@ -143,13 +143,13 @@ NSEC3::constructFromLexer(MasterLexer& lexer) {
     const string& nexthash =
         lexer.getNextToken(MasterToken::STRING).getString();
     if (*nexthash.rbegin() == '=') {
-        isc_throw(InvalidRdataText, "NSEC3 hash has padding: " << nexthash);
+        bundy_throw(InvalidRdataText, "NSEC3 hash has padding: " << nexthash);
     }
 
     vector<uint8_t> next;
     decodeBase32Hex(nexthash, next);
     if (next.size() > 255) {
-        isc_throw(InvalidRdataText, "NSEC3 hash is too long: "
+        bundy_throw(InvalidRdataText, "NSEC3 hash is too long: "
                   << next.size() << " bytes");
     }
 
@@ -168,13 +168,13 @@ NSEC3::NSEC3(InputBuffer& buffer, size_t rdata_len) :
         parseNSEC3ParamWire("NSEC3", buffer, rdata_len, salt);
 
     if (rdata_len < 1) {
-        isc_throw(DNSMessageFORMERR, "NSEC3 too short to contain hash length, "
+        bundy_throw(DNSMessageFORMERR, "NSEC3 too short to contain hash length, "
                   "length: " << rdata_len + salt.size() + 5);
     }
     const uint8_t nextlen = buffer.readUint8();
     --rdata_len;
     if (nextlen == 0 || rdata_len < nextlen) {
-        isc_throw(DNSMessageFORMERR, "NSEC3 invalid hash length: " <<
+        bundy_throw(DNSMessageFORMERR, "NSEC3 invalid hash length: " <<
                   static_cast<unsigned int>(nextlen));
     }
 
@@ -346,4 +346,4 @@ NSEC3::getNext() const {
 }
 
 // END_RDATA_NAMESPACE
-// END_ISC_NAMESPACE
+// END_BUNDY_NAMESPACE

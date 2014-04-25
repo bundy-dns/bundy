@@ -1,1 +1,1 @@
-EXTRA_DIST = b10-config.db
+EXTRA_DIST = bundy-config.db

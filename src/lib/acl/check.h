@@ -19,7 +19,7 @@
 #include <typeinfo>
 #include <sstream>
 
-namespace isc {
+namespace bundy {
 namespace acl {
 
 /**

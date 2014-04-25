@@ -40,13 +40,13 @@
 #include "../zone_entry.h"
 #include "nsas_test.h"
 
-using namespace isc::dns;
-using namespace isc::dns::rdata;
-using namespace isc::util;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
+using namespace bundy::util;
 using namespace std;
-using isc::util::unittests::TestResolver;
+using bundy::util::unittests::TestResolver;
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 
 
@@ -489,7 +489,7 @@ TEST_F(NameserverAddressStoreTest, updateRTT) {
     // for ns.example.com (the nameserver set for example.net in the class
     // initialization).  We'll set two addresses.
     Name ns_example_com(ns_name);
-    isc::dns::RRsetPtr ns_address = boost::shared_ptr<RRset>(new RRset(
+    bundy::dns::RRsetPtr ns_address = boost::shared_ptr<RRset>(new RRset(
         ns_example_com, RRClass::IN(), RRType::A(), RRTTL(300)));
     BOOST_FOREACH(string addr, address) {
         ns_address->addRdata(rdata::in::A(addr));
@@ -571,4 +571,4 @@ TEST_F(NameserverAddressStoreTest, updateRTT) {
 
 
 } // namespace nsas
-} // namespace isc
+} // namespace bundy

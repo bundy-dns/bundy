@@ -27,7 +27,7 @@
 
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace hooks {
 
 // Constructor
@@ -167,24 +167,24 @@ HooksManager::registerHook(const std::string& name) {
 
 // Return pre- and post- library handles.
 
-isc::hooks::LibraryHandle&
+bundy::hooks::LibraryHandle&
 HooksManager::preCalloutsLibraryHandleInternal() {
     conditionallyInitialize();
     return (callout_manager_->getPreLibraryHandle());
 }
 
-isc::hooks::LibraryHandle&
+bundy::hooks::LibraryHandle&
 HooksManager::preCalloutsLibraryHandle() {
     return (getHooksManager().preCalloutsLibraryHandleInternal());
 }
 
-isc::hooks::LibraryHandle&
+bundy::hooks::LibraryHandle&
 HooksManager::postCalloutsLibraryHandleInternal() {
     conditionallyInitialize();
     return (callout_manager_->getPostLibraryHandle());
 }
 
-isc::hooks::LibraryHandle&
+bundy::hooks::LibraryHandle&
 HooksManager::postCalloutsLibraryHandle() {
     return (getHooksManager().postCalloutsLibraryHandleInternal());
 }
@@ -197,4 +197,4 @@ HooksManager::validateLibraries(const std::vector<std::string>& libraries) {
 }
 
 } // namespace util
-} // namespace isc
+} // namespace bundy

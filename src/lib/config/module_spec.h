@@ -20,17 +20,17 @@
 
 #include <sstream>
 
-namespace isc { namespace config {
+namespace bundy { namespace config {
 
     ///
     /// A standard ModuleSpec exception that is thrown when a
     /// specification is not in the correct form.
     ///
-    class ModuleSpecError : public isc::Exception {
+    class ModuleSpecError : public bundy::Exception {
     public:
         ModuleSpecError(const char* file, size_t line,
                         const char* what = "Module specification is invalid") :
-            isc::Exception(file, line, what) {}
+            bundy::Exception(file, line, what) {}
     };
 
     ///
@@ -51,7 +51,7 @@ namespace isc { namespace config {
         /// \param e The Element containing the data specification
         /// \param check If false, the module specification in the file
         /// is not checked to be of the correct form.
-        explicit ModuleSpec(isc::data::ConstElementPtr e,
+        explicit ModuleSpec(bundy::data::ConstElementPtr e,
                             const bool check = true)
             throw(ModuleSpecError);
 
@@ -59,23 +59,23 @@ namespace isc { namespace config {
         /// ElementPtr, returns an empty ElementPtr if there is none
         /// \return ElementPtr Shared pointer to the commands
         ///                    part of the specification
-        isc::data::ConstElementPtr getCommandsSpec() const;
+        bundy::data::ConstElementPtr getCommandsSpec() const;
 
         /// Returns the configuration part of the specification as an
         /// ElementPtr
         /// \return ElementPtr Shared pointer to the configuration
         ///                    part of the specification
-        isc::data::ConstElementPtr getConfigSpec() const;
+        bundy::data::ConstElementPtr getConfigSpec() const;
 
         /// Returns the statistics part of the specification as an
         /// ElementPtr
         /// \return ElementPtr Shared pointer to the statistics
         ///                    part of the specification
-        isc::data::ConstElementPtr getStatisticsSpec() const;
+        bundy::data::ConstElementPtr getStatisticsSpec() const;
 
         /// Returns the full module specification as an ElementPtr
         /// \return ElementPtr Shared pointer to the specification
-        isc::data::ConstElementPtr getFullSpec() const {
+        bundy::data::ConstElementPtr getFullSpec() const {
             return module_specification;
         }
 
@@ -94,7 +94,7 @@ namespace isc { namespace config {
         /// must be specified.
         /// \return true if the data conforms to the specification,
         /// false otherwise.
-        bool validateConfig(isc::data::ConstElementPtr data,
+        bool validateConfig(bundy::data::ConstElementPtr data,
                              const bool full = false) const;
 
         // returns true if the given element conforms to this data
@@ -105,7 +105,7 @@ namespace isc { namespace config {
         /// must be specified.
         /// \return true if the data conforms to the specification,
         /// false otherwise.
-        bool validateStatistics(isc::data::ConstElementPtr data,
+        bool validateStatistics(bundy::data::ConstElementPtr data,
                              const bool full = false) const;
 
         /// Validates the arguments for the given command
@@ -147,33 +147,33 @@ namespace isc { namespace config {
         /// \return true if the command is known and the parameters are correct
         ///         false otherwise
         bool validateCommand(const std::string& command,
-                              isc::data::ConstElementPtr args,
-                              isc::data::ElementPtr errors) const;
+                              bundy::data::ConstElementPtr args,
+                              bundy::data::ElementPtr errors) const;
 
 
         /// errors must be of type ListElement
-        bool validateConfig(isc::data::ConstElementPtr data, const bool full,
-                             isc::data::ElementPtr errors) const;
+        bool validateConfig(bundy::data::ConstElementPtr data, const bool full,
+                             bundy::data::ElementPtr errors) const;
 
         /// errors must be of type ListElement
-        bool validateStatistics(isc::data::ConstElementPtr data, const bool full,
-                                isc::data::ElementPtr errors) const;
+        bool validateStatistics(bundy::data::ConstElementPtr data, const bool full,
+                                bundy::data::ElementPtr errors) const;
 
     private:
-        bool validateItem(isc::data::ConstElementPtr spec,
-                          isc::data::ConstElementPtr data,
+        bool validateItem(bundy::data::ConstElementPtr spec,
+                          bundy::data::ConstElementPtr data,
                           const bool full,
-                          isc::data::ElementPtr errors) const;
-        bool validateSpec(isc::data::ConstElementPtr spec,
-                           isc::data::ConstElementPtr data,
+                          bundy::data::ElementPtr errors) const;
+        bool validateSpec(bundy::data::ConstElementPtr spec,
+                           bundy::data::ConstElementPtr data,
                            const bool full,
-                           isc::data::ElementPtr errors) const;
-        bool validateSpecList(isc::data::ConstElementPtr spec,
-                                isc::data::ConstElementPtr data,
+                           bundy::data::ElementPtr errors) const;
+        bool validateSpecList(bundy::data::ConstElementPtr spec,
+                                bundy::data::ConstElementPtr data,
                                 const bool full,
-                                isc::data::ElementPtr errors) const;
+                                bundy::data::ElementPtr errors) const;
 
-        isc::data::ConstElementPtr module_specification;
+        bundy::data::ConstElementPtr module_specification;
     };
 
     /// Creates a \c ModuleSpec instance from the contents
@@ -186,7 +186,7 @@ namespace isc { namespace config {
     /// is checked to be of the correct form
     ModuleSpec
     moduleSpecFromFile(const std::string& file_name, const bool check = true)
-        throw(isc::data::JSONError, ModuleSpecError);
+        throw(bundy::data::JSONError, ModuleSpecError);
 
     /// Creates a \c ModuleSpec instance from the given input
     /// stream that contains the contents of a .spec file.
@@ -198,7 +198,7 @@ namespace isc { namespace config {
     /// to be of the correct form
     ModuleSpec
     moduleSpecFromFile(std::ifstream& in, const bool check = true)
-                       throw(isc::data::JSONError, ModuleSpecError);
+                       throw(bundy::data::JSONError, ModuleSpecError);
 } }
 
 #endif // _DATA_DEF_H

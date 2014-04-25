@@ -57,7 +57,7 @@ dhcp-perf-guide.html: dhcp-perf-guide.xml version.ent
 		--path ../../../doc \
 		--stringparam section.autolabel 1 \
 		--stringparam section.label.includes.component.label 1 \
-		--stringparam html.stylesheet bind10-guide.css \
+		--stringparam html.stylesheet bundy-guide.css \
 		http://docbook.sourceforge.net/release/xsl/current/html/docbook.xsl \
 		dhcp-perf-guide.xml
 

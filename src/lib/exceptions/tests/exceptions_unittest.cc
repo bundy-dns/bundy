@@ -19,7 +19,7 @@
 
 #include <gtest/gtest.h>
 
-using isc::Exception;
+using bundy::Exception;
 
 namespace {
 
@@ -31,7 +31,7 @@ protected:
 
 TEST_F(ExceptionTest, basicMethods) {
     try {
-        isc_throw(Exception, teststring);
+        bundy_throw(Exception, teststring);
     } catch (Exception& ex) {
         EXPECT_EQ(ex.getMessage(), std::string(teststring));
         EXPECT_EQ(ex.getFile(), std::string(__FILE__));
@@ -42,7 +42,7 @@ TEST_F(ExceptionTest, basicMethods) {
 // Test to see if it works as a proper derived class of std::exception.
 TEST_F(ExceptionTest, stdInheritance) {
     try {
-        isc_throw(Exception, teststring);
+        bundy_throw(Exception, teststring);
     } catch (std::exception& ex) {
         EXPECT_EQ(std::string(ex.what()), std::string(teststring));
     }

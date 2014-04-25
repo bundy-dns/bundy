@@ -29,17 +29,17 @@
 #include <utility>
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace testutils {
 
 // A minimal mock configuration session.  Most the methods are
 // stubbed out, except for a very basic group_sendmsg() and
 // group_recvmsg().  hasQueuedMessages() always returns false.
-class MockSession : public isc::cc::AbstractSession {
+class MockSession : public bundy::cc::AbstractSession {
 public:
     MockSession() :
         // by default we return a simple "success" message.
-        msg_(isc::data::Element::fromJSON("{\"result\": [0, \"SUCCESS\"]}")),
+        msg_(bundy::data::Element::fromJSON("{\"result\": [0, \"SUCCESS\"]}")),
         send_ok_(true), receive_ok_(true), answer_wanted_(false)
     {}
 
@@ -47,12 +47,12 @@ public:
     virtual void establish(const char*) {}
     virtual void disconnect() {}
 
-    virtual int group_sendmsg(isc::data::ConstElementPtr msg,
+    virtual int group_sendmsg(bundy::data::ConstElementPtr msg,
                               std::string group,
                               std::string, std::string, bool want_answer)
     {
         if (!send_ok_) {
-            isc_throw(isc::cc::SessionError,
+            bundy_throw(bundy::cc::SessionError,
                       "mock session send is disabled for test");
         }
 
@@ -62,11 +62,11 @@ public:
         return (0);
     }
 
-    virtual bool group_recvmsg(isc::data::ConstElementPtr&,
-                               isc::data::ConstElementPtr& msg, bool, int)
+    virtual bool group_recvmsg(bundy::data::ConstElementPtr&,
+                               bundy::data::ConstElementPtr& msg, bool, int)
     {
         if (!receive_ok_) {
-            isc_throw(isc::cc::SessionError,
+            bundy_throw(bundy::cc::SessionError,
                       "mock session receive is disabled for test");
         }
 
@@ -79,7 +79,7 @@ public:
 
     virtual void startRead(boost::function<void()>) {}
 
-    virtual int reply(isc::data::ConstElementPtr, isc::data::ConstElementPtr) {
+    virtual int reply(bundy::data::ConstElementPtr, bundy::data::ConstElementPtr) {
         return (-1);
     }
 
@@ -91,11 +91,11 @@ public:
     virtual size_t getTimeout() const { return 0; };
 
     // The following methods extent AbstractSession to allow testing:
-    void setMessage(isc::data::ConstElementPtr msg) { msg_ = msg; }
+    void setMessage(bundy::data::ConstElementPtr msg) { msg_ = msg; }
     void disableSend() { send_ok_ = false; }
     void disableReceive() { receive_ok_ = false; }
 
-    isc::data::ConstElementPtr getSentMessage() const { return (sent_msg_); }
+    bundy::data::ConstElementPtr getSentMessage() const { return (sent_msg_); }
     std::string getMessageDest() const { return (msg_dest_); }
 
     /// \brief Return the value of want_answer parameter of the previous call
@@ -103,9 +103,9 @@ public:
     bool wasAnswerWanted() const { return (answer_wanted_); }
 
 private:
-    isc::data::ConstElementPtr sent_msg_;
+    bundy::data::ConstElementPtr sent_msg_;
     std::string msg_dest_;
-    isc::data::ConstElementPtr msg_;
+    bundy::data::ConstElementPtr msg_;
     bool send_ok_;
     bool receive_ok_;
     bool answer_wanted_;
@@ -113,7 +113,7 @@ private:
 
 // This mock object does nothing except for recording passed parameters
 // to addServerXXX methods so the test code subsequently checks the parameters.
-class MockDNSService : public isc::asiodns::DNSServiceBase {
+class MockDNSService : public bundy::asiodns::DNSServiceBase {
 public:
     MockDNSService() : tcp_recv_timeout_(0) {}
 
@@ -134,7 +134,7 @@ public:
     virtual void clearServers() {}
 
     virtual asiolink::IOService& getIOService() {
-        isc_throw(isc::Unexpected,
+        bundy_throw(bundy::Unexpected,
                   "MockDNSService::getIOService() shouldn't be called");
     }
 
@@ -162,7 +162,7 @@ private:
 };
 
 // A nonoperative DNSServer object to be used in calls to processMessage().
-class MockServer : public isc::asiodns::DNSServer {
+class MockServer : public bundy::asiodns::DNSServer {
 public:
     MockServer() : done_(false) {}
     void operator()(asio::error_code, size_t) {}
@@ -174,7 +174,7 @@ private:
 };
 
 // Mock Xfrout client
-class MockXfroutClient : public isc::xfr::AbstractXfroutClient {
+class MockXfroutClient : public bundy::xfr::AbstractXfroutClient {
 public:
     MockXfroutClient() :
         is_connected_(false), connect_ok_(true), send_ok_(true),
@@ -183,7 +183,7 @@ public:
 
     virtual void connect() {
         if (!connect_ok_) {
-            isc_throw(isc::xfr::XfroutError,
+            bundy_throw(bundy::xfr::XfroutError,
                       "xfrout connection disabled for test");
         }
         is_connected_ = true;
@@ -191,7 +191,7 @@ public:
 
     virtual void disconnect() {
         if (!disconnect_ok_) {
-            isc_throw(isc::xfr::XfroutError,
+            bundy_throw(bundy::xfr::XfroutError,
                       "closing xfrout connection is disabled for test");
         }
         is_connected_ = false;
@@ -199,7 +199,7 @@ public:
 
     virtual int sendXfroutRequestInfo(int, const void*, uint16_t) {
         if (!send_ok_) {
-            isc_throw(isc::xfr::XfroutError,
+            bundy_throw(bundy::xfr::XfroutError,
                        "xfrout connection send is disabled for test");
         }
         return (0);

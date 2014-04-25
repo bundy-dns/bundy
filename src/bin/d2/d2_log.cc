@@ -12,16 +12,16 @@
 // OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 // PERFORMANCE OF THIS SOFTWARE.
 
-/// Defines the logger used by the top-level component of b10-d2.
+/// Defines the logger used by the top-level component of bundy-d2.
 
 #include <d2/d2_log.h>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 /// @brief Defines the logger used within D2.
-isc::log::Logger dctl_logger("dhcpddns");
+bundy::log::Logger dctl_logger("dhcpddns");
 
 } // namespace d2
-} // namespace isc
+} // namespace bundy
 

@@ -23,7 +23,7 @@
 #include <boost/lexical_cast.hpp>
 #include <log/logger_level.h>
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 /// \brief Format Failure
@@ -31,10 +31,10 @@ namespace log {
 /// This exception is used to wrap a bad_lexical_cast exception thrown during
 /// formatting an argument.
 
-class FormatFailure : public isc::Exception {
+class FormatFailure : public bundy::Exception {
 public:
     FormatFailure(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what)
+        bundy::Exception(file, line, what)
     {}
 };
 
@@ -44,10 +44,10 @@ public:
 /// This exception is used when the number of placeholders do not match
 /// the number of arguments passed to the formatter.
 
-class MismatchedPlaceholders : public isc::Exception {
+class MismatchedPlaceholders : public bundy::Exception {
 public:
     MismatchedPlaceholders(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what)
+        bundy::Exception(file, line, what)
     {}
 };
 
@@ -212,7 +212,7 @@ public:
                 // we can.  (Note that this does not include 'value' -
                 // boost::lexical_cast failed to convert it to a string, so an
                 // attempt to do so here would probably fail as well.)
-                isc_throw(FormatFailure, "bad_lexical_cast in call to "
+                bundy_throw(FormatFailure, "bad_lexical_cast in call to "
                           "Formatter::arg(): " << ex.what());
             }
         } else {

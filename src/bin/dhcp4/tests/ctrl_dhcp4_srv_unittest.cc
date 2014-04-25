@@ -33,13 +33,13 @@
 #include <unistd.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::asiolink;
-using namespace isc::config;
-using namespace isc::data;
-using namespace isc::dhcp;
-using namespace isc::dhcp::test;
-using namespace isc::hooks;
+using namespace bundy;
+using namespace bundy::asiolink;
+using namespace bundy::config;
+using namespace bundy::data;
+using namespace bundy::dhcp;
+using namespace bundy::dhcp::test;
+using namespace bundy::hooks;
 
 namespace {
 
@@ -81,7 +81,7 @@ TEST_F(CtrlDhcpv4SrvTest, commands) {
     );
 
     // Use empty parameters list
-    ElementPtr params(new isc::data::MapElement());
+    ElementPtr params(new bundy::data::MapElement());
     int rcode = -1;
 
     // Case 1: send bogus command
@@ -95,7 +95,7 @@ TEST_F(CtrlDhcpv4SrvTest, commands) {
     EXPECT_EQ(0, rcode); // expect success
 
     const pid_t pid(getpid());
-    ConstElementPtr x(new isc::data::IntElement(pid));
+    ConstElementPtr x(new bundy::data::IntElement(pid));
     params->set("pid", x);
 
     // Case 3: send shutdown command with 1 parameter: pid
@@ -133,7 +133,7 @@ TEST_F(CtrlDhcpv4SrvTest, libreload) {
     // to unload and to reload.
 
     // Use empty parameters list
-    ElementPtr params(new isc::data::MapElement());
+    ElementPtr params(new bundy::data::MapElement());
     int rcode = -1;
 
     ConstElementPtr result =

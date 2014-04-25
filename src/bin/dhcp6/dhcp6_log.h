@@ -19,13 +19,13 @@
 #include <log/logger_support.h>
 #include <log/macros.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// \brief DHCP6 Logging
 ///
 /// Defines the levels used to output debug messages in the non-library part of
-/// the b10-dhcp6 program.  Higher numbers equate to more verbose (and detailed)
+/// the bundy-dhcp6 program.  Higher numbers equate to more verbose (and detailed)
 /// output.
 
 // Debug levels used to log information during startup and shutdown.
@@ -50,13 +50,13 @@ const int DBG_DHCP6_DETAIL = DBGLVL_TRACE_DETAIL;
 // This level is used to log the contents of packets received and sent.
 const int DBG_DHCP6_DETAIL_DATA = DBGLVL_TRACE_DETAIL_DATA;
 
-/// Define the logger for the "dhcp6" module part of b10-dhcp6.  We could define
+/// Define the logger for the "dhcp6" module part of bundy-dhcp6.  We could define
 /// a logger in each file, but we would want to define a common name to avoid
 /// spelling mistakes, so it is just one small step from there to define a
 /// module-common logger.
-extern isc::log::Logger dhcp6_logger;
+extern bundy::log::Logger dhcp6_logger;
 
 } // namespace dhcp6
-} // namespace isc
+} // namespace bundy
 
 #endif // DHCP6_LOG_H

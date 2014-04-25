@@ -17,7 +17,7 @@
 
 #include <exceptions/exceptions.h>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace internal {
 

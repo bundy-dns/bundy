@@ -23,14 +23,14 @@
 
 #include <exceptions/exceptions.h>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 /// @brief Exception thrown if the process encountered an operational error.
-class DProcessBaseError : public isc::Exception {
+class DProcessBaseError : public bundy::Exception {
 public:
     DProcessBaseError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief String value for the shutdown command.
@@ -51,7 +51,7 @@ static const int COMMAND_INVALID = 2;
 /// level object in a "managed" asynchronous application. It provides a uniform
 /// interface such that a managing layer can construct, initialize, and start
 /// the application's event loop.  The event processing is centered around the
-/// use of isc::asiolink::io_service. The io_service is shared between the
+/// use of bundy::asiolink::io_service. The io_service is shared between the
 /// managing layer and the DProcessBase.  This allows management layer IO such
 /// as directives to be sensed and handled, as well as processing IO activity
 /// specific to the application.  In terms of management layer IO, there are
@@ -74,11 +74,11 @@ public:
         : app_name_(app_name), io_service_(io_service), shut_down_flag_(false),
         cfg_mgr_(cfg_mgr) {
         if (!io_service_) {
-            isc_throw (DProcessBaseError, "IO Service cannot be null");
+            bundy_throw (DProcessBaseError, "IO Service cannot be null");
         }
 
         if (!cfg_mgr_) {
-            isc_throw (DProcessBaseError, "CfgMgr cannot be null");
+            bundy_throw (DProcessBaseError, "CfgMgr cannot be null");
         }
     };
 
@@ -109,8 +109,8 @@ public:
     /// non-zero means failure), and a string explanation of the outcome. 
     ///  
     /// @throw DProcessBaseError if an operational error is encountered.
-    virtual isc::data::ConstElementPtr 
-        shutdown(isc::data::ConstElementPtr args) = 0;
+    virtual bundy::data::ConstElementPtr 
+        shutdown(bundy::data::ConstElementPtr args) = 0;
 
     /// @brief Processes the given configuration.
     ///
@@ -124,7 +124,7 @@ public:
     /// @return an Element that contains the results of configuration composed
     /// of an integer status value (0 means successful, non-zero means failure),
     /// and a string explanation of the outcome.
-    virtual isc::data::ConstElementPtr configure(isc::data::ConstElementPtr
+    virtual bundy::data::ConstElementPtr configure(bundy::data::ConstElementPtr
                                                  config_set) = 0;
 
     /// @brief Processes the given command.
@@ -144,8 +144,8 @@ public:
     /// - COMMAND_INVALID indicates a command is not valid.
     ///
     /// and a string explanation of the outcome.
-    virtual isc::data::ConstElementPtr command(
-            const std::string& command, isc::data::ConstElementPtr args) = 0;
+    virtual bundy::data::ConstElementPtr command(
+            const std::string& command, bundy::data::ConstElementPtr args) = 0;
 
     /// @brief Destructor
     virtual ~DProcessBase(){};
@@ -211,7 +211,7 @@ private:
 /// @brief Defines a shared pointer to DProcessBase.
 typedef boost::shared_ptr<DProcessBase> DProcessBasePtr;
 
-}; // namespace isc::d2
-}; // namespace isc
+}; // namespace bundy::d2
+}; // namespace bundy
 
 #endif

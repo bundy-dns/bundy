@@ -19,9 +19,9 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-using namespace isc;
-using namespace isc::asiolink;
-using namespace isc::dhcp;
+using namespace bundy;
+using namespace bundy::asiolink;
+using namespace bundy::dhcp;
 
 namespace {
 

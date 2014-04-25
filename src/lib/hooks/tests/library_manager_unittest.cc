@@ -30,8 +30,8 @@
 #include <unistd.h>
 
 
-using namespace isc;
-using namespace isc::hooks;
+using namespace bundy;
+using namespace bundy::hooks;
 using namespace std;
 
 namespace {
@@ -106,7 +106,7 @@ public:
 /// This is an instance of the LibraryManager class but with the protected
 /// methods made public for test purposes.
 
-class PublicLibraryManager : public isc::hooks::LibraryManager {
+class PublicLibraryManager : public bundy::hooks::LibraryManager {
 public:
     /// @brief Constructor
     ///

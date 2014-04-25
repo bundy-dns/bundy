@@ -35,10 +35,10 @@
 
 using namespace std;
 using boost::lexical_cast;
-using namespace isc::dns::rdata;
-using namespace isc::util;
+using namespace bundy::dns::rdata;
+using namespace bundy::util;
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 namespace {
@@ -66,7 +66,7 @@ EDNS::EDNS(const uint8_t version) :
     dnssec_aware_(false)
 {
     if (version_ > SUPPORTED_VERSION) {
-        isc_throw(isc::InvalidParameter,
+        bundy_throw(bundy::InvalidParameter,
                   "failed to construct EDNS: unsupported version: " <<
                   static_cast<unsigned int>(version_));
     }
@@ -77,18 +77,18 @@ EDNS::EDNS(const Name& name, const RRClass& rrclass, const RRType& rrtype,
     version_((ttl.getValue() & VERSION_MASK) >> VERSION_SHIFT)
 {
     if (rrtype != RRType::OPT()) {
-        isc_throw(isc::InvalidParameter,
+        bundy_throw(bundy::InvalidParameter,
                   "EDNS is being created with incompatible RR type: "
                   << rrtype);
     }
     
     if (version_ > EDNS::SUPPORTED_VERSION) {
-        isc_throw(DNSMessageBADVERS, "unsupported EDNS version: " <<
+        bundy_throw(DNSMessageBADVERS, "unsupported EDNS version: " <<
                   static_cast<unsigned int>(version_));
     }
 
     if (name != Name::ROOT_NAME()) {
-        isc_throw(DNSMessageFORMERR, "invalid owner name for EDNS OPT RR: " <<
+        bundy_throw(DNSMessageFORMERR, "invalid owner name for EDNS OPT RR: " <<
                   name);
     }
 
@@ -154,7 +154,7 @@ EDNS::toWire(AbstractMessageRenderer& renderer,
 }
 
 unsigned int
-EDNS::toWire(isc::util::OutputBuffer& buffer,
+EDNS::toWire(bundy::util::OutputBuffer& buffer,
              const uint8_t extended_rcode) const
 {
     return (toWireCommon(buffer, version_, udp_size_, dnssec_aware_,
@@ -183,4 +183,4 @@ operator<<(std::ostream& os, const EDNS& edns) {
 }
 
 } // end of namespace dns
-} // end of namespace isc
+} // end of namespace bundy

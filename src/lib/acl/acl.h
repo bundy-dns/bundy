@@ -21,7 +21,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/noncopyable.hpp>
 
-namespace isc {
+namespace bundy {
 namespace acl {
 
 /**

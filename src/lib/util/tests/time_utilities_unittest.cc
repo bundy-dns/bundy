@@ -21,10 +21,10 @@
 #include <gtest/gtest.h>
 
 using namespace std;
-using namespace isc::util;
+using namespace bundy::util;
 
 // See time_utilities.cc
-namespace isc {
+namespace bundy {
 namespace util {
 namespace detail {
 extern int64_t (*gettimeFunction)();

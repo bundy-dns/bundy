@@ -26,7 +26,7 @@
 #include <string>
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// Forward declaration to Option4AddrLst class.
@@ -39,11 +39,11 @@ typedef boost::shared_ptr<Option4AddrLst> Option4AddrLstPtr;
 ///
 /// This class handles a list of IPv4 addresses. An example of such option
 /// is dns-servers option. It can also be used to handle a single address.
-class Option4AddrLst : public isc::dhcp::Option {
+class Option4AddrLst : public bundy::dhcp::Option {
 public:
 
     /// Defines a collection of IPv4 addresses.
-    typedef std::vector<isc::asiolink::IOAddress> AddressContainer;
+    typedef std::vector<bundy::asiolink::IOAddress> AddressContainer;
 
     /// @brief Constructor, creates an option with empty list of addresses.
     ///
@@ -67,7 +67,7 @@ public:
     ///
     /// @param type option type
     /// @param addr a single address that will be stored as 1-elem. address list
-    Option4AddrLst(uint8_t type, const isc::asiolink::IOAddress& addr);
+    Option4AddrLst(uint8_t type, const bundy::asiolink::IOAddress& addr);
 
     /// @brief Constructor, used for received options.
     ///
@@ -93,7 +93,7 @@ public:
     /// Method will throw if option storing fails for some reason.
     ///
     /// @param buf output buffer (option will be stored there)
-    virtual void pack(isc::util::OutputBuffer& buf);
+    virtual void pack(bundy::util::OutputBuffer& buf);
 
     /// Returns string representation of the option.
     ///
@@ -144,7 +144,7 @@ public:
     /// will be thrown.
     ///
     /// @param addr an address that is going to be set as 1-element address list
-    void setAddress(const isc::asiolink::IOAddress& addr);
+    void setAddress(const bundy::asiolink::IOAddress& addr);
 
     /// @brief Adds address to existing list of addresses.
     ///
@@ -156,14 +156,14 @@ public:
     /// will be thrown.
     ///
     /// @param addr an address thait is going to be added to existing list
-    void addAddress(const isc::asiolink::IOAddress& addr);
+    void addAddress(const bundy::asiolink::IOAddress& addr);
 
 protected:
     /// contains list of addresses
     AddressContainer addrs_;
 };
 
-} // namespace isc::dhcp
-} // namespace isc
+} // namespace bundy::dhcp
+} // namespace bundy
 
 #endif // OPTION4_ADDRLST_H

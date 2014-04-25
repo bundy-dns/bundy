@@ -20,7 +20,7 @@
 
 #include "hash_table.h"
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 
 /// \brief Delete Object from Hash Table
@@ -32,7 +32,7 @@ namespace nsas {
 /// hash table without the need to be declared as "friend" or the need
 /// to define accessor methods.
 template <typename T>
-class HashDeleter : public isc::util::LruList<T>::Dropped {
+class HashDeleter : public bundy::util::LruList<T>::Dropped {
 public:
 
     /// \brief Constructor
@@ -70,6 +70,6 @@ void HashDeleter<T>::operator()(T* element) const {
 }
 
 } // namespace nsas
-} // namespace isc
+} // namespace bundy
 
 #endif // HASH_DELETER_H

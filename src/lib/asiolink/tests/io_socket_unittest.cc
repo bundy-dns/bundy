@@ -20,7 +20,7 @@
 #include <asio.hpp>
 #include <asiolink/io_socket.h>
 
-using namespace isc::asiolink;
+using namespace bundy::asiolink;
 
 TEST(IOSocketTest, dummySockets) {
     EXPECT_EQ(static_cast<short>(IPPROTO_UDP),

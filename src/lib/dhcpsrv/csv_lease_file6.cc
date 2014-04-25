@@ -14,10 +14,10 @@
 
 #include <dhcpsrv/csv_lease_file6.h>
 
-using namespace isc::asiolink;
-using namespace isc::util;
+using namespace bundy::asiolink;
+using namespace bundy::util;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 CSVLeaseFile6::CSVLeaseFile6(const std::string& filename)
@@ -172,5 +172,5 @@ CSVLeaseFile6::readHostname(const CSVRow& row) {
     return (hostname);
 }
 
-} // end of namespace isc::dhcp
-} // end of namespace isc
+} // end of namespace bundy::dhcp
+} // end of namespace bundy

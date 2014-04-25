@@ -23,14 +23,14 @@
 
 #include <stdint.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp_ddns {
 
 /// @brief Exception thrown if an error occurs during IO source open.
-class WatchSocketError : public isc::Exception {
+class WatchSocketError : public bundy::Exception {
 public:
     WatchSocketError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Provides an IO "ready" semaphore for use with select() or poll()
@@ -132,7 +132,7 @@ private:
 /// @brief Defines a smart pointer to an instance of a WatchSocket.
 typedef boost::shared_ptr<WatchSocket> WatchSocketPtr;
 
-} // namespace isc::dhcp_ddns
-} // namespace isc
+} // namespace bundy::dhcp_ddns
+} // namespace bundy
 
 #endif

@@ -28,8 +28,8 @@
 #include <dhcp/pkt6.h>
 #include <user_chk.h>
 
-using namespace isc::dhcp;
-using namespace isc::hooks;
+using namespace bundy::dhcp;
+using namespace bundy::hooks;
 using namespace user_chk;
 using namespace std;
 
@@ -95,7 +95,7 @@ int pkt4_send(CalloutHandle& handle) {
         handle.getContext(registered_user_label, registered_user);
 
         // Fetch the lease address.
-        isc::asiolink::IOAddress addr = response->getYiaddr();
+        bundy::asiolink::IOAddress addr = response->getYiaddr();
 
         if (registered_user) {
             // add options based on user
@@ -329,10 +329,10 @@ void add6Option(OptionPtr& vendor, uint8_t opt_code, std::string& opt_value) {
 ///
 /// where:
 /// <id type> text label of the id type: "HW_ADDR" or "DUID"
-/// <id str> user's id formatted as either isc::dhcp::Hwaddr.toText() or
-/// isc::dhcp::DUID.toText()
-/// <subnet str> selected subnet formatted as isc::dhcp::Subnet4::toText() or
-/// isc::dhcp::Subnet6::toText() as appropriate.
+/// <id str> user's id formatted as either bundy::dhcp::Hwaddr.toText() or
+/// bundy::dhcp::DUID.toText()
+/// <subnet str> selected subnet formatted as bundy::dhcp::Subnet4::toText() or
+/// bundy::dhcp::Subnet6::toText() as appropriate.
 /// <is registered> "yes" or "no"
 ///
 /// Sample IPv4 entry would like this:
@@ -386,7 +386,7 @@ void generate_output_record(const std::string& id_type_str,
 /// @param response IPv6 response packet from which to extract the lease value.
 ///
 /// @return A string containing the lease value.
-/// @throw isc::BadValue if the response contains neither an IA_NA nor IA_PD
+/// @throw bundy::BadValue if the response contains neither an IA_NA nor IA_PD
 /// option.
 std::string getV6AddrStr(Pkt6Ptr response) {
     OptionPtr tmp = response->getOption(D6O_IA_NA);
@@ -397,7 +397,7 @@ std::string getV6AddrStr(Pkt6Ptr response) {
     // IA_NA not there so try IA_PD
     tmp = response->getOption(D6O_IA_PD);
     if (!tmp) {
-        isc_throw (isc::BadValue, "Response has neither IA_NA nor IA_PD");
+        bundy_throw (bundy::BadValue, "Response has neither IA_NA nor IA_PD");
     }
 
     return(getAddrStrIA_PD(tmp));
@@ -413,13 +413,13 @@ std::string getV6AddrStr(Pkt6Ptr response) {
 ///
 /// @return A string containing the lease address.
 ///
-/// @throw isc::BadValue if the lease address cannot be extracted from options.
+/// @throw bundy::BadValue if the lease address cannot be extracted from options.
 std::string getAddrStrIA_NA(OptionPtr options) {
     boost::shared_ptr<Option6IA> ia =
         boost::dynamic_pointer_cast<Option6IA>(options);
 
     if (!ia) {
-        isc_throw (isc::BadValue, "D6O_IA_NA option invalid");
+        bundy_throw (bundy::BadValue, "D6O_IA_NA option invalid");
     }
 
     // If status indicates a failure return a blank string.
@@ -429,16 +429,16 @@ std::string getAddrStrIA_NA(OptionPtr options) {
 
     options = ia->getOption(D6O_IAADDR);
     if (!options) {
-        isc_throw (isc::BadValue, "D6O_IAADDR option missing");
+        bundy_throw (bundy::BadValue, "D6O_IAADDR option missing");
     }
 
     boost::shared_ptr<Option6IAAddr> addr_option;
     addr_option  = boost::dynamic_pointer_cast<Option6IAAddr>(options);
     if (!addr_option) {
-        isc_throw (isc::BadValue, "D6O_IAADDR Option6IAAddr missing");
+        bundy_throw (bundy::BadValue, "D6O_IAADDR Option6IAAddr missing");
     }
 
-    isc::asiolink::IOAddress addr = addr_option->getAddress();
+    bundy::asiolink::IOAddress addr = addr_option->getAddress();
     return (addr.toText());
 }
 
@@ -452,14 +452,14 @@ std::string getAddrStrIA_NA(OptionPtr options) {
 ///
 /// @return A string containing lease prefix
 ///
-/// @throw isc::BadValue if the prefix cannot be extracted from options.
+/// @throw bundy::BadValue if the prefix cannot be extracted from options.
 std::string getAddrStrIA_PD(OptionPtr options) {
     boost::shared_ptr<Option6IA> ia =
         boost::dynamic_pointer_cast<Option6IA>(options);
 
     // Make sure we have an IA_PD option.
     if (!ia) {
-        isc_throw (isc::BadValue, "D6O_IA_PD option invalid");
+        bundy_throw (bundy::BadValue, "D6O_IA_PD option invalid");
     }
 
     // Check the response for success status.  If it isn't a success response
@@ -472,17 +472,17 @@ std::string getAddrStrIA_PD(OptionPtr options) {
     // Get the prefix option the IA_PD option.
     options = ia->getOption(D6O_IAPREFIX);
     if (!options) {
-        isc_throw(isc::BadValue, "D60_IAPREFIX option is missing");
+        bundy_throw(bundy::BadValue, "D60_IAPREFIX option is missing");
     }
 
     boost::shared_ptr<Option6IAPrefix> addr_option;
     addr_option = boost::dynamic_pointer_cast<Option6IAPrefix>(options);
     if (!addr_option) {
-        isc_throw (isc::BadValue, "D6O_IA_PD addr option bad");
+        bundy_throw (bundy::BadValue, "D6O_IA_PD addr option bad");
     }
 
     // Get the address and prefix length values.
-    isc::asiolink::IOAddress addr = addr_option->getAddress();
+    bundy::asiolink::IOAddress addr = addr_option->getAddress();
     uint8_t prefix_len = addr_option->getLength();
 
     // Build the output string and return it.

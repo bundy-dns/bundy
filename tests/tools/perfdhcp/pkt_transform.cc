@@ -23,10 +23,10 @@
 #include "localized_option.h"
 
 using namespace std;
-using namespace isc;
+using namespace bundy;
 using namespace dhcp;
 
-namespace isc {
+namespace bundy {
 namespace perfdhcp {
 
 bool
@@ -65,7 +65,7 @@ PktTransform::pack(const Option::Universe universe,
         // but still some options have to be updated if client
         // specified them along with their offsets in the buffer.
         PktTransform::packOptions(in_buffer, options, out_buffer);
-    } catch (const isc::BadValue& e) {
+    } catch (const bundy::BadValue& e) {
         cout << "Building packet failed: " << e.what() << endl;
         return (false);
     }
@@ -103,7 +103,7 @@ PktTransform::unpack(const Option::Universe universe,
 
     try {
         PktTransform::unpackOptions(in_buffer, options);
-    } catch (const isc::BadValue& e) {
+    } catch (const bundy::BadValue& e) {
         cout << "Packet parsing failed: " << e.what() << endl;
         return (false);
     }
@@ -125,12 +125,12 @@ PktTransform::packOptions(const OptionBuffer& in_buffer,
             boost::shared_ptr<LocalizedOption> option =
                 boost::dynamic_pointer_cast<LocalizedOption>(it->second);
             if (option == NULL) {
-                isc_throw(isc::BadValue, "option is null");
+                bundy_throw(bundy::BadValue, "option is null");
             }
             uint32_t offset = option->getOffset();
             if ((offset == 0) ||
                 (offset + option->len() > in_buffer.size())) {
-                isc_throw(isc::BadValue,
+                bundy_throw(bundy::BadValue,
                           "option offset for option: " << option->getType()
                           << " is out of bounds (expected 1.."
                           << in_buffer.size() - option->len() << ")");
@@ -151,7 +151,7 @@ PktTransform::packOptions(const OptionBuffer& in_buffer,
         }
     }
     catch (const Exception&) {
-        isc_throw(isc::BadValue, "failed to pack options into buffer.");
+        bundy_throw(bundy::BadValue, "failed to pack options into buffer.");
     }
 }
 
@@ -164,14 +164,14 @@ PktTransform::unpackOptions(const OptionBuffer& in_buffer,
         boost::shared_ptr<LocalizedOption> option =
             boost::dynamic_pointer_cast<LocalizedOption>(it->second);
         if (option == NULL) {
-            isc_throw(isc::BadValue, "option is null");
+            bundy_throw(bundy::BadValue, "option is null");
         }
         size_t opt_pos = option->getOffset();
         if (opt_pos == 0) {
-            isc_throw(isc::BadValue, "failed to unpack packet from raw buffer "
+            bundy_throw(bundy::BadValue, "failed to unpack packet from raw buffer "
                       "(Option position not specified)");
         } else if (opt_pos + option->getHeaderLen() > in_buffer.size()) {
-            isc_throw(isc::BadValue,
+            bundy_throw(bundy::BadValue,
                       "failed to unpack options from from raw buffer "
                       "(Option position out of bounds)");
         }
@@ -189,7 +189,7 @@ PktTransform::unpackOptions(const OptionBuffer& in_buffer,
         }
         // Check if we got expected option type.
         if (opt_type != option->getType()) {
-            isc_throw(isc::BadValue,
+            bundy_throw(bundy::BadValue,
                       "failed to unpack option from raw buffer "
                       "(option type mismatch)");
         }
@@ -203,7 +203,7 @@ PktTransform::unpackOptions(const OptionBuffer& in_buffer,
 
         // Check if packet is not truncated.
         if (offset + option->getHeaderLen() + opt_len > in_buffer.size()) {
-            isc_throw(isc::BadValue,
+            bundy_throw(bundy::BadValue,
                       "failed to unpack option from raw buffer "
                       "(option truncated)");
         }
@@ -223,4 +223,4 @@ PktTransform::writeAt(dhcp::OptionBuffer& in_buffer, size_t dest_pos,
 }
 
 } // namespace perfdhcp
-} // namespace isc
+} // namespace bundy

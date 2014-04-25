@@ -16,13 +16,13 @@
 #include <asiodns/dns_server.h>
 #include <resolve/resolver_callback.h>
 
-using namespace isc::resolve;
+using namespace bundy::resolve;
 
 // Dummy subclass for DNSServer*
 // We want to check if resume is called
 // Since the server will get cloned(), we want the clones to share
 // our bools for whether resume got called and with what value
-class DummyServer : public isc::asiodns::DNSServer {
+class DummyServer : public bundy::asiodns::DNSServer {
 public:
     DummyServer(DummyServer* orig) {
         resume_called_ = orig->getResumeCalled();
@@ -77,7 +77,7 @@ private:
 
 TEST_F(ResolverCallbackServerTest, testSuccess) {
     EXPECT_FALSE(getResumeCalled());
-    getCallback()->success(isc::dns::MessagePtr());
+    getCallback()->success(bundy::dns::MessagePtr());
     EXPECT_TRUE(getResumeCalled());
     EXPECT_TRUE(getResumeValue());
 }

@@ -23,8 +23,8 @@
 #include <dns/tsigerror.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dns;
+using namespace bundy;
+using namespace bundy::dns;
 
 namespace {
 TEST(TSIGErrorTest, constructFromErrorCode) {

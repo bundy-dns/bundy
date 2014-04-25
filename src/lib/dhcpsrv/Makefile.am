@@ -11,7 +11,7 @@ if HAVE_PGSQL
 AM_CPPFLAGS += $(PGSQL_CPPFLAGS)
 endif
 
-AM_CXXFLAGS = $(B10_CXXFLAGS)
+AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 
 # Define rule to build logging source files from message file
 dhcpsrv_messages.h dhcpsrv_messages.cc: s-messages
@@ -39,62 +39,62 @@ CLEANFILES = *.gcno *.gcda dhcpsrv_messages.h dhcpsrv_messages.cc s-messages
 # Remove CSV files created by the CSVLeaseFile6 and CSVLeaseFile4 unit tests.
 CLEANFILES += *.csv
 
-lib_LTLIBRARIES = libb10-dhcpsrv.la
-libb10_dhcpsrv_la_SOURCES  =
-libb10_dhcpsrv_la_SOURCES += addr_utilities.cc addr_utilities.h
-libb10_dhcpsrv_la_SOURCES += alloc_engine.cc alloc_engine.h
-libb10_dhcpsrv_la_SOURCES += callout_handle_store.h
-libb10_dhcpsrv_la_SOURCES += csv_lease_file4.cc csv_lease_file4.h
-libb10_dhcpsrv_la_SOURCES += csv_lease_file6.cc csv_lease_file6.h
-libb10_dhcpsrv_la_SOURCES += d2_client_cfg.cc d2_client_cfg.h
-libb10_dhcpsrv_la_SOURCES += d2_client_mgr.cc d2_client_mgr.h
-libb10_dhcpsrv_la_SOURCES += dbaccess_parser.cc dbaccess_parser.h
-libb10_dhcpsrv_la_SOURCES += dhcpsrv_log.cc dhcpsrv_log.h
-libb10_dhcpsrv_la_SOURCES += cfgmgr.cc cfgmgr.h
-libb10_dhcpsrv_la_SOURCES += dhcp_config_parser.h
-libb10_dhcpsrv_la_SOURCES += dhcp_parsers.cc dhcp_parsers.h 
-libb10_dhcpsrv_la_SOURCES += key_from_key.h
-libb10_dhcpsrv_la_SOURCES += lease.cc lease.h
-libb10_dhcpsrv_la_SOURCES += lease_mgr.cc lease_mgr.h
-libb10_dhcpsrv_la_SOURCES += lease_mgr_factory.cc lease_mgr_factory.h
-libb10_dhcpsrv_la_SOURCES += memfile_lease_mgr.cc memfile_lease_mgr.h
+lib_LTLIBRARIES = libbundy-dhcpsrv.la
+libbundy_dhcpsrv_la_SOURCES  =
+libbundy_dhcpsrv_la_SOURCES += addr_utilities.cc addr_utilities.h
+libbundy_dhcpsrv_la_SOURCES += alloc_engine.cc alloc_engine.h
+libbundy_dhcpsrv_la_SOURCES += callout_handle_store.h
+libbundy_dhcpsrv_la_SOURCES += csv_lease_file4.cc csv_lease_file4.h
+libbundy_dhcpsrv_la_SOURCES += csv_lease_file6.cc csv_lease_file6.h
+libbundy_dhcpsrv_la_SOURCES += d2_client_cfg.cc d2_client_cfg.h
+libbundy_dhcpsrv_la_SOURCES += d2_client_mgr.cc d2_client_mgr.h
+libbundy_dhcpsrv_la_SOURCES += dbaccess_parser.cc dbaccess_parser.h
+libbundy_dhcpsrv_la_SOURCES += dhcpsrv_log.cc dhcpsrv_log.h
+libbundy_dhcpsrv_la_SOURCES += cfgmgr.cc cfgmgr.h
+libbundy_dhcpsrv_la_SOURCES += dhcp_config_parser.h
+libbundy_dhcpsrv_la_SOURCES += dhcp_parsers.cc dhcp_parsers.h 
+libbundy_dhcpsrv_la_SOURCES += key_from_key.h
+libbundy_dhcpsrv_la_SOURCES += lease.cc lease.h
+libbundy_dhcpsrv_la_SOURCES += lease_mgr.cc lease_mgr.h
+libbundy_dhcpsrv_la_SOURCES += lease_mgr_factory.cc lease_mgr_factory.h
+libbundy_dhcpsrv_la_SOURCES += memfile_lease_mgr.cc memfile_lease_mgr.h
 if HAVE_MYSQL
-libb10_dhcpsrv_la_SOURCES += mysql_lease_mgr.cc mysql_lease_mgr.h
+libbundy_dhcpsrv_la_SOURCES += mysql_lease_mgr.cc mysql_lease_mgr.h
 endif
 if HAVE_PGSQL
-libb10_dhcpsrv_la_SOURCES += pgsql_lease_mgr.cc pgsql_lease_mgr.h
+libbundy_dhcpsrv_la_SOURCES += pgsql_lease_mgr.cc pgsql_lease_mgr.h
 endif
-libb10_dhcpsrv_la_SOURCES += option_space_container.h
-libb10_dhcpsrv_la_SOURCES += pool.cc pool.h
-libb10_dhcpsrv_la_SOURCES += subnet.cc subnet.h
-libb10_dhcpsrv_la_SOURCES += triplet.h
-libb10_dhcpsrv_la_SOURCES += utils.h
+libbundy_dhcpsrv_la_SOURCES += option_space_container.h
+libbundy_dhcpsrv_la_SOURCES += pool.cc pool.h
+libbundy_dhcpsrv_la_SOURCES += subnet.cc subnet.h
+libbundy_dhcpsrv_la_SOURCES += triplet.h
+libbundy_dhcpsrv_la_SOURCES += utils.h
 
-nodist_libb10_dhcpsrv_la_SOURCES = dhcpsrv_messages.h dhcpsrv_messages.cc
+nodist_libbundy_dhcpsrv_la_SOURCES = dhcpsrv_messages.h dhcpsrv_messages.cc
 
-libb10_dhcpsrv_la_CXXFLAGS = $(AM_CXXFLAGS)
-libb10_dhcpsrv_la_CPPFLAGS = $(AM_CPPFLAGS) $(LOG4CPLUS_INCLUDES)
-libb10_dhcpsrv_la_LIBADD   = $(top_builddir)/src/lib/asiolink/libb10-asiolink.la
-libb10_dhcpsrv_la_LIBADD  += $(top_builddir)/src/lib/dhcp/libb10-dhcp++.la
-libb10_dhcpsrv_la_LIBADD  += $(top_builddir)/src/lib/dhcp_ddns/libb10-dhcp_ddns.la
-libb10_dhcpsrv_la_LIBADD  += $(top_builddir)/src/lib/hooks/libb10-hooks.la
-libb10_dhcpsrv_la_LIBADD  += $(top_builddir)/src/lib/log/libb10-log.la
-libb10_dhcpsrv_la_LIBADD  += $(top_builddir)/src/lib/util/libb10-util.la
-libb10_dhcpsrv_la_LIBADD  += $(top_builddir)/src/lib/cc/libb10-cc.la
-libb10_dhcpsrv_la_LIBADD  += $(top_builddir)/src/lib/hooks/libb10-hooks.la
+libbundy_dhcpsrv_la_CXXFLAGS = $(AM_CXXFLAGS)
+libbundy_dhcpsrv_la_CPPFLAGS = $(AM_CPPFLAGS) $(LOG4CPLUS_INCLUDES)
+libbundy_dhcpsrv_la_LIBADD   = $(top_builddir)/src/lib/asiolink/libbundy-asiolink.la
+libbundy_dhcpsrv_la_LIBADD  += $(top_builddir)/src/lib/dhcp/libbundy-dhcp++.la
+libbundy_dhcpsrv_la_LIBADD  += $(top_builddir)/src/lib/dhcp_ddns/libbundy-dhcp_ddns.la
+libbundy_dhcpsrv_la_LIBADD  += $(top_builddir)/src/lib/hooks/libbundy-hooks.la
+libbundy_dhcpsrv_la_LIBADD  += $(top_builddir)/src/lib/log/libbundy-log.la
+libbundy_dhcpsrv_la_LIBADD  += $(top_builddir)/src/lib/util/libbundy-util.la
+libbundy_dhcpsrv_la_LIBADD  += $(top_builddir)/src/lib/cc/libbundy-cc.la
+libbundy_dhcpsrv_la_LIBADD  += $(top_builddir)/src/lib/hooks/libbundy-hooks.la
 
-libb10_dhcpsrv_la_LDFLAGS  = -no-undefined -version-info 3:0:0
+libbundy_dhcpsrv_la_LDFLAGS  = -no-undefined -version-info 3:0:0
 if HAVE_MYSQL
-libb10_dhcpsrv_la_LDFLAGS += $(MYSQL_LIBS)
+libbundy_dhcpsrv_la_LDFLAGS += $(MYSQL_LIBS)
 endif
 if HAVE_PGSQL
-libb10_dhcpsrv_la_LDFLAGS += $(PGSQL_LIBS)
+libbundy_dhcpsrv_la_LDFLAGS += $(PGSQL_LIBS)
 endif
 
 if USE_CLANGPP
 # Disable unused parameter warning caused by some of the
 # Boost headers when compiling with clang.
-libb10_dhcpsrv_la_CXXFLAGS += -Wno-unused-parameter
+libbundy_dhcpsrv_la_CXXFLAGS += -Wno-unused-parameter
 endif
 
 # The message file should be in the distribution

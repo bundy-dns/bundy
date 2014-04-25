@@ -22,7 +22,7 @@ Usage: ./mkpywrapper.py ClassName
 (the script should be run on this directory)
 
 It will generate two files: classname_python.h and classname_python.cc,
-many of whose definitions are in the namespace isc::MODULE_NAME::python.
+many of whose definitions are in the namespace bundy::MODULE_NAME::python.
 By default MODULE_NAME will be 'dns' (because this tool is originally
 intended to be used for the C++ python binding of the DNS library), but
 can be changed via the -m command line option.

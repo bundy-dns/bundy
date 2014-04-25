@@ -64,49 +64,49 @@
 /// Nevertheless, we hope to have failover protocol eventually implemented in
 /// the Kea.
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief Exception thrown if name of database is not specified
 class NoDatabaseName : public Exception {
 public:
     NoDatabaseName(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// @brief Exception thrown on failure to open database
 class DbOpenError : public Exception {
 public:
     DbOpenError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// @brief Exception thrown on failure to execute a database function
 class DbOperationError : public Exception {
 public:
     DbOperationError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// @brief Multiple lease records found where one expected
 class MultipleRecords : public Exception {
 public:
     MultipleRecords(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// @brief Attempt to update lease that was not there
 class NoSuchLease : public Exception {
 public:
     NoSuchLease(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// @brief Data is truncated
 class DataTruncated : public Exception {
 public:
     DataTruncated(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 
@@ -142,7 +142,7 @@ public:
     ///
     /// @result true if the lease was added, false if not (because a lease
     ///         with the same address was already there).
-    virtual bool addLease(const isc::dhcp::Lease4Ptr& lease) = 0;
+    virtual bool addLease(const bundy::dhcp::Lease4Ptr& lease) = 0;
 
     /// @brief Adds an IPv6 lease.
     ///
@@ -164,7 +164,7 @@ public:
     /// @param addr address of the searched lease
     ///
     /// @return smart pointer to the lease (or NULL if a lease is not found)
-    virtual Lease4Ptr getLease4(const isc::asiolink::IOAddress& addr) const = 0;
+    virtual Lease4Ptr getLease4(const bundy::asiolink::IOAddress& addr) const = 0;
 
     /// @brief Returns existing IPv4 leases for specified hardware address.
     ///
@@ -176,7 +176,7 @@ public:
     /// @param hwaddr hardware address of the client
     ///
     /// @return lease collection
-    virtual Lease4Collection getLease4(const isc::dhcp::HWAddr& hwaddr) const = 0;
+    virtual Lease4Collection getLease4(const bundy::dhcp::HWAddr& hwaddr) const = 0;
 
     /// @brief Returns existing IPv4 leases for specified hardware address
     ///        and a subnet
@@ -188,7 +188,7 @@ public:
     /// @param subnet_id identifier of the subnet that lease must belong to
     ///
     /// @return a pointer to the lease (or NULL if a lease is not found)
-    virtual Lease4Ptr getLease4(const isc::dhcp::HWAddr& hwaddr,
+    virtual Lease4Ptr getLease4(const bundy::dhcp::HWAddr& hwaddr,
                                 SubnetID subnet_id) const = 0;
 
     /// @brief Returns existing IPv4 lease for specified client-id
@@ -240,7 +240,7 @@ public:
     ///
     /// @return smart pointer to the lease (or NULL if a lease is not found)
     virtual Lease6Ptr getLease6(Lease::Type type,
-                                const isc::asiolink::IOAddress& addr) const = 0;
+                                const bundy::asiolink::IOAddress& addr) const = 0;
 
     /// @brief Returns existing IPv6 leases for a given DUID+IA combination
     ///
@@ -316,7 +316,7 @@ public:
     ///        IPv6.)
     ///
     /// @return true if deletion was successful, false if no such lease exists
-    virtual bool deleteLease(const isc::asiolink::IOAddress& addr) = 0;
+    virtual bool deleteLease(const bundy::asiolink::IOAddress& addr) = 0;
 
     /// @brief Return backend type
     ///
@@ -384,7 +384,7 @@ private:
     ParameterMap parameters_;
 };
 
-}; // end of isc::dhcp namespace
-}; // end of isc namespace
+}; // end of bundy::dhcp namespace
+}; // end of bundy namespace
 
 #endif // LEASE_MGR_H

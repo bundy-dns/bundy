@@ -22,7 +22,7 @@
 #include <nsas/fetchable.h>
 #include "cache_entry_key.h"
 
-namespace isc {
+namespace bundy {
 namespace cache {
 
 /// \enum RRsetTrustLevel
@@ -58,7 +58,7 @@ enum RRsetTrustLevel {
 /// The object of RRsetEntry represents one cached RRset.
 /// Each RRset entry may be refered using shared_ptr by several message
 /// entries.
-class RRsetEntry : public isc::nsas::NsasEntry<RRsetEntry>
+class RRsetEntry : public bundy::nsas::NsasEntry<RRsetEntry>
 {
     ///
     /// \name Constructors and Destructor
@@ -73,7 +73,7 @@ public:
     /// \brief Constructor
     /// \param rrset The RRset used to initialize the RRset entry.
     /// \param level trustworthiness of the RRset.
-    RRsetEntry(const isc::dns::AbstractRRset& rrset,
+    RRsetEntry(const bundy::dns::AbstractRRset& rrset,
                const RRsetTrustLevel& level);
 
     /// The destructor.
@@ -83,7 +83,7 @@ public:
     /// \brief Return a pointer to a generated RRset
     ///
     /// \return Pointer to the generated RRset
-    isc::dns::RRsetPtr getRRset();
+    bundy::dns::RRsetPtr getRRset();
 
     /// \brief Get the expiration time of the RRset.
     ///
@@ -103,7 +103,7 @@ public:
     /// \brief Get the hash key
     ///
     /// \return return hash key
-    isc::nsas::HashKey hashKey() const {
+    bundy::nsas::HashKey hashKey() const {
         return (hash_key_);
     }
 
@@ -121,14 +121,14 @@ private:
     std::string entry_name_; // The entry name for this rrset entry.
     time_t expire_time_;     // Expiration time of rrset.
     RRsetTrustLevel trust_level_; // RRset trustworthiness.
-    boost::shared_ptr<isc::dns::RRset> rrset_;
-    isc::nsas::HashKey hash_key_; // RRsetEntry hash key
+    boost::shared_ptr<bundy::dns::RRset> rrset_;
+    bundy::nsas::HashKey hash_key_; // RRsetEntry hash key
 };
 
 typedef boost::shared_ptr<RRsetEntry> RRsetEntryPtr;
 
 } // namespace cache
-} // namespace isc
+} // namespace bundy
 
 #endif // RRSET_ENTRY_H
 

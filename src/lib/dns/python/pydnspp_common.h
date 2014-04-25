@@ -25,15 +25,15 @@
 #include <stdexcept>
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace python {
-// For our 'general' isc::Exceptions
+// For our 'general' bundy::Exceptions
 extern PyObject* po_IscException;
 extern PyObject* po_InvalidOperation;
 extern PyObject* po_InvalidParameter;
 
-// For our own isc::dns::Exception
+// For our own bundy::dns::Exception
 extern PyObject* po_DNSException;
 extern PyObject* po_DNSTextError;
 extern PyObject* po_DNSProtocolError;
@@ -119,7 +119,7 @@ convertToPyHash(HashvalType val) {
 }
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 #endif // LIBDNS_PYTHON_COMMON_H
 
 // Local Variables:

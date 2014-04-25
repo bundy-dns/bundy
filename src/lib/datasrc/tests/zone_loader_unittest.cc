@@ -39,9 +39,9 @@
 #include <string>
 #include <vector>
 
-using namespace isc::dns;
-using namespace isc::datasrc;
-using isc::data::Element;
+using namespace bundy::dns;
+using namespace bundy::datasrc;
+using bundy::data::Element;
 using boost::shared_ptr;
 using std::string;
 using std::vector;
@@ -51,6 +51,7 @@ namespace {
 class MockClient : public DataSourceClient {
 public:
     MockClient() :
+        DataSourceClient("mock"),
         commit_called_(false),
         missing_zone_(false),
         rrclass_(RRClass::IN())
@@ -70,16 +71,16 @@ public:
         shared_ptr<Context> find(const Name&, const RRType&,
                                  const FindOptions)
         {
-            isc_throw(isc::NotImplemented, "Not implemented");
+            bundy_throw(bundy::NotImplemented, "Not implemented");
         }
         shared_ptr<Context> findAll(const Name&,
                                     vector<ConstRRsetPtr>&,
                                     const FindOptions)
         {
-            isc_throw(isc::NotImplemented, "Not implemented");
+            bundy_throw(bundy::NotImplemented, "Not implemented");
         }
         FindNSEC3Result findNSEC3(const Name&, bool) {
-            isc_throw(isc::NotImplemented, "Not implemented");
+            bundy_throw(bundy::NotImplemented, "Not implemented");
         }
     private:
         Name origin_;
@@ -112,12 +113,12 @@ public:
 
             it_ = rrsets_.begin();
         }
-        virtual isc::dns::ConstRRsetPtr getNextRRset() {
+        virtual bundy::dns::ConstRRsetPtr getNextRRset() {
             ConstRRsetPtr result = *it_;
             ++it_;
             return (result);
         }
-        virtual isc::dns::ConstRRsetPtr getSOA() const {
+        virtual bundy::dns::ConstRRsetPtr getSOA() const {
             return (soa_);
         }
     private:
@@ -126,11 +127,11 @@ public:
         std::vector<ConstRRsetPtr> rrsets_;
         std::vector<ConstRRsetPtr>::const_iterator it_;
     };
-    virtual ZoneIteratorPtr getIterator(const isc::dns::Name& name,
+    virtual ZoneIteratorPtr getIterator(const bundy::dns::Name& name,
                                         bool) const
     {
         if (name != Name("example.org")) {
-            isc_throw(DataSourceError, "No such zone");
+            bundy_throw(DataSourceError, "No such zone");
         }
         return (ZoneIteratorPtr(new Iterator(Name("example.org"))));
     }
@@ -150,7 +151,7 @@ public:
     virtual std::pair<ZoneJournalReader::Result, ZoneJournalReaderPtr>
         getJournalReader(const Name&, uint32_t, uint32_t) const
     {
-        isc_throw(isc::NotImplemented, "Method not used in tests");
+        bundy_throw(bundy::NotImplemented, "Method not used in tests");
     }
     virtual ZoneUpdaterPtr getUpdater(const Name& name, bool replace,
                                       bool journaling) const;
@@ -171,14 +172,14 @@ public:
 };
 
 // Test implementation of RRsetCollectionBase. This is currently just a
-// wrapper around \c isc::datasrc::RRsetCollectionBase;
-// \c isc::datasrc::RRsetCollectionBase may become an abstract class in
+// wrapper around \c bundy::datasrc::RRsetCollectionBase;
+// \c bundy::datasrc::RRsetCollectionBase may become an abstract class in
 // the future.
-class TestRRsetCollection : public isc::datasrc::RRsetCollectionBase {
+class TestRRsetCollection : public bundy::datasrc::RRsetCollectionBase {
 public:
     TestRRsetCollection(ZoneUpdater& updater,
-                        const isc::dns::RRClass& rrclass) :
-        isc::datasrc::RRsetCollectionBase(updater, rrclass)
+                        const bundy::dns::RRClass& rrclass) :
+        bundy::datasrc::RRsetCollectionBase(updater, rrclass)
     {}
 };
 
@@ -196,32 +197,32 @@ public:
     virtual ZoneFinder& getFinder() {
         return (finder_);
     }
-    virtual isc::dns::RRsetCollectionBase& getRRsetCollection() {
+    virtual bundy::dns::RRsetCollectionBase& getRRsetCollection() {
         if (!rrset_collection_) {
             rrset_collection_.reset(new TestRRsetCollection(*this,
                                                             client_->rrclass_));
         }
         return (*rrset_collection_);
     }
-    virtual void addRRset(const isc::dns::AbstractRRset& rrset) {
+    virtual void addRRset(const bundy::dns::AbstractRRset& rrset) {
         if (client_->commit_called_) {
-            isc_throw(DataSourceError, "Add after commit");
+            bundy_throw(DataSourceError, "Add after commit");
         }
         // We need to copy the RRset. We don't do it properly (we omit the
         // signature, for example), because we don't need to.
-        RRsetPtr new_rrset(new isc::dns::BasicRRset(rrset.getName(),
+        RRsetPtr new_rrset(new bundy::dns::BasicRRset(rrset.getName(),
                                                     rrset.getClass(),
                                                     rrset.getType(),
                                                     rrset.getTTL()));
-        for (isc::dns::RdataIteratorPtr i(rrset.getRdataIterator());
+        for (bundy::dns::RdataIteratorPtr i(rrset.getRdataIterator());
              !i->isLast(); i->next()) {
             new_rrset->addRdata(i->getCurrent());
         }
         client_->rrsets_.push_back(new_rrset);
         client_->rrset_texts_.push_back(rrset.toText());
     }
-    virtual void deleteRRset(const isc::dns::AbstractRRset&) {
-        isc_throw(isc::NotImplemented, "Method not used in tests");
+    virtual void deleteRRset(const bundy::dns::AbstractRRset&) {
+        bundy_throw(bundy::NotImplemented, "Method not used in tests");
     }
     virtual void commit() {
         client_->commit_called_ = true;
@@ -264,10 +265,10 @@ private:
                                             vector<ConstRRsetPtr>&,
                                             const FindOptions)
         {
-            isc_throw(isc::NotImplemented, "Method not used in tests");
+            bundy_throw(bundy::NotImplemented, "Method not used in tests");
         }
         virtual FindNSEC3Result findNSEC3(const Name&, bool) {
-            isc_throw(isc::NotImplemented, "Method not used in tests");
+            bundy_throw(bundy::NotImplemented, "Method not used in tests");
         }
     private:
         const RRClass class_;
@@ -327,7 +328,8 @@ protected:
             writer->install();
             writer->cleanup();
         }
-        source_client_.reset(new memory::InMemoryClient(ztable_segment_,
+        source_client_.reset(new memory::InMemoryClient("memory",
+                                                        ztable_segment_,
                                                         rrclass_));
     }
 private:
@@ -381,10 +383,10 @@ TEST_F(ZoneLoaderTest, copyUnsigned) {
               destination_client_.rrset_texts_.back());
 
     // It isn't possible to try again now
-    EXPECT_THROW(loader.load(), isc::InvalidOperation);
-    EXPECT_THROW(loader.loadIncremental(1), isc::InvalidOperation);
+    EXPECT_THROW(loader.load(), bundy::InvalidOperation);
+    EXPECT_THROW(loader.loadIncremental(1), bundy::InvalidOperation);
     // Even 0, which should load nothing, returns the error
-    EXPECT_THROW(loader.loadIncremental(0), isc::InvalidOperation);
+    EXPECT_THROW(loader.loadIncremental(0), bundy::InvalidOperation);
 }
 
 // Try loading incrementally.
@@ -415,9 +417,9 @@ TEST_F(ZoneLoaderTest, copyUnsignedIncremental) {
     EXPECT_TRUE(destination_client_.commit_called_);
 
     // No more loading now
-    EXPECT_THROW(loader.load(), isc::InvalidOperation);
-    EXPECT_THROW(loader.loadIncremental(1), isc::InvalidOperation);
-    EXPECT_THROW(loader.loadIncremental(0), isc::InvalidOperation);
+    EXPECT_THROW(loader.load(), bundy::InvalidOperation);
+    EXPECT_THROW(loader.loadIncremental(1), bundy::InvalidOperation);
+    EXPECT_THROW(loader.loadIncremental(0), bundy::InvalidOperation);
 }
 
 // Check we can load RRSIGs and NSEC3 (which could break due to them being
@@ -465,7 +467,7 @@ TEST_F(ZoneLoaderTest, classMismatch) {
     destination_client_.rrclass_ = RRClass::CH();
     prepareSource(Name::ROOT_NAME(), "root.zone");
     EXPECT_THROW(ZoneLoader(destination_client_, Name::ROOT_NAME(),
-                            *source_client_), isc::InvalidParameter);
+                            *source_client_), bundy::InvalidParameter);
 }
 
 // Load an unsigned zone, all at once
@@ -503,10 +505,10 @@ TEST_F(ZoneLoaderTest, loadUnsigned) {
               destination_client_.rrset_texts_.back());
 
     // It isn't possible to try again now
-    EXPECT_THROW(loader.load(), isc::InvalidOperation);
-    EXPECT_THROW(loader.loadIncremental(1), isc::InvalidOperation);
+    EXPECT_THROW(loader.load(), bundy::InvalidOperation);
+    EXPECT_THROW(loader.loadIncremental(1), bundy::InvalidOperation);
     // Even 0, which should load nothing, returns the error
-    EXPECT_THROW(loader.loadIncremental(0), isc::InvalidOperation);
+    EXPECT_THROW(loader.loadIncremental(0), bundy::InvalidOperation);
 }
 
 // Try loading from master file incrementally.
@@ -549,9 +551,9 @@ TEST_F(ZoneLoaderTest, loadUnsignedIncremental) {
     EXPECT_EQ(1, loader.getProgress());
 
     // No more loading now
-    EXPECT_THROW(loader.load(), isc::InvalidOperation);
-    EXPECT_THROW(loader.loadIncremental(1), isc::InvalidOperation);
-    EXPECT_THROW(loader.loadIncremental(0), isc::InvalidOperation);
+    EXPECT_THROW(loader.load(), bundy::InvalidOperation);
+    EXPECT_THROW(loader.loadIncremental(1), bundy::InvalidOperation);
+    EXPECT_THROW(loader.loadIncremental(0), bundy::InvalidOperation);
 }
 
 // If the destination zone does not exist, it throws

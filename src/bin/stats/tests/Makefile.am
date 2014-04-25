@@ -22,11 +22,11 @@ endif
 	for pytest in $(PYTESTS) ; do \
 	echo Running test: $$pytest ; \
 	$(LIBRARY_PATH_PLACEHOLDER) \
-	PYTHONPATH=$(COMMON_PYTHON_PATH):$(abs_top_builddir)/src/bin/stats:$(abs_top_builddir)/src/bin/stats/tests:$(abs_top_builddir)/src/bin/msgq:$(abs_top_builddir)/src/lib/python/isc/config \
-	B10_FROM_SOURCE=$(abs_top_srcdir) \
-	BIND10_MSGQ_SOCKET_FILE=$(abs_top_builddir)/msgq_socket \
+	PYTHONPATH=$(COMMON_PYTHON_PATH):$(abs_top_builddir)/src/bin/stats:$(abs_top_builddir)/src/bin/stats/tests:$(abs_top_builddir)/src/bin/msgq:$(abs_top_builddir)/src/lib/python/bundy/config \
+	BUNDY_FROM_SOURCE=$(abs_top_srcdir) \
+	BUNDY_MSGQ_SOCKET_FILE=$(abs_top_builddir)/msgq_socket \
 	CONFIG_TESTDATA_PATH=$(abs_top_srcdir)/src/bin/stats/tests/testdata \
-	B10_LOCKFILE_DIR_FROM_BUILD=$(abs_top_builddir) \
+	BUNDY_LOCKFILE_DIR_FROM_BUILD=$(abs_top_builddir) \
 	$(PYCOVERAGE_RUN) $(abs_srcdir)/$$pytest || exit ; \
 	done
 

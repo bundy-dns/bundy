@@ -25,7 +25,7 @@
 
 #include <dns/rdata.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 // forward declarations
@@ -35,20 +35,20 @@ struct RRParamRegistryImpl;
 /// \brief A standard DNS module exception that is thrown if a new RR type is
 /// being registered with a different type string.
 ///
-class RRTypeExists : public isc::dns::Exception {
+class RRTypeExists : public bundy::dns::Exception {
 public:
     RRTypeExists(const char* file, size_t line, const char* what) :
-        isc::dns::Exception(file, line, what) {}
+        bundy::dns::Exception(file, line, what) {}
 };
 
 ///
 /// \brief A standard DNS module exception that is thrown if a new RR class is
 /// being registered with a different type string.
 ///
-class RRClassExists : public isc::dns::Exception {
+class RRClassExists : public bundy::dns::Exception {
 public:
     RRClassExists(const char* file, size_t line, const char* what) :
-        isc::dns::Exception(file, line, what) {}
+        bundy::dns::Exception(file, line, what) {}
 };
 
 namespace rdata {
@@ -102,7 +102,7 @@ public:
     /// \c Rdata to parse.
     /// \param rdata_len The length in buffer of the \c Rdata.  In bytes.
     /// \return An \c RdataPtr object pointing to the created \c Rdata object.
-    virtual RdataPtr create(isc::util::InputBuffer& buffer, size_t rdata_len) const = 0;
+    virtual RdataPtr create(bundy::util::InputBuffer& buffer, size_t rdata_len) const = 0;
 
     /// \brief Create RDATA from another \c Rdata object of the same type.
     ///
@@ -496,7 +496,7 @@ public:
     /// \return An \c rdata::RdataPtr object pointing to the created \c Rdata
     /// object.
     rdata::RdataPtr createRdata(const RRType& rrtype, const RRClass& rrclass,
-                                isc::util::InputBuffer& buffer, size_t len);
+                                bundy::util::InputBuffer& buffer, size_t len);
     /// \brief Create RDATA of a given pair of RR type and class, copying
     /// of another RDATA of same kind.
     ///

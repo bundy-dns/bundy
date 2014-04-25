@@ -28,7 +28,7 @@
 #include "command_options.h"
 #include "header_flags.h"
 
-namespace isc {
+namespace bundy {
 namespace badpacket {
 
 /// \brief Field Scan
@@ -37,7 +37,7 @@ namespace badpacket {
 /// cycle through combinations of the given options, sending and receiving
 /// messages. For each packet exchange, a summary is written to stdout.
 
-class Scan : public isc::asiodns::IOFetch::Callback {
+class Scan : public bundy::asiodns::IOFetch::Callback {
 public:
 
     /// \brief Constructor
@@ -58,7 +58,7 @@ public:
     /// will be called.
     ///
     /// \param result Result of the asynchronous I/O.  Zero implies success.
-    virtual void operator()(isc::asiodns::IOFetch::Result result);
+    virtual void operator()(bundy::asiodns::IOFetch::Result result);
 
 private:
     /// \brief Iterate over flags fields options
@@ -88,7 +88,7 @@ private:
     /// \param flags Header flags
     /// \param index Index of the current field to be processed.
     /// \param maxindex Maximum valid index value
-    void iterateFlags(isc::util::OutputBufferPtr& msgbuf,
+    void iterateFlags(bundy::util::OutputBufferPtr& msgbuf,
                  const CommandOptions& options, HeaderFlags& flags,
                  int index, int maxindex);
 
@@ -102,7 +102,7 @@ private:
     ///        the sending code
     /// \param options Command-line options (the important ones being address,
     ///        port and timeout).
-    void iterateFlagsStart(isc::util::OutputBufferPtr& msgbuf,
+    void iterateFlagsStart(bundy::util::OutputBufferPtr& msgbuf,
                            const CommandOptions& options);
 
     /// \brief Iterate over count fields
@@ -119,7 +119,7 @@ private:
     ///        port and timeout).
     /// \param index Index of the current field to be processed.
     /// \param maxindex Maximum valid index value
-    void iterateCount(isc::util::OutputBufferPtr& msgbuf,
+    void iterateCount(bundy::util::OutputBufferPtr& msgbuf,
                       const CommandOptions& options, int index, int maxindex);
 
     /// \brief Start iterating over count fields
@@ -132,7 +132,7 @@ private:
     ///        the sending code
     /// \param options Command-line options (the important ones being address,
     ///        port and timeout).
-    void iterateCountStart(isc::util::OutputBufferPtr& msgbuf,
+    void iterateCountStart(bundy::util::OutputBufferPtr& msgbuf,
                            const CommandOptions& options);
 
     /// \brief Iterate over message sizes
@@ -146,7 +146,7 @@ private:
     ///        the sending code
     /// \param options Command-line options (the important ones being address,
     ///        port and timeout).
-    void sizeMessage(isc::util::OutputBufferPtr& msgbuf,
+    void sizeMessage(bundy::util::OutputBufferPtr& msgbuf,
                      const CommandOptions& options);
 
     /// \brief Scan One Value
@@ -159,7 +159,7 @@ private:
     ///        the sending code
     /// \param options Command-line options (the important ones being address,
     ///        port and timeout).
-    void scanOne(isc::util::OutputBufferPtr& msgbuf,
+    void scanOne(bundy::util::OutputBufferPtr& msgbuf,
                  const CommandOptions& options);
 
     /// \brief Perform I/O
@@ -170,8 +170,8 @@ private:
     /// \param sendbuf Buffer sent to the nameserver
     /// \param recvbuf Buffer to hold reply from the nameserver
     /// \param options Command-line options
-    void performIO(isc::util::OutputBufferPtr& sendbuf,
-                   isc::util::OutputBufferPtr& recvbuf,
+    void performIO(bundy::util::OutputBufferPtr& sendbuf,
+                   bundy::util::OutputBufferPtr& recvbuf,
                    const CommandOptions& options);
 
     /// \brief Get Fields
@@ -183,16 +183,16 @@ private:
     ///
     /// \return A string that holds a textual interpretation of all the fields
     ///         in the header.
-    std::string getFields(isc::util::OutputBufferPtr& msgbuf);
+    std::string getFields(bundy::util::OutputBufferPtr& msgbuf);
 
     // Member variables
 
-    boost::scoped_ptr<isc::asiolink::IOService> service_;
+    boost::scoped_ptr<bundy::asiolink::IOService> service_;
                                                     ///< Service to run the scan
-    isc::asiodns::IOFetch::Result   result_;        ///< Result of the I/O
+    bundy::asiodns::IOFetch::Result   result_;        ///< Result of the I/O
 };
 
 } // namespace test
-} // namespace isc
+} // namespace bundy
 
 #endif // SCAN_H

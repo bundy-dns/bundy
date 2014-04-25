@@ -20,9 +20,9 @@
 #include <boost/scoped_ptr.hpp>
 #include <gtest/gtest.h>
 
-using namespace isc;
-using namespace isc::asiolink;
-using namespace isc::dhcp;
+using namespace bundy;
+using namespace bundy::asiolink;
+using namespace bundy::dhcp;
 
 namespace {
 
@@ -232,7 +232,7 @@ TEST_F(OptionCustomTest, binaryData) {
     EXPECT_THROW(
         option.reset(new OptionCustom(opt_def, Option::V4, buf_in.begin(),
                                       buf_in.end())),
-        isc::OutOfRange
+        bundy::OutOfRange
     );
 
     // Suboptions are not recognized for the binary formats because as it is
@@ -279,7 +279,7 @@ TEST_F(OptionCustomTest, booleanData) {
     EXPECT_THROW(
         option.reset(new OptionCustom(opt_def, Option::V6, buf.begin(),
                                       buf.end())),
-        isc::OutOfRange
+        bundy::OutOfRange
     );
 }
 
@@ -319,7 +319,7 @@ TEST_F(OptionCustomTest, fqdnData) {
     EXPECT_THROW(
         option.reset(new OptionCustom(opt_def, Option::V6,
                                       buf.begin(), buf.begin() + 4)),
-        isc::dhcp::BadDataTypeCast
+        bundy::dhcp::BadDataTypeCast
     );
 }
 
@@ -358,7 +358,7 @@ TEST_F(OptionCustomTest, int16Data) {
     // too short (1 byte instead of 2 bytes).
     EXPECT_THROW(
         option.reset(new OptionCustom(opt_def, Option::V6, buf.begin(), buf.begin() + 1)),
-        isc::OutOfRange
+        bundy::OutOfRange
     );
 }
 
@@ -396,7 +396,7 @@ TEST_F(OptionCustomTest, int32Data) {
     // too short (3 bytes instead of 4 bytes).
     EXPECT_THROW(
         option.reset(new OptionCustom(opt_def, Option::V6, buf.begin(), buf.begin() + 3)),
-        isc::OutOfRange
+        bundy::OutOfRange
     );
 }
 
@@ -436,7 +436,7 @@ TEST_F(OptionCustomTest, ipv4AddressData) {
     // too short (use 3 bytes instead of 4).
     EXPECT_THROW(
         option.reset(new OptionCustom(opt_def, Option::V4, buf.begin(), buf.begin() + 3)),
-        isc::OutOfRange
+        bundy::OutOfRange
     );
 }
 
@@ -479,7 +479,7 @@ TEST_F(OptionCustomTest, ipv6AddressData) {
     EXPECT_THROW(
         option.reset(new OptionCustom(opt_def, Option::V4, buf.begin(),
                                       buf.begin() + 15)),
-        isc::OutOfRange
+        bundy::OutOfRange
     );
 }
 
@@ -528,7 +528,7 @@ TEST_F(OptionCustomTest, stringData) {
     buf.clear();
     EXPECT_THROW(
         option.reset(new OptionCustom(opt_def, Option::V6, buf.begin(), buf.end())),
-        isc::OutOfRange
+        bundy::OutOfRange
     );
 }
 
@@ -583,7 +583,7 @@ TEST_F(OptionCustomTest, booleanDataArray) {
     buf.clear();
     EXPECT_THROW(
          option.reset(new OptionCustom(opt_def, Option::V6, buf.begin(), buf.end())),
-         isc::OutOfRange
+         bundy::OutOfRange
     );
 }
 
@@ -632,7 +632,7 @@ TEST_F(OptionCustomTest, uint32DataArray) {
     EXPECT_THROW(
         option.reset(new OptionCustom(opt_def, Option::V6, buf.begin(),
                                       buf.begin() + 3)),
-        isc::OutOfRange
+        bundy::OutOfRange
     );
 }
 
@@ -682,7 +682,7 @@ TEST_F(OptionCustomTest, ipv4AddressDataArray) {
     EXPECT_THROW(
         option.reset(new OptionCustom(opt_def, Option::V4, buf.begin(),
                                       buf.begin() + 2)),
-        isc::OutOfRange
+        bundy::OutOfRange
     );
 }
 
@@ -732,7 +732,7 @@ TEST_F(OptionCustomTest, ipv6AddressDataArray) {
     EXPECT_THROW(
         option.reset(new OptionCustom(opt_def, Option::V6, buf.begin(),
                                       buf.begin() + 15)),
-        isc::OutOfRange
+        bundy::OutOfRange
     );
 }
 
@@ -941,7 +941,7 @@ TEST_F(OptionCustomTest, recordDataTruncated) {
     // to even initialize the second data field.
     EXPECT_THROW(
         option.reset(new OptionCustom(opt_def, Option::V6, buf.begin(), buf.begin() + 17)),
-        isc::OutOfRange
+        bundy::OutOfRange
     );
 }
 
@@ -1240,7 +1240,7 @@ TEST_F(OptionCustomTest, setIpv4AddressDataArray) {
     // Add invalid address (IPv6 instead of IPv4).
     EXPECT_THROW(
         option->addArrayDataField(IOAddress("2001:db8:1::1")),
-        isc::dhcp::BadDataTypeCast
+        bundy::dhcp::BadDataTypeCast
     );
 }
 
@@ -1283,7 +1283,7 @@ TEST_F(OptionCustomTest, setIpv6AddressDataArray) {
     // Add invalid address (IPv4 instead of IPv6).
     EXPECT_THROW(
         option->addArrayDataField(IOAddress("192.168.0.1")),
-        isc::dhcp::BadDataTypeCast
+        bundy::dhcp::BadDataTypeCast
     );
 }
 
@@ -1566,8 +1566,8 @@ TEST_F(OptionCustomTest, invalidIndex) {
     EXPECT_NO_THROW(option->readInteger<uint32_t>(9));
 
     // Check that index value beyond 9 is not accepted.
-    EXPECT_THROW(option->readInteger<uint32_t>(10), isc::OutOfRange);
-    EXPECT_THROW(option->readInteger<uint32_t>(11), isc::OutOfRange);
+    EXPECT_THROW(option->readInteger<uint32_t>(10), bundy::OutOfRange);
+    EXPECT_THROW(option->readInteger<uint32_t>(11), bundy::OutOfRange);
 }
 
 } // anonymous namespace

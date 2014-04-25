@@ -21,7 +21,7 @@
 #include <boost/noncopyable.hpp>
 #include <boost/function.hpp>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 /// \brief A converter from a stream of RRs to a stream of collated RRsets
@@ -125,7 +125,7 @@ private:
 };
 
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 #endif  // RRCOLLATOR_H
 
 // Local Variables:

@@ -17,7 +17,7 @@
 
 #include <Python.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 class Name;
 
@@ -73,7 +73,7 @@ const Name& PyName_ToName(const PyObject* name_obj);
 
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 #endif // PYTHON_NAME_H
 
 // Local Variables:

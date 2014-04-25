@@ -21,17 +21,17 @@
 #include "opcode_python.h"
 #include "edns_python.h"
 
-using namespace isc::dns;
-using namespace isc::dns::python;
-using namespace isc::util;
-using namespace isc::util::python;
+using namespace bundy::dns;
+using namespace bundy::dns::python;
+using namespace bundy::util;
+using namespace bundy::util::python;
 
 namespace {
 
 class s_Opcode : public PyObject {
 public:
     s_Opcode() : cppobj(NULL), static_code(false) {}
-    const isc::dns::Opcode* cppobj;
+    const bundy::dns::Opcode* cppobj;
     bool static_code;
 };
 
@@ -60,7 +60,7 @@ Opcode_init(s_Opcode* const self, PyObject* args) {
         try {
             self->cppobj = new Opcode(code);
             self->static_code = false;
-        } catch (const isc::OutOfRange& ex) {
+        } catch (const bundy::OutOfRange& ex) {
             PyErr_SetString(PyExc_OverflowError, ex.what());
             return (-1);
         } catch (...) {
@@ -146,7 +146,7 @@ Opcode_richcmp(const s_Opcode* const self, const s_Opcode* const other,
 
 } // end of unnamed namespace
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace python {
 
@@ -211,7 +211,7 @@ createOpcodeObject(const Opcode& source) {
 bool
 PyOpcode_Check(PyObject* obj) {
     if (obj == NULL) {
-        isc_throw(PyCPPWrapperException, "obj argument NULL in typecheck");
+        bundy_throw(PyCPPWrapperException, "obj argument NULL in typecheck");
     }
     return (PyObject_TypeCheck(obj, &opcode_type));
 }
@@ -219,7 +219,7 @@ PyOpcode_Check(PyObject* obj) {
 const Opcode&
 PyOpcode_ToOpcode(const PyObject* opcode_obj) {
     if (opcode_obj == NULL) {
-        isc_throw(PyCPPWrapperException,
+        bundy_throw(PyCPPWrapperException,
                   "obj argument NULL in Opcode PyObject conversion");
     }
     const s_Opcode* opcode = static_cast<const s_Opcode*>(opcode_obj);
@@ -228,4 +228,4 @@ PyOpcode_ToOpcode(const PyObject* opcode_obj) {
 
 } // end python namespace
 } // end dns namespace
-} // end isc namespace
+} // end bundy namespace

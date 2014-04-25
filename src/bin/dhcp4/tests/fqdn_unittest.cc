@@ -24,11 +24,11 @@
 #include <gtest/gtest.h>
 #include <boost/scoped_ptr.hpp>
 
-using namespace isc;
-using namespace isc::asiolink;
-using namespace isc::dhcp;
-using namespace isc::dhcp::test;
-using namespace isc::dhcp_ddns;
+using namespace bundy;
+using namespace bundy::asiolink;
+using namespace bundy::dhcp;
+using namespace bundy::dhcp::test;
+using namespace bundy::dhcp_ddns;
 
 namespace {
 
@@ -76,7 +76,7 @@ public:
         D2ClientConfigPtr cfg;
 
         ASSERT_NO_THROW(cfg.reset(new D2ClientConfig(true,
-                                  isc::asiolink::IOAddress("127.0.0.1"), 53001,
+                                  bundy::asiolink::IOAddress("127.0.0.1"), 53001,
                                   dhcp_ddns::NCR_UDP, dhcp_ddns::FMT_JSON,
                                   (mask & ALWAYS_INCLUDE_FQDN),
                                   (mask & OVERRIDE_NO_UPDATE),
@@ -88,7 +88,7 @@ public:
     }
 
     // Create a lease to be used by various tests.
-    Lease4Ptr createLease(const isc::asiolink::IOAddress& addr,
+    Lease4Ptr createLease(const bundy::asiolink::IOAddress& addr,
                           const std::string& hostname,
                           const bool fqdn_fwd,
                           const bool fqdn_rev) {
@@ -316,7 +316,7 @@ public:
     }
 
     // Verify that NameChangeRequest holds valid values.
-    void verifyNameChangeRequest(const isc::dhcp_ddns::NameChangeType type,
+    void verifyNameChangeRequest(const bundy::dhcp_ddns::NameChangeType type,
                                  const bool reverse, const bool forward,
                                  const std::string& addr,
                                  const std::string& fqdn,
@@ -349,7 +349,7 @@ public:
             EXPECT_EQ(cltt + len, ncr->getLeaseExpiresOn());
         }
         EXPECT_EQ(len, ncr->getLeaseLength());
-        EXPECT_EQ(isc::dhcp_ddns::ST_NEW, ncr->getStatus());
+        EXPECT_EQ(bundy::dhcp_ddns::ST_NEW, ncr->getStatus());
 
         // Process the message off the queue
         ASSERT_NO_THROW(d2_mgr_.runReadyIO());
@@ -395,7 +395,7 @@ public:
             } else {
                 // Verify that there is one NameChangeRequest as expected.
                 ASSERT_EQ(1, d2_mgr_.getQueueSize());
-                verifyNameChangeRequest(isc::dhcp_ddns::CHG_ADD,
+                verifyNameChangeRequest(bundy::dhcp_ddns::CHG_ADD,
                                         exp_rev, exp_fwd,
                                         reply->getYiaddr().toText(),
                                         "myhost.example.com.",
@@ -415,7 +415,7 @@ public:
 // of computeDhcid function is NULL.
 TEST_F(NameDhcpv4SrvTest, dhcidNullLease) {
     Lease4Ptr lease;
-    EXPECT_THROW(srv_->computeDhcid(lease), isc::dhcp::DhcidComputeError);
+    EXPECT_THROW(srv_->computeDhcid(lease), bundy::dhcp::DhcidComputeError);
 
 }
 
@@ -429,11 +429,11 @@ TEST_F(NameDhcpv4SrvTest, dhcidWrongHostname) {
 
     // Now, use the wrong hostname. It should result in the exception.
     lease->hostname_ = "myhost...example.com.";
-    EXPECT_THROW(srv_->computeDhcid(lease), isc::dhcp::DhcidComputeError);
+    EXPECT_THROW(srv_->computeDhcid(lease), bundy::dhcp::DhcidComputeError);
 
     // Also, empty hostname is wrong.
     lease->hostname_ = "";
-    EXPECT_THROW(srv_->computeDhcid(lease), isc::dhcp::DhcidComputeError);
+    EXPECT_THROW(srv_->computeDhcid(lease), bundy::dhcp::DhcidComputeError);
 }
 
 // Test that the DHCID is computed correctly, when the lease holds
@@ -442,7 +442,7 @@ TEST_F(NameDhcpv4SrvTest, dhcidComputeFromClientId) {
     Lease4Ptr lease = createLease(IOAddress("192.0.2.3"),
                                   "myhost.example.com.",
                                   true, true);
-    isc::dhcp_ddns::D2Dhcid dhcid;
+    bundy::dhcp_ddns::D2Dhcid dhcid;
     ASSERT_NO_THROW(dhcid = srv_->computeDhcid(lease));
 
     // Make sure that the computed DHCID is valid.
@@ -459,7 +459,7 @@ TEST_F(NameDhcpv4SrvTest, dhcidComputeFromHWAddr) {
                                   true, true);
     lease->client_id_.reset();
 
-    isc::dhcp_ddns::D2Dhcid dhcid;
+    bundy::dhcp_ddns::D2Dhcid dhcid;
     ASSERT_NO_THROW(dhcid = srv_->computeDhcid(lease));
 
     // Make sure that the computed DHCID is valid.
@@ -647,7 +647,7 @@ TEST_F(NameDhcpv4SrvTest, createNameChangeRequestsNewLease) {
     ASSERT_NO_THROW(srv_->createNameChangeRequests(lease, old_lease));
     ASSERT_EQ(1, d2_mgr_.getQueueSize());
 
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_ADD, true, true,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_ADD, true, true,
                             "192.0.2.3", "myhost.example.com.",
                             "00010132E91AA355CFBB753C0F0497A5A940436965"
                             "B68B6D438D98E680BF10B09F3BCF",
@@ -679,7 +679,7 @@ TEST_F(NameDhcpv4SrvTest, createNameChangeRequestsNoUpdate) {
     ASSERT_NO_THROW(srv_->createNameChangeRequests(lease2, lease1));
     EXPECT_EQ(1, d2_mgr_.getQueueSize());
 
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_REMOVE, true, true,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_REMOVE, true, true,
                             "192.0.2.3", "lease1.example.com.",
                             "0001013A5B311F5B9FB10DDF8E53689B874F25D"
                             "62CC147C2FF237A64C90E5A597C9B7A",
@@ -705,13 +705,13 @@ TEST_F(NameDhcpv4SrvTest, createNameChangeRequestsRenew) {
     ASSERT_NO_THROW(srv_->createNameChangeRequests(lease2, lease1));
     ASSERT_EQ(2, d2_mgr_.getQueueSize());
 
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_REMOVE, true, true,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_REMOVE, true, true,
                             "192.0.2.3", "lease1.example.com.",
                             "0001013A5B311F5B9FB10DDF8E53689B874F25D"
                             "62CC147C2FF237A64C90E5A597C9B7A",
                             lease1->cltt_, 100);
 
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_ADD, true, true,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_ADD, true, true,
                             "192.0.2.3", "lease2.example.com.",
                             "000101F906D2BB752E1B2EECC5FF2BF434C0B2D"
                             "D6D7F7BD873F4F280165DB8C9DBA7CB",
@@ -730,7 +730,7 @@ TEST_F(NameDhcpv4SrvTest, createNameChangeRequestsLeaseMismatch) {
                                    "lease2.example.com.",
                                    true, true);
     EXPECT_THROW(srv_->createNameChangeRequests(lease2, lease1),
-                 isc::Unexpected);
+                 bundy::Unexpected);
 }
 
 // Test that the OFFER message generated as a result of the DISCOVER message
@@ -772,7 +772,7 @@ TEST_F(NameDhcpv4SrvTest, processRequestFqdnEmptyDomainName) {
     // The hostname is generated from the IP address acquired (yiaddr).
     std::string hostname = generatedNameFromAddress(reply->getYiaddr());
 
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_ADD, true, true,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_ADD, true, true,
                             reply->getYiaddr().toText(), hostname,
                             "", // empty DHCID forces that it is not checked
                             time(NULL) + subnet_->getValid(),
@@ -829,7 +829,7 @@ TEST_F(NameDhcpv4SrvTest, processRequestTopLevelHostname) {
     // The hostname is generated from the IP address acquired (yiaddr).
     std::string hostname = generatedNameFromAddress(reply->getYiaddr());
 
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_ADD, true, true,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_ADD, true, true,
                             reply->getYiaddr().toText(), hostname,
                             "", // empty DHCID forces that it is not checked
                             time(NULL), subnet_->getValid(), true);
@@ -855,7 +855,7 @@ TEST_F(NameDhcpv4SrvTest, processTwoRequestsFqdn) {
 
     // Verify that there is one NameChangeRequest generated.
     ASSERT_EQ(1, d2_mgr_.getQueueSize());
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_ADD, true, true,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_ADD, true, true,
                             reply->getYiaddr().toText(), "myhost.example.com.",
                             "00010132E91AA355CFBB753C0F0497A5A940436"
                             "965B68B6D438D98E680BF10B09F3BCF",
@@ -875,14 +875,14 @@ TEST_F(NameDhcpv4SrvTest, processTwoRequestsFqdn) {
 
     // There should be two NameChangeRequests. Verify that they are valid.
     ASSERT_EQ(2, d2_mgr_.getQueueSize());
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_REMOVE, true, true,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_REMOVE, true, true,
                             reply->getYiaddr().toText(),
                             "myhost.example.com.",
                             "00010132E91AA355CFBB753C0F0497A5A940436"
                             "965B68B6D438D98E680BF10B09F3BCF",
                             time(NULL), subnet_->getValid(), true);
 
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_ADD, true, true,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_ADD, true, true,
                             reply->getYiaddr().toText(),
                             "otherhost.example.com.",
                             "000101A5AEEA7498BD5AD9D3BF600E49FF39A7E3"
@@ -912,7 +912,7 @@ TEST_F(NameDhcpv4SrvTest, processTwoRequestsHostname) {
 
     // Verify that there is one NameChangeRequest generated.
     ASSERT_EQ(1, d2_mgr_.getQueueSize());
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_ADD, true, true,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_ADD, true, true,
                             reply->getYiaddr().toText(), "myhost.example.com.",
                             "00010132E91AA355CFBB753C0F0497A5A940436"
                             "965B68B6D438D98E680BF10B09F3BCF",
@@ -933,14 +933,14 @@ TEST_F(NameDhcpv4SrvTest, processTwoRequestsHostname) {
 
     // There should be two NameChangeRequests. Verify that they are valid.
     ASSERT_EQ(2, d2_mgr_.getQueueSize());
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_REMOVE, true, true,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_REMOVE, true, true,
                             reply->getYiaddr().toText(),
                             "myhost.example.com.",
                             "00010132E91AA355CFBB753C0F0497A5A940436"
                             "965B68B6D438D98E680BF10B09F3BCF",
                             time(NULL), subnet_->getValid(), true);
 
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_ADD, true, true,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_ADD, true, true,
                             reply->getYiaddr().toText(),
                             "otherhost.example.com.",
                             "000101A5AEEA7498BD5AD9D3BF600E49FF39A7E3"
@@ -969,7 +969,7 @@ TEST_F(NameDhcpv4SrvTest, processRequestRelease) {
 
     // Verify that there is one NameChangeRequest generated for lease.
     ASSERT_EQ(1, d2_mgr_.getQueueSize());
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_ADD, true, true,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_ADD, true, true,
                             reply->getYiaddr().toText(), "myhost.example.com.",
                             "00010132E91AA355CFBB753C0F0497A5A940436"
                             "965B68B6D438D98E680BF10B09F3BCF",
@@ -986,7 +986,7 @@ TEST_F(NameDhcpv4SrvTest, processRequestRelease) {
     // The lease has been removed, so there should be a NameChangeRequest to
     // remove corresponding DNS entries.
     ASSERT_EQ(1, d2_mgr_.getQueueSize());
-    verifyNameChangeRequest(isc::dhcp_ddns::CHG_REMOVE, true, true,
+    verifyNameChangeRequest(bundy::dhcp_ddns::CHG_REMOVE, true, true,
                             reply->getYiaddr().toText(), "myhost.example.com.",
                             "00010132E91AA355CFBB753C0F0497A5A940436"
                             "965B68B6D438D98E680BF10B09F3BCF",

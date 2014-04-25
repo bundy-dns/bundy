@@ -17,8 +17,8 @@
 
 #include <gtest/gtest.h>
 
-using namespace isc::data;
-using namespace isc::config;
+using namespace bundy::data;
+using namespace bundy::config;
 
 namespace {
 

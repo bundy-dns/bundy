@@ -17,7 +17,7 @@
 
 /// \brief The name used to identify the resolver between modules.
 ///
-/// It is currently set to b10-resolver.
+/// It is currently set to bundy-resolver.
 extern const char* const RESOLVER_NAME;
 
 #endif

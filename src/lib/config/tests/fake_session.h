@@ -24,7 +24,7 @@
 #include <cc/data.h>
 #include <cc/session.h>
 
-namespace isc {
+namespace bundy {
 namespace cc {
 class FakeSession : public AbstractSession {
 private:
@@ -37,9 +37,9 @@ public:
     // instead of whatever is in the msg queue.
     // The test can also add data to a copy of the message later to tweak
     // the group_recvmsg() behavior.  See getMessages() below.
-    FakeSession(isc::data::ElementPtr initial_messages,
-                isc::data::ElementPtr subscriptions,
-                isc::data::ElementPtr msg_queue);
+    FakeSession(bundy::data::ElementPtr initial_messages,
+                bundy::data::ElementPtr subscriptions,
+                bundy::data::ElementPtr msg_queue);
     virtual ~FakeSession();
 
     // This is thrown if two reads for length at once are scheduled at once.
@@ -58,60 +58,60 @@ public:
                            std::string instance = "*");
     virtual void unsubscribe(std::string group,
                              std::string instance = "*");
-    virtual int group_sendmsg(isc::data::ConstElementPtr msg,
+    virtual int group_sendmsg(bundy::data::ConstElementPtr msg,
                               std::string group,
                               std::string instance = "*",
                               std::string to = "*",
                               bool want_answer = false);
-    virtual bool group_recvmsg(isc::data::ConstElementPtr& envelope,
-                               isc::data::ConstElementPtr& msg,
+    virtual bool group_recvmsg(bundy::data::ConstElementPtr& envelope,
+                               bundy::data::ConstElementPtr& msg,
                                bool nonblock = true,
                                int seq = -1);
-    virtual int reply(isc::data::ConstElementPtr envelope,
-                      isc::data::ConstElementPtr newmsg);
+    virtual int reply(bundy::data::ConstElementPtr envelope,
+                      bundy::data::ConstElementPtr newmsg);
     virtual bool hasQueuedMsgs() const;
     virtual void setTimeout(size_t) {}
     virtual size_t getTimeout() const { return (0); }
-    isc::data::ConstElementPtr getFirstMessage(std::string& group,
+    bundy::data::ConstElementPtr getFirstMessage(std::string& group,
                                                std::string& to) const;
-    void addMessage(isc::data::ConstElementPtr, const std::string& group,
+    void addMessage(bundy::data::ConstElementPtr, const std::string& group,
                     const std::string& to, int seq = -1,
                     bool want_answer = false);
     bool haveSubscription(const std::string& group,
                           const std::string& instance);
-    bool haveSubscription(const isc::data::ConstElementPtr group,
-                          const isc::data::ConstElementPtr instance);
+    bool haveSubscription(const bundy::data::ConstElementPtr group,
+                          const bundy::data::ConstElementPtr instance);
 
     // For the convenience of tests, we share these internal members
     // with the tester.  The test code may insert update and check,
     // before (via the constructor parameters), during and after the actual
     // session object was created/destroyed.
-    isc::data::ElementPtr getMessages() { return (messages_); }
-    isc::data::ElementPtr getMsgQueue() { return (msg_queue_); }
+    bundy::data::ElementPtr getMessages() { return (messages_); }
+    bundy::data::ElementPtr getMsgQueue() { return (msg_queue_); }
 
     /// Throw exception on sendmsg()
     ///
     /// When set to true, and sendmsg() is later called, this
-    /// will throw isc::Exception
+    /// will throw bundy::Exception
     ///
     /// \param value If true, enable throw. If false, disable it
     void setThrowOnSend(bool value) { throw_on_send_ = value; }
 
 private:
-    bool recvmsg(isc::data::ConstElementPtr& msg,
+    bool recvmsg(bundy::data::ConstElementPtr& msg,
                  bool nonblock = true, int seq = -1);
-    bool recvmsg(isc::data::ConstElementPtr& env,
-                 isc::data::ConstElementPtr& msg,
+    bool recvmsg(bundy::data::ConstElementPtr& env,
+                 bundy::data::ConstElementPtr& msg,
                  bool nonblock = true, int seq = -1);
 
-    const isc::data::ElementPtr messages_;
-    isc::data::ElementPtr subscriptions_;
-    isc::data::ElementPtr msg_queue_;
+    const bundy::data::ElementPtr messages_;
+    bundy::data::ElementPtr subscriptions_;
+    bundy::data::ElementPtr msg_queue_;
     bool started_;
     bool throw_on_send_;
 };
 } // namespace cc
-} // namespace isc
+} // namespace bundy
 
 #endif // ISC_FAKESESSION_H
 

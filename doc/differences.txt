@@ -1,4 +1,4 @@
-Differences of Bind 10 to other software
+Differences of Bundy to other software
 ========================================
 
 BIND 9
@@ -9,11 +9,11 @@ TODO: There are definitely more differences than just this.
 DNS zone transfer:
 * When an incoming zone transfer fails, for example because the
   received zone doesn't contain a NS record, bind 9 stops serving the
-  zone and returns SERVFAIL to queries for that zone. Bind 10 still
+  zone and returns SERVFAIL to queries for that zone. Bundy still
   uses the previous version of zone.
 
 RDATA implementations:
-* IN/A: BIND 10 does not accept abbreviated forms of textual IPv4
+* IN/A: BUNDY does not accept abbreviated forms of textual IPv4
   addresses for class-IN, type-A RDATA.  BIND 9 warns about it but
   still accepts it as the standard inet_aton() function.  Such forms
   should actually be NOT accepted per RFC 1035, but BIND 9 accepts them
@@ -26,7 +26,7 @@ DNS data sources:
   purpose of the BIND 9's behavior is to make the ordering
   predictable, but if the RDATA are rotated in DNS responses (which
   BIND 9 also does by default) the predictability wouldn't be that
-  useful for the clients.  So we skip the sorting in the BIND 10
+  useful for the clients.  So we skip the sorting in the BUNDY
   implementation to simplify the implementation (and possibly make it
   a bit more efficient).
 

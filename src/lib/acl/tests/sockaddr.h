@@ -22,7 +22,7 @@
 
 #include <exceptions/exceptions.h>
 
-namespace isc {
+namespace bundy {
 namespace acl {
 namespace tests {
 
@@ -53,14 +53,14 @@ getSockAddr(const char* const addr) {
     // We don't expect getaddrinfo to fail for our tests.  But if that
     // ever happens we throw an exception to make sure the corresponding test
     // fail (either due to a failure of *_NO_THROW or the uncaught exception).
-    isc_throw(Unexpected,
+    bundy_throw(Unexpected,
               "failed to convert textual IP address to sockaddr for " <<
               addr);
 }
 
 } // end of namespace "tests"
 } // end of namespace "acl"
-} // end of namespace "isc"
+} // end of namespace "bundy"
 
 #endif  // ACL_TEST_SOCKADDR_H
 

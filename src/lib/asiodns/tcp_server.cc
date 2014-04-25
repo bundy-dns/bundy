@@ -39,11 +39,11 @@ using asio::const_buffer;
 using asio::ip::tcp;
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::util;
-using namespace isc::asiolink;
+using namespace bundy::dns;
+using namespace bundy::util;
+using namespace bundy::asiolink;
 
-namespace isc {
+namespace bundy {
 namespace asiodns {
 
 /// The following functions implement the \c TCPServer class.
@@ -57,7 +57,7 @@ TCPServer::TCPServer(io_service& io_service, int fd, int af,
     answer_callback_(answer)
 {
     if (af != AF_INET && af != AF_INET6) {
-        isc_throw(InvalidParameter, "Address family must be either AF_INET "
+        bundy_throw(InvalidParameter, "Address family must be either AF_INET "
                   "or AF_INET6, not " << af);
     }
     LOG_DEBUG(logger, DBGLVL_TRACE_BASIC, ASIODNS_FD_ADD_TCP).arg(fd);
@@ -69,7 +69,7 @@ TCPServer::TCPServer(io_service& io_service, int fd, int af,
     } catch (const std::exception& exception) {
         // Whatever the thing throws, it is something from ASIO and we convert
         // it
-        isc_throw(IOError, exception.what());
+        bundy_throw(IOError, exception.what());
     }
     // Set it to some value. It should be set to the right one
     // immediately, but set it to something non-zero just in case.
@@ -310,10 +310,10 @@ TCPServer::resume(const bool done) {
     done_ = done;
 
     // post() can throw due to memory allocation failure, but as like other
-    // cases of the entire BIND 10 implementation, we consider it fatal and
+    // cases of the entire BUNDY implementation, we consider it fatal and
     // let the exception be propagated.
     io_.post(*this);
 }
 
 } // namespace asiodns
-} // namespace isc
+} // namespace bundy

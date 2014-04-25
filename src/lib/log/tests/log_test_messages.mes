@@ -20,7 +20,7 @@
 # the chicken-and-egg situation where we need the files to build the message
 # compiler, yet we need the compiler to build the files.
 
-$NAMESPACE isc::log
+$NAMESPACE bundy::log
 
 % LOG_LOCK_TEST_MESSAGE this is a test message.
 This is a log message used in testing.

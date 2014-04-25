@@ -21,7 +21,7 @@
 
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace hash {
 class Sha1Test : public ::testing::Test {
@@ -105,5 +105,5 @@ TEST_F(Sha1Test, Test4) {
 
 } // namespace hash
 } // namespace util
-} // namespace isc
+} // namespace bundy
 

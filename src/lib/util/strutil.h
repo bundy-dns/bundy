@@ -23,7 +23,7 @@
 #include <exceptions/exceptions.h>
 #include <boost/lexical_cast.hpp>
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace str {
 
@@ -36,7 +36,7 @@ namespace str {
 class StringTokenError : public Exception {
 public:
     StringTokenError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// \brief Normalize Backslash
@@ -111,7 +111,7 @@ inline char toUpper(char chr) {
 /// \param text String to be upper-cased.
 inline void uppercase(std::string& text) {
     std::transform(text.begin(), text.end(), text.begin(),
-        isc::util::str::toUpper);
+        bundy::util::str::toUpper);
 }
 
 /// \brief Lowercase Character
@@ -135,7 +135,7 @@ inline char toLower(char chr) {
 /// \param text String to be lower-cased.
 inline void lowercase(std::string& text) {
     std::transform(text.begin(), text.end(), text.begin(),
-        isc::util::str::toLower);
+        bundy::util::str::toLower);
 }
 
 
@@ -192,11 +192,11 @@ tokenToNum(const std::string& num_token) {
     try {
         num = boost::lexical_cast<NumType>(num_token);
     } catch (const boost::bad_lexical_cast&) {
-        isc_throw(StringTokenError, "Invalid SRV numeric parameter: " <<
+        bundy_throw(StringTokenError, "Invalid SRV numeric parameter: " <<
                   num_token);
     }
     if (num < 0 || num >= (static_cast<NumType>(1) << BitSize)) {
-        isc_throw(StringTokenError, "Numeric SRV parameter out of range: " <<
+        bundy_throw(StringTokenError, "Numeric SRV parameter out of range: " <<
                   num);
     }
     return (num);
@@ -204,6 +204,6 @@ tokenToNum(const std::string& num_token) {
 
 } // namespace str
 } // namespace util
-} // namespace isc
+} // namespace bundy
 
 #endif // STRUTIL_H

@@ -24,7 +24,7 @@
 #include <acl/loader.h>
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace acl {
 namespace tests {
 
@@ -32,13 +32,13 @@ namespace tests {
 // and data
 class NamedCheck : public Check<Log> {
 public:
-    NamedCheck(const std::string& name, isc::data::ConstElementPtr data) :
+    NamedCheck(const std::string& name, bundy::data::ConstElementPtr data) :
         name_(name),
         data_(data)
     {}
     virtual bool matches(const Log&) const { return (true); }
     const std::string name_;
-    const isc::data::ConstElementPtr data_;
+    const bundy::data::ConstElementPtr data_;
 };
 
 // The creator of NamedCheck
@@ -57,7 +57,7 @@ public:
         return (names_);
     }
     boost::shared_ptr<Check<Log> > create(const std::string& name,
-                                          isc::data::ConstElementPtr data,
+                                          bundy::data::ConstElementPtr data,
                                           const Loader<Log>&)
     {
         bool found(false);
@@ -92,7 +92,7 @@ public:
         return (result);
     }
     boost::shared_ptr<Check<Log> > create(const std::string&,
-                                          isc::data::ConstElementPtr,
+                                          bundy::data::ConstElementPtr,
                                           const Loader<Log>&)
     {
         throw TestCreatorError();
@@ -116,7 +116,7 @@ public:
         return (result);
     }
     boost::shared_ptr<Check<Log> > create(const std::string&,
-                                          isc::data::ConstElementPtr,
+                                          bundy::data::ConstElementPtr,
                                           const Loader<Log>&)
     {
         return (boost::shared_ptr<Check<Log> >(new ThrowCheck()));
@@ -136,10 +136,10 @@ public:
      * is done, if there's bug in the test, it will throw TypeError for us.
      */
     boost::shared_ptr<Check<Log> > create(const std::string&,
-                                          isc::data::ConstElementPtr definition,
+                                          bundy::data::ConstElementPtr definition,
                                           const Loader<Log>&)
     {
-        std::vector<isc::data::ConstElementPtr> list(definition->listValue());
+        std::vector<bundy::data::ConstElementPtr> list(definition->listValue());
         int logpos(list[0]->intValue());
         bool accept(list[1]->boolValue());
         return (boost::shared_ptr<ConstCheck>(new ConstCheck(accept, logpos)));

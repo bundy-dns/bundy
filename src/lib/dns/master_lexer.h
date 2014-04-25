@@ -24,7 +24,7 @@
 
 #include <boost/noncopyable.hpp>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace master_lexer_internal {
 class State;
@@ -112,7 +112,7 @@ public:
     /// type (not larger than \c NOVALUE_TYPE_MAX).
     explicit MasterToken(Type type) : type_(type) {
         if (type > NOVALUE_TYPE_MAX) {
-            isc_throw(InvalidParameter, "Token per-type constructor "
+            bundy_throw(InvalidParameter, "Token per-type constructor "
                       "called with invalid type: " << type);
         }
     }
@@ -153,7 +153,7 @@ public:
     /// \brief error_code A pre-defined constant of \c ErrorCode.
     explicit MasterToken(ErrorCode error_code) : type_(ERROR) {
         if (!(error_code < MAX_ERROR_CODE)) {
-            isc_throw(InvalidParameter, "Invalid master lexer error code: "
+            bundy_throw(InvalidParameter, "Invalid master lexer error code: "
                       << error_code);
         }
         val_.error_code_ = error_code;
@@ -171,7 +171,7 @@ public:
     ///         token value.
     const StringRegion& getStringRegion() const {
         if (type_ != STRING && type_ != QSTRING) {
-            isc_throw(InvalidOperation,
+            bundy_throw(InvalidOperation,
                       "Token::getStringRegion() for non string-variant type");
         }
         return (val_.str_region_);
@@ -212,7 +212,7 @@ public:
     /// \param ret A string object to be filled with the token string.
     void getString(std::string& ret) const {
         if (type_ != STRING && type_ != QSTRING) {
-            isc_throw(InvalidOperation,
+            bundy_throw(InvalidOperation,
                       "Token::getString() for non string-variant type");
         }
         ret.assign(val_.str_region_.beg,
@@ -225,7 +225,7 @@ public:
     /// \return The integer corresponding to the number token value.
     uint32_t getNumber() const {
         if (type_ != NUMBER) {
-            isc_throw(InvalidOperation,
+            bundy_throw(InvalidOperation,
                       "Token::getNumber() for non number type");
         }
         return (val_.number_);
@@ -237,7 +237,7 @@ public:
     /// \return The error code of the token.
     ErrorCode getErrorCode() const {
         if (type_ != ERROR) {
-            isc_throw(InvalidOperation,
+            bundy_throw(InvalidOperation,
                       "Token::getErrorCode() for non error type");
         }
         return (val_.error_code_);
@@ -325,10 +325,10 @@ public:
     ///
     /// The \c token_ member variable (read-only) is set to a \c MasterToken
     /// object of type ERROR indicating the reason for the error.
-    class LexerError : public isc::dns::Exception {
+    class LexerError : public bundy::dns::Exception {
     public:
         LexerError(const char* file, size_t line, MasterToken error_token) :
-            isc::dns::Exception(file, line, error_token.getErrorText().c_str()),
+            bundy::dns::Exception(file, line, error_token.getErrorText().c_str()),
             token_(error_token)
         {}
         const MasterToken token_;
@@ -435,7 +435,7 @@ public:
     /// This method must not be called when there is no source pushed for
     /// \c MasterLexer.  This method is otherwise exception free.
     ///
-    /// \throw isc::InvalidOperation Called with no pushed source.
+    /// \throw bundy::InvalidOperation Called with no pushed source.
     void popSource();
 
     /// \brief Get number of sources inside the lexer.
@@ -563,7 +563,7 @@ public:
     ///     some internal data in the lexer. It is valid only until
     ///     getNextToken or ungetToken is called. Also, the token becomes
     ///     invalid when the lexer is destroyed.
-    /// \throw isc::InvalidOperation in case the source is not available. This
+    /// \throw bundy::InvalidOperation in case the source is not available. This
     ///     may mean the pushSource() has not been called yet, or that the
     ///     current source has been read past the end.
     /// \throw ReadError in case there's problem reading from the underlying
@@ -658,7 +658,7 @@ public:
     ///
     /// It does not work after change of source (by pushSource or popSource).
     ///
-    /// \throw isc::InvalidOperation If called second time in a row or if
+    /// \throw bundy::InvalidOperation If called second time in a row or if
     ///     getNextToken() was not called since the last change of the source.
     void ungetToken();
 
@@ -678,7 +678,7 @@ operator|(MasterLexer::Options o1, MasterLexer::Options o2) {
 }
 
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 #endif  // MASTER_LEXER_H
 
 // Local Variables:

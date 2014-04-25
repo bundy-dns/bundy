@@ -17,7 +17,7 @@
 
 #include <Python.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 class TSIGError;
 
@@ -36,7 +36,7 @@ PyObject* createTSIGErrorObject(const TSIGError& source);
 
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 #endif // PYTHON_TSIGERROR_H
 
 // Local Variables:

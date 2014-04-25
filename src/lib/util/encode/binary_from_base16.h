@@ -53,7 +53,7 @@ struct to_4_bit {
         if((unsigned)t < sizeof(lookup_table))
             value = lookup_table[(unsigned)t];
         if(-1 == value) { 
-            isc_throw(isc::BadValue,
+            bundy_throw(bundy::BadValue,
                       "attempt to decode a value not in base16 char set");
         }
         return (value);

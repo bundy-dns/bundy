@@ -29,10 +29,10 @@
 #include <vector>
 
 using namespace std;
-using namespace isc::data;
-using namespace isc::hooks;
+using namespace bundy::data;
+using namespace bundy::hooks;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 namespace {
@@ -124,14 +124,14 @@ DebugParser::commit() {
 
 // **************************** BooleanParser  *************************
 
-template<> void ValueParser<bool>::build(isc::data::ConstElementPtr value) {
+template<> void ValueParser<bool>::build(bundy::data::ConstElementPtr value) {
     // The Config Manager checks if user specified a
     // valid value for a boolean parameter: True or False.
     // We should have a boolean Element, use value directly
     try {
         value_ = value->boolValue();
-    } catch (const isc::data::TypeError &) {
-        isc_throw(BadValue, " Wrong value type for " << param_name_
+    } catch (const bundy::data::TypeError &) {
+        bundy_throw(BadValue, " Wrong value type for " << param_name_
                   << " : build called with a non-boolean element.");
     }
 }
@@ -144,15 +144,15 @@ template<> void ValueParser<uint32_t>::build(ConstElementPtr value) {
     try {
         check = boost::lexical_cast<int64_t>(x);
     } catch (const boost::bad_lexical_cast &) {
-        isc_throw(BadValue, "Failed to parse value " << value->str()
+        bundy_throw(BadValue, "Failed to parse value " << value->str()
                   << " as unsigned 32-bit integer.");
     }
     if (check > std::numeric_limits<uint32_t>::max()) {
-        isc_throw(BadValue, "Value " << value->str() << "is too large"
+        bundy_throw(BadValue, "Value " << value->str() << "is too large"
                   << " for unsigned 32-bit integer.");
     }
     if (check < 0) {
-        isc_throw(BadValue, "Value " << value->str() << "is negative."
+        bundy_throw(BadValue, "Value " << value->str() << "is negative."
                << " Only 0 or larger are allowed for unsigned 32-bit integer.");
     }
 
@@ -174,7 +174,7 @@ InterfaceListConfigParser(const std::string& param_name)
     : activate_all_(false),
       param_name_(param_name) {
     if (param_name_ != "interfaces") {
-        isc_throw(BadValue, "Internal error. Interface configuration "
+        bundy_throw(BadValue, "Internal error. Interface configuration "
             "parser called for the wrong parameter: " << param_name);
     }
 }
@@ -192,7 +192,7 @@ InterfaceListConfigParser::build(ConstElementPtr value) {
             // that he mistyped the configuration. Failing here should draw his
             // attention.
             if (isIfaceAdded(iface_name)) {
-                isc_throw(isc::dhcp::DhcpConfigError, "duplicate interface"
+                bundy_throw(bundy::dhcp::DhcpConfigError, "duplicate interface"
                           << " name '" << iface_name << "' specified in '"
                           << param_name_ << "' configuration parameter");
             }
@@ -248,7 +248,7 @@ HooksLibrariesParser::HooksLibrariesParser(const std::string& param_name)
 {
     // Sanity check on the name.
     if (param_name != "hooks-libraries") {
-        isc_throw(BadValue, "Internal error. Hooks libraries "
+        bundy_throw(BadValue, "Internal error. Hooks libraries "
             "parser called for the wrong parameter: " << param_name);
     }
 }
@@ -284,7 +284,7 @@ HooksLibrariesParser::build(ConstElementPtr value) {
         for (int i = 1; i < error_libs.size(); ++i) {
             error_list += (string(", ") + error_libs[i]);
         }
-        isc_throw(DhcpConfigError, "hooks libraries failed to validate - "
+        bundy_throw(DhcpConfigError, "hooks libraries failed to validate - "
                   "library or libraries in error are: " + error_list);
     }
 
@@ -320,12 +320,12 @@ OptionDataParser::OptionDataParser(const std::string&, OptionStoragePtr options,
     options_(options), option_descriptor_(false),
     global_context_(global_context) {
     if (!options_) {
-        isc_throw(isc::dhcp::DhcpConfigError, "parser logic error:"
+        bundy_throw(bundy::dhcp::DhcpConfigError, "parser logic error:"
              << "options storage may not be NULL");
     }
 
     if (!global_context_) {
-        isc_throw(isc::dhcp::DhcpConfigError, "parser logic error:"
+        bundy_throw(bundy::dhcp::DhcpConfigError, "parser logic error:"
              << "context may may not be NULL");
     }
 }
@@ -348,7 +348,7 @@ OptionDataParser::build(ConstElementPtr option_data_entries) {
                                          boolean_values_));
             parser = value_parser;
         } else {
-            isc_throw(DhcpConfigError,
+            bundy_throw(DhcpConfigError,
                       "Parser error: option-data parameter not supported: "
                       << param.first);
         }
@@ -372,7 +372,7 @@ OptionDataParser::commit() {
     if (!option_descriptor_.option) {
         // Before we can commit the new option should be configured. If it is
         // not than somebody must have called commit() before build().
-        isc_throw(isc::InvalidOperation,
+        bundy_throw(bundy::InvalidOperation,
             "parser logic error: no option has been configured and"
             " thus there is nothing to commit. Has build() been called?");
     }
@@ -404,19 +404,19 @@ OptionDataParser::createOption() {
     // is not zero.
     uint32_t option_code = uint32_values_->getParam("code");
     if (option_code == 0) {
-        isc_throw(DhcpConfigError, "option code must not be zero."
+        bundy_throw(DhcpConfigError, "option code must not be zero."
                 << " Option code '0' is reserved.");
 
     } else if (global_context_->universe_ == Option::V4 &&
                option_code > std::numeric_limits<uint8_t>::max()) {
-        isc_throw(DhcpConfigError, "invalid option code '" << option_code
+        bundy_throw(DhcpConfigError, "invalid option code '" << option_code
                 << "', it must not exceed '"
                   << static_cast<int>(std::numeric_limits<uint8_t>::max())
                   << "'");
 
     } else if (global_context_->universe_ == Option::V6 &&
                option_code > std::numeric_limits<uint16_t>::max()) {
-        isc_throw(DhcpConfigError, "invalid option code '" << option_code
+        bundy_throw(DhcpConfigError, "invalid option code '" << option_code
                 << "', it must not exceed '"
                   << std::numeric_limits<uint16_t>::max()
                   << "'");
@@ -427,16 +427,16 @@ OptionDataParser::createOption() {
     // contain spaces
     std::string option_name = string_values_->getParam("name");
     if (option_name.empty()) {
-        isc_throw(DhcpConfigError, "name of the option with code '"
+        bundy_throw(DhcpConfigError, "name of the option with code '"
                 << option_code << "' is empty");
     } else if (option_name.find(" ") != std::string::npos) {
-        isc_throw(DhcpConfigError, "invalid option name '" << option_name
+        bundy_throw(DhcpConfigError, "invalid option name '" << option_name
                 << "', space character is not allowed");
     }
 
     std::string option_space = string_values_->getParam("space");
     if (!OptionSpace::validateName(option_space)) {
-        isc_throw(DhcpConfigError, "invalid option space name '"
+        bundy_throw(DhcpConfigError, "invalid option space name '"
                 << option_space << "' specified for option '"
                 << option_name << "' (code '" << option_code
                 << "')");
@@ -468,7 +468,7 @@ OptionDataParser::createOption() {
         // It's ok if we don't have option format if the option is
         // specified as hex
         if (!def && csv_format) {
-            isc_throw(DhcpConfigError, "definition for the option '"
+            bundy_throw(DhcpConfigError, "definition for the option '"
                       << option_space << "." << option_name
                       << "' having code '" <<  option_code
                       << "' does not exist");
@@ -487,7 +487,7 @@ OptionDataParser::createOption() {
         // separated values then we need to split this string into
         // individual values - each value will be used to initialize
         // one data field of an option.
-        data_tokens = isc::util::str::tokens(option_data, ",");
+        data_tokens = bundy::util::str::tokens(option_data, ",");
     } else {
         // Otherwise, the option data is specified as a string of
         // hexadecimal digits that we have to turn into binary format.
@@ -500,7 +500,7 @@ OptionDataParser::createOption() {
             }
             util::encode::decodeHex(option_data, binary);
         } catch (...) {
-            isc_throw(DhcpConfigError, "option data is not a valid"
+            bundy_throw(DhcpConfigError, "option data is not a valid"
                       << " string of hexadecimal digits: " << option_data);
         }
     }
@@ -508,7 +508,7 @@ OptionDataParser::createOption() {
     OptionPtr option;
     if (!def) {
         if (csv_format) {
-            isc_throw(DhcpConfigError, "the CSV option data format can be"
+            bundy_throw(DhcpConfigError, "the CSV option data format can be"
                       " used to specify values for an option that has a"
                       " definition. The option with code " << option_code
                       << " does not have a definition.");
@@ -535,7 +535,7 @@ OptionDataParser::createOption() {
         // and/or option codes so keeping the option name in the
         // definition of option value makes sense.
         if (def->getName() != option_name) {
-            isc_throw(DhcpConfigError, "specified option name '"
+            bundy_throw(DhcpConfigError, "specified option name '"
                       << option_name << "' does not match the "
                       << "option definition: '" << option_space
                       << "." << def->getName() << "'");
@@ -552,8 +552,8 @@ OptionDataParser::createOption() {
             Subnet::OptionDescriptor desc(option, false);
             option_descriptor_.option = option;
             option_descriptor_.persistent = false;
-        } catch (const isc::Exception& ex) {
-            isc_throw(DhcpConfigError, "option data does not match"
+        } catch (const bundy::Exception& ex) {
+            bundy_throw(DhcpConfigError, "option data does not match"
                       << " option definition (space: " << option_space
                       << ", code: " << option_code << "): "
                       << ex.what());
@@ -572,17 +572,17 @@ OptionDataListParser::OptionDataListParser(const std::string&,
     global_context_(global_context),
     optionDataParserFactory_(optionDataParserFactory) {
     if (!options_) {
-        isc_throw(isc::dhcp::DhcpConfigError, "parser logic error:"
+        bundy_throw(bundy::dhcp::DhcpConfigError, "parser logic error:"
              << "options storage may not be NULL");
     }
 
     if (!options_) {
-        isc_throw(isc::dhcp::DhcpConfigError, "parser logic error:"
+        bundy_throw(bundy::dhcp::DhcpConfigError, "parser logic error:"
              << "context may not be NULL");
     }
 
     if (!optionDataParserFactory_) {
-        isc_throw(isc::dhcp::DhcpConfigError, "parser logic error:"
+        bundy_throw(bundy::dhcp::DhcpConfigError, "parser logic error:"
              << "option data parser factory may not be NULL");
     }
 }
@@ -621,7 +621,7 @@ OptionDefParser::OptionDefParser(const std::string&,
     : storage_(storage), boolean_values_(new BooleanStorage()),
     string_values_(new StringStorage()), uint32_values_(new Uint32Storage()) {
     if (!storage_) {
-        isc_throw(isc::dhcp::DhcpConfigError, "parser logic error:"
+        bundy_throw(bundy::dhcp::DhcpConfigError, "parser logic error:"
              << "options storage may not be NULL");
     }
 }
@@ -646,7 +646,7 @@ OptionDefParser::build(ConstElementPtr option_def) {
                                          boolean_values_));
             parser = array_parser;
         } else {
-            isc_throw(DhcpConfigError, "invalid parameter: " << entry);
+            bundy_throw(DhcpConfigError, "invalid parameter: " << entry);
         }
 
         parser->build(param.second);
@@ -669,7 +669,7 @@ OptionDefParser::build(ConstElementPtr option_def) {
     // to issue an error because we don't allow duplicates for
     // option definitions within an option space.
     if (std::distance(range.first, range.second) > 0) {
-        isc_throw(DhcpConfigError, "duplicated option definition for"
+        bundy_throw(DhcpConfigError, "duplicated option definition for"
                 << " code '" << option_definition_->getCode() << "'");
     }
 }
@@ -687,7 +687,7 @@ OptionDefParser::createOptionDef() {
     // Get the option space name and validate it.
     std::string space = string_values_->getParam("space");
     if (!OptionSpace::validateName(space)) {
-        isc_throw(DhcpConfigError, "invalid option space name '"
+        bundy_throw(DhcpConfigError, "invalid option space name '"
                   << space << "'");
     }
 
@@ -706,12 +706,12 @@ OptionDefParser::createOptionDef() {
     if (!encapsulates.empty()) {
         // Arrays can't be used together with sub-options.
         if (array_type) {
-            isc_throw(DhcpConfigError, "option '" << space << "."
+            bundy_throw(DhcpConfigError, "option '" << space << "."
                       << "name" << "', comprising an array of data"
                       << " fields may not encapsulate any option space");
 
         } else if (encapsulates == space) {
-            isc_throw(DhcpConfigError, "option must not encapsulate"
+            bundy_throw(DhcpConfigError, "option must not encapsulate"
                       << " an option space it belongs to: '"
                       << space << "." << name << "' is set to"
                       << " encapsulate '" << space << "'");
@@ -732,7 +732,7 @@ OptionDefParser::createOptionDef() {
 
     // Split the list of record types into tokens.
     std::vector<std::string> record_tokens =
-    isc::util::str::tokens(record_types, ",");
+    bundy::util::str::tokens(record_types, ",");
     // Iterate over each token and add a record type into
     // option definition.
     BOOST_FOREACH(std::string record_type, record_tokens) {
@@ -742,7 +742,7 @@ OptionDefParser::createOptionDef() {
                     def->addRecordField(record_type);
             }
         } catch (const Exception& ex) {
-            isc_throw(DhcpConfigError, "invalid record type values"
+            bundy_throw(DhcpConfigError, "invalid record type values"
                       << " specified for the option definition: "
                       << ex.what());
         }
@@ -751,8 +751,8 @@ OptionDefParser::createOptionDef() {
     // Check the option definition parameters are valid.
     try {
         def->validate();
-    } catch (const isc::Exception& ex) {
-        isc_throw(DhcpConfigError, "invalid option definition"
+    } catch (const bundy::Exception& ex) {
+        bundy_throw(DhcpConfigError, "invalid option definition"
                   << " parameters: " << ex.what());
     }
 
@@ -765,7 +765,7 @@ OptionDefParser::createOptionDef() {
 OptionDefListParser::OptionDefListParser(const std::string&,
     OptionDefStoragePtr storage) :storage_(storage) {
     if (!storage_) {
-        isc_throw(isc::dhcp::DhcpConfigError, "parser logic error:"
+        bundy_throw(bundy::dhcp::DhcpConfigError, "parser logic error:"
              << "storage may not be NULL");
     }
 }
@@ -777,7 +777,7 @@ OptionDefListParser::build(ConstElementPtr option_def_list) {
     storage_->clearItems();
 
     if (!option_def_list) {
-        isc_throw(DhcpConfigError, "parser error: a pointer to a list of"
+        bundy_throw(DhcpConfigError, "parser error: a pointer to a list of"
                   << " option definitions is NULL");
     }
 
@@ -813,13 +813,13 @@ OptionDefListParser::commit() {
 
 //****************************** RelayInfoParser ********************************
 RelayInfoParser::RelayInfoParser(const std::string&,
-                                 const isc::dhcp::Subnet::RelayInfoPtr& relay_info,
+                                 const bundy::dhcp::Subnet::RelayInfoPtr& relay_info,
                                  const Option::Universe& family)
-    :storage_(relay_info), local_(isc::asiolink::IOAddress(
+    :storage_(relay_info), local_(bundy::asiolink::IOAddress(
                                   family == Option::V4 ? "0.0.0.0" : "::")),
      string_values_(new StringStorage()), family_(family) {
     if (!relay_info) {
-        isc_throw(isc::dhcp::DhcpConfigError, "parser logic error:"
+        bundy_throw(bundy::dhcp::DhcpConfigError, "parser logic error:"
                   << "relay-info storage may not be NULL");
     }
 
@@ -839,13 +839,13 @@ RelayInfoParser::build(ConstElementPtr relay_info) {
     try {
         ip.reset(new asiolink::IOAddress(string_values_->getParam("ip-address")));
     } catch (...)  {
-        isc_throw(DhcpConfigError, "Failed to parse ip-address "
+        bundy_throw(DhcpConfigError, "Failed to parse ip-address "
                   "value: " << string_values_->getParam("ip-address"));
     }
 
     if ( (ip->isV4() && family_ != Option::V4) ||
          (ip->isV6() && family_ != Option::V6) ) {
-        isc_throw(DhcpConfigError, "ip-address field " << ip->toText()
+        bundy_throw(DhcpConfigError, "ip-address field " << ip->toText()
                   << "does not have IP address of expected family type: "
                   << (family_ == Option::V4?"IPv4":"IPv6"));
     }
@@ -853,18 +853,18 @@ RelayInfoParser::build(ConstElementPtr relay_info) {
     local_.addr_ = *ip;
 }
 
-isc::dhcp::ParserPtr
+bundy::dhcp::ParserPtr
 RelayInfoParser::createConfigParser(const std::string& parameter) {
     DhcpConfigParser* parser = NULL;
     if (parameter.compare("ip-address") == 0) {
         parser = new StringParser(parameter, string_values_);
     } else {
-        isc_throw(NotImplemented,
+        bundy_throw(NotImplemented,
                   "parser error: RelayInfoParser parameter not supported: "
                   << parameter);
     }
 
-    return (isc::dhcp::ParserPtr(parser));
+    return (bundy::dhcp::ParserPtr(parser));
 }
 
 void
@@ -877,7 +877,7 @@ PoolParser::PoolParser(const std::string&,  PoolStoragePtr pools)
         :pools_(pools) {
 
     if (!pools_) {
-        isc_throw(isc::dhcp::DhcpConfigError, "parser logic error:"
+        bundy_throw(bundy::dhcp::DhcpConfigError, "parser logic error:"
                   << "storage may not be NULL");
     }
 }
@@ -897,10 +897,10 @@ PoolParser::build(ConstElementPtr pools_list) {
         // Is this prefix/len notation?
         size_t pos = txt.find("/");
         if (pos != string::npos) {
-            isc::asiolink::IOAddress addr("::");
+            bundy::asiolink::IOAddress addr("::");
             uint8_t len = 0;
             try {
-                addr = isc::asiolink::IOAddress(txt.substr(0, pos));
+                addr = bundy::asiolink::IOAddress(txt.substr(0, pos));
 
                 // start with the first character after /
                 string prefix_len = txt.substr(pos + 1);
@@ -915,7 +915,7 @@ PoolParser::build(ConstElementPtr pools_list) {
                 // be checked in Pool4 constructor.
                 len = boost::lexical_cast<int>(prefix_len);
             } catch (...)  {
-                isc_throw(DhcpConfigError, "Failed to parse pool "
+                bundy_throw(DhcpConfigError, "Failed to parse pool "
                           "definition: " << text_pool->stringValue());
             }
 
@@ -928,15 +928,15 @@ PoolParser::build(ConstElementPtr pools_list) {
         pos = txt.find("-");
         if (pos != string::npos) {
             // using min-max notation
-            isc::asiolink::IOAddress min(txt.substr(0,pos));
-            isc::asiolink::IOAddress max(txt.substr(pos + 1));
+            bundy::asiolink::IOAddress min(txt.substr(0,pos));
+            bundy::asiolink::IOAddress max(txt.substr(pos + 1));
 
             PoolPtr pool(poolMaker(min, max));
             local_pools_.push_back(pool);
             continue;
         }
 
-        isc_throw(DhcpConfigError, "Failed to parse pool definition:"
+        bundy_throw(DhcpConfigError, "Failed to parse pool definition:"
                   << text_pool->stringValue() <<
                   ". Does not contain - (for min-max) nor / (prefix/len)");
         }
@@ -956,15 +956,15 @@ PoolParser::commit() {
 
 SubnetConfigParser::SubnetConfigParser(const std::string&,
                                        ParserContextPtr global_context,
-                                       const isc::asiolink::IOAddress& default_addr)
+                                       const bundy::asiolink::IOAddress& default_addr)
     : uint32_values_(new Uint32Storage()), string_values_(new StringStorage()),
     pools_(new PoolStorage()), options_(new OptionStorage()),
     global_context_(global_context),
-    relay_info_(new isc::dhcp::Subnet::RelayInfo(default_addr)) {
+    relay_info_(new bundy::dhcp::Subnet::RelayInfo(default_addr)) {
     // The first parameter should always be "subnet", but we don't check
     // against that here in case some wants to reuse this parser somewhere.
     if (!global_context_) {
-        isc_throw(isc::dhcp::DhcpConfigError, "parser logic error:"
+        bundy_throw(bundy::dhcp::DhcpConfigError, "parser logic error:"
                  << "context storage may not be NULL");
     }
 }
@@ -1055,7 +1055,7 @@ SubnetConfigParser::createSubnet() {
         subnet_txt = string_values_->getParam("subnet");
     } catch (const DhcpConfigError &) {
         // rethrow with precise error
-        isc_throw(DhcpConfigError,
+        bundy_throw(DhcpConfigError,
                  "Mandatory subnet definition in subnet missing");
     }
 
@@ -1070,13 +1070,13 @@ SubnetConfigParser::createSubnet() {
     // need to get all characters preceding "/".
     size_t pos = subnet_txt.find("/");
     if (pos == string::npos) {
-        isc_throw(DhcpConfigError,
+        bundy_throw(DhcpConfigError,
                   "Invalid subnet syntax (prefix/len expected):" << subnet_txt);
     }
 
     // Try to create the address object. It also validates that
     // the address syntax is ok.
-    isc::asiolink::IOAddress addr(subnet_txt.substr(0, pos));
+    bundy::asiolink::IOAddress addr(subnet_txt.substr(0, pos));
     uint8_t len = boost::lexical_cast<unsigned int>(subnet_txt.substr(pos + 1));
 
     // Call the subclass's method to instantiate the subnet
@@ -1101,7 +1101,7 @@ SubnetConfigParser::createSubnet() {
 
     if (!iface.empty()) {
         if (!IfaceMgr::instance().getIface(iface)) {
-            isc_throw(DhcpConfigError, "Specified interface name " << iface
+            bundy_throw(DhcpConfigError, "Specified interface name " << iface
                      << " for subnet " << subnet_->toText()
                      << " is not present" << " in the system.");
         }
@@ -1203,19 +1203,19 @@ SubnetConfigParser::optionSpaceToVendorId(const std::string& option_space) {
         check = boost::lexical_cast<int64_t>(x);
     } catch (const boost::bad_lexical_cast &) {
         /// @todo: Should we throw here?
-        // isc_throw(BadValue, "Failed to parse vendor-X value (" << x
+        // bundy_throw(BadValue, "Failed to parse vendor-X value (" << x
         //           << ") as unsigned 32-bit integer.");
         return (0);
     }
     if (check > std::numeric_limits<uint32_t>::max()) {
         /// @todo: Should we throw here?
-        //isc_throw(BadValue, "Value " << x << "is too large"
+        //bundy_throw(BadValue, "Value " << x << "is too large"
         //          << " for unsigned 32-bit integer.");
         return (0);
     }
     if (check < 0) {
         /// @todo: Should we throw here?
-        // isc_throw(BadValue, "Value " << x << "is negative."
+        // bundy_throw(BadValue, "Value " << x << "is negative."
         //       << " Only 0 or larger are allowed for unsigned 32-bit integer.");
         return (0);
     }
@@ -1224,7 +1224,7 @@ SubnetConfigParser::optionSpaceToVendorId(const std::string& option_space) {
     return (static_cast<uint32_t>(check));
 }
 
-isc::dhcp::Triplet<uint32_t>
+bundy::dhcp::Triplet<uint32_t>
 SubnetConfigParser::getParam(const std::string& name) {
     uint32_t value = 0;
     try {
@@ -1235,7 +1235,7 @@ SubnetConfigParser::getParam(const std::string& name) {
             // no local, use global value
             value = global_context_->uint32_values_->getParam(name);
         } catch (const DhcpConfigError &) {
-            isc_throw(DhcpConfigError, "Mandatory parameter " << name
+            bundy_throw(DhcpConfigError, "Mandatory parameter " << name
                       << " missing (no global default and no subnet-"
                       << "specific value)");
         }
@@ -1255,7 +1255,7 @@ D2ClientConfigParser::~D2ClientConfigParser() {
 }
 
 void
-D2ClientConfigParser::build(isc::data::ConstElementPtr client_config) {
+D2ClientConfigParser::build(bundy::data::ConstElementPtr client_config) {
     BOOST_FOREACH(ConfigPair param, client_config->mapValue()) {
         ParserPtr parser(createConfigParser(param.first));
         parser->build(param.second);
@@ -1331,7 +1331,7 @@ D2ClientConfigParser::build(isc::data::ConstElementPtr client_config) {
                                                   qualifying_suffix));
 }
 
-isc::dhcp::ParserPtr
+bundy::dhcp::ParserPtr
 D2ClientConfigParser::createConfigParser(const std::string& config_id) {
     DhcpConfigParser* parser = NULL;
     if (config_id.compare("server-port") == 0) {
@@ -1350,12 +1350,12 @@ D2ClientConfigParser::createConfigParser(const std::string& config_id) {
         (config_id.compare("replace-client-name") == 0)) {
         parser = new BooleanParser(config_id, boolean_values_);
     } else {
-        isc_throw(NotImplemented,
+        bundy_throw(NotImplemented,
             "parser error: D2ClientConfig parameter not supported: "
             << config_id);
     }
 
-    return (isc::dhcp::ParserPtr(parser));
+    return (bundy::dhcp::ParserPtr(parser));
 }
 
 void
@@ -1372,4 +1372,4 @@ D2ClientConfigParser::commit() {
 }
 
 };  // namespace dhcp
-};  // namespace isc
+};  // namespace bundy

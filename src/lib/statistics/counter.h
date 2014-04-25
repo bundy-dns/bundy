@@ -24,7 +24,7 @@
 
 #include <stdint.h>
 
-namespace isc {
+namespace bundy {
 namespace statistics {
 
 class Counter : boost::noncopyable {
@@ -43,12 +43,12 @@ public:
     ///
     /// \param items A number of counter items to hold (greater than 0)
     ///
-    /// \throw isc::InvalidParameter \a items is 0
+    /// \throw bundy::InvalidParameter \a items is 0
     explicit Counter(const size_t items) :
         counters_(items, 0)
     {
         if (items == 0) {
-            isc_throw(isc::InvalidParameter, "Items must not be 0");
+            bundy_throw(bundy::InvalidParameter, "Items must not be 0");
         }
     }
 
@@ -56,10 +56,10 @@ public:
     ///
     /// \param type %Counter item to increment
     ///
-    /// \throw isc::OutOfRange \a type is invalid
+    /// \throw bundy::OutOfRange \a type is invalid
     void inc(const Counter::Type& type) {
         if (type >= counters_.size()) {
-            isc_throw(isc::OutOfRange, "Counter type is out of range");
+            bundy_throw(bundy::OutOfRange, "Counter type is out of range");
         }
         ++counters_.at(type);
         return;
@@ -69,16 +69,16 @@ public:
     ///
     /// \param type %Counter item to get the value of
     ///
-    /// \throw isc::OutOfRange \a type is invalid
+    /// \throw bundy::OutOfRange \a type is invalid
     const Counter::Value& get(const Counter::Type& type) const {
         if (type >= counters_.size()) {
-            isc_throw(isc::OutOfRange, "Counter type is out of range");
+            bundy_throw(bundy::OutOfRange, "Counter type is out of range");
         }
         return (counters_.at(type));
     }
 };
 
 }   // namespace statistics
-}   // namespace isc
+}   // namespace bundy
 
 #endif // __COUNTER_H

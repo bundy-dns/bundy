@@ -31,7 +31,7 @@ builddir = '@builddir@'
 srcdir = '@srcdir@'
 pre_suffix = '.pre'
 
-xmldocument_command_name = 'b10-auth'
+xmldocument_command_name = 'bundy-auth'
 
 def need_generate(filepath, prepath, mtime):
     '''Check if we need to generate the specified file.
@@ -374,7 +374,7 @@ if __name__ == "__main__":
     try:
         def_mtime = import_definitions()
         generate_specfile('auth.spec', def_mtime)
-        generate_docfile('b10-auth.xml', def_mtime)
+        generate_docfile('bundy-auth.xml', def_mtime)
         generate_cxx('statistics_items.h',
                      'statistics.cc',
                      'tests'+os.sep+'statistics_unittest.cc',

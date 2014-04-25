@@ -19,7 +19,7 @@
 
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace dhcp_ddns {
 
 int selectCheck(int fd_to_check) {
@@ -39,5 +39,5 @@ int selectCheck(int fd_to_check) {
     return (select(maxfd + 1, &read_fds, NULL, NULL, &select_timeout));
 }
 
-}; // namespace isc::d2
-}; // namespace isc
+}; // namespace bundy::d2
+}; // namespace bundy

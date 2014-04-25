@@ -1,14 +1,14 @@
 /**
  *
- * @page dns BIND10 DNS
+ * @page dns BUNDY DNS
  *
- * @section dns-auth b10-auth
+ * @section dns-auth bundy-auth
  *
- * @todo: Describe b10-auth here.
+ * @todo: Describe bundy-auth here.
  *
- * @section b10-cfgmgr b10-cfgmgr Overview
+ * @section bundy-cfgmgr bundy-cfgmgr Overview
  *
- * @todo: Describe b10-cfgmgr here.
+ * @todo: Describe bundy-cfgmgr here.
  *
  *
  */

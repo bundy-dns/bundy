@@ -23,7 +23,7 @@
 
 #include <util/locks.h>
 
-namespace isc {
+namespace bundy {
 namespace util {
 
 /// \brief LRU List
@@ -255,6 +255,6 @@ void LruList<T>::clear() {
 }
 
 }   // namespace util
-}   // namespace isc
+}   // namespace bundy
 
 #endif // LRU_LIST_H

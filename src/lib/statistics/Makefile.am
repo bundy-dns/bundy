@@ -3,7 +3,7 @@ SUBDIRS = tests
 AM_CPPFLAGS = -I$(top_srcdir)/src/lib -I$(top_builddir)/src/lib
 AM_CPPFLAGS += $(BOOST_INCLUDES) $(MULTITHREADING_FLAG)
 AM_CPPFLAGS += -I$(top_srcdir)/src/lib/statistics -I$(top_builddir)/src/lib/statistics
-AM_CXXFLAGS = $(B10_CXXFLAGS)
+AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 
 # Some versions of GCC warn about some versions of Boost regarding
 # missing initializer for members in its posix_time.
@@ -19,7 +19,7 @@ endif
 
 CLEANFILES = *.gcno *.gcda
 
-# These are header-only shared classes and required to build BIND 10.
+# These are header-only shared classes and required to build BUNDY.
 # Include them in the distributed tarball with EXTRA_DIST (like as
 # external sources in ext/).
 EXTRA_DIST = counter.h counter_dict.h

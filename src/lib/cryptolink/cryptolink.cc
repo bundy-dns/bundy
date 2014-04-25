@@ -17,7 +17,7 @@
 
 #include <botan/botan.h>
 
-namespace isc {
+namespace bundy {
 namespace cryptolink {
 
 // For Botan, we use the CryptoLink class object in RAII style
@@ -52,7 +52,7 @@ CryptoLink::initialize() {
         try {
             c.impl_ = new CryptoLinkImpl();
         } catch (const Botan::Exception& ex) {
-            isc_throw(InitializationError, ex.what());
+            bundy_throw(InitializationError, ex.what());
         }
     }
 }
@@ -65,5 +65,5 @@ CryptoLink::createHMAC(const void* secret, size_t secret_len,
 }
 
 } // namespace cryptolink
-} // namespace isc
+} // namespace bundy
 

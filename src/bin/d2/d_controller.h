@@ -28,7 +28,7 @@
 #include <boost/noncopyable.hpp>
 
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 /// @brief DControllerBase launch exit status values.  Upon service shutdown
@@ -36,47 +36,47 @@ namespace d2 {
 /// these values.
 
 /// @brief Exception thrown when the command line is invalid.
-class InvalidUsage : public isc::Exception {
+class InvalidUsage : public bundy::Exception {
 public:
     InvalidUsage(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Exception thrown when the application process fails.
-class ProcessInitError: public isc::Exception {
+class ProcessInitError: public bundy::Exception {
 public:
     ProcessInitError (const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Exception thrown when the session start up fails.
-class SessionStartError: public isc::Exception {
+class SessionStartError: public bundy::Exception {
 public:
     SessionStartError (const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Exception thrown when the application process encounters an
 /// operation in its event loop (i.e. run method).
-class ProcessRunError: public isc::Exception {
+class ProcessRunError: public bundy::Exception {
 public:
     ProcessRunError (const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Exception thrown when the session end fails.
-class SessionEndError: public isc::Exception {
+class SessionEndError: public bundy::Exception {
 public:
     SessionEndError (const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 
 /// @brief Exception thrown when the controller encounters an operational error.
-class DControllerBaseError : public isc::Exception {
+class DControllerBaseError : public bundy::Exception {
 public:
     DControllerBaseError (const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 
@@ -85,10 +85,10 @@ class DControllerBase;
 typedef boost::shared_ptr<DControllerBase> DControllerBasePtr;
 
 /// @brief Defines a shared pointer to a Session.
-typedef boost::shared_ptr<isc::cc::Session> SessionPtr;
+typedef boost::shared_ptr<bundy::cc::Session> SessionPtr;
 
 /// @brief Defines a shared pointer to a ModuleCCSession.
-typedef boost::shared_ptr<isc::config::ModuleCCSession> ModuleCCSessionPtr;
+typedef boost::shared_ptr<bundy::config::ModuleCCSession> ModuleCCSessionPtr;
 
 
 /// @brief Application Controller
@@ -96,27 +96,27 @@ typedef boost::shared_ptr<isc::config::ModuleCCSession> ModuleCCSessionPtr;
 /// DControllerBase is an abstract singleton which provides the framework and
 /// services for managing an application process that implements the
 /// DProcessBase interface.  It allows the process to run either in
-/// integrated mode as a BIND10 module or stand-alone. It coordinates command
+/// integrated mode as a BUNDY module or stand-alone. It coordinates command
 /// line argument parsing, process instantiation and initialization, and runtime
 /// control through external command and configuration event handling.
 /// It creates the IOService instance which is used for runtime control
 /// events and passes the IOService into the application process at process
-/// creation.  In integrated mode it is responsible for establishing BIND10
+/// creation.  In integrated mode it is responsible for establishing BUNDY
 /// session(s) and passes this IOService into the session creation method(s).
 /// It also provides the callback handlers for command and configuration events
-/// received from the external framework (aka BIND10).  For example, when
+/// received from the external framework (aka BUNDY).  For example, when
 /// running in integrated mode and a user alters the configuration with the
-/// bindctl tool, BIND10 will emit a configuration message which is sensed by
+/// bundyctl tool, BUNDY will emit a configuration message which is sensed by
 /// the controller's IOService. The IOService in turn invokes the configuration
 /// callback, DControllerBase::configHandler().  If the user issues a command
-/// such as shutdown via bindctl,  BIND10 will emit a command message, which is
+/// such as shutdown via bundyctl,  BUNDY will emit a command message, which is
 /// sensed by controller's IOService which invokes the command callback,
 /// DControllerBase::commandHandler().
 ///
 /// NOTE: Derivations must supply their own static singleton instance method(s)
 /// for creating and fetching the instance. The base class declares the instance
-/// member in order for it to be available for BIND10 callback functions. This
-/// would not be required if BIND10 supported instance method callbacks.
+/// member in order for it to be available for BUNDY callback functions. This
+/// would not be required if BUNDY supported instance method callbacks.
 class DControllerBase : public boost::noncopyable {
 public:
     /// @brief Constructor
@@ -124,7 +124,7 @@ public:
     /// @param app_name is display name of the application under control. This
     /// name appears in log statements.
     /// @param bin_name is the name of the application executable. Typically
-    /// this matches the BIND10 module name.
+    /// this matches the BUNDY module name.
     DControllerBase(const char* app_name, const char* bin_name);
 
     /// @brief Destructor
@@ -135,9 +135,9 @@ public:
     ///
     /// 1. parse command line arguments
     /// 2. instantiate and initialize the application process
-    /// 3. establish BIND10 session(s) if in integrated mode
+    /// 3. establish BUNDY session(s) if in integrated mode
     /// 4. start and wait on the application process event loop
-    /// 5. upon event loop completion, disconnect from BIND10 (if needed)
+    /// 5. upon event loop completion, disconnect from BUNDY (if needed)
     /// 6. exit to the caller
     ///
     /// It is intended to be called from main() and be given the command line
@@ -149,7 +149,7 @@ public:
     /// in their main function. Such logger uses environmental variables to
     /// control severity, verbosity etc. Reinitialization of logger by this
     /// function would replace unit tests specific logger configuration with
-    /// this suitable for D2 running as a bind10 module.
+    /// this suitable for D2 running as a bundy module.
     ///
     /// @param argc  is the number of command line arguments supplied
     /// @param argv  is the array of string (char *) command line arguments
@@ -162,10 +162,10 @@ public:
     /// InvalidUsage - Indicates invalid command line.
     /// ProcessInitError  - Failed to create and initialize application
     /// process object.
-    /// SessionStartError  - Could not connect to BIND10 (integrated mode only).
+    /// SessionStartError  - Could not connect to BUNDY (integrated mode only).
     /// ProcessRunError - A fatal error occurred while in the application
     /// process event loop.
-    /// SessionEndError - Could not disconnect from BIND10 (integrated mode
+    /// SessionEndError - Could not disconnect from BUNDY (integrated mode
     /// only).
     void launch(int argc, char* argv[], const bool test_mode);
 
@@ -173,7 +173,7 @@ public:
     ///
     /// This configuration handler does not perform configuration
     /// parsing and always returns success. A dummy handler should
-    /// be installed using \ref isc::config::ModuleCCSession ctor
+    /// be installed using \ref bundy::config::ModuleCCSession ctor
     /// to get the initial configuration. This initial configuration
     /// comprises values for only those elements that were modified
     /// the previous session. The D2 configuration parsing can't be
@@ -182,13 +182,13 @@ public:
     /// various configuration values. Installing the dummy handler
     /// that guarantees to return success causes initial configuration
     /// to be stored for the session being created and that it can
-    /// be later accessed with \ref isc::config::ConfigData::getFullConfig.
+    /// be later accessed with \ref bundy::config::ConfigData::getFullConfig.
     ///
     /// @param new_config new configuration.
     ///
     /// @return success configuration status.
-    static isc::data::ConstElementPtr
-    dummyConfigHandler(isc::data::ConstElementPtr new_config);
+    static bundy::data::ConstElementPtr
+    dummyConfigHandler(bundy::data::ConstElementPtr new_config);
 
     /// @brief A callback for handling all incoming configuration updates.
     ///
@@ -199,8 +199,8 @@ public:
     /// @param new_config textual representation of the new configuration
     ///
     /// @return status of the config update
-    static isc::data::ConstElementPtr
-    configHandler(isc::data::ConstElementPtr new_config);
+    static bundy::data::ConstElementPtr
+    configHandler(bundy::data::ConstElementPtr new_config);
 
     /// @brief A callback for handling all incoming commands.
     ///
@@ -213,8 +213,8 @@ public:
     /// arguments exist for a particular command.
     ///
     /// @return status of the processed command
-    static isc::data::ConstElementPtr
-    commandHandler(const std::string& command, isc::data::ConstElementPtr args);
+    static bundy::data::ConstElementPtr
+    commandHandler(const std::string& command, bundy::data::ConstElementPtr args);
 
     /// @brief Instance method invoked by the configuration event handler and
     /// which processes the actual configuration update.  Provides behavioral
@@ -230,8 +230,8 @@ public:
     /// @return returns an Element that contains the results of configuration
     /// update composed of an integer status value (0 means successful,
     /// non-zero means failure), and a string explanation of the outcome.
-    virtual isc::data::ConstElementPtr
-    updateConfig(isc::data::ConstElementPtr new_config);
+    virtual bundy::data::ConstElementPtr
+    updateConfig(bundy::data::ConstElementPtr new_config);
 
 
     /// @brief Instance method invoked by the command event handler and  which
@@ -262,8 +262,8 @@ public:
     ///   failure.
     ///   D2::COMMAND_INVALID - Command is not recognized as valid be either
     ///   the controller or the application process.
-    virtual isc::data::ConstElementPtr
-    executeCommand(const std::string& command, isc::data::ConstElementPtr args);
+    virtual bundy::data::ConstElementPtr
+    executeCommand(const std::string& command, bundy::data::ConstElementPtr args);
 
 protected:
     /// @brief Virtual method that provides derivations the opportunity to
@@ -306,11 +306,11 @@ protected:
     ///   failure.
     ///   D2::COMMAND_INVALID - Command is not recognized as a valid custom
     ///   controller command.
-    virtual isc::data::ConstElementPtr customControllerCommand(
-            const std::string& command, isc::data::ConstElementPtr args);
+    virtual bundy::data::ConstElementPtr customControllerCommand(
+            const std::string& command, bundy::data::ConstElementPtr args);
 
     /// @brief Virtual method which is invoked after the controller successfully
-    /// establishes BIND10 connectivity.  It provides an opportunity for the
+    /// establishes BUNDY connectivity.  It provides an opportunity for the
     /// derivation to execute any custom behavior associated with session
     /// establishment.
     ///
@@ -320,7 +320,7 @@ protected:
     virtual void onSessionConnect(){};
 
     /// @brief Virtual method which is invoked as the first action taken when
-    /// the controller is terminating the session(s) with BIND10.  It provides
+    /// the controller is terminating the session(s) with BUNDY.  It provides
     /// an opportunity for the derivation to execute any custom behavior
     /// associated with session termination.
     ///
@@ -397,7 +397,7 @@ protected:
         return (io_service_);
     }
 
-    /// @brief Getter for fetching the name of the controller's BIND10 spec
+    /// @brief Getter for fetching the name of the controller's BUNDY spec
     /// file.
     ///
     /// @return returns the file name string.
@@ -405,7 +405,7 @@ protected:
         return (spec_file_name_);
     }
 
-    /// @brief Setter for setting the name of the controller's BIND10 spec file.
+    /// @brief Setter for setting the name of the controller's BUNDY spec file.
     ///
     /// @param spec_file_name the file name string.
     void setSpecFileName(const std::string& spec_file_name) {
@@ -453,16 +453,16 @@ private:
     /// if there is a failure creating or initializing the application process.
     void initProcess();
 
-    /// @brief Establishes connectivity with BIND10.  This method is used
+    /// @brief Establishes connectivity with BUNDY.  This method is used
     /// invoked during launch, if running in integrated mode, following
     /// successful process initialization.  It is responsible for establishing
-    /// the BIND10 control and config sessions. During the session creation,
+    /// the BUNDY control and config sessions. During the session creation,
     /// it passes in the controller's IOService and the callbacks for command
     /// directives and config events.  Lastly, it will invoke the onConnect
     /// method providing the derivation an opportunity to execute any custom
     /// logic associated with session establishment.
     ///
-    /// @throw the BIND10 framework may throw std::exceptions.
+    /// @throw the BUNDY framework may throw std::exceptions.
     void establishSession();
 
     /// @brief Invokes the application process's event loop,(DBaseProcess::run).
@@ -476,13 +476,13 @@ private:
     // @throw throws DControllerBaseError or indirectly DProcessBaseError
     void runProcess();
 
-    /// @brief Terminates connectivity with BIND10. This method is invoked
+    /// @brief Terminates connectivity with BUNDY. This method is invoked
     /// in integrated mode after the application event loop has exited. It
     /// first calls the onDisconnect method providing the derivation an
     /// opportunity to execute custom logic if needed, and then terminates the
-    /// BIND10 config and control sessions.
+    /// BUNDY config and control sessions.
     ///
-    /// @throw the BIND10 framework may throw std:exceptions.
+    /// @throw the BUNDY framework may throw std:exceptions.
     void disconnectSession();
 
     /// @brief Initiates shutdown procedure.  This method is invoked
@@ -500,7 +500,7 @@ private:
     /// @return returns an Element that contains the results of shutdown
     /// command composed of an integer status value (0 means successful,
     /// non-zero means failure), and a string explanation of the outcome.
-    isc::data::ConstElementPtr shutdown(isc::data::ConstElementPtr args);
+    bundy::data::ConstElementPtr shutdown(bundy::data::ConstElementPtr args);
 
     /// @brief Prints the program usage text to std error.
     ///
@@ -514,18 +514,18 @@ private:
     std::string app_name_;
 
     /// @brief Name of the service executable. By convention this matches
-    /// the BIND10 module name. It is also used to establish the logger
+    /// the BUNDY module name. It is also used to establish the logger
     /// name.
     std::string bin_name_;
 
     /// @brief Indicates if the controller stand alone mode is enabled. When
-    /// enabled, the controller will not establish connectivity with BIND10.
+    /// enabled, the controller will not establish connectivity with BUNDY.
     bool stand_alone_;
 
     /// @brief Indicates if the verbose logging mode is enabled.
     bool verbose_;
 
-    /// @brief The absolute file name of the BIND10 spec file.
+    /// @brief The absolute file name of the BUNDY spec file.
     std::string spec_file_name_;
 
     /// @brief Pointer to the instance of the process.
@@ -551,7 +551,7 @@ private:
 friend class DControllerTest;
 };
 
-}; // namespace isc::d2
-}; // namespace isc
+}; // namespace bundy::d2
+}; // namespace bundy
 
 #endif

@@ -15,6 +15,7 @@
 #ifndef DATA_SOURCE_CLIENT_H
 #define DATA_SOURCE_CLIENT_H 1
 
+#include <string>
 #include <utility>
 
 #include <boost/noncopyable.hpp>
@@ -53,18 +54,18 @@
 ///   subclass of DataSourceClient)
 /// - A creator function for an instance of that subclass, of the form:
 /// \code
-/// extern "C" DataSourceClient* createInstance(isc::data::ConstElementPtr cfg);
+/// extern "C" DataSourceClient* createInstance(bundy::data::ConstElementPtr cfg);
 /// \endcode
 /// - A destructor for said instance, of the form:
 /// \code
-/// extern "C" void destroyInstance(isc::data::DataSourceClient* instance);
+/// extern "C" void destroyInstance(bundy::data::DataSourceClient* instance);
 /// \endcode
 ///
 /// See the documentation for the \link DataSourceClient \endlink class for
 /// more information on implementing subclasses of it.
 ///
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 
 // zone_iterator.h is not included on purpose, most application won't need it
@@ -160,7 +161,7 @@ public:
     /// \name Constructors and Destructor.
     ///
 protected:
-    /// Default constructor.
+    /// Constructor.
     ///
     /// This is intentionally defined as protected as this base class
     /// should never be instantiated directly.
@@ -169,12 +170,33 @@ protected:
     /// This interface does not specify which exceptions can happen (at least
     /// at this moment), and the caller should expect any type of exception
     /// and react accordingly.
-    DataSourceClient() {}
+    ///
+    /// The passed string will be used for the returned value of
+    /// \c getDataSourceName() opaquely.  This class does not use the name
+    /// in any special way.
+    ///
+    /// \param datasrc_name A name of the underlying data source.
+    DataSourceClient(const std::string& datasrc_name) :
+        datasrc_name_(datasrc_name)
+    {}
 
 public:
     /// The destructor.
     virtual ~DataSourceClient() {}
     //@}
+
+    /// \brief Return the underlying data source name.
+    ///
+    /// In fact, this method simply returns the string passed to the
+    /// constructor.  There is no conceivable reason for customizing the
+    /// behavior of this method, so it's simply implemented as a non-virtual
+    /// method of the base class.
+    ///
+    /// \throw none.
+    /// \return the data source name.
+    const std::string& getDataSourceName() const {
+        return (datasrc_name_);
+    }
 
     /// Returns a \c ZoneFinder for a zone that best matches the given name.
     ///
@@ -201,14 +223,14 @@ public:
     ///
     /// \param name A domain name for which the search is performed.
     /// \return A \c FindResult object enclosing the search result (see above).
-    virtual FindResult findZone(const isc::dns::Name& name) const = 0;
+    virtual FindResult findZone(const bundy::dns::Name& name) const = 0;
 
     /// \brief Returns an iterator to the given zone
     ///
     /// This allows for traversing the whole zone. The returned object can
     /// provide the RRsets one by one.
     ///
-    /// The default implementation throws isc::NotImplemented. This allows
+    /// The default implementation throws bundy::NotImplemented. This allows
     /// for easy and fast deployment of minimal custom data sources, where
     /// the user/implementer doesn't have to care about anything else but
     /// the actual queries. Also, in some cases, it isn't possible to traverse
@@ -235,7 +257,7 @@ public:
     ///                     be that of the first RR read, and TTLs will be
     ///                     adjusted to the lowest one found.
     /// \return Pointer to the iterator.
-    virtual ZoneIteratorPtr getIterator(const isc::dns::Name& name,
+    virtual ZoneIteratorPtr getIterator(const bundy::dns::Name& name,
                                         bool separate_rrs = false) const;
 
     /// Return an updater to make updates to a specific zone.
@@ -275,7 +297,7 @@ public:
     /// intact unless explicitly deleted by \c deleteRRset() on the updater.
     ///
     /// A data source can be "read only" or can prohibit partial updates.
-    /// In such cases this method will result in an \c isc::NotImplemented
+    /// In such cases this method will result in an \c bundy::NotImplemented
     /// exception unconditionally or when \c replace is false).
     ///
     /// If \c journaling is true, the data source should store a journal
@@ -313,7 +335,7 @@ public:
     ///
     /// \return A pointer to the updater; it will be NULL if the specified
     /// zone isn't found.
-    virtual ZoneUpdaterPtr getUpdater(const isc::dns::Name& name,
+    virtual ZoneUpdaterPtr getUpdater(const bundy::dns::Name& name,
                                       bool replace, bool journaling = false)
         const = 0;
 
@@ -363,7 +385,7 @@ public:
     ///
     /// \return A pair of result code and a pointer to \c ZoneJournalReader.
     virtual std::pair<ZoneJournalReader::Result, ZoneJournalReaderPtr>
-    getJournalReader(const isc::dns::Name& zone, uint32_t begin_serial,
+    getJournalReader(const bundy::dns::Name& zone, uint32_t begin_serial,
                      uint32_t end_serial) const = 0;
 
     /// Return the number of zones currently known to this datasource
@@ -433,6 +455,9 @@ public:
     /// \return true if the zone previously existed and has been deleted by
     /// this method; false if the zone didn't exist.
     virtual bool deleteZone(const dns::Name& zone_name);
+
+private:
+    const std::string datasrc_name_;
 };
 }
 }

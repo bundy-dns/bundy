@@ -17,9 +17,9 @@
 #include <gtest/gtest.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::d2;
-using namespace isc::dns;
+using namespace bundy;
+using namespace bundy::d2;
+using namespace bundy::dns;
 
 namespace {
 

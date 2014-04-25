@@ -21,7 +21,7 @@
 
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace unittests {
 

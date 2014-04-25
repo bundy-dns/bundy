@@ -22,16 +22,16 @@ using std::string;
 
 string
 getXfroutSocketPath() {
-    if (getenv("B10_FROM_BUILD") != NULL) {
-        if (getenv("B10_FROM_SOURCE_LOCALSTATEDIR") != NULL) {
-            return (string(getenv("B10_FROM_SOURCE_LOCALSTATEDIR")) +
+    if (getenv("BUNDY_FROM_BUILD") != NULL) {
+        if (getenv("BUNDY_FROM_SOURCE_LOCALSTATEDIR") != NULL) {
+            return (string(getenv("BUNDY_FROM_SOURCE_LOCALSTATEDIR")) +
                     "/auth_xfrout_conn");
         } else {
-            return (string(getenv("B10_FROM_BUILD")) + "/auth_xfrout_conn");
+            return (string(getenv("BUNDY_FROM_BUILD")) + "/auth_xfrout_conn");
         }
     } else {
-        if (getenv("BIND10_XFROUT_SOCKET_FILE") != NULL) {
-            return (getenv("BIND10_XFROUT_SOCKET_FILE"));
+        if (getenv("BUNDY_XFROUT_SOCKET_FILE") != NULL) {
+            return (getenv("BUNDY_XFROUT_SOCKET_FILE"));
         } else {
             return (UNIX_XFROUT_SOCKET_FILE);
         }
@@ -40,21 +40,21 @@ getXfroutSocketPath() {
 
 string
 getDDNSSocketPath() {
-    if (getenv("B10_FROM_BUILD") != NULL) {
-        if (getenv("B10_FROM_SOURCE_LOCALSTATEDIR") != NULL) {
-            return (string(getenv("B10_FROM_SOURCE_LOCALSTATEDIR")) +
+    if (getenv("BUNDY_FROM_BUILD") != NULL) {
+        if (getenv("BUNDY_FROM_SOURCE_LOCALSTATEDIR") != NULL) {
+            return (string(getenv("BUNDY_FROM_SOURCE_LOCALSTATEDIR")) +
                     "/ddns_socket");
         } else {
-            return (string(getenv("B10_FROM_BUILD")) + "/ddns_socket");
+            return (string(getenv("BUNDY_FROM_BUILD")) + "/ddns_socket");
         }
     } else {
-        if (getenv("BIND10_DDNS_SOCKET_FILE") != NULL) {
-            return (getenv("BIND10_DDNS_SOCKET_FILE"));
+        if (getenv("BUNDY_DDNS_SOCKET_FILE") != NULL) {
+            return (getenv("BUNDY_DDNS_SOCKET_FILE"));
         } else {
             return (UNIX_DDNS_SOCKET_FILE);
         }
     }
 }
 
-const char* const AUTH_NAME = "b10-auth";
+const char* const AUTH_NAME = "bundy-auth";
 const char* const AUTH_STARTED_NOTIFICATION = "auth_started";

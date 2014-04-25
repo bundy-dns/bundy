@@ -70,22 +70,22 @@
 
 using namespace std;
 
-using namespace isc;
-using namespace isc::cc;
-using namespace isc::datasrc;
-using namespace isc::dns;
-using namespace isc::util;
-using namespace isc::util::io;
-using namespace isc::auth;
-using namespace isc::dns::rdata;
-using namespace isc::data;
-using namespace isc::config;
-using namespace isc::xfr;
-using namespace isc::asiolink;
-using namespace isc::asiodns;
-using namespace isc::server_common::portconfig;
-using isc::auth::statistics::Counters;
-using isc::auth::statistics::MessageAttributes;
+using namespace bundy;
+using namespace bundy::cc;
+using namespace bundy::datasrc;
+using namespace bundy::dns;
+using namespace bundy::util;
+using namespace bundy::util::io;
+using namespace bundy::auth;
+using namespace bundy::dns::rdata;
+using namespace bundy::data;
+using namespace bundy::config;
+using namespace bundy::xfr;
+using namespace bundy::asiolink;
+using namespace bundy::asiodns;
+using namespace bundy::server_common::portconfig;
+using bundy::auth::statistics::Counters;
+using bundy::auth::statistics::MessageAttributes;
 
 namespace {
 // A helper class for cleaning up message renderer.
@@ -226,7 +226,7 @@ private:
         case IPPROTO_TCP:
             return (SOCK_STREAM);
         default:
-            isc_throw(isc::InvalidParameter,
+            bundy_throw(bundy::InvalidParameter,
                       "Unexpected socket address family: " << protocol);
         }
     }
@@ -284,8 +284,8 @@ public:
     BaseSocketSessionForwarder& ddns_base_forwarder_;
 
     /// Holder for the DDNS Forwarder, which is used to send
-    /// DDNS messages to b10-ddns, but can be set to empty if
-    /// b10-ddns is not running
+    /// DDNS messages to bundy-ddns, but can be set to empty if
+    /// bundy-ddns is not running
     boost::scoped_ptr<SocketSessionForwarderHolder> ddns_forwarder_;
 
     /// \brief Resume the server
@@ -301,8 +301,8 @@ public:
     ///                    with statistics
     /// \param done If true, it indicates there is a response.
     ///             this value will be passed to server->resume(bool)
-    void resumeServer(isc::asiodns::DNSServer* server,
-                      isc::dns::Message& message,
+    void resumeServer(bundy::asiodns::DNSServer* server,
+                      bundy::dns::Message& message,
                       MessageAttributes& stats_attrs,
                       const bool done);
 
@@ -375,8 +375,8 @@ public:
     {}
 };
 
-AuthSrv::AuthSrv(isc::xfr::AbstractXfroutClient& xfrout_client,
-                 isc::util::io::BaseSocketSessionForwarder& ddns_forwarder) :
+AuthSrv::AuthSrv(bundy::xfr::AbstractXfroutClient& xfrout_client,
+                 bundy::util::io::BaseSocketSessionForwarder& ddns_forwarder) :
     dnss_(NULL)
 {
     impl_ = new AuthSrvImpl(xfrout_client, ddns_forwarder);
@@ -455,7 +455,7 @@ AuthSrv::getIOService() {
     return (impl_->io_service_);
 }
 
-isc::auth::DataSrcClientsMgr&
+bundy::auth::DataSrcClientsMgr&
 AuthSrv::getDataSrcClientsMgr() {
     return (impl_->datasrc_clients_mgr_);
 }
@@ -498,7 +498,7 @@ AuthSrv::processMessage(const IOMessage& io_message, Message& message,
             impl_->resumeServer(server, message, stats_attrs, false);
             return;
         }
-    } catch (const isc::Exception& ex) {
+    } catch (const bundy::Exception& ex) {
         LOG_DEBUG(auth_logger, DBG_AUTH_DETAIL, AUTH_HEADER_PARSE_FAIL)
                   .arg(ex.what());
         impl_->resumeServer(server, message, stats_attrs, false);
@@ -522,7 +522,7 @@ AuthSrv::processMessage(const IOMessage& io_message, Message& message,
                          stats_attrs);
         impl_->resumeServer(server, message, stats_attrs, true);
         return;
-    } catch (const isc::Exception& ex) {
+    } catch (const bundy::Exception& ex) {
         LOG_DEBUG(auth_logger, DBG_AUTH_DETAIL, AUTH_PACKET_PARSE_FAILED)
                   .arg(ex.what());
         makeErrorMessage(impl_->renderer_, message, buffer, Rcode::SERVFAIL(),
@@ -660,7 +660,7 @@ AuthSrvImpl::processNormalQuery(const IOMessage& io_message,
                              stats_attrs);
             return (true);
         }
-    } catch (const isc::Exception& ex) {
+    } catch (const bundy::Exception& ex) {
         LOG_ERROR(auth_logger, AUTH_PROCESS_FAIL).arg(ex.what());
         makeErrorMessage(renderer_, message, buffer, Rcode::SERVFAIL(),
                          stats_attrs);
@@ -820,7 +820,7 @@ AuthSrvImpl::processNotify(const IOMessage& io_message, Message& message,
                       .arg(parsed_answer->str());
             return (false);
         }
-    } catch (const isc::Exception& ex) {
+    } catch (const bundy::Exception& ex) {
         LOG_ERROR(auth_logger, AUTH_ZONEMGR_COMMS).arg(ex.what());
         return (false);
     }
@@ -839,7 +839,7 @@ bool
 AuthSrvImpl::processUpdate(const IOMessage& io_message)
 {
     // Push the update request to a separate process via the forwarder.
-    // On successful push, the request shouldn't be responded from b10-auth,
+    // On successful push, the request shouldn't be responded from bundy-auth,
     // so we return false.
     ddns_forwarder_->push(io_message);
     return (false);
@@ -861,10 +861,10 @@ AuthSrv::updateConfig(ConstElementPtr new_config) {
         if (new_config) {
             configureAuthServer(*this, new_config);
         }
-        return (isc::config::createAnswer());
-    } catch (const isc::Exception& error) {
+        return (bundy::config::createAnswer());
+    } catch (const bundy::Exception& error) {
         LOG_ERROR(auth_logger, AUTH_CONFIG_UPDATE_FAIL).arg(error.what());
-        return (isc::config::createAnswer(1, error.what()));
+        return (bundy::config::createAnswer(1, error.what()));
     }
 }
 
@@ -886,7 +886,7 @@ AuthSrv::setListenAddresses(const AddressList& addresses) {
 }
 
 void
-AuthSrv::setDNSService(isc::asiodns::DNSServiceBase& dnss) {
+AuthSrv::setDNSService(bundy::asiodns::DNSServiceBase& dnss) {
     dnss_ = &dnss;
 }
 
@@ -941,6 +941,24 @@ hasMappedSegment(auth::DataSrcClientsMgr& mgr) {
 }
 
 void
+AuthSrv::zoneUpdated(const std::string& event_name,
+                     const ConstElementPtr& params)
+{
+    if (event_name == "zone_updated") {
+        LOG_DEBUG(auth_logger, DBG_AUTH_OPS, AUTH_RECEIVED_ZONE_UPDATED);
+        try {
+            impl_->datasrc_clients_mgr_.updateZone(params);
+        } catch (const bundy::Exception& ex) {
+            // notify handler seems to assume exception free, so we catch
+            // almost everything and log it.
+            LOG_ERROR(auth_logger, AUTH_ZONE_UPDATE_FAIL).arg(ex.what());
+        }
+    } else {
+        LOG_ERROR(auth_logger, AUTH_ZONE_UPDATE_UNKNOWN).arg(event_name);
+    }
+}
+
+void
 AuthSrv::listsReconfigured() {
     const bool has_remote = hasMappedSegment(impl_->datasrc_clients_mgr_);
     if (has_remote && !impl_->readers_group_subscribed_) {
@@ -952,7 +970,7 @@ AuthSrv::listsReconfigured() {
     } else if (!has_remote && impl_->readers_group_subscribed_) {
         impl_->config_session_->unsubscribe("SegmentReader");
         impl_->config_session_->
-            setUnhandledCallback(isc::config::ModuleCCSession::
+            setUnhandledCallback(bundy::config::ModuleCCSession::
                                  UnhandledCallback());
         impl_->readers_group_subscribed_ = false;
     }
@@ -962,8 +980,8 @@ void
 AuthSrv::reconfigureDone(ConstElementPtr params) {
     // ACK the segment
     impl_->config_session_->
-        groupSendMsg(isc::config::createCommand("segment_info_update_ack",
-                                                params), "MemMgr");
+        groupSendMsg(bundy::config::createCommand("segment_info_update_ack",
+                                                params), "Memmgr");
 }
 
 void

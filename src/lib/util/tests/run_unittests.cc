@@ -20,5 +20,5 @@ int
 main(int argc, char* argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
 
-    return (isc::util::unittests::run_all());
+    return (bundy::util::unittests::run_all());
 }

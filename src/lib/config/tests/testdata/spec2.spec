@@ -63,7 +63,7 @@
       },
       {
         "command_name": "shutdown",
-        "command_description": "Shut down BIND 10",
+        "command_description": "Shut down BUNDY",
         "command_args": []
       }
     ],

@@ -22,7 +22,7 @@
 
 #include <stdint.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// Indexes for fields in vendor-class (17) DHCPv6 option
@@ -53,7 +53,7 @@ public:
     /// @param begin iterator to first byte of option data.
     /// @param end iterator to end of option data (first byte after option end).
     ///
-    /// @throw isc::OutOfRange if provided buffer is shorter than data size.
+    /// @throw bundy::OutOfRange if provided buffer is shorter than data size.
     /// @todo Extend constructor to set encapsulated option space name.
     OptionVendor(Option::Universe u, OptionBufferConstIter begin,
                  OptionBufferConstIter end);
@@ -62,7 +62,7 @@ public:
     /// unused byte after stored option.
     ///
     /// @param [out] buf buffer (option will be stored here)
-    virtual void pack(isc::util::OutputBuffer& buf);
+    virtual void pack(bundy::util::OutputBuffer& buf);
 
     /// @brief Parses received buffer
     ///
@@ -72,7 +72,7 @@ public:
     /// @param begin iterator to first byte of option data
     /// @param end iterator to end of option data (first byte after option end)
     ///
-    /// @throw isc::OutOfRange if provided buffer is shorter than data size.
+    /// @throw bundy::OutOfRange if provided buffer is shorter than data size.
     virtual void unpack(OptionBufferConstIter begin, OptionBufferConstIter end);
 
     /// @brief Sets enterprise identifier
@@ -100,7 +100,7 @@ private:
 /// Pointer to a vendor option
 typedef boost::shared_ptr<OptionVendor> OptionVendorPtr;
 
-} // isc::dhcp namespace
-} // isc namespace
+} // bundy::dhcp namespace
+} // bundy namespace
 
 #endif // OPTION_VENDOR_H

@@ -29,8 +29,8 @@
 #include <string>
 #include <time.h>
 
-using namespace isc;
-using namespace isc::dhcp;
+using namespace bundy;
+using namespace bundy::dhcp;
 using namespace std;
 
 /// @file
@@ -59,7 +59,7 @@ using namespace std;
 ///
 /// Within this file, the setting up of the MYSQL_BIND arrays for data being
 /// passed to and retrieved from the database is handled in the
-/// isc::dhcp::MySqlLease4Exchange and isc::dhcp::MySqlLease6Exchange classes.
+/// bundy::dhcp::MySqlLease4Exchange and bundy::dhcp::MySqlLease6Exchange classes.
 /// The classes also hold intermediate variables required for exchanging some
 /// of the data.
 ///
@@ -213,7 +213,7 @@ TaggedStatement tagged_statements[] = {
 
 
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief Common MySQL and Lease Data Methods
@@ -958,14 +958,14 @@ public:
     /// @return Lease6Ptr Pointer to a Lease6 object holding the relevant
     ///         data.
     ///
-    /// @throw isc::BadValue Unable to convert Lease Type value in database
+    /// @throw bundy::BadValue Unable to convert Lease Type value in database
     Lease6Ptr getLeaseData() {
         // The address buffer is declared larger than the buffer size passed
         // to the access function so that we can always append a null byte.
         // Create the IOAddress object corresponding to the received data.
         addr6_buffer_[addr6_length_] = '\0';
         std::string address = addr6_buffer_;
-        isc::asiolink::IOAddress addr(address);
+        bundy::asiolink::IOAddress addr(address);
 
         // Set the lease type in a variable of the appropriate data type, which
         // has been initialized with an arbitrary (but valid) value.
@@ -984,7 +984,7 @@ public:
                 break;
 
             default:
-                isc_throw(BadValue, "invalid lease type returned (" <<
+                bundy_throw(BadValue, "invalid lease type returned (" <<
                           static_cast<int>(lease_type_) << ") for lease with "
                           << "address " << address << ". Only 0, 1, or 2 are "
                           << "allowed.");
@@ -1114,7 +1114,7 @@ MySqlLeaseMgr::MySqlLeaseMgr(const LeaseMgr::ParameterMap& parameters)
     // up the system, but at the risk of losing data if the system crashes.
     my_bool result = mysql_autocommit(mysql_, 1);
     if (result != 0) {
-        isc_throw(DbOperationError, mysql_error(mysql_));
+        bundy_throw(DbOperationError, mysql_error(mysql_));
     }
 
     // Prepare all statements likely to be used.
@@ -1239,7 +1239,7 @@ MySqlLeaseMgr::openDatabase() {
         name = sname.c_str();
     } catch (...) {
         // No database name.  Throw a "NoName" exception
-        isc_throw(NoDatabaseName, "must specified a name for the database");
+        bundy_throw(NoDatabaseName, "must specified a name for the database");
     }
 
     // Set options for the connection:
@@ -1250,7 +1250,7 @@ MySqlLeaseMgr::openDatabase() {
     my_bool auto_reconnect = MLM_TRUE;
     int result = mysql_options(mysql_, MYSQL_OPT_RECONNECT, &auto_reconnect);
     if (result != 0) {
-        isc_throw(DbOpenError, "unable to set auto-reconnect option: " <<
+        bundy_throw(DbOpenError, "unable to set auto-reconnect option: " <<
                   mysql_error(mysql_));
     }
 
@@ -1261,7 +1261,7 @@ MySqlLeaseMgr::openDatabase() {
     const char *sql_mode = "SET SESSION sql_mode ='STRICT_ALL_TABLES'";
     result = mysql_options(mysql_, MYSQL_INIT_COMMAND, sql_mode);
     if (result != 0) {
-        isc_throw(DbOpenError, "unable to set SQL mode options: " <<
+        bundy_throw(DbOpenError, "unable to set SQL mode options: " <<
                   mysql_error(mysql_));
     }
 
@@ -1278,7 +1278,7 @@ MySqlLeaseMgr::openDatabase() {
     MYSQL* status = mysql_real_connect(mysql_, host, user, password, name,
                                        0, NULL, CLIENT_FOUND_ROWS);
     if (status != mysql_) {
-        isc_throw(DbOpenError, mysql_error(mysql_));
+        bundy_throw(DbOpenError, mysql_error(mysql_));
     }
 }
 
@@ -1294,7 +1294,7 @@ MySqlLeaseMgr::prepareStatement(StatementIndex index, const char* text) {
     // Validate that there is space for the statement in the statements array
     // and that nothing has been placed there before.
     if ((index >= statements_.size()) || (statements_[index] != NULL)) {
-        isc_throw(InvalidParameter, "invalid prepared statement index (" <<
+        bundy_throw(InvalidParameter, "invalid prepared statement index (" <<
                   static_cast<int>(index) << ") or indexed prepared " <<
                   "statement is not null");
     }
@@ -1303,13 +1303,13 @@ MySqlLeaseMgr::prepareStatement(StatementIndex index, const char* text) {
     text_statements_[index] = std::string(text);
     statements_[index] = mysql_stmt_init(mysql_);
     if (statements_[index] == NULL) {
-        isc_throw(DbOperationError, "unable to allocate MySQL prepared "
+        bundy_throw(DbOperationError, "unable to allocate MySQL prepared "
                   "statement structure, reason: " << mysql_error(mysql_));
     }
 
     int status = mysql_stmt_prepare(statements_[index], text, strlen(text));
     if (status != 0) {
-        isc_throw(DbOperationError, "unable to prepare MySQL statement <" <<
+        bundy_throw(DbOperationError, "unable to prepare MySQL statement <" <<
                   text << ">, reason: " << mysql_error(mysql_));
     }
 }
@@ -1445,14 +1445,14 @@ void MySqlLeaseMgr::getLeaseCollection(StatementIndex stindex,
         try {
             result.push_back(exchange->getLeaseData());
 
-        } catch (const isc::BadValue& ex) {
+        } catch (const bundy::BadValue& ex) {
             // Rethrow the exception with a bit more data.
-            isc_throw(BadValue, ex.what() << ". Statement is <" <<
+            bundy_throw(BadValue, ex.what() << ". Statement is <" <<
                       text_statements_[stindex] << ">");
         }
 
         if (single && (++count > 1)) {
-            isc_throw(MultipleRecords, "multiple records were found in the "
+            bundy_throw(MultipleRecords, "multiple records were found in the "
                       "database where only one was expected for query "
                       << text_statements_[stindex]);
         }
@@ -1464,7 +1464,7 @@ void MySqlLeaseMgr::getLeaseCollection(StatementIndex stindex,
         checkError(status, stindex, "unable to fetch results");
     } else if (status == MYSQL_DATA_TRUNCATED) {
         // Data truncated - throw an exception indicating what was at fault
-        isc_throw(DataTruncated, text_statements_[stindex]
+        bundy_throw(DataTruncated, text_statements_[stindex]
                   << " returned truncated data: columns affected are "
                   << exchange->getErrorColumns());
     }
@@ -1513,7 +1513,7 @@ void MySqlLeaseMgr::getLease(StatementIndex stindex, MYSQL_BIND* bind,
 // criteria.
 
 Lease4Ptr
-MySqlLeaseMgr::getLease4(const isc::asiolink::IOAddress& addr) const {
+MySqlLeaseMgr::getLease4(const bundy::asiolink::IOAddress& addr) const {
     LOG_DEBUG(dhcpsrv_logger, DHCPSRV_DBG_TRACE_DETAIL,
               DHCPSRV_MYSQL_GET_ADDR4).arg(addr.toText());
 
@@ -1628,7 +1628,7 @@ MySqlLeaseMgr::getLease4(const ClientId&, const HWAddr&, SubnetID) const {
     /// searches for the lease using HW address or client identifier.
     /// It never uses both parameters in the same time. We need to
     /// consider if this function is needed at all.
-    isc_throw(NotImplemented, "The MySqlLeaseMgr::getLease4 function was"
+    bundy_throw(NotImplemented, "The MySqlLeaseMgr::getLease4 function was"
               " called, but it is not implemented");
 }
 
@@ -1663,7 +1663,7 @@ MySqlLeaseMgr::getLease4(const ClientId& clientid, SubnetID subnet_id) const {
 
 Lease6Ptr
 MySqlLeaseMgr::getLease6(Lease::Type lease_type,
-                         const isc::asiolink::IOAddress& addr) const {
+                         const bundy::asiolink::IOAddress& addr) const {
     LOG_DEBUG(dhcpsrv_logger, DHCPSRV_DBG_TRACE_DETAIL,
               DHCPSRV_MYSQL_GET_ADDR6).arg(addr.toText())
               .arg(lease_type);
@@ -1808,12 +1808,12 @@ MySqlLeaseMgr::updateLeaseCommon(StatementIndex stindex, MYSQL_BIND* bind,
     // single row.
     int affected_rows = mysql_stmt_affected_rows(statements_[stindex]);
     if (affected_rows == 0) {
-        isc_throw(NoSuchLease, "unable to update lease for address " <<
+        bundy_throw(NoSuchLease, "unable to update lease for address " <<
                   lease->addr_ << " as it does not exist");
     } else if (affected_rows > 1) {
         // Should not happen - primary key constraint should only have selected
         // one row.
-        isc_throw(DbOperationError, "apparently updated more than one lease "
+        bundy_throw(DbOperationError, "apparently updated more than one lease "
                   "that had the address " << lease->addr_);
     }
 }
@@ -1897,7 +1897,7 @@ MySqlLeaseMgr::deleteLeaseCommon(StatementIndex stindex, MYSQL_BIND* bind) {
 
 
 bool
-MySqlLeaseMgr::deleteLease(const isc::asiolink::IOAddress& addr) {
+MySqlLeaseMgr::deleteLease(const bundy::asiolink::IOAddress& addr) {
     LOG_DEBUG(dhcpsrv_logger, DHCPSRV_DBG_TRACE_DETAIL,
               DHCPSRV_MYSQL_DELETE_ADDR).arg(addr.toText());
 
@@ -1962,7 +1962,7 @@ MySqlLeaseMgr::getVersion() const {
     // Execute the prepared statement
     int status = mysql_stmt_execute(statements_[stindex]);
     if (status != 0) {
-        isc_throw(DbOperationError, "unable to execute <"
+        bundy_throw(DbOperationError, "unable to execute <"
                   << text_statements_[stindex] << "> - reason: " <<
                   mysql_error(mysql_));
     }
@@ -1983,7 +1983,7 @@ MySqlLeaseMgr::getVersion() const {
 
     status = mysql_stmt_bind_result(statements_[stindex], bind);
     if (status != 0) {
-        isc_throw(DbOperationError, "unable to bind result set: " <<
+        bundy_throw(DbOperationError, "unable to bind result set: " <<
                   mysql_error(mysql_));
     }
 
@@ -1992,7 +1992,7 @@ MySqlLeaseMgr::getVersion() const {
     MySqlFreeResult fetch_release(statements_[stindex]);
     status = mysql_stmt_fetch(statements_[stindex]);
     if (status != 0) {
-        isc_throw(DbOperationError, "unable to obtain result set: " <<
+        bundy_throw(DbOperationError, "unable to obtain result set: " <<
                   mysql_error(mysql_));
     }
 
@@ -2004,7 +2004,7 @@ void
 MySqlLeaseMgr::commit() {
     LOG_DEBUG(dhcpsrv_logger, DHCPSRV_DBG_TRACE_DETAIL, DHCPSRV_MYSQL_COMMIT);
     if (mysql_commit(mysql_) != 0) {
-        isc_throw(DbOperationError, "commit failed: " << mysql_error(mysql_));
+        bundy_throw(DbOperationError, "commit failed: " << mysql_error(mysql_));
     }
 }
 
@@ -2013,9 +2013,9 @@ void
 MySqlLeaseMgr::rollback() {
     LOG_DEBUG(dhcpsrv_logger, DHCPSRV_DBG_TRACE_DETAIL, DHCPSRV_MYSQL_ROLLBACK);
     if (mysql_rollback(mysql_) != 0) {
-        isc_throw(DbOperationError, "rollback failed: " << mysql_error(mysql_));
+        bundy_throw(DbOperationError, "rollback failed: " << mysql_error(mysql_));
     }
 }
 
-}; // end of isc::dhcp namespace
-}; // end of isc namespace
+}; // end of bundy::dhcp namespace
+}; // end of bundy namespace

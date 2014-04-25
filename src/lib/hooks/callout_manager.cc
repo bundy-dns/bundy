@@ -26,7 +26,7 @@
 
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace hooks {
 
 // Constructor
@@ -38,7 +38,7 @@ CalloutManager::CalloutManager(int num_libraries)
       post_library_handle_(this, INT_MAX), num_libraries_(num_libraries)
 {
     if (num_libraries < 0) {
-        isc_throw(isc::BadValue, "number of libraries passed to the "
+        bundy_throw(bundy::BadValue, "number of libraries passed to the "
                   "CalloutManager must be >= 0");
     }
 }
@@ -55,7 +55,7 @@ CalloutManager::checkLibraryIndex(int library_index) const {
         return;
     }
 
-    isc_throw(NoSuchLibrary, "library index " << library_index <<
+    bundy_throw(NoSuchLibrary, "library index " << library_index <<
               " is not valid for the number of loaded libraries (" <<
               num_libraries_ << ")");
 }
@@ -101,7 +101,7 @@ bool
 CalloutManager::calloutsPresent(int hook_index) const {
     // Validate the hook index.
     if ((hook_index < 0) || (hook_index >= hook_vector_.size())) {
-        isc_throw(NoSuchHook, "hook index " << hook_index <<
+        bundy_throw(NoSuchHook, "hook index " << hook_index <<
                   " is not valid for the list of registered hooks");
     }
 
@@ -157,7 +157,7 @@ CalloutManager::callCallouts(int hook_index, CalloutHandle& callout_handle) {
                         .arg(PointerConverter(i->second).dlsymPtr());
                 }
             } catch (const std::exception& e) {
-                // Any exception, not just ones based on isc::Exception
+                // Any exception, not just ones based on bundy::Exception
                 LOG_ERROR(hooks_logger, HOOKS_CALLOUT_EXCEPTION)
                     .arg(current_library_)
                     .arg(server_hooks_.getName(current_hook_))
@@ -256,4 +256,4 @@ CalloutManager::deregisterAllCallouts(const std::string& name) {
 }
 
 } // namespace util
-} // namespace isc
+} // namespace bundy

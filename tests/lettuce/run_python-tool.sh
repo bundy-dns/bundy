@@ -16,8 +16,8 @@
 # WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 # This script runs the specified python program, referring to the in-tree
-# BIND 10 Python libraries (in case the program needs them)
+# BUNDY Python libraries (in case the program needs them)
 # usage example: run_python-tool.sh tools/xfr-client.py -p 5300 example.org
 
-. ./setup_intree_bind10.sh
+. ./setup_intree_bundy.sh
 $PYTHON_EXEC $*

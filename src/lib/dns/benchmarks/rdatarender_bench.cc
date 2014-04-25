@@ -29,10 +29,10 @@
 #include <dns/rrtype.h>
 
 using namespace std;
-using namespace isc::bench;
-using namespace isc::dns;
-using namespace isc::dns::rdata;
-using isc::util::OutputBuffer;
+using namespace bundy::bench;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
+using bundy::util::OutputBuffer;
 
 namespace {
 // This templated benchmark class is constructed with a vector of Rdata-like

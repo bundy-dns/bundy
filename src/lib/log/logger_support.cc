@@ -25,7 +25,7 @@ bool logging_init_state = false;
 
 } // Anonymous namespace
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 // Return initialization state.
@@ -45,10 +45,10 @@ setLoggingInitialized(bool state) {
 // Logger Run-Time Initialization.
 
 void
-initLogger(const string& root, isc::log::Severity severity, int dbglevel,
+initLogger(const string& root, bundy::log::Severity severity, int dbglevel,
            const char* file, bool buffer) {
     LoggerManager::init(root, severity, dbglevel, file, buffer);
 }
 
 } // namespace log
-} // namespace isc
+} // namespace bundy

@@ -21,12 +21,12 @@
 #include <string>
 #include <map>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// An exception that is thrown if an error occurs while configuring
 /// DHCP server.
-class DhcpConfigError : public isc::Exception {
+class DhcpConfigError : public bundy::Exception {
 public:
 
     /// @brief constructor
@@ -35,7 +35,7 @@ public:
     /// @param line line of the file, where exception occurred
     /// @param what text description of the issue that caused exception
     DhcpConfigError(const char* file, size_t line, const char* what)
-        : isc::Exception(file, line, what) {}
+        : bundy::Exception(file, line, what) {}
 };
 
 /// @brief Forward declaration to DhcpConfigParser class.
@@ -53,7 +53,7 @@ typedef boost::shared_ptr<DhcpConfigParser> ParserPtr;
 typedef std::vector<ParserPtr> ParserCollection;
 
 /// @brief Combination of parameter name and configuration contents
-typedef std::pair<std::string, isc::data::ConstElementPtr> ConfigPair;
+typedef std::pair<std::string, bundy::data::ConstElementPtr> ConfigPair;
 
 /// @brief Base abstract class for all DHCP parsers
 ///
@@ -99,7 +99,7 @@ public:
     /// configuration value is normally syntactically validated, but the
     /// @c build() implementation must also expect invalid input.  If it
     /// detects an error it may throw an exception of a derived class
-    /// of @c isc::Exception.
+    /// of @c bundy::Exception.
     ///
     /// Preparing a configuration value will often require resource
     /// allocation.  If it fails, it may throw a corresponding standard
@@ -111,7 +111,7 @@ public:
     ///
     /// @param config_value The configuration value for the identifier
     /// corresponding to the derived class.
-    virtual void build(isc::data::ConstElementPtr config_value) = 0;
+    virtual void build(bundy::data::ConstElementPtr config_value) = 0;
 
     /// @brief Apply the prepared configuration value to the server.
     ///
@@ -130,8 +130,8 @@ public:
     virtual void commit() = 0;
 };
 
-}; // end of isc::dhcp namespace
-}; // end of isc namespace
+}; // end of bundy::dhcp namespace
+}; // end of bundy namespace
 
 #endif // DHCP_CONFIG_PARSER_H
 

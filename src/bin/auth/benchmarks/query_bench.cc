@@ -46,17 +46,17 @@
 #include <vector>
 
 using namespace std;
-using namespace isc;
-using namespace isc::data;
-using namespace isc::auth;
-using namespace isc::dns;
-using namespace isc::log;
-using namespace isc::util;
-using namespace isc::util::unittests;
-using namespace isc::xfr;
-using namespace isc::bench;
-using namespace isc::asiodns;
-using namespace isc::asiolink;
+using namespace bundy;
+using namespace bundy::data;
+using namespace bundy::auth;
+using namespace bundy::dns;
+using namespace bundy::log;
+using namespace bundy::util;
+using namespace bundy::util::unittests;
+using namespace bundy::xfr;
+using namespace bundy::bench;
+using namespace bundy::asiodns;
+using namespace bundy::asiolink;
 
 namespace {
 // Commonly used constant:
@@ -171,7 +171,7 @@ printQPSResult(unsigned int iteration, double duration,
 }
 }
 
-namespace isc {
+namespace bundy {
 namespace bench {
 template<>
 void
@@ -248,8 +248,8 @@ main(int argc, char* argv[]) {
     const char* const query_data_file = argv[1];
 
     // By default disable logging to avoid unwanted noise.
-    initLogger("query-bench", debug_log ? isc::log::DEBUG : isc::log::NONE,
-               isc::log::MAX_DEBUG_LEVEL, NULL);
+    initLogger("query-bench", debug_log ? bundy::log::DEBUG : bundy::log::NONE,
+               bundy::log::MAX_DEBUG_LEVEL, NULL);
 
     DataSrcType datasrc_type = SQLITE3;
     if (strcmp(opt_datasrc_type, "sqlite3") == 0) {

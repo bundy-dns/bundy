@@ -23,8 +23,8 @@
 #include <vector>
 #include <string.h>
 
-using namespace isc::asiolink;
-using namespace isc::hooks;
+using namespace bundy::asiolink;
+using namespace bundy::hooks;
 
 namespace {
 
@@ -50,15 +50,15 @@ AllocEngineHooks Hooks;
 
 }; // anonymous namespace
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 AllocEngine::IterativeAllocator::IterativeAllocator(Lease::Type lease_type)
     :Allocator(lease_type) {
 }
 
-isc::asiolink::IOAddress
-AllocEngine::IterativeAllocator::increaseAddress(const isc::asiolink::IOAddress& addr) {
+bundy::asiolink::IOAddress
+AllocEngine::IterativeAllocator::increaseAddress(const bundy::asiolink::IOAddress& addr) {
     // Get a buffer holding an address.
     const std::vector<uint8_t>& vec = addr.toBytes();
     // Get the address length.
@@ -85,11 +85,11 @@ AllocEngine::IterativeAllocator::increaseAddress(const isc::asiolink::IOAddress&
     return (IOAddress::fromBytes(addr.getFamily(), packed));
 }
 
-isc::asiolink::IOAddress
-AllocEngine::IterativeAllocator::increasePrefix(const isc::asiolink::IOAddress& prefix,
+bundy::asiolink::IOAddress
+AllocEngine::IterativeAllocator::increasePrefix(const bundy::asiolink::IOAddress& prefix,
                                                 const uint8_t prefix_len) {
     if (!prefix.isV6()) {
-        isc_throw(BadValue, "Prefix operations are for IPv6 only (attempted to "
+        bundy_throw(BadValue, "Prefix operations are for IPv6 only (attempted to "
                   "increase prefix " << prefix << ")");
     }
 
@@ -97,7 +97,7 @@ AllocEngine::IterativeAllocator::increasePrefix(const isc::asiolink::IOAddress& 
     const std::vector<uint8_t>& vec = prefix.toBytes();
 
     if (prefix_len < 1 || prefix_len > 128) {
-        isc_throw(BadValue, "Cannot increase prefix: invalid prefix length: "
+        bundy_throw(BadValue, "Cannot increase prefix: invalid prefix length: "
                   << prefix_len);
     }
 
@@ -142,7 +142,7 @@ AllocEngine::IterativeAllocator::increasePrefix(const isc::asiolink::IOAddress& 
 }
 
 
-isc::asiolink::IOAddress
+bundy::asiolink::IOAddress
 AllocEngine::IterativeAllocator::pickAddress(const SubnetPtr& subnet,
                                              const DuidPtr&,
                                              const IOAddress&) {
@@ -158,7 +158,7 @@ AllocEngine::IterativeAllocator::pickAddress(const SubnetPtr& subnet,
     const PoolCollection& pools = subnet->getPools(pool_type_);
 
     if (pools.empty()) {
-        isc_throw(AllocFailed, "No pools defined in selected subnet");
+        bundy_throw(AllocFailed, "No pools defined in selected subnet");
     }
 
     // first we need to find a pool the last address belongs to.
@@ -189,7 +189,7 @@ AllocEngine::IterativeAllocator::pickAddress(const SubnetPtr& subnet,
         Pool6Ptr pool6 = boost::dynamic_pointer_cast<Pool6>(*it);
         if (!pool6) {
             // Something is gravely wrong here
-            isc_throw(Unexpected, "Wrong type of pool: " << (*it)->toText()
+            bundy_throw(Unexpected, "Wrong type of pool: " << (*it)->toText()
                       << " is not Pool6");
         }
         // Get the next prefix
@@ -219,28 +219,28 @@ AllocEngine::IterativeAllocator::pickAddress(const SubnetPtr& subnet,
 
 AllocEngine::HashedAllocator::HashedAllocator(Lease::Type lease_type)
     :Allocator(lease_type) {
-    isc_throw(NotImplemented, "Hashed allocator is not implemented");
+    bundy_throw(NotImplemented, "Hashed allocator is not implemented");
 }
 
 
-isc::asiolink::IOAddress
+bundy::asiolink::IOAddress
 AllocEngine::HashedAllocator::pickAddress(const SubnetPtr&,
                                           const DuidPtr&,
                                           const IOAddress&) {
-    isc_throw(NotImplemented, "Hashed allocator is not implemented");
+    bundy_throw(NotImplemented, "Hashed allocator is not implemented");
 }
 
 AllocEngine::RandomAllocator::RandomAllocator(Lease::Type lease_type)
     :Allocator(lease_type) {
-    isc_throw(NotImplemented, "Random allocator is not implemented");
+    bundy_throw(NotImplemented, "Random allocator is not implemented");
 }
 
 
-isc::asiolink::IOAddress
+bundy::asiolink::IOAddress
 AllocEngine::RandomAllocator::pickAddress(const SubnetPtr&,
                                           const DuidPtr&,
                                           const IOAddress&) {
-    isc_throw(NotImplemented, "Random allocator is not implemented");
+    bundy_throw(NotImplemented, "Random allocator is not implemented");
 }
 
 
@@ -263,7 +263,7 @@ AllocEngine::AllocEngine(AllocType engine_type, unsigned int attempts,
         allocators_[basic_type] = AllocatorPtr(new RandomAllocator(basic_type));
         break;
     default:
-        isc_throw(BadValue, "Invalid/unsupported allocation algorithm");
+        bundy_throw(BadValue, "Invalid/unsupported allocation algorithm");
     }
 
     // If this is IPv6 allocation engine, initalize also temporary addrs
@@ -283,7 +283,7 @@ AllocEngine::AllocEngine(AllocType engine_type, unsigned int attempts,
             allocators_[Lease::TYPE_PD] = AllocatorPtr(new RandomAllocator(Lease::TYPE_PD));
             break;
         default:
-            isc_throw(BadValue, "Invalid/unsupported allocation algorithm");
+            bundy_throw(BadValue, "Invalid/unsupported allocation algorithm");
         }
     }
 
@@ -298,23 +298,23 @@ AllocEngine::allocateLeases6(const Subnet6Ptr& subnet, const DuidPtr& duid,
                              Lease::Type type, const bool fwd_dns_update,
                              const bool rev_dns_update,
                              const std::string& hostname, bool fake_allocation,
-                             const isc::hooks::CalloutHandlePtr& callout_handle,
+                             const bundy::hooks::CalloutHandlePtr& callout_handle,
                              Lease6Collection& old_leases) {
 
     try {
         AllocatorPtr allocator = getAllocator(type);
 
         if (!allocator) {
-            isc_throw(InvalidOperation, "No allocator specified for "
+            bundy_throw(InvalidOperation, "No allocator specified for "
                       << Lease6::typeToText(type));
         }
 
         if (!subnet) {
-            isc_throw(InvalidOperation, "Subnet is required for allocation");
+            bundy_throw(InvalidOperation, "Subnet is required for allocation");
         }
 
         if (!duid) {
-            isc_throw(InvalidOperation, "DUID is mandatory for allocation");
+            bundy_throw(InvalidOperation, "DUID is mandatory for allocation");
         }
 
         // Check if there's existing lease for that subnet/duid/iaid
@@ -469,7 +469,7 @@ AllocEngine::allocateLeases6(const Subnet6Ptr& subnet, const DuidPtr& duid,
         // Unable to allocate an address, return an empty lease.
         LOG_WARN(dhcpsrv_logger, DHCPSRV_ADDRESS6_ALLOC_FAIL).arg(attempts_);
 
-    } catch (const isc::Exception& e) {
+    } catch (const bundy::Exception& e) {
 
         // Some other error, return an empty lease.
         LOG_ERROR(dhcpsrv_logger, DHCPSRV_ADDRESS6_ALLOC_ERROR).arg(e.what());
@@ -483,7 +483,7 @@ AllocEngine::allocateLease4(const SubnetPtr& subnet, const ClientIdPtr& clientid
                             const HWAddrPtr& hwaddr, const IOAddress& hint,
                             const bool fwd_dns_update, const bool rev_dns_update,
                             const std::string& hostname, bool fake_allocation,
-                            const isc::hooks::CalloutHandlePtr& callout_handle,
+                            const bundy::hooks::CalloutHandlePtr& callout_handle,
                             Lease4Ptr& old_lease) {
 
     // The NULL pointer indicates that the old lease didn't exist. It may
@@ -498,15 +498,15 @@ AllocEngine::allocateLease4(const SubnetPtr& subnet, const ClientIdPtr& clientid
         // Allocator is always created in AllocEngine constructor and there is
         // currently no other way to set it, so that check is not really necessary.
         if (!allocator) {
-            isc_throw(InvalidOperation, "No allocator selected");
+            bundy_throw(InvalidOperation, "No allocator selected");
         }
 
         if (!subnet) {
-            isc_throw(InvalidOperation, "Can't allocate IPv4 address without subnet");
+            bundy_throw(InvalidOperation, "Can't allocate IPv4 address without subnet");
         }
 
         if (!hwaddr) {
-            isc_throw(InvalidOperation, "HWAddr must be defined");
+            bundy_throw(InvalidOperation, "HWAddr must be defined");
         }
 
         // Check if there's existing lease for that subnet/clientid/hwaddr combination.
@@ -635,7 +635,7 @@ AllocEngine::allocateLease4(const SubnetPtr& subnet, const ClientIdPtr& clientid
         // Unable to allocate an address, return an empty lease.
         LOG_WARN(dhcpsrv_logger, DHCPSRV_ADDRESS4_ALLOC_FAIL).arg(attempts_);
 
-    } catch (const isc::Exception& e) {
+    } catch (const bundy::Exception& e) {
 
         // Some other error, return an empty lease.
         LOG_ERROR(dhcpsrv_logger, DHCPSRV_ADDRESS4_ALLOC_ERROR).arg(e.what());
@@ -650,11 +650,11 @@ Lease4Ptr AllocEngine::renewLease4(const SubnetPtr& subnet,
                                    const bool rev_dns_update,
                                    const std::string& hostname,
                                    const Lease4Ptr& lease,
-                                   const isc::hooks::CalloutHandlePtr& callout_handle,
+                                   const bundy::hooks::CalloutHandlePtr& callout_handle,
                                    bool fake_allocation /* = false */) {
 
     if (!lease) {
-        isc_throw(InvalidOperation, "Lease4 must be specified");
+        bundy_throw(InvalidOperation, "Lease4 must be specified");
     }
 
     // Let's keep the old data. This is essential if we are using memfile
@@ -728,11 +728,11 @@ Lease6Ptr AllocEngine::reuseExpiredLease(Lease6Ptr& expired,
                                          const bool fwd_dns_update,
                                          const bool rev_dns_update,
                                          const std::string& hostname,
-                                         const isc::hooks::CalloutHandlePtr& callout_handle,
+                                         const bundy::hooks::CalloutHandlePtr& callout_handle,
                                          bool fake_allocation /*= false */ ) {
 
     if (!expired->expired()) {
-        isc_throw(BadValue, "Attempt to recycle lease that is still valid");
+        bundy_throw(BadValue, "Attempt to recycle lease that is still valid");
     }
 
     if (expired->type_ != Lease::TYPE_PD) {
@@ -810,11 +810,11 @@ Lease4Ptr AllocEngine::reuseExpiredLease(Lease4Ptr& expired,
                                          const bool fwd_dns_update,
                                          const bool rev_dns_update,
                                          const std::string& hostname,
-                                         const isc::hooks::CalloutHandlePtr& callout_handle,
+                                         const bundy::hooks::CalloutHandlePtr& callout_handle,
                                          bool fake_allocation /*= false */ ) {
 
     if (!expired->expired()) {
-        isc_throw(BadValue, "Attempt to recycle lease that is still valid");
+        bundy_throw(BadValue, "Attempt to recycle lease that is still valid");
     }
 
     // address, lease type and prefixlen (0) stay the same
@@ -893,7 +893,7 @@ Lease6Ptr AllocEngine::createLease6(const Subnet6Ptr& subnet,
                                     const bool fwd_dns_update,
                                     const bool rev_dns_update,
                                     const std::string& hostname,
-                                    const isc::hooks::CalloutHandlePtr& callout_handle,
+                                    const bundy::hooks::CalloutHandlePtr& callout_handle,
                                     bool fake_allocation /*= false */ ) {
 
     if (type != Lease::TYPE_PD) {
@@ -977,10 +977,10 @@ Lease4Ptr AllocEngine::createLease4(const SubnetPtr& subnet,
                                     const bool fwd_dns_update,
                                     const bool rev_dns_update,
                                     const std::string& hostname,
-                                    const isc::hooks::CalloutHandlePtr& callout_handle,
+                                    const bundy::hooks::CalloutHandlePtr& callout_handle,
                                     bool fake_allocation /*= false */ ) {
     if (!hwaddr) {
-        isc_throw(BadValue, "Can't create a lease with NULL HW address");
+        bundy_throw(BadValue, "Can't create a lease with NULL HW address");
     }
     time_t now = time(NULL);
 
@@ -1092,7 +1092,7 @@ AllocEngine::AllocatorPtr AllocEngine::getAllocator(Lease::Type type) {
     std::map<Lease::Type, AllocatorPtr>::const_iterator alloc = allocators_.find(type);
 
     if (alloc == allocators_.end()) {
-        isc_throw(BadValue, "No allocator initialized for pool type "
+        bundy_throw(BadValue, "No allocator initialized for pool type "
                   << Lease::typeToText(type));
     }
     return (alloc->second);
@@ -1102,5 +1102,5 @@ AllocEngine::~AllocEngine() {
     // no need to delete allocator. smart_ptr will do the trick for us
 }
 
-}; // end of isc::dhcp namespace
-}; // end of isc namespace
+}; // end of bundy::dhcp namespace
+}; // end of bundy namespace

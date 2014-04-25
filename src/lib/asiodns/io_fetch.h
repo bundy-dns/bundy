@@ -31,7 +31,7 @@
 #include <dns/question.h>
 #include <dns/message.h>
 
-namespace isc {
+namespace bundy {
 namespace asiodns {
 
 // Forward declarations
@@ -133,10 +133,10 @@ public:
     ///        -1 indicates no timeout.
     /// \param edns true if the request should be EDNS. The default value is
     ///        true.
-    IOFetch(Protocol protocol, isc::asiolink::IOService& service,
-        const isc::dns::Question& question,
-        const isc::asiolink::IOAddress& address,
-        uint16_t port, isc::util::OutputBufferPtr& buff, Callback* cb,
+    IOFetch(Protocol protocol, bundy::asiolink::IOService& service,
+        const bundy::dns::Question& question,
+        const bundy::asiolink::IOAddress& address,
+        uint16_t port, bundy::util::OutputBufferPtr& buff, Callback* cb,
         int wait = -1,
         bool edns = true);
 
@@ -148,10 +148,10 @@ public:
     ///
     /// \param query_message the shared_ptr to a full query message
     ///        got from a query client.
-    IOFetch(Protocol protocol, isc::asiolink::IOService& service,
-        isc::dns::ConstMessagePtr query_message,
-        const isc::asiolink::IOAddress& address,
-        uint16_t port, isc::util::OutputBufferPtr& buff, Callback* cb,
+    IOFetch(Protocol protocol, bundy::asiolink::IOService& service,
+        bundy::dns::ConstMessagePtr query_message,
+        const bundy::asiolink::IOAddress& address,
+        uint16_t port, bundy::util::OutputBufferPtr& buff, Callback* cb,
         int wait = -1);
 
     /// \brief Constructor.
@@ -173,10 +173,10 @@ public:
     /// (default = 53)
     /// \param wait Timeout for the fetch (in ms).  The default value of
     ///     -1 indicates no timeout.
-    IOFetch(Protocol protocol, isc::asiolink::IOService& service,
-        isc::util::OutputBufferPtr& outpkt,
-        const isc::asiolink::IOAddress& address,
-        uint16_t port, isc::util::OutputBufferPtr& buff, Callback* cb,
+    IOFetch(Protocol protocol, bundy::asiolink::IOService& service,
+        bundy::util::OutputBufferPtr& outpkt,
+        const bundy::asiolink::IOAddress& address,
+        uint16_t port, bundy::util::OutputBufferPtr& buff, Callback* cb,
         int wait = -1);
 
     /// \brief Return Current Protocol
@@ -206,10 +206,10 @@ private:
     /// All the parameters are same with the constructor, except
     /// parameter "query_message"
     /// \param query_message the message to be sent out.
-    void initIOFetch(isc::dns::MessagePtr& query_message, Protocol protocol,
-            isc::asiolink::IOService& service, const isc::dns::Question& question,
-            const isc::asiolink::IOAddress& address, uint16_t port,
-            isc::util::OutputBufferPtr& buff, Callback* cb, int wait,
+    void initIOFetch(bundy::dns::MessagePtr& query_message, Protocol protocol,
+            bundy::asiolink::IOService& service, const bundy::dns::Question& question,
+            const bundy::asiolink::IOAddress& address, uint16_t port,
+            bundy::util::OutputBufferPtr& buff, Callback* cb, int wait,
             bool edns = true);
 
     /// \brief Log I/O Failure
@@ -227,6 +227,6 @@ private:
 };
 
 } // namespace asiodns
-} // namespace isc
+} // namespace bundy
 
 #endif // IO_FETCH_H

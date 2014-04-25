@@ -26,7 +26,7 @@
 
 namespace {
 
-using namespace isc::dhcp;
+using namespace bundy::dhcp;
 
 /// The following structure defines a Berkely Packet Filter program to perform
 /// packet filtering. The program operates on Ethernet packets.  To help with
@@ -97,14 +97,14 @@ struct sock_filter dhcp_sock_filter [] = {
 
 }
 
-using namespace isc::util;
+using namespace bundy::util;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 SocketInfo
 PktFilterLPF::openSocket(const Iface& iface,
-                         const isc::asiolink::IOAddress& addr,
+                         const bundy::asiolink::IOAddress& addr,
                          const uint16_t port, const bool,
                          const bool) {
 
@@ -118,7 +118,7 @@ PktFilterLPF::openSocket(const Iface& iface,
     int sock = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
     if (sock < 0) {
         close(fallback);
-        isc_throw(SocketConfigError, "Failed to create raw LPF socket");
+        bundy_throw(SocketConfigError, "Failed to create raw LPF socket");
     }
 
     // Create socket filter program. This program will only allow incoming UDP
@@ -136,7 +136,7 @@ PktFilterLPF::openSocket(const Iface& iface,
                    sizeof(filter_program)) < 0) {
         close(sock);
         close(fallback);
-        isc_throw(SocketConfigError, "Failed to install packet filtering program"
+        bundy_throw(SocketConfigError, "Failed to install packet filtering program"
                   << " on the socket " << sock);
     }
 
@@ -153,7 +153,7 @@ PktFilterLPF::openSocket(const Iface& iface,
              sizeof(sa)) < 0) {
         close(sock);
         close(fallback);
-        isc_throw(SocketConfigError, "Failed to bind LPF socket '" << sock
+        bundy_throw(SocketConfigError, "Failed to bind LPF socket '" << sock
                   << "' to interface '" << iface.getName() << "'");
     }
 
@@ -274,7 +274,7 @@ PktFilterLPF::send(const Iface& iface, uint16_t sockfd, const Pkt4Ptr& pkt) {
                         reinterpret_cast<const struct sockaddr*>(&sa),
                         sizeof(sockaddr_ll));
     if (result < 0) {
-        isc_throw(SocketWriteError, "failed to send DHCPv4 packet, errno="
+        bundy_throw(SocketWriteError, "failed to send DHCPv4 packet, errno="
                   << errno << " (check errno.h)");
     }
 
@@ -283,5 +283,5 @@ PktFilterLPF::send(const Iface& iface, uint16_t sockfd, const Pkt4Ptr& pkt) {
 }
 
 
-} // end of isc::dhcp namespace
-} // end of isc namespace
+} // end of bundy::dhcp namespace
+} // end of bundy namespace

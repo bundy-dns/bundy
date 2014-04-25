@@ -24,7 +24,7 @@
 
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 // *********************** TSIGKeyInfo  *************************
@@ -43,7 +43,7 @@ TSIGKeyInfo::~TSIGKeyInfo() {
 const char* DnsServerInfo::EMPTY_IP_STR = "0.0.0.0";
 
 DnsServerInfo::DnsServerInfo(const std::string& hostname,
-                             isc::asiolink::IOAddress ip_address, uint32_t port,
+                             bundy::asiolink::IOAddress ip_address, uint32_t port,
                              bool enabled)
     :hostname_(hostname), ip_address_(ip_address), port_(port),
     enabled_(enabled) {
@@ -91,7 +91,7 @@ DdnsDomainListMgr::~DdnsDomainListMgr () {
 void
 DdnsDomainListMgr::setDomains(DdnsDomainMapPtr domains) {
     if (!domains) {
-        isc_throw(D2CfgError,
+        bundy_throw(D2CfgError,
                   "DdnsDomainListMgr::setDomains: Domain list may not be null");
     }
 
@@ -179,7 +179,7 @@ TSIGKeyInfoParser::TSIGKeyInfoParser(const std::string& entry_name,
                                      TSIGKeyInfoMapPtr keys)
     : entry_name_(entry_name), keys_(keys), local_scalars_() {
     if (!keys_) {
-        isc_throw(D2CfgError, "TSIGKeyInfoParser ctor:"
+        bundy_throw(D2CfgError, "TSIGKeyInfoParser ctor:"
                   " key storage cannot be null");
     }
 }
@@ -188,8 +188,8 @@ TSIGKeyInfoParser::~TSIGKeyInfoParser() {
 }
 
 void
-TSIGKeyInfoParser::build(isc::data::ConstElementPtr key_config) {
-    isc::dhcp::ConfigPair config_pair;
+TSIGKeyInfoParser::build(bundy::data::ConstElementPtr key_config) {
+    bundy::dhcp::ConfigPair config_pair;
     // For each element in the key configuration:
     // 1. Create a parser for the element.
     // 2. Invoke the parser's build method passing in the element's
@@ -197,13 +197,13 @@ TSIGKeyInfoParser::build(isc::data::ConstElementPtr key_config) {
     // 3. Invoke the parser's commit method to store the element's parsed
     // data to the parser's local storage.
     BOOST_FOREACH (config_pair, key_config->mapValue()) {
-        isc::dhcp::ParserPtr parser(createConfigParser(config_pair.first));
+        bundy::dhcp::ParserPtr parser(createConfigParser(config_pair.first));
         parser->build(config_pair.second);
         parser->commit();
     }
 }
 
-isc::dhcp::ParserPtr
+bundy::dhcp::ParserPtr
 TSIGKeyInfoParser::createConfigParser(const std::string& config_id) {
     DhcpConfigParser* parser = NULL;
     // Based on the configuration id of the element, create the appropriate
@@ -211,16 +211,16 @@ TSIGKeyInfoParser::createConfigParser(const std::string& config_id) {
     if ((config_id == "name")  ||
         (config_id == "algorithm") ||
         (config_id == "secret")) {
-        parser = new isc::dhcp::StringParser(config_id,
+        parser = new bundy::dhcp::StringParser(config_id,
                                              local_scalars_.getStringStorage());
     } else {
-        isc_throw(NotImplemented,
+        bundy_throw(NotImplemented,
                   "parser error: TSIGKeyInfo parameter not supported: "
                   << config_id);
     }
 
     // Return the new parser instance.
-    return (isc::dhcp::ParserPtr(parser));
+    return (bundy::dhcp::ParserPtr(parser));
 }
 
 void
@@ -240,24 +240,24 @@ TSIGKeyInfoParser::commit() {
 
     // Name cannot be blank.
     if (name.empty()) {
-        isc_throw(D2CfgError, "TSIG Key Info must specify name");
+        bundy_throw(D2CfgError, "TSIG Key Info must specify name");
     }
 
     // Algorithm cannot be blank.
     if (algorithm.empty()) {
-        isc_throw(D2CfgError, "TSIG Key Info must specify algorithm");
+        bundy_throw(D2CfgError, "TSIG Key Info must specify algorithm");
     }
 
     // Secret cannot be blank.
     if (secret.empty()) {
-        isc_throw(D2CfgError, "TSIG Key Info must specify secret");
+        bundy_throw(D2CfgError, "TSIG Key Info must specify secret");
     }
 
     // Currently, the premise is that key storage is always empty prior to
     // parsing so we are always adding keys never replacing them. Duplicates
     // are not allowed and should be flagged as a configuration error.
     if (keys_->find(name) != keys_->end()) {
-        isc_throw(D2CfgError, "Duplicate TSIG key specified:" << name);
+        bundy_throw(D2CfgError, "Duplicate TSIG key specified:" << name);
     }
 
     TSIGKeyInfoPtr key_info(new TSIGKeyInfo(name, algorithm, secret));
@@ -273,7 +273,7 @@ TSIGKeyInfoListParser::TSIGKeyInfoListParser(const std::string& list_name,
     :list_name_(list_name), keys_(keys), local_keys_(new TSIGKeyInfoMap()),
      parsers_() {
     if (!keys_) {
-        isc_throw(D2CfgError, "TSIGKeyInfoListParser ctor:"
+        bundy_throw(D2CfgError, "TSIGKeyInfoListParser ctor:"
                   " key storage cannot be null");
     }
 }
@@ -283,9 +283,9 @@ TSIGKeyInfoListParser::~TSIGKeyInfoListParser(){
 
 void
 TSIGKeyInfoListParser::
-build(isc::data::ConstElementPtr key_list){
+build(bundy::data::ConstElementPtr key_list){
     int i = 0;
-    isc::data::ConstElementPtr key_config;
+    bundy::data::ConstElementPtr key_config;
     // For each key element in the key list:
     // 1. Create a parser for the key element.
     // 2. Invoke the parser's build method passing in the key's
@@ -294,7 +294,7 @@ build(isc::data::ConstElementPtr key_list){
     BOOST_FOREACH(key_config, key_list->listValue()) {
         // Create a name for the parser based on its position in the list.
         std::string entry_name = boost::lexical_cast<std::string>(i++);
-        isc::dhcp::ParserPtr parser(new TSIGKeyInfoParser(entry_name,
+        bundy::dhcp::ParserPtr parser(new TSIGKeyInfoParser(entry_name,
                                                             local_keys_));
         parser->build(key_config);
         parsers_.push_back(parser);
@@ -305,7 +305,7 @@ void
 TSIGKeyInfoListParser::commit() {
     // Invoke commit on each server parser. This will cause each one to
     // create it's server instance and commit it to storage.
-    BOOST_FOREACH(isc::dhcp::ParserPtr parser, parsers_) {
+    BOOST_FOREACH(bundy::dhcp::ParserPtr parser, parsers_) {
         parser->commit();
     }
 
@@ -320,7 +320,7 @@ DnsServerInfoParser::DnsServerInfoParser(const std::string& entry_name,
     DnsServerInfoStoragePtr servers)
     : entry_name_(entry_name), servers_(servers), local_scalars_() {
     if (!servers_) {
-        isc_throw(D2CfgError, "DnsServerInfoParser ctor:"
+        bundy_throw(D2CfgError, "DnsServerInfoParser ctor:"
                   " server storage cannot be null");
     }
 }
@@ -329,8 +329,8 @@ DnsServerInfoParser::~DnsServerInfoParser() {
 }
 
 void
-DnsServerInfoParser::build(isc::data::ConstElementPtr server_config) {
-    isc::dhcp::ConfigPair config_pair;
+DnsServerInfoParser::build(bundy::data::ConstElementPtr server_config) {
+    bundy::dhcp::ConfigPair config_pair;
     // For each element in the server configuration:
     // 1. Create a parser for the element.
     // 2. Invoke the parser's build method passing in the element's
@@ -338,33 +338,33 @@ DnsServerInfoParser::build(isc::data::ConstElementPtr server_config) {
     // 3. Invoke the parser's commit method to store the element's parsed
     // data to the parser's local storage.
     BOOST_FOREACH (config_pair, server_config->mapValue()) {
-        isc::dhcp::ParserPtr parser(createConfigParser(config_pair.first));
+        bundy::dhcp::ParserPtr parser(createConfigParser(config_pair.first));
         parser->build(config_pair.second);
         parser->commit();
     }
 
 }
 
-isc::dhcp::ParserPtr
+bundy::dhcp::ParserPtr
 DnsServerInfoParser::createConfigParser(const std::string& config_id) {
     DhcpConfigParser* parser = NULL;
     // Based on the configuration id of the element, create the appropriate
     // parser. Scalars are set to use the parser's local scalar storage.
     if ((config_id == "hostname")  ||
         (config_id == "ip_address")) {
-        parser = new isc::dhcp::StringParser(config_id,
+        parser = new bundy::dhcp::StringParser(config_id,
                                              local_scalars_.getStringStorage());
     } else if (config_id == "port") {
-        parser = new isc::dhcp::Uint32Parser(config_id,
+        parser = new bundy::dhcp::Uint32Parser(config_id,
                                              local_scalars_.getUint32Storage());
     } else {
-        isc_throw(NotImplemented,
+        bundy_throw(NotImplemented,
                   "parser error: DnsServerInfo parameter not supported: "
                   << config_id);
     }
 
     // Return the new parser instance.
-    return (isc::dhcp::ParserPtr(parser));
+    return (bundy::dhcp::ParserPtr(parser));
 }
 
 void
@@ -382,7 +382,7 @@ DnsServerInfoParser::commit() {
 
     // The configuration must specify one or the other.
     if (hostname.empty() == ip_address.empty()) {
-        isc_throw(D2CfgError, "Dns Server must specify one or the other"
+        bundy_throw(D2CfgError, "Dns Server must specify one or the other"
                   " of hostname and IP address");
     }
 
@@ -390,16 +390,16 @@ DnsServerInfoParser::commit() {
     if (!hostname.empty()) {
         // When  hostname is specified, create a valid, blank IOAddress and
         // then create the DnsServerInfo.
-        isc::asiolink::IOAddress io_addr(DnsServerInfo::EMPTY_IP_STR);
+        bundy::asiolink::IOAddress io_addr(DnsServerInfo::EMPTY_IP_STR);
         serverInfo.reset(new DnsServerInfo(hostname, io_addr, port));
     } else {
         try {
             // Create an IOAddress from the IP address string given and then
             // create the DnsServerInfo.
-            isc::asiolink::IOAddress io_addr(ip_address);
+            bundy::asiolink::IOAddress io_addr(ip_address);
             serverInfo.reset(new DnsServerInfo(hostname, io_addr, port));
-        } catch (const isc::asiolink::IOError& ex) {
-            isc_throw(D2CfgError, "Invalid IP address:" << ip_address);
+        } catch (const bundy::asiolink::IOError& ex) {
+            bundy_throw(D2CfgError, "Invalid IP address:" << ip_address);
         }
     }
 
@@ -413,7 +413,7 @@ DnsServerInfoListParser::DnsServerInfoListParser(const std::string& list_name,
                                        DnsServerInfoStoragePtr servers)
     :list_name_(list_name), servers_(servers), parsers_() {
     if (!servers_) {
-        isc_throw(D2CfgError, "DdnsServerInfoListParser ctor:"
+        bundy_throw(D2CfgError, "DdnsServerInfoListParser ctor:"
                   " server storage cannot be null");
     }
 }
@@ -423,9 +423,9 @@ DnsServerInfoListParser::~DnsServerInfoListParser(){
 
 void
 DnsServerInfoListParser::
-build(isc::data::ConstElementPtr server_list){
+build(bundy::data::ConstElementPtr server_list){
     int i = 0;
-    isc::data::ConstElementPtr server_config;
+    bundy::data::ConstElementPtr server_config;
     // For each server element in the server list:
     // 1. Create a parser for the server element.
     // 2. Invoke the parser's build method passing in the server's
@@ -434,7 +434,7 @@ build(isc::data::ConstElementPtr server_list){
     BOOST_FOREACH(server_config, server_list->listValue()) {
         // Create a name for the parser based on its position in the list.
         std::string entry_name = boost::lexical_cast<std::string>(i++);
-        isc::dhcp::ParserPtr parser(new DnsServerInfoParser(entry_name,
+        bundy::dhcp::ParserPtr parser(new DnsServerInfoParser(entry_name,
                                                             servers_));
         parser->build(server_config);
         parsers_.push_back(parser);
@@ -445,12 +445,12 @@ void
 DnsServerInfoListParser::commit() {
     // Domains must have at least one server.
     if (parsers_.size() == 0) {
-        isc_throw (D2CfgError, "Server List must contain at least one server");
+        bundy_throw (D2CfgError, "Server List must contain at least one server");
     }
 
     // Invoke commit on each server parser. This will cause each one to
     // create it's server instance and commit it to storage.
-    BOOST_FOREACH(isc::dhcp::ParserPtr parser, parsers_) {
+    BOOST_FOREACH(bundy::dhcp::ParserPtr parser, parsers_) {
         parser->commit();
     }
 }
@@ -463,7 +463,7 @@ DdnsDomainParser::DdnsDomainParser(const std::string& entry_name,
     : entry_name_(entry_name), domains_(domains), keys_(keys),
     local_servers_(new DnsServerInfoStorage()), local_scalars_() {
     if (!domains_) {
-        isc_throw(D2CfgError,
+        bundy_throw(D2CfgError,
                   "DdnsDomainParser ctor, domain storage cannot be null");
     }
 }
@@ -473,29 +473,29 @@ DdnsDomainParser::~DdnsDomainParser() {
 }
 
 void
-DdnsDomainParser::build(isc::data::ConstElementPtr domain_config) {
+DdnsDomainParser::build(bundy::data::ConstElementPtr domain_config) {
     // For each element in the domain configuration:
     // 1. Create a parser for the element.
     // 2. Invoke the parser's build method passing in the element's
     // configuration.
     // 3. Invoke the parser's commit method to store the element's parsed
     // data to the parser's local storage.
-    isc::dhcp::ConfigPair config_pair;
+    bundy::dhcp::ConfigPair config_pair;
     BOOST_FOREACH(config_pair, domain_config->mapValue()) {
-        isc::dhcp::ParserPtr parser(createConfigParser(config_pair.first));
+        bundy::dhcp::ParserPtr parser(createConfigParser(config_pair.first));
         parser->build(config_pair.second);
         parser->commit();
     }
 }
 
-isc::dhcp::ParserPtr
+bundy::dhcp::ParserPtr
 DdnsDomainParser::createConfigParser(const std::string& config_id) {
     DhcpConfigParser* parser = NULL;
     // Based on the configuration id of the element, create the appropriate
     // parser. Scalars are set to use the parser's local scalar storage.
     if ((config_id == "name")  ||
         (config_id == "key_name")) {
-        parser = new isc::dhcp::StringParser(config_id,
+        parser = new bundy::dhcp::StringParser(config_id,
                                              local_scalars_.getStringStorage());
     } else if (config_id == "dns_servers") {
        // Server list parser is given in our local server storage. It will pass
@@ -503,13 +503,13 @@ DdnsDomainParser::createConfigParser(const std::string& config_id) {
        // server instances upon commit.
        parser = new DnsServerInfoListParser(config_id, local_servers_);
     } else {
-       isc_throw(NotImplemented,
+       bundy_throw(NotImplemented,
                 "parser error: DdnsDomain parameter not supported: "
                 << config_id);
     }
 
     // Return the new domain parser instance.
-    return (isc::dhcp::ParserPtr(parser));
+    return (bundy::dhcp::ParserPtr(parser));
 }
 
 void
@@ -522,7 +522,7 @@ DdnsDomainParser::commit() {
 
     // Blank domain names are not allowed.
     if (name.empty()) {
-        isc_throw(D2CfgError, "Domain name cannot be blank");
+        bundy_throw(D2CfgError, "Domain name cannot be blank");
     }
 
     // Currently, the premise is that domain storage is always empty
@@ -530,7 +530,7 @@ DdnsDomainParser::commit() {
     // Duplicates are not allowed and should be flagged as a configuration
     // error.
     if (domains_->find(name) != domains_->end()) {
-        isc_throw(D2CfgError, "Duplicate domain specified:" << name);
+        bundy_throw(D2CfgError, "Duplicate domain specified:" << name);
     }
 
     // Key name is optional. If it is not blank, then validate it against
@@ -538,7 +538,7 @@ DdnsDomainParser::commit() {
     local_scalars_.getParam("key_name", key_name, DCfgContextBase::OPTIONAL);
     if (!key_name.empty()) {
         if ((!keys_) || (keys_->find(key_name) == keys_->end())) {
-            isc_throw(D2CfgError, "DdnsDomain :" << name <<
+            bundy_throw(D2CfgError, "DdnsDomain :" << name <<
                      " specifies and undefined key:" << key_name);
         }
     }
@@ -557,7 +557,7 @@ DdnsDomainListParser::DdnsDomainListParser(const std::string& list_name,
                                            TSIGKeyInfoMapPtr keys)
     :list_name_(list_name), domains_(domains), keys_(keys), parsers_() {
     if (!domains_) {
-        isc_throw(D2CfgError, "DdnsDomainListParser ctor:"
+        bundy_throw(D2CfgError, "DdnsDomainListParser ctor:"
                   " domain storage cannot be null");
     }
 }
@@ -567,17 +567,17 @@ DdnsDomainListParser::~DdnsDomainListParser(){
 
 void
 DdnsDomainListParser::
-build(isc::data::ConstElementPtr domain_list){
+build(bundy::data::ConstElementPtr domain_list){
     // For each domain element in the domain list:
     // 1. Create a parser for the domain element.
     // 2. Invoke the parser's build method passing in the domain's
     // configuration.
     // 3. Add the parser to the local collection of parsers.
     int i = 0;
-    isc::data::ConstElementPtr domain_config;
+    bundy::data::ConstElementPtr domain_config;
     BOOST_FOREACH(domain_config, domain_list->listValue()) {
         std::string entry_name = boost::lexical_cast<std::string>(i++);
-        isc::dhcp::ParserPtr parser(new DdnsDomainParser(entry_name,
+        bundy::dhcp::ParserPtr parser(new DdnsDomainParser(entry_name,
                                                          domains_, keys_));
         parser->build(domain_config);
         parsers_.push_back(parser);
@@ -588,7 +588,7 @@ void
 DdnsDomainListParser::commit() {
     // Invoke commit on each server parser. This will cause each one to
     // create it's server instance and commit it to storage.
-    BOOST_FOREACH(isc::dhcp::ParserPtr parser, parsers_) {
+    BOOST_FOREACH(bundy::dhcp::ParserPtr parser, parsers_) {
         parser->commit();
     }
 }
@@ -607,22 +607,22 @@ DdnsDomainListMgrParser::~DdnsDomainListMgrParser() {
 }
 
 void
-DdnsDomainListMgrParser::build(isc::data::ConstElementPtr domain_config) {
+DdnsDomainListMgrParser::build(bundy::data::ConstElementPtr domain_config) {
     // For each element in the domain manager configuration:
     // 1. Create a parser for the element.
     // 2. Invoke the parser's build method passing in the element's
     // configuration.
     // 3. Invoke the parser's commit method to store the element's parsed
     // data to the parser's local storage.
-    isc::dhcp::ConfigPair config_pair;
+    bundy::dhcp::ConfigPair config_pair;
     BOOST_FOREACH(config_pair, domain_config->mapValue()) {
-        isc::dhcp::ParserPtr parser(createConfigParser(config_pair.first));
+        bundy::dhcp::ParserPtr parser(createConfigParser(config_pair.first));
         parser->build(config_pair.second);
         parser->commit();
     }
 }
 
-isc::dhcp::ParserPtr
+bundy::dhcp::ParserPtr
 DdnsDomainListMgrParser::createConfigParser(const std::string& config_id) {
     DhcpConfigParser* parser = NULL;
     if (config_id == "ddns_domains") {
@@ -631,12 +631,12 @@ DdnsDomainListMgrParser::createConfigParser(const std::string& config_id) {
        // domain instances upon commit.
        parser = new DdnsDomainListParser(config_id, local_domains_, keys_);
     } else {
-       isc_throw(NotImplemented, "parser error: "
+       bundy_throw(NotImplemented, "parser error: "
                  "DdnsDomainListMgr parameter not supported: " << config_id);
     }
 
     // Return the new domain parser instance.
-    return (isc::dhcp::ParserPtr(parser));
+    return (bundy::dhcp::ParserPtr(parser));
 }
 
 void
@@ -646,5 +646,5 @@ DdnsDomainListMgrParser::commit() {
 }
 
 
-}; // end of isc::dhcp namespace
-}; // end of isc namespace
+}; // end of bundy::dhcp namespace
+}; // end of bundy namespace

@@ -24,7 +24,7 @@
 
 #include <memory>
 
-namespace isc {
+namespace bundy {
 namespace cryptolink {
 
 /// \brief Hash algorithm identifiers
@@ -52,7 +52,7 @@ class HMAC;
 class CryptoLinkError : public Exception {
 public:
     CryptoLinkError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// This exception is thrown if there was a problem initializing the
@@ -203,6 +203,6 @@ private:
 };
 
 } // namespace cryptolink
-} // namespace isc
+} // namespace bundy
 
 #endif // ISC_CRYPTO_H

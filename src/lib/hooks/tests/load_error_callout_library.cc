@@ -24,7 +24,7 @@
 
 #include <hooks/hooks.h>
 
-using namespace isc::hooks;
+using namespace bundy::hooks;
 
 extern "C" {
 
@@ -32,7 +32,7 @@ extern "C" {
 
 int
 version() {
-    return (BIND10_HOOKS_VERSION);
+    return (BUNDY_HOOKS_VERSION);
 }
 
 int

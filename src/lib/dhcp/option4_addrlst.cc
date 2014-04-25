@@ -25,10 +25,10 @@
 #include <string.h>
 
 using namespace std;
-using namespace isc::util;
-using namespace isc::asiolink;
+using namespace bundy::util;
+using namespace bundy::asiolink;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 Option4AddrLst::Option4AddrLst(uint8_t type)
@@ -46,7 +46,7 @@ Option4AddrLst::Option4AddrLst(uint8_t type, OptionBufferConstIter first,
                                OptionBufferConstIter last)
     :Option(V4, type) {
     if ( (distance(first, last) % V4ADDRESS_LEN) ) {
-        isc_throw(OutOfRange, "DHCPv4 Option4AddrLst " << type_
+        bundy_throw(OutOfRange, "DHCPv4 Option4AddrLst " << type_
                   << " has invalid length=" << distance(first, last)
                   << ", must be divisible by 4.");
     }
@@ -64,10 +64,10 @@ Option4AddrLst::Option4AddrLst(uint8_t type, const IOAddress& addr)
 }
 
 void
-Option4AddrLst::pack(isc::util::OutputBuffer& buf) {
+Option4AddrLst::pack(bundy::util::OutputBuffer& buf) {
 
     if (addrs_.size() * V4ADDRESS_LEN > 255) {
-        isc_throw(OutOfRange, "DHCPv4 Option4AddrLst " << type_ << " is too big."
+        bundy_throw(OutOfRange, "DHCPv4 Option4AddrLst " << type_ << " is too big."
                   << "At most 255 bytes are supported.");
         /// TODO Larger options can be stored as separate instances
         /// of DHCPv4 options. Clients MUST concatenate them.
@@ -85,9 +85,9 @@ Option4AddrLst::pack(isc::util::OutputBuffer& buf) {
     }
 }
 
-void Option4AddrLst::setAddress(const isc::asiolink::IOAddress& addr) {
+void Option4AddrLst::setAddress(const bundy::asiolink::IOAddress& addr) {
     if (!addr.isV4()) {
-        isc_throw(BadValue, "Can't store non-IPv4 address in "
+        bundy_throw(BadValue, "Can't store non-IPv4 address in "
                   << "Option4AddrLst option");
     }
     addrs_.clear();
@@ -106,9 +106,9 @@ void Option4AddrLst::setAddresses(const AddressContainer& addrs) {
 }
 
 
-void Option4AddrLst::addAddress(const isc::asiolink::IOAddress& addr) {
+void Option4AddrLst::addAddress(const bundy::asiolink::IOAddress& addr) {
     if (!addr.isV4()) {
-        isc_throw(BadValue, "Can't store non-IPv4 address in "
+        bundy_throw(BadValue, "Can't store non-IPv4 address in "
                   << "Option4AddrLst option");
     }
     addrs_.push_back(addr);
@@ -137,5 +137,5 @@ std::string Option4AddrLst::toText(int indent /* =0 */ ) {
     return tmp.str();
 }
 
-} // end of isc::dhcp namespace
-} // end of isc namespace
+} // end of bundy::dhcp namespace
+} // end of bundy namespace

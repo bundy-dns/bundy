@@ -15,8 +15,8 @@ endif
 check-local:
 	for pytest in $(PYTESTS) ; do \
 	echo Running test: $$pytest ; \
-	PYTHONPATH=$(COMMON_PYTHON_PATH):$(abs_top_srcdir)/src/bin:$(abs_top_builddir)/src/bin/bind10:$(abs_top_builddir)/src/lib/util/io/.libs \
-	B10_LOCKFILE_DIR_FROM_BUILD=$(abs_top_builddir) \
+	PYTHONPATH=$(COMMON_PYTHON_PATH):$(abs_top_srcdir)/src/bin:$(abs_top_builddir)/src/bin/bundy:$(abs_top_builddir)/src/lib/util/io/.libs \
+	BUNDY_LOCKFILE_DIR_FROM_BUILD=$(abs_top_builddir) \
 	$(LIBRARY_PATH_PLACEHOLDER) \
 		$(PYCOVERAGE_RUN) $(abs_srcdir)/$$pytest || exit ; \
 	done
@@ -33,7 +33,7 @@ AM_CPPFLAGS += -DINSTALL_PROG=\"$(abs_top_srcdir)/install-sh\"
 
 CLEANFILES = $(builddir)/interfaces.txt $(builddir)/logger_lockfile
 
-AM_CXXFLAGS = $(B10_CXXFLAGS)
+AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 if USE_CLANGPP
 # Disable unused parameter warning caused by some Boost headers when compiling with clang
 AM_CXXFLAGS += -Wno-unused-parameter
@@ -93,18 +93,18 @@ nodist_d2_unittests_SOURCES = ../d2_messages.h ../d2_messages.cc
 d2_unittests_CPPFLAGS = $(AM_CPPFLAGS) $(GTEST_INCLUDES)
 d2_unittests_LDFLAGS = $(AM_LDFLAGS) $(GTEST_LDFLAGS)
 d2_unittests_LDADD = $(GTEST_LDADD)
-d2_unittests_LDADD += $(top_builddir)/src/lib/exceptions/libb10-exceptions.la
-d2_unittests_LDADD += $(top_builddir)/src/lib/log/libb10-log.la
-d2_unittests_LDADD += $(top_builddir)/src/lib/asiodns/libb10-asiodns.la
-d2_unittests_LDADD += $(top_builddir)/src/lib/asiolink/libb10-asiolink.la
-d2_unittests_LDADD += $(top_builddir)/src/lib/cc/libb10-cc.la
-d2_unittests_LDADD += $(top_builddir)/src/lib/config/libb10-cfgclient.la
-d2_unittests_LDADD += $(top_builddir)/src/lib/dhcp_ddns/libb10-dhcp_ddns.la
-d2_unittests_LDADD += $(top_builddir)/src/lib/dhcp/libb10-dhcp++.la
-d2_unittests_LDADD += $(top_builddir)/src/lib/dhcpsrv/libb10-dhcpsrv.la
-d2_unittests_LDADD += $(top_builddir)/src/lib/dns/libb10-dns++.la
-d2_unittests_LDADD += $(top_builddir)/src/lib/util/libb10-util.la
-d2_unittests_LDADD += $(top_builddir)/src/lib/hooks/libb10-hooks.la
+d2_unittests_LDADD += $(top_builddir)/src/lib/exceptions/libbundy-exceptions.la
+d2_unittests_LDADD += $(top_builddir)/src/lib/log/libbundy-log.la
+d2_unittests_LDADD += $(top_builddir)/src/lib/asiodns/libbundy-asiodns.la
+d2_unittests_LDADD += $(top_builddir)/src/lib/asiolink/libbundy-asiolink.la
+d2_unittests_LDADD += $(top_builddir)/src/lib/cc/libbundy-cc.la
+d2_unittests_LDADD += $(top_builddir)/src/lib/config/libbundy-cfgclient.la
+d2_unittests_LDADD += $(top_builddir)/src/lib/dhcp_ddns/libbundy-dhcp_ddns.la
+d2_unittests_LDADD += $(top_builddir)/src/lib/dhcp/libbundy-dhcp++.la
+d2_unittests_LDADD += $(top_builddir)/src/lib/dhcpsrv/libbundy-dhcpsrv.la
+d2_unittests_LDADD += $(top_builddir)/src/lib/dns/libbundy-dns++.la
+d2_unittests_LDADD += $(top_builddir)/src/lib/util/libbundy-util.la
+d2_unittests_LDADD += $(top_builddir)/src/lib/hooks/libbundy-hooks.la
 
 endif
 

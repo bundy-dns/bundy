@@ -22,7 +22,7 @@
 #include <gtest/gtest.h>
 
 using namespace std;
-using namespace isc::dns;
+using namespace bundy::dns;
 
 namespace {
 TEST(OpcodeTest, construct) {
@@ -30,7 +30,7 @@ TEST(OpcodeTest, construct) {
     EXPECT_EQ(0, Opcode(0).getCode());
     EXPECT_EQ(15, Opcode(Opcode::RESERVED15_CODE).getCode());
 
-    EXPECT_THROW(Opcode(16), isc::OutOfRange);
+    EXPECT_THROW(Opcode(16), bundy::OutOfRange);
 }
 
 TEST(OpcodeTest, constants) {

@@ -24,10 +24,10 @@
 #include <string>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dhcp;
-using namespace isc::data;
-using namespace isc::config;
+using namespace bundy;
+using namespace bundy::dhcp;
+using namespace bundy::data;
+using namespace bundy::config;
 
 namespace {
 
@@ -172,7 +172,7 @@ public:
 /// @brief Version of parser with protected methods public
 ///
 /// Some of the methods in DbAccessParser are not required to be public in
-/// BIND 10.  Instead of being declared "private", they are declared "protected"
+/// BUNDY.  Instead of being declared "private", they are declared "protected"
 /// so that they can be accessed through a derived class in the unit tests.
 class TestDbAccessParser : public DbAccessParser {
 public:
@@ -248,7 +248,7 @@ TEST_F(DbAccessParserTest, emptyKeyword) {
 TEST_F(DbAccessParserTest, persistV4Memfile) {
     const char* config[] = {"type", "memfile",
                             "persist", "true",
-                            "name", "/opt/bind10/var/kea-leases4.csv",
+                            "name", "/opt/bundy/var/kea-leases4.csv",
                             NULL};
 
     string json_config = toJson(config);
@@ -267,7 +267,7 @@ TEST_F(DbAccessParserTest, persistV4Memfile) {
 TEST_F(DbAccessParserTest, persistV6Memfile) {
     const char* config[] = {"type", "memfile",
                             "persist", "true",
-                            "name", "/opt/bind10/var/kea-leases6.csv",
+                            "name", "/opt/bundy/var/kea-leases6.csv",
                             NULL};
 
     string json_config = toJson(config);
@@ -456,7 +456,7 @@ TEST_F(DbAccessParserTest, commit) {
     EXPECT_THROW({
             LeaseMgr& manager = LeaseMgrFactory::instance();
             manager.getType();  // Never executed but satisfies compiler
-            }, isc::dhcp::NoLeaseManager);
+            }, bundy::dhcp::NoLeaseManager);
 
     // Set up the parser to open the memfile database.
     const char* config[] = {"type", "memfile", "persist", "false", NULL};

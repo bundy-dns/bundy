@@ -41,9 +41,9 @@
 
 using namespace std;
 using boost::lexical_cast;
-using namespace isc::util;
+using namespace bundy::util;
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace rdata {
 
@@ -68,10 +68,10 @@ createRdata(const RRType& rrtype, const RRClass& rrclass,
 
 RdataPtr
 createRdata(const RRType& rrtype, const RRClass& rrclass,
-            isc::util::InputBuffer& buffer, size_t len)
+            bundy::util::InputBuffer& buffer, size_t len)
 {
     if (len > MAX_RDLENGTH) {
-        isc_throw(InvalidRdataLength, "RDLENGTH too large");
+        bundy_throw(InvalidRdataLength, "RDLENGTH too large");
     }
 
     size_t old_pos = buffer.getPosition();
@@ -81,7 +81,7 @@ createRdata(const RRType& rrtype, const RRClass& rrclass,
                                                    len);
 
     if (buffer.getPosition() - old_pos != len) {
-        isc_throw(InvalidRdataLength, "RDLENGTH mismatch: " <<
+        bundy_throw(InvalidRdataLength, "RDLENGTH mismatch: " <<
                   buffer.getPosition() - old_pos << " != " << len);
     }
 
@@ -130,7 +130,7 @@ fromtextError(bool& error_issued, const MasterLexer& lexer,
         // createRdata(), so we could assert() that here.  But since it
         // depends on detailed behavior of other classes, we treat the case
         // in a bit less harsh way.
-        isc_throw(Unexpected, "bug: createRdata() saw unexpected token type");
+        bundy_throw(Unexpected, "bug: createRdata() saw unexpected token type");
     }
 }
 }
@@ -150,7 +150,7 @@ createRdata(const RRType& rrtype, const RRClass& rrclass,
     } catch (const MasterLexer::LexerError& error) {
         fromtextError(error_issued, lexer, callbacks, &error.token_, "");
     } catch (const Exception& ex) {
-        // Catching all isc::Exception is too broad, but right now we don't
+        // Catching all bundy::Exception is too broad, but right now we don't
         // have better granularity.  When we complete #2518 we can make this
         // finer.
         fromtextError(error_issued, lexer, callbacks, NULL, ex.what());
@@ -208,9 +208,9 @@ struct GenericImpl {
     vector<uint8_t> data_;
 };
 
-Generic::Generic(isc::util::InputBuffer& buffer, size_t rdata_len) {
+Generic::Generic(bundy::util::InputBuffer& buffer, size_t rdata_len) {
     if (rdata_len > MAX_RDLENGTH) {
-        isc_throw(InvalidRdataLength, "RDLENGTH too large");
+        bundy_throw(InvalidRdataLength, "RDLENGTH too large");
     }
 
     vector<uint8_t> data(rdata_len);
@@ -225,7 +225,7 @@ GenericImpl*
 Generic::constructFromLexer(MasterLexer& lexer) {
     const MasterToken& token = lexer.getNextToken(MasterToken::STRING);
     if (token.getString() != "\\#") {
-        isc_throw(InvalidRdataText,
+        bundy_throw(InvalidRdataText,
                   "Missing the special token (\\#) for "
                   "unknown RDATA encoding");
     }
@@ -236,12 +236,12 @@ Generic::constructFromLexer(MasterLexer& lexer) {
     try {
         rdlen = lexer.getNextToken(MasterToken::NUMBER).getNumber();
     } catch (const MasterLexer::LexerError& ex) {
-        isc_throw(InvalidRdataLength,
+        bundy_throw(InvalidRdataLength,
                   "Unknown RDATA length is invalid");
     }
 
     if (rdlen > 65535) {
-        isc_throw(InvalidRdataLength,
+        bundy_throw(InvalidRdataLength,
                   "Unknown RDATA length is out of range: " << rdlen);
     }
 
@@ -267,15 +267,15 @@ Generic::constructFromLexer(MasterLexer& lexer) {
         }
 
         try {
-            isc::util::encode::decodeHex(hex_txt, data);
-        } catch (const isc::BadValue& ex) {
-            isc_throw(InvalidRdataText,
+            bundy::util::encode::decodeHex(hex_txt, data);
+        } catch (const bundy::BadValue& ex) {
+            bundy_throw(InvalidRdataText,
                       "Invalid hex encoding of generic RDATA: " << ex.what());
         }
     }
 
     if (data.size() != rdlen) {
-        isc_throw(InvalidRdataLength,
+        bundy_throw(InvalidRdataLength,
                   "Size of unknown RDATA hex data doesn't match RDLENGTH: "
                   << data.size() << " vs. " << rdlen);
     }
@@ -299,11 +299,11 @@ Generic::Generic(const std::string& rdata_string) :
         impl_ptr.reset(constructFromLexer(lexer));
 
         if (lexer.getNextToken().getType() != MasterToken::END_OF_FILE) {
-            isc_throw(InvalidRdataText, "extra input text for unknown RDATA: "
+            bundy_throw(InvalidRdataText, "extra input text for unknown RDATA: "
                       << rdata_string);
         }
     } catch (const MasterLexer::LexerError& ex) {
-        isc_throw(InvalidRdataText, "Failed to construct unknown RDATA "
+        bundy_throw(InvalidRdataText, "Failed to construct unknown RDATA "
                   "from '" << rdata_string << "': " << ex.what());
     }
 
@@ -367,7 +367,7 @@ Generic::toText() const {
 }
 
 void
-Generic::toWire(isc::util::OutputBuffer& buffer) const {
+Generic::toWire(bundy::util::OutputBuffer& buffer) const {
     buffer.writeData(&impl_->data_[0], impl_->data_.size());
 }
 

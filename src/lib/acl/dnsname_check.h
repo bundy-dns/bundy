@@ -19,7 +19,7 @@
 
 #include <acl/check.h>
 
-namespace isc {
+namespace bundy {
 namespace acl {
 namespace dns {
 
@@ -46,7 +46,7 @@ public:
     /// name
     ///
     /// \param name The domain name to be matched in \c matches().
-    NameCheck(const isc::dns::Name& name) : name_(name) {}
+    NameCheck(const bundy::dns::Name& name) : name_(name) {}
 
     /// Destructor
     virtual ~NameCheck() {}
@@ -66,15 +66,15 @@ public:
     /// This is mainly for testing purposes.
     ///
     /// \exception None
-    const isc::dns::Name& getName() const { return (name_); }
+    const bundy::dns::Name& getName() const { return (name_); }
 
 private:
-    const isc::dns::Name name_;
+    const bundy::dns::Name name_;
 };
 
 } // namespace dns
 } // namespace acl
-} // namespace isc
+} // namespace bundy
 
 #endif // DNSNAME_CHECK_H
 

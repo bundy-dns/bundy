@@ -29,10 +29,10 @@
 #include <sstream>
 
 using namespace std;
-using namespace isc;
-using namespace isc::asiolink;
-using namespace isc::dhcp;
-using namespace isc::dhcp::test;
+using namespace bundy;
+using namespace bundy::asiolink;
+using namespace bundy::dhcp;
+using namespace bundy::dhcp::test;
 
 namespace {
 
@@ -141,7 +141,7 @@ TEST_F(MemfileLeaseMgrTest, constructor) {
     // that is wrong.
     pmap["persist"] = "bogus";
     pmap["name"] = getLeaseFilePath("leasefile4_1.csv");
-    EXPECT_THROW(lease_mgr.reset(new Memfile_LeaseMgr(pmap)), isc::BadValue);
+    EXPECT_THROW(lease_mgr.reset(new Memfile_LeaseMgr(pmap)), bundy::BadValue);
 }
 
 // Checks if the getType() and getName() methods both return "memfile".
@@ -340,7 +340,7 @@ TEST_F(MemfileLeaseMgrTest, DISABLED_getLeases6DuidSize) {
 /// It then verifies that all of getLeases6() method variants correctly
 /// discriminate between the leases based on lease type alone.
 /// @todo: Disabled, because type parameter in Memfile_LeaseMgr::getLease6
-/// (Lease::Type, const isc::asiolink::IOAddress& addr) const is not used.
+/// (Lease::Type, const bundy::asiolink::IOAddress& addr) const is not used.
 TEST_F(MemfileLeaseMgrTest, DISABLED_lease6LeaseTypeCheck) {
     startBackend(V6);
     testLease6LeaseTypeCheck();

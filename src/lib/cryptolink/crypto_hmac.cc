@@ -27,27 +27,27 @@
 
 namespace {
 const char*
-getBotanHashAlgorithmName(isc::cryptolink::HashAlgorithm algorithm) {
+getBotanHashAlgorithmName(bundy::cryptolink::HashAlgorithm algorithm) {
     switch (algorithm) {
-    case isc::cryptolink::MD5:
+    case bundy::cryptolink::MD5:
         return ("MD5");
         break;
-    case isc::cryptolink::SHA1:
+    case bundy::cryptolink::SHA1:
         return ("SHA-1");
         break;
-    case isc::cryptolink::SHA256:
+    case bundy::cryptolink::SHA256:
         return ("SHA-256");
         break;
-    case isc::cryptolink::SHA224:
+    case bundy::cryptolink::SHA224:
         return ("SHA-224");
         break;
-    case isc::cryptolink::SHA384:
+    case bundy::cryptolink::SHA384:
         return ("SHA-384");
         break;
-    case isc::cryptolink::SHA512:
+    case bundy::cryptolink::SHA512:
         return ("SHA-512");
         break;
-    case isc::cryptolink::UNKNOWN_HASH:
+    case bundy::cryptolink::UNKNOWN_HASH:
         return ("Unknown");
         break;
     }
@@ -59,7 +59,7 @@ getBotanHashAlgorithmName(isc::cryptolink::HashAlgorithm algorithm) {
 } // local namespace
 
 
-namespace isc {
+namespace bundy {
 namespace cryptolink {
 
 class HMACImpl {
@@ -71,11 +71,11 @@ public:
             hash = Botan::get_hash(
                 getBotanHashAlgorithmName(hash_algorithm));
         } catch (const Botan::Algorithm_Not_Found&) {
-            isc_throw(isc::cryptolink::UnsupportedAlgorithm,
+            bundy_throw(bundy::cryptolink::UnsupportedAlgorithm,
                       "Unknown hash algorithm: " <<
                       static_cast<int>(hash_algorithm));
         } catch (const Botan::Exception& exc) {
-            isc_throw(isc::cryptolink::LibraryError, exc.what());
+            bundy_throw(bundy::cryptolink::LibraryError, exc.what());
         }
 
         hmac_.reset(new Botan::HMAC(hash));
@@ -103,15 +103,15 @@ public:
                 // Botan 1.8 considers len 0 a bad key. 1.9 does not,
                 // but we won't accept it anyway, and fail early
                 if (secret_len == 0) {
-                    isc_throw(BadKey, "Bad HMAC secret length: 0");
+                    bundy_throw(BadKey, "Bad HMAC secret length: 0");
                 }
                 hmac_->set_key(static_cast<const Botan::byte*>(secret),
                                secret_len);
             }
         } catch (const Botan::Invalid_Key_Length& ikl) {
-            isc_throw(BadKey, ikl.what());
+            bundy_throw(BadKey, ikl.what());
         } catch (const Botan::Exception& exc) {
-            isc_throw(isc::cryptolink::LibraryError, exc.what());
+            bundy_throw(bundy::cryptolink::LibraryError, exc.what());
         }
     }
 
@@ -133,11 +133,11 @@ public:
         try {
             hmac_->update(static_cast<const Botan::byte*>(data), len);
         } catch (const Botan::Exception& exc) {
-            isc_throw(isc::cryptolink::LibraryError, exc.what());
+            bundy_throw(bundy::cryptolink::LibraryError, exc.what());
         }
     }
 
-    void sign(isc::util::OutputBuffer& result, size_t len) {
+    void sign(bundy::util::OutputBuffer& result, size_t len) {
         try {
             Botan::SecureVector<Botan::byte> b_result(hmac_->final());
 
@@ -146,7 +146,7 @@ public:
             }
             result.writeData(b_result.begin(), len);
         } catch (const Botan::Exception& exc) {
-            isc_throw(isc::cryptolink::LibraryError, exc.what());
+            bundy_throw(bundy::cryptolink::LibraryError, exc.what());
         }
     }
 
@@ -159,7 +159,7 @@ public:
             }
             std::memcpy(result, b_result.begin(), output_size);
         } catch (const Botan::Exception& exc) {
-            isc_throw(isc::cryptolink::LibraryError, exc.what());
+            bundy_throw(bundy::cryptolink::LibraryError, exc.what());
         }
     }
 
@@ -172,7 +172,7 @@ public:
                 return (std::vector<uint8_t>(b_result.begin(), &b_result[len]));
             }
         } catch (const Botan::Exception& exc) {
-            isc_throw(isc::cryptolink::LibraryError, exc.what());
+            bundy_throw(bundy::cryptolink::LibraryError, exc.what());
         }
     }
 
@@ -199,7 +199,7 @@ public:
                                     static_cast<const unsigned char*>(sig),
                                     len));
         } catch (const Botan::Exception& exc) {
-            isc_throw(isc::cryptolink::LibraryError, exc.what());
+            bundy_throw(bundy::cryptolink::LibraryError, exc.what());
         }
     }
 
@@ -228,7 +228,7 @@ HMAC::update(const void* data, const size_t len) {
 }
 
 void
-HMAC::sign(isc::util::OutputBuffer& result, size_t len) {
+HMAC::sign(bundy::util::OutputBuffer& result, size_t len) {
     impl_->sign(result, len);
 }
 
@@ -250,7 +250,7 @@ HMAC::verify(const void* sig, const size_t len) {
 void
 signHMAC(const void* data, const size_t data_len, const void* secret,
          size_t secret_len, const HashAlgorithm hash_algorithm,
-         isc::util::OutputBuffer& result, size_t len)
+         bundy::util::OutputBuffer& result, size_t len)
 {
     boost::scoped_ptr<HMAC> hmac(
         CryptoLink::getCryptoLink().createHMAC(secret,
@@ -280,4 +280,4 @@ deleteHMAC(HMAC* hmac) {
 }
 
 } // namespace cryptolink
-} // namespace isc
+} // namespace bundy

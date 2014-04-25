@@ -12,7 +12,7 @@
 # OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
 
-$NAMESPACE isc::dhcp_ddns
+$NAMESPACE bundy::dhcp_ddns
 
 % DHCP_DDNS_INVALID_NCR application received an invalid DNS update request: %1
 This is an error message that indicates that an invalid request to update

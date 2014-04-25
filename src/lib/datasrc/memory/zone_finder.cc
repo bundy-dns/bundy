@@ -38,11 +38,11 @@
 
 #include <utility>
 
-using namespace isc::dns;
-using namespace isc::datasrc::memory;
-using namespace isc::datasrc;
+using namespace bundy::dns;
+using namespace bundy::datasrc::memory;
+using namespace bundy::datasrc;
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 
@@ -228,7 +228,7 @@ createNSEC3RRset(const ZoneNode* node, const RRClass& rrclass) {
      // but we simply consider it broken for NSEC3.
      if (rdataset->getRdataCount() == 0) {
          uint8_t labels_buf[LabelSequence::MAX_SERIALIZED_LENGTH];
-         isc_throw(DataSourceError, "Broken zone: RRSIG-only NSEC3 record at "
+         bundy_throw(DataSourceError, "Broken zone: RRSIG-only NSEC3 record at "
                    << node->getAbsoluteLabels(labels_buf) << "/" << rrclass);
      }
 
@@ -551,7 +551,7 @@ FindNodeResult findNode(const ZoneData& zone_data,
         if (out_of_zone_ok) {
             return (FindNodeResult(ZoneFinder::NXDOMAIN, NULL, NULL));
         }
-        isc_throw(OutOfZone, name_labels << " not in " <<
+        bundy_throw(OutOfZone, name_labels << " not in " <<
                              zone_data.getOriginNode()->getName());
     }
 }
@@ -584,7 +584,7 @@ protected:
 
     // We don't use the default protected methods that rely on this method,
     // so we can simply return NULL.
-    virtual const std::vector<isc::dns::ConstRRsetPtr>* getAllRRsets() const {
+    virtual const std::vector<bundy::dns::ConstRRsetPtr>* getAllRRsets() const {
         return (NULL);
     }
 
@@ -737,8 +737,8 @@ InMemoryZoneFinder::Context::findAdditional(
 }
 
 boost::shared_ptr<ZoneFinder::Context>
-InMemoryZoneFinder::find(const isc::dns::Name& name,
-                         const isc::dns::RRType& type,
+InMemoryZoneFinder::find(const bundy::dns::Name& name,
+                         const bundy::dns::RRType& type,
                          const FindOptions options)
 {
     return (ZoneFinderContextPtr(new Context(*this, options, rrclass_,
@@ -747,8 +747,8 @@ InMemoryZoneFinder::find(const isc::dns::Name& name,
 }
 
 boost::shared_ptr<ZoneFinder::Context>
-InMemoryZoneFinder::findAll(const isc::dns::Name& name,
-                            std::vector<isc::dns::ConstRRsetPtr>& target,
+InMemoryZoneFinder::findAll(const bundy::dns::Name& name,
+                            std::vector<bundy::dns::ConstRRsetPtr>& target,
                             const FindOptions options)
 {
     return (ZoneFinderContextPtr(new Context(*this, options, rrclass_,
@@ -769,7 +769,7 @@ InMemoryZoneFinder::findAll(const isc::dns::Name& name,
 // otherwise.  Due to its simplicity we implement it separately, rather than
 // sharing the code with findInternal.
 boost::shared_ptr<ZoneFinder::Context>
-InMemoryZoneFinder::findAtOrigin(const isc::dns::RRType& type,
+InMemoryZoneFinder::findAtOrigin(const bundy::dns::RRType& type,
                                  bool use_minttl,
                                  const FindOptions options)
 {
@@ -797,8 +797,8 @@ InMemoryZoneFinder::findAtOrigin(const isc::dns::RRType& type,
 }
 
 ZoneFinderResultContext
-InMemoryZoneFinder::findInternal(const isc::dns::Name& name,
-                                 const isc::dns::RRType& type,
+InMemoryZoneFinder::findInternal(const bundy::dns::Name& name,
+                                 const bundy::dns::RRType& type,
                                  std::vector<ConstRRsetPtr>* target,
                                  const FindOptions options)
 {
@@ -895,8 +895,8 @@ InMemoryZoneFinder::findInternal(const isc::dns::Name& name,
                              options, wild));
 }
 
-isc::datasrc::ZoneFinder::FindNSEC3Result
-InMemoryZoneFinder::findNSEC3(const isc::dns::Name& name, bool recursive) {
+bundy::datasrc::ZoneFinder::FindNSEC3Result
+InMemoryZoneFinder::findNSEC3(const bundy::dns::Name& name, bool recursive) {
     LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_FINDNSEC3).arg(name).
         arg(recursive ? "recursive" : "non-recursive");
 
@@ -906,7 +906,7 @@ InMemoryZoneFinder::findNSEC3(const isc::dns::Name& name, bool recursive) {
     LabelSequence name_ls(name);
 
     if (!zone_data_.isNSEC3Signed()) {
-        isc_throw(DataSourceError,
+        bundy_throw(DataSourceError,
                   "findNSEC3 attempt for non NSEC3 signed zone: " <<
                   origin_ls << "/" << getClass());
     }
@@ -918,7 +918,7 @@ InMemoryZoneFinder::findNSEC3(const isc::dns::Name& name, bool recursive) {
 
     const ZoneTree& tree = nsec3_data->getNSEC3Tree();
     if (tree.getNodeCount() == 0) {
-        isc_throw(DataSourceError,
+        bundy_throw(DataSourceError,
                   "findNSEC3 attempt but zone has no NSEC3 RRs: " <<
                   origin_ls << "/" << getClass());
     }
@@ -926,7 +926,7 @@ InMemoryZoneFinder::findNSEC3(const isc::dns::Name& name, bool recursive) {
     const NameComparisonResult cmp_result = name_ls.compare(origin_ls);
     if (cmp_result.getRelation() != NameComparisonResult::EQUAL &&
         cmp_result.getRelation() != NameComparisonResult::SUBDOMAIN) {
-        isc_throw(OutOfZone, "findNSEC3 attempt for out-of-zone name: "
+        bundy_throw(OutOfZone, "findNSEC3 attempt for out-of-zone name: "
                   << name_ls << ", zone: " << origin_ls << "/"
                   << getClass());
     }
@@ -945,7 +945,7 @@ InMemoryZoneFinder::findNSEC3(const isc::dns::Name& name, bool recursive) {
          tree.find<void*>(origin_ls, &node, orig_chain, NULL, NULL);
     if (result != ZoneTree::EXACTMATCH) {
         // If the origin node doesn't exist, simply fail.
-        isc_throw(DataSourceError,
+        bundy_throw(DataSourceError,
                   "findNSEC3 attempt but zone has no NSEC3 RRs: " <<
                   origin_ls << "/" << getClass());
     }
@@ -1016,7 +1016,7 @@ InMemoryZoneFinder::findNSEC3(const isc::dns::Name& name, bool recursive) {
         }
     }
 
-    isc_throw(DataSourceError, "recursive findNSEC3 mode didn't stop, likely "
+    bundy_throw(DataSourceError, "recursive findNSEC3 mode didn't stop, likely "
               "a broken NSEC3 zone: " << getOrigin() << "/"
               << getClass());
 }
@@ -1042,4 +1042,4 @@ InMemoryZoneFinder::getOrigin() const {
 
 } // namespace memory
 } // namespace datasrc
-} // namespace isc
+} // namespace bundy

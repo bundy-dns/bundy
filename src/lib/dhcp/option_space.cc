@@ -16,14 +16,14 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 OptionSpace::OptionSpace(const std::string& name, const bool vendor_space)
     : name_(name), vendor_space_(vendor_space) {
     //  Check that provided option space name is valid.
     if (!validateName(name_)) {
-        isc_throw(InvalidOptionSpace, "Invalid option space name "
+        bundy_throw(InvalidOptionSpace, "Invalid option space name "
                   << name_);
     }
 }
@@ -67,5 +67,5 @@ OptionSpace6::setVendorSpace(const uint32_t enterprise_number) {
     OptionSpace::setVendorSpace();
 }
 
-} // end of isc::dhcp namespace
-} // end of isc namespace
+} // end of bundy::dhcp namespace
+} // end of bundy namespace

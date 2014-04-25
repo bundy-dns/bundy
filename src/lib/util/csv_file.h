@@ -23,14 +23,14 @@
 #include <string>
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace util {
 
 /// @brief Exception thrown when an error occurs during CSV file processing.
 class CSVFileError : public Exception {
 public:
     CSVFileError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Represents a single row of the CSV file.
@@ -138,7 +138,7 @@ public:
             cast_value = boost::lexical_cast<T>(readAt(at).c_str());
 
         } catch (const boost::bad_lexical_cast& ex) {
-            isc_throw(CSVFileError, ex.what());
+            bundy_throw(CSVFileError, ex.what());
         }
         return (cast_value);
     }
@@ -194,7 +194,7 @@ public:
         try {
             values_[at] = boost::lexical_cast<std::string>(value);
         } catch (const boost::bad_lexical_cast& ex) {
-            isc_throw(CSVFileError, "unable to stringify the value to be"
+            bundy_throw(CSVFileError, "unable to stringify the value to be"
                       " written in the CSV file row at position '"
                       << at << "'");
         }
@@ -471,7 +471,7 @@ private:
     std::string read_msg_;
 };
 
-} // namespace isc::util
-} // namespace isc
+} // namespace bundy::util
+} // namespace bundy
 
 #endif // CSV_FILE_H

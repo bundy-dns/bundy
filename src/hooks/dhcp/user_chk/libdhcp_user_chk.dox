@@ -18,7 +18,7 @@
 @section libdhcp_user_chkIntro Libdhcp_user_chk: An Example Hooks Library
 ## Introduction
 libdhcp_user_chk is an example hooks library which customizes the DHCP query
-processing provided by BIND X DHCP server modules (b10-dhcp4 and b10-dhcp6).
+processing provided by BIND X DHCP server modules (bundy-dhcp4 and bundy-dhcp6).
 Specifically it allows subnet selection and DHCP response option customization
 based upon a registry of DHCP clients.  Note that the words "client" and "user" are used interchangeably herein.  The intent of the custom behavior is three
 fold:
@@ -88,7 +88,7 @@ flow upon receipt of an inbound request is the same and is as follows:
 ## Using the library
 Two steps are required in order to use the library:
 -# The user registry file must be created and deployed
--# The BIND10 DHCP module(s) must be configured to load the library
+-# The BUNDY DHCP module(s) must be configured to load the library
 
 ### Creating the Registry File
 Currently, the library uses a hard coded pathname for the user registry defined
@@ -125,8 +125,8 @@ the library will unload.
 
 ### Configuring the DHCP Modules
 it must be configured as a hook library for the
-desired DHCP server modules.  Note that the user_chk library is installed alongside the BIND10 libraries in "<install-dir>/lib" where <install-dir> is determined by the --prefix option of the configure script.  It defaults to "/usr/local". Assuming the default value then, configuring b10-dhcp4 to load the user_chk
-library could be done with the following BIND10 configuration commands:
+desired DHCP server modules.  Note that the user_chk library is installed alongside the BUNDY libraries in "<install-dir>/lib" where <install-dir> is determined by the --prefix option of the configure script.  It defaults to "/usr/local". Assuming the default value then, configuring bundy-dhcp4 to load the user_chk
+library could be done with the following BUNDY configuration commands:
 
 @code
 config add Dhcp4/hook_libraries
@@ -134,7 +134,7 @@ config set Dhcp4/hook_libraries[0] "/usr/local/lib/libdhcp_user_chk.so"
 config commit
 @endcode
 
-To configure it for b10-dhcp6, the commands are simply as shown below:
+To configure it for bundy-dhcp6, the commands are simply as shown below:
 
 @code
 config add Dhcp6/hook_libraries

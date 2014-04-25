@@ -22,20 +22,20 @@
 namespace {
 void
 flatten(std::map<std::string, int>& flat_map, const std::string& prefix,
-        const isc::data::ConstElementPtr map_element)
+        const bundy::data::ConstElementPtr map_element)
 {
-    std::map<std::string, isc::data::ConstElementPtr> map =
+    std::map<std::string, bundy::data::ConstElementPtr> map =
         map_element->mapValue();
-    for (std::map<std::string, isc::data::ConstElementPtr>::const_iterator
+    for (std::map<std::string, bundy::data::ConstElementPtr>::const_iterator
              i = map.begin(), e = map.end();
          i != e;
          ++i)
     {
         switch (i->second->getType()) {
-            case isc::data::Element::map:
+            case bundy::data::Element::map:
                 flatten(flat_map, i->first + ".", i->second);
                 break;
-            case isc::data::Element::integer:
+            case bundy::data::Element::integer:
                 flat_map[prefix + i->first] = i->second->intValue();
                 break;
             default:
@@ -45,12 +45,12 @@ flatten(std::map<std::string, int>& flat_map, const std::string& prefix,
 }
 }
 
-namespace isc {
+namespace bundy {
 namespace auth {
 namespace unittest {
 
 void
-checkStatisticsCounters(const isc::data::ConstElementPtr counters,
+checkStatisticsCounters(const bundy::data::ConstElementPtr counters,
                         const std::map<std::string, int>& expect)
 {
     std::map<std::string, int> stats_map;

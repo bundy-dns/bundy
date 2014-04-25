@@ -20,7 +20,7 @@
 #include <dns/message.h>
 #include <util/buffer.h>
 
-namespace isc {
+namespace bundy {
 namespace asiodns {
 
 /// \brief The \c DNSLookup class is an abstract base class for a DNS
@@ -71,9 +71,9 @@ public:
     /// \param buffer The final answer is put here
     /// \param server DNSServer object to use
     virtual void operator()(const asiolink::IOMessage& io_message,
-                            isc::dns::MessagePtr message,
-                            isc::dns::MessagePtr answer_message,
-                            isc::util::OutputBufferPtr buffer,
+                            bundy::dns::MessagePtr message,
+                            bundy::dns::MessagePtr answer_message,
+                            bundy::util::OutputBufferPtr buffer,
                             DNSServer* server) const
     {
         (*self_)(io_message, message, answer_message, buffer, server);
@@ -83,5 +83,5 @@ private:
 };
 
 }      // namespace asiodns
-}      // namespace isc
+}      // namespace bundy
 #endif // ASIOLINK_DNS_LOOKUP_H

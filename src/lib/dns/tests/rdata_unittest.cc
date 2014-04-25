@@ -34,13 +34,13 @@
 #include <boost/lexical_cast.hpp>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::util;
-using namespace isc::dns::rdata;
-using isc::UnitTestUtil;
-using isc::util::unittests::matchWireData;
+using namespace bundy::dns;
+using namespace bundy::util;
+using namespace bundy::dns::rdata;
+using bundy::UnitTestUtil;
+using bundy::util::unittests::matchWireData;
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace rdata {
 RdataTest::RdataTest() :
@@ -80,7 +80,7 @@ createRdataUsingLexer(const RRType& rrtype, const RRClass& rrclass,
                         MasterLoader::MANY_ERRORS, callbacks));
 }
 
-} // end of namespace isc::dns::rdata::test
+} // end of namespace bundy::dns::rdata::test
 
 // A mock class to check parameters passed via loader callbacks.  Its callback
 // records the passed parameters, allowing the test to check them later via

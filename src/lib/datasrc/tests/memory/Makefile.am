@@ -6,7 +6,7 @@ AM_CPPFLAGS += $(BOOST_INCLUDES)
 AM_CPPFLAGS += -DTEST_DATA_DIR=\"$(abs_srcdir)/testdata\"
 AM_CPPFLAGS += -DTEST_DATA_BUILDDIR=\"$(abs_builddir)\"
 
-AM_CXXFLAGS = $(B10_CXXFLAGS)
+AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 
 if USE_SHARED_MEMORY
 # See src/lib/util/Makefile.am.  We need this because some tests directly
@@ -57,14 +57,14 @@ run_unittests_SOURCES += zone_writer_unittest.cc
 run_unittests_CPPFLAGS = $(AM_CPPFLAGS) $(GTEST_INCLUDES)
 run_unittests_LDFLAGS  = $(AM_LDFLAGS)  $(GTEST_LDFLAGS)
 
-run_unittests_LDADD = $(top_builddir)/src/lib/datasrc/libb10-datasrc.la
-run_unittests_LDADD += $(top_builddir)/src/lib/dns/libb10-dns++.la
-run_unittests_LDADD += $(top_builddir)/src/lib/cc/libb10-cc.la
+run_unittests_LDADD = $(top_builddir)/src/lib/datasrc/libbundy-datasrc.la
+run_unittests_LDADD += $(top_builddir)/src/lib/dns/libbundy-dns++.la
+run_unittests_LDADD += $(top_builddir)/src/lib/cc/libbundy-cc.la
 run_unittests_LDADD += $(top_builddir)/src/lib/util/unittests/libutil_unittests.la
-run_unittests_LDADD += $(top_builddir)/src/lib/util/libb10-util.la
-run_unittests_LDADD += $(top_builddir)/src/lib/testutils/libb10-testutils.la
-run_unittests_LDADD += $(top_builddir)/src/lib/exceptions/libb10-exceptions.la
-run_unittests_LDADD += $(top_builddir)/src/lib/log/libb10-log.la
+run_unittests_LDADD += $(top_builddir)/src/lib/util/libbundy-util.la
+run_unittests_LDADD += $(top_builddir)/src/lib/testutils/libbundy-testutils.la
+run_unittests_LDADD += $(top_builddir)/src/lib/exceptions/libbundy-exceptions.la
+run_unittests_LDADD += $(top_builddir)/src/lib/log/libbundy-log.la
 run_unittests_LDADD += $(GTEST_LDADD)
 endif
 

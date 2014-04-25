@@ -31,8 +31,8 @@
 #include <gtest/gtest.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::d2;
+using namespace bundy;
+using namespace bundy::d2;
 
 namespace {
 
@@ -105,7 +105,7 @@ public:
 
     /// @brief Empty handler used to satisfy map verification.
     void dummyHandler() {
-        isc_throw(NameChangeTransactionError,
+        bundy_throw(NameChangeTransactionError,
                   "dummyHandler - invalid event: " << getContextStr());
     }
 
@@ -121,7 +121,7 @@ public:
             break;
         default:
             // its bogus
-            isc_throw(NameChangeTransactionError,
+            bundy_throw(NameChangeTransactionError,
                       "readyHandler - invalid event: " << getContextStr());
         }
     }
@@ -151,7 +151,7 @@ public:
             break;
         default:
             // its bogus
-            isc_throw(NameChangeTransactionError,
+            bundy_throw(NameChangeTransactionError,
                       "doingUpdateHandler - invalid event: "
                       << getContextStr());
         }
@@ -173,7 +173,7 @@ public:
             break;
         default:
             // its bogus
-            isc_throw(NameChangeTransactionError,
+            bundy_throw(NameChangeTransactionError,
                       "processTransDoneHandler - invalid event: "
                       << getContextStr());
         }
@@ -347,7 +347,7 @@ public:
 /// requires reverse change.
 /// 4. Valid construction functions properly
 TEST(NameChangeTransaction, construction) {
-    IOServicePtr io_service(new isc::asiolink::IOService());
+    IOServicePtr io_service(new bundy::asiolink::IOService());
 
     const char* msg_str =
         "{"

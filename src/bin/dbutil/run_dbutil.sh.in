@@ -20,10 +20,10 @@ export PYTHON_EXEC
 
 DBUTIL_PATH=@abs_top_builddir@/src/bin/dbutil
 
-# Note: lib/dns/python/.libs is necessary because __init__.py of isc package
-# automatically imports isc.datasrc, which then requires the DNS loadable
+# Note: lib/dns/python/.libs is necessary because __init__.py of bundy package
+# automatically imports bundy.datasrc, which then requires the DNS loadable
 # module.  #2145 should eliminate the need for it.
-PYTHONPATH=@abs_top_srcdir@/src/bin:@abs_top_builddir@/src/lib/python/isc/log_messages:@abs_top_builddir@/src/lib/python/isc/cc:@abs_top_builddir@/src/lib/python:@abs_top_builddir@/src/bin:@abs_top_srcdir@/src/lib/python:@abs_top_builddir@/src/lib/dns/python/.libs
+PYTHONPATH=@abs_top_srcdir@/src/bin:@abs_top_builddir@/src/lib/python/bundy/log_messages:@abs_top_builddir@/src/lib/python/bundy/cc:@abs_top_builddir@/src/lib/python:@abs_top_builddir@/src/bin:@abs_top_srcdir@/src/lib/python:@abs_top_builddir@/src/lib/dns/python/.libs
 export PYTHONPATH
 
 # If necessary (rare cases), explicitly specify paths to dynamic libraries
@@ -34,10 +34,10 @@ if test $SET_ENV_LIBRARY_PATH = yes; then
 	export @ENV_LIBRARY_PATH@
 fi
 
-B10_FROM_SOURCE=@abs_top_srcdir@
-export B10_FROM_SOURCE
+BUNDY_FROM_SOURCE=@abs_top_srcdir@
+export BUNDY_FROM_SOURCE
 
-BIND10_MSGQ_SOCKET_FILE=@abs_top_builddir@/msgq_socket
-export BIND10_MSGQ_SOCKET_FILE
+BUNDY_MSGQ_SOCKET_FILE=@abs_top_builddir@/msgq_socket
+export BUNDY_MSGQ_SOCKET_FILE
 
-exec ${PYTHON_EXEC} -O ${DBUTIL_PATH}/b10-dbutil "$@"
+exec ${PYTHON_EXEC} -O ${DBUTIL_PATH}/bundy-dbutil "$@"

@@ -19,14 +19,14 @@
 #include <log/macros.h>
 #include <d2/d2_messages.h>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 /// Define the logger for the "d2" logging.
-extern isc::log::Logger dctl_logger;
+extern bundy::log::Logger dctl_logger;
 
 
 } // namespace d2
-} // namespace isc
+} // namespace bundy
 
 #endif // D2_LOG_H

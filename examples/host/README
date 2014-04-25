@@ -1,4 +1,4 @@
-Rewriting host(1) in C++ from scratch using BIND 10's libdns++.
+Rewriting host(1) in C++ from scratch using BUNDY's libdns++.
 
 The bugs and incompatibilities are listed in the manual page
 and in the source code.

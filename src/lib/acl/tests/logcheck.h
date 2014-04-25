@@ -21,7 +21,7 @@
 
 // This is not a public header, it is used only inside the tests.
 
-namespace isc {
+namespace bundy {
 namespace acl {
 namespace tests {
 

@@ -25,7 +25,7 @@
 #include "rrset_cache.h"
 #include "local_zone_data.h"
 
-namespace isc {
+namespace bundy {
 namespace cache {
 class RRsetCache;
 
@@ -45,7 +45,7 @@ public:
     /// \param cls The RRClass code
     /// \param msg_cache_size The size for the message cache
     /// \param rst_cache_size The size for the RRset cache
-    CacheSizeInfo(const isc::dns::RRClass& cls,
+    CacheSizeInfo(const bundy::dns::RRClass& cls,
                   uint32_t msg_cache_size,
                   uint32_t rst_cache_size):
                     cclass(cls),
@@ -53,7 +53,7 @@ public:
                     rrset_cache_size(rst_cache_size)
     {}
 
-    isc::dns::RRClass cclass; // class of the cache.
+    bundy::dns::RRClass cclass; // class of the cache.
     uint32_t message_cache_size; // the size for message cache.
     uint32_t rrset_cache_size; // The size for rrset cache.
 };
@@ -62,10 +62,10 @@ public:
 ///
 /// Thrown if the given message has no question section when looking up
 /// the message in cache.
-class MessageNoQuestionSection : public isc::Exception {
+class MessageNoQuestionSection : public bundy::Exception {
 public:
     MessageNoQuestionSection(const char*file, size_t line, const char*what) :
-        isc::Exception(file, line, what)
+        bundy::Exception(file, line, what)
     {}
 };
 
@@ -86,7 +86,7 @@ public:
     /// Only support for class "IN", and message cache size is
     /// MESSAGE_CACHE_DEFAULT_SIZE, rrset cache size is
     /// RRSET_CACHE_DEFAULT_SIZE
-    ResolverClassCache(const isc::dns::RRClass& cache_class);
+    ResolverClassCache(const bundy::dns::RRClass& cache_class);
 
     /// \brief Construct Function.
     /// \param cache_info Cache size information for each message/rrsets of
@@ -107,9 +107,9 @@ public:
     ///        different sections(answer, authority, additional).
     /// \return return true if the message can be found, or else,
     ///         return false.
-    bool lookup(const isc::dns::Name& qname,
-                const isc::dns::RRType& qtype,
-                isc::dns::Message& response) const;
+    bool lookup(const bundy::dns::Name& qname,
+                const bundy::dns::RRType& qtype,
+                bundy::dns::Message& response) const;
 
     /// \brief Look up rrset in cache.
     ///
@@ -123,8 +123,8 @@ public:
     ///
     /// \overload
     ///
-    isc::dns::RRsetPtr lookup(const isc::dns::Name& qname,
-                              const isc::dns::RRType& qtype) const;
+    bundy::dns::RRsetPtr lookup(const bundy::dns::Name& qname,
+                              const bundy::dns::RRType& qtype) const;
 
     /// \brief Update the message in the cache with the new one.
     ///
@@ -141,7 +141,7 @@ public:
     ///       user quired, for example, if user query A record of
     ///       a.example. and the server replied with NXDOMAIN, this
     ///       should be cached for all the types queries of a.example.
-    bool update(const isc::dns::Message& msg);
+    bool update(const bundy::dns::Message& msg);
 
     /// \brief Update the rrset in the cache with the new one.
     ///
@@ -158,12 +158,12 @@ public:
     ///
     /// \note The class of the RRset must have been checked. It is not
     /// here.
-    bool update(const isc::dns::ConstRRsetPtr& rrset_ptr);
+    bool update(const bundy::dns::ConstRRsetPtr& rrset_ptr);
 
     /// \brief Get the RRClass this cache is for
     ///
     /// \return The RRClass of this cache
-    const isc::dns::RRClass& getClass() const;
+    const bundy::dns::RRClass& getClass() const;
 
 private:
     /// \brief Update rrset cache.
@@ -174,11 +174,11 @@ private:
     /// \return return true if the rrset is updated in the rrset cache,
     ///         or else return false if failed.
     /// \param rrset_cache_ptr The rrset cache need to be updated.
-    bool updateRRsetCache(const isc::dns::ConstRRsetPtr& rrset_ptr,
+    bool updateRRsetCache(const bundy::dns::ConstRRsetPtr& rrset_ptr,
                           RRsetCachePtr rrset_cache_ptr);
 
     /// \brief Class this cache is for.
-    const isc::dns::RRClass cache_class_;
+    const bundy::dns::RRClass cache_class_;
 
     /// \brief map of message caches for configured classes(each message
     /// cache is class-specific)
@@ -231,10 +231,10 @@ public:
     ///        different sections(answer, authority, additional).
     /// \return return true if the message can be found, or else,
     ///         return false.
-    bool lookup(const isc::dns::Name& qname,
-                const isc::dns::RRType& qtype,
-                const isc::dns::RRClass& qclass,
-                isc::dns::Message& response) const;
+    bool lookup(const bundy::dns::Name& qname,
+                const bundy::dns::RRType& qtype,
+                const bundy::dns::RRClass& qclass,
+                bundy::dns::Message& response) const;
 
     /// \brief Look up rrset in cache.
     ///
@@ -249,9 +249,9 @@ public:
     ///
     /// \overload
     ///
-    isc::dns::RRsetPtr lookup(const isc::dns::Name& qname,
-                              const isc::dns::RRType& qtype,
-                              const isc::dns::RRClass& qclass) const;
+    bundy::dns::RRsetPtr lookup(const bundy::dns::Name& qname,
+                              const bundy::dns::RRType& qtype,
+                              const bundy::dns::RRClass& qclass) const;
 
     /// \brief Look up closest enclosing NS rrset in cache.
     ///
@@ -273,8 +273,8 @@ public:
     ///
     /// So here there is another question, which rrset looking up interface
     /// is used frequently? Exact or closest enclosing ns looking up.
-    isc::dns::RRsetPtr lookupDeepestNS(const isc::dns::Name& qname,
-                              const isc::dns::RRClass& qclass) const;
+    bundy::dns::RRsetPtr lookupDeepestNS(const bundy::dns::Name& qname,
+                              const bundy::dns::RRClass& qclass) const;
     //@}
 
     /// \brief Update the message in the cache with the new one.
@@ -286,7 +286,7 @@ public:
     ///
     /// \note the function doesn't do any message validation check,
     ///       the user should make sure the message is valid.
-    bool update(const isc::dns::Message& msg);
+    bool update(const bundy::dns::Message& msg);
 
     /// \brief Update the rrset in the cache with the new one.
     ///
@@ -301,14 +301,14 @@ public:
     ///
     /// \overload
     ///
-    bool update(const isc::dns::ConstRRsetPtr& rrset_ptr);
+    bool update(const bundy::dns::ConstRRsetPtr& rrset_ptr);
 
 private:
     /// \brief Returns the class-specific subcache
     ///
     /// \param cache_class the class to get the subcache for
     /// \return The subcache, or NULL if there is no cache for this class
-    ResolverClassCache* getClassCache(const isc::dns::RRClass& cache_class) const;
+    ResolverClassCache* getClassCache(const bundy::dns::RRClass& cache_class) const;
 
     /// The class-specific caches.
     /// TODO: I think we can optimize for IN, and always have that
@@ -317,7 +317,7 @@ private:
 };
 
 } // namespace cache
-} // namespace isc
+} // namespace bundy
 
 #endif // RESOLVER_CACHE_H
 

@@ -31,13 +31,13 @@
 
 #include "nsas_test.h"
 
-using namespace isc::nsas;
-using namespace isc::asiolink;
-using namespace isc::dns;
-using namespace isc::dns::rdata;
-using namespace isc::util;
+using namespace bundy::nsas;
+using namespace bundy::asiolink;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
+using namespace bundy::util;
 using namespace std;
-using isc::util::unittests::TestResolver;
+using bundy::util::unittests::TestResolver;
 
 namespace {
 
@@ -45,7 +45,7 @@ namespace {
 class InheritedZoneEntry : public ZoneEntry {
     public:
         InheritedZoneEntry(
-            boost::shared_ptr<isc::resolve::ResolverInterface> resolver,
+            boost::shared_ptr<bundy::resolve::ResolverInterface> resolver,
             const std::string& name, const RRClass& class_code,
             boost::shared_ptr<HashTable<NameserverEntry> > nameserver_table,
             boost::shared_ptr<LruList<NameserverEntry> > nameserver_lru) :

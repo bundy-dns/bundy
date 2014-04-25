@@ -23,10 +23,10 @@
 #include <dns/rcode.h>
 #include <dns/rrset.h>
 
-using namespace isc::dns;
+using namespace bundy::dns;
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace resolve {
 
 // Classify the response in the "message" object.
@@ -276,4 +276,4 @@ ResponseClassifier::Category ResponseClassifier::cnameChase(
 }
 
 } // namespace resolve
-} // namespace isc
+} // namespace bundy

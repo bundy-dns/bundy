@@ -17,7 +17,7 @@
 #include <dhcp/option_custom.h>
 #include <util/encode/hex.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 OptionCustom::OptionCustom(const OptionDefinition& def,
@@ -53,7 +53,7 @@ OptionCustom::addArrayDataField(const asiolink::IOAddress& address) {
 
     if ((address.isV4() && definition_.getType() != OPT_IPV4_ADDRESS_TYPE) ||
         (address.isV6() && definition_.getType() != OPT_IPV6_ADDRESS_TYPE)) {
-        isc_throw(BadDataTypeCast, "invalid address specified "
+        bundy_throw(BadDataTypeCast, "invalid address specified "
                   << address << ". Expected a valid IPv"
                   << (definition_.getType() == OPT_IPV4_ADDRESS_TYPE ?
                       "4" : "6") << " address.");
@@ -76,38 +76,8 @@ OptionCustom::addArrayDataField(const bool value) {
 void
 OptionCustom::checkIndex(const uint32_t index) const {
     if (index >= buffers_.size()) {
-        isc_throw(isc::OutOfRange, "specified data field index " << index
+        bundy_throw(bundy::OutOfRange, "specified data field index " << index
                   << " is out of range.");
-    }
-}
-
-template<typename T>
-void
-OptionCustom::checkDataType(const uint32_t index) const {
-    // Check that the requested return type is a supported integer.
-    if (!OptionDataTypeTraits<T>::integer_type) {
-        isc_throw(isc::dhcp::InvalidDataType, "specified data type"
-                  " is not a supported integer type.");
-    }
-
-    // Get the option definition type.
-    OptionDataType data_type = definition_.getType();
-    if (data_type == OPT_RECORD_TYPE) {
-        const OptionDefinition::RecordFieldsCollection& record_fields =
-            definition_.getRecordFields();
-        // When we initialized buffers we have already checked that
-        // the number of these buffers is equal to number of option
-        // fields in the record so the condition below should be met.
-        assert(index < record_fields.size());
-        // Get the data type to be returned.
-        data_type = record_fields[index];
-    }
-
-    if (OptionDataTypeTraits<T>::type != data_type) {
-        isc_throw(isc::dhcp::InvalidDataType,
-                  "specified data type " << data_type << " does not"
-                  " match the data type in an option definition for field"
-                  " index " << index);
     }
 }
 
@@ -235,13 +205,13 @@ OptionCustom::createBuffers(const OptionBuffer& data_buf) {
                     // If we reached the end of buffer we assume that this option is
                     // truncated because there is no remaining data to initialize
                     // an option field.
-                    isc_throw(OutOfRange, "option buffer truncated");
+                    bundy_throw(OutOfRange, "option buffer truncated");
                 }
             } else {
                 // Our data field requires that there is a certain chunk of
                 // data left in the buffer. If not, option is truncated.
                 if (std::distance(data, data_buf.end()) < data_size) {
-                    isc_throw(OutOfRange, "option buffer truncated");
+                    bundy_throw(OutOfRange, "option buffer truncated");
                 }
             }
             // Store the created buffer.
@@ -268,7 +238,7 @@ OptionCustom::createBuffers(const OptionBuffer& data_buf) {
         // if variable length data is being held by the option but
         // this will not cause this check to throw exception.
         if (std::distance(data, data_buf.end()) < data_size) {
-            isc_throw(OutOfRange, "option buffer truncated");
+            bundy_throw(OutOfRange, "option buffer truncated");
         }
         // For an array of values we are taking different path because
         // we have to handle multiple buffers.
@@ -324,7 +294,7 @@ OptionCustom::createBuffers(const OptionBuffer& data_buf) {
                 buffers.push_back(OptionBuffer(data, data + data_size));
                 data += data_size;
             } else {
-                isc_throw(OutOfRange, "option buffer truncated");
+                bundy_throw(OutOfRange, "option buffer truncated");
             }
 
             // Unpack suboptions if any.
@@ -394,7 +364,7 @@ OptionCustom::dataFieldToText(const OptionDataType data_type,
 }
 
 void
-OptionCustom::pack(isc::util::OutputBuffer& buf) {
+OptionCustom::pack(bundy::util::OutputBuffer& buf) {
 
     // Pack DHCP header (V4 or V6).
     packHeader(buf);
@@ -427,7 +397,7 @@ OptionCustom::readAddress(const uint32_t index) const {
     } else if (buffers_[index].size() == asiolink::V6ADDRESS_LEN) {
         return (OptionDataTypeUtil::readAddress(buffers_[index], AF_INET6));
     } else {
-        isc_throw(BadDataTypeCast, "unable to read data from the buffer as"
+        bundy_throw(BadDataTypeCast, "unable to read data from the buffer as"
                   << " IP address. Invalid buffer length "
                   << buffers_[index].size() << ".");
     }
@@ -436,13 +406,13 @@ OptionCustom::readAddress(const uint32_t index) const {
 void
 OptionCustom::writeAddress(const asiolink::IOAddress& address,
                            const uint32_t index) {
-    using namespace isc::asiolink;
+    using namespace bundy::asiolink;
 
     checkIndex(index);
 
     if ((address.isV4() && buffers_[index].size() != V4ADDRESS_LEN) ||
         (address.isV6() && buffers_[index].size() != V6ADDRESS_LEN)) {
-        isc_throw(BadDataTypeCast, "invalid address specified "
+        bundy_throw(BadDataTypeCast, "invalid address specified "
                   << address << ". Expected a valid IPv"
                   << (buffers_[index].size() == V4ADDRESS_LEN ? "4" : "6")
                   << " address.");
@@ -612,5 +582,5 @@ std::string OptionCustom::toText(int indent) {
     return tmp.str();
 }
 
-} // end of isc::dhcp namespace
-} // end of isc namespace
+} // end of bundy::dhcp namespace
+} // end of bundy namespace

@@ -35,9 +35,9 @@
 #include <errno.h>
 
 using namespace std;
-using namespace isc::asiolink;
+using namespace bundy::asiolink;
 
-namespace isc {
+namespace bundy {
 namespace asiodns {
 
 SyncUDPServerPtr
@@ -49,17 +49,17 @@ SyncUDPServer::create(asio::io_service& io_service, const int fd,
 
 SyncUDPServer::SyncUDPServer(asio::io_service& io_service, const int fd,
                              const int af, DNSLookup* lookup) :
-    output_buffer_(new isc::util::OutputBuffer(0)),
-    query_(new isc::dns::Message(isc::dns::Message::PARSE)),
+    output_buffer_(new bundy::util::OutputBuffer(0)),
+    query_(new bundy::dns::Message(bundy::dns::Message::PARSE)),
     udp_endpoint_(sender_), lookup_callback_(lookup),
     resume_called_(false), done_(false), stopped_(false)
 {
     if (af != AF_INET && af != AF_INET6) {
-        isc_throw(InvalidParameter, "Address family must be either AF_INET "
+        bundy_throw(InvalidParameter, "Address family must be either AF_INET "
                   "or AF_INET6, not " << af);
     }
     if (!lookup) {
-        isc_throw(InvalidParameter, "null lookup callback given to "
+        bundy_throw(InvalidParameter, "null lookup callback given to "
                   "SyncUDPServer");
     }
     LOG_DEBUG(logger, DBGLVL_TRACE_BASIC, ASIODNS_FD_ADD_UDP).arg(fd);
@@ -70,7 +70,7 @@ SyncUDPServer::SyncUDPServer(asio::io_service& io_service, const int fd,
     } catch (const std::exception& exception) {
         // Whatever the thing throws, it is something from ASIO and we
         // convert it
-        isc_throw(IOError, exception.what());
+        bundy_throw(IOError, exception.what());
     }
     udp_socket_.reset(new UDPSocket<DummyIOCallback>(*socket_));
 }
@@ -127,7 +127,7 @@ SyncUDPServer::handleRead(const asio::error_code& ec, const size_t length) {
     (*lookup_callback_)(message, query_, answer_, output_buffer_, this);
 
     if (!resume_called_) {
-        isc_throw(isc::Unexpected,
+        bundy_throw(bundy::Unexpected,
                   "No resume called from the lookup callback");
     }
 
@@ -183,4 +183,4 @@ SyncUDPServer::hasAnswer() {
 }
 
 } // namespace asiodns
-} // namespace isc
+} // namespace bundy

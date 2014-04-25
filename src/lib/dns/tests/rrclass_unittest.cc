@@ -24,11 +24,11 @@
 #include <boost/scoped_ptr.hpp>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dns;
-using namespace isc::util;
+using namespace bundy;
+using namespace bundy::dns;
+using namespace bundy::util;
 using boost::scoped_ptr;
-using isc::util::unittests::matchWireData;
+using bundy::util::unittests::matchWireData;
 
 namespace {
 class RRClassTest : public ::testing::Test {

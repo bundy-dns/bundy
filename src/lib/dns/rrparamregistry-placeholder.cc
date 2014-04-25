@@ -35,10 +35,10 @@
 
 using namespace std;
 
-using namespace isc::util;
-using namespace isc::dns::rdata;
+using namespace bundy::util;
+using namespace bundy::dns::rdata;
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 namespace {
@@ -344,7 +344,7 @@ addParam(const string& code_string, uint16_t code, MC& codemap, MS& stringmap)
     typename MC::const_iterator found = codemap.find(code);
     if (found != codemap.end()) {
         if (found->second->code_string_ != code_string) {
-            isc_throw(ET, "Duplicate RR parameter registration");
+            bundy_throw(ET, "Duplicate RR parameter registration");
         }
         return (false);
     }

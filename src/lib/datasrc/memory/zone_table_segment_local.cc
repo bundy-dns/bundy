@@ -14,10 +14,10 @@
 
 #include <datasrc/memory/zone_table_segment_local.h>
 
-using namespace isc::dns;
-using namespace isc::util;
+using namespace bundy::dns;
+using namespace bundy::util;
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 
@@ -45,9 +45,9 @@ ZoneTableSegmentLocal::getImplType() const {
 
 void
 ZoneTableSegmentLocal::reset(MemorySegmentOpenMode,
-                             isc::data::ConstElementPtr)
+                             bundy::data::ConstElementPtr)
 {
-    isc_throw(isc::NotImplemented,
+    bundy_throw(bundy::NotImplemented,
               "ZoneTableSegmentLocal::reset() is not implemented and "
               "should not be used.");
 }
@@ -55,7 +55,7 @@ ZoneTableSegmentLocal::reset(MemorySegmentOpenMode,
 void
 ZoneTableSegmentLocal::clear()
 {
-    isc_throw(isc::NotImplemented,
+    bundy_throw(bundy::NotImplemented,
               "ZoneTableSegmentLocal::clear() is not implemented and "
               "should not be used.");
 }
@@ -80,4 +80,4 @@ ZoneTableSegmentLocal::getMemorySegment() {
 
 } // namespace memory
 } // namespace datasrc
-} // namespace isc
+} // namespace bundy

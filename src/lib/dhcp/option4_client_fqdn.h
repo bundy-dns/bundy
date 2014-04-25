@@ -20,7 +20,7 @@
 
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief Exception thrown when invalid flags have been specified for
@@ -28,7 +28,7 @@ namespace dhcp {
 class InvalidOption4FqdnFlags : public Exception {
 public:
     InvalidOption4FqdnFlags(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// @brief Exception thrown when invalid domain name is specified.
@@ -36,7 +36,7 @@ class InvalidOption4FqdnDomainName : public Exception {
 public:
     InvalidOption4FqdnDomainName(const char* file, size_t line,
                                  const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// Forward declaration to implementation of @c Option4ClientFqdn class.
@@ -103,7 +103,7 @@ class Option4ClientFqdnImpl;
 /// <b>Design choice:</b> This class uses pimpl idiom to separate the interface
 /// from implementation specifics. Implementations may use different approaches
 /// to handle domain names (mostly validation of the domain-names). The existing
-/// @c isc::dns::Name class is a natural (and the simplest) choice to handle
+/// @c bundy::dns::Name class is a natural (and the simplest) choice to handle
 /// domain-names. Use of this class however, implies that libdhcp must be linked
 /// with libdns. At some point these libraries may need to be separated, i.e. to
 /// support compilation and use of standalone DHCP server. This will require
@@ -279,7 +279,7 @@ public:
     /// The data being written are appended at the end of the buffer.
     ///
     /// @param [out] buf buffer where domain-name will be written.
-    void packDomainName(isc::util::OutputBuffer& buf) const;
+    void packDomainName(bundy::util::OutputBuffer& buf) const;
 
     /// @brief Set new domain-name.
     ///
@@ -307,7 +307,7 @@ public:
    /// @brief Writes option in the wire format into a buffer.
     ///
     /// @param [out] buf output buffer where option data will be stored.
-    virtual void pack(isc::util::OutputBuffer& buf);
+    virtual void pack(bundy::util::OutputBuffer& buf);
 
     /// @brief Parses option from the received buffer.
     ///
@@ -364,7 +364,7 @@ private:
 /// A pointer to the @c Option4ClientFqdn object.
 typedef boost::shared_ptr<Option4ClientFqdn> Option4ClientFqdnPtr;
 
-} // namespace isc::dhcp
-} // namespace isc
+} // namespace bundy::dhcp
+} // namespace bundy
 
 #endif // OPTION4_CLIENT_FQDN_H

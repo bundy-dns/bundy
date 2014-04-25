@@ -23,7 +23,7 @@
 
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace hooks {
 
 // Constructor.
@@ -111,7 +111,7 @@ CalloutHandle::getContextForLibrary() const {
     ContextCollection::const_iterator libcontext =
         context_collection_.find(libindex);
     if (libcontext == context_collection_.end()) {
-        isc_throw(NoSuchCalloutContext, "unable to find callout context "
+        bundy_throw(NoSuchCalloutContext, "unable to find callout context "
                   "associated with the current library index (" << libindex <<
                   ")");
     }
@@ -160,4 +160,4 @@ CalloutHandle::getHookName() const {
 }
 
 } // namespace util
-} // namespace isc
+} // namespace bundy

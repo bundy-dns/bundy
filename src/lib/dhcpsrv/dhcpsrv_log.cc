@@ -16,11 +16,11 @@
 
 #include "dhcpsrv/dhcpsrv_log.h"
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
-isc::log::Logger dhcpsrv_logger("dhcpsrv");
+bundy::log::Logger dhcpsrv_logger("dhcpsrv");
 
 } // namespace dhcp
-} // namespace isc
+} // namespace bundy
 

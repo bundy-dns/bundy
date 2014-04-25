@@ -17,7 +17,7 @@
 
 #include <boost/function.hpp>
 
-namespace isc {
+namespace bundy {
 // Forward declarations
 namespace util{
 class MemorySegment;

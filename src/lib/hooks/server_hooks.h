@@ -23,7 +23,7 @@
 #include <string>
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace hooks {
 
 /// @brief Duplicate hook
@@ -33,7 +33,7 @@ namespace hooks {
 class DuplicateHook : public Exception {
 public:
     DuplicateHook(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// @brief Invalid hook
@@ -42,7 +42,7 @@ public:
 class NoSuchHook : public Exception {
 public:
     NoSuchHook(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 
@@ -77,7 +77,7 @@ public:
     /// testing to reset the global ServerHooks object; it should never be
     /// used in production.
     ///
-    /// @throws isc::Unexpected if the registration of the pre-defined hooks
+    /// @throws bundy::Unexpected if the registration of the pre-defined hooks
     ///         fails in some way.
     void reset();
 
@@ -153,7 +153,7 @@ private:
     /// the object.  A reference to the singleton is obtainable through the
     /// getServerHooks() static method.
     ///
-    /// @throws isc::Unexpected if the registration of the pre-defined hooks
+    /// @throws bundy::Unexpected if the registration of the pre-defined hooks
     ///         fails in some way.
     ServerHooks();
 
@@ -163,7 +163,7 @@ private:
     /// context_create and context_destroy hooks set.  This is used during
     /// construction.
     ///
-    /// @throws isc::Unexpected if the registration of the pre-defined hooks
+    /// @throws bundy::Unexpected if the registration of the pre-defined hooks
     ///         fails in some way.
     void initialize();
 
@@ -178,6 +178,6 @@ private:
 };
 
 } // namespace util
-} // namespace isc
+} // namespace bundy
 
 #endif  // SERVER_HOOKS_H

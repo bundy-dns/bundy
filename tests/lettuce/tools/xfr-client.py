@@ -23,7 +23,7 @@
 #
 # For command line usage, run this program with -h option.
 
-from isc.dns import *
+from bundy.dns import *
 import sys
 import socket
 import struct

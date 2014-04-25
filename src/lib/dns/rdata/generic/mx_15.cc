@@ -30,10 +30,10 @@
 
 using namespace std;
 using boost::lexical_cast;
-using namespace isc::util;
-using isc::dns::rdata::generic::detail::createNameFromLexer;
+using namespace bundy::util;
+using bundy::dns::rdata::generic::detail::createNameFromLexer;
 
-// BEGIN_ISC_NAMESPACE
+// BEGIN_BUNDY_NAMESPACE
 // BEGIN_RDATA_NAMESPACE
 
 MX::MX(InputBuffer& buffer, size_t) :
@@ -71,11 +71,11 @@ MX::MX(const std::string& mx_str) :
         constructFromLexer(lexer, NULL);
 
         if (lexer.getNextToken().getType() != MasterToken::END_OF_FILE) {
-            isc_throw(InvalidRdataText, "extra input text for MX: "
+            bundy_throw(InvalidRdataText, "extra input text for MX: "
                       << mx_str);
         }
     } catch (const MasterLexer::LexerError& ex) {
-        isc_throw(InvalidRdataText, "Failed to construct MX from '" <<
+        bundy_throw(InvalidRdataText, "Failed to construct MX from '" <<
                   mx_str << "': " << ex.what());
     }
 }
@@ -109,7 +109,7 @@ void
 MX::constructFromLexer(MasterLexer& lexer, const Name* origin) {
     const uint32_t num = lexer.getNextToken(MasterToken::NUMBER).getNumber();
     if (num > 65535) {
-        isc_throw(InvalidRdataText, "Invalid MX preference: " << num);
+        bundy_throw(InvalidRdataText, "Invalid MX preference: " << num);
     }
     preference_ = static_cast<uint16_t>(num);
 
@@ -165,4 +165,4 @@ MX::getMXPref() const {
 }
 
 // END_RDATA_NAMESPACE
-// END_ISC_NAMESPACE
+// END_BUNDY_NAMESPACE

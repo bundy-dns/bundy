@@ -22,7 +22,7 @@ ISC sysinfo program.
 
 import sys; sys.path.append ('@@PYTHONPATH@@')
 import getopt
-from isc.sysinfo import *
+from bundy.sysinfo import *
 
 def usage():
     print("Usage: %s [-h] [-o <output-file>]" % sys.argv[0], \

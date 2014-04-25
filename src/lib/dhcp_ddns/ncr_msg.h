@@ -32,22 +32,22 @@
 #include <time.h>
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace dhcp_ddns {
 
 /// @brief Exception thrown when NameChangeRequest marshalling error occurs.
-class NcrMessageError : public isc::Exception {
+class NcrMessageError : public bundy::Exception {
 public:
     NcrMessageError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Exception thrown when there is an error occured during computation
 /// of the DHCID.
-class DhcidRdataComputeError : public isc::Exception {
+class DhcidRdataComputeError : public bundy::Exception {
 public:
     DhcidRdataComputeError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 
@@ -77,7 +77,7 @@ enum NameChangeFormat {
 ///
 /// @return NameChangeFormat value which maps to the given string.
 ///
-/// @throw isc::BadValue if given a string value which does not map to an
+/// @throw bundy::BadValue if given a string value which does not map to an
 /// enum value.
 extern NameChangeFormat stringToNcrFormat(const std::string& fmt_str);
 
@@ -113,7 +113,7 @@ public:
     ///
     /// @param hwaddr A pointer to the object encapsulating HW address.
     /// @param wire_fqdn A on-wire canonical representation of the FQDN.
-    D2Dhcid(const isc::dhcp::HWAddrPtr& hwaddr,
+    D2Dhcid(const bundy::dhcp::HWAddrPtr& hwaddr,
             const std::vector<uint8_t>& wire_fqdn);
 
     /// @brief Constructor, creates an instance of the @c D2Dhcid from the
@@ -125,11 +125,11 @@ public:
             const std::vector<uint8_t>& wire_fqdn);
 
     /// @brief Constructor, creates an instance of the @c D2Dhcid from the
-    /// @c isc::dhcp::DUID.
+    /// @c bundy::dhcp::DUID.
     ///
     /// @param duid An object representing DUID.
     /// @param wire_fqdn A on-wire canonical representation of the FQDN.
-    D2Dhcid(const isc::dhcp::DUID& duid,
+    D2Dhcid(const bundy::dhcp::DUID& duid,
             const std::vector<uint8_t>& wire_fqdn);
 
     /// @brief Returns the DHCID value as a string of hexadecimal digits.
@@ -160,16 +160,16 @@ public:
     /// of the RFC4701, which says that the FQDN must be in lowercase.
     /// This function doesn't validate if it really converted.
     ///
-    /// @param duid A @c isc::dhcp::DUID object encapsulating DUID.
+    /// @param duid A @c bundy::dhcp::DUID object encapsulating DUID.
     /// @param wire_fqdn A on-wire canonical representation of the FQDN.
-    void fromDUID(const isc::dhcp::DUID& duid,
+    void fromDUID(const bundy::dhcp::DUID& duid,
                   const std::vector<uint8_t>& wire_fqdn);
 
     /// @brief Sets the DHCID value based on the HW address and FQDN.
     ///
     /// @param hwaddr A pointer to the object encapsulating HW address.
     /// @param wire_fqdn A on-wire canonical representation of the FQDN.
-    void fromHWAddr(const isc::dhcp::HWAddrPtr& hwaddr,
+    void fromHWAddr(const bundy::dhcp::HWAddrPtr& hwaddr,
                     const std::vector<uint8_t>& wire_fqdn);
 
     /// @brief Returns a reference to the DHCID byte vector.
@@ -223,7 +223,7 @@ class NameChangeRequest;
 typedef boost::shared_ptr<NameChangeRequest> NameChangeRequestPtr;
 
 /// @brief Defines a map of Elements, keyed by their string name.
-typedef std::map<std::string, isc::data::ConstElementPtr> ElementMap;
+typedef std::map<std::string, bundy::data::ConstElementPtr> ElementMap;
 
 /// @brief  Represents a DHCP-DDNS client request.
 /// This class is used by DHCP-DDNS clients (e.g. DHCP4, DHCP6) to
@@ -290,7 +290,7 @@ public:
     /// @throw NcrMessageError if an error occurs creating new
     /// request.
     static NameChangeRequestPtr fromFormat(const NameChangeFormat format,
-                                           isc::util::InputBuffer& buffer);
+                                           bundy::util::InputBuffer& buffer);
 
     /// @brief Instance method for marshalling the contents of the request
     /// into the given buffer in the given format.
@@ -309,7 +309,7 @@ public:
     /// @param buffer is the output buffer to which the request should be
     /// marshalled.
     void toFormat(const NameChangeFormat format,
-                  isc::util::OutputBuffer& buffer) const;
+                  bundy::util::OutputBuffer& buffer) const;
 
     /// @brief Static method for creating a NameChangeRequest from a
     /// string containing a JSON rendition of a request.
@@ -365,7 +365,7 @@ public:
     ///
     /// @throw NcrMessageError if the element is not an integer
     /// Element or contains an invalid value.
-    void setChangeType(isc::data::ConstElementPtr element);
+    void setChangeType(bundy::data::ConstElementPtr element);
 
     /// @brief Checks forward change flag.
     ///
@@ -387,7 +387,7 @@ public:
     ///
     /// @throw NcrMessageError if the element is not a boolean
     /// Element
-    void setForwardChange(isc::data::ConstElementPtr element);
+    void setForwardChange(bundy::data::ConstElementPtr element);
 
     /// @brief Checks reverse change flag.
     ///
@@ -409,7 +409,7 @@ public:
     ///
     /// @throw NcrMessageError if the element is not a boolean
     /// Element
-    void setReverseChange(isc::data::ConstElementPtr element);
+    void setReverseChange(bundy::data::ConstElementPtr element);
 
     /// @brief Fetches the request FQDN
     ///
@@ -429,7 +429,7 @@ public:
     ///
     /// @throw NcrMessageError if the element is not a string
     /// Element
-    void setFqdn(isc::data::ConstElementPtr element);
+    void setFqdn(bundy::data::ConstElementPtr element);
 
     /// @brief Fetches the request IP address string.
     ///
@@ -470,7 +470,7 @@ public:
     ///
     /// @throw NcrMessageError if the element is not a string
     /// Element
-    void setIpAddress(isc::data::ConstElementPtr element);
+    void setIpAddress(bundy::data::ConstElementPtr element);
 
     /// @brief Fetches the request DHCID
     ///
@@ -496,7 +496,7 @@ public:
     ///
     /// @throw NcrMessageError if the input data contains non-digits
     /// or there is an odd number of digits.
-    void setDhcid(isc::data::ConstElementPtr element);
+    void setDhcid(bundy::data::ConstElementPtr element);
 
     /// @brief Fetches the request lease expiration
     ///
@@ -537,7 +537,7 @@ public:
     ///
     /// @throw NcrMessageError if the element is not a string
     /// Element, or if the element value is an invalid date-time string.
-    void setLeaseExpiresOn(isc::data::ConstElementPtr element);
+    void setLeaseExpiresOn(bundy::data::ConstElementPtr element);
 
     /// @brief Fetches the request lease length.
     ///
@@ -557,7 +557,7 @@ public:
     ///
     /// @throw NcrMessageError if the element is not a string
     /// Element
-    void setLeaseLength(isc::data::ConstElementPtr element);
+    void setLeaseLength(bundy::data::ConstElementPtr element);
 
     /// @brief Fetches the request status.
     ///
@@ -580,7 +580,7 @@ public:
     /// @return a pointer to the element if located
     /// @throw NcrMessageError if the element cannot be found within
     /// the map
-    isc::data::ConstElementPtr getElement(const std::string& name,
+    bundy::data::ConstElementPtr getElement(const std::string& name,
                                           const ElementMap& element_map) const;
 
     /// @brief Returns a text rendition of the contents of the request.
@@ -632,7 +632,7 @@ private:
 };
 
 
-}; // end of isc::dhcp_ddns namespace
-}; // end of isc namespace
+}; // end of bundy::dhcp_ddns namespace
+}; // end of bundy namespace
 
 #endif

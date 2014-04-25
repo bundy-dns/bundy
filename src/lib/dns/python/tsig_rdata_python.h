@@ -17,7 +17,7 @@
 
 #include <Python.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace rdata {
 namespace any {
@@ -60,7 +60,7 @@ const rdata::any::TSIG& PyTSIG_ToTSIG(const PyObject* tsig_obj);
 
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 #endif // PYTHON_TSIG_H
 
 // Local Variables:

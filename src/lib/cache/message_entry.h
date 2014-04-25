@@ -22,7 +22,7 @@
 #include "rrset_cache.h"
 #include "rrset_entry.h"
 
-namespace isc {
+namespace bundy {
 namespace cache {
 
 class RRsetEntry;
@@ -31,7 +31,7 @@ class RRsetEntry;
 ///
 /// The object of MessageEntry represents one response message
 /// answered to the resolver client.
-class MessageEntry : public isc::nsas::NsasEntry<MessageEntry> {
+class MessageEntry : public bundy::nsas::NsasEntry<MessageEntry> {
 // Noncopyable
 private:
     MessageEntry(const MessageEntry& source);
@@ -47,13 +47,13 @@ private:
         /// \param name The Name for the RRset
         /// \param type The RRType for the RRrset
         /// \param cache Which cache the RRset is stored in
-        RRsetRef(const isc::dns::Name& name, const isc::dns::RRType& type,
+        RRsetRef(const bundy::dns::Name& name, const bundy::dns::RRType& type,
                 RRsetCache* cache):
                 name_(name), type_(type), cache_(cache)
         {}
 
-        isc::dns::Name name_; // Name of rrset.
-        isc::dns::RRType type_; // Type of rrset.
+        bundy::dns::Name name_; // Name of rrset.
+        bundy::dns::RRType type_; // Type of rrset.
         RRsetCache* cache_; //Which cache the RRset is stored
     };
 
@@ -70,7 +70,7 @@ public:
     /// \param negative_soa_cache the pointer of RRsetCache. This
     ///        cache is used only for storing SOA rrset from negative
     ///        response (NXDOMAIN or NOERROR_NODATA)
-    MessageEntry(const isc::dns::Message& message,
+    MessageEntry(const bundy::dns::Message& message,
                  const RRsetCachePtr& rrset_cache,
                  const RRsetCachePtr& negative_soa_cache);
 
@@ -85,12 +85,12 @@ public:
     /// \param response generated dns message.
     /// \return return true if the response message can be generated
     ///         from the cached information, or else, return false.
-    bool genMessage(const time_t& time_now, isc::dns::Message& response);
+    bool genMessage(const time_t& time_now, bundy::dns::Message& response);
 
     /// \brief Get the hash key of the message entry.
     ///
     /// \return return hash key
-    virtual isc::nsas::HashKey hashKey() const {
+    virtual bundy::nsas::HashKey hashKey() const {
         return (*hash_key_ptr_);
     }
 
@@ -106,7 +106,7 @@ protected:
     /// \brief Initialize the message entry with dns message.
     ///
     /// \param message The Message to initialize the entry with
-    void initMessageEntry(const isc::dns::Message& message);
+    void initMessageEntry(const bundy::dns::Message& message);
 
     /// \brief Parse the rrsets in specified section.
     ///
@@ -117,8 +117,8 @@ protected:
     /// \param rrset_count the rrset count of the section.
     ///        (TODO for Message, getRRsetCount() should be one
     ///        interface provided by Message.)
-    void parseSection(const isc::dns::Message& msg,
-                      const isc::dns::Message::Section& section,
+    void parseSection(const bundy::dns::Message& msg,
+                      const bundy::dns::Message::Section& section,
                       uint32_t& smaller_ttl,
                       uint16_t& rrset_count);
 
@@ -128,7 +128,7 @@ protected:
     /// \param msg The message to parse the RRsets from
     /// \param min_ttl Get the minimum ttl of rrset in the authority section
     /// \param rrset_count the rrset count of the authority section
-    void parseNegativeResponseAuthoritySection(const isc::dns::Message& msg,
+    void parseNegativeResponseAuthoritySection(const bundy::dns::Message& msg,
             uint32_t& min_ttl,
             uint16_t& rrset_count);
 
@@ -142,9 +142,9 @@ protected:
     ///        trust worthiness
     /// \param section Section of the rrset
     /// \return return rrset trust level.
-    RRsetTrustLevel getRRsetTrustLevel(const isc::dns::Message& message,
-        const isc::dns::RRsetPtr& rrset,
-        const isc::dns::Message::Section& section);
+    RRsetTrustLevel getRRsetTrustLevel(const bundy::dns::Message& message,
+        const bundy::dns::RRsetPtr& rrset,
+        const bundy::dns::Message::Section& section);
 
     /// \brief Add rrset to one section of message.
     ///
@@ -152,9 +152,9 @@ protected:
     /// \param rrset_entry_vec vector for rrset entries in
     ///        different sections.
     /// \param section The section to add to
-    void addRRset(isc::dns::Message& message,
+    void addRRset(bundy::dns::Message& message,
                   const std::vector<RRsetEntryPtr>& rrset_entry_vec,
-                  const isc::dns::Message::Section& section);
+                  const bundy::dns::Message::Section& section);
 
     /// \brief Get the all the rrset entries for the message entry.
     ///
@@ -171,7 +171,7 @@ protected:
 
 private:
     std::string entry_name_; // The name for this entry(name + type)
-    isc::nsas::HashKey* hash_key_ptr_;  // the key for messag entry in hash table.
+    bundy::nsas::HashKey* hash_key_ptr_;  // the key for messag entry in hash table.
 
     std::vector<RRsetRef> rrsets_;
     RRsetCachePtr rrset_cache_; //Normal rrset cache
@@ -195,7 +195,7 @@ private:
 typedef boost::shared_ptr<MessageEntry> MessageEntryPtr;
 
 } // namespace cache
-} // namespace isc
+} // namespace bundy
 
 #endif // MESSAGE_ENTRY_H
 

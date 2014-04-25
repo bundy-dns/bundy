@@ -17,7 +17,7 @@
 #include <dns/message.h>
 #include <dns/opcode.h>
 
-using namespace isc::dns;
+using namespace bundy::dns;
 
 namespace {
     class SectionInserter {
@@ -33,7 +33,7 @@ namespace {
     };
 }
 
-namespace isc {
+namespace bundy {
 namespace resolve {
 
 void
@@ -47,8 +47,8 @@ makeErrorMessage(MessagePtr answer_message,
     answer_message->setRcode(error_code);
 }
 
-void initResponseMessage(const isc::dns::Message& query_message,
-                         isc::dns::Message& response_message)
+void initResponseMessage(const bundy::dns::Message& query_message,
+                         bundy::dns::Message& response_message)
 {
     response_message.setOpcode(query_message.getOpcode());
     response_message.setQid(query_message.getQid());
@@ -57,10 +57,10 @@ void initResponseMessage(const isc::dns::Message& query_message,
         query_message);
 }
 
-void initResponseMessage(const isc::dns::Question& question,
-                         isc::dns::Message& response_message)
+void initResponseMessage(const bundy::dns::Question& question,
+                         bundy::dns::Message& response_message)
 {
-    response_message.setOpcode(isc::dns::Opcode::QUERY());
+    response_message.setOpcode(bundy::dns::Opcode::QUERY());
     response_message.addQuestion(question);
 }
 
@@ -74,5 +74,5 @@ void copyResponseMessage(const Message& source, MessagePtr target) {
 
 
 } // namespace resolve
-} // namespace isc
+} // namespace bundy
 

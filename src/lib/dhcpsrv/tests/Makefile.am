@@ -6,7 +6,7 @@ AM_CPPFLAGS += -DTEST_DATA_BUILDDIR=\"$(abs_top_builddir)/src/lib/dhcpsrv/tests\
 AM_CPPFLAGS += -DDHCP_DATA_DIR=\"$(abs_top_builddir)/src/lib/dhcpsrv/tests\"
 AM_CPPFLAGS += -DINSTALL_PROG=\"$(abs_top_srcdir)/install-sh\"
 
-AM_CXXFLAGS = $(B10_CXXFLAGS)
+AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 
 # Some versions of GCC warn about some versions of Boost regarding
 # missing initializer for members in its posix_time.
@@ -27,7 +27,7 @@ if HAVE_GTEST
 # Use of these switches will guarantee that the .so files are created in the
 # .libs folder and they can be dlopened.
 # Note that the shared libraries with callouts should not be used together with
-# the --enable-static-link option. With this option, the bind10 libraries are
+# the --enable-static-link option. With this option, the bundy libraries are
 # statically linked with the program and if the callout invokes the methods
 # which belong to these libraries, the library with the callout will get its
 # own copy of the static objects (e.g. logger, ServerHooks) and that will lead
@@ -106,16 +106,16 @@ if USE_CLANGPP
 libdhcpsrv_unittests_CXXFLAGS += -Wno-unused-variable -Wno-unused-parameter
 endif
 
-libdhcpsrv_unittests_LDADD  = $(top_builddir)/src/lib/dhcpsrv/libb10-dhcpsrv.la
+libdhcpsrv_unittests_LDADD  = $(top_builddir)/src/lib/dhcpsrv/libbundy-dhcpsrv.la
 libdhcpsrv_unittests_LDADD += $(top_builddir)/src/lib/dhcp/tests/libdhcptest.la
-libdhcpsrv_unittests_LDADD += $(top_builddir)/src/lib/dhcp/libb10-dhcp++.la
-libdhcpsrv_unittests_LDADD += $(top_builddir)/src/lib/dhcp_ddns/libb10-dhcp_ddns.la
-libdhcpsrv_unittests_LDADD += $(top_builddir)/src/lib/config/libb10-cfgclient.la
-libdhcpsrv_unittests_LDADD += $(top_builddir)/src/lib/cc/libb10-cc.la
-libdhcpsrv_unittests_LDADD += $(top_builddir)/src/lib/asiolink/libb10-asiolink.la
-libdhcpsrv_unittests_LDADD += $(top_builddir)/src/lib/hooks/libb10-hooks.la
-libdhcpsrv_unittests_LDADD += $(top_builddir)/src/lib/log/libb10-log.la
-libdhcpsrv_unittests_LDADD += $(top_builddir)/src/lib/exceptions/libb10-exceptions.la
+libdhcpsrv_unittests_LDADD += $(top_builddir)/src/lib/dhcp/libbundy-dhcp++.la
+libdhcpsrv_unittests_LDADD += $(top_builddir)/src/lib/dhcp_ddns/libbundy-dhcp_ddns.la
+libdhcpsrv_unittests_LDADD += $(top_builddir)/src/lib/config/libbundy-cfgclient.la
+libdhcpsrv_unittests_LDADD += $(top_builddir)/src/lib/cc/libbundy-cc.la
+libdhcpsrv_unittests_LDADD += $(top_builddir)/src/lib/asiolink/libbundy-asiolink.la
+libdhcpsrv_unittests_LDADD += $(top_builddir)/src/lib/hooks/libbundy-hooks.la
+libdhcpsrv_unittests_LDADD += $(top_builddir)/src/lib/log/libbundy-log.la
+libdhcpsrv_unittests_LDADD += $(top_builddir)/src/lib/exceptions/libbundy-exceptions.la
 libdhcpsrv_unittests_LDADD += $(GTEST_LDADD)
 endif
 

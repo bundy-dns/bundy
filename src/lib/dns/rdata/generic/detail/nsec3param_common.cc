@@ -28,10 +28,10 @@
 #include <stdint.h>
 
 using namespace std;
-using namespace isc::util;
-using namespace isc::util::encode;
+using namespace bundy::util;
+using namespace bundy::util::encode;
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace rdata {
 namespace generic {
@@ -45,21 +45,21 @@ parseNSEC3ParamFromLexer(const char* const rrtype_name,
     const uint32_t hashalg =
         lexer.getNextToken(MasterToken::NUMBER).getNumber();
     if (hashalg > 0xff) {
-        isc_throw(InvalidRdataText, rrtype_name <<
+        bundy_throw(InvalidRdataText, rrtype_name <<
                   " hash algorithm out of range: " << hashalg);
     }
 
     const uint32_t flags =
         lexer.getNextToken(MasterToken::NUMBER).getNumber();
     if (flags > 0xff) {
-        isc_throw(InvalidRdataText, rrtype_name << " flags out of range: " <<
+        bundy_throw(InvalidRdataText, rrtype_name << " flags out of range: " <<
                   flags);
     }
 
     const uint32_t iterations =
         lexer.getNextToken(MasterToken::NUMBER).getNumber();
     if (iterations > 0xffff) {
-        isc_throw(InvalidRdataText, rrtype_name <<
+        bundy_throw(InvalidRdataText, rrtype_name <<
                   " iterations out of range: " << iterations);
     }
 
@@ -70,7 +70,7 @@ parseNSEC3ParamFromLexer(const char* const rrtype_name,
     // so the encoded string cannot be longer than the double of max length
     // of the actual salt.
     if (salthex.size() > 255 * 2) {
-        isc_throw(InvalidRdataText, rrtype_name << " salt is too long: "
+        bundy_throw(InvalidRdataText, rrtype_name << " salt is too long: "
                   << salthex.size() << " (encoded) bytes");
     }
     if (salthex != "-") {       // "-" means a 0-length salt
@@ -88,7 +88,7 @@ parseNSEC3ParamWire(const char* const rrtype_name,
     // NSEC3/NSEC3PARAM RR must have at least 5 octets:
     // hash algorithm(1), flags(1), iteration(2), saltlen(1)
     if (rdata_len < 5) {
-        isc_throw(DNSMessageFORMERR, rrtype_name << " too short, length: "
+        bundy_throw(DNSMessageFORMERR, rrtype_name << " too short, length: "
                   << rdata_len);
     }
 
@@ -99,7 +99,7 @@ parseNSEC3ParamWire(const char* const rrtype_name,
     const uint8_t saltlen = buffer.readUint8();
     rdata_len -= 5;
     if (rdata_len < saltlen) {
-        isc_throw(DNSMessageFORMERR, rrtype_name <<
+        bundy_throw(DNSMessageFORMERR, rrtype_name <<
                   " salt length is too large: " <<
                   static_cast<unsigned int>(saltlen));
     }

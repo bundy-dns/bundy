@@ -22,7 +22,7 @@
 #include <stdint.h>
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace test {
 
@@ -53,17 +53,17 @@ extern const char* const zzz_hash;
 // A simple faked NSEC3 hash calculator with a dedicated creator for it.
 //
 // This is used in some NSEC3-related tests below.
-class TestNSEC3HashCreator : public isc::dns::NSEC3HashCreator {
+class TestNSEC3HashCreator : public bundy::dns::NSEC3HashCreator {
 private:
     class TestNSEC3Hash;
 public:
     TestNSEC3HashCreator() {}
-    virtual isc::dns::NSEC3Hash* create(const
-                                        isc::dns::rdata::generic::NSEC3PARAM&)
+    virtual bundy::dns::NSEC3Hash* create(const
+                                        bundy::dns::rdata::generic::NSEC3PARAM&)
         const;
-    virtual isc::dns::NSEC3Hash* create(const isc::dns::rdata::generic::NSEC3&)
+    virtual bundy::dns::NSEC3Hash* create(const bundy::dns::rdata::generic::NSEC3&)
         const;
-    virtual isc::dns::NSEC3Hash* create(uint8_t, uint16_t,
+    virtual bundy::dns::NSEC3Hash* create(uint8_t, uint16_t,
                                         const uint8_t*, size_t)
         const;
 };
@@ -73,7 +73,7 @@ void
 findNSEC3Check(bool expected_matched, uint8_t expected_labels,
                const std::string& expected_closest,
                const std::string& expected_next,
-               const isc::datasrc::ZoneFinder::FindNSEC3Result& result);
+               const bundy::datasrc::ZoneFinder::FindNSEC3Result& result);
 
 // Perform the shared part of NSEC3 test (shared between in-memory and database
 // tests).

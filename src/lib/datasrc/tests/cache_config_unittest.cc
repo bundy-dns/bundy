@@ -27,14 +27,14 @@
 
 #include <iterator>             // for std::distance
 
-using namespace isc::datasrc;
-using namespace isc::data;
-using namespace isc::dns;
-using isc::datasrc::unittest::MockDataSourceClient;
-using isc::datasrc::internal::CacheConfig;
-using isc::datasrc::internal::CacheConfigError;
-using isc::datasrc::memory::LoadAction;
-using isc::datasrc::memory::ZoneData;
+using namespace bundy::datasrc;
+using namespace bundy::data;
+using namespace bundy::dns;
+using bundy::datasrc::unittest::MockDataSourceClient;
+using bundy::datasrc::internal::CacheConfig;
+using bundy::datasrc::internal::CacheConfigError;
+using bundy::datasrc::memory::LoadAction;
+using bundy::datasrc::memory::ZoneData;
 
 namespace {
 
@@ -65,7 +65,7 @@ protected:
     MockDataSourceClient mock_client_;
     const ConstElementPtr master_config_; // valid config for MasterFiles
     const ConstElementPtr mock_config_; // valid config for MasterFiles
-    isc::util::MemorySegmentLocal msgmt_;
+    bundy::util::MemorySegmentLocal msgmt_;
 };
 
 size_t
@@ -103,7 +103,7 @@ TEST_F(CacheConfigTest, badConstructMasterFiles) {
     EXPECT_THROW(CacheConfig("MasterFiles", 0,
                              *Element::fromJSON("{\"cache-enable\": true}"),
                              true),
-                 isc::data::TypeError);
+                 bundy::data::TypeError);
 
     // no "cache-enable"
     EXPECT_THROW(CacheConfig("MasterFiles", 0,
@@ -123,13 +123,13 @@ TEST_F(CacheConfigTest, badConstructMasterFiles) {
     EXPECT_THROW(CacheConfig("MasterFiles", 0,
                              *Element::fromJSON("{\"cache-enable\": 1,"
                                                 " \"params\": {}}"), true),
-                 isc::data::TypeError);
+                 bundy::data::TypeError);
 
     // "params" is not a map
     EXPECT_THROW(CacheConfig("MasterFiles", 0,
                              *Element::fromJSON("{\"cache-enable\": true,"
                                                 " \"params\": []}"), true),
-                 isc::data::TypeError);
+                 bundy::data::TypeError);
 
     // bogus zone name
     const ConstElementPtr bad_config(Element::fromJSON(
@@ -137,20 +137,20 @@ TEST_F(CacheConfigTest, badConstructMasterFiles) {
                                          " \"params\": "
                                          "{\"bad..name\": \"file1\"}}"));
     EXPECT_THROW(CacheConfig("MasterFiles", 0, *bad_config, true),
-                 isc::dns::EmptyLabel);
+                 bundy::dns::EmptyLabel);
 
     // file name is not a string
     const ConstElementPtr bad_config2(Element::fromJSON(
                                           "{\"cache-enable\": true,"
                                           " \"params\": {\".\": 1}}"));
     EXPECT_THROW(CacheConfig("MasterFiles", 0, *bad_config2, true),
-                 isc::data::TypeError);
+                 bundy::data::TypeError);
 
     // Specify data source client (must be null for MasterFiles)
     EXPECT_THROW(CacheConfig("MasterFiles", &mock_client_,
                              *Element::fromJSON("{\"cache-enable\": true,"
                                                 " \"params\": {}}"), true),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 TEST_F(CacheConfigTest, getLoadActionWithMasterFiles) {
@@ -218,28 +218,28 @@ TEST_F(CacheConfigTest, badConstructWithMock) {
     EXPECT_THROW(CacheConfig("mock", &mock_client_,
                              *Element::fromJSON("{\"cache-enable\": true}"),
                              true),
-                 isc::NotImplemented);
+                 bundy::NotImplemented);
 
     // "cache-zones" is not a list
     EXPECT_THROW(CacheConfig("mock", &mock_client_,
                              *Element::fromJSON("{\"cache-enable\": true,"
                                                 " \"cache-zones\": {}}"),
                              true),
-                 isc::data::TypeError);
+                 bundy::data::TypeError);
 
     // "cache-zone" entry is not a string
     EXPECT_THROW(CacheConfig("mock", &mock_client_,
                              *Element::fromJSON("{\"cache-enable\": true,"
                                                 " \"cache-zones\": [1]}"),
                              true),
-                 isc::data::TypeError);
+                 bundy::data::TypeError);
 
     // bogus zone name
     const ConstElementPtr bad_config(Element::fromJSON(
                                          "{\"cache-enable\": true,"
                                          " \"cache-zones\": [\"bad..\"]}"));
     EXPECT_THROW(CacheConfig("mock", &mock_client_, *bad_config, true),
-                 isc::dns::EmptyLabel);
+                 bundy::dns::EmptyLabel);
 
     // duplicate zone name (note that comparison is case insensitive)
     const ConstElementPtr dup_config(Element::fromJSON(
@@ -251,7 +251,7 @@ TEST_F(CacheConfigTest, badConstructWithMock) {
 
     // datasrc is null
     EXPECT_THROW(CacheConfig("mock", 0, *mock_config_, true),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 TEST_F(CacheConfigTest, getLoadActionWithMock) {
@@ -285,7 +285,7 @@ TEST_F(CacheConfigTest, getLoadActionWithMock) {
 
     // buggy data source client: it returns a null pointer from getIterator.
     EXPECT_THROW(cache_conf.getLoadAction(RRClass::IN(), Name("null.org")),
-                 isc::Unexpected);
+                 bundy::Unexpected);
 }
 
 TEST_F(CacheConfigTest, getSegmentType) {
@@ -306,7 +306,7 @@ TEST_F(CacheConfigTest, getSegmentType) {
                                                 " \"cache-type\": 1,"
                                                 " \"params\": {}}"));
     EXPECT_THROW(CacheConfig("MasterFiles", 0, *badconfig, true),
-                 isc::data::TypeError);
+                 bundy::data::TypeError);
 }
 
 }

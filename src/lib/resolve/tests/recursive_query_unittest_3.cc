@@ -49,11 +49,11 @@
 
 using namespace asio;
 using namespace asio::ip;
-using namespace isc::asiolink;
-using namespace isc::dns;
-using namespace isc::dns::rdata;
-using namespace isc::util;
-using namespace isc::resolve;
+using namespace bundy::asiolink;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
+using namespace bundy::util;
+using namespace bundy::resolve;
 using namespace std;
 
 /// RecursiveQuery Test - 3
@@ -77,10 +77,10 @@ const size_t BUFFER_SIZE = 1024;               ///< For all buffers
 const char* const DUMMY_ADDR3 = "1.2.3.4";     ///< address to return as A
 } // end anonymous namespace
 
-namespace isc {
+namespace bundy {
 namespace asiodns {
 
-class MockResolver3 : public isc::resolve::ResolverInterface {
+class MockResolver3 : public bundy::resolve::ResolverInterface {
 public:
     virtual void resolve(const QuestionPtr& question,
                  const ResolverInterface::CallbackPtr& callback) {
@@ -114,8 +114,8 @@ public:
     QueryStatus     expected_;                  ///< Expected next state
     OutputBufferPtr question_buffer_;           ///< Question we expect to receive
     boost::shared_ptr<MockResolver3> resolver_;  ///< Mock resolver
-    isc::nsas::NameserverAddressStore* nsas_;   ///< Nameserver address store
-    isc::cache::ResolverCache cache_;           ///< Resolver cache
+    bundy::nsas::NameserverAddressStore* nsas_;   ///< Nameserver address store
+    bundy::cache::ResolverCache cache_;           ///< Resolver cache
 
     // Data for TCP Server
     size_t          tcp_cumulative_;            ///< Cumulative TCP data received
@@ -148,7 +148,7 @@ public:
         expected_(NONE),
         question_buffer_(new OutputBuffer(BUFFER_SIZE)),
         resolver_(new MockResolver3()),
-        nsas_(new isc::nsas::NameserverAddressStore(resolver_)),
+        nsas_(new bundy::nsas::NameserverAddressStore(resolver_)),
         tcp_cumulative_(0),
         tcp_endpoint_(asio::ip::address::from_string(TEST_ADDRESS3),
                       TEST_PORT3),
@@ -181,7 +181,7 @@ public:
     ///
     /// \param message Message buffer in RENDER mode.
     /// \param qid QID to set the message to
-    void setCommonMessage(isc::dns::Message& message, uint16_t qid) {
+    void setCommonMessage(bundy::dns::Message& message, uint16_t qid) {
         message.setQid(qid);
         message.setHeaderFlag(Message::HEADERFLAG_QR);
         message.setOpcode(Opcode::QUERY());
@@ -192,14 +192,14 @@ public:
     /// \brief Set FORMERR answer
     ///
     /// \param message Message to update with FORMERR status
-    void setFORMERR(isc::dns::Message& message) {
+    void setFORMERR(bundy::dns::Message& message) {
         message.setRcode(Rcode::FORMERR());
     }
 
     /// \brief Set Answer
     ///
     /// \param message Message to update with FORMERR status
-    void setAnswer(isc::dns::Message& message) {
+    void setAnswer(bundy::dns::Message& message) {
         // Give a response
         RRsetPtr answer(new RRset(Name("ednsfallback."), RRClass::IN(),
                         RRType::A(), RRTTL(300)));
@@ -449,7 +449,7 @@ public:
 /// \brief Resolver Callback Object
 ///
 /// Holds the success and failure callback methods for the resolver
-class ResolverCallback3 : public isc::resolve::ResolverInterface::Callback {
+class ResolverCallback3 : public bundy::resolve::ResolverInterface::Callback {
 public:
     /// \brief Constructor
     ResolverCallback3(IOService& service) :
@@ -465,7 +465,7 @@ public:
     /// Called if the resolver detects that the call has succeeded.
     ///
     /// \param response Answer to the question.
-    virtual void success(const isc::dns::MessagePtr response) {
+    virtual void success(const bundy::dns::MessagePtr response) {
         // There should be one RR each  in the question and answer sections,
         // and two RRs in each of the the authority and additional sections.
         EXPECT_EQ(1, response->getRRCount(Message::SECTION_QUESTION));
@@ -559,7 +559,7 @@ TEST_F(RecursiveQueryTest3, Resolve) {
     query.setRttRecorder(recorder);
 
     // Set up callback to receive notification that the query has completed.
-    isc::resolve::ResolverInterface::CallbackPtr
+    bundy::resolve::ResolverInterface::CallbackPtr
         resolver_callback(new ResolverCallback3(service_));
 
     // Kick off the resolution process.
@@ -587,4 +587,4 @@ TEST_F(RecursiveQueryTest3, Resolve) {
 }
 
 } // namespace asiodns
-} // namespace isc
+} // namespace bundy

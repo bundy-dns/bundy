@@ -20,7 +20,7 @@
 
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief DHCPv6 Option class for handling list of IPv6 addresses.
@@ -31,7 +31,7 @@ class Option6AddrLst: public Option {
 
 public:
     /// a container for (IPv6) addresses
-    typedef std::vector<isc::asiolink::IOAddress> AddressContainer;
+    typedef std::vector<bundy::asiolink::IOAddress> AddressContainer;
 
     /// @brief Constructor used during option generation.
     ///
@@ -43,7 +43,7 @@ public:
     ///
     /// @param type option type
     /// @param addr a single address to be stored
-    Option6AddrLst(uint16_t type, const isc::asiolink::IOAddress& addr);
+    Option6AddrLst(uint16_t type, const bundy::asiolink::IOAddress& addr);
 
     /// @brief Constructor used for parsing received option
     ///
@@ -56,7 +56,7 @@ public:
     /// @brief Assembles on-wire form of this option
     ///
     /// @param buf pointer to packet buffer
-    void pack(isc::util::OutputBuffer& buf);
+    void pack(bundy::util::OutputBuffer& buf);
 
     /// @brief Parses received data
     ///
@@ -70,7 +70,7 @@ public:
     /// @brief Sets a single address.
     ///
     /// @param addr a single address to be added
-    void setAddress(const isc::asiolink::IOAddress& addr);
+    void setAddress(const bundy::asiolink::IOAddress& addr);
 
     /// @brief Sets list of addresses.
     ///
@@ -94,7 +94,7 @@ protected:
     AddressContainer addrs_;
 };
 
-} // isc::dhcp namespace
-} // isc namespace
+} // bundy::dhcp namespace
+} // bundy namespace
 
 #endif // OPTION_ADDRLST_H

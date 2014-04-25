@@ -18,7 +18,7 @@
 #include <util/unittests/resource.h>
 #include <util/unittests/check_valgrind.h>
 
-using namespace isc::log;
+using namespace bundy::log;
 
 // Declare a set of messages to go into the global dictionary.
 
@@ -44,9 +44,9 @@ TEST(MessageInitializerTest2, MessageLoadTest) {
     // test for its presence and bypass the test if not available.
 #ifdef EXPECT_DEATH
     // Adding one more should take us over the limit.
-    if (!isc::util::unittests::runningOnValgrind()) {
+    if (!bundy::util::unittests::runningOnValgrind()) {
         EXPECT_DEATH({
-            isc::util::unittests::dontCreateCoreDumps();
+            bundy::util::unittests::dontCreateCoreDumps();
 
             MessageInitializer initializer2(values);
           }, ".*");

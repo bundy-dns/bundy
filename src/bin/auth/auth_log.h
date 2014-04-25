@@ -18,13 +18,13 @@
 #include <log/macros.h>
 #include <auth/auth_messages.h>
 
-namespace isc {
+namespace bundy {
 namespace auth {
 
 /// \brief Auth Logging
 ///
 /// Defines the levels used to output debug messages in the "auth" part of
-/// the b10-auth program.  Higher numbers equate to more verbose (and detailed)
+/// the bundy-auth program.  Higher numbers equate to more verbose (and detailed)
 /// output.
 
 // Debug messages indicating normal startup are logged at this debug level.
@@ -44,13 +44,13 @@ extern const int DBG_AUTH_DETAIL;
 // This level is used to log the contents of packets received and sent.
 extern const int DBG_AUTH_MESSAGES;
 
-/// Define the logger for the "auth" module part of b10-auth.  We could define
+/// Define the logger for the "auth" module part of bundy-auth.  We could define
 /// a logger in each file, but we would want to define a common name to avoid
 /// spelling mistakes, so it is just one small step from there to define a
 /// module-common logger.
-extern isc::log::Logger auth_logger;
+extern bundy::log::Logger auth_logger;
 
 } // namespace nsas
-} // namespace isc
+} // namespace bundy
 
 #endif // AUTH_LOG_H

@@ -15,7 +15,7 @@
 #ifndef DATASRC_CONFIG_H
 #define DATASRC_CONFIG_H 1
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 
 /// \brief Default directory to find the loadable data source libraries
@@ -23,10 +23,10 @@ namespace datasrc {
 /// This is the directory where, once installed, loadable backend libraries
 /// such as memory_ds.so and sqlite3_ds.so are found. It is used by the
 /// DataSourceClient loader if no absolute path is used and
-/// B10_FROM_BUILD is not set in the environment.
+/// BUNDY_FROM_BUILD is not set in the environment.
 const char* const BACKEND_LIBRARY_PATH = "@@PKGLIBDIR@@/";
 
 } // end namespace datasrc
-} // end namespace isc
+} // end namespace bundy
 
 #endif // DATASRC_CONFIG_H

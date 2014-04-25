@@ -23,28 +23,28 @@
 /// more tentative methods (those that are not (yet) pure virtual)
 /// They should all throw NotImplemented
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 
 ZoneIteratorPtr
-DataSourceClient::getIterator(const isc::dns::Name&, bool) const {
-    isc_throw(isc::NotImplemented, "Data source doesn't support iteration");
+DataSourceClient::getIterator(const bundy::dns::Name&, bool) const {
+    bundy_throw(bundy::NotImplemented, "Data source doesn't support iteration");
 }
 
 unsigned int
 DataSourceClient::getZoneCount() const {
-    isc_throw(isc::NotImplemented, "Data source doesn't support getZoneCount");
+    bundy_throw(bundy::NotImplemented, "Data source doesn't support getZoneCount");
 }
 
 bool
 DataSourceClient::createZone(const dns::Name&) {
-    isc_throw(isc::NotImplemented, "Data source doesn't support createZone");
+    bundy_throw(bundy::NotImplemented, "Data source doesn't support createZone");
 }
 
 bool
 DataSourceClient::deleteZone(const dns::Name&) {
-    isc_throw(isc::NotImplemented, "Data source doesn't support deleteZone");
+    bundy_throw(bundy::NotImplemented, "Data source doesn't support deleteZone");
 }
 
 } // end namespace datasrc
-} // end namespace isc
+} // end namespace bundy

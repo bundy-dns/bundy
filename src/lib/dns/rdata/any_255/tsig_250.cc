@@ -32,12 +32,12 @@
 
 using namespace std;
 using boost::lexical_cast;
-using namespace isc::util;
-using namespace isc::util::encode;
-using namespace isc::dns;
-using isc::dns::rdata::generic::detail::createNameFromLexer;
+using namespace bundy::util;
+using namespace bundy::util::encode;
+using namespace bundy::dns;
+using bundy::dns::rdata::generic::detail::createNameFromLexer;
 
-// BEGIN_ISC_NAMESPACE
+// BEGIN_BUNDY_NAMESPACE
 // BEGIN_RDATA_NAMESPACE
 
 // straightforward representation of TSIG RDATA fields
@@ -86,20 +86,20 @@ TSIG::constructFromLexer(MasterLexer& lexer, const Name* origin) {
     try {
         time_signed = boost::lexical_cast<uint64_t>(time_txt);
     } catch (const boost::bad_lexical_cast&) {
-        isc_throw(InvalidRdataText, "Invalid TSIG Time");
+        bundy_throw(InvalidRdataText, "Invalid TSIG Time");
     }
     if ((time_signed >> 48) != 0) {
-        isc_throw(InvalidRdataText, "TSIG Time out of range");
+        bundy_throw(InvalidRdataText, "TSIG Time out of range");
     }
 
     const uint32_t fudge = lexer.getNextToken(MasterToken::NUMBER).getNumber();
     if (fudge > 0xffff) {
-        isc_throw(InvalidRdataText, "TSIG Fudge out of range");
+        bundy_throw(InvalidRdataText, "TSIG Fudge out of range");
     }
     const uint32_t macsize =
         lexer.getNextToken(MasterToken::NUMBER).getNumber();
     if (macsize > 0xffff) {
-        isc_throw(InvalidRdataText, "TSIG MAC Size out of range");
+        bundy_throw(InvalidRdataText, "TSIG MAC Size out of range");
     }
 
     const string& mac_txt = (macsize > 0) ?
@@ -107,13 +107,13 @@ TSIG::constructFromLexer(MasterLexer& lexer, const Name* origin) {
     vector<uint8_t> mac;
     decodeBase64(mac_txt, mac);
     if (mac.size() != macsize) {
-        isc_throw(InvalidRdataText, "TSIG MAC Size and data are inconsistent");
+        bundy_throw(InvalidRdataText, "TSIG MAC Size and data are inconsistent");
     }
 
     const uint32_t orig_id =
         lexer.getNextToken(MasterToken::NUMBER).getNumber();
     if (orig_id > 0xffff) {
-        isc_throw(InvalidRdataText, "TSIG Original ID out of range");
+        bundy_throw(InvalidRdataText, "TSIG Original ID out of range");
     }
 
     const string& error_txt =
@@ -135,24 +135,24 @@ TSIG::constructFromLexer(MasterLexer& lexer, const Name* origin) {
         try {
             error = boost::lexical_cast<uint32_t>(error_txt);
         } catch (const boost::bad_lexical_cast&) {
-            isc_throw(InvalidRdataText, "Invalid TSIG Error");
+            bundy_throw(InvalidRdataText, "Invalid TSIG Error");
         }
         if (error > 0xffff) {
-            isc_throw(InvalidRdataText, "TSIG Error out of range");
+            bundy_throw(InvalidRdataText, "TSIG Error out of range");
         }
     }
 
     const uint32_t otherlen =
         lexer.getNextToken(MasterToken::NUMBER).getNumber();
     if (otherlen > 0xffff) {
-        isc_throw(InvalidRdataText, "TSIG Other Len out of range");
+        bundy_throw(InvalidRdataText, "TSIG Other Len out of range");
     }
     const string otherdata_txt = (otherlen > 0) ?
             lexer.getNextToken(MasterToken::STRING).getString() : "";
     vector<uint8_t> other_data;
     decodeBase64(otherdata_txt, other_data);
     if (other_data.size() != otherlen) {
-        isc_throw(InvalidRdataText,
+        bundy_throw(InvalidRdataText,
                   "TSIG Other Data length does not match Other Len");
     }
     // RFC2845 says Other Data is "empty unless Error == BADTIME".
@@ -221,11 +221,11 @@ TSIG::TSIG(const std::string& tsig_str) : impl_(NULL) {
         impl_ptr.reset(constructFromLexer(lexer, NULL));
 
         if (lexer.getNextToken().getType() != MasterToken::END_OF_FILE) {
-            isc_throw(InvalidRdataText,
+            bundy_throw(InvalidRdataText,
                       "Extra input text for TSIG: " << tsig_str);
         }
     } catch (const MasterLexer::LexerError& ex) {
-        isc_throw(InvalidRdataText,
+        bundy_throw(InvalidRdataText,
                   "Failed to construct TSIG from '" << tsig_str << "': "
                   << ex.what());
     }
@@ -320,15 +320,15 @@ TSIG::TSIG(const Name& algorithm, uint64_t time_signed, uint16_t fudge,
 {
     // Time Signed is a 48-bit value.
     if ((time_signed >> 48) != 0) {
-        isc_throw(OutOfRange, "TSIG Time Signed is too large: " <<
+        bundy_throw(OutOfRange, "TSIG Time Signed is too large: " <<
                   time_signed);
     }
     if ((mac_size == 0 && mac != NULL) || (mac_size > 0 && mac == NULL)) {
-        isc_throw(InvalidParameter, "TSIG MAC size and data inconsistent");
+        bundy_throw(InvalidParameter, "TSIG MAC size and data inconsistent");
     }
     if ((other_len == 0 && other_data != NULL) ||
         (other_len > 0 && other_data == NULL)) {
-        isc_throw(InvalidParameter,
+        bundy_throw(InvalidParameter,
                   "TSIG Other data length and data inconsistent");
     }
     const Name& canonical_algorithm_name =
@@ -562,4 +562,4 @@ TSIG::getOtherData() const {
 }
 
 // END_RDATA_NAMESPACE
-// END_ISC_NAMESPACE
+// END_BUNDY_NAMESPACE

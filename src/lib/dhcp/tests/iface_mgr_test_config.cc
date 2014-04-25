@@ -19,9 +19,9 @@
 #include <dhcp/tests/pkt_filter_test_stub.h>
 #include <dhcp/tests/pkt_filter6_test_stub.h>
 
-using namespace isc::asiolink;
+using namespace bundy::asiolink;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 namespace test {
 
@@ -53,7 +53,7 @@ IfaceMgrTestConfig::addAddress(const std::string& iface_name,
                                const IOAddress& address) {
     Iface* iface = IfaceMgr::instance().getIface(iface_name);
     if (iface == NULL) {
-        isc_throw(isc::BadValue, "interface '" << iface_name
+        bundy_throw(bundy::BadValue, "interface '" << iface_name
                   << "' doesn't exist");
     }
     iface->addAddress(address);
@@ -112,7 +112,7 @@ IfaceMgrTestConfig::setDirectResponse(const bool direct_resp) {
     boost::shared_ptr<PktFilterTestStub> stub =
         boost::dynamic_pointer_cast<PktFilterTestStub>(getPacketFilter4());
     if (!stub) {
-        isc_throw(isc::Unexpected, "unable to set direct response capability for"
+        bundy_throw(bundy::Unexpected, "unable to set direct response capability for"
                   " test packet filter - current packet filter is not"
                   " of a PktFilterTestStub");
     }
@@ -128,7 +128,7 @@ IfaceMgrTestConfig::setIfaceFlags(const std::string& name,
                                   const FlagInactive6& inactive6) {
     Iface* iface = IfaceMgr::instance().getIface(name);
     if (iface == NULL) {
-        isc_throw(isc::BadValue, "interface '" << name << "' doesn't exist");
+        bundy_throw(bundy::BadValue, "interface '" << name << "' doesn't exist");
     }
     iface->flag_loopback_ = loopback.flag_;
     iface->flag_up_ = up.flag_;

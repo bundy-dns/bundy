@@ -16,13 +16,13 @@
 
 #include <exceptions/exceptions.h>
 
-using isc::Exception;
+using bundy::Exception;
 
-namespace isc {
+namespace bundy {
 
 const char*
 Exception::what() const throw() {
-    const char* whatstr = "isc::Exception";
+    const char* whatstr = "bundy::Exception";
 
     // XXX: even though it's very unlikely that c_str() throws an exception,
     // it's still not 100% guaranteed.  To meet the exception specification

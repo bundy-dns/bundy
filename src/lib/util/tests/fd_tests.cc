@@ -20,8 +20,8 @@
 
 #include <gtest/gtest.h>
 
-using namespace isc::util::io;
-using namespace isc::util::unittests;
+using namespace bundy::util::io;
+using namespace bundy::util::unittests;
 
 namespace {
 
@@ -47,7 +47,7 @@ class FDTest : public ::testing::Test {
 
 // Test we read what was sent
 TEST_F(FDTest, read) {
-    if (!isc::util::unittests::runningOnValgrind()) {
+    if (!bundy::util::unittests::runningOnValgrind()) {
         int read_pipe(0);
         buffer = new unsigned char[TEST_DATA_SIZE];
         pid_t feeder(provide_input(&read_pipe, data, TEST_DATA_SIZE));
@@ -61,7 +61,7 @@ TEST_F(FDTest, read) {
 
 // Test we write the correct thing
 TEST_F(FDTest, write) {
-    if (!isc::util::unittests::runningOnValgrind()) {
+    if (!bundy::util::unittests::runningOnValgrind()) {
         int write_pipe(0);
         pid_t checker(check_output(&write_pipe, data, TEST_DATA_SIZE));
         ASSERT_GE(checker, 0);

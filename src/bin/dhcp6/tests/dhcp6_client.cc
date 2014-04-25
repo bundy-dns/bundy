@@ -24,9 +24,9 @@
 #include <cstdlib>
 #include <time.h>
 
-using namespace isc::test;
+using namespace bundy::test;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 namespace test {
 
@@ -287,7 +287,7 @@ Dhcp6Client::generateDUID(DUID::DUIDType duid_type) const {
 
     /// @todo remove this check once other DUID types are implemented.
     if (duid_type != DUID::DUID_LLT) {
-        isc_throw(NotImplemented, "currently the Dhcp6Client only supports"
+        bundy_throw(NotImplemented, "currently the Dhcp6Client only supports"
                   " generation of DUID LLT");
     }
     duid.push_back(static_cast<uint8_t>(duid_type));
@@ -359,6 +359,6 @@ Dhcp6Client::sendMsg(const Pkt6Ptr& msg) {
 }
 
 
-} // end of namespace isc::dhcp::test
-} // end of namespace isc::dhcp
-} // end of namespace isc
+} // end of namespace bundy::dhcp::test
+} // end of namespace bundy::dhcp
+} // end of namespace bundy

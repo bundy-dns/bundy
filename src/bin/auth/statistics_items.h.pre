@@ -18,7 +18,7 @@
 /// This file declares a set of statistics items in Auth module for internal
 /// use. This file is intended to be included in statistics.cc and unittests.
 
-namespace isc {
+namespace bundy {
 namespace auth {
 namespace statistics {
 
@@ -44,7 +44,7 @@ extern const size_t num_rcode_to_msgcounter;
 
 } // namespace statistics
 } // namespace auth
-} // namespace isc
+} // namespace bundy
 
 #endif // __STATISTICS_ITEMS_H
 

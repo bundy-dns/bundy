@@ -22,12 +22,12 @@
  - PERFORMANCE OF THIS SOFTWARE.
 -->
 
-<?xml-stylesheet href="bind10-guide.css" type="text/css"?>
+<?xml-stylesheet href="bundy-guide.css" type="text/css"?>
 
 <book>
   <bookinfo>
     <title>DHCP Performance Guide</title>
-    <!-- <subtitle>Various aspects of DHCP Performance in BIND 10</subtitle> -->
+    <!-- <subtitle>Various aspects of DHCP Performance in BUNDY</subtitle> -->
 
     <copyright>
       <year>2012</year>
@@ -42,16 +42,16 @@
       <surname>Siodelski</surname>
     </author>
     <abstract>
-      <para>BIND 10 is a framework that features Domain Name System
+      <para>BUNDY is a framework that features Domain Name System
       (DNS) and Dynamic Host Configuration Protocol (DHCP)
       software with development managed by Internet Systems Consortium (ISC).
       This document describes various aspects of DHCP performance,
-      measurements and tuning. It covers BIND 10 DHCP (codename Kea),
+      measurements and tuning. It covers BUNDY DHCP (codename Kea),
       existing ISC DHCP4 software, perfdhcp (a DHCP performance
       measurement tool) and other related topics.</para>
     </abstract>
 
-    <releaseinfo>This is a companion document for BIND 10 version
+    <releaseinfo>This is a companion document for BUNDY version
     &__VERSION__;.</releaseinfo>
 
   </bookinfo>
@@ -63,7 +63,7 @@
       <title>Acknowledgements</title>
 
       <para>ISC would like to acknowledge generous support for
-      BIND 10 development of DHCPv4 and DHCPv6 components provided
+      BUNDY development of DHCPv4 and DHCPv6 components provided
       by <ulink url="http://www.comcast.com/">Comcast</ulink>.</para>
 
     </section>
@@ -100,7 +100,7 @@
         Kea will support several different database backends, using
         both popular databases (like MySQL or SQLite) and
         custom-developed solutions (such as an in-memory database).
-        To aid in the choice of backend, the BIND 10
+        To aid in the choice of backend, the BUNDY
         source code features a set of performance microbenchmarks.
          Written in C/C++, these are small tools that simulate expected
         DHCP server behaviour and evaluate the performance of
@@ -124,9 +124,9 @@
 
       <para>
         Those benchmarks are stored in tests/tools/dhcp-ubench directory of the
-        BIND 10 source tree. This directory contains simplified prototypes for
+        BUNDY source tree. This directory contains simplified prototypes for
         the various database back-ends that are planned or considered as a
-        possibly for BIND10 DHCP.  These benchmarks are expected to evolve into
+        possibly for BUNDY DHCP.  These benchmarks are expected to evolve into
         useful tools that will allow users to measure performance in their
         specific environment.
       </para>
@@ -143,8 +143,8 @@
     <para>
       As the benchmarks require additional (sometimes heavy) dependencies, they
       are not built by default. Actually, their build system is completely
-      separate from that of the rest of BIND 10.  It will be eventually merged
-      with the main BIND 10 build system.
+      separate from that of the rest of BUNDY.  It will be eventually merged
+      with the main BUNDY build system.
     </para>
 
     <para>

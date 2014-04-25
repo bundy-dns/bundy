@@ -22,7 +22,7 @@
 #include <gtest/gtest.h>
 
 using namespace std;
-using namespace isc::dns;
+using namespace bundy::dns;
 
 namespace {
 TEST(RcodeTest, constructFromCode) {
@@ -31,15 +31,15 @@ TEST(RcodeTest, constructFromCode) {
     EXPECT_EQ(0xfff, Rcode(0xfff).getCode()); // possible max code
 
     // should fail on attempt of construction with an out of range code
-    EXPECT_THROW(Rcode(0x1000), isc::OutOfRange);
-    EXPECT_THROW(Rcode(0xffff), isc::OutOfRange);
+    EXPECT_THROW(Rcode(0x1000), bundy::OutOfRange);
+    EXPECT_THROW(Rcode(0xffff), bundy::OutOfRange);
 }
 
 TEST(RcodeTest, constructFromCodePair) {
     EXPECT_EQ(3, Rcode(Rcode::NXDOMAIN_CODE, 0).getCode());
     EXPECT_EQ(Rcode::BADVERS_CODE, Rcode(0, 1).getCode());
     EXPECT_EQ(0xfff, Rcode(0xf, 0xff).getCode());
-    EXPECT_THROW(Rcode(0x10, 0xff), isc::OutOfRange);
+    EXPECT_THROW(Rcode(0x10, 0xff), bundy::OutOfRange);
 }
 
 TEST(RcodeTest, getExtendedCode) {

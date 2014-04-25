@@ -17,10 +17,10 @@
 
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
-Lease::Lease(const isc::asiolink::IOAddress& addr, uint32_t t1, uint32_t t2,
+Lease::Lease(const bundy::asiolink::IOAddress& addr, uint32_t t1, uint32_t t2,
              uint32_t valid_lft, SubnetID subnet_id, time_t cltt,
              const bool fqdn_fwd, const bool fqdn_rev,
              const std::string& hostname)
@@ -137,20 +137,20 @@ Lease4::operator=(const Lease4& other) {
     return (*this);
 }
 
-Lease6::Lease6(Type type, const isc::asiolink::IOAddress& addr,
+Lease6::Lease6(Type type, const bundy::asiolink::IOAddress& addr,
                DuidPtr duid, uint32_t iaid, uint32_t preferred, uint32_t valid,
                uint32_t t1, uint32_t t2, SubnetID subnet_id, uint8_t prefixlen)
     : Lease(addr, t1, t2, valid, subnet_id, 0/*cltt*/, false, false, ""),
       type_(type), prefixlen_(prefixlen), iaid_(iaid), duid_(duid),
       preferred_lft_(preferred) {
     if (!duid) {
-        isc_throw(InvalidOperation, "DUID must be specified for a lease");
+        bundy_throw(InvalidOperation, "DUID must be specified for a lease");
     }
 
     cltt_ = time(NULL);
 }
 
-Lease6::Lease6(Type type, const isc::asiolink::IOAddress& addr,
+Lease6::Lease6(Type type, const bundy::asiolink::IOAddress& addr,
                DuidPtr duid, uint32_t iaid, uint32_t preferred, uint32_t valid,
                uint32_t t1, uint32_t t2, SubnetID subnet_id,
                const bool fqdn_fwd, const bool fqdn_rev,
@@ -160,14 +160,14 @@ Lease6::Lease6(Type type, const isc::asiolink::IOAddress& addr,
       type_(type), prefixlen_(prefixlen), iaid_(iaid), duid_(duid),
       preferred_lft_(preferred) {
     if (!duid) {
-        isc_throw(InvalidOperation, "DUID must be specified for a lease");
+        bundy_throw(InvalidOperation, "DUID must be specified for a lease");
     }
 
     cltt_ = time(NULL);
 }
 
 Lease6::Lease6()
-    : Lease(isc::asiolink::IOAddress("::"), 0, 0, 0, 0, 0, false, false, ""),
+    : Lease(bundy::asiolink::IOAddress("::"), 0, 0, 0, 0, 0, false, false, ""),
       type_(TYPE_NA), prefixlen_(0), iaid_(0), duid_(DuidPtr()),
       preferred_lft_(0) {
 }
@@ -272,5 +272,5 @@ operator<<(std::ostream& os, const Lease& lease) {
     return (os);
 }
 
-} // namespace isc::dhcp
-} // namespace isc
+} // namespace bundy::dhcp
+} // namespace bundy

@@ -28,11 +28,11 @@
 #include <dns/labelsequence.h>
 
 using namespace std;
-using namespace isc::util;
-using isc::dns::NameComparisonResult;
-using namespace isc::dns::name::internal;
+using namespace bundy::util;
+using bundy::dns::NameComparisonResult;
+using namespace bundy::dns::name::internal;
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 namespace {
@@ -170,7 +170,7 @@ stringParse(Iterator s, Iterator send, bool downcase, Offsets& offsets,
             //
             if (c == '.') {
                 if (s != send) {
-                    isc_throw(EmptyLabel,
+                    bundy_throw(EmptyLabel,
                               "non terminating empty label in " <<
                               string(orig_s, send));
                 }
@@ -200,7 +200,7 @@ stringParse(Iterator s, Iterator send, bool downcase, Offsets& offsets,
         case ft_ordinary:
             if (c == '.') {
                 if (count == 0) {
-                    isc_throw(EmptyLabel,
+                    bundy_throw(EmptyLabel,
                               "duplicate period in " << string(orig_s, send));
                 }
                 ndata.at(offsets.back()) = count;
@@ -214,7 +214,7 @@ stringParse(Iterator s, Iterator send, bool downcase, Offsets& offsets,
                 state = ft_escape;
             } else {
                 if (++count > Name::MAX_LABELLEN) {
-                    isc_throw(TooLongLabel,
+                    bundy_throw(TooLongLabel,
                               "label is too long in " << string(orig_s, send));
                 }
                 ndata.push_back(downcase ? maptolower[c] : c);
@@ -224,14 +224,14 @@ stringParse(Iterator s, Iterator send, bool downcase, Offsets& offsets,
             if (c == '[') {
                 // This looks like a bitstring label, which was deprecated.
                 // Intentionally drop it.
-                isc_throw(BadLabelType,
+                bundy_throw(BadLabelType,
                           "invalid label type in " << string(orig_s, send));
             }
             // FALLTHROUGH
         case ft_escape:
             if (!isdigit(c & 0xff)) {
                 if (++count > Name::MAX_LABELLEN) {
-                    isc_throw(TooLongLabel,
+                    bundy_throw(TooLongLabel,
                               "label is too long in " << string(orig_s, send));
                 }
                 ndata.push_back(downcase ? maptolower[c] : c);
@@ -244,7 +244,7 @@ stringParse(Iterator s, Iterator send, bool downcase, Offsets& offsets,
             // FALLTHROUGH
         case ft_escdecimal:
             if (!isdigit(c & 0xff)) {
-                isc_throw(BadEscape,
+                bundy_throw(BadEscape,
                           "mixture of escaped digit and non-digit in "
                           << string(orig_s, send));
             }
@@ -253,12 +253,12 @@ stringParse(Iterator s, Iterator send, bool downcase, Offsets& offsets,
             digits++;
             if (digits == 3) {
                 if (value > 255) {
-                    isc_throw(BadEscape,
+                    bundy_throw(BadEscape,
                               "escaped decimal is too large in "
                               << string(orig_s, send));
                 }
                 if (++count > Name::MAX_LABELLEN) {
-                    isc_throw(TooLongLabel,
+                    bundy_throw(TooLongLabel,
                               "label is too long in " << string(orig_s, send));
                 }
                 ndata.push_back(downcase ? maptolower[value] : value);
@@ -273,13 +273,13 @@ stringParse(Iterator s, Iterator send, bool downcase, Offsets& offsets,
 
     if (!done) {                // no trailing '.' was found.
         if (ndata.size() == Name::MAX_WIRE) {
-            isc_throw(TooLongName,
+            bundy_throw(TooLongName,
                       "name is too long for termination in " <<
                       string(orig_s, send));
         }
         assert(s == send);
         if (state != ft_ordinary) {
-            isc_throw(IncompleteName,
+            bundy_throw(IncompleteName,
                       "incomplete textual name in " <<
                       (empty ? "<empty>" : string(orig_s, send)));
         }
@@ -321,7 +321,7 @@ Name::Name(const char* namedata, size_t data_len, const Name* origin,
 {
     // Check validity of data
     if (namedata == NULL || data_len == 0) {
-        isc_throw(isc::InvalidParameter,
+        bundy_throw(bundy::InvalidParameter,
                   "No data provided to Name constructor");
     }
     // If the last character is not a dot, it is a relative to origin.
@@ -329,7 +329,7 @@ Name::Name(const char* namedata, size_t data_len, const Name* origin,
     const bool absolute = (namedata[data_len - 1] == '.');
     // If we are not absolute, we need the origin to complete the name.
     if (!absolute && origin == NULL) {
-        isc_throw(MissingNameOrigin,
+        bundy_throw(MissingNameOrigin,
                   "No origin available and name is relative");
     }
     // Prepare inputs for the parser
@@ -376,7 +376,7 @@ Name::Name(const char* namedata, size_t data_len, const Name* origin,
 
         // And check the sizes are OK.
         if (labelcount_ > Name::MAX_LABELS || length_ > Name::MAX_WIRE) {
-            isc_throw(TooLongName, "Combined name is too long");
+            bundy_throw(TooLongName, "Combined name is too long");
         }
     }
 }
@@ -435,7 +435,7 @@ Name::Name(InputBuffer& buffer, bool downcase) {
             if (c <= MAX_LABELLEN) {
                 offsets.push_back(nused);
                 if (nused + c + 1 > Name::MAX_WIRE) {
-                    isc_throw(DNSMessageFORMERR, "wire name is too long: "
+                    bundy_throw(DNSMessageFORMERR, "wire name is too long: "
                               << nused + c + 1 << " bytes");
                 }
                 nused += c + 1;
@@ -455,7 +455,7 @@ Name::Name(InputBuffer& buffer, bool downcase) {
             } else {
                 // this case includes local compression pointer, which hasn't
                 // been standardized.
-                isc_throw(DNSMessageFORMERR, "unknown label character: " << c);
+                bundy_throw(DNSMessageFORMERR, "unknown label character: " << c);
             }
             break;
         case fw_ordinary:
@@ -474,7 +474,7 @@ Name::Name(InputBuffer& buffer, bool downcase) {
                 break;
             }
             if (new_current >= biggest_pointer) {
-                isc_throw(DNSMessageFORMERR,
+                bundy_throw(DNSMessageFORMERR,
                           "bad compression pointer (out of range): " <<
                           new_current);
             }
@@ -490,7 +490,7 @@ Name::Name(InputBuffer& buffer, bool downcase) {
     }
 
     if (!done) {
-        isc_throw(DNSMessageFORMERR, "incomplete wire-format name");
+        bundy_throw(DNSMessageFORMERR, "incomplete wire-format name");
     }
 
     labelcount_ = offsets.size();
@@ -581,7 +581,7 @@ Name::concatenate(const Name& suffix) const {
 
     unsigned int length = length_ + suffix.length_ - 1;
     if (length > Name::MAX_WIRE) {
-        isc_throw(TooLongName, "names are too long to concatenate");
+        bundy_throw(TooLongName, "names are too long to concatenate");
     }
 
     Name retname;
@@ -642,7 +642,7 @@ Name::reverse() const {
 Name
 Name::split(const unsigned int first, const unsigned int n) const {
     if (n == 0 || n > labelcount_ || first > labelcount_ - n) {
-        isc_throw(OutOfRange, "Name::split: invalid split range");
+        bundy_throw(OutOfRange, "Name::split: invalid split range");
     }
 
     Name retname;
@@ -679,7 +679,7 @@ Name::split(const unsigned int first, const unsigned int n) const {
 Name
 Name::split(const unsigned int level) const {
     if (level >= getLabelCount()) {
-        isc_throw(OutOfRange, "invalid level for name split (" << level
+        bundy_throw(OutOfRange, "invalid level for name split (" << level
                   << ") for name " << *this);
     }
 

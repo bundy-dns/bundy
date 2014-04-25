@@ -19,7 +19,7 @@
 #include <dns/rrset.h>
 #include <dns/rrtype.h>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 namespace detail {
@@ -37,7 +37,7 @@ inline dns::RRType
 getCoveredType(const dns::ConstRRsetPtr& sig_rrset) {
     dns::RdataIteratorPtr it = sig_rrset->getRdataIterator();
     if (it->isLast()) {
-        isc_throw(isc::Unexpected,
+        bundy_throw(bundy::Unexpected,
                   "Empty RRset is passed in-memory loader, name: "
                   << sig_rrset->getName());
     }
@@ -48,7 +48,7 @@ getCoveredType(const dns::ConstRRsetPtr& sig_rrset) {
 } // namespace detail
 } // namespace memory
 } // namespace datasrc
-} // namespace isc
+} // namespace bundy
 
 #endif // DATASRC_MEMORY_UTIL_INTERNAL_H
 

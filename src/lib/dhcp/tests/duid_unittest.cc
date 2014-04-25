@@ -27,9 +27,9 @@
 #include <arpa/inet.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dhcp;
-using namespace isc::asiolink;
+using namespace bundy;
+using namespace bundy::dhcp;
+using namespace bundy::asiolink;
 
 // don't import the entire boost namespace.  It will unexpectedly hide uint8_t
 // for some systems.
@@ -39,7 +39,7 @@ namespace {
 
 // This is a workaround for strange linking problems with gtest:
 // libdhcp___unittests-duid_unittest.o: In function `Compare<long unsigned int, long unsigned int>':
-// ~/gtest-1.6.0/include/gtest/gtest.h:1353: undefined reference to `isc::dhcp::ClientId::MAX_CLIENT_ID_LE'N
+// ~/gtest-1.6.0/include/gtest/gtest.h:1353: undefined reference to `bundy::dhcp::ClientId::MAX_CLIENT_ID_LE'N
 // collect2: ld returned 1 exit status
 
 const size_t MAX_DUID_LEN = DUID::MAX_DUID_LEN;
@@ -148,12 +148,12 @@ TEST(DuidTest, fromText) {
     // Repeated colon sign is not allowed.
     EXPECT_THROW(
         duid.reset(new DUID(DUID::fromText("00::bb:D:ee:EF:ab"))),
-        isc::BadValue
+        bundy::BadValue
     );
     // DUID with excessive number of digits for one of the bytes.
     EXPECT_THROW(
        duid.reset(new DUID(DUID::fromText("00:01:021:03:04:05:06"))),
-       isc::BadValue
+       bundy::BadValue
     );
 }
 
@@ -302,13 +302,13 @@ TEST(ClientIdTest, fromText) {
     // Repeated colon sign in the ClientId is not allowed.
     EXPECT_THROW(
         ClientId::fromText("00::bb:D:ee:EF:ab"),
-        isc::BadValue
+        bundy::BadValue
 
     );
     // ClientId with excessive number of digits for one of the bytes.
     EXPECT_THROW(
         ClientId::fromText("00:01:021:03:04:05:06"),
-        isc::BadValue
+        bundy::BadValue
     );
 }
 

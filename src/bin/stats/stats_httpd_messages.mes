@@ -20,9 +20,9 @@ The stats-httpd module was called with a bad command-line argument
 and will not start.
 
 % STATSHTTPD_CC_SESSION_ERROR error connecting to message bus: %1
-The stats-httpd module was unable to connect to the BIND 10 command
+The stats-httpd module was unable to connect to the BUNDY command
 and control bus. A likely problem is that the message bus daemon
-(b10-msgq) is not running. The stats-httpd module will now shut down.
+(bundy-msgq) is not running. The stats-httpd module will now shut down.
 
 % STATSHTTPD_CLOSING closing %1
 The stats-httpd daemon will stop listening for requests on the given

@@ -20,7 +20,7 @@
 #include <util/strutil.h>
 #include <sstream>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief Implements the logic for the Option6ClientFqdn class.
@@ -41,7 +41,7 @@ public:
     Option4ClientFqdn::Rcode rcode1_;
     Option4ClientFqdn::Rcode rcode2_;
     /// Holds the pointer to a domain name carried in the option.
-    boost::shared_ptr<isc::dns::Name> domain_name_;
+    boost::shared_ptr<bundy::dns::Name> domain_name_;
     /// Indicates whether domain name is partial or fully qualified.
     Option4ClientFqdn::DomainNameType domain_name_type_;
 
@@ -166,7 +166,7 @@ Option4ClientFqdnImpl(const Option4ClientFqdnImpl& source)
       domain_name_(),
       domain_name_type_(source.domain_name_type_) {
     if (source.domain_name_) {
-        domain_name_.reset(new isc::dns::Name(*source.domain_name_));
+        domain_name_.reset(new bundy::dns::Name(*source.domain_name_));
     }
 }
 
@@ -176,7 +176,7 @@ Option4ClientFqdnImpl&
 // cppcheck-suppress operatorEqToSelf
 Option4ClientFqdnImpl::operator=(const Option4ClientFqdnImpl& source) {
     if (source.domain_name_) {
-        domain_name_.reset(new isc::dns::Name(*source.domain_name_));
+        domain_name_.reset(new bundy::dns::Name(*source.domain_name_));
 
     } else {
         domain_name_.reset();
@@ -202,10 +202,10 @@ setDomainName(const std::string& domain_name,
               const Option4ClientFqdn::DomainNameType name_type) {
     // domain-name must be trimmed. Otherwise, string comprising spaces only
     // would be treated as a fully qualified name.
-    std::string name = isc::util::str::trim(domain_name);
+    std::string name = bundy::util::str::trim(domain_name);
     if (name.empty()) {
         if (name_type == Option4ClientFqdn::FULL) {
-            isc_throw(InvalidOption4FqdnDomainName,
+            bundy_throw(InvalidOption4FqdnDomainName,
                       "fully qualified domain-name must not be empty"
                       << " when setting new domain-name for DHCPv4 Client"
                       << " FQDN Option");
@@ -216,10 +216,10 @@ setDomainName(const std::string& domain_name,
 
     } else {
         try {
-            domain_name_.reset(new isc::dns::Name(name));
+            domain_name_.reset(new bundy::dns::Name(name));
 
         } catch (const Exception& ex) {
-            isc_throw(InvalidOption4FqdnDomainName,
+            bundy_throw(InvalidOption4FqdnDomainName,
                       "invalid domain-name value '"
                       << domain_name << "' when setting new domain-name for"
                       << " DHCPv4 Client FQDN Option");
@@ -234,7 +234,7 @@ void
 Option4ClientFqdnImpl::checkFlags(const uint8_t flags, const bool check_mbz) {
     // The Must Be Zero (MBZ) bits must not be set.
     if (check_mbz && ((flags & ~Option4ClientFqdn::FLAG_MASK) != 0)) {
-        isc_throw(InvalidOption4FqdnFlags,
+        bundy_throw(InvalidOption4FqdnFlags,
                   "invalid DHCPv4 Client FQDN Option flags: 0x"
                   << std::hex << static_cast<int>(flags) << std::dec);
     }
@@ -243,7 +243,7 @@ Option4ClientFqdnImpl::checkFlags(const uint8_t flags, const bool check_mbz) {
     // MUST be 0. Checking it here.
     if ((flags & (Option4ClientFqdn::FLAG_N | Option4ClientFqdn::FLAG_S))
         == (Option4ClientFqdn::FLAG_N | Option4ClientFqdn::FLAG_S)) {
-        isc_throw(InvalidOption4FqdnFlags,
+        bundy_throw(InvalidOption4FqdnFlags,
                   "both N and S flag of the DHCPv4 Client FQDN Option are set."
                   << " According to RFC 4702, if the N bit is 1 the S bit"
                   << " MUST be 0");
@@ -257,7 +257,7 @@ Option4ClientFqdnImpl::parseWireData(OptionBufferConstIter first,
     // Buffer must comprise at least one byte with the flags.
     // The domain-name may be empty.
     if (std::distance(first, last) < Option4ClientFqdn::FIXED_FIELDS_LEN) {
-        isc_throw(OutOfRange, "DHCPv4 Client FQDN Option ("
+        bundy_throw(OutOfRange, "DHCPv4 Client FQDN Option ("
                   << DHO_FQDN << ") is truncated");
     }
 
@@ -277,7 +277,7 @@ Option4ClientFqdnImpl::parseWireData(OptionBufferConstIter first,
 
         }
     } catch (const Exception& ex) {
-        isc_throw(InvalidOption4FqdnDomainName,
+        bundy_throw(InvalidOption4FqdnDomainName,
                   "failed to parse the domain-name in DHCPv4 Client FQDN"
                   << " Option: " << ex.what());
     }
@@ -296,8 +296,8 @@ Option4ClientFqdnImpl::parseCanonicalDomainName(OptionBufferConstIter first,
             OptionBuffer buf(first, last);
             buf.push_back(0);
             // Reset domain name.
-            isc::util::InputBuffer name_buf(&buf[0], buf.size());
-            domain_name_.reset(new isc::dns::Name(name_buf));
+            bundy::util::InputBuffer name_buf(&buf[0], buf.size());
+            domain_name_.reset(new bundy::dns::Name(name_buf));
             // Terminating zero was missing, so set the domain-name type
             // to partial.
             domain_name_type_ = Option4ClientFqdn::PARTIAL;
@@ -305,9 +305,9 @@ Option4ClientFqdnImpl::parseCanonicalDomainName(OptionBufferConstIter first,
             // We are dealing with fully qualified domain name so there is
             // no need to add terminating zero. Simply pass the buffer to
             // Name object constructor.
-            isc::util::InputBuffer name_buf(&(*first),
+            bundy::util::InputBuffer name_buf(&(*first),
                                             std::distance(first, last));
-            domain_name_.reset(new isc::dns::Name(name_buf));
+            domain_name_.reset(new bundy::dns::Name(name_buf));
             // Set the domain-type to fully qualified domain name.
             domain_name_type_ = Option4ClientFqdn::FULL;
         }
@@ -319,7 +319,7 @@ Option4ClientFqdnImpl::parseASCIIDomainName(OptionBufferConstIter first,
                                             OptionBufferConstIter last) {
     if (std::distance(first, last) > 0) {
         std::string domain_name(first, last);
-        domain_name_.reset(new isc::dns::Name(domain_name));
+        domain_name_.reset(new bundy::dns::Name(domain_name));
         domain_name_type_ = domain_name[domain_name.length() - 1] == '.' ?
             Option4ClientFqdn::FULL : Option4ClientFqdn::PARTIAL;
     }
@@ -370,7 +370,7 @@ Option4ClientFqdn::getFlag(const uint8_t flag) const {
     // Caller should query for one of the: E, N, S or O flags. Any other value
     /// is invalid and results in the exception.
     if (flag != FLAG_S && flag != FLAG_O && flag != FLAG_N && flag != FLAG_E) {
-        isc_throw(InvalidOption4FqdnFlags, "invalid DHCPv4 Client FQDN"
+        bundy_throw(InvalidOption4FqdnFlags, "invalid DHCPv4 Client FQDN"
                   << " Option flag specified, expected E, N, S or O");
     }
 
@@ -383,7 +383,7 @@ Option4ClientFqdn::setFlag(const uint8_t flag, const bool set_flag) {
     // discouraged this check doesn't preclude the caller from setting
     // multiple flags concurrently.
     if (((flag & ~FLAG_MASK) != 0) || (flag == 0)) {
-        isc_throw(InvalidOption4FqdnFlags, "invalid DHCPv4 Client FQDN"
+        bundy_throw(InvalidOption4FqdnFlags, "invalid DHCPv4 Client FQDN"
                   << " Option flag " << std::hex
                   << static_cast<int>(flag) << std::dec
                   << "is being set. Expected combination of E, N, S and O");
@@ -427,7 +427,7 @@ Option4ClientFqdn::getDomainName() const {
 }
 
 void
-Option4ClientFqdn::packDomainName(isc::util::OutputBuffer& buf) const {
+Option4ClientFqdn::packDomainName(bundy::util::OutputBuffer& buf) const {
     // If domain-name is empty, do nothing.
     if (!impl_->domain_name_) {
         return;
@@ -435,7 +435,7 @@ Option4ClientFqdn::packDomainName(isc::util::OutputBuffer& buf) const {
 
     if (getFlag(FLAG_E)) {
         // Domain name, encoded as a set of labels.
-        isc::dns::LabelSequence labels(*impl_->domain_name_);
+        bundy::dns::LabelSequence labels(*impl_->domain_name_);
         if (labels.getDataLength() > 0) {
             size_t read_len = 0;
             const uint8_t* data = labels.getData(&read_len);
@@ -469,7 +469,7 @@ Option4ClientFqdn::getDomainNameType() const {
 }
 
 void
-Option4ClientFqdn::pack(isc::util::OutputBuffer& buf) {
+Option4ClientFqdn::pack(bundy::util::OutputBuffer& buf) {
     // Header = option code and length.
     packHeader(buf);
     // Flags field.
@@ -522,5 +522,5 @@ Option4ClientFqdn::len() {
     return (getHeaderLen() + FIXED_FIELDS_LEN + domain_name_length);
 }
 
-} // end of isc::dhcp namespace
-} // end of isc namespace
+} // end of bundy::dhcp namespace
+} // end of bundy namespace

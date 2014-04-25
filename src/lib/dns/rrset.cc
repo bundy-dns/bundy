@@ -28,11 +28,11 @@
 #include <dns/rrset.h>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::util;
-using namespace isc::dns::rdata;
+using namespace bundy::dns;
+using namespace bundy::util;
+using namespace bundy::dns::rdata;
 
-namespace isc {
+namespace bundy {
 namespace dns {
 void
 AbstractRRset::addRdata(const Rdata& rdata) {
@@ -50,7 +50,7 @@ AbstractRRset::toText() const {
         // But only for class ANY or NONE
         if (getClass() != RRClass::ANY() &&
             getClass() != RRClass::NONE()) {
-            isc_throw(EmptyRRset, "toText() is attempted for an empty RRset");
+            bundy_throw(EmptyRRset, "toText() is attempted for an empty RRset");
         }
 
         s += getName().toText() + " " + getTTL().toText() + " " +
@@ -86,7 +86,7 @@ rrsetToWire(const AbstractRRset& rrset, T& output, const size_t limit) {
         // empty rrsets are only allowed for classes ANY and NONE
         if (rrset.getClass() != RRClass::ANY() &&
             rrset.getClass() != RRClass::NONE()) {
-            isc_throw(EmptyRRset, "toWire() is attempted for an empty RRset");
+            bundy_throw(EmptyRRset, "toWire() is attempted for an empty RRset");
         }
 
         // For an empty RRset, write the name, type, class and TTL once,
@@ -190,7 +190,7 @@ BasicRRsetImpl::toWire(AbstractMessageRenderer& renderer, size_t limit) const {
         // empty rrsets are only allowed for classes ANY and NONE
         if (rrclass_ != RRClass::ANY() &&
             rrclass_ != RRClass::NONE()) {
-            isc_throw(EmptyRRset, "toWire() is attempted for an empty RRset");
+            bundy_throw(EmptyRRset, "toWire() is attempted for an empty RRset");
         }
 
         // For an empty RRset, write the name, type, class and TTL once,
@@ -303,7 +303,7 @@ BasicRRset::getLength() const {
         // empty rrsets are only allowed for classes ANY and NONE
         if (getClass() != RRClass::ANY() &&
             getClass() != RRClass::NONE()) {
-            isc_throw(EmptyRRset, "getLength() is attempted for an empty RRset");
+            bundy_throw(EmptyRRset, "getLength() is attempted for an empty RRset");
         }
 
         // For an empty RRset, write the name, type, class and TTL once,

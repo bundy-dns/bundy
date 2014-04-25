@@ -35,9 +35,9 @@
 #include <boost/algorithm/string/predicate.hpp>
 
 using namespace std;
-using namespace isc::util;
+using namespace bundy::util;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 
@@ -101,13 +101,13 @@ OptionDefinition::addRecordField(const std::string& data_type_name) {
 void
 OptionDefinition::addRecordField(const OptionDataType data_type) {
     if (type_ != OPT_RECORD_TYPE) {
-        isc_throw(isc::InvalidOperation, "'record' option type must be used"
+        bundy_throw(bundy::InvalidOperation, "'record' option type must be used"
                   " to add data fields to the record");
     }
     if (data_type >= OPT_RECORD_TYPE ||
         data_type == OPT_ANY_ADDRESS_TYPE ||
         data_type == OPT_EMPTY_TYPE) {
-        isc_throw(isc::BadValue,
+        bundy_throw(bundy::BadValue,
                   "attempted to add invalid data type to the record.");
     }
     record_fields_.push_back(data_type);
@@ -206,7 +206,7 @@ OptionDefinition::optionFactory(Option::Universe u, uint16_t type,
         }
         return (OptionPtr(new OptionCustom(*this, u, begin, end)));
     } catch (const Exception& ex) {
-        isc_throw(InvalidOptionValue, ex.what());
+        bundy_throw(InvalidOptionValue, ex.what());
     }
 }
 
@@ -223,7 +223,7 @@ OptionDefinition::optionFactory(Option::Universe u, uint16_t type,
     OptionBuffer buf;
     if (!array_type_ && type_ != OPT_RECORD_TYPE) {
         if (values.empty()) {
-            isc_throw(InvalidOptionValue, "no option value specified");
+            bundy_throw(InvalidOptionValue, "no option value specified");
         }
         writeToBuffer(util::str::trim(values[0]), type_, buf);
     } else if (array_type_ && type_ != OPT_RECORD_TYPE) {
@@ -233,7 +233,7 @@ OptionDefinition::optionFactory(Option::Universe u, uint16_t type,
     } else if (type_ == OPT_RECORD_TYPE) {
         const RecordFieldsCollection& records = getRecordFields();
         if (records.size() > values.size()) {
-            isc_throw(InvalidOptionValue, "number of data fields for the option"
+            bundy_throw(InvalidOptionValue, "number of data fields for the option"
                       << " type '" <<  getCode() << "' is greater than number"
                       << " of values provided.");
         }
@@ -333,7 +333,7 @@ OptionDefinition::validate() const {
     // Non-empty error string means that we have hit the error. We throw
     // exception and include error string.
     if (!err_str.str().empty()) {
-        isc_throw(MalformedOptionDefinition, err_str.str());
+        bundy_throw(MalformedOptionDefinition, err_str.str());
     }
 }
 
@@ -434,14 +434,14 @@ OptionDefinition::convertToBool(const std::string& value_str) const {
        result = boost::lexical_cast<int>(value_str);
 
     } catch (const boost::bad_lexical_cast&) {
-        isc_throw(BadDataTypeCast, "unable to covert the value '"
+        bundy_throw(BadDataTypeCast, "unable to covert the value '"
                   << value_str << "' to boolean data type");
     }
     // The boolean value is encoded in DHCP option as 0 or 1. Therefore,
     // we only allow a user to specify those values for options which
     // have boolean fields.
     if (result != 1 && result != 0) {
-        isc_throw(BadDataTypeCast, "unable to convert '" << value_str
+        bundy_throw(BadDataTypeCast, "unable to convert '" << value_str
                   << "' to boolean data type");
     }
     return (static_cast<bool>(result));
@@ -454,7 +454,7 @@ OptionDefinition::lexicalCastWithRangeCheck(const std::string& value_str)
     // The lexical cast should be attempted when converting to an integer
     // value only.
     if (!OptionDataTypeTraits<T>::integer_type) {
-        isc_throw(BadDataTypeCast,
+        bundy_throw(BadDataTypeCast,
                   "must not convert '" << value_str
                   << "' to non-integer data type");
     }
@@ -469,14 +469,14 @@ OptionDefinition::lexicalCastWithRangeCheck(const std::string& value_str)
         result = boost::lexical_cast<int64_t>(value_str);
 
     } catch (const boost::bad_lexical_cast&) {
-        isc_throw(BadDataTypeCast, "unable to convert the value '"
+        bundy_throw(BadDataTypeCast, "unable to convert the value '"
                   << value_str << "' to integer data type");
     }
     // Perform range checks.
     if (OptionDataTypeTraits<T>::integer_type) {
         if (result > numeric_limits<T>::max() ||
             result < numeric_limits<T>::min()) {
-            isc_throw(BadDataTypeCast, "unable to convert '"
+            bundy_throw(BadDataTypeCast, "unable to convert '"
                       << value_str << "' to numeric type. This value is "
                       " expected to be in the range of "
                       << numeric_limits<T>::min()
@@ -539,7 +539,7 @@ OptionDefinition::writeToBuffer(const std::string& value,
         {
             asiolink::IOAddress address(value);
             if (!address.isV4() && !address.isV6()) {
-                isc_throw(BadDataTypeCast, "provided address "
+                bundy_throw(BadDataTypeCast, "provided address "
                           << address
                           << " is not a valid IPv4 or IPv6 address.");
             }
@@ -559,7 +559,7 @@ OptionDefinition::writeToBuffer(const std::string& value,
         // at the exit point from this function.
         ;
     }
-    isc_throw(isc::BadValue, "attempt to write invalid option data field type"
+    bundy_throw(bundy::BadValue, "attempt to write invalid option data field type"
               " into the option buffer: " << type);
 
 }
@@ -602,7 +602,7 @@ OptionDefinition::factoryIA6(uint16_t type,
                              OptionBufferConstIter begin,
                              OptionBufferConstIter end) {
     if (std::distance(begin, end) < Option6IA::OPTION6_IA_LEN) {
-        isc_throw(isc::OutOfRange, "input option buffer has invalid size,"
+        bundy_throw(bundy::OutOfRange, "input option buffer has invalid size,"
                   << " expected at least " << Option6IA::OPTION6_IA_LEN
                   << " bytes");
     }
@@ -615,7 +615,7 @@ OptionDefinition::factoryIAAddr6(uint16_t type,
                                  OptionBufferConstIter begin,
                                  OptionBufferConstIter end) {
     if (std::distance(begin, end) < Option6IAAddr::OPTION6_IAADDR_LEN) {
-        isc_throw(isc::OutOfRange,
+        bundy_throw(bundy::OutOfRange,
                   "input option buffer has invalid size, expected at least "
                   << Option6IAAddr::OPTION6_IAADDR_LEN << " bytes");
     }
@@ -629,7 +629,7 @@ OptionDefinition::factoryIAPrefix6(uint16_t type,
                                  OptionBufferConstIter begin,
                                  OptionBufferConstIter end) {
     if (std::distance(begin, end) < Option6IAPrefix::OPTION6_IAPREFIX_LEN) {
-        isc_throw(isc::OutOfRange,
+        bundy_throw(bundy::OutOfRange,
                   "input option buffer has invalid size, expected at least "
                   << Option6IAPrefix::OPTION6_IAPREFIX_LEN << " bytes");
     }
@@ -690,5 +690,5 @@ OptionDefinition::factorySpecialFormatOption(Option::Universe u,
     return (OptionPtr());
 }
 
-} // end of isc::dhcp namespace
-} // end of isc namespace
+} // end of bundy::dhcp namespace
+} // end of bundy namespace

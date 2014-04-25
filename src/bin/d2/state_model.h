@@ -27,14 +27,14 @@
 #include <map>
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 /// @brief Thrown if the state machine encounters a general error.
-class StateModelError : public isc::Exception {
+class StateModelError : public bundy::Exception {
 public:
     StateModelError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Define an Event.
@@ -674,6 +674,6 @@ private:
 /// @brief Defines a pointer to a StateModel.
 typedef boost::shared_ptr<StateModel> StateModelPtr;
 
-} // namespace isc::d2
-} // namespace isc
+} // namespace bundy::d2
+} // namespace bundy
 #endif

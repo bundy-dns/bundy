@@ -30,10 +30,10 @@
 #include <gtest/gtest.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dns;
-using namespace isc::util;
-using isc::util::unittests::matchWireData;
+using namespace bundy;
+using namespace bundy::dns;
+using namespace bundy::util;
+using bundy::util::unittests::matchWireData;
 
 //
 // XXX: these are defined as class static constants, but some compilers
@@ -167,57 +167,57 @@ checkBadTextName(const string& txt) {
 
 TEST_F(NameTest, checkExceptionsHierarchy) {
     EXPECT_NO_THROW({
-        const isc::dns::EmptyLabel exception("", 0, "");
-        const isc::dns::NameParserException& exception_cast =
-          dynamic_cast<const isc::dns::NameParserException&>(exception);
+        const bundy::dns::EmptyLabel exception("", 0, "");
+        const bundy::dns::NameParserException& exception_cast =
+          dynamic_cast<const bundy::dns::NameParserException&>(exception);
         // to avoid compiler warning
         exception_cast.what();
     });
 
     EXPECT_NO_THROW({
-        const isc::dns::TooLongName exception("", 0, "");
-        const isc::dns::NameParserException& exception_cast =
-          dynamic_cast<const isc::dns::NameParserException&>(exception);
+        const bundy::dns::TooLongName exception("", 0, "");
+        const bundy::dns::NameParserException& exception_cast =
+          dynamic_cast<const bundy::dns::NameParserException&>(exception);
         // to avoid compiler warning
         exception_cast.what();
     });
 
     EXPECT_NO_THROW({
-        const isc::dns::TooLongLabel exception("", 0, "");
-        const isc::dns::NameParserException& exception_cast =
-          dynamic_cast<const isc::dns::NameParserException&>(exception);
+        const bundy::dns::TooLongLabel exception("", 0, "");
+        const bundy::dns::NameParserException& exception_cast =
+          dynamic_cast<const bundy::dns::NameParserException&>(exception);
         // to avoid compiler warning
         exception_cast.what();
     });
 
     EXPECT_NO_THROW({
-        const isc::dns::BadLabelType exception("", 0, "");
-        const isc::dns::NameParserException& exception_cast =
-          dynamic_cast<const isc::dns::NameParserException&>(exception);
+        const bundy::dns::BadLabelType exception("", 0, "");
+        const bundy::dns::NameParserException& exception_cast =
+          dynamic_cast<const bundy::dns::NameParserException&>(exception);
         // to avoid compiler warning
         exception_cast.what();
     });
 
     EXPECT_NO_THROW({
-        const isc::dns::BadEscape exception("", 0, "");
-        const isc::dns::NameParserException& exception_cast =
-          dynamic_cast<const isc::dns::NameParserException&>(exception);
+        const bundy::dns::BadEscape exception("", 0, "");
+        const bundy::dns::NameParserException& exception_cast =
+          dynamic_cast<const bundy::dns::NameParserException&>(exception);
         // to avoid compiler warning
         exception_cast.what();
     });
 
     EXPECT_NO_THROW({
-        const isc::dns::IncompleteName exception("", 0, "");
-        const isc::dns::NameParserException& exception_cast =
-          dynamic_cast<const isc::dns::NameParserException&>(exception);
+        const bundy::dns::IncompleteName exception("", 0, "");
+        const bundy::dns::NameParserException& exception_cast =
+          dynamic_cast<const bundy::dns::NameParserException&>(exception);
         // to avoid compiler warning
         exception_cast.what();
     });
 
     EXPECT_NO_THROW({
-        const isc::dns::MissingNameOrigin exception("", 0, "");
-        const isc::dns::NameParserException& exception_cast =
-          dynamic_cast<const isc::dns::NameParserException&>(exception);
+        const bundy::dns::MissingNameOrigin exception("", 0, "");
+        const bundy::dns::NameParserException& exception_cast =
+          dynamic_cast<const bundy::dns::NameParserException&>(exception);
         // to avoid compiler warning
         exception_cast.what();
     });
@@ -333,10 +333,10 @@ TEST_F(NameTest, appendOrigin) {
 
 // When we don't provide the data, it throws
 TEST_F(NameTest, noDataProvided) {
-    EXPECT_THROW(Name(NULL, 10, NULL), isc::InvalidParameter);
-    EXPECT_THROW(Name(NULL, 10, &origin_name), isc::InvalidParameter);
-    EXPECT_THROW(Name("www", 0, NULL), isc::InvalidParameter);
-    EXPECT_THROW(Name("www", 0, &origin_name), isc::InvalidParameter);
+    EXPECT_THROW(Name(NULL, 10, NULL), bundy::InvalidParameter);
+    EXPECT_THROW(Name(NULL, 10, &origin_name), bundy::InvalidParameter);
+    EXPECT_THROW(Name("www", 0, NULL), bundy::InvalidParameter);
+    EXPECT_THROW(Name("www", 0, &origin_name), bundy::InvalidParameter);
 }
 
 // When we combine the first part and the origin together, the resulting name

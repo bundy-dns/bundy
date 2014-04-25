@@ -16,7 +16,7 @@
 
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace acl {
 
 BasicAction defaultActionLoader(data::ConstElementPtr actionEl) {

@@ -28,13 +28,13 @@
 #include <string>
 #include <vector>
 
-using isc::UnitTestUtil;
-using isc::dns::Name;
-using isc::dns::LabelSequence;
-using isc::dns::MessageRenderer;
-using isc::util::OutputBuffer;
+using bundy::UnitTestUtil;
+using bundy::dns::Name;
+using bundy::dns::LabelSequence;
+using bundy::dns::MessageRenderer;
+using bundy::util::OutputBuffer;
 using boost::lexical_cast;
-using isc::util::unittests::matchWireData;
+using bundy::util::unittests::matchWireData;
 
 namespace {
 class MessageRendererTest : public ::testing::Test {
@@ -151,7 +151,7 @@ TEST_F(MessageRendererTest, writeNameMixedCaseCompress) {
     // Change the compression mode in the middle of rendering.  This is not
     // allowed in this implementation.
     EXPECT_THROW(renderer.setCompressMode(MessageRenderer::CASE_INSENSITIVE),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 
     // Once the renderer is cleared, it's okay again.
     renderer.clear();
@@ -264,16 +264,16 @@ TEST_F(MessageRendererTest, setBufferErrors) {
 
     // Buffer cannot be reset when the renderer is in use.
     renderer.writeUint32(10);
-    EXPECT_THROW(renderer.setBuffer(&new_buffer), isc::InvalidParameter);
+    EXPECT_THROW(renderer.setBuffer(&new_buffer), bundy::InvalidParameter);
 
     renderer.clear();
     renderer.setBuffer(&new_buffer);
     renderer.writeUint32(10);
-    EXPECT_THROW(renderer.setBuffer(&new_buffer), isc::InvalidParameter);
+    EXPECT_THROW(renderer.setBuffer(&new_buffer), bundy::InvalidParameter);
 
     // Resetting the buffer isn't allowed for the default buffer.
     renderer.setBuffer(NULL);
-    EXPECT_THROW(renderer.setBuffer(NULL), isc::InvalidParameter);
+    EXPECT_THROW(renderer.setBuffer(NULL), bundy::InvalidParameter);
 
     // It's okay to reset a temporary buffer without using it.
     renderer.setBuffer(&new_buffer);
@@ -287,7 +287,7 @@ TEST_F(MessageRendererTest, manyRRs) {
     for (size_t i = 0; i < 1000; ++i) {
         renderer.writeName(Name(lexical_cast<std::string>(i) + ".example"));
     }
-    isc::util::InputBuffer b(renderer.getData(), renderer.getLength());
+    bundy::util::InputBuffer b(renderer.getData(), renderer.getLength());
     for (size_t i = 0; i < 1000; ++i) {
         EXPECT_EQ(Name(lexical_cast<std::string>(i) + ".example"), Name(b));
     }

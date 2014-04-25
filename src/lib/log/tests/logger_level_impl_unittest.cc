@@ -23,7 +23,7 @@
 #include <log/logger_support.h>
 #include <log4cplus/logger.h>
 
-using namespace isc::log;
+using namespace bundy::log;
 using namespace std;
 
 class LoggerLevelImplTest : public ::testing::Test {
@@ -38,7 +38,7 @@ protected:
 };
 
 
-// Checks that the log4cplus and BIND 10 levels convert correctly
+// Checks that the log4cplus and BUNDY levels convert correctly
 TEST_F(LoggerLevelImplTest, DefaultConversionFromBind) {
     log4cplus::LogLevel fatal =
         LoggerLevelImpl::convertFromBindLevel(Level(FATAL));
@@ -87,7 +87,7 @@ TEST_F(LoggerLevelImplTest, DebugConversionFromBind) {
 
 // Do the checks the other way
 static void
-test_convert_to(const char* trace, isc::log::Severity severity, int dbglevel,
+test_convert_to(const char* trace, bundy::log::Severity severity, int dbglevel,
                 log4cplus::LogLevel level)
 {
     SCOPED_TRACE(trace);

@@ -20,7 +20,7 @@
 
 #include <util/lru_list.h>
 
-namespace isc {
+namespace bundy {
 namespace cache {
 
 class RRsetEntry;
@@ -58,8 +58,8 @@ public:
     /// \param qtype The query type 
     /// \return return the shared_ptr of rrset entry if it can be
     /// found in the cache, or else, return NULL.
-    RRsetEntryPtr lookup(const isc::dns::Name& qname,
-                         const isc::dns::RRType& qtype);
+    RRsetEntryPtr lookup(const bundy::dns::Name& qname,
+                         const bundy::dns::RRType& qtype);
 
     /// \brief Update RRset Cache
     /// Update the rrset entry in the cache with the new one.
@@ -71,21 +71,21 @@ public:
     /// \param level trustworthiness of the rrset.
     /// \return return the rrset entry in the cache, it may be the
     /// new added rrset entry or existed one if it is not replaced.
-    RRsetEntryPtr update(const isc::dns::AbstractRRset& rrset,
+    RRsetEntryPtr update(const bundy::dns::AbstractRRset& rrset,
                          const RRsetTrustLevel& level);
 
     /// \short Protected memebers, so they can be accessed by tests.
 protected:
     uint16_t class_; // The class of the rrset cache.
-    isc::nsas::HashTable<RRsetEntry> rrset_table_;
-    isc::util::LruList<RRsetEntry> rrset_lru_;
+    bundy::nsas::HashTable<RRsetEntry> rrset_table_;
+    bundy::util::LruList<RRsetEntry> rrset_lru_;
 };
 
 typedef boost::shared_ptr<RRsetCache> RRsetCachePtr;
 typedef boost::shared_ptr<const RRsetCache> ConstRRsetCachePtr;
 
 } // namespace cache
-} // namespace isc
+} // namespace bundy
 
 #endif // RRSET_CACHE_H
 

@@ -30,9 +30,9 @@
 #include <dns/rdata/generic/detail/txt_like.h>
 
 using namespace std;
-using namespace isc::util;
+using namespace bundy::util;
 
-// BEGIN_ISC_NAMESPACE
+// BEGIN_BUNDY_NAMESPACE
 // BEGIN_RDATA_NAMESPACE
 
 /// \brief The assignment operator
@@ -142,4 +142,4 @@ SPF::compare(const Rdata& other) const {
 }
 
 // END_RDATA_NAMESPACE
-// END_ISC_NAMESPACE
+// END_BUNDY_NAMESPACE

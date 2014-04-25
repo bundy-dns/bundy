@@ -26,9 +26,9 @@
 // don't import the entire boost namespace.  It will unexpectedly hide uint8_t
 // for some systems.
 using boost::scoped_ptr;
-using namespace isc;
-using namespace isc::dhcp;
-using namespace isc::asiolink;
+using namespace bundy;
+using namespace bundy::dhcp;
+using namespace bundy::asiolink;
 
 namespace {
 
@@ -172,18 +172,18 @@ TEST(Subnet4Test, clientClasses) {
     Subnet4Ptr subnet(new Subnet4(IOAddress("192.0.2.0"), 8, 1, 2, 3));
 
     // This client does not belong to any class.
-    isc::dhcp::ClientClasses no_class;
+    bundy::dhcp::ClientClasses no_class;
 
     // This client belongs to foo only.
-    isc::dhcp::ClientClasses foo_class;
+    bundy::dhcp::ClientClasses foo_class;
     foo_class.insert("foo");
 
     // This client belongs to bar only. I like that client.
-    isc::dhcp::ClientClasses bar_class;
+    bundy::dhcp::ClientClasses bar_class;
     bar_class.insert("bar");
 
     // This client belongs to foo, bar and baz classes.
-    isc::dhcp::ClientClasses three_classes;
+    bundy::dhcp::ClientClasses three_classes;
     three_classes.insert("foo");
     three_classes.insert("bar");
     three_classes.insert("baz");
@@ -210,14 +210,14 @@ TEST(Subnet4Test, clientClassesMultiple) {
     Subnet4Ptr subnet(new Subnet4(IOAddress("192.0.2.0"), 8, 1, 2, 3));
 
     // This client does not belong to any class.
-    isc::dhcp::ClientClasses no_class;
+    bundy::dhcp::ClientClasses no_class;
 
     // This client belongs to foo only.
-    isc::dhcp::ClientClasses foo_class;
+    bundy::dhcp::ClientClasses foo_class;
     foo_class.insert("foo");
 
     // This client belongs to bar only. I like that client.
-    isc::dhcp::ClientClasses bar_class;
+    bundy::dhcp::ClientClasses bar_class;
     bar_class.insert("bar");
 
     // No class restrictions defined, any client should be supported
@@ -249,14 +249,14 @@ TEST(Subnet4Test, addInvalidOption) {
     // Attempt to add this option should result in exception.
     OptionPtr option1(new Option(Option::V6, code, OptionBuffer(10, 0xFF)));
     EXPECT_THROW(subnet->addOption(option1, false, "dhcp4"),
-                 isc::BadValue);
+                 bundy::BadValue);
 
     // Create NULL pointer option. Attempt to add NULL option
     // should result in exception.
     OptionPtr option2;
     ASSERT_FALSE(option2);
     EXPECT_THROW(subnet->addOption(option2, false, "dhcp4"),
-                 isc::BadValue);
+                 bundy::BadValue);
 }
 
 // This test verifies that inRange() and inPool() methods work properly.
@@ -549,18 +549,18 @@ TEST(Subnet6Test, clientClasses) {
     Subnet6Ptr subnet(new Subnet6(IOAddress("2001:db8:1::"), 56, 1, 2, 3, 4));
 
     // This client does not belong to any class.
-    isc::dhcp::ClientClasses no_class;
+    bundy::dhcp::ClientClasses no_class;
 
     // This client belongs to foo only.
-    isc::dhcp::ClientClasses foo_class;
+    bundy::dhcp::ClientClasses foo_class;
     foo_class.insert("foo");
 
     // This client belongs to bar only. I like that client.
-    isc::dhcp::ClientClasses bar_class;
+    bundy::dhcp::ClientClasses bar_class;
     bar_class.insert("bar");
 
     // This client belongs to foo, bar and baz classes.
-    isc::dhcp::ClientClasses three_classes;
+    bundy::dhcp::ClientClasses three_classes;
     three_classes.insert("foo");
     three_classes.insert("bar");
     three_classes.insert("baz");
@@ -587,14 +587,14 @@ TEST(Subnet6Test, clientClassesMultiple) {
     Subnet6Ptr subnet(new Subnet6(IOAddress("2001:db8:1::"), 56, 1, 2, 3, 4));
 
     // This client does not belong to any class.
-    isc::dhcp::ClientClasses no_class;
+    bundy::dhcp::ClientClasses no_class;
 
     // This client belongs to foo only.
-    isc::dhcp::ClientClasses foo_class;
+    bundy::dhcp::ClientClasses foo_class;
     foo_class.insert("foo");
 
     // This client belongs to bar only. I like that client.
-    isc::dhcp::ClientClasses bar_class;
+    bundy::dhcp::ClientClasses bar_class;
     bar_class.insert("bar");
 
     // No class restrictions defined, any client should be supported
@@ -653,7 +653,7 @@ TEST(Subnet6Test, addOptions) {
     // with option codes that we have added to dhcp6 option space.
     for (uint16_t code = 105; code < 112; ++code) {
         OptionPtr option(new Option(Option::V6, code, OptionBuffer(10, 0xFF)));
-        ASSERT_NO_THROW(subnet->addOption(option, false, "isc"));
+        ASSERT_NO_THROW(subnet->addOption(option, false, "bundy"));
     }
 
     // Get options from the Subnet and check if all 10 are there.
@@ -670,11 +670,11 @@ TEST(Subnet6Test, addOptions) {
         ++expected_code;
     }
 
-    options = subnet->getOptionDescriptors("isc");
+    options = subnet->getOptionDescriptors("bundy");
     ASSERT_TRUE(options);
     ASSERT_EQ(7, options->size());
 
-    // Validate codes of options added to isc option space.
+    // Validate codes of options added to bundy option space.
     expected_code = 105;
     for (Subnet::OptionContainer::const_iterator option_desc = options->begin();
          option_desc != options->end(); ++option_desc) {
@@ -696,7 +696,7 @@ TEST(Subnet6Test, addOptions) {
     ASSERT_TRUE(options);
     EXPECT_TRUE(options->empty());
 
-    options = subnet->getOptionDescriptors("isc");
+    options = subnet->getOptionDescriptors("bundy");
     ASSERT_TRUE(options);
     EXPECT_TRUE(options->empty());
 }
@@ -760,13 +760,13 @@ TEST(Subnet6Test, addInvalidOption) {
     // Create option with invalid universe (V4 instead of V6).
     // Attempt to add this option should result in exception.
     OptionPtr option1(new Option(Option::V4, code, OptionBuffer(10, 0xFF)));
-    EXPECT_THROW(subnet->addOption(option1, false, "dhcp6"), isc::BadValue);
+    EXPECT_THROW(subnet->addOption(option1, false, "dhcp6"), bundy::BadValue);
 
     // Create NULL pointer option. Attempt to add NULL option
     // should result in exception.
     OptionPtr option2;
     ASSERT_FALSE(option2);
-    EXPECT_THROW(subnet->addOption(option2, false, "dhcp6"), isc::BadValue);
+    EXPECT_THROW(subnet->addOption(option2, false, "dhcp6"), bundy::BadValue);
 }
 
 TEST(Subnet6Test, addPersistentOption) {
@@ -829,7 +829,7 @@ TEST(Subnet6Test, getOptionDescriptor) {
     for (uint16_t code = 100; code < 110; ++code) {
         std::ostringstream stream;
         // First, try the invalid option space name.
-        Subnet::OptionDescriptor desc = subnet->getOptionDescriptor("isc", code);
+        Subnet::OptionDescriptor desc = subnet->getOptionDescriptor("bundy", code);
         // Returned descriptor should contain NULL option ptr.
         EXPECT_FALSE(desc.option);
         // Now, try the valid option space.
@@ -881,7 +881,7 @@ TEST(Subnet6Test, addVendorOptions) {
     ASSERT_TRUE(options);
     ASSERT_EQ(7, options->size());
 
-    // Validate codes of options added to isc option space.
+    // Validate codes of options added to bundy option space.
     expected_code = 105;
     for (Subnet::OptionContainer::const_iterator option_desc = options->begin();
          option_desc != options->end(); ++option_desc) {

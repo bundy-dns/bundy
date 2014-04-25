@@ -46,8 +46,8 @@
 
 using namespace asio;
 using namespace asio::ip;
-using namespace isc::util;
-using namespace isc::asiolink;
+using namespace bundy::util;
+using namespace bundy::asiolink;
 using namespace std;
 
 namespace {

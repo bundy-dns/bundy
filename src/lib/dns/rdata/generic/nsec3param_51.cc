@@ -28,10 +28,10 @@
 #include <vector>
 
 using namespace std;
-using namespace isc::util;
-using namespace isc::util::encode;
+using namespace bundy::util;
+using namespace bundy::util::encode;
 
-// BEGIN_ISC_NAMESPACE
+// BEGIN_BUNDY_NAMESPACE
 // BEGIN_RDATA_NAMESPACE
 
 struct NSEC3PARAMImpl {
@@ -78,11 +78,11 @@ NSEC3PARAM::NSEC3PARAM(const std::string& nsec3param_str) :
         impl_ptr.reset(constructFromLexer(lexer));
 
         if (lexer.getNextToken().getType() != MasterToken::END_OF_FILE) {
-            isc_throw(InvalidRdataText,
+            bundy_throw(InvalidRdataText,
                       "Extra input text for NSEC3PARAM: " << nsec3param_str);
         }
     } catch (const MasterLexer::LexerError& ex) {
-        isc_throw(InvalidRdataText,
+        bundy_throw(InvalidRdataText,
                   "Failed to construct NSEC3PARAM from '" << nsec3param_str
                   << "': " << ex.what());
     }
@@ -235,4 +235,4 @@ NSEC3PARAM::getSalt() const {
 }
 
 // END_RDATA_NAMESPACE
-// END_ISC_NAMESPACE
+// END_BUNDY_NAMESPACE

@@ -20,8 +20,8 @@
 #include <dhcp/pkt6.h>
 #include <user_chk.h>
 
-using namespace isc::dhcp;
-using namespace isc::hooks;
+using namespace bundy::dhcp;
+using namespace bundy::hooks;
 using namespace user_chk;
 using namespace std;
 

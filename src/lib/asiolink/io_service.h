@@ -21,7 +21,7 @@ namespace asio {
     class io_service;
 }
 
-namespace isc {
+namespace bundy {
 namespace asiolink {
 
 class IOServiceImpl;
@@ -66,7 +66,7 @@ public:
 
     /// \brief Return the native \c io_service object used in this wrapper.
     ///
-    /// This is a short term work around to support other BIND 10 modules
+    /// This is a short term work around to support other BUNDY modules
     /// that share the same \c io_service with the authoritative server.
     /// It will eventually be removed once the wrapper interface is
     /// generalized.
@@ -88,5 +88,5 @@ private:
 };
 
 } // namespace asiolink
-} // namespace isc
+} // namespace bundy
 #endif // ASIOLINK_IO_SERVICE_H

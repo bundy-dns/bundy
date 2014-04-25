@@ -40,12 +40,12 @@
 #include "question_python.h"
 #include "message_python.h"
 
-using namespace isc::dns::python;
+using namespace bundy::dns::python;
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace python {
-// For our 'general' isc::Exceptions
+// For our 'general' bundy::Exceptions
 PyObject* po_IscException;
 PyObject* po_InvalidOperation;
 PyObject* po_InvalidParameter;

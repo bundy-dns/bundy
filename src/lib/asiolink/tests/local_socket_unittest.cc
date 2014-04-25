@@ -29,7 +29,7 @@
 #include <stdint.h>
 #include <unistd.h>             // for alarm(3)
 
-using namespace isc::asiolink;
+using namespace bundy::asiolink;
 
 namespace {
 

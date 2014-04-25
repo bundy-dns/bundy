@@ -40,7 +40,7 @@
 /// - An active callout can only modify the registration of callouts registered
 ///   by its own library.
 
-using namespace isc::hooks;
+using namespace bundy::hooks;
 using namespace std;
 
 namespace {

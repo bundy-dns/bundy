@@ -25,9 +25,9 @@
 #include <sstream>
 
 using namespace std;
-using namespace isc;
-using namespace isc::config;
-using namespace isc::d2;
+using namespace bundy;
+using namespace bundy::config;
+using namespace bundy::d2;
 using namespace boost::posix_time;
 
 namespace {
@@ -46,9 +46,9 @@ public:
     }
 
     /// @brief Dummy implementation as this method is abstract.
-    virtual isc::dhcp::ParserPtr
+    virtual bundy::dhcp::ParserPtr
     createConfigParser(const std::string& /* element_id */) {
-        return (isc::dhcp::ParserPtr());
+        return (bundy::dhcp::ParserPtr());
     }
 };
 
@@ -154,7 +154,7 @@ TEST_F(DStubCfgMgrTest, parseOrderTest) {
 
     // Create the test configuration with the elements in "random" order.
 
-    // NOTE that element sets produced by  isc::data::Element::fromJSON(),
+    // NOTE that element sets produced by  bundy::data::Element::fromJSON(),
     // are in lexical order by element_id. This means that iterating over
     // such an element set, will present the elements in lexical order. Should
     // this change, this test will need to be modified accordingly.

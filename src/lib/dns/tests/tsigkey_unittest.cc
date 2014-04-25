@@ -26,9 +26,9 @@
 #include <util/unittests/wiredata.h>
 
 using namespace std;
-using namespace isc::dns;
-using isc::UnitTestUtil;
-using isc::util::unittests::matchWireData;
+using namespace bundy::dns;
+using bundy::UnitTestUtil;
+using bundy::util::unittests::matchWireData;
 
 namespace {
 class TSIGKeyTest : public ::testing::Test {
@@ -48,23 +48,23 @@ TEST_F(TSIGKeyTest, algorithmNames) {
     EXPECT_EQ(Name("hmac-sha512"), TSIGKey::HMACSHA512_NAME());
 
     // Also check conversion to cryptolink definitions
-    EXPECT_EQ(isc::cryptolink::MD5, TSIGKey(key_name, TSIGKey::HMACMD5_NAME(),
+    EXPECT_EQ(bundy::cryptolink::MD5, TSIGKey(key_name, TSIGKey::HMACMD5_NAME(),
                                             NULL, 0).getAlgorithm());
-    EXPECT_EQ(isc::cryptolink::MD5,
+    EXPECT_EQ(bundy::cryptolink::MD5,
               TSIGKey(key_name, TSIGKey::HMACMD5_SHORT_NAME(),
                       NULL, 0).getAlgorithm());
-    EXPECT_EQ(isc::cryptolink::SHA1, TSIGKey(key_name, TSIGKey::HMACSHA1_NAME(),
+    EXPECT_EQ(bundy::cryptolink::SHA1, TSIGKey(key_name, TSIGKey::HMACSHA1_NAME(),
                                              NULL, 0).getAlgorithm());
-    EXPECT_EQ(isc::cryptolink::SHA256, TSIGKey(key_name,
+    EXPECT_EQ(bundy::cryptolink::SHA256, TSIGKey(key_name,
                                                TSIGKey::HMACSHA256_NAME(),
                                                NULL, 0).getAlgorithm());
-    EXPECT_EQ(isc::cryptolink::SHA224, TSIGKey(key_name,
+    EXPECT_EQ(bundy::cryptolink::SHA224, TSIGKey(key_name,
                                                TSIGKey::HMACSHA224_NAME(),
                                                NULL, 0).getAlgorithm());
-    EXPECT_EQ(isc::cryptolink::SHA384, TSIGKey(key_name,
+    EXPECT_EQ(bundy::cryptolink::SHA384, TSIGKey(key_name,
                                                TSIGKey::HMACSHA384_NAME(),
                                                NULL, 0).getAlgorithm());
-    EXPECT_EQ(isc::cryptolink::SHA512, TSIGKey(key_name,
+    EXPECT_EQ(bundy::cryptolink::SHA512, TSIGKey(key_name,
                                                TSIGKey::HMACSHA512_NAME(),
                                                NULL, 0).getAlgorithm());
 }
@@ -88,7 +88,7 @@ TEST_F(TSIGKeyTest, construct) {
     // "unknown" algorithm is only accepted with empty secret.
     EXPECT_THROW(TSIGKey(key_name, Name("unknown-alg"),
                          secret.c_str(), secret.size()),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     TSIGKey key2(key_name, Name("unknown-alg"), NULL, 0);
     EXPECT_EQ(key_name, key2.getKeyName());
     EXPECT_EQ(Name("unknown-alg"), key2.getAlgorithmName());
@@ -107,9 +107,9 @@ TEST_F(TSIGKeyTest, construct) {
 
     // Invalid combinations of secret and secret_len:
     EXPECT_THROW(TSIGKey(key_name, TSIGKey::HMACSHA1_NAME(), secret.c_str(), 0),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     EXPECT_THROW(TSIGKey(key_name, TSIGKey::HMACSHA256_NAME(), NULL, 16),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 void
@@ -320,15 +320,15 @@ TEST(TSIGStringTest, TSIGKeyFromToString) {
     EXPECT_EQ(Name("test.example."), k5.getKeyName());
     EXPECT_EQ(Name("unknown"), k5.getAlgorithmName());
 
-    EXPECT_THROW(TSIGKey(""), isc::InvalidParameter);
-    EXPECT_THROW(TSIGKey(":"), isc::InvalidParameter);
-    EXPECT_THROW(TSIGKey("::"), isc::InvalidParameter);
-    EXPECT_THROW(TSIGKey("..:aa:"), isc::InvalidParameter);
-    EXPECT_THROW(TSIGKey("test.example:xxxx:"), isc::InvalidParameter);
-    EXPECT_THROW(TSIGKey("test.example.::"), isc::InvalidParameter);
-    EXPECT_THROW(TSIGKey("test.example.:"), isc::InvalidParameter);
-    EXPECT_THROW(TSIGKey("test.example.:MSG6Ng==:"), isc::InvalidParameter);
-    EXPECT_THROW(TSIGKey("test.example.:MSG6Ng==:unknown"), isc::InvalidParameter);
+    EXPECT_THROW(TSIGKey(""), bundy::InvalidParameter);
+    EXPECT_THROW(TSIGKey(":"), bundy::InvalidParameter);
+    EXPECT_THROW(TSIGKey("::"), bundy::InvalidParameter);
+    EXPECT_THROW(TSIGKey("..:aa:"), bundy::InvalidParameter);
+    EXPECT_THROW(TSIGKey("test.example:xxxx:"), bundy::InvalidParameter);
+    EXPECT_THROW(TSIGKey("test.example.::"), bundy::InvalidParameter);
+    EXPECT_THROW(TSIGKey("test.example.:"), bundy::InvalidParameter);
+    EXPECT_THROW(TSIGKey("test.example.:MSG6Ng==:"), bundy::InvalidParameter);
+    EXPECT_THROW(TSIGKey("test.example.:MSG6Ng==:unknown"), bundy::InvalidParameter);
 }
 
 

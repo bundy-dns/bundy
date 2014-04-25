@@ -25,10 +25,10 @@
 
 using boost::scoped_ptr;
 using namespace std;
-using namespace isc::dns;
-using namespace isc::dns::rdata;
-using namespace isc::util;
-using namespace isc::util::encode;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
+using namespace bundy::util;
+using namespace bundy::util::encode;
 
 namespace {
 typedef scoped_ptr<NSEC3Hash> NSEC3HashPtr;
@@ -215,7 +215,7 @@ public:
     }
     virtual NSEC3Hash* create(uint8_t, uint16_t,
                               const uint8_t*, size_t) const {
-        isc_throw(isc::Unexpected,
+        bundy_throw(bundy::Unexpected,
                   "This method is not implemented here.");
     }
 private:

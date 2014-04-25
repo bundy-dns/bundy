@@ -5,7 +5,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/src/bin -I$(top_builddir)/src/bin
 AM_CPPFLAGS += -I$(top_srcdir)/src/lib/cc -I$(top_builddir)/src/lib/cc
 AM_CPPFLAGS += $(BOOST_INCLUDES)
 
-AM_CXXFLAGS = $(B10_CXXFLAGS)
+AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 if USE_CLANGPP
 # Disable unused parameter warning caused by some Boost headers when compiling with clang
 AM_CXXFLAGS += -Wno-unused-parameter
@@ -19,22 +19,22 @@ pkglibexecdir = $(libexecdir)/@PACKAGE@
 
 CLEANFILES = spec_config.h dhcp6_messages.h dhcp6_messages.cc s-messages
 
-man_MANS = b10-dhcp6.8
+man_MANS = bundy-dhcp6.8
 DISTCLEANFILES = $(man_MANS)
-EXTRA_DIST = $(man_MANS) b10-dhcp6.xml dhcp6.spec
+EXTRA_DIST = $(man_MANS) bundy-dhcp6.xml dhcp6.spec
 
 if GENERATE_DOCS
 
-b10-dhcp6.8: b10-dhcp6.xml
+bundy-dhcp6.8: bundy-dhcp6.xml
 	@XSLTPROC@ --novalid --xinclude --nonet -o $@ \
         http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl \
-        $(srcdir)/b10-dhcp6.xml
+        $(srcdir)/bundy-dhcp6.xml
 
 else
 
 $(man_MANS):
 	@echo Man generation disabled.  Creating dummy $@.  Configure with --enable-generate-docs to enable it.
-	@echo Man generation disabled.  Remove this file, configure with --enable-generate-docs, and rebuild BIND 10 > $@
+	@echo Man generation disabled.  Remove this file, configure with --enable-generate-docs, and rebuild BUNDY > $@
 
 endif
 
@@ -49,27 +49,27 @@ s-messages: dhcp6_messages.mes
 
 BUILT_SOURCES = spec_config.h dhcp6_messages.h dhcp6_messages.cc
 
-pkglibexec_PROGRAMS = b10-dhcp6
+pkglibexec_PROGRAMS = bundy-dhcp6
 
-b10_dhcp6_SOURCES  = main.cc
-b10_dhcp6_SOURCES += ctrl_dhcp6_srv.cc ctrl_dhcp6_srv.h
-b10_dhcp6_SOURCES += config_parser.cc config_parser.h
-b10_dhcp6_SOURCES += dhcp6_log.cc dhcp6_log.h
-b10_dhcp6_SOURCES += dhcp6_srv.cc dhcp6_srv.h
+bundy_dhcp6_SOURCES  = main.cc
+bundy_dhcp6_SOURCES += ctrl_dhcp6_srv.cc ctrl_dhcp6_srv.h
+bundy_dhcp6_SOURCES += config_parser.cc config_parser.h
+bundy_dhcp6_SOURCES += dhcp6_log.cc dhcp6_log.h
+bundy_dhcp6_SOURCES += dhcp6_srv.cc dhcp6_srv.h
 
-nodist_b10_dhcp6_SOURCES = dhcp6_messages.h dhcp6_messages.cc
+nodist_bundy_dhcp6_SOURCES = dhcp6_messages.h dhcp6_messages.cc
 EXTRA_DIST += dhcp6_messages.mes
 
-b10_dhcp6_LDADD  = $(top_builddir)/src/lib/asiolink/libb10-asiolink.la
-b10_dhcp6_LDADD += $(top_builddir)/src/lib/cc/libb10-cc.la
-b10_dhcp6_LDADD += $(top_builddir)/src/lib/config/libb10-cfgclient.la
-b10_dhcp6_LDADD += $(top_builddir)/src/lib/dhcp/libb10-dhcp++.la
-b10_dhcp6_LDADD += $(top_builddir)/src/lib/dhcp_ddns/libb10-dhcp_ddns.la
-b10_dhcp6_LDADD += $(top_builddir)/src/lib/dhcpsrv/libb10-dhcpsrv.la
-b10_dhcp6_LDADD += $(top_builddir)/src/lib/exceptions/libb10-exceptions.la
-b10_dhcp6_LDADD += $(top_builddir)/src/lib/log/libb10-log.la
-b10_dhcp6_LDADD += $(top_builddir)/src/lib/util/libb10-util.la
-b10_dhcp6_LDADD += $(top_builddir)/src/lib/hooks/libb10-hooks.la
+bundy_dhcp6_LDADD  = $(top_builddir)/src/lib/asiolink/libbundy-asiolink.la
+bundy_dhcp6_LDADD += $(top_builddir)/src/lib/cc/libbundy-cc.la
+bundy_dhcp6_LDADD += $(top_builddir)/src/lib/config/libbundy-cfgclient.la
+bundy_dhcp6_LDADD += $(top_builddir)/src/lib/dhcp/libbundy-dhcp++.la
+bundy_dhcp6_LDADD += $(top_builddir)/src/lib/dhcp_ddns/libbundy-dhcp_ddns.la
+bundy_dhcp6_LDADD += $(top_builddir)/src/lib/dhcpsrv/libbundy-dhcpsrv.la
+bundy_dhcp6_LDADD += $(top_builddir)/src/lib/exceptions/libbundy-exceptions.la
+bundy_dhcp6_LDADD += $(top_builddir)/src/lib/log/libbundy-log.la
+bundy_dhcp6_LDADD += $(top_builddir)/src/lib/util/libbundy-util.la
+bundy_dhcp6_LDADD += $(top_builddir)/src/lib/hooks/libbundy-hooks.la
 
-b10_dhcp6dir = $(pkgdatadir)
-b10_dhcp6_DATA = dhcp6.spec
+bundy_dhcp6dir = $(pkgdatadir)
+bundy_dhcp6_DATA = dhcp6.spec

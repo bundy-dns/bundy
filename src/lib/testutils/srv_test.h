@@ -33,7 +33,7 @@ class IOMessage;
 class IOEndpoint;
 }
 
-namespace isc {
+namespace bundy {
 namespace testutils {
 extern const char* const DEFAULT_REMOTE_ADDRESS;
 extern const uint16_t DEFAULT_REMOTE_PORT;
@@ -87,31 +87,31 @@ protected:
     /// It constructs wire-format DNS packet data from \c message in the
     /// form of \c IOMessage in \c io_message.
     /// The existing content of \c io_message, if any, will be deleted.
-    void createRequestPacket(isc::dns::Message& message,
+    void createRequestPacket(bundy::dns::Message& message,
                              const int protocol = IPPROTO_UDP,
-                             isc::dns::TSIGContext* context = NULL,
+                             bundy::dns::TSIGContext* context = NULL,
                              const char* const address = DEFAULT_REMOTE_ADDRESS,
                              uint16_t port = DEFAULT_REMOTE_PORT);
 
     MockSession notify_session;
     MockServer dnsserv;
-    isc::dns::Message request_message;
-    isc::dns::MessagePtr parse_message;
-    isc::dns::MessagePtr response_message;
-    const isc::dns::qid_t default_qid;
-    const isc::dns::Opcode opcode;
-    const isc::dns::Name qname;
-    const isc::dns::RRClass qclass;
-    const isc::dns::RRType qtype;
+    bundy::dns::Message request_message;
+    bundy::dns::MessagePtr parse_message;
+    bundy::dns::MessagePtr response_message;
+    const bundy::dns::qid_t default_qid;
+    const bundy::dns::Opcode opcode;
+    const bundy::dns::Name qname;
+    const bundy::dns::RRClass qclass;
+    const bundy::dns::RRType qtype;
     asiolink::IOSocket* io_sock;
     boost::scoped_ptr<asiolink::IOMessage> io_message;
     boost::scoped_ptr<const asiolink::IOEndpoint> endpoint;
-    isc::dns::MessageRenderer request_renderer;
-    isc::util::OutputBufferPtr response_obuffer;
+    bundy::dns::MessageRenderer request_renderer;
+    bundy::util::OutputBufferPtr response_obuffer;
     std::vector<uint8_t> data;
 };
 } // end of namespace testutils
-} // end of namespace isc
+} // end of namespace bundy
 #endif  // ISC_TESTUTILS_SRVTEST_H
 
 // Local Variables:

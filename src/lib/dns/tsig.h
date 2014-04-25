@@ -23,7 +23,7 @@
 #include <dns/tsigkey.h>
 #include <dns/tsigrecord.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 /// An exception that is thrown for logic errors identified in TSIG
@@ -32,10 +32,10 @@ namespace dns {
 /// Note that this exception is not thrown for TSIG protocol errors such as
 /// verification failures.  In general, this exception indicates an internal
 /// program bug.
-class TSIGContextError : public isc::Exception {
+class TSIGContextError : public bundy::Exception {
 public:
     TSIGContextError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// TSIG session context.

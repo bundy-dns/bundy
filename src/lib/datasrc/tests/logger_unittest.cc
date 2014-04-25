@@ -16,7 +16,7 @@
 
 #include <datasrc/logger.h>
 
-using namespace isc::datasrc;
+using namespace bundy::datasrc;
 
 namespace {
 

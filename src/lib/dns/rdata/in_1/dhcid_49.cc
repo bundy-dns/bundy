@@ -25,10 +25,10 @@
 #include <dns/rdataclass.h>
 
 using namespace std;
-using namespace isc::util;
-using namespace isc::util::encode;
+using namespace bundy::util;
+using namespace bundy::util::encode;
 
-// BEGIN_ISC_NAMESPACE
+// BEGIN_BUNDY_NAMESPACE
 // BEGIN_RDATA_NAMESPACE
 
 void
@@ -66,11 +66,11 @@ DHCID::DHCID(const std::string& dhcid_str) {
         constructFromLexer(lexer);
 
         if (lexer.getNextToken().getType() != MasterToken::END_OF_FILE) {
-            isc_throw(InvalidRdataText, "extra input text for DHCID: "
+            bundy_throw(InvalidRdataText, "extra input text for DHCID: "
                       << dhcid_str);
         }
     } catch (const MasterLexer::LexerError& ex) {
-        isc_throw(InvalidRdataText, "Failed to construct DHCID from '" <<
+        bundy_throw(InvalidRdataText, "Failed to construct DHCID from '" <<
                   dhcid_str << "': " << ex.what());
     }
 }
@@ -96,7 +96,7 @@ DHCID::DHCID(MasterLexer& lexer, const Name*,
 /// \param rdata_len The length of the RDATA in bytes
 DHCID::DHCID(InputBuffer& buffer, size_t rdata_len) {
     if (rdata_len == 0) {
-        isc_throw(InvalidRdataLength, "Missing DHCID rdata");
+        bundy_throw(InvalidRdataLength, "Missing DHCID rdata");
     }
 
     digest_.resize(rdata_len);
@@ -164,4 +164,4 @@ DHCID::getDigest() const {
 }
 
 // END_RDATA_NAMESPACE
-// END_ISC_NAMESPACE
+// END_BUNDY_NAMESPACE

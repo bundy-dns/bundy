@@ -21,11 +21,11 @@
 
 #include <iostream>
 
-using namespace isc::d2;
+using namespace bundy::d2;
 using namespace std;
 
 /// This file contains entry point (main() function) for standard DHCP-DDNS
-/// process, b10-dhcp-ddns, component for BIND10 framework.  It fetches
+/// process, bundy-dhcp-ddns, component for BUNDY framework.  It fetches
 /// the D2Controller singleton instance and invokes its launch method.
 /// The exit value of the program will be EXIT_SUCCESS if there were no
 /// errors, EXIT_FAILURE otherwise.
@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
     try  {
         // 'false' value disables test mode.
         controller->launch(argc, argv, false);
-    } catch (const isc::Exception& ex) {
+    } catch (const bundy::Exception& ex) {
         std::cerr << "Service failed:" << ex.what() << std::endl;
         ret = EXIT_FAILURE;
     }

@@ -65,8 +65,8 @@ protected:
                         const string& socketFile, const string& env_name,
                         const string& expected, string (*actual_fn)())
     {
-        setEnv("B10_FROM_BUILD", fromBuild);
-        setEnv("B10_FROM_SOURCE_LOCALSTATEDIR", localStateDir);
+        setEnv("BUNDY_FROM_BUILD", fromBuild);
+        setEnv("BUNDY_FROM_SOURCE_LOCALSTATEDIR", localStateDir);
         setEnv(env_name, socketFile);
         EXPECT_EQ(expected, actual_fn());
     }
@@ -74,48 +74,48 @@ protected:
 
 // Test that when we have no special environment, we get the default from prefix
 TEST_F(Paths, xfroutNoEnv) {
-    testSocketPath("", "", "", "BIND10_XFROUT_SOCKET_FILE",
+    testSocketPath("", "", "", "BUNDY_XFROUT_SOCKET_FILE",
                    UNIX_XFROUT_SOCKET_FILE, getXfroutSocketPath);
 }
 
 TEST_F(Paths, ddnsNoEnv) {
-    testSocketPath("", "", "", "BIND10_DDNS_SOCKET_FILE",
+    testSocketPath("", "", "", "BUNDY_DDNS_SOCKET_FILE",
                    UNIX_DDNS_SOCKET_FILE, getDDNSSocketPath);
 }
 
-// Override by B10_FROM_BUILD
+// Override by BUNDY_FROM_BUILD
 TEST_F(Paths, xfroutFromBuild) {
     testSocketPath("/from/build", "", "/wrong/path",
-                   "BIND10_XFROUT_SOCKET_FILE", "/from/build/auth_xfrout_conn",
+                   "BUNDY_XFROUT_SOCKET_FILE", "/from/build/auth_xfrout_conn",
                    getXfroutSocketPath);
 }
 
 TEST_F(Paths, ddnsFromBuild) {
-    testSocketPath("/from/build", "", "/wrong/path", "BIND10_DDNS_SOCKET_FILE",
+    testSocketPath("/from/build", "", "/wrong/path", "BUNDY_DDNS_SOCKET_FILE",
                    "/from/build/ddns_socket", getDDNSSocketPath);
 }
 
-// Override by B10_FROM_SOURCE_LOCALSTATEDIR
+// Override by BUNDY_FROM_SOURCE_LOCALSTATEDIR
 TEST_F(Paths, xfroutLocalStatedir) {
     testSocketPath("/wrong/path", "/state/dir", "/wrong/path",
-                   "BIND10_XFROUT_SOCKET_FILE", "/state/dir/auth_xfrout_conn",
+                   "BUNDY_XFROUT_SOCKET_FILE", "/state/dir/auth_xfrout_conn",
                    getXfroutSocketPath);
 }
 
 TEST_F(Paths, ddnsLocalStatedir) {
     testSocketPath("/wrong/path", "/state/dir", "/wrong/path",
-                   "BIND10_DDNS_SOCKET_FILE", "/state/dir/ddns_socket",
+                   "BUNDY_DDNS_SOCKET_FILE", "/state/dir/ddns_socket",
                    getDDNSSocketPath);
 }
 
-// Override by BIND10_xxx_SOCKET_FILE explicitly
+// Override by BUNDY_xxx_SOCKET_FILE explicitly
 TEST_F(Paths, xfroutFromEnv) {
-    testSocketPath("", "", "/the/path/to/file", "BIND10_XFROUT_SOCKET_FILE",
+    testSocketPath("", "", "/the/path/to/file", "BUNDY_XFROUT_SOCKET_FILE",
                    "/the/path/to/file", getXfroutSocketPath);
 }
 
 TEST_F(Paths, ddnsFromEnv) {
-    testSocketPath("", "", "/the/path/to/file", "BIND10_DDNS_SOCKET_FILE",
+    testSocketPath("", "", "/the/path/to/file", "BUNDY_DDNS_SOCKET_FILE",
                    "/the/path/to/file", getDDNSSocketPath);
 }
 

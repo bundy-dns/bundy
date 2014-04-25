@@ -35,7 +35,7 @@
 
 #include <hooks/hooks.h>
 
-using namespace isc::hooks;
+using namespace bundy::hooks;
 
 extern "C" {
 
@@ -104,7 +104,7 @@ hook_nonstandard_three(CalloutHandle& handle) {
 
 int
 version() {
-    return (BIND10_HOOKS_VERSION);
+    return (BUNDY_HOOKS_VERSION);
 }
 
 int load(LibraryHandle& handle) {

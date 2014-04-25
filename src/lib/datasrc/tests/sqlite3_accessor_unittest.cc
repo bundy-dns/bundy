@@ -34,13 +34,13 @@
 #include <fstream>
 
 using namespace std;
-using namespace isc::datasrc;
-using namespace isc::datasrc::test;
+using namespace bundy::datasrc;
+using namespace bundy::datasrc::test;
 using boost::lexical_cast;
-using isc::data::ConstElementPtr;
-using isc::data::Element;
-using isc::dns::RRClass;
-using isc::dns::Name;
+using bundy::data::ConstElementPtr;
+using bundy::data::Element;
+using bundy::dns::RRClass;
+using bundy::dns::Name;
 
 namespace {
 // Some test data
@@ -366,7 +366,7 @@ TEST_F(SQLite3AccessorTest, diffIteratorNoRecords) {
     // Get the iterator context.  Difference of version 1 does not exist, so
     // this should throw an exception.
     EXPECT_THROW(accessor->getDiffs(zone_info.second, 1, 1234),
-                 isc::datasrc::NoSuchSerial);
+                 bundy::datasrc::NoSuchSerial);
 
     // Check that an invalid high version number also throws an exception.
     EXPECT_THROW(accessor->getDiffs(zone_info.second, 1231, 2234),
@@ -632,9 +632,9 @@ TEST_F(SQLite3AccessorTest, findPrevious) {
               accessor->findPreviousName(1, "com.example.cname-ext."));
     // Throw when we are before the origin
     EXPECT_THROW(accessor->findPreviousName(1, "com.example."),
-                 isc::NotImplemented);
+                 bundy::NotImplemented);
     EXPECT_THROW(accessor->findPreviousName(1, "a.example."),
-                 isc::NotImplemented);
+                 bundy::NotImplemented);
 }
 
 TEST_F(SQLite3AccessorTest, findPreviousNoData) {
@@ -642,7 +642,7 @@ TEST_F(SQLite3AccessorTest, findPreviousNoData) {
     // The underlying DB/data don't support DNSSEC, so it's not implemented
     // (does it make sense? Or different exception here?)
     EXPECT_THROW(accessor->findPreviousName(3, "com.example.sql2.www."),
-                 isc::NotImplemented);
+                 bundy::NotImplemented);
 }
 
 // Test fixture for creating a db that automatically deletes it before start,
@@ -837,7 +837,7 @@ protected:
         if (system(install_cmd) != 0) {
             // any exception will do, this is failure in test setup, but nice
             // to show the command that fails, and shouldn't be caught
-            isc_throw(isc::Exception,
+            bundy_throw(bundy::Exception,
                       "Error setting up; command failed: " << install_cmd);
         };
         initAccessor(TEST_DATA_BUILDDIR "/test.sqlite3.copied", "IN");
@@ -1630,7 +1630,7 @@ TEST_F(SQLite3Update, deleteZone) {
     zone_id = zone_info.second;
 
     // Calling deleteZone without transaction should fail
-    EXPECT_THROW(accessor->deleteZone(zone_info.first), isc::InvalidOperation);
+    EXPECT_THROW(accessor->deleteZone(zone_info.first), bundy::InvalidOperation);
 
     // Delete the zone.  Then confirm it, both before and after commit.
     accessor->startTransaction();

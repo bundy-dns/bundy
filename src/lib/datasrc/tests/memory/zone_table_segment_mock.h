@@ -22,7 +22,7 @@
 
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 namespace test {
@@ -32,8 +32,8 @@ namespace test {
 // was de-allocated on it.
 class ZoneTableSegmentMock : public ZoneTableSegment {
 public:
-    ZoneTableSegmentMock(const isc::dns::RRClass& rrclass,
-                         isc::util::MemorySegment& mem_sgmt) :
+    ZoneTableSegmentMock(const bundy::dns::RRClass& rrclass,
+                         bundy::util::MemorySegment& mem_sgmt) :
         ZoneTableSegment(rrclass),
         impl_type_("mock"),
         mem_sgmt_(mem_sgmt),
@@ -48,12 +48,12 @@ public:
         return (impl_type_);
     }
 
-    virtual void reset(MemorySegmentOpenMode, isc::data::ConstElementPtr) {
-        isc_throw(isc::NotImplemented, "reset() is not implemented");
+    virtual void reset(MemorySegmentOpenMode, bundy::data::ConstElementPtr) {
+        bundy_throw(bundy::NotImplemented, "reset() is not implemented");
     }
 
     virtual void clear() {
-        isc_throw(isc::NotImplemented, "clear() is not implemented");
+        bundy_throw(bundy::NotImplemented, "clear() is not implemented");
     }
 
     virtual ZoneTableHeader& getHeader() {
@@ -64,7 +64,7 @@ public:
         return (header_);
     }
 
-    virtual isc::util::MemorySegment& getMemorySegment() {
+    virtual bundy::util::MemorySegment& getMemorySegment() {
         return (mem_sgmt_);
     }
 
@@ -78,14 +78,14 @@ public:
 
 private:
     std::string impl_type_;
-    isc::util::MemorySegment& mem_sgmt_;
+    bundy::util::MemorySegment& mem_sgmt_;
     ZoneTableHeader header_;
 };
 
 } // namespace test
 } // namespace memory
 } // namespace datasrc
-} // namespace isc
+} // namespace bundy
 
 #endif // DATASRC_MEMORY_ZONE_TABLE_SEGMENT_TEST_H
 

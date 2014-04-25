@@ -20,14 +20,14 @@ import socket
 import sys
 import io
 from datetime import datetime
-from isc.testutils.tsigctx_mock import MockTSIGContext
-from isc.testutils.ccsession_mock import MockModuleCCSession
-from isc.testutils.rrset_utils import *
+from bundy.testutils.tsigctx_mock import MockTSIGContext
+from bundy.testutils.ccsession_mock import MockModuleCCSession
+from bundy.testutils.rrset_utils import *
 from xfrin import *
 import xfrin
-from isc.xfrin.diff import Diff
-import isc.log
-from isc.server_common.tsig_keyring import init_keyring, get_keyring
+from bundy.xfrin.diff import Diff
+import bundy.log
+from bundy.server_common.tsig_keyring import init_keyring, get_keyring
 # If we use any python library that is basically a wrapper for
 # a library we use as well (like sqlite3 in our datasources),
 # we must make sure we import ours first; If we have special
@@ -132,7 +132,7 @@ class XfrinTestTimeoutException(Exception):
 class MockCC(MockModuleCCSession, ConfigData):
     def __init__(self):
         super().__init__()
-        module_spec = isc.config.module_spec_from_file(
+        module_spec = bundy.config.module_spec_from_file(
             xfrin.SPECFILE_LOCATION)
         ConfigData.__init__(self, module_spec)
         # For inspection
@@ -191,7 +191,7 @@ class MockDataSourceClient():
         if zone_name == TEST_ZONE_NAME or \
                 zone_name == Name('no-soa.example') or \
                 zone_name == Name('dup-soa.example'):
-            return (isc.datasrc.DataSourceClient.SUCCESS, self)
+            return (bundy.datasrc.DataSourceClient.SUCCESS, self)
         elif zone_name == Name('no-such-zone.example'):
             return (DataSourceClient.NOTFOUND, None)
         elif zone_name == Name('partial-match-zone.example'):
@@ -235,7 +235,7 @@ class MockDataSourceClient():
 
     def commit(self):
         if self.force_fail:
-            raise isc.datasrc.Error('Updater.commit() failed')
+            raise bundy.datasrc.Error('Updater.commit() failed')
         self.committed_diffs.append(self.diffs)
         self.diffs = []
 
@@ -261,7 +261,7 @@ class MockDataSrcClientsMgr():
         # the expected arguments and exceptions are handled.  if we need more
         # variations in tests, this mock method should be extended.
         self.reconfigure_param.append((arg1, arg2))
-        raise isc.server_common.datasrc_clients_mgr.ConfigError(
+        raise bundy.server_common.datasrc_clients_mgr.ConfigError(
             'reconfigure failure')
 
     def find(self, zone_name, want_exact_match, want_finder):
@@ -429,14 +429,14 @@ class TestXfrinInitialSOA(TestXfrinState):
 
     def test_handle_ixfr_uptodate(self):
         self.conn._request_type = RRType.IXFR
-        self.conn._request_serial = isc.dns.Serial(1234) # same as soa_rrset
+        self.conn._request_serial = bundy.dns.Serial(1234) # same as soa_rrset
         self.assertTrue(self.state.handle_rr(self.conn, soa_rrset))
         self.assertEqual(type(XfrinIXFRUptodate()),
                          type(self.conn.get_xfrstate()))
 
     def test_handle_ixfr_uptodate2(self):
         self.conn._request_type = RRType.IXFR
-        self.conn._request_serial = isc.dns.Serial(1235) # > soa_rrset
+        self.conn._request_serial = bundy.dns.Serial(1235) # > soa_rrset
         self.assertTrue(self.state.handle_rr(self.conn, soa_rrset))
         self.assertEqual(type(XfrinIXFRUptodate()),
                          type(self.conn.get_xfrstate()))
@@ -445,7 +445,7 @@ class TestXfrinInitialSOA(TestXfrinState):
         # Similar to the previous case, but checking serial number arithmetic
         # comparison
         self.conn._request_type = RRType.IXFR
-        self.conn._request_serial = isc.dns.Serial(0xffffffff)
+        self.conn._request_serial = bundy.dns.Serial(0xffffffff)
         self.assertTrue(self.state.handle_rr(self.conn, soa_rrset))
         self.assertEqual(type(XfrinFirstData()),
                          type(self.conn.get_xfrstate()))
@@ -453,7 +453,7 @@ class TestXfrinInitialSOA(TestXfrinState):
     def test_handle_axfr_uptodate(self):
         # "request serial" should matter only for IXFR
         self.conn._request_type = RRType.AXFR
-        self.conn._request_serial = isc.dns.Serial(1234) # same as soa_rrset
+        self.conn._request_serial = bundy.dns.Serial(1234) # same as soa_rrset
         self.assertTrue(self.state.handle_rr(self.conn, soa_rrset))
         self.assertEqual(type(XfrinFirstData()),
                          type(self.conn.get_xfrstate()))
@@ -467,7 +467,7 @@ class TestXfrinFirstData(TestXfrinState):
         self.state = XfrinFirstData()
         self.conn._request_type = RRType.IXFR
         # arbitrary chosen serial < 1234:
-        self.conn._request_serial = isc.dns.Serial(1230)
+        self.conn._request_serial = bundy.dns.Serial(1230)
         self.conn._diff = None           # should be replaced in the AXFR case
 
     def test_handle_ixfr_begin_soa(self):
@@ -578,7 +578,7 @@ class TestXfrinIXFRAdd(TestXfrinState):
         # We need record the state in 'conn' to check the case where the
         # state doesn't change.
         XfrinIXFRAdd().set_xfrstate(self.conn, XfrinIXFRAdd())
-        self.conn._current_serial = isc.dns.Serial(1230)
+        self.conn._current_serial = bundy.dns.Serial(1230)
         self.state = self.conn.get_xfrstate()
 
     def test_handle_add_rr(self):
@@ -590,7 +590,7 @@ class TestXfrinIXFRAdd(TestXfrinState):
         self.assertEqual(type(XfrinIXFRAdd()), type(self.conn.get_xfrstate()))
 
     def test_handle_end_soa(self):
-        self.conn._end_serial = isc.dns.Serial(1234)
+        self.conn._end_serial = bundy.dns.Serial(1234)
         self.conn._diff.add_data(self.ns_rrset) # put some dummy change
         self.assertTrue(self.state.handle_rr(self.conn, soa_rrset))
         self.assertEqual(type(XfrinIXFREnd()), type(self.conn.get_xfrstate()))
@@ -599,7 +599,7 @@ class TestXfrinIXFRAdd(TestXfrinState):
         self.assertEqual([], self.conn._diff.get_buffer())
 
     def test_handle_new_delete(self):
-        self.conn._end_serial = isc.dns.Serial(1234)
+        self.conn._end_serial = bundy.dns.Serial(1234)
         # SOA RR whose serial is the current one means we are going to a new
         # difference, starting with removing that SOA.
         self.conn._diff.add_data(self.ns_rrset) # put some dummy change
@@ -609,7 +609,7 @@ class TestXfrinIXFRAdd(TestXfrinState):
                          type(self.conn.get_xfrstate()))
 
     def test_handle_new_delete_missing_sig(self):
-        self.conn._end_serial = isc.dns.Serial(1234)
+        self.conn._end_serial = bundy.dns.Serial(1234)
         # SOA RR whose serial is the current one means we are going to a new
         # difference, starting with removing that SOA.
         self.conn._diff.add_data(self.ns_rrset) # put some dummy change
@@ -632,7 +632,7 @@ class TestXfrinIXFRAdd(TestXfrinState):
 
     def test_handle_out_of_sync(self):
         # getting SOA with an inconsistent serial.  This is an error.
-        self.conn._end_serial = isc.dns.Serial(1235)
+        self.conn._end_serial = bundy.dns.Serial(1235)
         self.assertRaises(XfrinProtocolError, self.state.handle_rr,
                           self.conn, soa_rrset)
 
@@ -668,7 +668,7 @@ class TestXfrinAXFR(TestXfrinState):
     def setUp(self):
         super().setUp()
         self.state = XfrinAXFR()
-        self.conn._end_serial = isc.dns.Serial(1234)
+        self.conn._end_serial = bundy.dns.Serial(1234)
 
     def test_handle_rr(self):
         """
@@ -1003,7 +1003,7 @@ class TestAXFR(TestXfrinConnection):
         def message_has_tsig(data):
             # a simple check if the actual data contains a TSIG RR.
             # At our level this simple check should suffice; other detailed
-            # tests regarding the TSIG protocol are done in the isc.dns module.
+            # tests regarding the TSIG protocol are done in the bundy.dns module.
             msg = Message(Message.PARSE)
             msg.from_wire(data)
             return msg.get_tsig_record() is not None
@@ -1656,7 +1656,7 @@ class TestIXFRResponse(TestXfrinConnection):
 
         super().setUp()
         self.conn._query_id = self.conn.qid = 1035
-        self.conn._request_serial = isc.dns.Serial(1230)
+        self.conn._request_serial = bundy.dns.Serial(1230)
         self.conn._request_type = RRType.IXFR
         self.conn._datasrc_client = MockDataSourceClient()
         XfrinInitialSOA().set_xfrstate(self.conn, XfrinInitialSOA())
@@ -2126,15 +2126,15 @@ class TestStatisticsXfrinConn(TestXfrinConnection):
     def setUp(self):
         super().setUp()
         # fake datetime
-        self.__orig_datetime = isc.statistics.counters.datetime
-        self.__orig_start_timer = isc.statistics.counters._start_timer
+        self.__orig_datetime = bundy.statistics.counters.datetime
+        self.__orig_start_timer = bundy.statistics.counters._start_timer
         time1 = datetime(2000, 1, 1, 0, 0, 0, 0)
         time2 = datetime(2000, 1, 1, 0, 0, 0, 1)
         class FakeDateTime:
             @classmethod
             def now(cls): return time2
-        isc.statistics.counters.datetime = FakeDateTime
-        isc.statistics.counters._start_timer = lambda : time1
+        bundy.statistics.counters.datetime = FakeDateTime
+        bundy.statistics.counters._start_timer = lambda : time1
         delta = time2 - time1
         self._const_sec = round(delta.days * 86400 + delta.seconds +
                                 delta.microseconds * 1E-6, 6)
@@ -2156,8 +2156,8 @@ class TestStatisticsXfrinConn(TestXfrinConnection):
 
     def tearDown(self):
         super().tearDown()
-        isc.statistics.counters.datetime = self.__orig_datetime
-        isc.statistics.counters._start_timer = self.__orig_start_timer
+        bundy.statistics.counters.datetime = self.__orig_datetime
+        bundy.statistics.counters._start_timer = self.__orig_start_timer
 
     @property
     def _ipver(self):
@@ -2167,11 +2167,11 @@ class TestStatisticsXfrinConn(TestXfrinConnection):
         '''checks exception being raised if not incremented statistics
         counter gotten'''
         for (name, exp) in self.__name_to_perzone_counter:
-            self.assertRaises(isc.cc.data.DataNotFoundError,
+            self.assertRaises(bundy.cc.data.DataNotFoundError,
                               self.conn._counters.get, self.__zones,
                               TEST_ZONE_NAME_STR, name)
         for name in self.__name_to_counter:
-            self.assertRaises(isc.cc.data.DataNotFoundError,
+            self.assertRaises(bundy.cc.data.DataNotFoundError,
                               self.conn._counters.get, name)
 
     def _check_updated_perzone_statistics(self, overwrite):
@@ -2198,7 +2198,7 @@ class TestStatisticsXfrinConn(TestXfrinConnection):
                 msg = '%s: expected %s but actually got %s' % (name, exp, act)
                 self.assertEqual(exp, act, msg=msg)
             else:
-                self.assertRaises(isc.cc.data.DataNotFoundError,
+                self.assertRaises(bundy.cc.data.DataNotFoundError,
                                   self.conn._counters.get, name)
 
 class TestStatisticsXfrinAXFRv4(TestStatisticsXfrinConn):
@@ -2744,14 +2744,14 @@ class TestXfrin(unittest.TestCase):
 
         # list.find() raises an exception
         self.xfr._datasrc_clients_mgr.found_datasrc_client = \
-            isc.datasrc.Error('test exception')
+            bundy.datasrc.Error('test exception')
         self.assertEqual(1, self.xfr.command_handler("retransfer",
                                                      self.args)['result'][0])
 
         # datasrc.find() raises an exception
         class RaisingkDataSourceClient(MockDataSourceClient):
             def find_zone(self, zone_name):
-                raise isc.datasrc.Error('test exception')
+                raise bundy.datasrc.Error('test exception')
         self.xfr._datasrc_clients_mgr.found_datasrc_client = \
             RaisingkDataSourceClient()
         self.assertEqual(1, self.xfr.command_handler("retransfer",
@@ -2831,9 +2831,9 @@ class TestXfrin(unittest.TestCase):
         self.assertEqual(self.xfr._max_transfers_in, 3)
 
     def test_command_handler_getstats(self):
-        module_spec = isc.config.module_spec_from_file(
+        module_spec = bundy.config.module_spec_from_file(
             xfrin.SPECFILE_LOCATION)
-        ans = isc.config.parse_answer(
+        ans = bundy.config.parse_answer(
             self.xfr.command_handler("getstats", None))
         self.assertEqual(0, ans[0])
         self.assertTrue(module_spec.validate_statistics(False, ans[1]))
@@ -3127,7 +3127,7 @@ def raise_interrupt():
     raise KeyboardInterrupt()
 
 def raise_ccerror():
-    raise isc.cc.session.SessionError('test error')
+    raise bundy.cc.session.SessionError('test error')
 
 def raise_exception():
     raise Exception('test exception')
@@ -3160,16 +3160,21 @@ class TestXfrinProcessMockCC:
 
 class TestXfrinProcessMockCCSession:
     def __init__(self):
-        self.send_called = False
-        self.send_called_correctly = False
+        self.send_called = 0    # number of group_sendmsg() called
+        self.notify_sent_correctly = False
         self.recv_called = False
         self.recv_called_correctly = False
 
     def group_sendmsg(self, msg, module, want_answer=False):
-        self.send_called = True
-        if module == 'Auth' and msg['command'][0] == 'loadzone':
-            self.send_called_correctly = True
-            seq = "random-e068c2de26d760f20cf10afc4b87ef0f"
+        self.send_called += 1
+        if module == 'notifications/ZoneUpdateListener':
+            notification = msg['notification']
+            if (notification[0] == 'zone_updated' and
+                Name(notification[1]['origin']) == Name('example.org') and
+                notification[1]['class'] == 'IN' and
+                notification[1]['datasource'] == 'test-datasrc'):
+                self.notify_sent_correctly = True
+                return "random-e068c2de26d760f20cf10afc4b87ef0f"
         else:
             seq = None
 
@@ -3177,8 +3182,6 @@ class TestXfrinProcessMockCCSession:
 
     def group_recvmsg(self, message, seq):
         self.recv_called = True
-        if message == False and seq == "random-e068c2de26d760f20cf10afc4b87ef0f":
-            self.recv_called_correctly = True
         # return values are ignored
         return (None, None)
 
@@ -3245,13 +3248,13 @@ class TestXfrinProcess(unittest.TestCase):
         """
         return "example.org/IN"
 
-    def publish_xfrin_news(self, zone_name, rrclass, ret):
+    def publish_xfrin_news(self, datasrc_name, zone_name, rrclass, ret):
         """
         Part of pretending to be the server as well. This just logs the
         success/failure of the previous operation.
         """
         if ret == XFRIN_OK:
-            xfrin._do_auth_loadzone(self, zone_name, rrclass)
+            xfrin._notify_zoneupdate(self, datasrc_name, zone_name, rrclass)
 
         self.__published.append(ret)
 
@@ -3274,10 +3277,15 @@ class TestXfrinProcess(unittest.TestCase):
         and expected sequence of transfers is passed to specify what test
         should happen.
         """
+        class MyDataSourceClient:
+            # process_xfrin() will eventually call this method, so we need to
+            # fake it.  We only need this method for the purpose of this test.
+            def get_datasource_name(self):
+                return 'test-datasrc'
         self.__rets = rets
         published = rets[-1]
         xfrin.process_xfrin(self, XfrinRecorder(), Name("example.org."),
-                            RRClass.IN, None, zone_soa, None,
+                            RRClass.IN, MyDataSourceClient(), zone_soa, None,
                             TEST_MASTER_IPV4_ADDRINFO, True, None,
                             request_ixfr,
                             xfrin.Counters(xfrin.SPECFILE_LOCATION),
@@ -3294,10 +3302,9 @@ class TestXfrinProcess(unittest.TestCase):
         """
         self.__do_test([XFRIN_OK], [RRType.IXFR], ZoneInfo.REQUEST_IXFR_FIRST)
         # Check there was loadzone command
-        self.assertTrue(self._send_cc_session.send_called)
-        self.assertTrue(self._send_cc_session.send_called_correctly)
-        self.assertTrue(self._send_cc_session.recv_called)
-        self.assertTrue(self._send_cc_session.recv_called_correctly)
+        self.assertEqual(1, self._send_cc_session.send_called)
+        self.assertTrue(self._send_cc_session.notify_sent_correctly)
+        self.assertFalse(self._send_cc_session.recv_called)
 
     def test_axfr_ok(self):
         """
@@ -3346,10 +3353,9 @@ class TestXfrinProcess(unittest.TestCase):
         """
         self.__do_test([XFRIN_OK], [RRType.IXFR],
                        ZoneInfo.REQUEST_IXFR_FIRST)
-        self.assertTrue(self._send_cc_session.send_called)
-        self.assertTrue(self._send_cc_session.send_called_correctly)
-        self.assertTrue(self._send_cc_session.recv_called)
-        self.assertTrue(self._send_cc_session.recv_called_correctly)
+        self.assertEqual(1, self._send_cc_session.send_called)
+        self.assertTrue(self._send_cc_session.notify_sent_correctly)
+        self.assertFalse(self._send_cc_session.recv_called)
 
     def test_initial_request_type(self):
         """Check initial xfr reuqest type (AXFR or IXFR).
@@ -3382,14 +3388,14 @@ class TestFormatting(unittest.TestCase):
     # (ticket #1379), these tests should be moved with them.
     def test_format_zone_str(self):
         self.assertEqual("example.com/IN",
-                         format_zone_str(isc.dns.Name("example.com"),
-                         isc.dns.RRClass("IN")))
+                         format_zone_str(bundy.dns.Name("example.com"),
+                         bundy.dns.RRClass("IN")))
         self.assertEqual("example.com/CH",
-                         format_zone_str(isc.dns.Name("example.com"),
-                         isc.dns.RRClass("CH")))
+                         format_zone_str(bundy.dns.Name("example.com"),
+                         bundy.dns.RRClass("CH")))
         self.assertEqual("example.org/IN",
-                         format_zone_str(isc.dns.Name("example.org"),
-                         isc.dns.RRClass("IN")))
+                         format_zone_str(bundy.dns.Name("example.org"),
+                         bundy.dns.RRClass("IN")))
 
     def test_format_addrinfo(self):
         # This test may need to be updated if the input type is changed,
@@ -3512,7 +3518,7 @@ class TestXfrinConnectionSocketCounter(unittest.TestCase):
         raise self.expception
 
     def test_open(self):
-        self.assertRaises(isc.cc.data.DataNotFoundError,
+        self.assertRaises(bundy.cc.data.DataNotFoundError,
                           self.conn._counters.get,
                           'socket', self._ipver, 'tcp', 'open')
         self.conn.create_socket(self._master_addrinfo[0],
@@ -3521,7 +3527,7 @@ class TestXfrinConnectionSocketCounter(unittest.TestCase):
                 'socket', self._ipver, 'tcp', 'open'))
 
     def test_openfail(self):
-        self.assertRaises(isc.cc.data.DataNotFoundError,
+        self.assertRaises(bundy.cc.data.DataNotFoundError,
                           self.conn._counters.get,
                           'socket', self._ipver, 'tcp', 'openfail')
         orig_create_socket = xfrin.asyncore.dispatcher.create_socket
@@ -3536,7 +3542,7 @@ class TestXfrinConnectionSocketCounter(unittest.TestCase):
             xfrin.asyncore.dispatcher.create_socket = orig_create_socket
 
     def test_close(self):
-        self.assertRaises(isc.cc.data.DataNotFoundError,
+        self.assertRaises(bundy.cc.data.DataNotFoundError,
                           self.conn._counters.get,
                           'socket', self._ipver, 'tcp', 'close')
         orig_socket_close = xfrin.asyncore.dispatcher.close
@@ -3549,7 +3555,7 @@ class TestXfrinConnectionSocketCounter(unittest.TestCase):
             xfrin.asyncore.dispatcher.close = orig_socket_close
 
     def test_conn(self):
-        self.assertRaises(isc.cc.data.DataNotFoundError,
+        self.assertRaises(bundy.cc.data.DataNotFoundError,
                           self.conn._counters.get,
                           'socket', self._ipver, 'tcp', 'conn')
         orig_socket_connect = xfrin.asyncore.dispatcher.connect
@@ -3562,7 +3568,7 @@ class TestXfrinConnectionSocketCounter(unittest.TestCase):
             xfrin.asyncore.dispatcher.connect = orig_socket_connect
 
     def test_connfail(self):
-        self.assertRaises(isc.cc.data.DataNotFoundError,
+        self.assertRaises(bundy.cc.data.DataNotFoundError,
                           self.conn._counters.get,
                           'socket', self._ipver, 'tcp', 'connfail')
         orig_socket_connect = xfrin.asyncore.dispatcher.connect
@@ -3577,7 +3583,7 @@ class TestXfrinConnectionSocketCounter(unittest.TestCase):
             xfrin.asyncore.dispatcher.connect = orig_socket_connect
 
     def test_senderr(self):
-        self.assertRaises(isc.cc.data.DataNotFoundError,
+        self.assertRaises(bundy.cc.data.DataNotFoundError,
                           self.conn._counters.get,
                           'socket', self._ipver, 'tcp', 'senderr')
         orig_socket_send = xfrin.asyncore.dispatcher.send
@@ -3590,7 +3596,7 @@ class TestXfrinConnectionSocketCounter(unittest.TestCase):
             xfrin.asyncore.dispatcher.send = orig_socket_send
 
     def test_recverr(self):
-        self.assertRaises(isc.cc.data.DataNotFoundError,
+        self.assertRaises(bundy.cc.data.DataNotFoundError,
                           self.conn._counters.get,
                           'socket', self._ipver, 'tcp', 'recverr')
         orig_socket_recv = xfrin.asyncore.dispatcher.recv
@@ -3613,7 +3619,7 @@ class TestXfrinConnectionSocketCounterV6(TestXfrinConnectionSocketCounter):
 
 if __name__== "__main__":
     try:
-        isc.log.resetUnitTestRootLogger()
+        bundy.log.resetUnitTestRootLogger()
         unittest.main()
     except KeyboardInterrupt as e:
         print(e)

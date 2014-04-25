@@ -26,7 +26,7 @@
 
 #include <coroutine.h>
 
-namespace isc {
+namespace bundy {
 namespace asiodns {
 
 //
@@ -45,8 +45,8 @@ public:
     /// \param af address family, either AF_INET or AF_INET6
     /// \param lookup the callbackprovider for DNS lookup events
     /// \param answer the callbackprovider for DNS answer events
-    /// \throw isc::InvalidParameter if af is neither AF_INET nor AF_INET6
-    /// \throw isc::asiolink::IOError when a low-level error happens, like the
+    /// \throw bundy::InvalidParameter if af is neither AF_INET nor AF_INET6
+    /// \throw bundy::asiolink::IOError when a low-level error happens, like the
     ///     fd is not a valid descriptor.
     UDPServer(asio::io_service& io_service, int fd, int af,
               DNSLookup* lookup = NULL, DNSAnswer* answer = NULL);
@@ -93,5 +93,5 @@ private:
 };
 
 } // namespace asiodns
-} // namespace isc
+} // namespace bundy
 #endif // UDP_SERVER_H

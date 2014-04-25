@@ -22,7 +22,7 @@
 
 #include <vector>
 
-// BEGIN_ISC_NAMESPACE
+// BEGIN_BUNDY_NAMESPACE
 
 // BEGIN_COMMON_DECLARATIONS
 // END_COMMON_DECLARATIONS
@@ -73,7 +73,7 @@ public:
     /// \param data The OPTION-DATA field of the pseudo RR.
     /// \param length The size of the \c data argument. OPTION-LENGTH is
     /// set to this size.
-    /// \throw \c isc::InvalidParameter if this pseudo RR would cause
+    /// \throw \c bundy::InvalidParameter if this pseudo RR would cause
     /// the OPT RDATA to overflow its RDLENGTH.
     void appendPseudoRR(uint16_t code, const uint8_t* data, uint16_t length);
 
@@ -90,7 +90,7 @@ private:
 };
 
 // END_RDATA_NAMESPACE
-// END_ISC_NAMESPACE
+// END_BUNDY_NAMESPACE
 // END_HEADER_GUARD
 
 // Local Variables: 

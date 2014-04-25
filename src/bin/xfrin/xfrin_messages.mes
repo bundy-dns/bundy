@@ -15,9 +15,9 @@
 # No namespace declaration - these constants go in the global namespace
 # of the xfrin messages python module.
 
-% XFRIN_AUTH_LOADZONE sending Auth loadzone for origin=%1, class=%2
-There was a successful zone transfer.  We send the "loadzone" command for the
-zone to b10-auth.
+% XFRIN_NOTIFY_ZONEUPDATE sending notification of updated on zone %1/%2
+There was a successful zone transfer, and bundy-xfrin sent out a notification
+message about the update of the zone to interested modules.
 
 % XFRIN_AXFR_INCONSISTENT_SOA AXFR SOAs are inconsistent for %1: %2 expected, %3 received
 The serial fields of the first and last SOAs of AXFR (including AXFR-style
@@ -65,7 +65,7 @@ Configuration for the global data sources is updated, but the update
 cannot be applied to xfrin.  The xfrin module will still keep running
 with the previous configuration, but the cause of the failure and
 other log messages must be carefully examined because if only xfrin
-rejects the new configuration then the entire BIND 10 system will have
+rejects the new configuration then the entire BUNDY system will have
 inconsistent state among different modules.  If other modules accept
 the update but xfrin produces this error, the xfrin module should
 probably be restarted.
@@ -76,10 +76,10 @@ but could not find a data source where the specified zone belongs.
 There can be several reasons for this error: it may be a simple
 misspelling in the xfrin or zonemgr configuration, or in the user
 supplied parameter if it is triggered by an external command (such as
-from bindctl).  Another possibility is that this is the initial transfer
+from bundyctl).  Another possibility is that this is the initial transfer
 for a newly setup secondary zone.  In this case at least an initial empty zone
 must be created in one of configured data sources.  This can be done by
-the -e option of b10-loadzone.
+the -e option of bundy-loadzone.
 
 % XFRIN_EXITING exiting
 The xfrin daemon is exiting.

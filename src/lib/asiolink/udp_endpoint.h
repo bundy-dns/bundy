@@ -21,7 +21,7 @@
 
 #include <asiolink/io_endpoint.h>
 
-namespace isc {
+namespace bundy {
 namespace asiolink {
 
 /// \brief The \c UDPEndpoint class is a concrete derived class of
@@ -115,7 +115,7 @@ private:
 };
 
 } // namespace asiolink
-} // namespace isc
+} // namespace bundy
 #endif // UDP_ENDPOINT_H
 
 // Local Variables:

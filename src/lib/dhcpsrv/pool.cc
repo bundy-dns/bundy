@@ -17,17 +17,17 @@
 #include <dhcpsrv/pool.h>
 #include <sstream>
 
-using namespace isc::asiolink;
+using namespace bundy::asiolink;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
-Pool::Pool(Lease::Type type, const isc::asiolink::IOAddress& first,
-           const isc::asiolink::IOAddress& last)
+Pool::Pool(Lease::Type type, const bundy::asiolink::IOAddress& first,
+           const bundy::asiolink::IOAddress& last)
     :id_(getNextID()), first_(first), last_(last), type_(type) {
 }
 
-bool Pool::inRange(const isc::asiolink::IOAddress& addr) const {
+bool Pool::inRange(const bundy::asiolink::IOAddress& addr) const {
     return (first_.smallerEqual(addr) && addr.smallerEqual(last_));
 }
 
@@ -39,30 +39,30 @@ Pool::toText() const {
     return (tmp.str());
 }
 
-Pool4::Pool4(const isc::asiolink::IOAddress& first,
-             const isc::asiolink::IOAddress& last)
+Pool4::Pool4(const bundy::asiolink::IOAddress& first,
+             const bundy::asiolink::IOAddress& last)
 :Pool(Lease::TYPE_V4, first, last) {
     // check if specified address boundaries are sane
     if (!first.isV4() || !last.isV4()) {
-        isc_throw(BadValue, "Invalid Pool4 address boundaries: not IPv4");
+        bundy_throw(BadValue, "Invalid Pool4 address boundaries: not IPv4");
     }
 
     if (last < first) {
-        isc_throw(BadValue, "Upper boundary is smaller than lower boundary.");
+        bundy_throw(BadValue, "Upper boundary is smaller than lower boundary.");
     }
 }
 
-Pool4::Pool4( const isc::asiolink::IOAddress& prefix, uint8_t prefix_len)
+Pool4::Pool4( const bundy::asiolink::IOAddress& prefix, uint8_t prefix_len)
 :Pool(Lease::TYPE_V4, prefix, IOAddress("0.0.0.0")) {
 
     // check if the prefix is sane
     if (!prefix.isV4()) {
-        isc_throw(BadValue, "Invalid Pool4 address boundaries: not IPv4");
+        bundy_throw(BadValue, "Invalid Pool4 address boundaries: not IPv4");
     }
 
     // check if the prefix length is sane
     if (prefix_len == 0 || prefix_len > 32) {
-        isc_throw(BadValue, "Invalid prefix length");
+        bundy_throw(BadValue, "Invalid prefix length");
     }
 
     // Let's now calculate the last address in defined pool
@@ -70,23 +70,23 @@ Pool4::Pool4( const isc::asiolink::IOAddress& prefix, uint8_t prefix_len)
 }
 
 
-Pool6::Pool6(Lease::Type type, const isc::asiolink::IOAddress& first,
-             const isc::asiolink::IOAddress& last)
+Pool6::Pool6(Lease::Type type, const bundy::asiolink::IOAddress& first,
+             const bundy::asiolink::IOAddress& last)
     :Pool(type, first, last), prefix_len_(128) {
 
     // check if specified address boundaries are sane
     if (!first.isV6() || !last.isV6()) {
-        isc_throw(BadValue, "Invalid Pool6 address boundaries: not IPv6");
+        bundy_throw(BadValue, "Invalid Pool6 address boundaries: not IPv6");
     }
 
     if ( (type != Lease::TYPE_NA) && (type != Lease::TYPE_TA) &&
          (type != Lease::TYPE_PD)) {
-        isc_throw(BadValue, "Invalid Pool6 type: " << static_cast<int>(type)
+        bundy_throw(BadValue, "Invalid Pool6 type: " << static_cast<int>(type)
                   << ", must be TYPE_IA, TYPE_TA or TYPE_PD");
     }
 
     if (last < first) {
-        isc_throw(BadValue, "Upper boundary is smaller than lower boundary.");
+        bundy_throw(BadValue, "Upper boundary is smaller than lower boundary.");
         // This check is a bit strict. If we decide that it is too strict,
         // we need to comment it and uncomment lines below.
         // On one hand, letting the user specify 2001::f - 2001::1 is nice, but
@@ -102,34 +102,34 @@ Pool6::Pool6(Lease::Type type, const isc::asiolink::IOAddress& first,
     // parameters are for IA and TA only. There is another dedicated
     // constructor for that (it uses prefix/length)
     if ((type != Lease::TYPE_NA) && (type != Lease::TYPE_TA)) {
-        isc_throw(BadValue, "Invalid Pool6 type specified:"
+        bundy_throw(BadValue, "Invalid Pool6 type specified:"
                   << static_cast<int>(type));
     }
 }
 
-Pool6::Pool6(Lease::Type type, const isc::asiolink::IOAddress& prefix,
+Pool6::Pool6(Lease::Type type, const bundy::asiolink::IOAddress& prefix,
              uint8_t prefix_len, uint8_t delegated_len /* = 128 */)
     :Pool(type, prefix, IOAddress("::")), prefix_len_(delegated_len) {
 
     // check if the prefix is sane
     if (!prefix.isV6()) {
-        isc_throw(BadValue, "Invalid Pool6 address boundaries: not IPv6");
+        bundy_throw(BadValue, "Invalid Pool6 address boundaries: not IPv6");
     }
 
     // check if the prefix length is sane
     if (prefix_len == 0 || prefix_len > 128) {
-        isc_throw(BadValue, "Invalid prefix length: " << prefix_len);
+        bundy_throw(BadValue, "Invalid prefix length: " << prefix_len);
     }
 
     if (prefix_len > delegated_len) {
-        isc_throw(BadValue, "Delegated length (" << static_cast<int>(delegated_len)
+        bundy_throw(BadValue, "Delegated length (" << static_cast<int>(delegated_len)
                   << ") must be longer than prefix length ("
                   << static_cast<int>(prefix_len) << ")");
     }
 
     if ( ( (type == Lease::TYPE_NA) || (type == Lease::TYPE_TA)) &&
          (delegated_len != 128)) {
-        isc_throw(BadValue, "For IA or TA pools, delegated prefix length must "
+        bundy_throw(BadValue, "For IA or TA pools, delegated prefix length must "
                   << " be 128.");
     }
 
@@ -150,5 +150,5 @@ Pool6::toText() const {
 }
 
 
-}; // end of isc::dhcp namespace
-}; // end of isc namespace
+}; // end of bundy::dhcp namespace
+}; // end of bundy namespace

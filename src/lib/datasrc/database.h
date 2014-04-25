@@ -35,7 +35,7 @@
 #include <map>
 #include <set>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 
 /// \brief Abstraction of lowlevel database with DNS data
@@ -340,7 +340,7 @@ public:
     ///     records.
     /// \exception any Since any implementation can be used, the caller should
     ///     expect any exception to be thrown.
-    /// \exception isc::NotImplemented in case the database does not support
+    /// \exception bundy::NotImplemented in case the database does not support
     ///     NSEC3
     ///
     /// \param hash The hash part of the NSEC3 name (eg. for a name of NSEC3
@@ -528,7 +528,7 @@ public:
     /// An implementation may choose to skip providing this interface if the
     /// zones managed by that data source are known to not support NSEC3.
     /// In that case the implementation should throw the
-    /// \c isc::NotImplemented exception.
+    /// \c bundy::NotImplemented exception.
     ///
     /// Note that the \c ADD_NSEC3_HASH column of \c columns is expected to
     /// store only the hash label, not the entire owner name.  This is similar
@@ -546,7 +546,7 @@ public:
     ///
     /// \exception DataSourceError Invalid call without starting a transaction,
     /// or other internal database error.
-    /// \exception isc::NotImplemented in case the database does not support
+    /// \exception bundy::NotImplemented in case the database does not support
     ///     NSEC3
     ///
     /// \param columns An array of strings that defines a record to be added
@@ -605,7 +605,7 @@ public:
     ///
     /// \exception DataSourceError Invalid call without starting a transaction,
     /// or other internal database error.
-    /// \exception isc::NotImplemented in case the database does not support
+    /// \exception bundy::NotImplemented in case the database does not support
     ///     NSEC3
     ///
     /// \param params An array of strings that defines a record to be deleted
@@ -804,7 +804,7 @@ public:
     /// of domains.
     ///
     /// \param rname The name to ask for previous of, in reversed form.
-    ///     We use the reversed form (see isc::dns::Name::reverse),
+    ///     We use the reversed form (see bundy::dns::Name::reverse),
     ///     because then the case insensitive order of string representation
     ///     and the DNSSEC order correspond (eg. org.example.a is followed
     ///     by org.example.a.b which is followed by org.example.b, etc).
@@ -871,14 +871,17 @@ public:
     ///
     /// It initializes the client with a database via the given accessor.
     ///
-    /// \exception isc::InvalidParameter if accessor is NULL. It might throw
+    /// \exception bundy::InvalidParameter if accessor is NULL. It might throw
     /// standard allocation exception as well, but doesn't throw anything else.
     ///
+    /// \param datasrc_name The name of the underlying data source.  See the
+    /// base class constructor.
     /// \param rrclass The RR class of the zones that this client will handle.
     /// \param accessor The accessor to the database to use to get data.
     ///  As the parameter suggests, the client takes ownership of the accessor
     ///  and will delete it when itself deleted.
-    DatabaseClient(isc::dns::RRClass rrclass,
+    DatabaseClient(const std::string& datasrc_name,
+                   bundy::dns::RRClass rrclass,
                    boost::shared_ptr<DatabaseAccessor> accessor);
 
 
@@ -908,12 +911,12 @@ public:
         ///     it from database, but as the DatabaseClient just searched for
         ///     the zone using the name, it should have it.
         Finder(boost::shared_ptr<DatabaseAccessor> database, int zone_id,
-               const isc::dns::Name& origin);
+               const bundy::dns::Name& origin);
 
         // The following three methods are just implementations of inherited
         // ZoneFinder's pure virtual methods.
-        virtual isc::dns::Name getOrigin() const;
-        virtual isc::dns::RRClass getClass() const;
+        virtual bundy::dns::Name getOrigin() const;
+        virtual bundy::dns::RRClass getClass() const;
 
         /// \brief Find an RRset in the datasource
         ///
@@ -947,8 +950,8 @@ public:
         /// \param type The RRType to find
         /// \param options Options about how to search.
         ///     See ZoneFinder::FindOptions.
-        virtual ZoneFinderContextPtr find(const isc::dns::Name& name,
-                                          const isc::dns::RRType& type,
+        virtual ZoneFinderContextPtr find(const bundy::dns::Name& name,
+                                          const bundy::dns::RRType& type,
                                           const FindOptions options =
                                           FIND_DEFAULT);
         /// \brief Implementation of the ZoneFinder::findAll method.
@@ -957,15 +960,15 @@ public:
         /// RRsets in the named node through the target parameter in successful
         /// case. It acts the same in the unsuccessful one.
         virtual ZoneFinderContextPtr findAll(
-            const isc::dns::Name& name,
-            std::vector<isc::dns::ConstRRsetPtr>& target,
+            const bundy::dns::Name& name,
+            std::vector<bundy::dns::ConstRRsetPtr>& target,
             const FindOptions options = FIND_DEFAULT);
 
         /// Look for NSEC3 for proving (non)existence of given name.
         ///
         /// See documentation in \c Zone.
         virtual FindNSEC3Result
-        findNSEC3(const isc::dns::Name& name, bool recursive);
+        findNSEC3(const bundy::dns::Name& name, bool recursive);
 
         /// \brief The zone ID
         ///
@@ -986,7 +989,7 @@ public:
     private:
         boost::shared_ptr<DatabaseAccessor> accessor_;
         const int zone_id_;
-        const isc::dns::Name origin_;
+        const bundy::dns::Name origin_;
 
         /// \brief Shortcut name for the result of getRRsets
         typedef std::pair<bool, std::map<dns::RRType, dns::RRsetPtr> >
@@ -1003,9 +1006,9 @@ public:
         /// Parameters and behaviour is like of those combined together.
         /// Unexpected parameters, like type != ANY and having the target, are
         /// just that - unexpected and not checked.
-        ResultContext findInternal(const isc::dns::Name& name,
-                                   const isc::dns::RRType& type,
-                                   std::vector<isc::dns::ConstRRsetPtr>*
+        ResultContext findInternal(const bundy::dns::Name& name,
+                                   const bundy::dns::RRType& type,
+                                   std::vector<bundy::dns::ConstRRsetPtr>*
                                    target,
                                    const FindOptions options = FIND_DEFAULT);
 
@@ -1115,8 +1118,8 @@ public:
             /// \param covering true if a covering NSEC is required; false if
             /// a matching NSEC is required.
             /// \return Any found DNSSEC proof RRset or NULL
-            isc::dns::ConstRRsetPtr getDNSSECRRset(
-                const isc::dns::Name& name, bool covering);
+            bundy::dns::ConstRRsetPtr getDNSSECRRset(
+                const bundy::dns::Name& name, bool covering);
 
             /// \brief Get DNSSEC negative proof for a given name.
             ///
@@ -1127,7 +1130,7 @@ public:
             ///
             /// \param found_set The RRset which may contain an NSEC RRset.
             /// \return Any found DNSSEC proof RRset or NULL
-            isc::dns::ConstRRsetPtr getDNSSECRRset(const FoundRRsets&
+            bundy::dns::ConstRRsetPtr getDNSSECRRset(const FoundRRsets&
                                                    found_set);
 
         private:
@@ -1163,7 +1166,7 @@ public:
 
         /// \brief A simple wrapper for identifying the previous name
         /// of the given name in the underlying database.
-        isc::dns::Name findPreviousName(const isc::dns::Name& name) const;
+        bundy::dns::Name findPreviousName(const bundy::dns::Name& name) const;
 
         /// \brief Search result of \c findDelegationPoint().
         ///
@@ -1185,16 +1188,16 @@ public:
         /// deriving it from a parent class was deemed not worthwhile.
         struct DelegationSearchResult {
             DelegationSearchResult(const ZoneFinder::Result param_code,
-                                   const isc::dns::ConstRRsetPtr param_rrset,
-                                   const isc::dns::ConstRRsetPtr param_ns,
+                                   const bundy::dns::ConstRRsetPtr param_rrset,
+                                   const bundy::dns::ConstRRsetPtr param_ns,
                                    size_t param_last_known) :
                                    code(param_code), rrset(param_rrset),
                                    first_ns(param_ns),
                                    last_known(param_last_known)
             {}
             const ZoneFinder::Result code;          ///< Result code
-            const isc::dns::ConstRRsetPtr rrset;    ///< RRset found
-            const isc::dns::ConstRRsetPtr first_ns; ///< First NS found
+            const bundy::dns::ConstRRsetPtr rrset;    ///< RRset found
+            const bundy::dns::ConstRRsetPtr first_ns; ///< First NS found
             const size_t last_known; ///< No. labels in last non-empty domain
         };
 
@@ -1233,7 +1236,7 @@ public:
         ///         is used later in the find() processing; it is passed back
         ///         to avoid the need to perform a second search to obtain it.
         DelegationSearchResult
-        findDelegationPoint(const isc::dns::Name& name,
+        findDelegationPoint(const bundy::dns::Name& name,
                             const FindOptions options);
 
         /// \brief Find wildcard match
@@ -1276,11 +1279,11 @@ public:
         ///         success due to an exact match).  Also returned if there
         ///         is no match is an indication as to whether there was an
         ///         NXDOMAIN or an NXRRSET.
-        ResultContext findWildcardMatch(const isc::dns::Name& name,
-                                        const isc::dns::RRType& type,
+        ResultContext findWildcardMatch(const bundy::dns::Name& name,
+                                        const bundy::dns::RRType& type,
                                         const FindOptions options,
                                         const DelegationSearchResult& dresult,
-                                        std::vector<isc::dns::ConstRRsetPtr>*
+                                        std::vector<bundy::dns::ConstRRsetPtr>*
                                         target, FindDNSSECContext& dnssec_ctx);
 
         /// \brief Handle matching results for name
@@ -1323,13 +1326,13 @@ public:
         ///         the above 4 cases).  The return value is intended to be
         ///         usable as a return value of the caller of this helper
         ///         method.
-        ResultContext findOnNameResult(const isc::dns::Name& name,
-                                       const isc::dns::RRType& type,
+        ResultContext findOnNameResult(const bundy::dns::Name& name,
+                                       const bundy::dns::RRType& type,
                                        const FindOptions options,
                                        const bool is_origin,
                                        const FoundRRsets& found,
                                        const std::string* wildname,
-                                       std::vector<isc::dns::ConstRRsetPtr>*
+                                       std::vector<bundy::dns::ConstRRsetPtr>*
                                        target, FindDNSSECContext& dnssec_ctx);
 
         /// \brief Handle no match for name
@@ -1362,11 +1365,11 @@ public:
         ///         indicating the match type (e.g. CNAME at the wildcard
         ///         match, no RRs of the requested type at the wildcard,
         ///         success due to an exact match).
-        ResultContext findNoNameResult(const isc::dns::Name& name,
-                                       const isc::dns::RRType& type,
+        ResultContext findNoNameResult(const bundy::dns::Name& name,
+                                       const bundy::dns::RRType& type,
                                        FindOptions options,
                                        const DelegationSearchResult& dresult,
-                                       std::vector<isc::dns::ConstRRsetPtr>*
+                                       std::vector<bundy::dns::ConstRRsetPtr>*
                                        target, FindDNSSECContext& dnssec_ctx);
 
         /// Logs condition and creates result
@@ -1390,12 +1393,12 @@ public:
         ///
         /// \return FindResult object constructed from the code and rrset
         ///         arguments.
-        ResultContext logAndCreateResult(const isc::dns::Name& name,
+        ResultContext logAndCreateResult(const bundy::dns::Name& name,
                                          const std::string* wildname,
-                                         const isc::dns::RRType& type,
+                                         const bundy::dns::RRType& type,
                                          ZoneFinder::Result code,
-                                         isc::dns::ConstRRsetPtr rrset,
-                                         const isc::log::MessageID& log_id,
+                                         bundy::dns::ConstRRsetPtr rrset,
+                                         const bundy::log::MessageID& log_id,
                                          FindResultFlags flags) const;
 
         /// \brief Checks if something lives below this domain.
@@ -1427,7 +1430,7 @@ public:
     ///     ZoneFinder being instance of Finder (possible subclass of this class
     ///     may return something else and it may change in future versions), it
     ///     should use it as a ZoneFinder only.
-    virtual FindResult findZone(const isc::dns::Name& name) const;
+    virtual FindResult findZone(const bundy::dns::Name& name) const;
 
     /// \brief Create a zone in the database
     ///
@@ -1437,9 +1440,9 @@ public:
     /// does not, creates it, commits, and returns true. If the zone
     /// does exist already, it does nothing (except abort the transaction)
     /// and returns false.
-    virtual bool createZone(const isc::dns::Name& zone_name);
+    virtual bool createZone(const bundy::dns::Name& zone_name);
 
-    virtual bool deleteZone(const isc::dns::Name& zone_name);
+    virtual bool deleteZone(const bundy::dns::Name& zone_name);
 
     /// \brief Get the zone iterator
     ///
@@ -1449,7 +1452,7 @@ public:
     /// at the same time.
     ///
     /// \exception DataSourceError if the zone doesn't exist.
-    /// \exception isc::NotImplemented if the underlying DatabaseConnection
+    /// \exception bundy::NotImplemented if the underlying DatabaseConnection
     ///     doesn't implement iteration. But in case it is not implemented
     ///     and the zone doesn't exist, DataSourceError is thrown.
     /// \exception Anything else the underlying DatabaseConnection might
@@ -1462,14 +1465,14 @@ public:
     ///                     be that of the first RR read, and TTLs will be
     ///                     adjusted to the lowest one found.
     /// \return Shared pointer to the iterator (it will never be NULL)
-    virtual ZoneIteratorPtr getIterator(const isc::dns::Name& name,
+    virtual ZoneIteratorPtr getIterator(const bundy::dns::Name& name,
                                         bool separate_rrs = false) const;
 
     /// This implementation internally clones the accessor from the one
     /// used in the client and starts a separate transaction using the cloned
     /// accessor.  The returned updater will be able to work separately from
     /// the original client.
-    virtual ZoneUpdaterPtr getUpdater(const isc::dns::Name& name,
+    virtual ZoneUpdaterPtr getUpdater(const bundy::dns::Name& name,
                                       bool replace,
                                       bool journaling = false) const;
 
@@ -1479,12 +1482,12 @@ public:
     /// The returned reader object will be able to work separately from
     /// the original client.
     virtual std::pair<ZoneJournalReader::Result, ZoneJournalReaderPtr>
-    getJournalReader(const isc::dns::Name& zone, uint32_t begin_serial,
+    getJournalReader(const bundy::dns::Name& zone, uint32_t begin_serial,
                      uint32_t end_serial) const;
 
 private:
     /// \brief The RR class that this client handles.
-    const isc::dns::RRClass rrclass_;
+    const bundy::dns::RRClass rrclass_;
 
     /// \brief The accessor to our database.
     const boost::shared_ptr<DatabaseAccessor> accessor_;

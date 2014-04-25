@@ -41,7 +41,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace io {
 class BaseSocketSessionForwarder;
@@ -106,8 +106,8 @@ public:
     /// experimental) purposes.
     /// \param ddns_forwarder Forwarder to which DDNS UPDATE requests
     ///                       are passed to
-    AuthSrv(isc::xfr::AbstractXfroutClient& xfrout_client,
-            isc::util::io::BaseSocketSessionForwarder& ddns_forwarder);
+    AuthSrv(bundy::xfr::AbstractXfroutClient& xfrout_client,
+            bundy::util::io::BaseSocketSessionForwarder& ddns_forwarder);
     ~AuthSrv();
     //@}
 
@@ -131,11 +131,11 @@ public:
     /// \param buffer an \c OutputBuffer for the resposne
     /// \param server Pointer to the \c DNSServer
     ///
-    /// \throw isc::Unexpected Protocol type of \a message is unexpected
-    void processMessage(const isc::asiolink::IOMessage& io_message,
-                        isc::dns::Message& message,
-                        isc::util::OutputBuffer& buffer,
-                        isc::asiodns::DNSServer* server);
+    /// \throw bundy::Unexpected Protocol type of \a message is unexpected
+    void processMessage(const bundy::asiolink::IOMessage& io_message,
+                        bundy::dns::Message& message,
+                        bundy::util::OutputBuffer& buffer,
+                        bundy::asiodns::DNSServer* server);
 
     /// \brief Updates the configuration for the \c AuthSrv object.
     ///
@@ -157,7 +157,7 @@ public:
     /// possibly containing the data source information to be used.
     /// \return An immutable pointer-like object to a data \c Element
     /// containing the result of the update operation.
-    isc::data::ConstElementPtr updateConfig(isc::data::ConstElementPtr config);
+    bundy::data::ConstElementPtr updateConfig(bundy::data::ConstElementPtr config);
 
     /// \brief Returns the command and configuration session for the
     /// \c AuthSrv.
@@ -166,7 +166,7 @@ public:
     ///
     /// \return A pointer to \c ModuleCCSession object stored in the
     /// \c AuthSrv object.  In this implementation it could be NULL.
-    isc::config::ModuleCCSession* getConfigSession() const;
+    bundy::config::ModuleCCSession* getConfigSession() const;
 
     /// \brief Set the command and configuration session for the \c AuthSrv.
     ///
@@ -181,21 +181,21 @@ public:
     ///
     /// \param config_session A pointer to \c ModuleCCSession object to receive
     /// control commands and configuration updates.
-    void setConfigSession(isc::config::ModuleCCSession* config_session);
+    void setConfigSession(bundy::config::ModuleCCSession* config_session);
 
     /// \brief Return this object's ASIO IO Service queue
-    isc::asiolink::IOService& getIOService();
+    bundy::asiolink::IOService& getIOService();
 
     /// \brief Return pointer to the DNS Lookup callback function
-    isc::asiodns::DNSLookup* getDNSLookupProvider() const { return (dns_lookup_); }
+    bundy::asiodns::DNSLookup* getDNSLookupProvider() const { return (dns_lookup_); }
 
     /// \brief Return pointer to the DNS Answer callback function
-    isc::asiodns::DNSAnswer* getDNSAnswerProvider() const { return (dns_answer_); }
+    bundy::asiodns::DNSAnswer* getDNSAnswerProvider() const { return (dns_answer_); }
 
     /// \brief Return data source clients manager.
     ///
     /// \throw None
-    isc::auth::DataSrcClientsMgr& getDataSrcClientsMgr();
+    bundy::auth::DataSrcClientsMgr& getDataSrcClientsMgr();
 
     /// \brief Set the communication session with a separate process for
     /// outgoing zone transfers.
@@ -213,7 +213,7 @@ public:
     /// disconnecting the session and destroying the object when the server
     /// is shutdown.
     ///
-    void setXfrinSession(isc::cc::AbstractSession* xfrin_session);
+    void setXfrinSession(bundy::cc::AbstractSession* xfrin_session);
 
     /// \brief Returns statistics data
     ///
@@ -221,18 +221,18 @@ public:
     /// Counters::get().
     ///
     /// \return JSON format statistics data.
-    isc::data::ConstElementPtr getStatistics() const;
+    bundy::data::ConstElementPtr getStatistics() const;
 
     /**
      * \brief Set and get the addresses we listen on.
      */
-    void setListenAddresses(const isc::server_common::portconfig::AddressList&
+    void setListenAddresses(const bundy::server_common::portconfig::AddressList&
                             addresses);
-    const isc::server_common::portconfig::AddressList& getListenAddresses()
+    const bundy::server_common::portconfig::AddressList& getListenAddresses()
         const;
 
     /// \brief Assign an ASIO DNS Service queue to this Auth object
-    void setDNSService(isc::asiodns::DNSServiceBase& dnss);
+    void setDNSService(bundy::asiodns::DNSServiceBase& dnss);
 
     /// \brief Sets the keyring used for verifying and signing
     ///
@@ -240,24 +240,24 @@ public:
     /// reloading routines of tsig keys replace the actual keyring object.
     /// It is expected the pointer will point to some statically-allocated
     /// object, it doesn't take ownership of it.
-    void setTSIGKeyRing(const boost::shared_ptr<isc::dns::TSIGKeyRing>*
+    void setTSIGKeyRing(const boost::shared_ptr<bundy::dns::TSIGKeyRing>*
                         keyring);
 
     /// \brief Create the internal forwarder for DDNS update messages
     ///
     /// Until this method is called (it is called when the
-    /// start_ddns_forwarder command is sent to b10-auth), b10-auth will
+    /// start_ddns_forwarder command is sent to bundy-auth), bundy-auth will
     /// respond to UPDATE messages with a NOTIMP rcode.
     /// If the internal forwarder was already created, it is destroyed and
-    /// created again. This is useful for instance when b10-ddns is shut
+    /// created again. This is useful for instance when bundy-ddns is shut
     /// down and restarted.
     void createDDNSForwarder();
 
     /// \brief Destroy the internal forwarder for DDNS update messages
     ///
     /// After this method has been called (it is called when the
-    /// stop_ddns_forwarder command is sent to b10-auth), DDNS Update
-    /// messages are no longer forwarded internally, but b10-auth will
+    /// stop_ddns_forwarder command is sent to bundy-auth), DDNS Update
+    /// messages are no longer forwarded internally, but bundy-auth will
     /// immediately respond with a NOTIMP rcode.
     /// If there was no forwarder yet, this method does nothing.
     void destroyDDNSForwarder();
@@ -280,14 +280,22 @@ public:
     /// memory manager for segments, if some are remotely mapped.
     void listsReconfigured();
 
+    /// \brief Notification callback for zone updates.
+    ///
+    /// \param event_name Should be "zone_updated"
+    /// \param params parameters for the zone_updated notification, consisting
+    /// of origin, (RR) class, and data source name.
+    void zoneUpdated(const std::string& event_name,
+                     const bundy::data::ConstElementPtr& params);
+
 private:
-    void reconfigureDone(isc::data::ConstElementPtr request);
+    void reconfigureDone(bundy::data::ConstElementPtr request);
     void foreignCommand(const std::string& command, const std::string&,
-                        const isc::data::ConstElementPtr& params);
+                        const bundy::data::ConstElementPtr& params);
     AuthSrvImpl* impl_;
-    isc::asiodns::DNSLookup* dns_lookup_;
-    isc::asiodns::DNSAnswer* dns_answer_;
-    isc::asiodns::DNSServiceBase* dnss_;
+    bundy::asiodns::DNSLookup* dns_lookup_;
+    bundy::asiodns::DNSAnswer* dns_answer_;
+    bundy::asiodns::DNSServiceBase* dnss_;
 };
 
 #endif // AUTH_SRV_H

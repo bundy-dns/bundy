@@ -63,11 +63,11 @@ appendDigit(const char* name) {
 // Framework functions
 int
 version() {
-    return (BIND10_HOOKS_VERSION);
+    return (BUNDY_HOOKS_VERSION);
 }
 
 int
-load(isc::hooks::LibraryHandle&) {
+load(bundy::hooks::LibraryHandle&) {
     return (appendDigit(LOAD_MARKER_FILE));
 }
 

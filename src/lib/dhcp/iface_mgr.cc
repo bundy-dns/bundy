@@ -39,10 +39,10 @@
 #include <sys/select.h>
 
 using namespace std;
-using namespace isc::asiolink;
-using namespace isc::util::io::internal;
+using namespace bundy::asiolink;
+using namespace bundy::util::io::internal;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 IfaceMgr&
@@ -80,7 +80,7 @@ Iface::closeSockets(const uint16_t family) {
     // @todo Consider replacing the AF_INET and AF_INET6 with some
     // enum which will not be confused with the actual socket type.
     if ((family != AF_INET) && (family != AF_INET6)) {
-        isc_throw(BadValue, "Invalid socket family " << family
+        bundy_throw(BadValue, "Invalid socket family " << family
                   << " specified when requested to close all sockets"
                   << " which belong to this family");
     }
@@ -130,7 +130,7 @@ Iface::getPlainMac() const {
 
 void Iface::setMac(const uint8_t* mac, size_t len) {
     if (len > MAX_MAC_LEN) {
-        isc_throw(OutOfRange, "Interface " << getFullName()
+        bundy_throw(OutOfRange, "Interface " << getFullName()
                   << " was detected to have link address of length "
                   << len << ", but maximum supported length is "
                   << MAX_MAC_LEN);
@@ -139,7 +139,7 @@ void Iface::setMac(const uint8_t* mac, size_t len) {
     memcpy(mac_, mac, len);
 }
 
-bool Iface::delAddress(const isc::asiolink::IOAddress& addr) {
+bool Iface::delAddress(const bundy::asiolink::IOAddress& addr) {
     for (AddressCollection::iterator a = addrs_.begin();
          a!=addrs_.end(); ++a) {
         if (*a==addr) {
@@ -184,15 +184,15 @@ IfaceMgr::IfaceMgr()
         detectIfaces();
 
     } catch (const std::exception& ex) {
-        isc_throw(IfaceDetectError, ex.what());
+        bundy_throw(IfaceDetectError, ex.what());
     }
 }
 
-void Iface::addUnicast(const isc::asiolink::IOAddress& addr) {
+void Iface::addUnicast(const bundy::asiolink::IOAddress& addr) {
     for (Iface::AddressCollection::const_iterator i = unicasts_.begin();
          i != unicasts_.end(); ++i) {
         if (*i == addr) {
-            isc_throw(BadValue, "Address " << addr
+            bundy_throw(BadValue, "Address " << addr
                       << " already defined on the " << name_ << " interface.");
         }
     }
@@ -200,7 +200,7 @@ void Iface::addUnicast(const isc::asiolink::IOAddress& addr) {
 }
 
 bool
-Iface::getAddress4(isc::asiolink::IOAddress& address) const {
+Iface::getAddress4(bundy::asiolink::IOAddress& address) const {
     // Iterate over existing addresses assigned to the interface.
     // Try to find the one that is IPv4.
     const AddressCollection& addrs = getAddresses();
@@ -279,7 +279,7 @@ void
 IfaceMgr::setPacketFilter(const PktFilterPtr& packet_filter) {
     // Do not allow NULL pointer.
     if (!packet_filter) {
-        isc_throw(InvalidPacketFilter, "NULL packet filter object specified for"
+        bundy_throw(InvalidPacketFilter, "NULL packet filter object specified for"
                   " DHCPv4");
     }
     // Different packet filters use different socket types. It does not make
@@ -290,7 +290,7 @@ IfaceMgr::setPacketFilter(const PktFilterPtr& packet_filter) {
     // chance to replace the packet filter if he closes sockets explicitly.
     if (hasOpenSocket(AF_INET)) {
         // There is at least one socket open, so we have to fail.
-        isc_throw(PacketFilterChangeDenied,
+        bundy_throw(PacketFilterChangeDenied,
                   "it is not allowed to set new packet"
                   << " filter when there are open IPv4 sockets - need"
                   << " to close them first");
@@ -302,13 +302,13 @@ IfaceMgr::setPacketFilter(const PktFilterPtr& packet_filter) {
 void
 IfaceMgr::setPacketFilter(const PktFilter6Ptr& packet_filter) {
     if (!packet_filter) {
-        isc_throw(InvalidPacketFilter, "NULL packet filter object specified for"
+        bundy_throw(InvalidPacketFilter, "NULL packet filter object specified for"
                   " DHCPv6");
     }
 
     if (hasOpenSocket(AF_INET6)) {
         // There is at least one socket open, so we have to fail.
-        isc_throw(PacketFilterChangeDenied,
+        bundy_throw(PacketFilterChangeDenied,
                   "it is not allowed to set new packet"
                   << " filter when there are open IPv6 sockets - need"
                   << " to close them first");
@@ -370,7 +370,7 @@ void IfaceMgr::stubDetectIfaces() {
         // this is BSD-like OS
     } else {
         // we give up. What OS is this, anyway? Solaris? Hurd?
-        isc_throw(NotImplemented,
+        bundy_throw(NotImplemented,
                   "Interface detection on this OS is not supported.");
     }
 
@@ -619,7 +619,7 @@ int IfaceMgr::openSocket(const std::string& ifname, const IOAddress& addr,
                          const bool send_bcast) {
     Iface* iface = getIface(ifname);
     if (!iface) {
-        isc_throw(BadValue, "There is no " << ifname << " interface present.");
+        bundy_throw(BadValue, "There is no " << ifname << " interface present.");
     }
     if (addr.isV4()) {
         return openSocket4(*iface, addr, port, receive_bcast, send_bcast);
@@ -628,7 +628,7 @@ int IfaceMgr::openSocket(const std::string& ifname, const IOAddress& addr,
         return openSocket6(*iface, addr, port, receive_bcast);
 
     } else {
-        isc_throw(BadValue, "Failed to detect family of address: "
+        bundy_throw(BadValue, "Failed to detect family of address: "
                   << addr);
     }
 }
@@ -653,7 +653,7 @@ int IfaceMgr::openSocketFromIface(const std::string& ifname,
         while (addr_it != addrs.end()) {
             if (addr_it->getFamily() == family) {
                 // We have interface and address so let's open socket.
-                // This may cause isc::Unexpected exception.
+                // This may cause bundy::Unexpected exception.
                 return (openSocket(iface->getName(), *addr_it, port, false));
             }
             ++addr_it;
@@ -667,14 +667,14 @@ int IfaceMgr::openSocketFromIface(const std::string& ifname,
                 family_name = "AF_INET6";
             }
             // We did not find address on the interface.
-            isc_throw(SocketConfigError, "There is no address for interface: "
+            bundy_throw(SocketConfigError, "There is no address for interface: "
                       << ifname << ", port: " << port << ", address "
                       " family: " << family_name);
         }
     }
     // If we got here it means that we had not found the specified interface.
     // Otherwise we would have returned from previous exist points.
-    isc_throw(BadValue, "There is no " << ifname << " interface present.");
+    bundy_throw(BadValue, "There is no " << ifname << " interface present.");
 }
 
 int IfaceMgr::openSocketFromAddress(const IOAddress& addr,
@@ -697,14 +697,14 @@ int IfaceMgr::openSocketFromAddress(const IOAddress& addr,
             // socket.
             if (*addr_it == addr) {
                 // Open socket using local interface, address and port.
-                // This may cause isc::Unexpected exception.
+                // This may cause bundy::Unexpected exception.
                 return (openSocket(iface->getName(), *addr_it, port, false));
             }
         }
     }
     // If we got here it means that we did not find specified address
     // on any available interface.
-    isc_throw(BadValue, "There is no such address " << addr);
+    bundy_throw(BadValue, "There is no such address " << addr);
 }
 
 int IfaceMgr::openSocketFromRemoteAddress(const IOAddress& remote_addr,
@@ -714,18 +714,18 @@ int IfaceMgr::openSocketFromRemoteAddress(const IOAddress& remote_addr,
         IOAddress local_address(getLocalAddress(remote_addr, port));
         return openSocketFromAddress(local_address, port);
     } catch (const Exception& e) {
-        isc_throw(SocketConfigError, e.what());
+        bundy_throw(SocketConfigError, e.what());
     }
 }
 
-isc::asiolink::IOAddress
+bundy::asiolink::IOAddress
 IfaceMgr::getLocalAddress(const IOAddress& remote_addr, const uint16_t port) {
     // Create remote endpoint, we will be connecting to it.
     boost::scoped_ptr<const UDPEndpoint>
         remote_endpoint(static_cast<const UDPEndpoint*>
                         (UDPEndpoint::create(IPPROTO_UDP, remote_addr, port)));
     if (!remote_endpoint) {
-        isc_throw(Unexpected, "Unable to create remote endpoint");
+        bundy_throw(Unexpected, "Unable to create remote endpoint");
     }
 
     // Create socket that will be used to connect to remote endpoint.
@@ -747,13 +747,13 @@ IfaceMgr::getLocalAddress(const IOAddress& remote_addr, const uint16_t port) {
         sock.open(asio::ip::udp::v4(), err_code);
         if (err_code) {
             const char* errstr = strerror(errno);
-            isc_throw(Unexpected, "failed to open UDPv4 socket, reason:"
+            bundy_throw(Unexpected, "failed to open UDPv4 socket, reason:"
                       << errstr);
         }
         sock.set_option(asio::socket_base::broadcast(true), err_code);
         if (err_code) {
             sock.close();
-            isc_throw(Unexpected, "failed to enable broadcast on the socket");
+            bundy_throw(Unexpected, "failed to enable broadcast on the socket");
         }
     }
 
@@ -761,7 +761,7 @@ IfaceMgr::getLocalAddress(const IOAddress& remote_addr, const uint16_t port) {
     sock.connect(remote_endpoint->getASIOEndpoint(), err_code);
     if (err_code) {
         sock.close();
-        isc_throw(Unexpected, "failed to connect to remote endpoint.");
+        bundy_throw(Unexpected, "failed to connect to remote endpoint.");
     }
 
     // Once we are connected socket object holds local endpoint.
@@ -804,7 +804,7 @@ bool
 IfaceMgr::send(const Pkt6Ptr& pkt) {
     Iface* iface = getIface(pkt->getIface());
     if (!iface) {
-        isc_throw(BadValue, "Unable to send DHCPv6 message. Invalid interface ("
+        bundy_throw(BadValue, "Unable to send DHCPv6 message. Invalid interface ("
                   << pkt->getIface() << ") specified.");
     }
 
@@ -817,7 +817,7 @@ IfaceMgr::send(const Pkt4Ptr& pkt) {
 
     Iface* iface = getIface(pkt->getIface());
     if (!iface) {
-        isc_throw(BadValue, "Unable to send DHCPv4 message. Invalid interface ("
+        bundy_throw(BadValue, "Unable to send DHCPv4 message. Invalid interface ("
                   << pkt->getIface() << ") specified.");
     }
 
@@ -830,7 +830,7 @@ boost::shared_ptr<Pkt4>
 IfaceMgr::receive4(uint32_t timeout_sec, uint32_t timeout_usec /* = 0 */) {
     // Sanity check for microsecond timeout.
     if (timeout_usec >= 1000000) {
-        isc_throw(BadValue, "fractional timeout must be shorter than"
+        bundy_throw(BadValue, "fractional timeout must be shorter than"
                   " one million microseconds");
     }
     const SocketInfo* candidate = 0;
@@ -882,7 +882,7 @@ IfaceMgr::receive4(uint32_t timeout_sec, uint32_t timeout_usec /* = 0 */) {
         // nothing received and timeout has been reached
         return (Pkt4Ptr()); // NULL
     } else if (result < 0) {
-        isc_throw(SocketReadError, strerror(errno));
+        bundy_throw(SocketReadError, strerror(errno));
     }
 
     // Let's find out which socket has the data
@@ -920,7 +920,7 @@ IfaceMgr::receive4(uint32_t timeout_sec, uint32_t timeout_usec /* = 0 */) {
     }
 
     if (!candidate) {
-        isc_throw(SocketReadError, "received data over unknown socket");
+        bundy_throw(SocketReadError, "received data over unknown socket");
     }
 
     // Now we have a socket, let's get some data from it!
@@ -931,7 +931,7 @@ IfaceMgr::receive4(uint32_t timeout_sec, uint32_t timeout_usec /* = 0 */) {
 Pkt6Ptr IfaceMgr::receive6(uint32_t timeout_sec, uint32_t timeout_usec /* = 0 */ ) {
     // Sanity check for microsecond timeout.
     if (timeout_usec >= 1000000) {
-        isc_throw(BadValue, "fractional timeout must be shorter than"
+        bundy_throw(BadValue, "fractional timeout must be shorter than"
                   " one million microseconds");
     }
 
@@ -985,7 +985,7 @@ Pkt6Ptr IfaceMgr::receive6(uint32_t timeout_sec, uint32_t timeout_usec /* = 0 */
         // nothing received and timeout has been reached
         return (Pkt6Ptr()); // NULL
     } else if (result < 0) {
-        isc_throw(SocketReadError, strerror(errno));
+        bundy_throw(SocketReadError, strerror(errno));
     }
 
     // Let's find out which socket has the data
@@ -1023,16 +1023,16 @@ Pkt6Ptr IfaceMgr::receive6(uint32_t timeout_sec, uint32_t timeout_usec /* = 0 */
     }
 
     if (!candidate) {
-        isc_throw(SocketReadError, "received data over unknown socket");
+        bundy_throw(SocketReadError, "received data over unknown socket");
     }
     // Assuming that packet filter is not NULL, because its modifier checks it.
     return (packet_filter6_->receive(*candidate));
 }
 
-uint16_t IfaceMgr::getSocket(const isc::dhcp::Pkt6& pkt) {
+uint16_t IfaceMgr::getSocket(const bundy::dhcp::Pkt6& pkt) {
     Iface* iface = getIface(pkt.getIface());
     if (iface == NULL) {
-        isc_throw(BadValue, "Tried to find socket for non-existent interface");
+        bundy_throw(BadValue, "Tried to find socket for non-existent interface");
     }
 
 
@@ -1081,15 +1081,15 @@ uint16_t IfaceMgr::getSocket(const isc::dhcp::Pkt6& pkt) {
         return (candidate->sockfd_);
     }
 
-    isc_throw(Unexpected, "Interface " << iface->getFullName()
+    bundy_throw(Unexpected, "Interface " << iface->getFullName()
               << " does not have any suitable IPv6 sockets open.");
 }
 
 SocketInfo
-IfaceMgr::getSocket(isc::dhcp::Pkt4 const& pkt) {
+IfaceMgr::getSocket(bundy::dhcp::Pkt4 const& pkt) {
     Iface* iface = getIface(pkt.getIface());
     if (iface == NULL) {
-        isc_throw(BadValue, "Tried to find socket for non-existent interface");
+        bundy_throw(BadValue, "Tried to find socket for non-existent interface");
     }
 
     const Iface::SocketCollection& socket_collection = iface->getSockets();
@@ -1103,9 +1103,9 @@ IfaceMgr::getSocket(isc::dhcp::Pkt4 const& pkt) {
         /// to send data.
     }
 
-    isc_throw(Unexpected, "Interface " << iface->getFullName()
+    bundy_throw(Unexpected, "Interface " << iface->getFullName()
               << " does not have any suitable IPv4 sockets open.");
 }
 
-} // end of namespace isc::dhcp
-} // end of namespace isc
+} // end of namespace bundy::dhcp
+} // end of namespace bundy

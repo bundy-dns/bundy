@@ -20,7 +20,7 @@ int
 main(int argc, char* argv[]) {
 
     ::testing::InitGoogleTest(&argc, argv);
-    isc::log::initLogger();
+    bundy::log::initLogger();
 
     int result = RUN_ALL_TESTS();
 

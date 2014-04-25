@@ -28,10 +28,10 @@
 #include <arpa/inet.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dhcp;
-using namespace isc::util;
-using namespace isc::asiolink;
+using namespace bundy;
+using namespace bundy::dhcp;
+using namespace bundy::util;
+using namespace bundy::asiolink;
 
 namespace {
 class Option6IAPrefixTest : public ::testing::Test {

@@ -32,19 +32,21 @@
 
 #include <utility>
 
-using namespace isc::dns;
-using namespace isc::dns::rdata;
-using namespace isc::datasrc::memory;
-using namespace isc::util;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
+using namespace bundy::datasrc::memory;
+using namespace bundy::util;
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 
 using boost::shared_ptr;
 
-InMemoryClient::InMemoryClient(shared_ptr<ZoneTableSegment> ztable_segment,
+InMemoryClient::InMemoryClient(const std::string& datasrc_name,
+                               shared_ptr<ZoneTableSegment> ztable_segment,
                                RRClass rrclass) :
+    DataSourceClient(datasrc_name),
     ztable_segment_(ztable_segment),
     rrclass_(rrclass)
 {}
@@ -60,8 +62,8 @@ InMemoryClient::getZoneCount() const {
     return (zone_table->getZoneCount());
 }
 
-isc::datasrc::DataSourceClient::FindResult
-InMemoryClient::findZone(const isc::dns::Name& zone_name) const {
+bundy::datasrc::DataSourceClient::FindResult
+InMemoryClient::findZone(const bundy::dns::Name& zone_name) const {
     LOG_DEBUG(logger, DBG_TRACE_DATA,
               DATASRC_MEMORY_MEM_FIND_ZONE).arg(zone_name);
 
@@ -77,7 +79,7 @@ InMemoryClient::findZone(const isc::dns::Name& zone_name) const {
 }
 
 const ZoneData*
-InMemoryClient::findZoneData(const isc::dns::Name& zone_name) {
+InMemoryClient::findZoneData(const bundy::dns::Name& zone_name) {
     const ZoneTable* zone_table = ztable_segment_->getHeader().getTable();
     const ZoneTable::FindResult result(zone_table->findZone(zone_name));
     return (result.zone_data);
@@ -118,7 +120,7 @@ public:
         ZoneTree::Result result(tree_.find(origin, &node_, chain_));
         // It can't happen that the origin is not in there
         if (result != ZoneTree::EXACTMATCH) {
-            isc_throw(Unexpected,
+            bundy_throw(Unexpected,
                       "In-memory zone corrupted, missing origin node");
         }
 
@@ -161,7 +163,7 @@ public:
             if (nsec3_namespace_ != ZoneIteratorPtr()) {
                 return (nsec3_namespace_->getNextRRset());
             }
-            isc_throw(Unexpected, "Iterating past the zone end");
+            bundy_throw(Unexpected, "Iterating past the zone end");
         }
         /*
          * This cycle finds the first nonempty node with yet unused
@@ -255,11 +257,11 @@ InMemoryClient::getIterator(const Name& name, bool separate_rrs) const {
     const ZoneTable* zone_table = ztable_segment_->getHeader().getTable();
     const ZoneTable::FindResult result(zone_table->findZone(name));
     if (result.code != result::SUCCESS) {
-        isc_throw(NoSuchZone, "no such zone for in-memory iterator: "
+        bundy_throw(NoSuchZone, "no such zone for in-memory iterator: "
                   << name.toText());
     }
     if (!result.zone_data) {
-        isc_throw(EmptyZone, "empty zone for in-memory iterator: "
+        bundy_throw(EmptyZone, "empty zone for in-memory iterator: "
                   << name.toText());
     }
 
@@ -271,18 +273,18 @@ InMemoryClient::getIterator(const Name& name, bool separate_rrs) const {
 }
 
 ZoneUpdaterPtr
-InMemoryClient::getUpdater(const isc::dns::Name&, bool, bool) const {
-    isc_throw(isc::NotImplemented, "Update attempt on in memory data source");
+InMemoryClient::getUpdater(const bundy::dns::Name&, bool, bool) const {
+    bundy_throw(bundy::NotImplemented, "Update attempt on in memory data source");
 }
 
 std::pair<ZoneJournalReader::Result, ZoneJournalReaderPtr>
-InMemoryClient::getJournalReader(const isc::dns::Name&, uint32_t,
+InMemoryClient::getJournalReader(const bundy::dns::Name&, uint32_t,
                                  uint32_t) const
 {
-    isc_throw(isc::NotImplemented, "Journaling isn't supported for "
+    bundy_throw(bundy::NotImplemented, "Journaling isn't supported for "
               "in memory data source");
 }
 
 } // end of namespace memory
 } // end of namespace datasrc
-} // end of namespace isc
+} // end of namespace bundy

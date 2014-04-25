@@ -29,8 +29,8 @@
 #include <config/tests/fake_session.h>
 
 using namespace std;
-using namespace isc::cc;
-using namespace isc::data;
+using namespace bundy::cc;
+using namespace bundy::data;
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -63,12 +63,12 @@ listRemove(ElementPtr list, ConstElementPtr el) {
 }
 // endwant
 
-namespace isc {
+namespace bundy {
 namespace cc {
 
-FakeSession::FakeSession(isc::data::ElementPtr initial_messages,
-                         isc::data::ElementPtr subscriptions,
-                         isc::data::ElementPtr msg_queue) :
+FakeSession::FakeSession(bundy::data::ElementPtr initial_messages,
+                         bundy::data::ElementPtr subscriptions,
+                         bundy::data::ElementPtr msg_queue) :
     messages_(initial_messages),
     subscriptions_(subscriptions),
     msg_queue_(msg_queue),
@@ -98,7 +98,7 @@ FakeSession::recvmsg(ConstElementPtr& msg, bool nonblock, int) {
     if (started_ && !nonblock) {
         // This would schedule another read for length, leading to
         // corrupted data
-        isc_throw(DoubleRead, "Second read scheduled from recvmsg");
+        bundy_throw(DoubleRead, "Second read scheduled from recvmsg");
     }
 
     //cout << "[XX] client asks for message " << endl;
@@ -120,7 +120,7 @@ FakeSession::recvmsg(ConstElementPtr& env, ConstElementPtr& msg, bool nonblock,
     if (started_ && !nonblock) {
         // This would schedule another read for length, leading to
         // corrupted data
-        isc_throw(DoubleRead, "Second read scheduled from recvmsg");
+        bundy_throw(DoubleRead, "Second read scheduled from recvmsg");
     }
 
     //cout << "[XX] client asks for message and env" << endl;
@@ -186,7 +186,7 @@ FakeSession::group_sendmsg(ConstElementPtr msg, std::string group,
                            std::string to, std::string, bool want_answer)
 {
     if (throw_on_send_) {
-        isc_throw(Exception, "Throw on send is set in FakeSession");
+        bundy_throw(Exception, "Throw on send is set in FakeSession");
     }
     addMessage(msg, group, to, -1, want_answer);
     return (1);

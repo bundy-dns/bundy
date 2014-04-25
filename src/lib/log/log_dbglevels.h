@@ -47,7 +47,7 @@
 /// DBG_ symbols in the various modules.
 ///
 /// \note If the names of debug constants are changed, or if ones are added or
-/// removed, edit the file src/lib/python/isc/log/log.cc to update the log
+/// removed, edit the file src/lib/python/bundy/log/log.cc to update the log
 /// level definitions available to Python.  The change does not need to be
 /// made if only the numeric values of constants are updated.
 

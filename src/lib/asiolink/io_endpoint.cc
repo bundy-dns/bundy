@@ -31,7 +31,7 @@
 
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace asiolink {
 
 const IOEndpoint*
@@ -43,7 +43,7 @@ IOEndpoint::create(const int protocol, const IOAddress& address,
     } else if (protocol == IPPROTO_TCP) {
         return (new TCPEndpoint(address, port));
     }
-    isc_throw(IOError,
+    bundy_throw(IOError,
               "IOEndpoint creation attempt for unsupported protocol: " <<
               protocol);
 }
@@ -75,4 +75,4 @@ operator<<(ostream& os, const IOEndpoint& endpoint) {
     return (os);
 }
 } // namespace asiolink
-} // namespace isc
+} // namespace bundy

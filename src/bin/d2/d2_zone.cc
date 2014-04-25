@@ -14,7 +14,7 @@
 
 #include <d2/d2_zone.h>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 D2Zone::D2Zone(const dns::Name& name, const dns::RRClass& rrclass)
@@ -32,5 +32,5 @@ operator<<(std::ostream& os, const D2Zone& zone) {
 }
 
 } // namespace d2
-} // namespace isc
+} // namespace bundy
 

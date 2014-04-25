@@ -29,12 +29,12 @@
 #include <dns/tests/unittest_util.h>
 #include <dns/tests/rdata_unittest.h>
 
-using isc::UnitTestUtil;
+using bundy::UnitTestUtil;
 using namespace std;
-using namespace isc;
-using namespace isc::dns;
-using namespace isc::util;
-using namespace isc::dns::rdata;
+using namespace bundy;
+using namespace bundy::dns;
+using namespace bundy::util;
+using namespace bundy::dns::rdata;
 
 namespace {
 
@@ -51,7 +51,7 @@ protected:
     {}
 
     void checkFromText_None(const string& rdata_str) {
-        checkFromText<generic::NSEC3, isc::Exception, isc::Exception>(
+        checkFromText<generic::NSEC3, bundy::Exception, bundy::Exception>(
             rdata_str, rdata_nsec3, false, false);
     }
 
@@ -73,7 +73,7 @@ protected:
 
     void checkFromText_BadString(const string& rdata_str) {
         checkFromText
-            <generic::NSEC3, InvalidRdataText, isc::Exception>(
+            <generic::NSEC3, InvalidRdataText, bundy::Exception>(
                 rdata_str, rdata_nsec3, true, false);
     }
 

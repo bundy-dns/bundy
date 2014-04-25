@@ -25,7 +25,7 @@
 #include <string>
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace hooks {
 
 class ServerHooks;
@@ -37,7 +37,7 @@ class ServerHooks;
 class NoSuchArgument : public Exception {
 public:
     NoSuchArgument(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// @brief No such callout context item
@@ -49,7 +49,7 @@ public:
 class NoSuchCalloutContext : public Exception {
 public:
     NoSuchCalloutContext(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 // Forward declaration of the library handle and related collection classes.
@@ -121,7 +121,7 @@ public:
     /// that the libraries that could have allocated memory in a callout handle
     /// will not be unloaded until all such handles have been destroyed.  This
     /// issue is discussed in more detail in the documentation for
-    /// isc::hooks::LibraryManager.
+    /// bundy::hooks::LibraryManager.
     ///
     /// @param manager Pointer to the callout manager object.
     /// @param lmcoll Pointer to the library manager collection.  This has a
@@ -164,7 +164,7 @@ public:
     void getArgument(const std::string& name, T& value) const {
         ElementCollection::const_iterator element_ptr = arguments_.find(name);
         if (element_ptr == arguments_.end()) {
-            isc_throw(NoSuchArgument, "unable to find argument with name " <<
+            bundy_throw(NoSuchArgument, "unable to find argument with name " <<
                       name);
         }
 
@@ -268,7 +268,7 @@ public:
 
         ElementCollection::const_iterator element_ptr = lib_context.find(name);
         if (element_ptr == lib_context.end()) {
-            isc_throw(NoSuchCalloutContext, "unable to find callout context "
+            bundy_throw(NoSuchCalloutContext, "unable to find callout context "
                       "item " << name << " in the context associated with "
                       "current library");
         }
@@ -384,7 +384,7 @@ private:
 typedef boost::shared_ptr<CalloutHandle> CalloutHandlePtr;
 
 } // namespace hooks
-} // namespace isc
+} // namespace bundy
 
 
 #endif // CALLOUT_HANDLE_H

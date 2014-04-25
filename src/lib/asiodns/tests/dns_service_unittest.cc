@@ -32,8 +32,8 @@
 #include <unistd.h>
 #include <netdb.h>
 
-using namespace isc::asiolink;
-using namespace isc::asiodns;
+using namespace bundy::asiolink;
+using namespace bundy::asiodns;
 using boost::scoped_ptr;
 using boost::lexical_cast;
 
@@ -48,12 +48,12 @@ const char* const TEST_IPV6_ADDR = "::1";
 // discards any received data.
 class TestLookup : public DNSLookup {
 public:
-    TestLookup(isc::util::OutputBuffer** b1, isc::util::OutputBuffer** b2,
+    TestLookup(bundy::util::OutputBuffer** b1, bundy::util::OutputBuffer** b2,
                IOService& io_service) :
         first_buffer_(b1), second_buffer_(b2), io_service_(io_service)
     {}
-    void operator()(const IOMessage&, isc::dns::MessagePtr,
-                    isc::dns::MessagePtr, isc::util::OutputBufferPtr buffer,
+    void operator()(const IOMessage&, bundy::dns::MessagePtr,
+                    bundy::dns::MessagePtr, bundy::util::OutputBufferPtr buffer,
                     DNSServer* server) const
     {
         server->resume(false);
@@ -66,8 +66,8 @@ public:
             io_service_.stop();
         }
     }
-    isc::util::OutputBuffer** first_buffer_;
-    isc::util::OutputBuffer** second_buffer_;
+    bundy::util::OutputBuffer** first_buffer_;
+    bundy::util::OutputBuffer** second_buffer_;
     IOService& io_service_;
 };
 
@@ -131,8 +131,8 @@ protected:
         return (!io_service_is_time_out);
     }
 
-    isc::util::OutputBuffer* first_buffer_;
-    isc::util::OutputBuffer* second_buffer_;
+    bundy::util::OutputBuffer* first_buffer_;
+    bundy::util::OutputBuffer* second_buffer_;
     IOService io_service;
     TestLookup lookup;
     DNSService dns_service;
@@ -183,7 +183,7 @@ getSocketFD(int family, const char* const address, const char* const port) {
         if (s >= 0) {
             close(s);
         }
-        isc_throw(isc::Unexpected, "failed to open test socket");
+        bundy_throw(bundy::Unexpected, "failed to open test socket");
     }
     return (s);
 }
@@ -226,7 +226,7 @@ TEST_F(UDPDNSServiceTest, addUDPServerFromFDWithUnknownOption) {
     EXPECT_THROW(dns_service.addServerUDPFromFD(
                      getSocketFD(AF_INET6, TEST_IPV6_ADDR, TEST_SERVER_PORT),
                      AF_INET6, static_cast<DNSService::ServerFlag>(2)),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 } // unnamed namespace

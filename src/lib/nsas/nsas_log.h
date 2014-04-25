@@ -18,7 +18,7 @@
 #include <log/macros.h>
 #include "nsas_messages.h"
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 
 /// \brief NSAS Logging
@@ -45,9 +45,9 @@ const int NSAS_DBG_RTT = DBGLVL_TRACE_DETAIL_DATA;
 /// Define the logger used to log messages.  We could define it in multiple
 /// modules, but defining in a single module and linking to it saves time and
 /// space.
-extern isc::log::Logger nsas_logger;    // isc::nsas::logger is the NSAS logger
+extern bundy::log::Logger nsas_logger;    // bundy::nsas::logger is the NSAS logger
 
 } // namespace nsas
-} // namespace isc
+} // namespace bundy
 
 #endif // NSAS_LOG_H

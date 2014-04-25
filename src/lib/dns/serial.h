@@ -18,7 +18,7 @@
 #include <stdint.h>
 #include <iostream>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 /// The maximum difference between two serial numbers. If the (plain uint32_t)
@@ -153,6 +153,6 @@ private:
 std::ostream& operator<<(std::ostream& os, const Serial& serial);
 
 } // end namespace dns
-} // end namespace isc
+} // end namespace bundy
 
 #endif // SERIAL_H

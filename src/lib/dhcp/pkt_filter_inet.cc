@@ -19,9 +19,9 @@
 #include <errno.h>
 #include <cstring>
 
-using namespace isc::asiolink;
+using namespace bundy::asiolink;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 PktFilterInet::PktFilterInet()
@@ -32,7 +32,7 @@ PktFilterInet::PktFilterInet()
 
 SocketInfo
 PktFilterInet::openSocket(const Iface& iface,
-                          const isc::asiolink::IOAddress& addr,
+                          const bundy::asiolink::IOAddress& addr,
                           const uint16_t port,
                           const bool receive_bcast,
                           const bool send_bcast) {
@@ -52,7 +52,7 @@ PktFilterInet::openSocket(const Iface& iface,
 
     int sock = socket(AF_INET, SOCK_DGRAM, 0);
     if (sock < 0) {
-        isc_throw(SocketConfigError, "Failed to create UDP6 socket.");
+        bundy_throw(SocketConfigError, "Failed to create UDP6 socket.");
     }
 
 #ifdef SO_BINDTODEVICE
@@ -61,7 +61,7 @@ PktFilterInet::openSocket(const Iface& iface,
         if (setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, iface.getName().c_str(),
                        iface.getName().length() + 1) < 0) {
             close(sock);
-            isc_throw(SocketConfigError, "Failed to set SO_BINDTODEVICE option"
+            bundy_throw(SocketConfigError, "Failed to set SO_BINDTODEVICE option"
                       << " on socket " << sock);
         }
     }
@@ -72,14 +72,14 @@ PktFilterInet::openSocket(const Iface& iface,
         int flag = 1;
         if (setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &flag, sizeof(flag)) < 0) {
             close(sock);
-            isc_throw(SocketConfigError, "Failed to set SO_BROADCAST option"
+            bundy_throw(SocketConfigError, "Failed to set SO_BROADCAST option"
                       << " on socket " << sock);
         }
     }
 
     if (bind(sock, (struct sockaddr *)&addr4, sizeof(addr4)) < 0) {
         close(sock);
-        isc_throw(SocketConfigError, "Failed to bind socket " << sock
+        bundy_throw(SocketConfigError, "Failed to bind socket " << sock
                   << " to " << addr
                   << "/port=" << port);
     }
@@ -90,7 +90,7 @@ PktFilterInet::openSocket(const Iface& iface,
     int flag = 1;
     if (setsockopt(sock, IPPROTO_IP, IP_PKTINFO, &flag, sizeof(flag)) != 0) {
         close(sock);
-        isc_throw(SocketConfigError, "setsockopt: IP_PKTINFO: failed.");
+        bundy_throw(SocketConfigError, "setsockopt: IP_PKTINFO: failed.");
     }
 #endif
 
@@ -132,7 +132,7 @@ PktFilterInet::receive(const Iface& iface, const SocketInfo& socket_info) {
 
     int result = recvmsg(socket_info.sockfd_, &m, 0);
     if (result < 0) {
-        isc_throw(SocketReadError, "failed to receive UDP4 data");
+        bundy_throw(SocketReadError, "failed to receive UDP4 data");
     }
 
     // We have all data let's create Pkt4 object.
@@ -245,7 +245,7 @@ PktFilterInet::send(const Iface&, uint16_t sockfd,
 
     int result = sendmsg(sockfd, &m, 0);
     if (result < 0) {
-        isc_throw(SocketWriteError, "pkt4 send failed: sendmsg() returned "
+        bundy_throw(SocketWriteError, "pkt4 send failed: sendmsg() returned "
                   " with an error: " << strerror(errno));
     }
 
@@ -254,5 +254,5 @@ PktFilterInet::send(const Iface&, uint16_t sockfd,
 
 
 
-} // end of isc::dhcp namespace
-} // end of isc namespace
+} // end of bundy::dhcp namespace
+} // end of bundy namespace

@@ -1,10 +1,10 @@
-/b10-certgen
-/b10-certgen.1
-/b10-cmdctl
-/b10-cmdctl.8
+/bundy-certgen
+/bundy-certgen.1
+/bundy-cmdctl
+/bundy-cmdctl.8
 /cmdctl-certfile.pem
 /cmdctl-keyfile.pem
 /cmdctl.py
 /cmdctl.spec
 /cmdctl.spec.pre
-/run_b10-cmdctl.sh
+/run_bundy-cmdctl.sh

@@ -23,9 +23,9 @@
 #include <vector>
 
 using namespace std;
-using namespace isc::util;
-using namespace isc::bench;
-using namespace isc::dns;
+using namespace bundy::util;
+using namespace bundy::bench;
+using namespace bundy::dns;
 
 namespace {
 // This templated test performs rendering given set of names using

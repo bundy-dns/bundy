@@ -22,7 +22,7 @@
 #include <algorithm>
 #include <stdint.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace rdata {
 namespace generic {
@@ -132,7 +132,7 @@ int compareCharStringDatas(const CharStringData& self,
 /// \throw DNSMessageFORMERR If the available data is not enough to read
 /// the character-string, or if the character-string length is out of bounds
 /// \return The number of bytes read
-size_t bufferToCharString(isc::util::InputBuffer& buffer, size_t rdata_len,
+size_t bufferToCharString(bundy::util::InputBuffer& buffer, size_t rdata_len,
                           CharString& target);
 
 
@@ -140,7 +140,7 @@ size_t bufferToCharString(isc::util::InputBuffer& buffer, size_t rdata_len,
 } // namespace generic
 } // namespace rdata
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 #endif  // DNS_RDATA_CHARSTRING_H
 
 // Local Variables:

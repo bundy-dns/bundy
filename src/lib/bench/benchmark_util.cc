@@ -33,11 +33,11 @@
 #include <bench/benchmark_util.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dns;
-using namespace isc::util;
+using namespace bundy;
+using namespace bundy::dns;
+using namespace bundy::util;
 
-namespace isc {
+namespace bundy {
 namespace bench {
 void
 loadQueryData(const char* const input_file, BenchQueries& queries,
@@ -47,7 +47,7 @@ loadQueryData(const char* const input_file, BenchQueries& queries,
 
     ifs.open(input_file, ios_base::in);
     if ((ifs.rdstate() & istream::failbit) != 0) {
-        isc_throw(BenchMarkError, "failed to load query data file: " +
+        bundy_throw(BenchMarkError, "failed to load query data file: " +
                   string(input_file));
     }
     loadQueryData(ifs, queries, qclass, strict);
@@ -65,7 +65,7 @@ loadQueryData(istream& input, BenchQueries& queries, const RRClass& qclass,
     while (getline(input, line), !input.eof()) {
         ++linenum;
         if (input.bad() || input.fail()) {
-            isc_throw(BenchMarkError,
+            bundy_throw(BenchMarkError,
                       "Unexpected line in query data file around line " <<
                       linenum);
         }
@@ -78,7 +78,7 @@ loadQueryData(istream& input, BenchQueries& queries, const RRClass& qclass,
         iss >> qname_string >> qtype_string;
         if (iss.bad() || iss.fail()) {
             if (strict) {
-                isc_throw(BenchMarkError,
+                bundy_throw(BenchMarkError,
                           "load query: unexpected input around line " <<
                           linenum);
             }
@@ -104,7 +104,7 @@ loadQueryData(istream& input, BenchQueries& queries, const RRClass& qclass,
             queries.push_back(query_data);
         } catch (const Exception&) {
             if (strict) {
-                isc_throw(BenchMarkError,
+                bundy_throw(BenchMarkError,
                           "failed to parse/create query around line " <<
                           linenum);
             }

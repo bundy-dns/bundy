@@ -30,11 +30,11 @@ namespace {
 
 class FormatterTest : public ::testing::Test {
 protected:
-    typedef pair<isc::log::Severity, string> Output;
-    typedef isc::log::Formatter<FormatterTest> Formatter;
+    typedef pair<bundy::log::Severity, string> Output;
+    typedef bundy::log::Formatter<FormatterTest> Formatter;
     vector<Output> outputs;
 public:
-    void output(const isc::log::Severity& prefix, const string& message) {
+    void output(const bundy::log::Severity& prefix, const string& message) {
         outputs.push_back(Output(prefix, message));
     }
     // Just shortcut for new string
@@ -52,9 +52,9 @@ TEST_F(FormatterTest, inactive) {
 // Create an active formatter and check it produces output. Does no arg
 // substitution yet
 TEST_F(FormatterTest, active) {
-    Formatter(isc::log::INFO, s("Text of message"), this);
+    Formatter(bundy::log::INFO, s("Text of message"), this);
     ASSERT_EQ(1, outputs.size());
-    EXPECT_EQ(isc::log::INFO, outputs[0].first);
+    EXPECT_EQ(bundy::log::INFO, outputs[0].first);
     EXPECT_EQ("Text of message", outputs[0].second);
 }
 
@@ -68,23 +68,23 @@ TEST_F(FormatterTest, inactiveArg) {
 TEST_F(FormatterTest, stringArg) {
     {
         SCOPED_TRACE("C++ string");
-        Formatter(isc::log::INFO, s("Hello %1"), this).arg(string("World"));
+        Formatter(bundy::log::INFO, s("Hello %1"), this).arg(string("World"));
         ASSERT_EQ(1, outputs.size());
-        EXPECT_EQ(isc::log::INFO, outputs[0].first);
+        EXPECT_EQ(bundy::log::INFO, outputs[0].first);
         EXPECT_EQ("Hello World", outputs[0].second);
     }
     {
         SCOPED_TRACE("C++ string");
-        Formatter(isc::log::INFO, s("Hello %1"), this).arg(string("Internet"));
+        Formatter(bundy::log::INFO, s("Hello %1"), this).arg(string("Internet"));
         ASSERT_EQ(2, outputs.size());
-        EXPECT_EQ(isc::log::INFO, outputs[1].first);
+        EXPECT_EQ(bundy::log::INFO, outputs[1].first);
         EXPECT_EQ("Hello Internet", outputs[1].second);
     }
 }
 
 // Test the .deactivate() method
 TEST_F(FormatterTest, deactivate) {
-    Formatter(isc::log::INFO, s("Text of message"), this).deactivate();
+    Formatter(bundy::log::INFO, s("Text of message"), this).deactivate();
     // If there was no .deactivate, it should have output it.
     // But not now.
     ASSERT_EQ(0, outputs.size());
@@ -92,18 +92,18 @@ TEST_F(FormatterTest, deactivate) {
 
 // Can convert to string
 TEST_F(FormatterTest, intArg) {
-    Formatter(isc::log::INFO, s("The answer is %1"), this).arg(42);
+    Formatter(bundy::log::INFO, s("The answer is %1"), this).arg(42);
     ASSERT_EQ(1, outputs.size());
-    EXPECT_EQ(isc::log::INFO, outputs[0].first);
+    EXPECT_EQ(bundy::log::INFO, outputs[0].first);
     EXPECT_EQ("The answer is 42", outputs[0].second);
 }
 
 // Can use multiple arguments at different places
 TEST_F(FormatterTest, multiArg) {
-    Formatter(isc::log::INFO, s("The %2 are %1"), this).arg("switched").
+    Formatter(bundy::log::INFO, s("The %2 are %1"), this).arg("switched").
         arg("arguments");
     ASSERT_EQ(1, outputs.size());
-    EXPECT_EQ(isc::log::INFO, outputs[0].first);
+    EXPECT_EQ(bundy::log::INFO, outputs[0].first);
     EXPECT_EQ("The arguments are switched", outputs[0].second);
 }
 
@@ -112,53 +112,53 @@ TEST_F(FormatterTest, multiArg) {
 TEST_F(FormatterTest, mismatchedPlaceholders) {
     // Throws MismatchedPlaceholders exception if the placeholder is missing
     // for a supplied argument.
-    EXPECT_THROW(Formatter(isc::log::INFO, s("Missing the second %1"), this).
+    EXPECT_THROW(Formatter(bundy::log::INFO, s("Missing the second %1"), this).
                  arg("argument").arg("missing"),
-                 isc::log::MismatchedPlaceholders);
+                 bundy::log::MismatchedPlaceholders);
 
 #ifdef EXPECT_DEATH
     // Likewise, if there's a redundant placeholder (or missing argument), the
     // check detects it and aborts the program.  Due to the restriction of the
     // current implementation, it doesn't throw.
-    if (!isc::util::unittests::runningOnValgrind()) {
+    if (!bundy::util::unittests::runningOnValgrind()) {
         EXPECT_DEATH({
-            isc::util::unittests::dontCreateCoreDumps();
-            Formatter(isc::log::INFO, s("Too many arguments in %1 %2"), this).
+            bundy::util::unittests::dontCreateCoreDumps();
+            Formatter(bundy::log::INFO, s("Too many arguments in %1 %2"), this).
                 arg("only one");
         }, ".*");
     }
 #endif /* EXPECT_DEATH */
     // Mixed case of above two: the exception will be thrown due to the missing
     // placeholder. The other check is disabled due to that.
-    EXPECT_THROW(Formatter(isc::log::INFO, s("Missing the first %2"), this).
+    EXPECT_THROW(Formatter(bundy::log::INFO, s("Missing the first %2"), this).
                  arg("missing").arg("argument"),
-                 isc::log::MismatchedPlaceholders);
+                 bundy::log::MismatchedPlaceholders);
 }
 
 #else
 
 // If logger checks are not enabled, nothing is thrown
 TEST_F(FormatterTest, mismatchedPlaceholders) {
-    Formatter(isc::log::INFO, s("Missing the second %1"), this).
+    Formatter(bundy::log::INFO, s("Missing the second %1"), this).
         arg("argument").arg("missing");
     ASSERT_EQ(1, outputs.size());
-    EXPECT_EQ(isc::log::INFO, outputs[0].first);
+    EXPECT_EQ(bundy::log::INFO, outputs[0].first);
     EXPECT_EQ("Missing the second argument "
               "@@Missing placeholder %2 for 'missing'@@", outputs[0].second);
 
-    EXPECT_NO_THROW(Formatter(isc::log::INFO,
+    EXPECT_NO_THROW(Formatter(bundy::log::INFO,
                               s("Too many arguments in %1 %2"), this).
                     arg("only one"));
     ASSERT_EQ(2, outputs.size());
-    EXPECT_EQ(isc::log::INFO, outputs[1].first);
+    EXPECT_EQ(bundy::log::INFO, outputs[1].first);
     EXPECT_EQ("Too many arguments in only one %2 "
               "@@Excess logger placeholders still exist@@",
               outputs[1].second);
 
-    EXPECT_NO_THROW(Formatter(isc::log::INFO, s("Missing the first %2"), this).
+    EXPECT_NO_THROW(Formatter(bundy::log::INFO, s("Missing the first %2"), this).
                     arg("missing").arg("argument"));
     ASSERT_EQ(3, outputs.size());
-    EXPECT_EQ(isc::log::INFO, outputs[2].first);
+    EXPECT_EQ(bundy::log::INFO, outputs[2].first);
     EXPECT_EQ("Missing the first argument "
               "@@Missing placeholder %1 for 'missing'@@", outputs[2].second);
 }
@@ -167,10 +167,10 @@ TEST_F(FormatterTest, mismatchedPlaceholders) {
 
 // Can replace multiple placeholders
 TEST_F(FormatterTest, multiPlaceholder) {
-    Formatter(isc::log::INFO, s("The %1 is the %1"), this).
+    Formatter(bundy::log::INFO, s("The %1 is the %1"), this).
         arg("first rule of tautology club");
     ASSERT_EQ(1, outputs.size());
-    EXPECT_EQ(isc::log::INFO, outputs[0].first);
+    EXPECT_EQ(bundy::log::INFO, outputs[0].first);
     EXPECT_EQ("The first rule of tautology club is "
               "the first rule of tautology club", outputs[0].second);
 }
@@ -178,9 +178,9 @@ TEST_F(FormatterTest, multiPlaceholder) {
 // Test we can cope with replacement containing the placeholder
 TEST_F(FormatterTest, noRecurse) {
     // If we recurse, this will probably eat all the memory and crash
-    Formatter(isc::log::INFO, s("%1"), this).arg("%1 %1");
+    Formatter(bundy::log::INFO, s("%1"), this).arg("%1 %1");
     ASSERT_EQ(1, outputs.size());
-    EXPECT_EQ(isc::log::INFO, outputs[0].first);
+    EXPECT_EQ(bundy::log::INFO, outputs[0].first);
     EXPECT_EQ("%1 %1", outputs[0].second);
 }
 

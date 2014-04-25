@@ -12,7 +12,7 @@
 // OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 // PERFORMANCE OF THIS SOFTWARE.
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace unittests {
 /// \brief A helper utility for a simple synchronization with another process.

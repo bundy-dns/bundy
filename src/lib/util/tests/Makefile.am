@@ -7,7 +7,7 @@ AM_CPPFLAGS += -DTEST_DATA_BUILDDIR=\"$(abs_builddir)\"
 # used to bind a UNIX domain socket so we can minimize the risk of exceeding
 # the limit of file name path size.
 AM_CPPFLAGS += -DTEST_DATA_TOPBUILDDIR=\"$(abs_top_builddir)\"
-AM_CXXFLAGS = $(B10_CXXFLAGS)
+AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 
 if USE_STATIC_LINK
 AM_LDFLAGS = -static
@@ -51,10 +51,10 @@ run_unittests_SOURCES += range_utilities_unittest.cc
 run_unittests_CPPFLAGS = $(AM_CPPFLAGS) $(GTEST_INCLUDES)
 run_unittests_LDFLAGS = $(AM_LDFLAGS) $(GTEST_LDFLAGS)
 
-run_unittests_LDADD = $(top_builddir)/src/lib/util/libb10-util.la
-run_unittests_LDADD += $(top_builddir)/src/lib/util/io/libb10-util-io.la
+run_unittests_LDADD = $(top_builddir)/src/lib/util/libbundy-util.la
+run_unittests_LDADD += $(top_builddir)/src/lib/util/io/libbundy-util-io.la
 run_unittests_LDADD += $(top_builddir)/src/lib/util/unittests/libutil_unittests.la
-run_unittests_LDADD += $(top_builddir)/src/lib/exceptions/libb10-exceptions.la
+run_unittests_LDADD += $(top_builddir)/src/lib/exceptions/libbundy-exceptions.la
 run_unittests_LDADD += $(GTEST_LDADD)
 endif
 

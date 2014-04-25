@@ -58,17 +58,17 @@
 #include <iostream>
 
 using namespace std;
-using namespace isc::asiodns;
-using namespace isc::asiolink;
-using namespace isc::auth;
-using namespace isc::cc;
-using namespace isc::config;
-using namespace isc::data;
-using namespace isc::dns;
-using namespace isc::log;
-using namespace isc::util;
-using namespace isc::util::io;
-using namespace isc::xfr;
+using namespace bundy::asiodns;
+using namespace bundy::asiolink;
+using namespace bundy::auth;
+using namespace bundy::cc;
+using namespace bundy::config;
+using namespace bundy::data;
+using namespace bundy::dns;
+using namespace bundy::log;
+using namespace bundy::util;
+using namespace bundy::util::io;
+using namespace bundy::xfr;
 
 namespace {
 
@@ -91,8 +91,8 @@ my_command_handler(const string& command, ConstElementPtr args) {
 void
 datasrcConfigHandler(AuthSrv* server, bool* first_time,
                      ModuleCCSession* config_session, const std::string&,
-                     isc::data::ConstElementPtr config,
-                     const isc::config::ConfigData&)
+                     bundy::data::ConstElementPtr config,
+                     const bundy::config::ConfigData&)
 {
     assert(server != NULL);
 
@@ -119,7 +119,7 @@ datasrcConfigHandler(AuthSrv* server, bool* first_time,
 
 void
 usage() {
-    cerr << "Usage:  b10-auth [-v]"
+    cerr << "Usage:  bundy-auth [-v]"
          << endl;
     cerr << "\t-v: verbose logging (debug-level)" << endl;
     exit(1);
@@ -148,9 +148,9 @@ main(int argc, char* argv[]) {
     }
 
     // Initialize logging.  If verbose, we'll use maximum verbosity.
-    isc::log::initLogger(AUTH_NAME,
-                         (verbose ? isc::log::DEBUG : isc::log::INFO),
-                         isc::log::MAX_DEBUG_LEVEL, NULL, true);
+    bundy::log::initLogger(AUTH_NAME,
+                         (verbose ? bundy::log::DEBUG : bundy::log::INFO),
+                         bundy::log::MAX_DEBUG_LEVEL, NULL, true);
 
     int ret = 0;
 
@@ -164,8 +164,8 @@ main(int argc, char* argv[]) {
     SocketSessionForwarder ddns_forwarder(getDDNSSocketPath());
     try {
         string specfile;
-        if (getenv("B10_FROM_BUILD")) {
-            specfile = string(getenv("B10_FROM_BUILD")) +
+        if (getenv("BUNDY_FROM_BUILD")) {
+            specfile = string(getenv("BUNDY_FROM_BUILD")) +
                 "/src/bin/auth/auth.spec";
         } else {
             specfile = string(AUTH_SPECFILE_LOCATION);
@@ -186,12 +186,12 @@ main(int argc, char* argv[]) {
         cc_session.reset(new Session(io_service.get_io_service()));
         LOG_DEBUG(auth_logger, DBG_AUTH_START, AUTH_CONFIG_CHANNEL_CREATED);
         // Initialize the Socket Requestor
-        isc::server_common::initSocketRequestor(*cc_session, AUTH_NAME);
+        bundy::server_common::initSocketRequestor(*cc_session, AUTH_NAME);
 
         // We delay starting listening to new commands/config just before we
         // go into the main loop to avoid confusion due to mixture of
         // synchronous and asynchronous operations (this would happen in
-        // initial communication with b10-init that takes place in
+        // initial communication with bundy-init that takes place in
         // updateConfig() for listen_on and in initializing TSIG keys below).
         // Until then all operations on the CC session will take place
         // synchronously.
@@ -223,8 +223,12 @@ main(int argc, char* argv[]) {
         }
 
         LOG_DEBUG(auth_logger, DBG_AUTH_START, AUTH_LOAD_TSIG);
-        isc::server_common::initKeyring(*config_session);
-        auth_server->setTSIGKeyRing(&isc::server_common::keyring);
+        bundy::server_common::initKeyring(*config_session);
+        auth_server->setTSIGKeyRing(&bundy::server_common::keyring);
+
+        config_session->subscribeNotification(
+            "ZoneUpdateListener",
+            boost::bind(&AuthSrv::zoneUpdated, auth_server, _1, _2));
 
         // Start the data source configuration.  We pass first_time and
         // config_session for the hack described in datasrcConfigHandler.
@@ -247,7 +251,7 @@ main(int argc, char* argv[]) {
         // Currently, only the DDNS module is notified, but we could consider
         // make an announcement channel for these (one-way) messages
         cc_session->group_sendmsg(
-            isc::config::createCommand(AUTH_STARTED_NOTIFICATION), "DDNS");
+            bundy::config::createCommand(AUTH_STARTED_NOTIFICATION), "DDNS");
         io_service.run();
     } catch (const std::exception& ex) {
         LOG_FATAL(auth_logger, AUTH_SERVER_FAILED).arg(ex.what());

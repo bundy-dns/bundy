@@ -14,7 +14,7 @@
 
 #include <dhcp/tests/pkt_filter6_test_stub.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 namespace test {
 
@@ -23,7 +23,7 @@ PktFilter6TestStub::PktFilter6TestStub() {
 
 SocketInfo
 PktFilter6TestStub::openSocket(const Iface&,
-           const isc::asiolink::IOAddress& addr,
+           const bundy::asiolink::IOAddress& addr,
            const uint16_t port, const bool) {
     return (SocketInfo(addr, port, 0));
 }

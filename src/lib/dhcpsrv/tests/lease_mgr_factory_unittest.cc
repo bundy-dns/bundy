@@ -24,7 +24,7 @@
 #include <sstream>
 
 using namespace std;
-using namespace isc::dhcp;
+using namespace bundy::dhcp;
 
 // This set of tests only check the parsing functions of LeaseMgrFactory.
 // Tests of the LeaseMgr create/instance/destroy are implicitly carried out
@@ -63,10 +63,10 @@ TEST_F(LeaseMgrFactoryTest, parseInvalid) {
     // With spaces, there are some tokens so we expect invalid parameter
     // as there are no equals signs.
     invalid = "   \t  ";
-    EXPECT_THROW(LeaseMgrFactory::parse(invalid), isc::InvalidParameter);
+    EXPECT_THROW(LeaseMgrFactory::parse(invalid), bundy::InvalidParameter);
 
     invalid = "   noequalshere  ";
-    EXPECT_THROW(LeaseMgrFactory::parse(invalid), isc::InvalidParameter);
+    EXPECT_THROW(LeaseMgrFactory::parse(invalid), bundy::InvalidParameter);
 
     // A single "=" is valid string, but is placed here as the result is
     // expected to be nothing.

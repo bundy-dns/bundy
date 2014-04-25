@@ -28,12 +28,12 @@ enum CounterItems {
     NUMBER_OF_ITEMS = 3
 };
 
-using namespace isc::statistics;
+using namespace bundy::statistics;
 
 TEST(CounterDictionaryCreateTest, invalidCounterSize) {
-    // Creating counter with 0 elements will cause an isc::InvalidParameter
+    // Creating counter with 0 elements will cause an bundy::InvalidParameter
     // exception
-    EXPECT_THROW(CounterDictionary counters(0), isc::InvalidParameter);
+    EXPECT_THROW(CounterDictionary counters(0), bundy::InvalidParameter);
 }
 
 // This fixture is for testing CounterDictionary.
@@ -86,23 +86,23 @@ TEST_F(CounterDictionaryTest, deleteElement) {
     EXPECT_EQ(counters["test"].get(ITEM3), 0);
     // Delete the element
     counters.deleteElement("test");
-    // Accessing to the deleted element will cause an isc::OutOfRange exception
-    EXPECT_THROW(counters["test"].get(ITEM1), isc::OutOfRange);
-    // Deleting an element which does not exist will cause an isc::OutOfRange
+    // Accessing to the deleted element will cause an bundy::OutOfRange exception
+    EXPECT_THROW(counters["test"].get(ITEM1), bundy::OutOfRange);
+    // Deleting an element which does not exist will cause an bundy::OutOfRange
     //  exception
-    EXPECT_THROW(counters.deleteElement("test"), isc::OutOfRange);
+    EXPECT_THROW(counters.deleteElement("test"), bundy::OutOfRange);
 }
 
 TEST_F(CounterDictionaryTest, invalidCounterItem) {
-    // Incrementing out-of-bound counter will cause an isc::OutOfRange
+    // Incrementing out-of-bound counter will cause an bundy::OutOfRange
     // exception
-    EXPECT_THROW(counters["test"].inc(NUMBER_OF_ITEMS), isc::OutOfRange);
+    EXPECT_THROW(counters["test"].inc(NUMBER_OF_ITEMS), bundy::OutOfRange);
 }
 
 TEST_F(CounterDictionaryTest, uniquenessCheck) {
-    // Adding an element which already exists will cause an isc::OutOfRange
+    // Adding an element which already exists will cause an bundy::OutOfRange
     //  exception
-    EXPECT_THROW(counters.addElement("test"), isc::InvalidParameter);
+    EXPECT_THROW(counters.addElement("test"), bundy::InvalidParameter);
 }
 
 TEST_F(CounterDictionaryTest, iteratorTest) {

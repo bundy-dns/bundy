@@ -20,9 +20,9 @@ endif
 	echo Running test: $$pytest ; \
 	$(LIBRARY_PATH_PLACEHOLDER) \
 	PYTHONPATH=$(COMMON_PYTHON_PATH):$(abs_top_builddir)/src/bin/msgq \
-	BIND10_TEST_SOCKET_FILE=$(builddir)/test_msgq_socket.sock \
-	B10_FROM_SOURCE=$(abs_top_srcdir) \
-	B10_FROM_BUILD=$(abs_top_builddir) \
+	BUNDY_TEST_SOCKET_FILE=$(builddir)/test_msgq_socket.sock \
+	BUNDY_FROM_SOURCE=$(abs_top_srcdir) \
+	BUNDY_FROM_BUILD=$(abs_top_builddir) \
 	$(PYCOVERAGE_RUN) $(abs_srcdir)/$$pytest || exit ; \
 	done
 

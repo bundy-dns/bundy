@@ -25,7 +25,7 @@
 #include "nsas_types.h"
 #include "glue_hints.h"
 
-namespace isc {
+namespace bundy {
 // Some forward declarations, so we do not need to include so many headers
 
 namespace dns {
@@ -68,7 +68,7 @@ public:
     /// there is an assumption that there will be more nameservers than zones
     /// in the store.
     NameserverAddressStore(
-        boost::shared_ptr<isc::resolve::ResolverInterface> resolver,
+        boost::shared_ptr<bundy::resolve::ResolverInterface> resolver,
         uint32_t zonehashsize = 1009, uint32_t nshashsize = 3001);
 
     /// \brief Destructor
@@ -117,16 +117,16 @@ protected:
     boost::shared_ptr<HashTable<NameserverEntry> > nameserver_hash_;
 
     // ... and the LRU lists
-    boost::shared_ptr<isc::util::LruList<ZoneEntry> > zone_lru_;
-    boost::shared_ptr<isc::util::LruList<NameserverEntry> > nameserver_lru_;
+    boost::shared_ptr<bundy::util::LruList<ZoneEntry> > zone_lru_;
+    boost::shared_ptr<bundy::util::LruList<NameserverEntry> > nameserver_lru_;
     // The resolver we use
 private:
-    isc::resolve::ResolverInterface* resolver_;
+    bundy::resolve::ResolverInterface* resolver_;
     //}@
 };
 
 } // namespace nsas
-} // namespace isc
+} // namespace bundy
 
 
 #endif // NAMESERVER_ADDRESS_STORE_H

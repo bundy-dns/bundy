@@ -19,9 +19,9 @@
 
 #include <gtest/gtest.h>
 
-using namespace isc;
-using namespace isc::dhcp;
-using namespace isc::util;
+using namespace bundy;
+using namespace bundy::dhcp;
+using namespace bundy::util;
 
 namespace {
 
@@ -62,7 +62,7 @@ TEST_F(OptionStringTest, constructorFromString) {
 
     // Check that an attempt to use empty string in the constructor
     // will result in an exception.
-    EXPECT_THROW(OptionString(Option::V6, 123, ""), isc::OutOfRange);
+    EXPECT_THROW(OptionString(Option::V6, 123, ""), bundy::OutOfRange);
 }
 
 // This test verifies that the constructor which creates an option instance
@@ -74,7 +74,7 @@ TEST_F(OptionStringTest, constructorFromBuffer) {
     // an exception.
     EXPECT_THROW(
         OptionString(Option::V4, 234, buf_.begin(), buf_.begin()),
-        isc::OutOfRange
+        bundy::OutOfRange
     );
 
     // Declare option as a scoped pointer here so as its scope is
@@ -124,7 +124,7 @@ TEST_F(OptionStringTest, setValue) {
     EXPECT_NO_THROW(optv4.setValue("new option value"));
     EXPECT_EQ("new option value", optv4.getValue());
     // Try to set to an empty string. It should throw exception.
-    EXPECT_THROW(optv4.setValue(""), isc::OutOfRange);
+    EXPECT_THROW(optv4.setValue(""), bundy::OutOfRange);
 }
 
 // This test verifies that the pack function encodes the option in

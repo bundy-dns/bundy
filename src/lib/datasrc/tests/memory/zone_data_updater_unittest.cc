@@ -38,9 +38,9 @@
 
 #include <cassert>
 
-using isc::testutils::textToRRset;
-using namespace isc::dns;
-using namespace isc::datasrc::memory;
+using bundy::testutils::textToRRset;
+using namespace bundy::dns;
+using namespace bundy::datasrc::memory;
 
 namespace {
 
@@ -51,7 +51,7 @@ const char* const mapped_file = TEST_DATA_BUILDDIR "/test.mapped";
 class SegmentCreator {
 public:
     virtual ~SegmentCreator() {}
-    typedef boost::shared_ptr<isc::util::MemorySegment> SegmentPtr;
+    typedef boost::shared_ptr<bundy::util::MemorySegment> SegmentPtr;
     // Create the segment.
     virtual SegmentPtr create() const = 0;
     // Clean-up after the test. Most of them will be just NOP (the default),
@@ -60,7 +60,7 @@ public:
 };
 
 ZoneNode*
-getNode(isc::util::MemorySegment& mem_sgmt, const Name& name,
+getNode(bundy::util::MemorySegment& mem_sgmt, const Name& name,
         ZoneData* zone_data)
 {
     ZoneNode* node = NULL;
@@ -111,7 +111,7 @@ protected:
 
     const Name zname_;
     const RRClass zclass_;
-    boost::shared_ptr<isc::util::MemorySegment> mem_sgmt_;
+    boost::shared_ptr<bundy::util::MemorySegment> mem_sgmt_;
     boost::scoped_ptr<ZoneDataUpdater> updater_;
 };
 
@@ -133,7 +133,7 @@ public:
     virtual SegmentPtr create() const {
         // We are not really supposed to create the segment directly in real
         // code, but it should be OK inside tests.
-        return (SegmentPtr(new isc::util::MemorySegmentLocal));
+        return (SegmentPtr(new bundy::util::MemorySegmentLocal));
     }
 };
 
@@ -147,13 +147,13 @@ INSTANTIATE_TEST_CASE_P(LocalSegment, ZoneDataUpdaterTest,
 class MappedSegmentCreator : public SegmentCreator {
 public:
     MappedSegmentCreator(size_t initial_size =
-                         isc::util::MemorySegmentMapped::INITIAL_SIZE) :
+                         bundy::util::MemorySegmentMapped::INITIAL_SIZE) :
         initial_size_(initial_size)
     {}
     virtual SegmentPtr create() const {
-        return (SegmentPtr(new isc::util::MemorySegmentMapped(
+        return (SegmentPtr(new bundy::util::MemorySegmentMapped(
                                mapped_file,
-                               isc::util::MemorySegmentMapped::CREATE_ONLY,
+                               bundy::util::MemorySegmentMapped::CREATE_ONLY,
                                initial_size_)));
     }
     virtual void cleanup() const {
@@ -184,7 +184,7 @@ TEST_P(ZoneDataUpdaterTest, zoneMinTTL) {
                       "example.org. 3600 IN SOA . . 0 0 0 0 1200",
                       zclass_, zname_),
                   ConstRRsetPtr());
-    isc::util::InputBuffer b(getZoneData()->getMinTTLData(), sizeof(uint32_t));
+    bundy::util::InputBuffer b(getZoneData()->getMinTTLData(), sizeof(uint32_t));
     EXPECT_EQ(RRTTL(1200), RRTTL(b));
 }
 
@@ -247,7 +247,7 @@ TEST_P(ZoneDataUpdaterTest, rrsigOnly) {
 
 // Commonly used checks for rrsigForNSEC3Only
 void
-checkNSEC3Rdata(isc::util::MemorySegment& mem_sgmt, const Name& name,
+checkNSEC3Rdata(bundy::util::MemorySegment& mem_sgmt, const Name& name,
                 ZoneData* zone_data)
 {
     ZoneNode* node = NULL;
@@ -303,7 +303,7 @@ TEST_P(ZoneDataUpdaterTest, rrsigForNSEC3Only) {
                      textToRRset(
                          "09GM.example.org. 3600 IN RRSIG NSEC3 5 3 3600 "
                          "20150420235959 20051021000000 1 example.org. FAKE")),
-                 isc::NotImplemented);
+                 bundy::NotImplemented);
 }
 
 // Generate many small RRsets. This tests that the underlying memory segment
@@ -337,7 +337,7 @@ TEST_P(ZoneDataUpdaterTest, updaterCollision) {
                                            Name("another.example.com."));
     EXPECT_THROW(ZoneDataUpdater(*mem_sgmt_, RRClass::IN(),
                                  Name("another.example.com."), *zone_data),
-                 isc::InvalidOperation);
+                 bundy::InvalidOperation);
     ZoneData::destroy(*mem_sgmt_, zone_data, RRClass::IN());
 }
 

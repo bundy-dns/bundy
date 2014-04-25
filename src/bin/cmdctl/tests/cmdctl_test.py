@@ -21,7 +21,7 @@ import time
 import stat
 import sys
 from cmdctl import *
-import isc.log
+import bundy.log
 
 assert 'CMDCTL_SRC_PATH' in os.environ,\
        "Please run this test with 'make check'"
@@ -374,7 +374,7 @@ class TestSecureHTTPRequestHandler(unittest.TestCase):
             self.handler._check_user_name_and_pwd = orig_check_user_name_and_pwd
 
 class MockSession:
-    """Act like isc.cc.Session, stealing group_sendmsg/recvmsg().
+    """Act like bundy.cc.Session, stealing group_sendmsg/recvmsg().
 
     The initial simple version only records given parameters in
     group_sendmsg() for later inspection and raise a timeout exception
@@ -389,7 +389,7 @@ class MockSession:
         self.__sent_messages.append((msg, module_name))
 
     def group_recvmsg(self, nonblock, seq):
-        raise isc.cc.session.SessionTimeout('dummy timeout')
+        raise bundy.cc.session.SessionTimeout('dummy timeout')
 
 class MyCommandControl(CommandControl):
     def __init__(self, httpserver, verbose):
@@ -405,8 +405,8 @@ class MyCommandControl(CommandControl):
 
     def _setup_session(self):
         spec_file = BUILD_FILE_PATH + 'cmdctl.spec'
-        module_spec = isc.config.module_spec_from_file(spec_file)
-        config = isc.config.config_data.ConfigData(module_spec)
+        module_spec = bundy.config.module_spec_from_file(spec_file)
+        config = bundy.config.config_data.ConfigData(module_spec)
         self._module_name = 'Cmdctl'
         self._cmdctl_config_data = config.get_full_config()
 
@@ -438,14 +438,14 @@ class TestCommandControl(unittest.TestCase):
 
     def test_get_cmdctl_config_data(self):
         old_env = os.environ
-        if 'B10_FROM_SOURCE' in os.environ:
-            del os.environ['B10_FROM_SOURCE']
+        if 'BUNDY_FROM_SOURCE' in os.environ:
+            del os.environ['BUNDY_FROM_SOURCE']
         self.cmdctl.get_cmdctl_config_data()
         self._check_config(self.cmdctl)
         os.environ = old_env
 
         old_env = os.environ
-        os.environ['B10_FROM_SOURCE'] = '../'
+        os.environ['BUNDY_FROM_SOURCE'] = '../'
         self._check_config(self.cmdctl)
         os.environ = old_env
 
@@ -518,7 +518,7 @@ class TestCommandControl(unittest.TestCase):
         self._check_answer(answer, 1, 'unknown config item: non-exist')
 
         old_env = os.environ
-        os.environ['B10_FROM_SOURCE'] = '../'
+        os.environ['BUNDY_FROM_SOURCE'] = '../'
         self._check_config(self.cmdctl)
         os.environ = old_env
 
@@ -784,7 +784,7 @@ class TestFuncNotInClass(unittest.TestCase):
 
 
 if __name__== "__main__":
-    isc.log.resetUnitTestRootLogger()
+    bundy.log.resetUnitTestRootLogger()
     unittest.main()
 
 

@@ -21,7 +21,7 @@
 
 #include <iostream>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 class LibDHCP {
@@ -36,7 +36,7 @@ public:
     /// Method returns the collection of DHCP standard DHCP
     /// option definitions.
     /// @todo DHCPv4 option definitions are not implemented. For now
-    /// this function will throw isc::NotImplemented in case of attempt
+    /// this function will throw bundy::NotImplemented in case of attempt
     /// to get option definitions for V4 universe.
     ///
     /// @param u universe of the options (V4 or V6).
@@ -93,9 +93,9 @@ public:
     ///
     /// @return instance of option.
     ///
-    /// @throw isc::InvalidOperation if there is no factory function registered
+    /// @throw bundy::InvalidOperation if there is no factory function registered
     ///        for the specified option type.
-    static isc::dhcp::OptionPtr optionFactory(isc::dhcp::Option::Universe u,
+    static bundy::dhcp::OptionPtr optionFactory(bundy::dhcp::Option::Universe u,
                                               uint16_t type,
                                               const OptionBuffer& buf);
 
@@ -110,8 +110,8 @@ public:
     ///
     /// @param buf output buffer (assembled options will be stored here)
     /// @param options collection of options to store to
-    static void packOptions(isc::util::OutputBuffer& buf,
-                            const isc::dhcp::OptionCollection& options);
+    static void packOptions(bundy::util::OutputBuffer& buf,
+                            const bundy::dhcp::OptionCollection& options);
 
     /// @brief Parses provided buffer as DHCPv4 options and creates Option objects.
     ///
@@ -125,7 +125,7 @@ public:
     ///        put here.
     static size_t unpackOptions4(const OptionBuffer& buf,
                                  const std::string& option_space,
-                                 isc::dhcp::OptionCollection& options);
+                                 bundy::dhcp::OptionCollection& options);
 
     /// @brief Parses provided buffer as DHCPv6 options and creates Option objects.
     ///
@@ -150,13 +150,13 @@ public:
     /// @return offset to the first byte after last parsed option
     static size_t unpackOptions6(const OptionBuffer& buf,
                                  const std::string& option_space,
-                                 isc::dhcp::OptionCollection& options,
+                                 bundy::dhcp::OptionCollection& options,
                                  size_t* relay_msg_offset = 0,
                                  size_t* relay_msg_len = 0);
 
     /// Registers factory method that produces options of specific option types.
     ///
-    /// @throw isc::BadValue if provided the type is already registered, has
+    /// @throw bundy::BadValue if provided the type is already registered, has
     ///        too large a value or an invalid universe is specified.
     ///
     /// @param u universe of the option (V4 or V6)
@@ -194,7 +194,7 @@ public:
     ///        put here.
     static size_t unpackVendorOptions6(const uint32_t vendor_id,
                                        const OptionBuffer& buf,
-                                       isc::dhcp::OptionCollection& options);
+                                       bundy::dhcp::OptionCollection& options);
 
     /// @brief Parses provided buffer as DHCPv4 vendor options and creates
     ///        Option objects.
@@ -207,7 +207,7 @@ public:
     /// @param options Reference to option container. Options will be
     ///        put here.
     static size_t unpackVendorOptions4(const uint32_t vendor_id, const OptionBuffer& buf,
-                                       isc::dhcp::OptionCollection& options);
+                                       bundy::dhcp::OptionCollection& options);
 
 private:
 

@@ -25,9 +25,9 @@
 #include <string.h>
 
 using namespace std;
-using namespace isc::util;
+using namespace bundy::util;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 OptionPtr
@@ -43,7 +43,7 @@ Option::Option(Universe u, uint16_t type)
 
     // END option (type 255 is forbidden as well)
     if ((u == V4) && ((type == 0) || (type > 254))) {
-        isc_throw(BadValue, "Can't create V4 option of type "
+        bundy_throw(BadValue, "Can't create V4 option of type "
                   << type << ", V4 options are in range 1..254");
     }
 }
@@ -62,17 +62,17 @@ Option::Option(Universe u, uint16_t type, OptionBufferConstIter first,
 void
 Option::check() {
     if ( (universe_ != V4) && (universe_ != V6) ) {
-        isc_throw(BadValue, "Invalid universe type specified. "
+        bundy_throw(BadValue, "Invalid universe type specified. "
                   << "Only V4 and V6 are allowed.");
     }
 
     if (universe_ == V4) {
 
         if (type_ > 255) {
-            isc_throw(OutOfRange, "DHCPv4 Option type " << type_ << " is too big. "
+            bundy_throw(OutOfRange, "DHCPv4 Option type " << type_ << " is too big. "
                       << "For DHCPv4 allowed type range is 0..255");
         } else if (data_.size() > 255) {
-            isc_throw(OutOfRange, "DHCPv4 Option " << type_ << " is too big.");
+            bundy_throw(OutOfRange, "DHCPv4 Option " << type_ << " is too big.");
             /// TODO Larger options can be stored as separate instances
             /// of DHCPv4 options. Clients MUST concatenate them.
             /// Fortunately, there are no such large options used today.
@@ -83,7 +83,7 @@ Option::check() {
     // both types and data size.
 }
 
-void Option::pack(isc::util::OutputBuffer& buf) {
+void Option::pack(bundy::util::OutputBuffer& buf) {
     // Write a header.
     packHeader(buf);
     // Write data.
@@ -95,10 +95,10 @@ void Option::pack(isc::util::OutputBuffer& buf) {
 }
 
 void
-Option::packHeader(isc::util::OutputBuffer& buf) {
+Option::packHeader(bundy::util::OutputBuffer& buf) {
     if (universe_ == V4) {
         if (len() > 255) {
-            isc_throw(OutOfRange, "DHCPv4 Option " << type_ << " is too big. "
+            bundy_throw(OutOfRange, "DHCPv4 Option " << type_ << " is too big. "
                       << "At most 255 bytes are supported.");
             /// TODO Larger options can be stored as separate instances
             /// of DHCPv4 options. Clients MUST concatenate them.
@@ -115,7 +115,7 @@ Option::packHeader(isc::util::OutputBuffer& buf) {
 }
 
 void
-Option::packOptions(isc::util::OutputBuffer& buf) {
+Option::packOptions(bundy::util::OutputBuffer& buf) {
     LibDHCP::packOptions(buf, options_);
 }
 
@@ -141,7 +141,7 @@ Option::unpackOptions(const OptionBuffer& buf) {
         LibDHCP::unpackOptions6(buf, getEncapsulatedSpace(), options_);
         return;
     default:
-        isc_throw(isc::BadValue, "Invalid universe type " << universe_);
+        bundy_throw(bundy::BadValue, "Invalid universe type " << universe_);
     }
 }
 
@@ -176,7 +176,7 @@ Option::valid() {
 }
 
 OptionPtr Option::getOption(uint16_t opt_type) {
-    isc::dhcp::OptionCollection::const_iterator x =
+    bundy::dhcp::OptionCollection::const_iterator x =
         options_.find(opt_type);
     if ( x != options_.end() ) {
         return (*x).second;
@@ -185,7 +185,7 @@ OptionPtr Option::getOption(uint16_t opt_type) {
 }
 
 bool Option::delOption(uint16_t opt_type) {
-    isc::dhcp::OptionCollection::iterator x = options_.find(opt_type);
+    bundy::dhcp::OptionCollection::iterator x = options_.find(opt_type);
     if ( x != options_.end() ) {
         options_.erase(x);
         return true; // delete successful
@@ -234,7 +234,7 @@ void Option::addOption(OptionPtr opt) {
     if (universe_ == V4) {
         // check for uniqueness (DHCPv4 options must be unique)
         if (getOption(opt->getType())) {
-            isc_throw(BadValue, "Option " << opt->getType()
+            bundy_throw(BadValue, "Option " << opt->getType()
                       << " already present in this message.");
         }
     }
@@ -243,7 +243,7 @@ void Option::addOption(OptionPtr opt) {
 
 uint8_t Option::getUint8() {
     if (data_.size() < sizeof(uint8_t) ) {
-        isc_throw(OutOfRange, "Attempt to read uint8 from option " << type_
+        bundy_throw(OutOfRange, "Attempt to read uint8 from option " << type_
                   << " that has size " << data_.size());
     }
     return (data_[0]);
@@ -283,5 +283,5 @@ Option::~Option() {
 
 }
 
-} // end of isc::dhcp namespace
-} // end of isc namespace
+} // end of bundy::dhcp namespace
+} // end of bundy namespace

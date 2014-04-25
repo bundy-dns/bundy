@@ -18,7 +18,7 @@
 #include <exceptions/exceptions.h>
 #include "option_info.h"
 
-namespace isc {
+namespace bundy {
 namespace badpacket {
 
 /// \brief Header Flags
@@ -84,7 +84,7 @@ public:
         // should not really be needed, as the command line parsing should have
         // checked the limits.  But be safe.)
         if ((value < o.minval(index)) || (value > o.maxval(index))) {
-            isc_throw(isc::BadValue, "value of index " << index << " is out of range");
+            bundy_throw(bundy::BadValue, "value of index " << index << " is out of range");
         }
 
         // Clear the field then set it with the value.
@@ -97,6 +97,6 @@ private:
 };
 
 } // namespace badpacket
-} // namespace isc
+} // namespace bundy
 
 #endif // HEADER_FLAGS_H

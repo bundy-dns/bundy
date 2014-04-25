@@ -20,8 +20,8 @@
 
 #include <gtest/gtest.h>
 
-using namespace isc::datasrc;
-using isc::dns::Name;
+using namespace bundy::datasrc;
+using bundy::dns::Name;
 
 namespace {
 
@@ -31,17 +31,18 @@ namespace {
  */
 class NopClient : public DataSourceClient {
 public:
-    virtual FindResult findZone(const isc::dns::Name&) const {
+    NopClient() : DataSourceClient("nop") {}
+    virtual FindResult findZone(const bundy::dns::Name&) const {
         return (FindResult(result::NOTFOUND, ZoneFinderPtr()));
     }
-    virtual ZoneUpdaterPtr getUpdater(const isc::dns::Name&, bool, bool)
+    virtual ZoneUpdaterPtr getUpdater(const bundy::dns::Name&, bool, bool)
         const
     {
         return (ZoneUpdaterPtr());
     }
     virtual std::pair<ZoneJournalReader::Result, ZoneJournalReaderPtr>
-    getJournalReader(const isc::dns::Name&, uint32_t, uint32_t) const {
-        isc_throw(isc::NotImplemented, "Journaling isn't supported "
+    getJournalReader(const bundy::dns::Name&, uint32_t, uint32_t) const {
+        bundy_throw(bundy::NotImplemented, "Journaling isn't supported "
                   "in Nop data source");
     }
 };
@@ -53,15 +54,19 @@ public:
 
 // The default implementation is NotImplemented
 TEST_F(ClientTest, defaultIterator) {
-    EXPECT_THROW(client_.getIterator(Name(".")), isc::NotImplemented);
+    EXPECT_THROW(client_.getIterator(Name(".")), bundy::NotImplemented);
 }
 
 TEST_F(ClientTest, defaultGetZoneCount) {
-    EXPECT_THROW(client_.getZoneCount(), isc::NotImplemented);
+    EXPECT_THROW(client_.getZoneCount(), bundy::NotImplemented);
 }
 
 TEST_F(ClientTest, defaultCreateZone) {
-    EXPECT_THROW(client_.createZone(Name("example.com.")), isc::NotImplemented);
+    EXPECT_THROW(client_.createZone(Name("example.com.")), bundy::NotImplemented);
+}
+
+TEST_F(ClientTest, getDataSourceName) {
+    EXPECT_EQ("nop", client_.getDataSourceName());
 }
 
 }

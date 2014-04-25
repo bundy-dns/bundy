@@ -22,7 +22,7 @@
 #include <util/range_utilities.h>
 
 using namespace std;
-using namespace isc::util;
+using namespace bundy::util;
 
 TEST(RangeUtilitiesTest, isZero) {
 

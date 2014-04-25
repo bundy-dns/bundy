@@ -23,7 +23,7 @@
 
 #include <gtest/gtest.h>
 
-namespace isc {
+namespace bundy {
 
 class UnitTestUtil {
 public:
@@ -56,7 +56,7 @@ public:
     ///
     static ::testing::AssertionResult
     matchName(const char* nameexp1, const char* nameexp2,
-              const isc::dns::Name& name1, const isc::dns::Name& name2);
+              const bundy::dns::Name& name1, const bundy::dns::Name& name2);
 
     ///
     /// Populate a request message
@@ -65,12 +65,12 @@ public:
     /// opcode 'opcode' and the name/class/type query tuple specified in
     /// 'name', 'rrclass' and 'rrtype.
     static void
-    createRequestMessage(isc::dns::Message& request_message,
-                         const isc::dns::Opcode& opcode,
+    createRequestMessage(bundy::dns::Message& request_message,
+                         const bundy::dns::Opcode& opcode,
                          const uint16_t qid,
-                         const isc::dns::Name& name,
-                         const isc::dns::RRClass& rrclass,
-                         const isc::dns::RRType& rrtype);
+                         const bundy::dns::Name& name,
+                         const bundy::dns::RRClass& rrclass,
+                         const bundy::dns::RRType& rrtype);
 
     ///
     /// Populate a DNSSEC request message
@@ -80,12 +80,12 @@ public:
     /// 'name', 'rrclass' and 'rrtype.
     /// EDNS will be added with DO=1 and bufsize 4096
     static void
-    createDNSSECRequestMessage(isc::dns::Message& request_message,
-                               const isc::dns::Opcode& opcode,
+    createDNSSECRequestMessage(bundy::dns::Message& request_message,
+                               const bundy::dns::Opcode& opcode,
                                const uint16_t qid,
-                               const isc::dns::Name& name,
-                               const isc::dns::RRClass& rrclass,
-                               const isc::dns::RRType& rrtype);
+                               const bundy::dns::Name& name,
+                               const bundy::dns::RRClass& rrclass,
+                               const bundy::dns::RRType& rrtype);
 
 };
 }

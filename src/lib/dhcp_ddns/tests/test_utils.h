@@ -20,7 +20,7 @@
 #include <gtest/gtest.h>
 
 
-namespace isc {
+namespace bundy {
 namespace dhcp_ddns {
 
 /// @brief Returns the result of select() given an fd to check for read status.
@@ -31,7 +31,7 @@ namespace dhcp_ddns {
 /// read, > 0 if it is ready to read. 
 int selectCheck(int fd_to_check);
 
-}; // namespace isc::dhcp_ddns;
-}; // namespace isc;
+}; // namespace bundy::dhcp_ddns;
+}; // namespace bundy;
 
 #endif 

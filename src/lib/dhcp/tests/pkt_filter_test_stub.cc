@@ -14,7 +14,7 @@
 
 #include <dhcp/tests/pkt_filter_test_stub.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 namespace test {
 
@@ -29,7 +29,7 @@ PktFilterTestStub::isDirectResponseSupported() const {
 
 SocketInfo
 PktFilterTestStub::openSocket(const Iface&,
-           const isc::asiolink::IOAddress& addr,
+           const bundy::asiolink::IOAddress& addr,
            const uint16_t port, const bool, const bool) {
     return (SocketInfo(addr, port, 0));
 }

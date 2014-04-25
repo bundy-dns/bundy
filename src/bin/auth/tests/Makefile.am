@@ -14,7 +14,7 @@ AM_CPPFLAGS += -DDSRC_DIR=\"$(abs_top_builddir)/src/lib/datasrc\"
 AM_CPPFLAGS += -DPLUGIN_DATA_PATH=\"$(abs_top_builddir)/src/bin/cfgmgr/plugins\"
 AM_CPPFLAGS += -DINSTALL_PROG=\"$(abs_top_srcdir)/install-sh\"
 
-AM_CXXFLAGS = $(B10_CXXFLAGS)
+AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 
 if USE_STATIC_LINK
 AM_LDFLAGS = -static
@@ -69,22 +69,22 @@ nodist_run_unittests_SOURCES += statistics_unittest.cc
 
 run_unittests_CPPFLAGS = $(AM_CPPFLAGS) $(GTEST_INCLUDES)
 run_unittests_LDFLAGS = $(AM_LDFLAGS) $(GTEST_LDFLAGS)
-run_unittests_LDADD = $(top_builddir)/src/lib/testutils/libb10-testutils.la
-run_unittests_LDADD +=  $(top_builddir)/src/lib/datasrc/libb10-datasrc.la
-run_unittests_LDADD +=  $(top_builddir)/src/lib/dns/libb10-dns++.la
-run_unittests_LDADD += $(top_builddir)/src/lib/util/libb10-util.la
-run_unittests_LDADD += $(top_builddir)/src/lib/asiodns/libb10-asiodns.la
-run_unittests_LDADD += $(top_builddir)/src/lib/asiolink/libb10-asiolink.la
-run_unittests_LDADD += $(top_builddir)/src/lib/config/libb10-cfgclient.la
-run_unittests_LDADD += $(top_builddir)/src/lib/cc/libb10-cc.la
-run_unittests_LDADD += $(top_builddir)/src/lib/exceptions/libb10-exceptions.la
-run_unittests_LDADD += $(top_builddir)/src/lib/xfr/libb10-xfr.la
-run_unittests_LDADD += $(top_builddir)/src/lib/log/libb10-log.la
-run_unittests_LDADD += $(top_builddir)/src/lib/server_common/libb10-server-common.la
-run_unittests_LDADD += $(top_builddir)/src/lib/nsas/libb10-nsas.la
+run_unittests_LDADD = $(top_builddir)/src/lib/testutils/libbundy-testutils.la
+run_unittests_LDADD +=  $(top_builddir)/src/lib/datasrc/libbundy-datasrc.la
+run_unittests_LDADD +=  $(top_builddir)/src/lib/dns/libbundy-dns++.la
+run_unittests_LDADD += $(top_builddir)/src/lib/util/libbundy-util.la
+run_unittests_LDADD += $(top_builddir)/src/lib/asiodns/libbundy-asiodns.la
+run_unittests_LDADD += $(top_builddir)/src/lib/asiolink/libbundy-asiolink.la
+run_unittests_LDADD += $(top_builddir)/src/lib/config/libbundy-cfgclient.la
+run_unittests_LDADD += $(top_builddir)/src/lib/cc/libbundy-cc.la
+run_unittests_LDADD += $(top_builddir)/src/lib/exceptions/libbundy-exceptions.la
+run_unittests_LDADD += $(top_builddir)/src/lib/xfr/libbundy-xfr.la
+run_unittests_LDADD += $(top_builddir)/src/lib/log/libbundy-log.la
+run_unittests_LDADD += $(top_builddir)/src/lib/server_common/libbundy-server-common.la
+run_unittests_LDADD += $(top_builddir)/src/lib/nsas/libbundy-nsas.la
 run_unittests_LDADD += $(top_builddir)/src/lib/util/unittests/libutil_unittests.la
 run_unittests_LDADD += $(top_builddir)/src/lib/config/tests/libfake_session.la
-run_unittests_LDADD += $(top_builddir)/src/lib/util/threads/libb10-threads.la
+run_unittests_LDADD += $(top_builddir)/src/lib/util/threads/libbundy-threads.la
 run_unittests_LDADD += $(GTEST_LDADD)
 run_unittests_LDADD += $(SQLITE_LIBS)
 
@@ -120,8 +120,8 @@ testdata/example-nsec3.sqlite3: testdata/example-nsec3.zone testdata/example-com
 		example.com testdata/example-nsec3.zone
 
 check-local:
-	B10_FROM_BUILD=${abs_top_builddir} ./run_unittests
-	$(PYTHON) $(srcdir)/gen-statisticsitems_test.py $(top_builddir)/src/bin/auth/b10-auth.xml
+	BUNDY_FROM_BUILD=${abs_top_builddir} ./run_unittests
+	$(PYTHON) $(srcdir)/gen-statisticsitems_test.py $(top_builddir)/src/bin/auth/bundy-auth.xml
 
 noinst_PROGRAMS = run_unittests
 

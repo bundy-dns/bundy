@@ -19,7 +19,7 @@
 
 #include <asiolink/dummy_io_cb.h>
 
-using namespace isc::asiolink;
+using namespace bundy::asiolink;
 using namespace asio;
 
 namespace { // begin unnamed namespace
@@ -28,9 +28,9 @@ TEST(DummyIOCallbackTest, throws) {
     DummyIOCallback cb;
     asio::error_code error_code;
 
-    // All methods should throw isc::Unexpected.
-    EXPECT_THROW(cb(error_code), isc::Unexpected);
-    EXPECT_THROW(cb(error_code, 42), isc::Unexpected);
+    // All methods should throw bundy::Unexpected.
+    EXPECT_THROW(cb(error_code), bundy::Unexpected);
+    EXPECT_THROW(cb(error_code, 42), bundy::Unexpected);
 }
 
 } // end of unnamed namespace

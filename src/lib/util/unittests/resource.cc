@@ -19,7 +19,7 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace unittests {
 
@@ -32,4 +32,4 @@ dontCreateCoreDumps() {
 
 } // end of namespace unittests
 } // end of namespace util
-} // end of namespace isc
+} // end of namespace bundy

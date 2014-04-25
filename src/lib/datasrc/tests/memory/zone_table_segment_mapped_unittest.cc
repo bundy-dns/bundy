@@ -27,11 +27,11 @@
 
 #include <sys/stat.h>
 
-using namespace isc::dns;
-using namespace isc::datasrc::memory;
-using namespace isc::data;
-using namespace isc::util;
-using namespace isc::util::random;
+using namespace bundy::dns;
+using namespace bundy::datasrc::memory;
+using namespace bundy::data;
+using namespace bundy::util;
+using namespace bundy::util::random;
 using namespace std;
 using boost::scoped_ptr;
 
@@ -178,12 +178,12 @@ TEST_F(ZoneTableSegmentMappedTest, getImplType) {
 
 TEST_F(ZoneTableSegmentMappedTest, getHeaderUninitialized) {
     // This should throw as we haven't called reset() yet.
-    EXPECT_THROW(ztable_segment_->getHeader(), isc::InvalidOperation);
+    EXPECT_THROW(ztable_segment_->getHeader(), bundy::InvalidOperation);
 }
 
 TEST_F(ZoneTableSegmentMappedTest, getMemorySegmentUninitialized) {
     // This should throw as we haven't called reset() yet.
-    EXPECT_THROW(ztable_segment_->getMemorySegment(), isc::InvalidOperation);
+    EXPECT_THROW(ztable_segment_->getMemorySegment(), bundy::InvalidOperation);
 }
 
 TEST_F(ZoneTableSegmentMappedTest, isUsableUninitialized) {
@@ -214,7 +214,7 @@ TEST_F(ZoneTableSegmentMappedTest, resetBadConfig) {
     EXPECT_THROW({
         ztable_segment_->reset(ZoneTableSegment::CREATE,
                                ConstElementPtr());
-    }, isc::InvalidParameter);
+    }, bundy::InvalidParameter);
 
     EXPECT_TRUE(verifyData(ztable_segment_->getMemorySegment()));
 
@@ -222,7 +222,7 @@ TEST_F(ZoneTableSegmentMappedTest, resetBadConfig) {
     EXPECT_THROW({
         ztable_segment_->reset(ZoneTableSegment::CREATE,
                                Element::fromJSON("42"));
-    }, isc::InvalidParameter);
+    }, bundy::InvalidParameter);
 
     EXPECT_TRUE(verifyData(ztable_segment_->getMemorySegment()));
 
@@ -230,7 +230,7 @@ TEST_F(ZoneTableSegmentMappedTest, resetBadConfig) {
     EXPECT_THROW({
         ztable_segment_->reset(ZoneTableSegment::CREATE,
                                Element::fromJSON("{}"));
-    }, isc::InvalidParameter);
+    }, bundy::InvalidParameter);
 
     EXPECT_TRUE(verifyData(ztable_segment_->getMemorySegment()));
 
@@ -238,7 +238,7 @@ TEST_F(ZoneTableSegmentMappedTest, resetBadConfig) {
     EXPECT_THROW({
         ztable_segment_->reset(ZoneTableSegment::CREATE,
                                Element::fromJSON("{\"foo\": \"bar\"}"));
-    }, isc::InvalidParameter);
+    }, bundy::InvalidParameter);
 
     EXPECT_TRUE(verifyData(ztable_segment_->getMemorySegment()));
 
@@ -246,7 +246,7 @@ TEST_F(ZoneTableSegmentMappedTest, resetBadConfig) {
     EXPECT_THROW({
         ztable_segment_->reset(ZoneTableSegment::CREATE,
                                Element::fromJSON("{\"mapped-file\": 42}"));
-    }, isc::InvalidParameter);
+    }, bundy::InvalidParameter);
 
     EXPECT_TRUE(verifyData(ztable_segment_->getMemorySegment()));
 }
@@ -259,8 +259,8 @@ TEST_F(ZoneTableSegmentMappedTest, reset) {
     }, MemorySegmentOpenError);
 
     // The following should still throw, unaffected by the failed open.
-    EXPECT_THROW(ztable_segment_->getHeader(), isc::InvalidOperation);
-    EXPECT_THROW(ztable_segment_->getMemorySegment(), isc::InvalidOperation);
+    EXPECT_THROW(ztable_segment_->getHeader(), bundy::InvalidOperation);
+    EXPECT_THROW(ztable_segment_->getMemorySegment(), bundy::InvalidOperation);
 
     // isUsable() and isWritable() must still return false, because the
     // segment has not been successfully reset() yet.
@@ -273,7 +273,7 @@ TEST_F(ZoneTableSegmentMappedTest, reset) {
         ztable_segment_->reset
             (static_cast<ZoneTableSegment::MemorySegmentOpenMode>(1234),
              config_params_);
-    }, isc::InvalidParameter);
+    }, bundy::InvalidParameter);
 
     // READ_WRITE mode must create the mapped file if it doesn't exist
     // (and must not result in an exception).
@@ -303,7 +303,7 @@ TEST_F(ZoneTableSegmentMappedTest, reset) {
     EXPECT_THROW({
         ztable_segment_->reset(ZoneTableSegment::CREATE,
                                Element::fromJSON("{}"));
-    }, isc::InvalidParameter);
+    }, bundy::InvalidParameter);
     EXPECT_TRUE(ztable_segment_->isUsable());
     EXPECT_TRUE(ztable_segment_->isWritable());
     // The following should not throw.
@@ -411,8 +411,8 @@ TEST_F(ZoneTableSegmentMappedTest, clearUninitialized) {
 
     // The following should still throw, because the segment has not
     // been successfully reset() yet.
-    EXPECT_THROW(ztable_segment_->getHeader(), isc::InvalidOperation);
-    EXPECT_THROW(ztable_segment_->getMemorySegment(), isc::InvalidOperation);
+    EXPECT_THROW(ztable_segment_->getHeader(), bundy::InvalidOperation);
+    EXPECT_THROW(ztable_segment_->getMemorySegment(), bundy::InvalidOperation);
 
     // isWritable() must still return false, because the segment has not
     // been successfully reset() yet.
@@ -437,8 +437,8 @@ TEST_F(ZoneTableSegmentMappedTest, clear) {
     EXPECT_FALSE(ztable_segment_->isUsable());
     EXPECT_FALSE(ztable_segment_->isWritable());
     // The following method calls should now throw.
-    EXPECT_THROW(ztable_segment_->getHeader(), isc::InvalidOperation);
-    EXPECT_THROW(ztable_segment_->getMemorySegment(), isc::InvalidOperation);
+    EXPECT_THROW(ztable_segment_->getHeader(), bundy::InvalidOperation);
+    EXPECT_THROW(ztable_segment_->getMemorySegment(), bundy::InvalidOperation);
 }
 
 TEST_F(ZoneTableSegmentMappedTest, resetFailedCorruptedChecksum) {

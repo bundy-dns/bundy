@@ -22,7 +22,7 @@
 
 #include <gtest/gtest.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 namespace test {
 
@@ -104,14 +104,14 @@ public:
     int rcode_;
 
     /// @brief Stores the message component of the last configuration tattempt.
-    isc::data::ConstElementPtr comment_;
+    bundy::data::ConstElementPtr comment_;
 
     /// @brief Server object under test.
     D2Dhcpv4Srv srv_;
 };
 
-}; // end of isc::dhcp::test namespace
-}; // end of isc::dhcp namespace
-}; // end of isc namespace
+}; // end of bundy::dhcp::test namespace
+}; // end of bundy::dhcp namespace
+}; // end of bundy namespace
 
 #endif // D2_UNITTEST_H

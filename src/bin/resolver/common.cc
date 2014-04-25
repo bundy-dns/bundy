@@ -14,4 +14,4 @@
 
 #include "common.h"
 
-const char* const RESOLVER_NAME = "b10-resolver";
+const char* const RESOLVER_NAME = "bundy-resolver";

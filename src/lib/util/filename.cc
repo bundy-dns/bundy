@@ -23,7 +23,7 @@
 using namespace std;
 
 
-namespace isc {
+namespace bundy {
 namespace util {
 
 // Split string into components.  Any backslashes are assumed to have
@@ -90,9 +90,9 @@ Filename::expandWithDefault(const string& defname) const {
     string def_extension("");
 
     // Normalize the input string.
-    string copy_defname = isc::util::str::trim(defname);
+    string copy_defname = bundy::util::str::trim(defname);
 #ifdef WIN32
-    isc::util::str::normalizeSlash(copy_defname);
+    bundy::util::str::normalizeSlash(copy_defname);
 #endif
 
     // Split into the components
@@ -116,9 +116,9 @@ Filename::useAsDefault(const string& name) const {
     string name_extension("");
 
     // Normalize the input string.
-    string copy_name = isc::util::str::trim(name);
+    string copy_name = bundy::util::str::trim(name);
 #ifdef WIN32
-    isc::util::str::normalizeSlash(copy_name);
+    bundy::util::str::normalizeSlash(copy_name);
 #endif
 
     // Split into the components
@@ -152,4 +152,4 @@ Filename::setDirectory(const std::string& new_directory) {
 
 
 } // namespace log
-} // namespace isc
+} // namespace bundy

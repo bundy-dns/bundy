@@ -17,7 +17,7 @@
 
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 /// \brief Severity Levels
@@ -58,7 +58,7 @@ struct Level {
     // Default assignment and copy constructor is appropriate
 };
 
-/// \brief Returns the isc::log::Severity value represented by the given string
+/// \brief Returns the bundy::log::Severity value represented by the given string
 ///
 /// This must be one of the strings "DEBUG", "INFO", "WARN", "ERROR", "FATAL" or
 /// "NONE". (Case is not important, but the string most not contain leading or
@@ -67,10 +67,10 @@ struct Level {
 /// \param sev_str The string representing severity value
 ///
 /// \return The severity. If the string is not recognized, an error will be
-///         logged and the string will return  isc::log::INFO.
-isc::log::Severity getSeverity(const std::string& sev_str);
+///         logged and the string will return  bundy::log::INFO.
+bundy::log::Severity getSeverity(const std::string& sev_str);
 
 }   // namespace log
-}   // namespace isc
+}   // namespace bundy
 
 #endif // LOGGER_LEVEL_H

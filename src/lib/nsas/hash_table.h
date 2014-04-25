@@ -27,7 +27,7 @@
 // Maximum key length if the maximum size of a DNS name
 #define MAX_KEY_LENGTH 255
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 
 /// \brief Hash Table Slot
@@ -48,7 +48,7 @@ struct HashTableSlot {
     typedef typename std::list<boost::shared_ptr<T> >::iterator  iterator;
                                     ///< Iterator over elements with same hash
 
-    typedef isc::util::locks::upgradable_mutex mutex_type;
+    typedef bundy::util::locks::upgradable_mutex mutex_type;
                                     ///< Mutex protecting this slot
     //@}
 
@@ -115,11 +115,11 @@ public:
     ///
     //@{
     typedef typename
-    isc::util::locks::sharable_lock<typename HashTableSlot<T>::mutex_type>
+    bundy::util::locks::sharable_lock<typename HashTableSlot<T>::mutex_type>
     sharable_lock;                  ///< Type for a scope-limited read-lock
 
     typedef typename
-    isc::util::locks::scoped_lock<typename HashTableSlot<T>::mutex_type>
+    bundy::util::locks::scoped_lock<typename HashTableSlot<T>::mutex_type>
     scoped_lock;                    ///< Type for a scope-limited write-lock
     //@}
 
@@ -332,6 +332,6 @@ bool HashTable<T>::addInternal(boost::shared_ptr<T>& object,
 }
 
 }   // namespace nsas
-}   // namespace isc
+}   // namespace bundy
 
 #endif // HASH_TABLE_H

@@ -24,7 +24,7 @@
 
 #include <time.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief MySQL Handle Holder
@@ -48,7 +48,7 @@ public:
     /// @throw DbOpenError Unable to initialize MySql handle.
     MySqlHolder() : mysql_(mysql_init(NULL)) {
         if (mysql_ == NULL) {
-            isc_throw(DbOpenError, "unable to initialize MySQL");
+            bundy_throw(DbOpenError, "unable to initialize MySQL");
         }
     }
 
@@ -89,7 +89,7 @@ class MySqlLease6Exchange;
 
 /// @brief MySQL Lease Manager
 ///
-/// This class provides the \ref isc::dhcp::LeaseMgr interface to the MySQL
+/// This class provides the \ref bundy::dhcp::LeaseMgr interface to the MySQL
 /// database.  Use of this backend presupposes that a MySQL database is
 /// available and that the Kea schema has been created within it.
 
@@ -113,9 +113,9 @@ public:
     /// @param parameters A data structure relating keywords and values
     ///        concerned with the database.
     ///
-    /// @throw isc::dhcp::NoDatabaseName Mandatory database name not given
-    /// @throw isc::dhcp::DbOpenError Error opening the database
-    /// @throw isc::dhcp::DbOperationError An operation on the open database has
+    /// @throw bundy::dhcp::NoDatabaseName Mandatory database name not given
+    /// @throw bundy::dhcp::DbOpenError Error opening the database
+    /// @throw bundy::dhcp::DbOperationError An operation on the open database has
     ///        failed.
     MySqlLeaseMgr(const ParameterMap& parameters);
 
@@ -129,7 +129,7 @@ public:
     /// @result true if the lease was added, false if not (because a lease
     ///         with the same address was already there).
     ///
-    /// @throw isc::dhcp::DbOperationError An operation on the open database has
+    /// @throw bundy::dhcp::DbOperationError An operation on the open database has
     ///        failed.
     virtual bool addLease(const Lease4Ptr& lease);
 
@@ -140,7 +140,7 @@ public:
     /// @result true if the lease was added, false if not (because a lease
     ///         with the same address was already there).
     ///
-    /// @throw isc::dhcp::DbOperationError An operation on the open database has
+    /// @throw bundy::dhcp::DbOperationError An operation on the open database has
     ///        failed.
     virtual bool addLease(const Lease6Ptr& lease);
 
@@ -157,12 +157,12 @@ public:
     ///
     /// @return smart pointer to the lease (or NULL if a lease is not found)
     ///
-    /// @throw isc::dhcp::DataTruncation Data was truncated on retrieval to
+    /// @throw bundy::dhcp::DataTruncation Data was truncated on retrieval to
     ///        fit into the space allocated for the result.  This indicates a
     ///        programming error.
-    /// @throw isc::dhcp::DbOperationError An operation on the open database has
+    /// @throw bundy::dhcp::DbOperationError An operation on the open database has
     ///        failed.
-    virtual Lease4Ptr getLease4(const isc::asiolink::IOAddress& addr) const;
+    virtual Lease4Ptr getLease4(const bundy::asiolink::IOAddress& addr) const;
 
 
     /// @brief Returns existing IPv4 leases for specified hardware address.
@@ -176,12 +176,12 @@ public:
     ///
     /// @return lease collection
     ///
-    /// @throw isc::dhcp::DataTruncation Data was truncated on retrieval to
+    /// @throw bundy::dhcp::DataTruncation Data was truncated on retrieval to
     ///        fit into the space allocated for the result.  This indicates a
     ///        programming error.
-    /// @throw isc::dhcp::DbOperationError An operation on the open database has
+    /// @throw bundy::dhcp::DbOperationError An operation on the open database has
     ///        failed.
-    virtual Lease4Collection getLease4(const isc::dhcp::HWAddr& hwaddr) const;
+    virtual Lease4Collection getLease4(const bundy::dhcp::HWAddr& hwaddr) const;
 
     /// @brief Returns existing IPv4 leases for specified hardware address
     ///        and a subnet
@@ -194,12 +194,12 @@ public:
     ///
     /// @return a pointer to the lease (or NULL if a lease is not found)
     ///
-    /// @throw isc::dhcp::DataTruncation Data was truncated on retrieval to
+    /// @throw bundy::dhcp::DataTruncation Data was truncated on retrieval to
     ///        fit into the space allocated for the result.  This indicates a
     ///        programming error.
-    /// @throw isc::dhcp::DbOperationError An operation on the open database has
+    /// @throw bundy::dhcp::DbOperationError An operation on the open database has
     ///        failed.
-    virtual Lease4Ptr getLease4(const isc::dhcp::HWAddr& hwaddr,
+    virtual Lease4Ptr getLease4(const bundy::dhcp::HWAddr& hwaddr,
                                 SubnetID subnet_id) const;
 
     /// @brief Returns existing IPv4 lease for specified client-id
@@ -213,10 +213,10 @@ public:
     ///
     /// @return lease collection
     ///
-    /// @throw isc::dhcp::DataTruncation Data was truncated on retrieval to
+    /// @throw bundy::dhcp::DataTruncation Data was truncated on retrieval to
     ///        fit into the space allocated for the result.  This indicates a
     ///        programming error.
-    /// @throw isc::dhcp::DbOperationError An operation on the open database has
+    /// @throw bundy::dhcp::DbOperationError An operation on the open database has
     ///        failed.
     virtual Lease4Collection getLease4(const ClientId& clientid) const;
 
@@ -228,7 +228,7 @@ public:
     /// @param subnet_id A subnet identifier.
     ///
     /// @return A pointer to the lease or NULL if the lease is not found.
-    /// @throw isc::NotImplemented On every call as this function is currently
+    /// @throw bundy::NotImplemented On every call as this function is currently
     /// not implemented for the MySQL backend.
     virtual Lease4Ptr getLease4(const ClientId& client_id, const HWAddr& hwaddr,
                                 SubnetID subnet_id) const;
@@ -243,10 +243,10 @@ public:
     ///
     /// @return a pointer to the lease (or NULL if a lease is not found)
     ///
-    /// @throw isc::dhcp::DataTruncation Data was truncated on retrieval to
+    /// @throw bundy::dhcp::DataTruncation Data was truncated on retrieval to
     ///        fit into the space allocated for the result.  This indicates a
     ///        programming error.
-    /// @throw isc::dhcp::DbOperationError An operation on the open database has
+    /// @throw bundy::dhcp::DbOperationError An operation on the open database has
     ///        failed.
     virtual Lease4Ptr getLease4(const ClientId& clientid,
                                 SubnetID subnet_id) const;
@@ -262,15 +262,15 @@ public:
     ///
     /// @return smart pointer to the lease (or NULL if a lease is not found)
     ///
-    /// @throw isc::BadValue record retrieved from database had an invalid
+    /// @throw bundy::BadValue record retrieved from database had an invalid
     ///        lease type field.
-    /// @throw isc::dhcp::DataTruncation Data was truncated on retrieval to
+    /// @throw bundy::dhcp::DataTruncation Data was truncated on retrieval to
     ///        fit into the space allocated for the result.  This indicates a
     ///        programming error.
-    /// @throw isc::dhcp::DbOperationError An operation on the open database has
+    /// @throw bundy::dhcp::DbOperationError An operation on the open database has
     ///        failed.
     virtual Lease6Ptr getLease6(Lease::Type type,
-                                const isc::asiolink::IOAddress& addr) const;
+                                const bundy::asiolink::IOAddress& addr) const;
 
     /// @brief Returns existing IPv6 leases for a given DUID+IA combination
     ///
@@ -285,12 +285,12 @@ public:
     ///
     /// @return smart pointer to the lease (or NULL if a lease is not found)
     ///
-    /// @throw isc::BadValue record retrieved from database had an invalid
+    /// @throw bundy::BadValue record retrieved from database had an invalid
     ///        lease type field.
-    /// @throw isc::dhcp::DataTruncation Data was truncated on retrieval to
+    /// @throw bundy::dhcp::DataTruncation Data was truncated on retrieval to
     ///        fit into the space allocated for the result.  This indicates a
     ///        programming error.
-    /// @throw isc::dhcp::DbOperationError An operation on the open database has
+    /// @throw bundy::dhcp::DbOperationError An operation on the open database has
     ///        failed.
     virtual Lease6Collection getLeases6(Lease::Type type, const DUID& duid,
                                         uint32_t iaid) const;
@@ -304,12 +304,12 @@ public:
     ///
     /// @return lease collection (may be empty if no lease is found)
     ///
-    /// @throw isc::BadValue record retrieved from database had an invalid
+    /// @throw bundy::BadValue record retrieved from database had an invalid
     ///        lease type field.
-    /// @throw isc::dhcp::DataTruncation Data was truncated on retrieval to
+    /// @throw bundy::dhcp::DataTruncation Data was truncated on retrieval to
     ///        fit into the space allocated for the result.  This indicates a
     ///        programming error.
-    /// @throw isc::dhcp::DbOperationError An operation on the open database has
+    /// @throw bundy::dhcp::DbOperationError An operation on the open database has
     ///        failed.
     virtual Lease6Collection getLeases6(Lease::Type type, const DUID& duid,
                                         uint32_t iaid, SubnetID subnet_id) const;
@@ -321,9 +321,9 @@ public:
     ///
     /// @param lease4 The lease to be updated.
     ///
-    /// @throw isc::dhcp::NoSuchLease Attempt to update a lease that did not
+    /// @throw bundy::dhcp::NoSuchLease Attempt to update a lease that did not
     ///        exist.
-    /// @throw isc::dhcp::DbOperationError An operation on the open database has
+    /// @throw bundy::dhcp::DbOperationError An operation on the open database has
     ///        failed.
     virtual void updateLease4(const Lease4Ptr& lease4);
 
@@ -334,9 +334,9 @@ public:
     ///
     /// @param lease6 The lease to be updated.
     ///
-    /// @throw isc::dhcp::NoSuchLease Attempt to update a lease that did not
+    /// @throw bundy::dhcp::NoSuchLease Attempt to update a lease that did not
     ///        exist.
-    /// @throw isc::dhcp::DbOperationError An operation on the open database has
+    /// @throw bundy::dhcp::DbOperationError An operation on the open database has
     ///        failed.
     virtual void updateLease6(const Lease6Ptr& lease6);
 
@@ -347,9 +347,9 @@ public:
     ///
     /// @return true if deletion was successful, false if no such lease exists
     ///
-    /// @throw isc::dhcp::DbOperationError An operation on the open database has
+    /// @throw bundy::dhcp::DbOperationError An operation on the open database has
     ///        failed.
-    virtual bool deleteLease(const isc::asiolink::IOAddress& addr);
+    virtual bool deleteLease(const bundy::asiolink::IOAddress& addr);
 
     /// @brief Return backend type
     ///
@@ -379,7 +379,7 @@ public:
     /// @return Version number as a pair of unsigned integers.  "first" is the
     ///         major version number, "second" the minor number.
     ///
-    /// @throw isc::dhcp::DbOperationError An operation on the open database has
+    /// @throw bundy::dhcp::DbOperationError An operation on the open database has
     ///        failed.
     virtual std::pair<uint32_t, uint32_t> getVersion() const;
 
@@ -482,9 +482,9 @@ private:
     ///        to be valid, else an exception will be thrown.
     /// @param text Text of the SQL statement to be prepared.
     ///
-    /// @throw isc::dhcp::DbOperationError An operation on the open database has
+    /// @throw bundy::dhcp::DbOperationError An operation on the open database has
     ///        failed.
-    /// @throw isc::InvalidParameter 'index' is not valid for the vector.
+    /// @throw bundy::InvalidParameter 'index' is not valid for the vector.
     void prepareStatement(StatementIndex index, const char* text);
 
     /// @brief Prepare statements
@@ -492,9 +492,9 @@ private:
     /// Creates the prepared statements for all of the SQL statements used
     /// by the MySQL backend.
     ///
-    /// @throw isc::dhcp::DbOperationError An operation on the open database has
+    /// @throw bundy::dhcp::DbOperationError An operation on the open database has
     ///        failed.
-    /// @throw isc::InvalidParameter 'index' is not valid for the vector.  This
+    /// @throw bundy::InvalidParameter 'index' is not valid for the vector.  This
     ///        represents an internal error within the code.
     void prepareStatements();
 
@@ -520,7 +520,7 @@ private:
     /// @return true if the lease was added, false if it was not added because
     ///         a lease with that address already exists in the database.
     ///
-    /// @throw isc::dhcp::DbOperationError An operation on the open database has
+    /// @throw bundy::dhcp::DbOperationError An operation on the open database has
     ///        failed.
     bool addLeaseCommon(StatementIndex stindex, std::vector<MYSQL_BIND>& bind);
 
@@ -539,10 +539,10 @@ private:
     ///        If more than one is present, a MultipleRecords exception will
     ///        be thrown.
     ///
-    /// @throw isc::dhcp::BadValue Data retrieved from the database was invalid.
-    /// @throw isc::dhcp::DbOperationError An operation on the open database has
+    /// @throw bundy::dhcp::BadValue Data retrieved from the database was invalid.
+    /// @throw bundy::dhcp::DbOperationError An operation on the open database has
     ///        failed.
-    /// @throw isc::dhcp::MultipleRecords Multiple records were retrieved
+    /// @throw bundy::dhcp::MultipleRecords Multiple records were retrieved
     ///        from the database where only one was expected.
     template <typename Exchange, typename LeaseCollection>
     void getLeaseCollection(StatementIndex stindex, MYSQL_BIND* bind,
@@ -560,10 +560,10 @@ private:
     ///        the collection when this method is called are not erased: the
     ///        new data is appended to the end.
     ///
-    /// @throw isc::dhcp::BadValue Data retrieved from the database was invalid.
-    /// @throw isc::dhcp::DbOperationError An operation on the open database has
+    /// @throw bundy::dhcp::BadValue Data retrieved from the database was invalid.
+    /// @throw bundy::dhcp::DbOperationError An operation on the open database has
     ///        failed.
-    /// @throw isc::dhcp::MultipleRecords Multiple records were retrieved
+    /// @throw bundy::dhcp::MultipleRecords Multiple records were retrieved
     ///        from the database where only one was expected.
     void getLeaseCollection(StatementIndex stindex, MYSQL_BIND* bind,
                             Lease4Collection& result) const {
@@ -580,10 +580,10 @@ private:
     /// @param lease LeaseCollection object returned.  Note that any existing
     ///        data in the collection is erased first.
     ///
-    /// @throw isc::dhcp::BadValue Data retrieved from the database was invalid.
-    /// @throw isc::dhcp::DbOperationError An operation on the open database has
+    /// @throw bundy::dhcp::BadValue Data retrieved from the database was invalid.
+    /// @throw bundy::dhcp::DbOperationError An operation on the open database has
     ///        failed.
-    /// @throw isc::dhcp::MultipleRecords Multiple records were retrieved
+    /// @throw bundy::dhcp::MultipleRecords Multiple records were retrieved
     ///        from the database where only one was expected.
     void getLeaseCollection(StatementIndex stindex, MYSQL_BIND* bind,
                             Lease6Collection& result) const {
@@ -628,7 +628,7 @@ private:
     ///
     /// @throw NoSuchLease Could not update a lease because no lease matches
     ///        the address given.
-    /// @throw isc::dhcp::DbOperationError An operation on the open database has
+    /// @throw bundy::dhcp::DbOperationError An operation on the open database has
     ///        failed.
     template <typename LeasePtr>
     void updateLeaseCommon(StatementIndex stindex, MYSQL_BIND* bind,
@@ -648,7 +648,7 @@ private:
     /// @return true if one or more rows were deleted, false if none were
     ///         deleted.
     ///
-    /// @throw isc::dhcp::DbOperationError An operation on the open database has
+    /// @throw bundy::dhcp::DbOperationError An operation on the open database has
     ///        failed.
     bool deleteLeaseCommon(StatementIndex stindex, MYSQL_BIND* bind);
 
@@ -662,12 +662,12 @@ private:
     /// @param index Index of statement that caused the error
     /// @param what High-level description of the error
     ///
-    /// @throw isc::dhcp::DbOperationError An operation on the open database has
+    /// @throw bundy::dhcp::DbOperationError An operation on the open database has
     ///        failed.
     inline void checkError(int status, StatementIndex index,
                            const char* what) const {
         if (status != 0) {
-            isc_throw(DbOperationError, what << " for <" <<
+            bundy_throw(DbOperationError, what << " for <" <<
                       text_statements_[index] << ">, reason: " <<
                       mysql_error(mysql_) << " (error code " <<
                       mysql_errno(mysql_) << ")");
@@ -687,7 +687,7 @@ private:
     std::vector<std::string> text_statements_;  ///< Raw text of statements
 };
 
-}; // end of isc::dhcp namespace
-}; // end of isc namespace
+}; // end of bundy::dhcp namespace
+}; // end of bundy namespace
 
 #endif // MYSQL_LEASE_MGR_H

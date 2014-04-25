@@ -31,7 +31,7 @@
 #include <list>
 #include <string>
 
-using namespace isc::datasrc;
+using namespace bundy::datasrc;
 
 namespace {
 
@@ -41,60 +41,60 @@ class MockUpdater : public ZoneUpdater {
 public:
     // We do the adding in this test. We currently only check these are
     // the correct ones, according to a predefined set in a list.
-    virtual void addRRset(const isc::dns::AbstractRRset& rrset) {
+    virtual void addRRset(const bundy::dns::AbstractRRset& rrset) {
         ASSERT_FALSE(expected_rrsets_.empty());
 
         // As the rrsetCheck requires a shared pointer, we need to create
         // a copy.
-        isc::dns::RRsetPtr copy(new isc::dns::BasicRRset(rrset.getName(),
+        bundy::dns::RRsetPtr copy(new bundy::dns::BasicRRset(rrset.getName(),
                                                          rrset.getClass(),
                                                          rrset.getType(),
                                                          rrset.getTTL()));
         EXPECT_FALSE(rrset.getRRsig()) << "Unexpected RRSIG on rrset, not "
             "copying. Following check will likely fail as a result.";
-        for (isc::dns::RdataIteratorPtr it = rrset.getRdataIterator();
+        for (bundy::dns::RdataIteratorPtr it = rrset.getRdataIterator();
              !it->isLast(); it->next()) {
             copy->addRdata(it->getCurrent());
         }
 
-        isc::testutils::rrsetCheck(expected_rrsets_.front(), copy);
+        bundy::testutils::rrsetCheck(expected_rrsets_.front(), copy);
         // And remove this RRset, as it has been used.
         expected_rrsets_.pop_front();
     }
     // The unused but required methods
     virtual ZoneFinder& getFinder() {
-        isc_throw(isc::NotImplemented, "Not to be called in this test");
+        bundy_throw(bundy::NotImplemented, "Not to be called in this test");
     }
-    virtual isc::dns::RRsetCollectionBase& getRRsetCollection() {
-        isc_throw(isc::NotImplemented, "Not to be called in this test");
+    virtual bundy::dns::RRsetCollectionBase& getRRsetCollection() {
+        bundy_throw(bundy::NotImplemented, "Not to be called in this test");
     }
-    virtual void deleteRRset(const isc::dns::AbstractRRset&) {
-        isc_throw(isc::NotImplemented, "Not to be called in this test");
+    virtual void deleteRRset(const bundy::dns::AbstractRRset&) {
+        bundy_throw(bundy::NotImplemented, "Not to be called in this test");
     }
     virtual void commit() {
-        isc_throw(isc::NotImplemented, "Not to be called in this test");
+        bundy_throw(bundy::NotImplemented, "Not to be called in this test");
     }
     // The RRsets that are expected to appear through addRRset.
-    std::list<isc::dns::RRsetPtr> expected_rrsets_;
+    std::list<bundy::dns::RRsetPtr> expected_rrsets_;
 };
 
 class MasterLoaderCallbackTest : public ::testing::Test {
 protected:
     MasterLoaderCallbackTest() :
         ok_(true),
-        callbacks_(createMasterLoaderCallbacks(isc::dns::Name("example.org"),
-                                               isc::dns::RRClass::IN(), &ok_))
+        callbacks_(createMasterLoaderCallbacks(bundy::dns::Name("example.org"),
+                                               bundy::dns::RRClass::IN(), &ok_))
     {}
     // Generate a new RRset, put it to the updater and return it.
-    void generateRRset(isc::dns::AddRRCallback callback) {
-        const isc::dns::RRsetPtr
-            result(new isc::dns::RRset(isc::dns::Name("example.org"),
-                                       isc::dns::RRClass::IN(),
-                                       isc::dns::RRType::A(),
-                                       isc::dns::RRTTL(3600)));
-        const isc::dns::rdata::RdataPtr
-            data(isc::dns::rdata::createRdata(isc::dns::RRType::A(),
-                                              isc::dns::RRClass::IN(),
+    void generateRRset(bundy::dns::AddRRCallback callback) {
+        const bundy::dns::RRsetPtr
+            result(new bundy::dns::RRset(bundy::dns::Name("example.org"),
+                                       bundy::dns::RRClass::IN(),
+                                       bundy::dns::RRType::A(),
+                                       bundy::dns::RRTTL(3600)));
+        const bundy::dns::rdata::RdataPtr
+            data(bundy::dns::rdata::createRdata(bundy::dns::RRType::A(),
+                                              bundy::dns::RRClass::IN(),
                                               "192.0.2.1"));
 
         result->addRdata(data);
@@ -108,13 +108,13 @@ protected:
     // Is the loading OK?
     bool ok_;
     // The tested context
-    isc::dns::MasterLoaderCallbacks callbacks_;
+    bundy::dns::MasterLoaderCallbacks callbacks_;
 };
 
 // Check it doesn't crash if we don't provide the OK
 TEST_F(MasterLoaderCallbackTest, noOkProvided) {
-    createMasterLoaderCallbacks(isc::dns::Name("example.org"),
-                                isc::dns::RRClass::IN(), NULL).
+    createMasterLoaderCallbacks(bundy::dns::Name("example.org"),
+                                bundy::dns::RRClass::IN(), NULL).
         error("No source", 1, "No reason");
 }
 
@@ -139,7 +139,7 @@ TEST_F(MasterLoaderCallbackTest, callbacks) {
 
 // Try adding some RRsets.
 TEST_F(MasterLoaderCallbackTest, addRRset) {
-    isc::dns::AddRRCallback
+    bundy::dns::AddRRCallback
         callback(createMasterLoaderAddCallback(updater_));
     // Put some of them in.
     EXPECT_NO_THROW(generateRRset(callback));

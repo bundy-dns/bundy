@@ -20,7 +20,7 @@
 
 #include <dns/rcode.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 /// TSIG errors
 ///
@@ -62,7 +62,7 @@ public:
     /// class in this library.  This constructor works as a converter from
     /// these RCODEs to corresponding TSIGError objects.
     ///
-    /// \exception isc::OutOfRange Given rcode is not convertible to
+    /// \exception bundy::OutOfRange Given rcode is not convertible to
     /// TSIGErrors.
     ///
     /// \param rcode the \c Rcode from which the TSIGError should be derived.

@@ -24,11 +24,11 @@ namespace {
 /// \param message Message to put the read data in
 /// \param datafile The file to read from
 void
-messageFromFile(isc::dns::Message& message, const char* datafile) {
+messageFromFile(bundy::dns::Message& message, const char* datafile) {
     std::vector<unsigned char> data;
-    isc::UnitTestUtil::readWireData(datafile, data);
+    bundy::UnitTestUtil::readWireData(datafile, data);
 
-    isc::util::InputBuffer buffer(&data[0], data.size());
+    bundy::util::InputBuffer buffer(&data[0], data.size());
     message.fromWire(buffer);
 }
 

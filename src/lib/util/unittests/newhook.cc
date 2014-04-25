@@ -22,8 +22,8 @@
 #ifdef ENABLE_CUSTOM_OPERATOR_NEW
 void*
 operator new(size_t size) throw(std::bad_alloc) {
-    if (isc::util::unittests::force_throw_on_new &&
-        size == isc::util::unittests::throw_size_on_new) {
+    if (bundy::util::unittests::force_throw_on_new &&
+        size == bundy::util::unittests::throw_size_on_new) {
         throw std::bad_alloc();
     }
     void* p = malloc(size);
@@ -41,7 +41,7 @@ operator delete(void* p) throw() {
 }
 #endif
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace unittests {
 bool force_throw_on_new = false;

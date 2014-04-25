@@ -24,7 +24,7 @@
 #include <sstream>
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace rdata {
 namespace generic {
@@ -50,18 +50,18 @@ public:
     /// \c DNSMessageFORMERR is thrown if the RR is misformed.
     TXTLikeImpl(util::InputBuffer& buffer, size_t rdata_len) {
         if (rdata_len > MAX_RDLENGTH) {
-            isc_throw(InvalidRdataLength, "RDLENGTH too large: " << rdata_len);
+            bundy_throw(InvalidRdataLength, "RDLENGTH too large: " << rdata_len);
         }
 
         if (rdata_len == 0) {    // note that this couldn't happen in the loop.
-            isc_throw(DNSMessageFORMERR, "Error in parsing " <<
+            bundy_throw(DNSMessageFORMERR, "Error in parsing " <<
                       RRType(typeCode) << " RDATA: 0-length character string");
         }
 
         do {
             const uint8_t len = buffer.readUint8();
             if (rdata_len < len + 1) {
-                isc_throw(DNSMessageFORMERR, "Error in parsing " <<
+                bundy_throw(DNSMessageFORMERR, "Error in parsing " <<
                           RRType(typeCode) <<
                           " RDATA: character string length is too large: " <<
                           static_cast<int>(len));
@@ -87,12 +87,12 @@ public:
         try {
             buildFromTextHelper(lexer);
             if (lexer.getNextToken().getType() != MasterToken::END_OF_FILE) {
-                isc_throw(InvalidRdataText, "Failed to construct " <<
+                bundy_throw(InvalidRdataText, "Failed to construct " <<
                           RRType(typeCode) << " RDATA from '" << txtstr <<
                           "': extra new line");
             }
         } catch (const MasterLexer::LexerError& ex) {
-            isc_throw(InvalidRdataText, "Failed to construct " <<
+            bundy_throw(InvalidRdataText, "Failed to construct " <<
                       RRType(typeCode) << " RDATA from '" << txtstr << "': "
                       << ex.what());
         }
@@ -126,7 +126,7 @@ private:
         lexer.ungetToken();
 
         if (string_list_.empty()) {
-            isc_throw(InvalidRdataText, "Failed to construct" <<
+            bundy_throw(InvalidRdataText, "Failed to construct" <<
                       RRType(typeCode) << " RDATA: empty input");
         }
     }
@@ -236,7 +236,7 @@ private:
 }      // namespace generic
 }      // namespace rdata
 }      // namespace dns
-}      // namespace isc
+}      // namespace bundy
 
 #endif //  TXT_LIKE_H
 

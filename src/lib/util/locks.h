@@ -26,7 +26,7 @@
 #ifndef LOCKS
 #define LOCKS
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace locks {
 
@@ -60,6 +60,6 @@ public:
 
 } // namespace locks
 } // namespace util
-} // namespace isc
+} // namespace bundy
 
 #endif // LOCKS

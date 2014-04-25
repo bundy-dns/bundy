@@ -22,7 +22,7 @@
 #include <dns/rrclass.h>
 #include <util/memory_segment.h>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 
@@ -40,7 +40,7 @@ struct ZoneValidationError : public ZoneLoaderException {
 /// \c zone_file.
 ///
 /// Throws \c ZoneDataUpdater::AddError if invalid or inconsistent data
-/// is present in the \c zone_file. Throws \c isc::Unexpected if empty
+/// is present in the \c zone_file. Throws \c bundy::Unexpected if empty
 /// RRsets are passed by the master loader. Throws \c EmptyZone if an
 /// empty zone would be created due to the \c loadZoneData().
 ///
@@ -49,15 +49,15 @@ struct ZoneValidationError : public ZoneLoaderException {
 /// \param zone_name The name of the zone that is being loaded.
 /// \param zone_file Filename which contains the zone data for \c zone_name.
 ZoneData* loadZoneData(util::MemorySegment& mem_sgmt,
-                       const isc::dns::RRClass& rrclass,
-                       const isc::dns::Name& zone_name,
+                       const bundy::dns::RRClass& rrclass,
+                       const bundy::dns::Name& zone_name,
                        const std::string& zone_file);
 
 /// \brief Create and return a ZoneData instance populated from the
 /// \c iterator.
 ///
 /// Throws \c ZoneDataUpdater::AddError if invalid or inconsistent data
-/// is present in the \c iterator. Throws \c isc::Unexpected if empty
+/// is present in the \c iterator. Throws \c bundy::Unexpected if empty
 /// RRsets are passed by the zone iterator. Throws \c EmptyZone if an
 /// empty zone would be created due to the \c loadZoneData().
 ///
@@ -66,13 +66,13 @@ ZoneData* loadZoneData(util::MemorySegment& mem_sgmt,
 /// \param zone_name The name of the zone that is being loaded.
 /// \param iterator Iterator that returns RRsets to load into the zone.
 ZoneData* loadZoneData(util::MemorySegment& mem_sgmt,
-                       const isc::dns::RRClass& rrclass,
-                       const isc::dns::Name& zone_name,
+                       const bundy::dns::RRClass& rrclass,
+                       const bundy::dns::Name& zone_name,
                        ZoneIterator& iterator);
 
 } // namespace memory
 } // namespace datasrc
-} // namespace isc
+} // namespace bundy
 
 #endif // DATASRC_ZONE_DATA_LOADER_H
 

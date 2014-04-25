@@ -114,7 +114,7 @@ Disadvantages
 ~~~~~~~~~~~~~
 
  * Need to set up another module (not a problem if we have inter-module
-   dependencies in b10-init)
+   dependencies in bundy-init)
  * Possible performance impact. However, experiments show this is not an issue,
    and the receptionist can actually increase the throughput with some tuning
    and the increase in RTT is not big.

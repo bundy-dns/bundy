@@ -25,7 +25,7 @@
 // utility area.
 //
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace encode {
 
@@ -55,7 +55,7 @@ void decodeBase32Hex(const std::string& input, std::vector<uint8_t>& result);
 
 } // namespace encode 
 } // namespace util
-} // namespace isc
+} // namespace bundy
 
 #endif  // BASE32HEX_H
 

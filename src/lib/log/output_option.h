@@ -39,7 +39,7 @@
 /// reason, it is a "struct" and members are accessed directly instead of
 /// through methods.
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 struct OutputOption {
@@ -80,6 +80,6 @@ OutputOption::Stream getStream(const std::string& stream_str);
 
 
 } // namespace log
-} // namespace isc
+} // namespace bundy
 
 #endif // OUTPUT_OPTION_H

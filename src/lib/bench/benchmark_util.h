@@ -32,7 +32,7 @@
 
 #include <exceptions/exceptions.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 class RRClass;
 }
@@ -43,7 +43,7 @@ namespace bench {
 class BenchMarkError : public Exception {
 public:
     BenchMarkError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 /// \brief A convenient shortcut type to represent a sequence of query %data
@@ -109,12 +109,12 @@ typedef std::vector<std::vector<unsigned char> > BenchQueries;
 /// \param strict If \c true, apply stricter validation on the query name and
 /// query RR types; otherwise invalid inputs will be ignored.
 void loadQueryData(const char* const input_file, BenchQueries& queries,
-                   const isc::dns::RRClass& qclass, const bool strict = false);
+                   const bundy::dns::RRClass& qclass, const bool strict = false);
 
 /// \brief Load query %data from an input stream into a vector.
 ///
 /// This version of function is same as
-/// loadQueryData(const char*,  BenchQueries&, const isc::dns::RRClass&, const bool)
+/// loadQueryData(const char*,  BenchQueries&, const bundy::dns::RRClass&, const bool)
 /// except it reads the input query sequence from a specified input stream.
 ///
 /// This version will be used for a smaller scale test where query %data is
@@ -137,7 +137,7 @@ void loadQueryData(const char* const input_file, BenchQueries& queries,
 /// \param strict If \c true, apply stricter validation on the query name and
 /// query RR types; otherwise invalid inputs will be ignored.
 void loadQueryData(std::istream& input, BenchQueries& queries,
-                   const isc::dns::RRClass& qclass, const bool strict = false);
+                   const bundy::dns::RRClass& qclass, const bool strict = false);
 }
 }
 #endif  // BENCHMARK_UTIL_H

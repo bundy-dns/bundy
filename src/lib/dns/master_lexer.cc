@@ -28,7 +28,7 @@
 #include <string>
 #include <vector>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 // The definition of SOURCE_SIZE_UNKNOWN.  Note that we initialize it using
@@ -143,7 +143,7 @@ MasterLexer::~MasterLexer() {
 bool
 MasterLexer::pushSource(const char* filename, std::string* error) {
     if (filename == NULL) {
-        isc_throw(InvalidParameter,
+        bundy_throw(InvalidParameter,
                   "NULL filename for MasterLexer::pushSource");
     }
     try {
@@ -168,7 +168,7 @@ MasterLexer::pushSource(std::istream& input) {
         impl_->sources_.push_back(InputSourcePtr(new InputSource(input)));
     } catch (const InputSource::OpenError& ex) {
         // Convert the "internal" exception to public one.
-        isc_throw(Unexpected, "Failed to push a stream to lexer: " <<
+        bundy_throw(Unexpected, "Failed to push a stream to lexer: " <<
                   ex.what());
     }
     impl_->source_ = impl_->sources_.back().get();
@@ -180,7 +180,7 @@ MasterLexer::pushSource(std::istream& input) {
 void
 MasterLexer::popSource() {
     if (impl_->sources_.empty()) {
-        isc_throw(InvalidOperation,
+        bundy_throw(InvalidOperation,
                   "MasterLexer::popSource on an empty source");
     }
     impl_->popped_size_ += impl_->source_->getPosition();
@@ -228,7 +228,7 @@ MasterLexer::getPosition() const {
 const MasterToken&
 MasterLexer::getNextToken(Options options) {
     if (impl_->source_ == NULL) {
-        isc_throw(isc::InvalidOperation, "No source to read tokens from");
+        bundy_throw(bundy::InvalidOperation, "No source to read tokens from");
     }
     // Store the current state so we can restore it in ungetToken
     impl_->previous_paren_count_ = impl_->paren_count_;
@@ -263,7 +263,7 @@ optionsForTokenType(MasterToken::Type expect) {
     case MasterToken::NUMBER:
         return (MasterLexer::NUMBER);
     default:
-        isc_throw(InvalidParameter,
+        bundy_throw(InvalidParameter,
                   "expected type for getNextToken not supported: " << expect);
     }
 }
@@ -314,7 +314,7 @@ MasterLexer::ungetToken() {
         impl_->last_was_eol_ = impl_->previous_was_eol_;
         impl_->paren_count_ = impl_->previous_paren_count_;
     } else {
-        isc_throw(isc::InvalidOperation, "No token to unget ready");
+        bundy_throw(bundy::InvalidOperation, "No token to unget ready");
     }
 }
 
@@ -335,7 +335,7 @@ const size_t error_text_max_count = sizeof(error_text) / sizeof(error_text[0]);
 std::string
 MasterToken::getErrorText() const {
     if (type_ != ERROR) {
-        isc_throw(InvalidOperation,
+        bundy_throw(InvalidOperation,
                   "MasterToken::getErrorText() for non error type");
     }
 
@@ -617,4 +617,4 @@ Number::handle(MasterLexer& lexer) const {
 } // namespace master_lexer_internal
 
 } // end of namespace dns
-} // end of namespace isc
+} // end of namespace bundy

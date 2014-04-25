@@ -28,11 +28,11 @@
 #include <dns/rdata/generic/detail/lexer_util.h>
 
 using namespace std;
-using namespace isc::util;
-using namespace isc::util::str;
-using isc::dns::rdata::generic::detail::createNameFromLexer;
+using namespace bundy::util;
+using namespace bundy::util::str;
+using bundy::dns::rdata::generic::detail::createNameFromLexer;
 
-// BEGIN_ISC_NAMESPACE
+// BEGIN_BUNDY_NAMESPACE
 // BEGIN_RDATA_NAMESPACE
 
 struct SRVImpl {
@@ -75,32 +75,32 @@ SRV::SRV(const std::string& srv_str) :
 
         uint32_t num = lexer.getNextToken(MasterToken::NUMBER).getNumber();
         if (num > 65535) {
-            isc_throw(InvalidRdataText, "Invalid SRV priority in: " << srv_str);
+            bundy_throw(InvalidRdataText, "Invalid SRV priority in: " << srv_str);
         }
         const uint16_t priority = static_cast<uint16_t>(num);
 
         num = lexer.getNextToken(MasterToken::NUMBER).getNumber();
         if (num > 65535) {
-            isc_throw(InvalidRdataText, "Invalid SRV weight in: " << srv_str);
+            bundy_throw(InvalidRdataText, "Invalid SRV weight in: " << srv_str);
         }
         const uint16_t weight = static_cast<uint16_t>(num);
 
         num = lexer.getNextToken(MasterToken::NUMBER).getNumber();
         if (num > 65535) {
-            isc_throw(InvalidRdataText, "Invalid SRV port in: " << srv_str);
+            bundy_throw(InvalidRdataText, "Invalid SRV port in: " << srv_str);
         }
         const uint16_t port = static_cast<uint16_t>(num);
 
         const Name targetname = createNameFromLexer(lexer, NULL);
 
         if (lexer.getNextToken().getType() != MasterToken::END_OF_FILE) {
-            isc_throw(InvalidRdataText, "extra input text for SRV: "
+            bundy_throw(InvalidRdataText, "extra input text for SRV: "
                       << srv_str);
         }
 
         impl_ = new SRVImpl(priority, weight, port, targetname);
     } catch (const MasterLexer::LexerError& ex) {
-        isc_throw(InvalidRdataText, "Failed to construct SRV from '" <<
+        bundy_throw(InvalidRdataText, "Failed to construct SRV from '" <<
                   srv_str << "': " << ex.what());
     }
 }
@@ -124,7 +124,7 @@ SRV::SRV(const std::string& srv_str) :
 /// to be the value of the RDLENGTH field of the corresponding RR.
 SRV::SRV(InputBuffer& buffer, size_t rdata_len) {
     if (rdata_len < 6) {
-        isc_throw(InvalidRdataLength, "SRV too short");
+        bundy_throw(InvalidRdataLength, "SRV too short");
     }
 
     const uint16_t priority = buffer.readUint16();
@@ -158,19 +158,19 @@ SRV::SRV(MasterLexer& lexer, const Name* origin,
 {
     uint32_t num = lexer.getNextToken(MasterToken::NUMBER).getNumber();
     if (num > 65535) {
-        isc_throw(InvalidRdataText, "Invalid SRV priority: " << num);
+        bundy_throw(InvalidRdataText, "Invalid SRV priority: " << num);
     }
     const uint16_t priority = static_cast<uint16_t>(num);
 
     num = lexer.getNextToken(MasterToken::NUMBER).getNumber();
     if (num > 65535) {
-        isc_throw(InvalidRdataText, "Invalid SRV weight: " << num);
+        bundy_throw(InvalidRdataText, "Invalid SRV weight: " << num);
     }
     const uint16_t weight = static_cast<uint16_t>(num);
 
     num = lexer.getNextToken(MasterToken::NUMBER).getNumber();
     if (num > 65535) {
-        isc_throw(InvalidRdataText, "Invalid SRV port: " << num);
+        bundy_throw(InvalidRdataText, "Invalid SRV port: " << num);
     }
     const uint16_t port = static_cast<uint16_t>(num);
 
@@ -301,4 +301,4 @@ SRV::getTarget() const {
 }
 
 // END_RDATA_NAMESPACE
-// END_ISC_NAMESPACE
+// END_BUNDY_NAMESPACE

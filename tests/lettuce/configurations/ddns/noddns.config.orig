@@ -37,10 +37,10 @@
     },
     "Init": {
         "components": {
-            "b10-xfrout": {"kind": "dispensable"},
-            "b10-auth": {"kind": "needed", "special": "auth"},
-            "b10-zonemgr": {"kind": "dispensable", "address": "ZoneMgr" },
-            "b10-cmdctl": {"kind": "needed", "special": "cmdctl"}
+            "bundy-xfrout": {"kind": "dispensable"},
+            "bundy-auth": {"kind": "needed", "special": "auth"},
+            "bundy-zonemgr": {"kind": "dispensable", "address": "ZoneMgr" },
+            "bundy-cmdctl": {"kind": "needed", "special": "cmdctl"}
         }
     }
 }

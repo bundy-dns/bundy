@@ -34,11 +34,11 @@
 #include <time.h>
 
 using namespace std;
-using namespace isc::util;
-using namespace isc::util::encode;
-using isc::dns::rdata::generic::detail::createNameFromLexer;
+using namespace bundy::util;
+using namespace bundy::util::encode;
+using bundy::dns::rdata::generic::detail::createNameFromLexer;
 
-// BEGIN_ISC_NAMESPACE
+// BEGIN_BUNDY_NAMESPACE
 // BEGIN_RDATA_NAMESPACE
 
 namespace {
@@ -80,12 +80,12 @@ RRSIG::constructFromLexer(MasterLexer& lexer, const Name* origin) {
     const uint32_t algorithm =
         lexer.getNextToken(MasterToken::NUMBER).getNumber();
     if (algorithm > 0xff) {
-        isc_throw(InvalidRdataText, "RRSIG algorithm out of range");
+        bundy_throw(InvalidRdataText, "RRSIG algorithm out of range");
     }
     const uint32_t labels =
         lexer.getNextToken(MasterToken::NUMBER).getNumber();
     if (labels > 0xff) {
-        isc_throw(InvalidRdataText, "RRSIG labels out of range");
+        bundy_throw(InvalidRdataText, "RRSIG labels out of range");
     }
     const uint32_t originalttl =
         lexer.getNextToken(MasterToken::NUMBER).getNumber();
@@ -96,7 +96,7 @@ RRSIG::constructFromLexer(MasterLexer& lexer, const Name* origin) {
     const uint32_t tag =
         lexer.getNextToken(MasterToken::NUMBER).getNumber();
     if (tag > 0xffff) {
-        isc_throw(InvalidRdataText, "RRSIG key tag out of range");
+        bundy_throw(InvalidRdataText, "RRSIG key tag out of range");
     }
     const Name& signer = createNameFromLexer(lexer, origin);
 
@@ -158,11 +158,11 @@ RRSIG::RRSIG(const std::string& rrsig_str) :
         impl_ptr.reset(constructFromLexer(lexer, NULL));
 
         if (lexer.getNextToken().getType() != MasterToken::END_OF_FILE) {
-            isc_throw(InvalidRdataText, "extra input text for RRSIG: "
+            bundy_throw(InvalidRdataText, "extra input text for RRSIG: "
                       << rrsig_str);
         }
     } catch (const MasterLexer::LexerError& ex) {
-        isc_throw(InvalidRdataText, "Failed to construct RRSIG from '" <<
+        bundy_throw(InvalidRdataText, "Failed to construct RRSIG from '" <<
                   rrsig_str << "': " << ex.what());
     }
 
@@ -198,7 +198,7 @@ RRSIG::RRSIG(InputBuffer& buffer, size_t rdata_len) {
     size_t pos = buffer.getPosition();
 
     if (rdata_len < RRSIG_MINIMUM_LEN) {
-        isc_throw(InvalidRdataLength, "RRSIG too short");
+        bundy_throw(InvalidRdataLength, "RRSIG too short");
     }
 
     RRType covered(buffer);
@@ -212,7 +212,7 @@ RRSIG::RRSIG(InputBuffer& buffer, size_t rdata_len) {
 
     // rdata_len must be sufficiently large to hold non empty signature data.
     if (rdata_len <= buffer.getPosition() - pos) {
-        isc_throw(InvalidRdataLength, "RRSIG too short");
+        bundy_throw(InvalidRdataLength, "RRSIG too short");
     }
     rdata_len -= (buffer.getPosition() - pos);
 
@@ -337,4 +337,4 @@ RRSIG::typeCovered() const {
 }
 
 // END_RDATA_NAMESPACE
-// END_ISC_NAMESPACE
+// END_BUNDY_NAMESPACE

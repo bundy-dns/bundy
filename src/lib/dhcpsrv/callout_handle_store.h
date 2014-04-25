@@ -18,13 +18,13 @@
 #include <hooks/hooks_manager.h>
 #include <hooks/callout_handle.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief CalloutHandle Store
 ///
 /// When using the Hooks Framework, there is a need to associate an
-/// isc::hooks::CalloutHandle object with each request passing through the
+/// bundy::hooks::CalloutHandle object with each request passing through the
 /// server.  For the DHCP servers, the association is provided by this function.
 ///
 /// The DHCP servers process a single request at a time. At points where the
@@ -55,11 +55,11 @@ namespace dhcp {
 ///         pointer is returned if pktptr is itself an empty pointer.
 
 template <typename T>
-isc::hooks::CalloutHandlePtr getCalloutHandle(const T& pktptr) {
+bundy::hooks::CalloutHandlePtr getCalloutHandle(const T& pktptr) {
 
     // Stored data is declared static, so is initialized when first accessed
     static T stored_pointer;                // Pointer to last packet seen
-    static isc::hooks::CalloutHandlePtr stored_handle;
+    static bundy::hooks::CalloutHandlePtr stored_handle;
                                             // Pointer to stored handle
 
     if (pktptr) {
@@ -72,7 +72,7 @@ isc::hooks::CalloutHandlePtr getCalloutHandle(const T& pktptr) {
             // CalloutHandle.  (The latter operation frees and probably deletes
             // (depending on other pointers) the stored one.)
             stored_pointer = pktptr;
-            stored_handle = isc::hooks::HooksManager::createCalloutHandle();
+            stored_handle = bundy::hooks::HooksManager::createCalloutHandle();
         }
         
     } else {
@@ -86,6 +86,6 @@ isc::hooks::CalloutHandlePtr getCalloutHandle(const T& pktptr) {
 }
 
 } // namespace shcp
-} // namespace isc
+} // namespace bundy
 
 #endif // CALLOUT_HANDLE_STORE_H

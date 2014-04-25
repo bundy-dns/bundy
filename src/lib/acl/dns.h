@@ -26,7 +26,7 @@
 #include <acl/dnsname_check.h>
 #include <acl/loader.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 class TSIGRecord;
 }
@@ -37,7 +37,7 @@ namespace dns {
  * \brief DNS request to be checked.
  *
  * This plays the role of Context of the generic template ACLs (in namespace
- * isc::acl).
+ * bundy::acl).
  *
  * It is a simple structure holding just the bunch of information. Therefore
  * the names don't end up with an underscore; there are no methods so they
@@ -75,7 +75,7 @@ struct RequestContext {
     /// \param tsig_param A valid pointer to the TSIG record included in
     /// the request or NULL if the request doesn't contain a TSIG.
     RequestContext(const IPAddress& remote_address_param,
-                   const isc::dns::TSIGRecord* tsig_param) :
+                   const bundy::dns::TSIGRecord* tsig_param) :
         remote_address(remote_address_param),
         tsig(tsig_param)
     {}
@@ -95,7 +95,7 @@ struct RequestContext {
     /// \brief The TSIG record included in the request message, if any.
     ///
     /// If the request doesn't include a TSIG, this member will be NULL.
-    const isc::dns::TSIGRecord* const tsig;
+    const bundy::dns::TSIGRecord* const tsig;
     //@}
 };
 
@@ -126,22 +126,22 @@ RequestLoader& getRequestLoader();
 namespace internal {
 
 // Shortcut typedef
-typedef isc::acl::IPCheck<RequestContext> RequestIPCheck;
-typedef isc::acl::dns::NameCheck<RequestContext> RequestKeyCheck;
+typedef bundy::acl::IPCheck<RequestContext> RequestIPCheck;
+typedef bundy::acl::dns::NameCheck<RequestContext> RequestKeyCheck;
 
 class RequestCheckCreator : public acl::Loader<RequestContext>::CheckCreator {
 public:
     virtual std::vector<std::string> names() const;
 
     virtual boost::shared_ptr<RequestCheck>
-    create(const std::string& name, isc::data::ConstElementPtr definition,
+    create(const std::string& name, bundy::data::ConstElementPtr definition,
            const acl::Loader<RequestContext>& loader);
 };
 } // end of namespace "internal"
 
 } // end of namespace "dns"
 } // end of namespace "acl"
-} // end of namespace "isc"
+} // end of namespace "bundy"
 
 #endif
 

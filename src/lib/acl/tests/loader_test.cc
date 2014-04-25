@@ -20,10 +20,10 @@
 
 using namespace std;
 using namespace boost;
-using namespace isc::acl;
-using namespace isc::acl::tests;
-using isc::data::Element;
-using isc::data::ConstElementPtr;
+using namespace bundy::acl;
+using namespace bundy::acl::tests;
+using bundy::data::Element;
+using bundy::data::ConstElementPtr;
 
 namespace {
 
@@ -378,7 +378,7 @@ TEST_F(LoaderTest, ACLPropagate) {
 }
 
 TEST_F(LoaderTest, nullDescription) {
-    EXPECT_THROW(loader_.load(ConstElementPtr()), isc::InvalidParameter);
+    EXPECT_THROW(loader_.load(ConstElementPtr()), bundy::InvalidParameter);
 }
 
 }

@@ -37,11 +37,11 @@
 
 using namespace std;
 using namespace boost::posix_time;
-using namespace isc;
-using namespace isc::dhcp;
-using namespace isc::asiolink;
+using namespace bundy;
+using namespace bundy::dhcp;
+using namespace bundy::asiolink;
 
-namespace isc {
+namespace bundy {
 namespace perfdhcp {
 
 bool TestControl::interrupted_ = false;
@@ -83,7 +83,7 @@ TestControl::TestControlSocket::initSocketData() {
             }
         }
     }
-    isc_throw(BadValue, "interface for for specified socket "
+    bundy_throw(BadValue, "interface for for specified socket "
               "descriptor not found");
 }
 
@@ -147,7 +147,7 @@ TestControl::cleanCachedPackets() {
 void
 TestControl::copyIaOptions(const Pkt6Ptr& pkt_from, Pkt6Ptr& pkt_to) {
     if (!pkt_from || !pkt_to) {
-        isc_throw(BadValue, "NULL pointers must not be specified as arguments"
+        bundy_throw(BadValue, "NULL pointers must not be specified as arguments"
                   " for the copyIaOptions function");
     }
     // IA_NA
@@ -155,7 +155,7 @@ TestControl::copyIaOptions(const Pkt6Ptr& pkt_from, Pkt6Ptr& pkt_to) {
         .includes(CommandOptions::LeaseType::ADDRESS)) {
         OptionPtr option = pkt_from->getOption(D6O_IA_NA);
         if (!option) {
-            isc_throw(OptionNotFound, "IA_NA option not found in the"
+            bundy_throw(OptionNotFound, "IA_NA option not found in the"
                       " server's response");
         }
         pkt_to->addOption(option);
@@ -165,7 +165,7 @@ TestControl::copyIaOptions(const Pkt6Ptr& pkt_from, Pkt6Ptr& pkt_to) {
         .includes(CommandOptions::LeaseType::PREFIX)) {
         OptionPtr option = pkt_from->getOption(D6O_IA_PD);
         if (!option) {
-            isc_throw(OptionNotFound, "IA_PD option not found in the"
+            bundy_throw(OptionNotFound, "IA_PD option not found in the"
                       " server's response");
         }
         pkt_to->addOption(option);
@@ -335,7 +335,7 @@ TestControl::createMessageFromReply(const uint16_t msg_type,
                                     const dhcp::Pkt6Ptr& reply) {
     // Restrict messages to Release and Renew.
     if (msg_type != DHCPV6_RENEW && msg_type != DHCPV6_RELEASE) {
-        isc_throw(isc::BadValue, "invalid message type " << msg_type
+        bundy_throw(bundy::BadValue, "invalid message type " << msg_type
                   << " to be created from Reply, expected DHCPV6_RENEW or"
                   " DHCPV6_RELEASE");
     }
@@ -344,7 +344,7 @@ TestControl::createMessageFromReply(const uint16_t msg_type,
     const char* msg_type_str = (msg_type == DHCPV6_RENEW ? "Renew" : "Release");
     // Reply message must be specified.
     if (!reply) {
-        isc_throw(isc::BadValue, "Unable to create " << msg_type_str
+        bundy_throw(bundy::BadValue, "Unable to create " << msg_type_str
                   << " message from the Reply message because the instance of"
                   " the Reply message is NULL");
     }
@@ -353,7 +353,7 @@ TestControl::createMessageFromReply(const uint16_t msg_type,
     // Client id.
     OptionPtr opt_clientid = reply->getOption(D6O_CLIENTID);
     if (!opt_clientid) {
-        isc_throw(isc::Unexpected, "failed to create " << msg_type_str
+        bundy_throw(bundy::Unexpected, "failed to create " << msg_type_str
                   << " message because client id option has not been found"
                   " in the Reply message");
     }
@@ -361,7 +361,7 @@ TestControl::createMessageFromReply(const uint16_t msg_type,
     // Server id.
     OptionPtr opt_serverid = reply->getOption(D6O_SERVERID);
     if (!opt_serverid) {
-        isc_throw(isc::Unexpected, "failed to create " << msg_type_str
+        bundy_throw(bundy::Unexpected, "failed to create " << msg_type_str
                   << " because server id option has not been found in the"
                   " Reply message");
     }
@@ -379,7 +379,7 @@ TestControl::factoryElapsedTime6(Option::Universe, uint16_t,
         return (OptionPtr(new Option(Option::V6, D6O_ELAPSED_TIME,
                                      OptionBuffer(2, 0))));
     }
-    isc_throw(isc::BadValue,
+    bundy_throw(bundy::BadValue,
               "elapsed time option buffer size has to be 0 or 2");
 }
 
@@ -471,7 +471,7 @@ TestControl::generateMacAddress(uint8_t& randomized) const {
     // Get the base MAC address. We are going to randomize part of it.
     std::vector<uint8_t> mac_addr(options.getMacTemplate());
     if (mac_addr.size() != HW_ETHER_LEN) {
-        isc_throw(BadValue, "invalid MAC address template specified");
+        bundy_throw(BadValue, "invalid MAC address template specified");
     }
     uint32_t r = macaddr_gen_->generate();
     randomized = 0;
@@ -561,7 +561,7 @@ TestControl::getElapsedTime(const T& pkt1, const T& pkt2) {
     ptime pkt2_time = pkt2->getTimestamp();
     if (pkt1_time.is_not_a_date_time() ||
         pkt2_time.is_not_a_date_time()) {
-        isc_throw(InvalidOperation, "packet timestamp not set");;
+        bundy_throw(InvalidOperation, "packet timestamp not set");;
     }
     time_period elapsed_period(pkt1_time, pkt2_time);
     return (elapsed_period.is_null() ? 0 :
@@ -623,7 +623,7 @@ TestControl::getTemplateBuffer(const size_t idx) const {
     if (template_buffers_.size() > idx) {
         return (template_buffers_[idx]);
     }
-    isc_throw(OutOfRange, "invalid buffer index");
+    bundy_throw(OutOfRange, "invalid buffer index");
 }
 
 int
@@ -723,7 +723,7 @@ TestControl::openSocket() const {
 
     // Check for mismatch between IP option and server address
     if (family != remoteaddr.getFamily()) {
-        isc_throw(InvalidParameter,
+        bundy_throw(InvalidParameter,
                   "Values for IP version: " <<
                   static_cast<unsigned int>(options.getIpVersion()) <<
                   " and server address: " << servername << " are mismatched.");
@@ -759,7 +759,7 @@ TestControl::openSocket() const {
                                                                 port);
     }
     if (sock <= 0) {
-        isc_throw(BadValue, "unable to open socket to communicate with "
+        bundy_throw(BadValue, "unable to open socket to communicate with "
                   "DHCP server");
     }
 
@@ -771,7 +771,7 @@ TestControl::openSocket() const {
         int ret = setsockopt(sock, SOL_SOCKET, SO_BROADCAST,
                              &broadcast_enable, sizeof(broadcast_enable));
         if (ret < 0) {
-            isc_throw(InvalidOperation,
+            bundy_throw(InvalidOperation,
                       "unable to set broadcast option on the socket");
         }
     } else if (options.getIpVersion() == 6) {
@@ -787,7 +787,7 @@ TestControl::openSocket() const {
                 Iface* iface =
                     IfaceMgr::instance().getIface(options.getLocalName());
                 if (iface == NULL) {
-                    isc_throw(Unexpected, "unknown interface "
+                    bundy_throw(Unexpected, "unknown interface "
                               << options.getLocalName());
                 }
                 int idx = iface->getIndex();
@@ -795,7 +795,7 @@ TestControl::openSocket() const {
                                      &idx, sizeof(idx));
             }
             if (ret < 0) {
-                isc_throw(InvalidOperation,
+                bundy_throw(InvalidOperation,
                           "unable to enable multicast on socket " <<  sock
                           << ". errno = " << errno);
             }
@@ -986,7 +986,7 @@ TestControl::printStats() const {
     CommandOptions& options = CommandOptions::instance();
     if (options.getIpVersion() == 4) {
         if (!stats_mgr4_) {
-            isc_throw(InvalidOperation, "Statistics Manager for DHCPv4 "
+            bundy_throw(InvalidOperation, "Statistics Manager for DHCPv4 "
                       "hasn't been initialized");
         }
         stats_mgr4_->printStats();
@@ -995,7 +995,7 @@ TestControl::printStats() const {
         }
     } else if (options.getIpVersion() == 6) {
         if (!stats_mgr6_) {
-            isc_throw(InvalidOperation, "Statistics Manager for DHCPv6 "
+            bundy_throw(InvalidOperation, "Statistics Manager for DHCPv6 "
                       "hasn't been initialized");
         }
         stats_mgr6_->printStats();
@@ -1026,13 +1026,13 @@ TestControl::readPacketTemplate(const std::string& file_name) {
     std::ifstream temp_file;
     temp_file.open(file_name.c_str(), ios::in | ios::binary | ios::ate);
     if (!temp_file.is_open()) {
-        isc_throw(BadValue, "unable to open template file " << file_name);
+        bundy_throw(BadValue, "unable to open template file " << file_name);
     }
     // Read template file contents.
     std::streampos temp_size = temp_file.tellg();
     if (temp_size == std::streampos(0)) {
         temp_file.close();
-        isc_throw(OutOfRange, "the template file " << file_name << " is empty");
+        bundy_throw(OutOfRange, "the template file " << file_name << " is empty");
     }
     temp_file.seekg(0, ios::beg);
     std::vector<char> file_contents(temp_size);
@@ -1048,15 +1048,15 @@ TestControl::readPacketTemplate(const std::string& file_name) {
             hex_digits.push_back(file_contents[i]);
         } else if (!isxdigit(file_contents[i]) &&
                    !isspace(file_contents[i])) {
-            isc_throw(BadValue, "'" << file_contents[i] << "' is not a"
+            bundy_throw(BadValue, "'" << file_contents[i] << "' is not a"
                       " hexadecimal digit");
         }
     }
     // Expect even number of digits.
     if (hex_digits.size() % 2 != 0) {
-        isc_throw(OutOfRange, "odd number of digits in template file");
+        bundy_throw(OutOfRange, "odd number of digits in template file");
     } else if (hex_digits.empty()) {
-        isc_throw(OutOfRange, "template file " << file_name << " is empty");
+        bundy_throw(OutOfRange, "template file " << file_name << " is empty");
     }
     std::vector<uint8_t> binary_stream;
     for (int i = 0; i < hex_digits.size(); i += 2) {
@@ -1264,7 +1264,7 @@ TestControl::registerOptionFactories() const {
         registerOptionFactories6();
         break;
     default:
-        isc_throw(InvalidOperation, "command line options have to be parsed "
+        bundy_throw(InvalidOperation, "command line options have to be parsed "
                   "before DHCP option factories can be registered");
     }
 }
@@ -1300,7 +1300,7 @@ TestControl::run() {
     // was not called prior to starting the test. This is fatal
     // error.
     if (options.getIpVersion() == 0) {
-        isc_throw(InvalidOperation,
+        bundy_throw(InvalidOperation,
                   "command options must be parsed before running a test");
     } else if (options.getIpVersion() == 4) {
         setTransidGenerator(NumberGeneratorPtr(new SequentialGenerator()));
@@ -1318,7 +1318,7 @@ TestControl::run() {
     registerOptionFactories();
     TestControlSocket socket(openSocket());
     if (!socket.valid_) {
-        isc_throw(Unexpected, "invalid socket descriptor");
+        bundy_throw(Unexpected, "invalid socket descriptor");
     }
     // Initialize packet templates.
     initPacketTemplates();
@@ -1455,7 +1455,7 @@ TestControl::runWrapped(bool do_stop /*= false */) const {
         signal(SIGCHLD, handleChild);
         pid = fork();
         if (pid < 0) {
-            isc_throw(Unexpected, "unable to fork");
+            bundy_throw(Unexpected, "unable to fork");
         } else if (pid == 0) {
             execlp(options.getWrapped().c_str(),
                    do_stop ? "stop" : "start",
@@ -1493,7 +1493,7 @@ TestControl::sendDiscover4(const TestControlSocket& socket,
     const uint32_t transid = generateTransid();
     Pkt4Ptr pkt4(new Pkt4(DHCPDISCOVER, transid));
     if (!pkt4) {
-        isc_throw(Unexpected, "failed to create DISCOVER packet");
+        bundy_throw(Unexpected, "failed to create DISCOVER packet");
     }
 
     // Delete the default Message Type option set by Pkt4
@@ -1518,7 +1518,7 @@ TestControl::sendDiscover4(const TestControlSocket& socket,
     IfaceMgr::instance().send(pkt4);
     if (!preload) {
         if (!stats_mgr4_) {
-            isc_throw(InvalidOperation, "Statistics Manager for DHCPv4 "
+            bundy_throw(InvalidOperation, "Statistics Manager for DHCPv4 "
                       "hasn't been initialized");
         }
         stats_mgr4_->passSentPacket(StatsMgr4::XCHG_DO, pkt4);
@@ -1552,7 +1552,7 @@ TestControl::sendDiscover4(const TestControlSocket& socket,
                                 template_buf.end());
     // Check if we are not going out of bounds.
     if (rand_offset + HW_ETHER_LEN > in_buf.size()) {
-        isc_throw(OutOfRange, "randomization offset is out of bounds");
+        bundy_throw(OutOfRange, "randomization offset is out of bounds");
     }
     PerfPkt4Ptr pkt4(new PerfPkt4(&in_buf[0], in_buf.size(),
                                   transid_offset,
@@ -1568,7 +1568,7 @@ TestControl::sendDiscover4(const TestControlSocket& socket,
     IfaceMgr::instance().send(boost::static_pointer_cast<Pkt4>(pkt4));
     if (!preload) {
         if (!stats_mgr4_) {
-            isc_throw(InvalidOperation, "Statistics Manager for DHCPv4 "
+            bundy_throw(InvalidOperation, "Statistics Manager for DHCPv4 "
                       "hasn't been initialized");
         }
         // Update packet stats.
@@ -1583,7 +1583,7 @@ TestControl::sendMessageFromReply(const uint16_t msg_type,
                                   const TestControlSocket& socket) {
     // We only permit Release or Renew messages to be sent using this function.
     if (msg_type != DHCPV6_RENEW && msg_type != DHCPV6_RELEASE) {
-        isc_throw(isc::BadValue, "invalid message type " << msg_type
+        bundy_throw(bundy::BadValue, "invalid message type " << msg_type
                   << " to be sent, expected DHCPV6_RENEW or DHCPV6_RELEASE");
     }
     // We track the timestamp of last Release and Renew in different variables.
@@ -1603,7 +1603,7 @@ TestControl::sendMessageFromReply(const uint16_t msg_type,
     // And send it.
     IfaceMgr::instance().send(msg);
     if (!stats_mgr6_) {
-        isc_throw(Unexpected, "Statistics Manager for DHCPv6 "
+        bundy_throw(Unexpected, "Statistics Manager for DHCPv6 "
                   "hasn't been initialized");
     }
     stats_mgr6_->passSentPacket((msg_type == DHCPV6_RENEW ? StatsMgr6::XCHG_RN
@@ -1628,7 +1628,7 @@ TestControl::sendRequest4(const TestControlSocket& socket,
         OptionPtr opt_serverid =
             offer_pkt4->getOption(DHO_DHCP_SERVER_IDENTIFIER);
         if (!opt_serverid) {
-            isc_throw(BadValue, "there is no SERVER_IDENTIFIER option "
+            bundy_throw(BadValue, "there is no SERVER_IDENTIFIER option "
                       << "in OFFER message");
         }
         if (stats_mgr4_->getRcvdPacketsNum(StatsMgr4::XCHG_DO) == 1) {
@@ -1640,7 +1640,7 @@ TestControl::sendRequest4(const TestControlSocket& socket,
     /// Set client address.
     asiolink::IOAddress yiaddr = offer_pkt4->getYiaddr();
     if (!yiaddr.isV4()) {
-        isc_throw(BadValue, "the YIADDR returned in OFFER packet is not "
+        bundy_throw(BadValue, "the YIADDR returned in OFFER packet is not "
                   " IPv4 address");
     }
     OptionPtr opt_requested_address =
@@ -1664,7 +1664,7 @@ TestControl::sendRequest4(const TestControlSocket& socket,
     pkt4->pack();
     IfaceMgr::instance().send(pkt4);
     if (!stats_mgr4_) {
-        isc_throw(InvalidOperation, "Statistics Manager for DHCPv4 "
+        bundy_throw(InvalidOperation, "Statistics Manager for DHCPv4 "
                   "hasn't been initialized");
     }
     stats_mgr4_->passSentPacket(StatsMgr4::XCHG_RA, pkt4);
@@ -1692,7 +1692,7 @@ TestControl::sendRequest4(const TestControlSocket& socket,
                                 template_buf.end());
     // Check if given randomization offset is not out of bounds.
     if (rand_offset + HW_ETHER_LEN > in_buf.size()) {
-        isc_throw(OutOfRange, "randomization offset is out of bounds");
+        bundy_throw(OutOfRange, "randomization offset is out of bounds");
     }
 
     // Create packet from the temporary buffer.
@@ -1731,7 +1731,7 @@ TestControl::sendRequest4(const TestControlSocket& socket,
         OptionPtr opt_serverid_offer =
             offer_pkt4->getOption(DHO_DHCP_SERVER_IDENTIFIER);
         if (!opt_serverid_offer) {
-            isc_throw(BadValue, "there is no SERVER_IDENTIFIER option "
+            bundy_throw(BadValue, "there is no SERVER_IDENTIFIER option "
                       << "in OFFER message");
         }
         boost::shared_ptr<LocalizedOption>
@@ -1748,7 +1748,7 @@ TestControl::sendRequest4(const TestControlSocket& socket,
     /// Set client address.
     asiolink::IOAddress yiaddr = offer_pkt4->getYiaddr();
     if (!yiaddr.isV4()) {
-        isc_throw(BadValue, "the YIADDR returned in OFFER packet is not "
+        bundy_throw(BadValue, "the YIADDR returned in OFFER packet is not "
                   " IPv4 address");
     }
 
@@ -1769,7 +1769,7 @@ TestControl::sendRequest4(const TestControlSocket& socket,
     pkt4->rawPack();
     IfaceMgr::instance().send(boost::static_pointer_cast<Pkt4>(pkt4));
     if (!stats_mgr4_) {
-        isc_throw(InvalidOperation, "Statistics Manager for DHCPv4 "
+        bundy_throw(InvalidOperation, "Statistics Manager for DHCPv4 "
                   "hasn't been initialized");
     }
     // Update packet stats.
@@ -1790,7 +1790,7 @@ TestControl::sendRequest6(const TestControlSocket& socket,
     // Set client id.
     OptionPtr opt_clientid = advertise_pkt6->getOption(D6O_CLIENTID);
     if (!opt_clientid) {
-        isc_throw(Unexpected, "client id not found in received packet");
+        bundy_throw(Unexpected, "client id not found in received packet");
     }
     pkt6->addOption(opt_clientid);
 
@@ -1803,7 +1803,7 @@ TestControl::sendRequest6(const TestControlSocket& socket,
     } else {
         OptionPtr opt_serverid = advertise_pkt6->getOption(D6O_SERVERID);
         if (!opt_serverid) {
-            isc_throw(Unexpected, "server id not found in received packet");
+            bundy_throw(Unexpected, "server id not found in received packet");
         }
         if (stats_mgr6_->getRcvdPacketsNum(StatsMgr6::XCHG_SA) == 1) {
             first_packet_serverid_ = opt_serverid->getData();
@@ -1824,7 +1824,7 @@ TestControl::sendRequest6(const TestControlSocket& socket,
     pkt6->pack();
     IfaceMgr::instance().send(pkt6);
     if (!stats_mgr6_) {
-        isc_throw(InvalidOperation, "Statistics Manager for DHCPv6 "
+        bundy_throw(InvalidOperation, "Statistics Manager for DHCPv6 "
                   "hasn't been initialized");
     }
     stats_mgr6_->passSentPacket(StatsMgr6::XCHG_RR, pkt6);
@@ -1870,7 +1870,7 @@ TestControl::sendRequest6(const TestControlSocket& socket,
         OptionPtr opt_serverid_advertise =
             advertise_pkt6->getOption(D6O_SERVERID);
         if (!opt_serverid_advertise) {
-            isc_throw(BadValue, "there is no SERVERID option "
+            bundy_throw(BadValue, "there is no SERVERID option "
                       << "in ADVERTISE message");
         }
         boost::shared_ptr<LocalizedOption>
@@ -1887,20 +1887,20 @@ TestControl::sendRequest6(const TestControlSocket& socket,
     boost::shared_ptr<Option6IA> opt_ia_na_advertise =
         boost::static_pointer_cast<Option6IA>(advertise_pkt6->getOption(D6O_IA_NA));
     if (!opt_ia_na_advertise) {
-        isc_throw(Unexpected, "DHCPv6 IA_NA option not found in received "
+        bundy_throw(Unexpected, "DHCPv6 IA_NA option not found in received "
                   "packet");
     }
     size_t addr_offset = getRequestedIpOffset();
     boost::shared_ptr<LocalizedOption>
         opt_ia_na(new LocalizedOption(opt_ia_na_advertise, addr_offset));
     if (!opt_ia_na->valid()) {
-        isc_throw(BadValue, "Option IA_NA in advertise packet is invalid");
+        bundy_throw(BadValue, "Option IA_NA in advertise packet is invalid");
     }
     pkt6->addOption(opt_ia_na);
     // Set server id.
     OptionPtr opt_serverid_advertise = advertise_pkt6->getOption(D6O_SERVERID);
     if (!opt_serverid_advertise) {
-        isc_throw(Unexpected, "DHCPV6 SERVERID option not found in received "
+        bundy_throw(Unexpected, "DHCPV6 SERVERID option not found in received "
                   "packet");
     }
     size_t srvid_offset = getServerIdOffset();
@@ -1913,7 +1913,7 @@ TestControl::sendRequest6(const TestControlSocket& socket,
     size_t rand_offset = getRandomOffset(arg_idx);
     OptionPtr opt_clientid_advertise = advertise_pkt6->getOption(D6O_CLIENTID);
     if (!opt_clientid_advertise) {
-        isc_throw(Unexpected, "DHCPV6 CLIENTID option not found in received packet");
+        bundy_throw(Unexpected, "DHCPV6 CLIENTID option not found in received packet");
     }
     rand_offset -= (opt_clientid_advertise->len() - 1);
     // Set client id.
@@ -1929,7 +1929,7 @@ TestControl::sendRequest6(const TestControlSocket& socket,
     // Send packet.
     IfaceMgr::instance().send(pkt6);
     if (!stats_mgr6_) {
-        isc_throw(InvalidOperation, "Statistics Manager for DHCPv6 "
+        bundy_throw(InvalidOperation, "Statistics Manager for DHCPv6 "
                   "hasn't been initialized");
     }
     // Update packet stats.
@@ -1957,7 +1957,7 @@ TestControl::sendSolicit6(const TestControlSocket& socket,
     const uint32_t transid = generateTransid();
     Pkt6Ptr pkt6(new Pkt6(DHCPV6_SOLICIT, transid));
     if (!pkt6) {
-        isc_throw(Unexpected, "failed to create SOLICIT packet");
+        bundy_throw(Unexpected, "failed to create SOLICIT packet");
     }
     pkt6->addOption(Option::factory(Option::V6, D6O_ELAPSED_TIME));
     if (CommandOptions::instance().isRapidCommit()) {
@@ -1985,7 +1985,7 @@ TestControl::sendSolicit6(const TestControlSocket& socket,
     IfaceMgr::instance().send(pkt6);
     if (!preload) {
         if (!stats_mgr6_) {
-            isc_throw(InvalidOperation, "Statistics Manager for DHCPv6 "
+            bundy_throw(InvalidOperation, "Statistics Manager for DHCPv6 "
                       "hasn't been initialized");
         }
         stats_mgr6_->passSentPacket(StatsMgr6::XCHG_SA, pkt6);
@@ -2008,7 +2008,7 @@ TestControl::sendSolicit6(const TestControlSocket& socket,
     PerfPkt6Ptr pkt6(new PerfPkt6(&template_buf[0], template_buf.size(),
                                   transid_offset, transid));
     if (!pkt6) {
-        isc_throw(Unexpected, "failed to create SOLICIT packet");
+        bundy_throw(Unexpected, "failed to create SOLICIT packet");
     }
     size_t rand_offset = getRandomOffset(arg_idx);
     // randomized will pick number of bytes randomized so we can
@@ -2017,7 +2017,7 @@ TestControl::sendSolicit6(const TestControlSocket& socket,
     uint8_t randomized = 0;
     std::vector<uint8_t> duid = generateDuid(randomized);
     if (rand_offset > template_buf.size()) {
-        isc_throw(OutOfRange, "randomization offset is out of bounds");
+        bundy_throw(OutOfRange, "randomization offset is out of bounds");
     }
     // Store random part of the DUID into the packet.
     pkt6->writeAt(rand_offset - randomized + 1,
@@ -2030,7 +2030,7 @@ TestControl::sendSolicit6(const TestControlSocket& socket,
     IfaceMgr::instance().send(pkt6);
     if (!preload) {
         if (!stats_mgr6_) {
-            isc_throw(InvalidOperation, "Statistics Manager for DHCPv6 "
+            bundy_throw(InvalidOperation, "Statistics Manager for DHCPv6 "
                       "hasn't been initialized");
         }
         // Update packet stats.
@@ -2047,7 +2047,7 @@ TestControl::setDefaults4(const TestControlSocket& socket,
     // Interface name.
     Iface* iface = IfaceMgr::instance().getIface(socket.ifindex_);
     if (iface == NULL) {
-        isc_throw(BadValue, "unable to find interface with given index");
+        bundy_throw(BadValue, "unable to find interface with given index");
     }
     pkt->setIface(iface->getName());
     // Interface index.
@@ -2073,7 +2073,7 @@ TestControl::setDefaults6(const TestControlSocket& socket,
     // Interface name.
     Iface* iface = IfaceMgr::instance().getIface(socket.ifindex_);
     if (iface == NULL) {
-        isc_throw(BadValue, "unable to find interface with given index");
+        bundy_throw(BadValue, "unable to find interface with given index");
     }
     pkt->setIface(iface->getName());
     // Interface index.
@@ -2098,4 +2098,4 @@ TestControl::testDiags(const char diag) const {
 }
 
 } // namespace perfdhcp
-} // namespace isc
+} // namespace bundy

@@ -30,7 +30,7 @@
 #include <dns/rrset.h>
 
 using namespace std;
-using namespace isc::dns;
+using namespace bundy::dns;
 
 namespace {
 // A callback functor for masterLoad() commonly used for the following tests.

@@ -17,7 +17,7 @@
 
 #include <Python.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 class Question;
 
@@ -58,7 +58,7 @@ const Question& PyQuestion_ToQuestion(const PyObject* question_obj);
 
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 #endif // PYTHON_QUESTION_H
 
 // Local Variables:

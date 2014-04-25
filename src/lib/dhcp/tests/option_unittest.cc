@@ -31,9 +31,9 @@
 #include <arpa/inet.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dhcp;
-using namespace isc::util;
+using namespace bundy;
+using namespace bundy::dhcp;
+using namespace bundy::util;
 using boost::scoped_ptr;
 
 namespace {
@@ -72,7 +72,7 @@ public:
     /// @return An offset to the first byte after last parsed option.
     size_t execute(const OptionBuffer& buf,
                    const std::string& option_space,
-                   isc::dhcp::OptionCollection& options,
+                   bundy::dhcp::OptionCollection& options,
                    size_t* relay_msg_offset,
                    size_t* relay_msg_len) {
         // Set the executed_ member to true to allow verification that the

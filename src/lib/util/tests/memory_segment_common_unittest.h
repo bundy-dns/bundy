@@ -14,7 +14,7 @@
 
 #include <util/memory_segment.h>
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace test {
 

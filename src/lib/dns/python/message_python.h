@@ -17,7 +17,7 @@
 
 #include <Python.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 class Message;
 
@@ -32,7 +32,7 @@ extern PyTypeObject message_type;
 
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 #endif // PYTHON_MESSAGE_H
 
 // Local Variables:

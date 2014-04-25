@@ -20,7 +20,7 @@
 
 #include <boost/noncopyable.hpp>
 
-namespace isc {
+namespace bundy {
 namespace asiolink {
 
 /// \brief A wrapper for ASIO stream socket in the local (AF_UNIX) domain.
@@ -123,7 +123,7 @@ private:
 };
 
 } // namespace asiolink
-} // namespace isc
+} // namespace bundy
 
 #endif // LOCAL_SOCKET_H
 

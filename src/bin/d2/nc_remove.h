@@ -19,15 +19,15 @@
 
 #include <d2/nc_trans.h>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 /// @brief Thrown if the NameRemoveTransaction encounters a general error.
-class NameRemoveTransactionError : public isc::Exception {
+class NameRemoveTransactionError : public bundy::Exception {
 public:
     NameRemoveTransactionError(const char* file, size_t line,
                                const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Embodies the "life-cycle" required to carry out a DDNS Remove update.
@@ -430,6 +430,6 @@ protected:
 typedef boost::shared_ptr<NameRemoveTransaction> NameRemoveTransactionPtr;
 
 
-} // namespace isc::d2
-} // namespace isc
+} // namespace bundy::d2
+} // namespace bundy
 #endif

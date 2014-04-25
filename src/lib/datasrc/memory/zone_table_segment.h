@@ -30,7 +30,7 @@
 #include <cstdlib>
 #include <string>
 
-namespace isc {
+namespace bundy {
 // Some forward declarations
 namespace dns {
 class Name;
@@ -53,10 +53,10 @@ public:
 /// fails (due to various reasons). When this exception is thrown, a
 /// strong exception safety guarantee is provided, and the
 /// \c ZoneTableSegment is usable as before.
-class ResetFailed : public isc::Exception {
+class ResetFailed : public bundy::Exception {
 public:
     ResetFailed(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what)
+        bundy::Exception(file, line, what)
     {}
 };
 
@@ -65,11 +65,11 @@ public:
 /// state of the \c ZoneTableSegment. When this exception is thrown,
 /// only basic exception safety guarantee is provided and the
 /// \c ZoneTableSegment must be expected as cleared.
-class ResetFailedAndSegmentCleared : public isc::Exception {
+class ResetFailedAndSegmentCleared : public bundy::Exception {
 public:
     ResetFailedAndSegmentCleared(const char* file, size_t line,
                                  const char* what) :
-        isc::Exception(file, line, what)
+        bundy::Exception(file, line, what)
     {}
 };
 
@@ -118,7 +118,7 @@ protected:
     /// An instance implementing this interface is expected to be
     /// created by the factory method (\c create()), so this constructor
     /// is protected.
-    ZoneTableSegment(const isc::dns::RRClass&)
+    ZoneTableSegment(const bundy::dns::RRClass&)
     {}
 public:
     /// \brief Destructor
@@ -140,12 +140,12 @@ public:
     /// As long as \c isUsable() returns true, this method must always
     /// succeed without throwing an exception.  If \c isUsable() returns
     /// false, a derived class implementation can throw
-    /// \c isc::InvalidOperation depending on its implementation
+    /// \c bundy::InvalidOperation depending on its implementation
     /// details. Applications are generally expected to call this
     /// method only when \c isUsable() returns true (either by making
     /// sure explicitly or by some other indirect means).
     ///
-    /// \throw isc::InvalidOperation may be thrown by some
+    /// \throw bundy::InvalidOperation may be thrown by some
     /// implementations if this method is called without calling
     /// \c reset() successfully first.
     virtual ZoneTableHeader& getHeader() = 0;
@@ -157,10 +157,10 @@ public:
 
     /// \brief Return the MemorySegment for the zone table segment.
     ///
-    /// \throw isc::InvalidOperation may be thrown by some
+    /// \throw bundy::InvalidOperation may be thrown by some
     /// implementations if this method is called without calling
     /// \c reset() successfully first.
-    virtual isc::util::MemorySegment& getMemorySegment() = 0;
+    virtual bundy::util::MemorySegment& getMemorySegment() = 0;
 
     /// \brief Return true if the segment is writable.
     ///
@@ -189,7 +189,7 @@ public:
     /// \param rrclass The RR class of the zones to be maintained in the table.
     /// \param type The memory segment type to be used.
     /// \return Returns a \c ZoneTableSegment object of the specified type.
-    static ZoneTableSegment* create(const isc::dns::RRClass& rrclass,
+    static ZoneTableSegment* create(const bundy::dns::RRClass& rrclass,
                                     const std::string& type);
 
     /// \brief Destroy a \c ZoneTableSegment
@@ -253,7 +253,7 @@ public:
     /// First, in case a \c ZoneTableSegment was reset successfully
     /// before and is currently usable (\c isUsable() returns true), and
     /// an invalid configuration is passed in \c params to \c reset(),
-    /// the isc::InvalidParameter exception must be thrown. In this
+    /// the bundy::InvalidParameter exception must be thrown. In this
     /// case, a strong exception safety guarantee must be provided, and
     /// the \c ZoneTableSegment must be usable as before.
     ///
@@ -289,7 +289,7 @@ public:
     /// implementation class for details of what to pass in this
     /// argument.
     ///
-    /// \throw isc::InvalidParameter if the configuration in \c params
+    /// \throw bundy::InvalidParameter if the configuration in \c params
     /// has incorrect syntax, but there is a strong exception safety
     /// guarantee and the \c ZoneTableSegment is usable or unusable as
     /// before.
@@ -303,7 +303,7 @@ public:
     /// exception safety guarantee and the \c ZoneTableSegment is not
     /// usable without a further successful \c reset().
     ///
-    /// \throw isc::NotImplemented Some implementations may choose to
+    /// \throw bundy::NotImplemented Some implementations may choose to
     /// not implement this method. In this case, there must be a strong
     /// exception safety guarantee and the \c ZoneTableSegment is usable
     /// or unusable as before.
@@ -313,7 +313,7 @@ public:
     /// \param params An element containing implementation-specific
     /// config (see the description).
     virtual void reset(MemorySegmentOpenMode mode,
-                       isc::data::ConstElementPtr params) = 0;
+                       bundy::data::ConstElementPtr params) = 0;
 
     /// \brief Close the currently configured \c MemorySegment (if
     /// open).
@@ -325,7 +325,7 @@ public:
     /// configured \c MemorySegment and clear the `ZoneTableSegment` to
     /// a freshly constructed state.
     ///
-    /// \throw isc::NotImplemented Some implementations may choose to
+    /// \throw bundy::NotImplemented Some implementations may choose to
     /// not implement this method. In this case, there must be a strong
     /// exception safety guarantee and the \c ZoneTableSegment is usable
     /// or unusable as before.
@@ -341,7 +341,7 @@ public:
 
 } // namespace memory
 } // namespace datasrc
-} // namespace isc
+} // namespace bundy
 
 #endif // ZONE_TABLE_SEGMENT_H
 

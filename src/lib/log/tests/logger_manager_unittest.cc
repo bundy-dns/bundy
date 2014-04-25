@@ -39,8 +39,8 @@
 #include <sys/types.h>
 #include <regex.h>
 
-using namespace isc;
-using namespace isc::log;
+using namespace bundy;
+using namespace bundy::log;
 using namespace std;
 
 /// \brief LoggerManager Test
@@ -114,7 +114,7 @@ public:
     //
     // \return Temporary file name
     std::string createTempFilename() {
-        string filename = TEMP_DIR + "/bind10_logger_manager_test_XXXXXX";
+        string filename = TEMP_DIR + "/bundy_logger_manager_test_XXXXXX";
 
         // Copy into writeable storage for the call to mkstemp
         boost::scoped_array<char> tname(new char[filename.size() + 1]);
@@ -124,7 +124,7 @@ public:
         // There is still a race condition here, albeit a small one.
         int filenum = mkstemp(tname.get());
         if (filenum == -1) {
-            isc_throw(Exception, "Unable to obtain unique filename");
+            bundy_throw(Exception, "Unable to obtain unique filename");
         }
         close(filenum);
 

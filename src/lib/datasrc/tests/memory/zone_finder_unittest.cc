@@ -40,13 +40,13 @@
 #include <string>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::dns::rdata;
-using namespace isc::datasrc;
-using namespace isc::testutils;
-using namespace isc::datasrc::test;
-using namespace isc::datasrc::memory::test;
-using namespace isc::datasrc::memory;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
+using namespace bundy::datasrc;
+using namespace bundy::testutils;
+using namespace bundy::datasrc::test;
+using namespace bundy::datasrc::memory::test;
+using namespace bundy::datasrc::memory;
 
 namespace {
 // Commonly used result codes (Who should write the prefix all the time)
@@ -1616,7 +1616,7 @@ TEST_F(InMemoryZoneFinderTest, NSECNonExistentTest) {
     updater_.reset();
     loadZoneIntoTable(*ztable_segment, name, class_,
                       TEST_DATA_DIR "/2504-test.zone");
-    InMemoryClient client(ztable_segment, class_);
+    InMemoryClient client("memory", ztable_segment, class_);
 
     DataSourceClient::FindResult result(client.findZone(name));
 
@@ -1779,7 +1779,7 @@ TEST_F(InMemoryZoneFinderNSEC3Test, findNSEC3MissingOrigin) {
      updater_.reset();
      loadZoneIntoTable(*ztable_segment, name, class_,
                        TEST_DATA_DIR "/2503-test.zone");
-     InMemoryClient client(ztable_segment, class_);
+     InMemoryClient client("memory", ztable_segment, class_);
 
      DataSourceClient::FindResult result(client.findZone(name));
 

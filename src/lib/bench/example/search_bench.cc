@@ -26,7 +26,7 @@
 #include <bench/benchmark.h>
 
 using namespace std;
-using namespace isc::bench;
+using namespace bundy::bench;
 
 namespace {
 template <bool Sorted>
@@ -75,7 +75,7 @@ private:
 };
 }
 
-namespace isc {
+namespace bundy {
 namespace bench {
 template<>
 void

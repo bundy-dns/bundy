@@ -16,6 +16,28 @@
 # <topsrcdir>/tools/reorder_message_file.py to make sure the
 # messages are in the correct order.
 
+% MEMMGR_CCMEMBER_DUP_SUBSCRIBED duplicate segment reader subscription (ignored): %1
+The subscription of a segment reader has been notified more than once.
+This can happen at the timing of memmgr's initialization.  If this message
+is shown at some later time, it's more likely to be some internal defect.
+
+% MEMMGR_CCMEMBER_DUP_UNSUBSCRIBED duplicate or spurious segment reader unsubscription (ignored): %1
+The unsubscription of a segment reader has been notified but the memmgr
+doesn't know the reader.  This is an unexpected event, and most likely
+to be a defect in msgq or memmgr itself.  But memmgr keeps running, just
+warning about it.
+
+% MEMMGR_CCMEMBER_NOTIFY notified of module membership update: %1 %2
+An informational message (but logged at the 'info' level since this should
+be a relatively rare event).  There is an update on module membership
+for a memory segment reader.
+
+% MEMMGR_CCMEMBER_NOTIFY_FAIL failed to update segment reader information: %1
+An unexpected error happens while handling a notification about a segment
+reader.  This can be either a defect of memmgr or msgq, or there might be a
+malicious module in the system pretending to be the msgq.  memmgr keeps
+running, but it's suggested to check the entire system.
+
 % MEMMGR_CONFIG_FAIL failed to apply configuration updates: %1
 The memmgr daemon tried to apply configuration updates but found an error.
 The cause of the error is included in the message.  None of the received
@@ -30,7 +52,7 @@ Configuration for the global data sources is updated, but the update
 cannot be applied to memmgr.  The memmgr module will still keep running
 with the previous configuration, but the cause of the failure and
 other log messages must be carefully examined because if only memmgr
-rejects the new configuration then the entire BIND 10 system will have
+rejects the new configuration then the entire BUNDY system will have
 inconsistent state among different modules.  If other modules accept
 the update but memmgr produces this error, it's quite likely that the
 system isn't working as expected, and is probably better to be shut down
@@ -41,11 +63,47 @@ The memmgr daemon received a new version of data source configuration,
 and has successfully applied it to the local state.  Loading of new zone
 data into memory will possibly take place.
 
+% MEMMGR_DATASRC_SGMTINFO_ACK_FAIL failed to handle command: %1
+Error happend in handling the segment_info_update_ack command.
+This is an unexpected situation, most likely to be a bug of the
+sender implementation.
+
+% MEMMGR_DATASRC_SGMTINFO_ACK_NOREADER no segment reader for update_ack: %1
+The memmgr received an acknowledgement for an update on memory segment
+information, but the sender was unknown for the memmgr.  This could happen,
+although less commonly, if a reader unsubscribed from the reader's group
+immediately after it sent an update_ack message, depending on the delivery
+timing of these messages.  If this is the likely cause of the message,
+it can be ignored.  Otherwise, there may be some system defect, and it's
+suggested to check the entire system.
+
+% MEMMGR_LOADZONE received a load command for %1/%2 in data source '%3'
+An informational message.  The memmgr received a loadzone command.
+
+% MEMMGR_UPDATE_ZONE received a zone update event for %1/%2 in data source '%3'
+An informational message.  The memmgr received an update notification
+for a zone from other module.
+
+% MEMMGR_LOADZONE_FAIL failed to handle command: %1
+Error happend in handling the zoneload command.
+
+% MEMMGR_LOAD_COMPLETED load completed for '%1/%2', %3 new load command, %4 readers notified
+An informational message.  The memmgr was notified from a helper
+thread of the completion of loading zone data.  The corresponding data
+source and RR class names are shown.  It also shows whether a new load
+command was immediately sent to the thread, and how many segment
+readers were notified.
+
 % MEMMGR_NO_DATASRC_CONF failed to add data source configuration: %1
 The memmgr daemon tried to incorporate data source configuration on
 its startup but failed to do so.  Due to internal implementation
-details this shouldn't happen as long as the BIND 10 system has been
+details this shouldn't happen as long as the BUNDY system has been
 installed correctly.  So, if this error message is logged, you should
 probably reinstall the entire system, preferably from the scratch, and
 see if it still happens.  The memmgr daemon cannot do any meaningful
 work without data sources, so it immediately terminates itself.
+
+% MEMMGR_SGMTINFO_ACK received a memory segment info update ack for '%1/%2'
+An informational message.  The memmgr received a memory segment info
+update ack command in response to an update message it has sent.
+The corresponding data source and RR class names are shown.

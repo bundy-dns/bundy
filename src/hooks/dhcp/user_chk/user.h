@@ -56,7 +56,7 @@ public:
     /// @param id_type The type of user id contained in vector
     /// @param id a vector of unsigned bytes containing the id
     ///
-    /// @throw isc::BadValue if the vector is empty.
+    /// @throw bundy::BadValue if the vector is empty.
     UserId(UserIdType id_type, const std::vector<uint8_t>& id);
 
     /// @brief Constructor
@@ -69,7 +69,7 @@ public:
     ///
     /// @param id a vector of unsigned bytes containing the id
     ///
-    /// @throw isc::BadValue if the string is empty, contains non
+    /// @throw bundy::BadValue if the string is empty, contains non
     /// valid hex digits, or an odd number of hex digits.
     UserId(UserIdType id_type, const std::string& id_str);
 
@@ -111,14 +111,14 @@ public:
     ///
     /// @param type The id type value for which the label is desired
     ///
-    /// @throw isc::BadValue if type is not valid.
+    /// @throw bundy::BadValue if type is not valid.
     static std::string lookupTypeStr(UserIdType type);
 
     /// @brief Returns the id type for a given text label
     ///
     /// @param type_str The text label for which the id value is desired
     ///
-    /// @throw isc::BadValue if type_str is not a valid text label.
+    /// @throw bundy::BadValue if type_str is not a valid text label.
     static UserIdType lookupType(const std::string& type_str);
 
 private:
@@ -163,7 +163,7 @@ public:
     ///
     /// @param user_id Id to assign to the user
     ///
-    /// @throw isc::BadValue if user id is blank.
+    /// @throw bundy::BadValue if user id is blank.
     User(const UserId & user_id);
 
     /// @brief Constructor
@@ -174,7 +174,7 @@ public:
     /// @param user_id Type of id contained in the id vector
     /// @param id Vector of data representing the user's id
     ///
-    /// @throw isc::BadValue if user id vector is empty.
+    /// @throw bundy::BadValue if user id vector is empty.
     User(UserId::UserIdType id_type, const std::vector<uint8_t>& id);
 
     /// @brief Constructor
@@ -185,7 +185,7 @@ public:
     /// @param user_id Type of id contained in the id vector
     /// @param id string of hex digits representing the user's id
     ///
-    /// @throw isc::BadValue if user id string is empty or invalid
+    /// @throw bundy::BadValue if user id string is empty or invalid
     User(UserId::UserIdType id_type, const std::string& id_str);
 
     /// @brief Destructor
@@ -212,7 +212,7 @@ public:
     /// @param name string by which the property is identified (keyed)
     /// @param value string data to associate with the property
     ///
-    /// @throw isc::BadValue if name is blank.
+    /// @throw bundy::BadValue if name is blank.
     void setProperty(const std::string& name, const std::string& value);
 
     /// @brief Fetches the string value for a given property name.

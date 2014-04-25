@@ -17,7 +17,7 @@
 #include <dhcp/option_vendor_class.h>
 #include <sstream>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 OptionVendorClass::OptionVendorClass(Option::Universe u,
@@ -36,7 +36,7 @@ OptionVendorClass::OptionVendorClass(Option::Universe u,
 }
 
 void
-OptionVendorClass::pack(isc::util::OutputBuffer& buf) {
+OptionVendorClass::pack(bundy::util::OutputBuffer& buf) {
     packHeader(buf);
 
     buf.writeUint32(getVendorId());
@@ -58,12 +58,12 @@ void
 OptionVendorClass::unpack(OptionBufferConstIter begin,
                           OptionBufferConstIter end) {
     if (std::distance(begin, end) < getMinimalLength() - getHeaderLen()) {
-        isc_throw(OutOfRange, "parsed Vendor Class option data truncated to"
+        bundy_throw(OutOfRange, "parsed Vendor Class option data truncated to"
                   " size " << std::distance(begin, end));
     }
     // Option must contain at least one enterprise id. It is ok to read 4-byte
     // value here because we have checked that the buffer he minimal length.
-    vendor_id_ = isc::util::readUint32(&(*begin), distance(begin, end));
+    vendor_id_ = bundy::util::readUint32(&(*begin), distance(begin, end));
     begin += sizeof(vendor_id_);
 
     // Start reading opaque data.
@@ -85,7 +85,7 @@ OptionVendorClass::unpack(OptionBufferConstIter begin,
             // no space left for the empty tuple (thus we add 1), we have
             // to signal the option truncation.
             if (offset + 1 >= std::distance(begin, end)) {
-                isc_throw(isc::OutOfRange, "truncated DHCPv4 V-I Vendor Class"
+                bundy_throw(bundy::OutOfRange, "truncated DHCPv4 V-I Vendor Class"
                           " option - it should contain enterprise id followed"
                           " by opaque data field tuple");
             }
@@ -96,7 +96,7 @@ OptionVendorClass::unpack(OptionBufferConstIter begin,
 void
 OptionVendorClass::addTuple(const OpaqueDataTuple& tuple) {
     if (tuple.getLengthFieldType() != getLengthFieldType()) {
-        isc_throw(isc::BadValue, "attempted to add opaque data tuple having"
+        bundy_throw(bundy::BadValue, "attempted to add opaque data tuple having"
                   " invalid size of the length field "
                   << tuple.getDataFieldSize() << " to Vendor Class option");
     }
@@ -108,12 +108,12 @@ OptionVendorClass::addTuple(const OpaqueDataTuple& tuple) {
 void
 OptionVendorClass::setTuple(const size_t at, const OpaqueDataTuple& tuple) {
     if (at >= getTuplesNum()) {
-        isc_throw(isc::OutOfRange, "attempted to set an opaque data for the"
+        bundy_throw(bundy::OutOfRange, "attempted to set an opaque data for the"
                   " vendor option at position " << at << " which is out of"
                   " range");
 
     } else if (tuple.getLengthFieldType() != getLengthFieldType()) {
-        isc_throw(isc::BadValue, "attempted to set opaque data tuple having"
+        bundy_throw(bundy::BadValue, "attempted to set opaque data tuple having"
                   " invalid size of the length field "
                   << tuple.getDataFieldSize() << " to Vendor Class option");
     }
@@ -124,7 +124,7 @@ OptionVendorClass::setTuple(const size_t at, const OpaqueDataTuple& tuple) {
 OpaqueDataTuple
 OptionVendorClass::getTuple(const size_t at) const {
     if (at >= getTuplesNum()) {
-        isc_throw(isc::OutOfRange, "attempted to get an opaque data for the"
+        bundy_throw(bundy::OutOfRange, "attempted to get an opaque data for the"
                   " vendor option at position " << at << " which is out of"
                   " range. There are only " << getTuplesNum() << " tuples");
     }
@@ -187,5 +187,5 @@ OptionVendorClass::toText(int indent) {
     return (s.str());
 }
 
-} // namespace isc::dhcp
-} // namespace isc
+} // namespace bundy::dhcp
+} // namespace bundy

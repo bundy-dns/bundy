@@ -21,7 +21,7 @@
 #ifndef RCODE_H
 #define RCODE_H 1
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 /// \brief DNS Response Codes (RCODEs) class.
@@ -82,7 +82,7 @@ public:
     /// Since RCODEs are 12-bit values, parameters larger than 0xfff are
     /// invalid.
     /// If \c code is larger than 0xfff an exception of class
-    /// \c isc::OutOfRange will be thrown.
+    /// \c bundy::OutOfRange will be thrown.
     ///
     /// \param code The underlying 12-bit code value of the \c Rcode.
     explicit Rcode(const uint16_t code);
@@ -95,7 +95,7 @@ public:
     ///
     /// The first parameter, \c code, is the lower 4 bits, and therefore must
     /// not exceed 15.  Otherwise, an exception of class
-    /// \c isc::OutOfRange will be thrown.
+    /// \c bundy::OutOfRange will be thrown.
     ///
     /// This version of constructor is provided specifically for constructing
     /// an Rcode from a DNS header and an %EDNS OPT RR.  Normal applications

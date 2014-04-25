@@ -23,7 +23,7 @@
 #include <boost/shared_ptr.hpp>
 #include <stdint.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief This class encapsulates DHCPv6 Vendor Class and DHCPv4 V-I Vendor
@@ -80,7 +80,7 @@ public:
     /// @brief Renders option into the buffer in the wire format.
     ///
     /// @param [out] buf Buffer to which the option is rendered.
-    virtual void pack(isc::util::OutputBuffer& buf);
+    virtual void pack(bundy::util::OutputBuffer& buf);
 
     /// @brief Parses buffer holding an option.
     ///
@@ -100,7 +100,7 @@ public:
     /// @brief Adds a new opaque data tuple to the option.
     ///
     /// @param tuple Tuple to be added.
-    /// @throw isc::BadValue if the type of the tuple doesn't match the
+    /// @throw bundy::BadValue if the type of the tuple doesn't match the
     /// universe this option belongs to.
     void addTuple(const OpaqueDataTuple& tuple);
 
@@ -112,8 +112,8 @@ public:
     ///
     /// @param at Index at which the tuple should be replaced.
     /// @param tuple Tuple to be set.
-    /// @throw isc::OutOfRange if the tuple position is out of range.
-    /// @throw isc::BadValue if the type of the tuple doesn't match the
+    /// @throw bundy::OutOfRange if the tuple position is out of range.
+    /// @throw bundy::BadValue if the type of the tuple doesn't match the
     /// universe this option belongs to.
     void setTuple(const size_t at, const OpaqueDataTuple& tuple);
 
@@ -122,7 +122,7 @@ public:
     ///  If the specified position is out of range an exception is thrown.
     ///
     /// @param at Index at which the tuple should be replaced.
-    /// @throw isc::OutOfRange if the tuple position is out of range.
+    /// @throw bundy::OutOfRange if the tuple position is out of range.
     OpaqueDataTuple getTuple(const size_t at) const;
 
     /// @brief Returns the number of opaque data tuples added to the option.

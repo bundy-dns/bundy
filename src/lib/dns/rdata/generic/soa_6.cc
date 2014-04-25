@@ -35,10 +35,10 @@
 
 using namespace std;
 using boost::lexical_cast;
-using namespace isc::util;
-using isc::dns::rdata::generic::detail::createNameFromLexer;
+using namespace bundy::util;
+using bundy::dns::rdata::generic::detail::createNameFromLexer;
 
-// BEGIN_ISC_NAMESPACE
+// BEGIN_BUNDY_NAMESPACE
 // BEGIN_RDATA_NAMESPACE
 
 SOA::SOA(InputBuffer& buffer, size_t) :
@@ -94,11 +94,11 @@ SOA::SOA(const std::string& soastr) :
         fillParameters(lexer, numdata_);
 
         if (lexer.getNextToken().getType() != MasterToken::END_OF_FILE) {
-            isc_throw(InvalidRdataText, "extra input text for SOA: "
+            bundy_throw(InvalidRdataText, "extra input text for SOA: "
                       << soastr);
         }
     } catch (const MasterLexer::LexerError& ex) {
-        isc_throw(InvalidRdataText, "Failed to construct SOA from '" <<
+        bundy_throw(InvalidRdataText, "Failed to construct SOA from '" <<
                   soastr << "': " << ex.what());
     }
 }
@@ -215,4 +215,4 @@ SOA::compare(const Rdata& other) const {
 }
 
 // END_RDATA_NAMESPACE
-// END_ISC_NAMESPACE
+// END_BUNDY_NAMESPACE

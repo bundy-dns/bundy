@@ -31,15 +31,15 @@
  * \code #include <util/unittests/newhook.h>
  * ...
  * TEST(SomeTest, newException) {
- *        isc::util::unittests::force_throw_on_new = true;
- *        isc::util::unittests::throw_size_on_new = sizeof(Foo);
+ *        bundy::util::unittests::force_throw_on_new = true;
+ *        bundy::util::unittests::throw_size_on_new = sizeof(Foo);
  *        try {
  *            // this will do 'new Foo()' internally and should throw
  *            createFoo();
- *            isc::util::unittests::force_throw_on_new = false;
+ *            bundy::util::unittests::force_throw_on_new = false;
  *            ASSERT_FALSE(true) << "Expected throw on new";
  *        } catch (const std::bad_alloc&) {
- *            isc::util::unittests::force_throw_on_new = false;
+ *            bundy::util::unittests::force_throw_on_new = false;
  *            // do some integrity check, etc, if necessary
  *        }
  * } \endcode
@@ -51,7 +51,7 @@
  * \c force_throw_on_new.
  */
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace unittests {
 /// Switch to enable the use of special operator new

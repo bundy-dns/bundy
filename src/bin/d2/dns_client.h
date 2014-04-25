@@ -23,7 +23,7 @@
 #include <asiodns/io_fetch.h>
 #include <dns/tsig.h>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 class DNSClient;
@@ -146,7 +146,7 @@ public:
     /// @param wait A timeout (in milliseconds) for the response. If a response
     /// is not received within the timeout, exchange is interrupted. This value
     /// must not exceed maximal value for 'int' data type.
-    /// @param tsig_key An @c isc::dns::TSIGKey object representing TSIG
+    /// @param tsig_key An @c bundy::dns::TSIGKey object representing TSIG
     /// context which will be used to render the DNS Update message.
     ///
     /// @todo Implement TSIG Support. Currently any attempt to call this
@@ -187,6 +187,6 @@ private:
 };
 
 } // namespace d2
-} // namespace isc
+} // namespace bundy
 
 #endif // DNS_CLIENT_H

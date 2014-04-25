@@ -17,7 +17,7 @@
 #include <cassert>
 #include <boost/bind.hpp>
 
-namespace isc {
+namespace bundy {
 namespace resolver {
 namespace bench {
 

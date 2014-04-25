@@ -25,7 +25,7 @@ public:
     /// @brief The sole SQL benchmark constructor
     ///
     /// DB file must be present and appropriate database schema must
-    /// be used. See sqlite.schema script and isc-dhcp-perf-guide.html
+    /// be used. See sqlite.schema script and bundy-dhcp-perf-guide.html
     /// for details.
     ///
     /// sync flag affects "PRAGMA synchronous" to be ON or OFF.

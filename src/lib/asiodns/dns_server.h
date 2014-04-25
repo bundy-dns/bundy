@@ -17,7 +17,7 @@
 
 #include <asiolink/io_message.h>
 
-namespace isc {
+namespace bundy {
 namespace asiodns {
 
 /// \brief The \c DNSServer class is a wrapper (and base class) for
@@ -151,5 +151,5 @@ private:
 
 
 } // namespace asiodns
-} // namespace isc
+} // namespace bundy
 #endif // ASIOLINK_DNS_SERVER_H

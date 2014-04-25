@@ -16,7 +16,7 @@
 #include <log/logger_support.h>
 #include <log/log_messages.h>
 
-using namespace isc::log;
+using namespace bundy::log;
 
 /// \brief Test InitLogger
 ///

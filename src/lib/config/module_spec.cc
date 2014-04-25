@@ -24,8 +24,8 @@
 
 // todo: add more context to thrown ModuleSpecErrors?
 
-using namespace isc::data;
-using namespace isc::config;
+using namespace bundy::data;
+using namespace bundy::config;
 
 namespace {
 //
@@ -40,14 +40,14 @@ check_leaf_item(ConstElementPtr spec, const std::string& name,
         if (type == Element::any || spec->get(name)->getType() == type) {
             return;
         } else {
-            isc_throw(ModuleSpecError,
+            bundy_throw(ModuleSpecError,
                       name + " not of type " + Element::typeToName(type));
         }
     } else if (mandatory) {
         // todo: want parent item name, and perhaps some info about location
         // in list? or just catch and throw new...
         // or make this part non-throwing and check return value...
-        isc_throw(ModuleSpecError, name + " missing in " + spec->str());
+        bundy_throw(ModuleSpecError, name + " missing in " + spec->str());
     }
 }
 
@@ -81,7 +81,7 @@ check_config_item(ConstElementPtr spec) {
 void
 check_config_item_list(ConstElementPtr spec) {
     if (spec->getType() != Element::list) {
-        isc_throw(ModuleSpecError, "config_data is not a list of elements");
+        bundy_throw(ModuleSpecError, "config_data is not a list of elements");
     }
     BOOST_FOREACH(ConstElementPtr item, spec->listValue()) {
         check_config_item(item);
@@ -123,7 +123,7 @@ void check_statistics_item_list(ConstElementPtr spec);
 void
 check_statistics_item_list(ConstElementPtr spec) {
     if (spec->getType() != Element::list) {
-        isc_throw(ModuleSpecError, "statistics is not a list of elements");
+        bundy_throw(ModuleSpecError, "statistics is not a list of elements");
     }
     BOOST_FOREACH(ConstElementPtr item, spec->listValue()) {
         check_config_item(item);
@@ -136,7 +136,7 @@ check_statistics_item_list(ConstElementPtr spec) {
             && item->contains("item_default")) {
             if(!check_format(item->get("item_default"),
                              item->get("item_format"))) {
-                isc_throw(ModuleSpecError,
+                bundy_throw(ModuleSpecError,
                     "item_default not valid type of item_format");
             }
         }
@@ -153,7 +153,7 @@ check_command(ConstElementPtr spec) {
 void
 check_command_list(ConstElementPtr spec) {
     if (spec->getType() != Element::list) {
-        isc_throw(ModuleSpecError, "commands is not a list of elements");
+        bundy_throw(ModuleSpecError, "commands is not a list of elements");
     }
     BOOST_FOREACH(ConstElementPtr item, spec->listValue()) {
         check_command(item);
@@ -184,12 +184,12 @@ check_module_specification(ConstElementPtr def) {
     try {
         check_data_specification(def);
     } catch (const TypeError& te) {
-        isc_throw(ModuleSpecError, te.what());
+        bundy_throw(ModuleSpecError, te.what());
     }
 }
 }
 
-namespace isc {
+namespace bundy {
 namespace config {
 //
 // Public functions
@@ -315,14 +315,14 @@ moduleSpecFromFile(const std::string& file_name, const bool check)
     if (!file) {
         std::stringstream errs;
         errs << "Error opening " << file_name << ": " << strerror(errno);
-        isc_throw(ModuleSpecError, errs.str());
+        bundy_throw(ModuleSpecError, errs.str());
     }
 
     ConstElementPtr module_spec_element = Element::fromJSON(file, file_name);
     if (module_spec_element->contains("module_spec")) {
         return (ModuleSpec(module_spec_element->get("module_spec"), check));
     } else {
-        isc_throw(ModuleSpecError, "No module_spec in specification");
+        bundy_throw(ModuleSpecError, "No module_spec in specification");
     }
 }
 
@@ -334,7 +334,7 @@ moduleSpecFromFile(std::ifstream& in, const bool check)
     if (module_spec_element->contains("module_spec")) {
         return (ModuleSpec(module_spec_element->get("module_spec"), check));
     } else {
-        isc_throw(ModuleSpecError, "No module_spec in specification");
+        bundy_throw(ModuleSpecError, "No module_spec in specification");
     }
 }
 

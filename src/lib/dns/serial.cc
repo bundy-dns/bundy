@@ -14,7 +14,7 @@
 
 #include <dns/serial.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 bool
@@ -72,5 +72,5 @@ operator<<(std::ostream& os, const Serial& serial) {
 }
 
 } // end namespace dns
-} // end namespace isc
+} // end namespace bundy
 

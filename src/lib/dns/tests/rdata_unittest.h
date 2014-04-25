@@ -27,7 +27,7 @@
 #include <string>
 #include <sstream>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace rdata {
 class RdataTest : public ::testing::Test {
@@ -75,7 +75,7 @@ protected:
         }
     }
 
-    isc::util::OutputBuffer obuffer;
+    bundy::util::OutputBuffer obuffer;
     MessageRenderer renderer;
     /// This is an RDATA object of some "unknown" RR type so that it can be
     /// used to test the compare() method against a well-known RR type.

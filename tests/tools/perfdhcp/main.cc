@@ -21,7 +21,7 @@
 #include "test_control.h"
 #include "command_options.h"
 
-using namespace isc::perfdhcp;
+using namespace bundy::perfdhcp;
 
 int
 main(int argc, char* argv[]) {
@@ -39,7 +39,7 @@ main(int argc, char* argv[]) {
         if (command_options.parse(argc, argv, true)) {
             return (ret_code);
         }
-    } catch(isc::Exception& e) {
+    } catch(bundy::Exception& e) {
         ret_code = 1;
         std::cerr << "Error parsing command line options: "
                   << e.what() << std::endl;
@@ -52,7 +52,7 @@ main(int argc, char* argv[]) {
     try{
         TestControl& test_control = TestControl::instance();
         ret_code =  test_control.run();
-    } catch (isc::Exception& e) {
+    } catch (bundy::Exception& e) {
         ret_code = 1;
         std::cerr << "Error running perfdhcp: " << e.what() << std::endl;
         if (diags.find('e') != std::string::npos) {

@@ -26,8 +26,8 @@
 #include <string>
 
 
-using namespace isc;
-using namespace isc::hooks;
+using namespace bundy;
+using namespace bundy::hooks;
 using namespace std;
 
 namespace {
@@ -75,7 +75,7 @@ public:
         handle->setArgument(RESULT, result);
 
         // Seed the calculation.
-        HooksManager::callCallouts(isc::hooks::ServerHooks::CONTEXT_CREATE,
+        HooksManager::callCallouts(bundy::hooks::ServerHooks::CONTEXT_CREATE,
                                    *handle);
         handle->getArgument(RESULT, result);
         EXPECT_EQ(r0, result) << "context_create" << COMMON_TEXT;

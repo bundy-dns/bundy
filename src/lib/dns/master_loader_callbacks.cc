@@ -16,7 +16,7 @@
 
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 namespace {
@@ -31,4 +31,4 @@ MasterLoaderCallbacks::getNullCallbacks() {
 }
 
 } // end namespace dns
-} // end namespace isc
+} // end namespace bundy

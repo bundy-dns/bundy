@@ -22,7 +22,7 @@
 #include <stdexcept>
 #include <exceptions/exceptions.h>
 
-namespace isc { namespace data {
+namespace bundy { namespace data {
 
 class Element;
 // todo: describe the rationale behind ElementPtr?
@@ -34,10 +34,10 @@ typedef boost::shared_ptr<const Element> ConstElementPtr;
 /// is called for an Element that has a wrong type (e.g. int_value on a
 /// ListElement)
 ///
-class TypeError : public isc::Exception {
+class TypeError : public bundy::Exception {
 public:
     TypeError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 ///
@@ -47,10 +47,10 @@ public:
 // i'd like to use Exception here but we need one that is derived from
 // runtime_error (as this one is directly based on external data, and
 // i want to add some values to any static data string that is provided)
-class JSONError : public isc::Exception {
+class JSONError : public bundy::Exception {
 public:
     JSONError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 ///
@@ -125,20 +125,20 @@ public:
     /// getValue() below
     //@{
     virtual int64_t intValue() const
-    { isc_throw(TypeError, "intValue() called on non-integer Element"); };
+    { bundy_throw(TypeError, "intValue() called on non-integer Element"); };
     virtual double doubleValue() const
-    { isc_throw(TypeError, "doubleValue() called on non-double Element"); };
+    { bundy_throw(TypeError, "doubleValue() called on non-double Element"); };
     virtual bool boolValue() const
-    { isc_throw(TypeError, "boolValue() called on non-Bool Element"); };
+    { bundy_throw(TypeError, "boolValue() called on non-Bool Element"); };
     virtual std::string stringValue() const
-    { isc_throw(TypeError, "stringValue() called on non-string Element"); };
+    { bundy_throw(TypeError, "stringValue() called on non-string Element"); };
     virtual const std::vector<ConstElementPtr>& listValue() const {
         // replace with real exception or empty vector?
-        isc_throw(TypeError, "listValue() called on non-list Element");
+        bundy_throw(TypeError, "listValue() called on non-list Element");
     };
     virtual const std::map<std::string, ConstElementPtr>& mapValue() const {
         // replace with real exception or empty map?
-        isc_throw(TypeError, "mapValue() called on non-map Element");
+        bundy_throw(TypeError, "mapValue() called on non-map Element");
     };
     //@}
 
@@ -305,7 +305,7 @@ public:
 
     /// \brief These functions will parse the given string (JSON)
     /// representation  of a compound element. If there is a parse
-    /// error, an exception of the type isc::data::JSONError is thrown.
+    /// error, an exception of the type bundy::data::JSONError is thrown.
 
     //@{
     /// Creates an Element from the given JSON string
@@ -358,7 +358,7 @@ public:
 
     /// These function pparse the wireformat at the given stringstream
     /// (of the given length). If there is a parse error an exception
-    /// of the type isc::cc::DecodeError is raised.
+    /// of the type bundy::cc::DecodeError is raised.
 
     //@{
     /// Creates an Element from the wire format in the given

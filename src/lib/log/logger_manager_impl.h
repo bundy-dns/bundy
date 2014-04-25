@@ -26,7 +26,7 @@ class Logger;
 class Appender;
 }
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 // Forward declarations
@@ -43,7 +43,7 @@ struct OutputOption;
 /// of those specifications.
 ///
 /// Note: the logging has been implemented using a "pimpl" idiom to conceal
-/// the underlying implementation (log4cplus) from the BIND 10 interface.
+/// the underlying implementation (log4cplus) from the BUNDY interface.
 /// This requires that there be an implementation class, even though in this
 /// case, all the implementation class methods can be declared static.
 
@@ -80,7 +80,7 @@ public:
     /// messages) is called before a message is logged, log4cplus will output
     /// a message to stderr noting that logging has not been initialized.
     ///
-    /// It is assumed here that the name of the BIND 10 root logger can be
+    /// It is assumed here that the name of the BUNDY root logger can be
     /// obtained from the global function getRootLoggerName().
     ///
     /// \param severity Severity to be associated with this logger
@@ -88,7 +88,7 @@ public:
     /// \param buffer If true, all log messages will be buffered until one of
     ///        the \c process() methods is called. If false, initial logging
     ///        shall go to the default output (i.e. stdout)
-    static void init(isc::log::Severity severity = isc::log::INFO,
+    static void init(bundy::log::Severity severity = bundy::log::INFO,
                      int dbglevel = 0, bool buffer = false);
 
     /// \brief Reset logging
@@ -98,7 +98,7 @@ public:
     ///
     /// \param severity Severity to be associated with this logger
     /// \param dbglevel Debug level associated with the root logger
-    static void reset(isc::log::Severity severity = isc::log::INFO,
+    static void reset(bundy::log::Severity severity = bundy::log::INFO,
                       int dbglevel = 0);
 
 private:
@@ -144,7 +144,7 @@ private:
 
     /// \brief Set default layout and severity for root logger
     ///
-    /// Initializes the root logger to BIND 10 defaults - console or buffered
+    /// Initializes the root logger to BUNDY defaults - console or buffered
     /// output and the passed severity/debug level.
     ///
     /// \param severity Severity of messages that the logger should output.
@@ -152,7 +152,7 @@ private:
     /// \param buffer If true, all log messages will be buffered until one of
     ///        the \c process() methods is called. If false, initial logging
     ///        shall go to the default output (i.e. stdout)
-    static void initRootLogger(isc::log::Severity severity = isc::log::INFO,
+    static void initRootLogger(bundy::log::Severity severity = bundy::log::INFO,
                                int dbglevel = 0, bool buffer = false);
 
     /// \brief Set layout for console appender
@@ -196,6 +196,6 @@ private:
 };
 
 } // namespace log
-} // namespace isc
+} // namespace bundy
 
 #endif // LOGGER_MANAGER_IMPL_H

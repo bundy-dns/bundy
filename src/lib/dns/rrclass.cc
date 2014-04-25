@@ -24,22 +24,22 @@
 #include <dns/rrclass.h>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::util;
+using namespace bundy::dns;
+using namespace bundy::util;
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 RRClass::RRClass(const std::string& class_str) {
     if (!RRParamRegistry::getRegistry().textToClassCode(class_str, classcode_)) {
-        isc_throw(InvalidRRClass,
+        bundy_throw(InvalidRRClass,
                   "Unrecognized RR class string: " + class_str);
     }
 }
 
 RRClass::RRClass(InputBuffer& buffer) {
     if (buffer.getLength() - buffer.getPosition() < sizeof(uint16_t)) {
-        isc_throw(IncompleteRRClass, "incomplete wire-format RR class");
+        bundy_throw(IncompleteRRClass, "incomplete wire-format RR class");
     }
     classcode_ = buffer.readUint16();
 }

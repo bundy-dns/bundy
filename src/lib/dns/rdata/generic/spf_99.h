@@ -21,7 +21,7 @@
 
 #include <dns/rdata.h>
 
-// BEGIN_ISC_NAMESPACE
+// BEGIN_BUNDY_NAMESPACE
 
 // BEGIN_COMMON_DECLARATIONS
 // END_COMMON_DECLARATIONS
@@ -67,12 +67,12 @@ public:
     const std::vector<std::vector<uint8_t> >& getString() const;
 
 private:
-    typedef isc::dns::rdata::generic::detail::TXTLikeImpl<SPF, 99> SPFImpl;
+    typedef bundy::dns::rdata::generic::detail::TXTLikeImpl<SPF, 99> SPFImpl;
     SPFImpl* impl_;
 };
 
 // END_RDATA_NAMESPACE
-// END_ISC_NAMESPACE
+// END_BUNDY_NAMESPACE
 // END_HEADER_GUARD
 
 // Local Variables: 

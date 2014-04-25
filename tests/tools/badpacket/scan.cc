@@ -40,13 +40,13 @@
 #include "scan.h"
 
 using namespace std;
-using namespace isc::asiolink;
-using namespace isc::asiodns;
-using namespace isc::dns;
-using namespace isc::util;
-using namespace isc::util::str;
+using namespace bundy::asiolink;
+using namespace bundy::asiodns;
+using namespace bundy::dns;
+using namespace bundy::util;
+using namespace bundy::util::str;
 
-namespace isc {
+namespace bundy {
 namespace badpacket {
 
 // Perform the scan from start to end on a single question.
@@ -191,7 +191,7 @@ Scan::sizeMessage(OutputBufferPtr& msgbuf, const CommandOptions& options) {
 
 // Perform the message exchange for a single combination command options.
 void
-Scan::scanOne(isc::util::OutputBufferPtr& msgbuf, const CommandOptions& options) {
+Scan::scanOne(bundy::util::OutputBufferPtr& msgbuf, const CommandOptions& options) {
     // Store the interpretation of outgoing message.
     string fields = string("(") + getFields(msgbuf) + string(")");
 
@@ -230,7 +230,7 @@ Scan::scanOne(isc::util::OutputBufferPtr& msgbuf, const CommandOptions& options)
 
 // Get interpretation of the message fields.
 std::string
-Scan::getFields(isc::util::OutputBufferPtr& msgbuf) {
+Scan::getFields(bundy::util::OutputBufferPtr& msgbuf) {
 
     // Header flags. (Note that all come from the same word in the message, so
     // using the word offset for the QR flag as the position in the buffer from
@@ -310,4 +310,4 @@ Scan::operator()(IOFetch::Result result) {
 }
 
 } // namespace test
-} // namespace isc
+} // namespace bundy

@@ -25,10 +25,10 @@
 #include <dns/rdata/generic/detail/lexer_util.h>
 
 using namespace std;
-using namespace isc::util;
-using isc::dns::rdata::generic::detail::createNameFromLexer;
+using namespace bundy::util;
+using bundy::dns::rdata::generic::detail::createNameFromLexer;
 
-// BEGIN_ISC_NAMESPACE
+// BEGIN_BUNDY_NAMESPACE
 // BEGIN_RDATA_NAMESPACE
 
 /// \brief Constructor from string.
@@ -57,11 +57,11 @@ DNAME::DNAME(const std::string& namestr) :
         dname_ = createNameFromLexer(lexer, NULL);
 
         if (lexer.getNextToken().getType() != MasterToken::END_OF_FILE) {
-            isc_throw(InvalidRdataText, "extra input text for DNAME: "
+            bundy_throw(InvalidRdataText, "extra input text for DNAME: "
                       << namestr);
         }
     } catch (const MasterLexer::LexerError& ex) {
-        isc_throw(InvalidRdataText, "Failed to construct DNAME from '" <<
+        bundy_throw(InvalidRdataText, "Failed to construct DNAME from '" <<
                   namestr << "': " << ex.what());
     }
 }
@@ -132,4 +132,4 @@ DNAME::getDname() const {
 }
 
 // END_RDATA_NAMESPACE
-// END_ISC_NAMESPACE
+// END_BUNDY_NAMESPACE

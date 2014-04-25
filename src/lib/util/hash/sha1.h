@@ -35,7 +35,7 @@
 
 #include <stdint.h>
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace hash {
 /*
@@ -87,5 +87,5 @@ extern int SHA1Result(SHA1Context *, uint8_t Message_Digest[SHA1_HASHSIZE]);
 
 } // namespace hash
 } // namespace util
-} // namespace isc
+} // namespace bundy
 #endif

@@ -22,9 +22,9 @@
 #include <cassert>
 #include <set>
 
-using namespace isc::util;
+using namespace bundy::util;
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 namespace {     // hide internal-only names from the public namespaces

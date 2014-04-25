@@ -24,10 +24,10 @@
 #include <cassert>
 #include <string>
 
-using namespace isc::dns;
-using namespace isc::dns::rdata;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 
@@ -73,7 +73,7 @@ ZoneDataUpdater::contextCheck(const AbstractRRset& rrset,
             if (sp->type != RRType::NSEC()) {
                 LOG_ERROR(logger, DATASRC_MEMORY_MEM_CNAME_TO_NONEMPTY).
                     arg(rrset.getName());
-                isc_throw(AddError,
+                bundy_throw(AddError,
                           "CNAME can't be added with " << sp->type
                           << " RRType for " << rrset.getName());
             }
@@ -83,7 +83,7 @@ ZoneDataUpdater::contextCheck(const AbstractRRset& rrset,
     {
         LOG_ERROR(logger,
                   DATASRC_MEMORY_MEM_CNAME_COEXIST).arg(rrset.getName());
-        isc_throw(AddError,
+        bundy_throw(AddError,
                   "CNAME and " << rrset.getType() <<
                   " can't coexist for " << rrset.getName());
     }
@@ -100,17 +100,17 @@ ZoneDataUpdater::contextCheck(const AbstractRRset& rrset,
           RdataSet::find(rdataset, RRType::DNAME()) != NULL)))
     {
         LOG_ERROR(logger, DATASRC_MEMORY_MEM_DNAME_NS).arg(rrset.getName());
-        isc_throw(AddError, "DNAME can't coexist with NS in non-apex domain: "
+        bundy_throw(AddError, "DNAME can't coexist with NS in non-apex domain: "
                   << rrset.getName());
     }
 }
 
 void
-ZoneDataUpdater::validate(const isc::dns::ConstRRsetPtr rrset) const {
+ZoneDataUpdater::validate(const bundy::dns::ConstRRsetPtr rrset) const {
     assert(rrset);
 
     if (rrset->getRdataCount() == 0) {
-        isc_throw(AddError,
+        bundy_throw(AddError,
                   "The rrset provided is empty: "
                   << rrset->getName() << "/" << rrset->getType());
     }
@@ -127,7 +127,7 @@ ZoneDataUpdater::validate(const isc::dns::ConstRRsetPtr rrset) const {
         LOG_ERROR(logger,
                   DATASRC_MEMORY_MEM_SINGLETON).arg(rrset->getName()).
             arg(rrset->getType());
-        isc_throw(AddError, "multiple RRs of singleton type for "
+        bundy_throw(AddError, "multiple RRs of singleton type for "
                   << rrset->getName());
     }
 
@@ -137,7 +137,7 @@ ZoneDataUpdater::validate(const isc::dns::ConstRRsetPtr rrset) const {
          rrset->getType() == RRType::NSEC3PARAM()) &&
         (rrset->getRdataCount() > 1))
     {
-        isc_throw(AddError, "Multiple NSEC3/NSEC3PARAM RDATA is given for "
+        bundy_throw(AddError, "Multiple NSEC3/NSEC3PARAM RDATA is given for "
                   << rrset->getName() << " which isn't supported");
     }
 
@@ -151,7 +151,7 @@ ZoneDataUpdater::validate(const isc::dns::ConstRRsetPtr rrset) const {
             if (dynamic_cast<const generic::RRSIG&>(
                      rit->getCurrent()).typeCovered() != covered)
             {
-                isc_throw(AddError, "RRSIG contains mixed covered types: "
+                bundy_throw(AddError, "RRSIG contains mixed covered types: "
                           << rrset->toText());
             }
         }
@@ -164,7 +164,7 @@ ZoneDataUpdater::validate(const isc::dns::ConstRRsetPtr rrset) const {
         LOG_ERROR(logger,
                   DATASRC_MEMORY_MEM_OUT_OF_ZONE).arg(rrset->getName()).
             arg(zone_name_);
-        isc_throw(AddError,
+        bundy_throw(AddError,
                   "The name " << rrset->getName() <<
                   " is not contained in zone " << zone_name_);
     }
@@ -180,14 +180,14 @@ ZoneDataUpdater::validate(const isc::dns::ConstRRsetPtr rrset) const {
         if (rrset->getType() == RRType::NS()) {
             LOG_ERROR(logger, DATASRC_MEMORY_MEM_WILDCARD_NS).
                 arg(rrset->getName());
-            isc_throw(AddError, "Invalid NS owner name (wildcard): "
+            bundy_throw(AddError, "Invalid NS owner name (wildcard): "
                       << rrset->getName());
         }
 
         if (rrset->getType() == RRType::DNAME()) {
             LOG_ERROR(logger, DATASRC_MEMORY_MEM_WILDCARD_DNAME).
                 arg(rrset->getName());
-            isc_throw(AddError, "Invalid DNAME owner name (wildcard): "
+            bundy_throw(AddError, "Invalid DNAME owner name (wildcard): "
                       << rrset->getName());
         }
     }
@@ -202,7 +202,7 @@ ZoneDataUpdater::validate(const isc::dns::ConstRRsetPtr rrset) const {
          rrset->getName().getLabelCount() != zone_name_.getLabelCount() + 1))
     {
         LOG_ERROR(logger, DATASRC_MEMORY_BAD_NSEC3_NAME).arg(rrset->getName());
-        isc_throw(AddError, "Invalid NSEC3 owner name: " <<
+        bundy_throw(AddError, "Invalid NSEC3 owner name: " <<
                   rrset->getName() << "; zone: " << zone_name_);
     }
 }
@@ -239,7 +239,7 @@ ZoneDataUpdater::setupNSEC3(const ConstRRsetPtr rrset) {
     } else {
         const NSEC3Hash* hash = getNSEC3Hash();
         if (!hash->match(nsec3_rdata)) {
-            isc_throw(AddError,
+            bundy_throw(AddError,
                       rrset->getType() << " with inconsistent parameters: "
                       << rrset->toText());
         }
@@ -263,7 +263,7 @@ ZoneDataUpdater::addNSEC3(const Name& name, const ConstRRsetPtr& rrset,
         // hopefully this case shouldn't happen in practice, at least unless
         // zone is really broken.
         assert(!rrset);
-        isc_throw(NotImplemented,
+        bundy_throw(NotImplemented,
                   "RRSIG for NSEC3 cannot be added - no known NSEC3 data");
     }
 
@@ -373,10 +373,10 @@ ZoneDataUpdater::addRdataSet(const Name& name, const RRType& rrtype,
 }
 
 void
-ZoneDataUpdater::addInternal(const isc::dns::Name& name,
-                     const isc::dns::RRType& rrtype,
-                     const isc::dns::ConstRRsetPtr& rrset,
-                     const isc::dns::ConstRRsetPtr& rrsig)
+ZoneDataUpdater::addInternal(const bundy::dns::Name& name,
+                     const bundy::dns::RRType& rrtype,
+                     const bundy::dns::ConstRRsetPtr& rrset,
+                     const bundy::dns::ConstRRsetPtr& rrsig)
 {
     // Add wildcards possibly contained in the owner name to the domain
     // tree.  This can only happen for the normal (non-NSEC3) tree.
@@ -396,7 +396,7 @@ ZoneDataUpdater::add(const ConstRRsetPtr& rrset,
 {
     // Validate input.
     if (!rrset && !sig_rrset) {
-        isc_throw(NullRRset,
+        bundy_throw(NullRRset,
                   "ZoneDataUpdater::add is given 2 NULL pointers");
     }
     if (rrset) {
@@ -422,7 +422,7 @@ ZoneDataUpdater::add(const ConstRRsetPtr& rrset,
         try {
             addInternal(name, rrtype, rrset, sig_rrset);
             added = true;
-        } catch (const isc::util::MemorySegmentGrown&) {
+        } catch (const bundy::util::MemorySegmentGrown&) {
             // The segment has grown. So, we update the base pointer (because
             // the data may have been remapped somewhere else in the process).
             zone_data_ =
@@ -435,4 +435,4 @@ ZoneDataUpdater::add(const ConstRRsetPtr& rrset,
 
 } // namespace memory
 } // namespace datasrc
-} // namespace isc
+} // namespace bundy

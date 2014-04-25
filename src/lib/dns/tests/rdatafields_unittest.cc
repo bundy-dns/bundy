@@ -29,12 +29,12 @@
 #include <gtest/gtest.h>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::dns::rdata;
-using isc::UnitTestUtil;
-using isc::util::OutputBuffer;
-using isc::util::InputBuffer;
-using isc::util::unittests::matchWireData;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
+using bundy::UnitTestUtil;
+using bundy::util::OutputBuffer;
+using bundy::util::InputBuffer;
+using bundy::util::unittests::matchWireData;
 
 namespace {
 class RdataFieldsTest : public ::testing::Test {
@@ -308,11 +308,11 @@ TEST_F(RdataFieldsTest, invalidFieldLength) {
     };
     // sum of field len < data len
     EXPECT_THROW(RdataFields(specs, 3, &fields_wire[0], fields_wire.size()),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
     // sum of field len > data len
     EXPECT_THROW(RdataFields(specs, 3, &fields_wire[0],
                              fields_wire.size() - 2),
-                 isc::InvalidParameter);
+                 bundy::InvalidParameter);
 }
 
 // Invalid input to the "from parameter" constructor: NULL vs length mismatch
@@ -320,16 +320,16 @@ TEST_F(RdataFieldsTest, mismatchFieldLengthAndData) {
     const unsigned char dummy_data = 0;
     const RdataFields::FieldSpec dummy_spec(RdataFields::DATA, 1);
 
-    EXPECT_THROW(RdataFields(NULL, 1, &dummy_data, 1), isc::InvalidParameter);
-    EXPECT_THROW(RdataFields(&dummy_spec, 0, NULL, 0), isc::InvalidParameter);
-    EXPECT_THROW(RdataFields(&dummy_spec, 1, NULL, 1), isc::InvalidParameter);
-    EXPECT_THROW(RdataFields(NULL, 0, &dummy_data, 0), isc::InvalidParameter);
+    EXPECT_THROW(RdataFields(NULL, 1, &dummy_data, 1), bundy::InvalidParameter);
+    EXPECT_THROW(RdataFields(&dummy_spec, 0, NULL, 0), bundy::InvalidParameter);
+    EXPECT_THROW(RdataFields(&dummy_spec, 1, NULL, 1), bundy::InvalidParameter);
+    EXPECT_THROW(RdataFields(NULL, 0, &dummy_data, 0), bundy::InvalidParameter);
 }
 
 // Bogus input to getFieldSpec()
 TEST_F(RdataFieldsTest, getFieldSpecWithBadFieldId) {
     const RdataFields fields_in_a(in::A("192.0.2.1"));
-    EXPECT_THROW(fields_in_a.getFieldSpec(1), isc::OutOfRange);
+    EXPECT_THROW(fields_in_a.getFieldSpec(1), bundy::OutOfRange);
 }
 
 // Tests for unexpected methods in RdataFieldComposerTest.  Confirm
@@ -367,6 +367,6 @@ private:
 };
 
 TEST(RdataFieldComposerTest, unusedMethods) {
-    EXPECT_THROW(RdataFields(DummyRdata(DummyRdata::CLEAR)), isc::Unexpected);
+    EXPECT_THROW(RdataFields(DummyRdata(DummyRdata::CLEAR)), bundy::Unexpected);
 }
 }

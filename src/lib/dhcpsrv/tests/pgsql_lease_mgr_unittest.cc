@@ -30,10 +30,10 @@
 #include <string>
 #include <utility>
 
-using namespace isc;
-using namespace isc::asiolink;
-using namespace isc::dhcp;
-using namespace isc::dhcp::test;
+using namespace bundy;
+using namespace bundy::asiolink;
+using namespace bundy::dhcp;
+using namespace bundy::dhcp::test;
 using namespace std;
 
 namespace {
@@ -220,7 +220,7 @@ TEST(PgSqlOpenTest, OpenDatabase) {
         LeaseMgrFactory::create(validConnectionString());
         EXPECT_NO_THROW((void) LeaseMgrFactory::instance());
         LeaseMgrFactory::destroy();
-    } catch (const isc::Exception& ex) {
+    } catch (const bundy::Exception& ex) {
         FAIL() << "*** ERROR: unable to open database, reason:\n"
                << "    " << ex.what() << "\n"
                << "*** The test environment is broken and must be fixed\n"

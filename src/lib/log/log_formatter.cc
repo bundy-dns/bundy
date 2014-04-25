@@ -24,7 +24,7 @@
 using namespace std;
 using namespace boost;
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 void
@@ -42,7 +42,7 @@ replacePlaceholder(string* message, const string& arg,
 #ifdef ENABLE_LOGGER_CHECKS
     else {
         // We're missing the placeholder, so throw an exception
-        isc_throw(MismatchedPlaceholders,
+        bundy_throw(MismatchedPlaceholders,
 		  "Missing logger placeholder in message: " << *message);
     }
 #else

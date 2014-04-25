@@ -24,11 +24,11 @@
 
 #include <gtest/gtest.h>
 
-using namespace isc::dns;
-using namespace isc::datasrc;
-using namespace isc::datasrc::internal;
-using isc::data::Element;
-using isc::datasrc::unittest::MockDataSourceClient;
+using namespace bundy::dns;
+using namespace bundy::datasrc;
+using namespace bundy::datasrc::internal;
+using bundy::data::Element;
+using bundy::datasrc::unittest::MockDataSourceClient;
 
 namespace {
 
@@ -53,7 +53,7 @@ protected:
     {}
 
 private:
-    const isc::data::ConstElementPtr config_spec_;
+    const bundy::data::ConstElementPtr config_spec_;
     const CacheConfig cache_config_;
 protected:
     ZoneTableAccessorCache accessor_;
@@ -76,8 +76,8 @@ TEST_F(ZoneTableAccessorTest, iteratorFromCache) {
     EXPECT_TRUE(it->isLast());
 
     // getCurrent() and next() will be rejected once iterator reaches the end
-    EXPECT_THROW(it->getCurrent(), isc::InvalidOperation);
-    EXPECT_THROW(it->next(), isc::InvalidOperation);
+    EXPECT_THROW(it->getCurrent(), bundy::InvalidOperation);
+    EXPECT_THROW(it->next(), bundy::InvalidOperation);
 }
 
 TEST_F(ZoneTableAccessorTest, emptyTable) {
@@ -89,8 +89,8 @@ TEST_F(ZoneTableAccessorTest, emptyTable) {
     ZoneTableAccessor::IteratorPtr it = accessor.getIterator();
     ASSERT_TRUE(it);
     EXPECT_TRUE(it->isLast());
-    EXPECT_THROW(it->getCurrent(), isc::InvalidOperation);
-    EXPECT_THROW(it->next(), isc::InvalidOperation);
+    EXPECT_THROW(it->getCurrent(), bundy::InvalidOperation);
+    EXPECT_THROW(it->next(), bundy::InvalidOperation);
 }
 
 TEST_F(ZoneTableAccessorTest, disabledTable) {
@@ -105,8 +105,8 @@ TEST_F(ZoneTableAccessorTest, disabledTable) {
     ZoneTableAccessor::IteratorPtr it = accessor.getIterator();
     ASSERT_TRUE(it);
     EXPECT_TRUE(it->isLast());
-    EXPECT_THROW(it->getCurrent(), isc::InvalidOperation);
-    EXPECT_THROW(it->next(), isc::InvalidOperation);
+    EXPECT_THROW(it->getCurrent(), bundy::InvalidOperation);
+    EXPECT_THROW(it->next(), bundy::InvalidOperation);
 }
 
 }

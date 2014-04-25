@@ -26,10 +26,10 @@
 
 using namespace std;
 using boost::lexical_cast;
-using namespace isc::util;
-using namespace isc::dns;
+using namespace bundy::util;
+using namespace bundy::dns;
 
-// BEGIN_ISC_NAMESPACE
+// BEGIN_BUNDY_NAMESPACE
 // BEGIN_RDATA_NAMESPACE
 
 class NAPTRImpl {
@@ -38,7 +38,7 @@ public:
 
     NAPTRImpl(InputBuffer& buffer, size_t rdata_len) : replacement(".") {
         if (rdata_len < 4 || buffer.getLength() - buffer.getPosition() < 4) {
-            isc_throw(isc::dns::DNSMessageFORMERR, "Error in parsing "
+            bundy_throw(bundy::dns::DNSMessageFORMERR, "Error in parsing "
                       "NAPTR RDATA wire format: insufficient length ");
         }
         order = buffer.readUint16();
@@ -50,13 +50,13 @@ public:
         rdata_len -= detail::bufferToCharString(buffer, rdata_len, regexp);
         replacement = Name(buffer);
         if (rdata_len < 1) {
-            isc_throw(isc::dns::DNSMessageFORMERR, "Error in parsing "
+            bundy_throw(bundy::dns::DNSMessageFORMERR, "Error in parsing "
                       "NAPTR RDATA wire format: missing replacement name");
         }
         rdata_len -= replacement.getLength();
 
         if (rdata_len != 0) {
-            isc_throw(isc::dns::DNSMessageFORMERR, "Error in parsing " <<
+            bundy_throw(bundy::dns::DNSMessageFORMERR, "Error in parsing " <<
                       "NAPTR RDATA: bytes left at end: " <<
                       static_cast<int>(rdata_len));
         }
@@ -72,11 +72,11 @@ public:
             // Should be at end of data now
             if (lexer.getNextToken(MasterToken::QSTRING, true).getType() !=
                 MasterToken::END_OF_FILE) {
-                isc_throw(InvalidRdataText,
+                bundy_throw(InvalidRdataText,
                           "Invalid NAPTR text format: too many fields.");
             }
         } catch (const MasterLexer::LexerError& ex) {
-            isc_throw(InvalidRdataText, "Failed to construct NAPTR RDATA from "
+            bundy_throw(InvalidRdataText, "Failed to construct NAPTR RDATA from "
                                         << naptr_str << "': " << ex.what());
         }
     }
@@ -91,14 +91,14 @@ private:
     parseNAPTRData(MasterLexer& lexer) {
         MasterToken token = lexer.getNextToken(MasterToken::NUMBER);
         if (token.getNumber() > 65535) {
-            isc_throw(InvalidRdataText,
+            bundy_throw(InvalidRdataText,
                       "Invalid NAPTR text format: order out of range: "
                       << token.getNumber());
         }
         order = token.getNumber();
         token = lexer.getNextToken(MasterToken::NUMBER);
         if (token.getNumber() > 65535) {
-            isc_throw(InvalidRdataText,
+            bundy_throw(InvalidRdataText,
                       "Invalid NAPTR text format: preference out of range: "
                       << token.getNumber());
         }
@@ -261,4 +261,4 @@ NAPTR::toWireHelper(T& outputer) const {
 }
 
 // END_RDATA_NAMESPACE
-// END_ISC_NAMESPACE
+// END_BUNDY_NAMESPACE

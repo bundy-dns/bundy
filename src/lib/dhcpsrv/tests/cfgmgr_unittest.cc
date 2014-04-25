@@ -28,11 +28,11 @@
 #include <arpa/inet.h>
 
 using namespace std;
-using namespace isc::asiolink;
-using namespace isc::dhcp;
-using namespace isc::dhcp::test;
-using namespace isc::util;
-using namespace isc;
+using namespace bundy::asiolink;
+using namespace bundy::dhcp;
+using namespace bundy::dhcp::test;
+using namespace bundy::util;
+using namespace bundy;
 
 // don't import the entire boost namespace.  It will unexpectedly hide uint8_t
 // for some systems.
@@ -60,20 +60,20 @@ TEST(ValueStorageTest, BooleanTesting) {
 
     // Verify that we can delete a parameter and it will no longer be found.
     testStore.delParam("firstBool");
-    EXPECT_THROW(testStore.getParam("firstBool"), isc::dhcp::DhcpConfigError);
+    EXPECT_THROW(testStore.getParam("firstBool"), bundy::dhcp::DhcpConfigError);
 
     // Verify that the delete was safe and the store still operates.
     EXPECT_FALSE(testStore.getParam("secondBool"));
 
     // Verify that looking for a parameter that never existed throws.
-    ASSERT_THROW(testStore.getParam("bogusBool"), isc::dhcp::DhcpConfigError);
+    ASSERT_THROW(testStore.getParam("bogusBool"), bundy::dhcp::DhcpConfigError);
 
     // Verify that attempting to delete a parameter that never existed does not throw.
     EXPECT_NO_THROW(testStore.delParam("bogusBool"));
 
     // Verify that we can empty the list.
     testStore.clear();
-    EXPECT_THROW(testStore.getParam("secondBool"), isc::dhcp::DhcpConfigError);
+    EXPECT_THROW(testStore.getParam("secondBool"), bundy::dhcp::DhcpConfigError);
 
 }
 
@@ -100,20 +100,20 @@ TEST(ValueStorageTest, Uint32Testing) {
 
     // Verify that we can delete a parameter and it will no longer be found.
     testStore.delParam("firstInt");
-    EXPECT_THROW(testStore.getParam("firstInt"), isc::dhcp::DhcpConfigError);
+    EXPECT_THROW(testStore.getParam("firstInt"), bundy::dhcp::DhcpConfigError);
 
     // Verify that the delete was safe and the store still operates.
     EXPECT_EQ(testStore.getParam("secondInt"), intTwo);
 
     // Verify that looking for a parameter that never existed throws.
-    ASSERT_THROW(testStore.getParam("bogusInt"), isc::dhcp::DhcpConfigError);
+    ASSERT_THROW(testStore.getParam("bogusInt"), bundy::dhcp::DhcpConfigError);
 
     // Verify that attempting to delete a parameter that never existed does not throw.
     EXPECT_NO_THROW(testStore.delParam("bogusInt"));
 
     // Verify that we can empty the list.
     testStore.clear();
-    EXPECT_THROW(testStore.getParam("secondInt"), isc::dhcp::DhcpConfigError);
+    EXPECT_THROW(testStore.getParam("secondInt"), bundy::dhcp::DhcpConfigError);
 }
 
 // This test verifies that StringStorage functions properly.
@@ -142,20 +142,20 @@ TEST(ValueStorageTest, StringTesting) {
 
     // Verify that we can delete a parameter and it will no longer be found.
     testStore.delParam("firstString");
-    EXPECT_THROW(testStore.getParam("firstString"), isc::dhcp::DhcpConfigError);
+    EXPECT_THROW(testStore.getParam("firstString"), bundy::dhcp::DhcpConfigError);
 
     // Verify that the delete was safe and the store still operates.
     EXPECT_EQ(testStore.getParam("secondString"), stringTwo);
 
     // Verify that looking for a parameter that never existed throws.
-    ASSERT_THROW(testStore.getParam("bogusString"), isc::dhcp::DhcpConfigError);
+    ASSERT_THROW(testStore.getParam("bogusString"), bundy::dhcp::DhcpConfigError);
 
     // Verify that attempting to delete a parameter that never existed does not throw.
     EXPECT_NO_THROW(testStore.delParam("bogusString"));
 
     // Verify that we can empty the list.
     testStore.clear();
-    EXPECT_THROW(testStore.getParam("secondString"), isc::dhcp::DhcpConfigError);
+    EXPECT_THROW(testStore.getParam("secondString"), bundy::dhcp::DhcpConfigError);
 }
 
 
@@ -188,7 +188,7 @@ public:
     }
 
     /// used in client classification (or just empty container for other tests)
-    isc::dhcp::ClientClasses classify_;
+    bundy::dhcp::ClientClasses classify_;
 };
 
 // This test verifies that multiple option definitions can be added
@@ -202,10 +202,10 @@ TEST_F(CfgMgrTest, getOptionDefs) {
         option_name << "option-" << code;
         OptionDefinitionPtr def(new OptionDefinition(option_name.str(), code,
                                                      "uint16"));
-        // Add option definition to "isc" option space.
+        // Add option definition to "bundy" option space.
         // Option codes are not duplicated so expect no error
         // when adding them.
-        ASSERT_NO_THROW(cfg_mgr.addOptionDef(def, "isc"));
+        ASSERT_NO_THROW(cfg_mgr.addOptionDef(def, "bundy"));
     }
 
     // Create a set of option definitions with codes between 105 and 114 and
@@ -219,7 +219,7 @@ TEST_F(CfgMgrTest, getOptionDefs) {
     }
 
     // Sanity check that all 10 option definitions are there.
-    OptionDefContainerPtr option_defs1 = cfg_mgr.getOptionDefs("isc");
+    OptionDefContainerPtr option_defs1 = cfg_mgr.getOptionDefs("bundy");
     ASSERT_TRUE(option_defs1);
     ASSERT_EQ(10, option_defs1->size());
 
@@ -266,10 +266,10 @@ TEST_F(CfgMgrTest, getOptionDef) {
         option_name << "option-" << code;
         OptionDefinitionPtr def(new OptionDefinition(option_name.str(), code,
                                                      "uint16"));
-        // Add option definition to "isc" option space.
+        // Add option definition to "bundy" option space.
         // Option codes are not duplicated so expect no error
         // when adding them.
-        ASSERT_NO_THROW(cfg_mgr.addOptionDef(def, "isc"));
+        ASSERT_NO_THROW(cfg_mgr.addOptionDef(def, "bundy"));
     }
 
     // Create a set of option definitions with codes between 105 and 114 and
@@ -285,7 +285,7 @@ TEST_F(CfgMgrTest, getOptionDef) {
     // Try to get option definitions one by one using all codes
     // that we expect to be there.
     for (uint16_t code = 100; code < 110; ++code) {
-        OptionDefinitionPtr def = cfg_mgr.getOptionDef("isc", code);
+        OptionDefinitionPtr def = cfg_mgr.getOptionDef("bundy", code);
         ASSERT_TRUE(def);
         // Check that the option name is in the format of 'option-[code]'.
         // That way we make sure that the options that have the same codes
@@ -326,7 +326,7 @@ TEST_F(CfgMgrTest, getOptionDef) {
 
     // Try to get the non-existing option definition from an
     // existing option space.
-    EXPECT_FALSE(cfg_mgr.getOptionDef("isc", 56));
+    EXPECT_FALSE(cfg_mgr.getOptionDef("bundy", 56));
 
 }
 
@@ -341,7 +341,7 @@ TEST_F(CfgMgrTest, overrideStdOptionDef) {
     // There is a definition for routers option in libdhcp++, so an attempt
     // to add (override) another definition for this option should fail.
     def.reset(new OptionDefinition("routers", DHO_ROUTERS, "uint32"));
-    EXPECT_THROW(cfg_mgr.addOptionDef(def, "dhcp4"), isc::BadValue);
+    EXPECT_THROW(cfg_mgr.addOptionDef(def, "dhcp4"), bundy::BadValue);
 
     /// @todo There is no definition for the NIS Server Addr option in
     /// libdhcp++. Once it is implemented it should be not allowed to
@@ -355,7 +355,7 @@ TEST_F(CfgMgrTest, overrideStdOptionDef) {
     // has its definition in the libdhcp++.
     def.reset(new OptionDefinition("sntp-servers", D6O_SNTP_SERVERS,
                                    "ipv4-address"));
-    EXPECT_THROW(cfg_mgr.addOptionDef(def, "dhcp6"), isc::BadValue);
+    EXPECT_THROW(cfg_mgr.addOptionDef(def, "dhcp6"), bundy::BadValue);
     // There is no definition for option 59 in libdhcp++ yet, so it should
     // be possible provide a custom definition.
     def.reset(new OptionDefinition("bootfile-url", 59, "uint32"));
@@ -371,14 +371,14 @@ TEST_F(CfgMgrTest, addOptionDefNegative) {
     OptionDefinitionPtr def(new OptionDefinition("option-foo", 1000, "uint16"));
 
     // Try empty option space name.
-    ASSERT_THROW(cfg_mgr.addOptionDef(def, ""), isc::BadValue);
+    ASSERT_THROW(cfg_mgr.addOptionDef(def, ""), bundy::BadValue);
     // Try NULL option definition.
-    ASSERT_THROW(cfg_mgr.addOptionDef(OptionDefinitionPtr(), "isc"),
-                 isc::dhcp::MalformedOptionDefinition);
+    ASSERT_THROW(cfg_mgr.addOptionDef(OptionDefinitionPtr(), "bundy"),
+                 bundy::dhcp::MalformedOptionDefinition);
     // Try adding option definition twice and make sure that it
     // fails on the second attempt.
-    ASSERT_NO_THROW(cfg_mgr.addOptionDef(def, "isc"));
-    EXPECT_THROW(cfg_mgr.addOptionDef(def, "isc"), DuplicateOptionDefinition);
+    ASSERT_NO_THROW(cfg_mgr.addOptionDef(def, "bundy"));
+    EXPECT_THROW(cfg_mgr.addOptionDef(def, "bundy"), DuplicateOptionDefinition);
 }
 
 // This test verifies if the configuration manager is able to hold and return
@@ -816,7 +816,7 @@ TEST_F(CfgMgrTest, optionSpace4) {
     CfgMgr& cfg_mgr = CfgMgr::instance();
 
     // Create some option spaces.
-    OptionSpacePtr space1(new OptionSpace("isc", false));
+    OptionSpacePtr space1(new OptionSpace("bundy", false));
     OptionSpacePtr space2(new OptionSpace("xyz", true));
 
     // Add option spaces with different names and expect they
@@ -828,15 +828,15 @@ TEST_F(CfgMgrTest, optionSpace4) {
     const OptionSpaceCollection& spaces = cfg_mgr.getOptionSpaces4();
 
     ASSERT_EQ(2, spaces.size());
-    EXPECT_FALSE(spaces.find("isc") == spaces.end());
+    EXPECT_FALSE(spaces.find("bundy") == spaces.end());
     EXPECT_FALSE(spaces.find("xyz") == spaces.end());
 
     // Create another option space with the name that duplicates
     // the existing option space.
-    OptionSpacePtr space3(new OptionSpace("isc", true));
+    OptionSpacePtr space3(new OptionSpace("bundy", true));
     // Expect that the duplicate option space is rejected.
     ASSERT_THROW(
-        cfg_mgr.addOptionSpace4(space3), isc::dhcp::InvalidOptionSpace
+        cfg_mgr.addOptionSpace4(space3), bundy::dhcp::InvalidOptionSpace
     );
 
     /// @todo decode if a duplicate vendor space is allowed.
@@ -849,7 +849,7 @@ TEST_F(CfgMgrTest, optionSpace6) {
     CfgMgr& cfg_mgr = CfgMgr::instance();
 
     // Create some option spaces.
-    OptionSpacePtr space1(new OptionSpace("isc", false));
+    OptionSpacePtr space1(new OptionSpace("bundy", false));
     OptionSpacePtr space2(new OptionSpace("xyz", true));
 
     // Add option spaces with different names and expect they
@@ -861,15 +861,15 @@ TEST_F(CfgMgrTest, optionSpace6) {
     const OptionSpaceCollection& spaces = cfg_mgr.getOptionSpaces6();
 
     ASSERT_EQ(2, spaces.size());
-    EXPECT_FALSE(spaces.find("isc") == spaces.end());
+    EXPECT_FALSE(spaces.find("bundy") == spaces.end());
     EXPECT_FALSE(spaces.find("xyz") == spaces.end());
 
     // Create another option space with the name that duplicates
     // the existing option space.
-    OptionSpacePtr space3(new OptionSpace("isc", true));
+    OptionSpacePtr space3(new OptionSpace("bundy", true));
     // Expect that the duplicate option space is rejected.
     ASSERT_THROW(
-        cfg_mgr.addOptionSpace6(space3), isc::dhcp::InvalidOptionSpace
+        cfg_mgr.addOptionSpace6(space3), bundy::dhcp::InvalidOptionSpace
     );
 
     /// @todo decide if a duplicate vendor space is allowed.
@@ -990,7 +990,7 @@ TEST_F(CfgMgrTest, d2ClientConfig) {
 
     // Create a new, enabled configuration.
     ASSERT_NO_THROW(new_cfg.reset(new D2ClientConfig(true,
-                                  isc::asiolink::IOAddress("127.0.0.1"), 477,
+                                  bundy::asiolink::IOAddress("127.0.0.1"), 477,
                                   dhcp_ddns::NCR_UDP, dhcp_ddns::FMT_JSON,
                                   true, true, true, true,
                                   "pre-fix", "suf-fix")));
@@ -1049,7 +1049,7 @@ TEST_F(CfgMgrTest, getSubnet4ForInterface) {
 
     // This function throws an exception if the name of the interface is wrong.
     EXPECT_THROW(CfgMgr::instance().getSubnet4("bogus-interface", classify_),
-                 isc::BadValue);
+                 bundy::BadValue);
 
 }
 
@@ -1066,7 +1066,7 @@ TEST_F(CfgMgrTest, subnet4Duplication) {
     ASSERT_NO_THROW(cfg_mgr.addSubnet4(subnet1));
     EXPECT_NO_THROW(cfg_mgr.addSubnet4(subnet2));
     // Subnet 3 has the same ID as subnet 1. It shouldn't be able to add it.
-    EXPECT_THROW(cfg_mgr.addSubnet4(subnet3), isc::dhcp::DuplicateSubnetID);
+    EXPECT_THROW(cfg_mgr.addSubnet4(subnet3), bundy::dhcp::DuplicateSubnetID);
 }
 
 // Checks that detection of duplicated subnet IDs works as expected. It should
@@ -1085,7 +1085,7 @@ TEST_F(CfgMgrTest, subnet6Duplication) {
     ASSERT_NO_THROW(cfg_mgr.addSubnet6(subnet1));
     EXPECT_NO_THROW(cfg_mgr.addSubnet6(subnet2));
     // Subnet 3 has the same ID as subnet 1. It shouldn't be able to add it.
-    EXPECT_THROW(cfg_mgr.addSubnet6(subnet3), isc::dhcp::DuplicateSubnetID);
+    EXPECT_THROW(cfg_mgr.addSubnet6(subnet3), bundy::dhcp::DuplicateSubnetID);
 }
 
 

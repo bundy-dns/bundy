@@ -17,7 +17,7 @@ LIBRARY_PATH_PLACEHOLDER += $(ENV_LIBRARY_PATH)=$(abs_top_builddir)/src/lib/data
 endif
 
 # test using command-line arguments, so use check-local target instead of TESTS
-# We set B10_FROM_BUILD below, so that the test can refer to the in-source
+# We set BUNDY_FROM_BUILD below, so that the test can refer to the in-source
 # spec file.
 check-local:
 if ENABLE_PYTHON_COVERAGE
@@ -28,7 +28,7 @@ endif
 	for pytest in $(PYTESTS) ; do \
 	echo Running test: $$pytest ; \
 	chmod +x $(abs_builddir)/$$pytest ; \
-	B10_FROM_BUILD=$(abs_top_builddir) \
+	BUNDY_FROM_BUILD=$(abs_top_builddir) \
 	$(LIBRARY_PATH_PLACEHOLDER) \
 	PYTHONPATH=$(COMMON_PYTHON_PATH):$(abs_top_builddir)/src/bin/xfrout:$(abs_top_builddir)/src/lib/dns/python/.libs:$(abs_top_builddir)/src/lib/util/io/.libs \
 	TESTDATASRCDIR=$(abs_srcdir)/testdata/ \

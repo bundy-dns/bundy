@@ -22,7 +22,7 @@
 
 #include <sys/time.h>
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace random {
 
@@ -54,4 +54,4 @@ QidGenerator::generateQid() {
 
 } // namespace random
 } // namespace util
-} // namespace isc
+} // namespace bundy

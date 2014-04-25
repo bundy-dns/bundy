@@ -17,7 +17,7 @@
 #include <unistd.h>
 #include <cerrno>
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace io {
 

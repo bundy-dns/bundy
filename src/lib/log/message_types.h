@@ -17,7 +17,7 @@
 
 #include <string.h>
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 typedef const char* MessageID;
@@ -30,7 +30,7 @@ typedef const char* MessageID;
 bool equalMessageID(const MessageID& m1, const MessageID& m2);
 
 } // namespace log
-} // namespace isc
+} // namespace bundy
 
 
 

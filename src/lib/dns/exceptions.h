@@ -22,7 +22,7 @@
 
 #include <exceptions/exceptions.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 ///
@@ -30,19 +30,19 @@ namespace dns {
 ///
 class Rcode;                    // forward declaration
 
-class Exception : public isc::Exception {
+class Exception : public bundy::Exception {
 public:
     Exception(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 ///
 /// \brief Base class for all sorts of text parse errors.
 ///
-class DNSTextError : public isc::dns::Exception {
+class DNSTextError : public bundy::dns::Exception {
 public:
     DNSTextError(const char* file, size_t line, const char* what) :
-        isc::dns::Exception(file, line, what) {}
+        bundy::dns::Exception(file, line, what) {}
 };
 
 ///
@@ -54,10 +54,10 @@ public:
         DNSTextError(file, line, what) {}
 };
 
-class DNSProtocolError : public isc::dns::Exception {
+class DNSProtocolError : public bundy::dns::Exception {
 public:
     DNSProtocolError(const char* file, size_t line, const char* what) :
-        isc::dns::Exception(file, line, what) {}
+        bundy::dns::Exception(file, line, what) {}
     virtual const Rcode& getRcode() const = 0;
 };
 

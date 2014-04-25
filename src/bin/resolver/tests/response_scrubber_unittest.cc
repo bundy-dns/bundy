@@ -39,7 +39,7 @@
 // Class for endpoint checks.  The family of the endpoint is set in the
 // constructor; the address family by the string provided for the address.
 
-namespace isc {
+namespace bundy {
 namespace asiolink {
 
 class GenericEndpoint : public IOEndpoint {
@@ -81,11 +81,11 @@ private:
 }
 
 using namespace asio::ip;
-using namespace isc::dns;
+using namespace bundy::dns;
 using namespace rdata;
-using namespace isc::dns::rdata::generic;
-using namespace isc::dns::rdata::in;
-using namespace isc::asiolink;
+using namespace bundy::dns::rdata::generic;
+using namespace bundy::dns::rdata::in;
+using namespace bundy::asiolink;
 
 // Test class
 

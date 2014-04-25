@@ -18,7 +18,7 @@
 
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 // (Virtual) Destructor
@@ -110,4 +110,4 @@ MessageDictionary::globalDictionary() {
 
 
 } // namespace log
-} // namespace isc
+} // namespace bundy

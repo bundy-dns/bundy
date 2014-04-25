@@ -23,9 +23,9 @@
 #include <dns/rrtype.h>
 
 using namespace std;
-using namespace isc::util;
+using namespace bundy::util;
 
-namespace isc {
+namespace bundy {
 namespace dns {
 Question::Question(InputBuffer& buffer) :
     name_(buffer), rrtype_(0), rrclass_(0)

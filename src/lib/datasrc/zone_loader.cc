@@ -31,13 +31,13 @@
 
 #include <string>
 
-using isc::dns::Name;
-using isc::dns::ConstRRsetPtr;
-using isc::dns::RRsetCollectionBase;
-using isc::dns::MasterLoader;
-using isc::dns::MasterLexer;
+using bundy::dns::Name;
+using bundy::dns::ConstRRsetPtr;
+using bundy::dns::RRsetCollectionBase;
+using bundy::dns::MasterLoader;
+using bundy::dns::MasterLexer;
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 
 const double ZoneLoader::PROGRESS_UNKNOWN = -1;
@@ -55,7 +55,7 @@ ZoneLoader::ZoneLoader(DataSourceClient& destination, const Name& zone_name,
     assert(iterator_ != ZoneIteratorPtr());
     // In case the zone doesn't exist in the destination, throw
     if (updater_ == ZoneUpdaterPtr()) {
-        isc_throw(DataSourceError, "Zone " << zone_name << " not found in "
+        bundy_throw(DataSourceError, "Zone " << zone_name << " not found in "
                   "destination data source, can't fill it with data");
     }
     // The dereference of zone_finder is safe, if we can get iterator, we can
@@ -64,7 +64,7 @@ ZoneLoader::ZoneLoader(DataSourceClient& destination, const Name& zone_name,
     // TODO: We probably need a getClass on the data source itself.
     if (source.findZone(zone_name).zone_finder->getClass() !=
         updater_->getFinder().getClass()) {
-        isc_throw(isc::InvalidParameter,
+        bundy_throw(bundy::InvalidParameter,
                   "Source and destination class mismatch");
     }
 }
@@ -77,7 +77,7 @@ addRR(ZoneUpdater* updater, size_t* rr_count,
       const dns::RRType& type, const dns::RRTTL& ttl,
       const dns::rdata::RdataPtr& data)
 {
-    isc::dns::BasicRRset rrset(name, rrclass, type, ttl);
+    bundy::dns::BasicRRset rrset(name, rrclass, type, ttl);
     rrset.addRdata(data);
     updater->addRRset(rrset);
     ++*rr_count;
@@ -90,7 +90,7 @@ ZoneLoader::ZoneLoader(DataSourceClient& destination, const Name& zone_name,
     complete_(false), loaded_ok_(true), rr_count_(0)
 {
     if (updater_ == ZoneUpdaterPtr()) {
-        isc_throw(DataSourceError, "Zone " << zone_name << " not found in "
+        bundy_throw(DataSourceError, "Zone " << zone_name << " not found in "
                   "destination data source, can't fill it with data");
     } else {
         loader_.reset(new
@@ -150,7 +150,7 @@ logError(const dns::Name* zone_name, const dns::RRClass* rrclass,
 bool
 ZoneLoader::loadIncremental(size_t limit) {
     if (complete_) {
-        isc_throw(isc::InvalidOperation,
+        bundy_throw(bundy::InvalidOperation,
                   "Loading has been completed previously");
     }
 
@@ -158,11 +158,11 @@ ZoneLoader::loadIncremental(size_t limit) {
         assert(loader_);
         try {
             complete_ = loader_->loadIncremental(limit);
-        } catch (const isc::dns::MasterLoaderError& e) {
-            isc_throw(MasterFileError, e.getMessage().c_str());
+        } catch (const bundy::dns::MasterLoaderError& e) {
+            bundy_throw(MasterFileError, e.getMessage().c_str());
         }
         if (complete_ && !loaded_ok_) {
-            isc_throw(MasterFileError, "Error while loading master file");
+            bundy_throw(MasterFileError, "Error while loading master file");
         }
     } else {
         complete_ = copyRRsets(updater_, iterator_, limit, rr_count_);
@@ -179,7 +179,7 @@ ZoneLoader::loadIncremental(size_t limit) {
         if (!dns::checkZone(zone_name, zone_class, collection, callbacks)) {
             // The post-load check failed.
             loaded_ok_ = false;
-            isc_throw(ZoneContentError, "Errors found when validating zone " <<
+            bundy_throw(ZoneContentError, "Errors found when validating zone " <<
                       zone_name << "/" << zone_class);
         }
         updater_->commit();
@@ -219,4 +219,4 @@ ZoneLoader::getProgress() const {
 }
 
 } // end namespace datasrc
-} // end namespace isc
+} // end namespace bundy

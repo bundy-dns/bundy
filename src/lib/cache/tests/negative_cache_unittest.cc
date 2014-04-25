@@ -21,8 +21,8 @@
 #include "resolver_cache.h"
 #include "cache_test_messagefromfile.h"
 
-using namespace isc::cache;
-using namespace isc::dns;
+using namespace bundy::cache;
+using namespace bundy::dns;
 using namespace std;
 
 namespace {

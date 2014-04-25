@@ -18,7 +18,7 @@
 #include <dhcp/pkt6.h>
 #include <hooks/callout_handle.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 namespace test {
 
@@ -35,12 +35,12 @@ namespace test {
 ///
 /// @return CalloutHandlePtr pointing to CalloutHandle associated with the
 ///         Pkt6 object.
-isc::hooks::CalloutHandlePtr
+bundy::hooks::CalloutHandlePtr
 testGetCalloutHandle(const Pkt6Ptr& pktptr);
 
 } // namespace test
 } // namespace dhcp
-} // namespace isc
+} // namespace bundy
 
 
 #endif // TEST_GET_CALLOUT_HANDLE_H

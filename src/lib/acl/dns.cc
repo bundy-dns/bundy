@@ -33,10 +33,10 @@
 #include <vector>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::data;
+using namespace bundy::dns;
+using namespace bundy::data;
 
-namespace isc {
+namespace bundy {
 namespace acl {
 
 /// The specialization of \c IPCheck for access control with \c RequestContext.
@@ -85,7 +85,7 @@ internal::RequestCheckCreator::create(const string& name,
                                       const acl::Loader<RequestContext>&)
 {
     if (!definition) {
-        isc_throw(LoaderError,
+        bundy_throw(LoaderError,
                   "NULL pointer is passed to RequestCheckCreator");
     }
 
@@ -100,7 +100,7 @@ internal::RequestCheckCreator::create(const string& name,
         // This case shouldn't happen (normally) as it should have been
         // rejected at the loader level.  But we explicitly catch the case
         // and throw an exception for that.
-        isc_throw(LoaderError, "Invalid check name for RequestCheck: " <<
+        bundy_throw(LoaderError, "Invalid check name for RequestCheck: " <<
                   name);
     }
 }

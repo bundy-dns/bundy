@@ -1,5 +1,5 @@
 The asiodns library is intended to provide an abstraction layer between
-BIND10 modules and asiolink library.
+BUNDY modules and asiolink library.
 
 These DNS server and client routines are written using the "stackless
 coroutine" pattern invented by Chris Kohlhoff and described at

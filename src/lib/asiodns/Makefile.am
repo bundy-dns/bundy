@@ -6,7 +6,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/src/lib/dns -I$(top_builddir)/src/lib/dns
 AM_CPPFLAGS += -I$(top_srcdir)/src/lib/asiolink -I$(top_builddir)/src/lib/asiolink
 AM_CPPFLAGS += -I$(top_srcdir)/src/lib/util -I$(top_builddir)/src/lib/util
 
-AM_CXXFLAGS = $(B10_CXXFLAGS)
+AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 
 CLEANFILES = *.gcno *.gcda asiodns_messages.h asiodns_messages.cc s-messages
 
@@ -19,25 +19,25 @@ s-messages: asiodns_messages.mes
 
 BUILT_SOURCES = asiodns_messages.h asiodns_messages.cc
 
-lib_LTLIBRARIES = libb10-asiodns.la
-libb10_asiodns_la_SOURCES = dns_answer.h
-libb10_asiodns_la_SOURCES += asiodns.h
-libb10_asiodns_la_SOURCES += dns_lookup.h
-libb10_asiodns_la_SOURCES += dns_server.h
-libb10_asiodns_la_SOURCES += dns_service.cc dns_service.h
-libb10_asiodns_la_SOURCES += tcp_server.cc tcp_server.h
-libb10_asiodns_la_SOURCES += udp_server.cc udp_server.h
-libb10_asiodns_la_SOURCES += sync_udp_server.cc sync_udp_server.h
-libb10_asiodns_la_SOURCES += io_fetch.cc io_fetch.h
-libb10_asiodns_la_SOURCES += logger.h logger.cc
+lib_LTLIBRARIES = libbundy-asiodns.la
+libbundy_asiodns_la_SOURCES = dns_answer.h
+libbundy_asiodns_la_SOURCES += asiodns.h
+libbundy_asiodns_la_SOURCES += dns_lookup.h
+libbundy_asiodns_la_SOURCES += dns_server.h
+libbundy_asiodns_la_SOURCES += dns_service.cc dns_service.h
+libbundy_asiodns_la_SOURCES += tcp_server.cc tcp_server.h
+libbundy_asiodns_la_SOURCES += udp_server.cc udp_server.h
+libbundy_asiodns_la_SOURCES += sync_udp_server.cc sync_udp_server.h
+libbundy_asiodns_la_SOURCES += io_fetch.cc io_fetch.h
+libbundy_asiodns_la_SOURCES += logger.h logger.cc
 
-nodist_libb10_asiodns_la_SOURCES = asiodns_messages.cc asiodns_messages.h
+nodist_libbundy_asiodns_la_SOURCES = asiodns_messages.cc asiodns_messages.h
 
 EXTRA_DIST = asiodns_messages.mes
 
 # Note: the ordering matters: -Wno-... must follow -Wextra (defined in
-# B10_CXXFLAGS)
-libb10_asiodns_la_CXXFLAGS = $(AM_CXXFLAGS)
-libb10_asiodns_la_CPPFLAGS = $(AM_CPPFLAGS)
-libb10_asiodns_la_LIBADD  = $(top_builddir)/src/lib/asiolink/libb10-asiolink.la
-libb10_asiodns_la_LIBADD += $(top_builddir)/src/lib/log/libb10-log.la
+# BUNDY_CXXFLAGS)
+libbundy_asiodns_la_CXXFLAGS = $(AM_CXXFLAGS)
+libbundy_asiodns_la_CPPFLAGS = $(AM_CPPFLAGS)
+libbundy_asiodns_la_LIBADD  = $(top_builddir)/src/lib/asiolink/libbundy-asiolink.la
+libbundy_asiodns_la_LIBADD += $(top_builddir)/src/lib/log/libbundy-log.la

@@ -23,7 +23,7 @@
 #include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 
 
@@ -53,7 +53,8 @@ public:
         DataSourceLibraryError(file, line, what) {}
 };
 
-typedef DataSourceClient* ds_creator(isc::data::ConstElementPtr config,
+typedef DataSourceClient* ds_creator(const std::string& datasrc_name,
+                                     bundy::data::ConstElementPtr config,
                                      std::string& error);
 typedef void ds_destructor(DataSourceClient* instance);
 
@@ -129,9 +130,9 @@ private:
 /// It may also be an absolute path; if it starts with '/', nothing is
 /// prepended. If it does not, the loadable library will be taken from the
 /// installation directory, see the value of
-/// isc::datasrc::BACKEND_LIBRARY_PATH in datasrc_config.h for the exact path.
+/// bundy::datasrc::BACKEND_LIBRARY_PATH in datasrc_config.h for the exact path.
 ///
-/// \note When 'B10_FROM_BUILD' is set in the environment, the build
+/// \note When 'BUNDY_FROM_BUILD' is set in the environment, the build
 ///       directory is used instead of the install directory.
 ///
 /// There are of course some demands to an implementation, not all of which
@@ -139,9 +140,9 @@ private:
 /// functions. The creator function must return an instance of a subclass of
 /// DataSourceClient. The prototypes of these functions are as follows:
 /// \code
-/// extern "C" DataSourceClient* createInstance(isc::data::ConstElementPtr cfg);
+/// extern "C" DataSourceClient* createInstance(bundy::data::ConstElementPtr cfg);
 ///
-/// extern "C" void destroyInstance(isc::data::DataSourceClient* instance);
+/// extern "C" void destroyInstance(bundy::data::DataSourceClient* instance);
 /// \endcode
 ///
 /// \note This class is relatively recent, and its design is not yet fully
@@ -162,6 +163,7 @@ public:
     ///            for the given type, or if there was a problem during
     ///            initialization
     ///
+    /// \param datasrc_name A name of the underlying data source.
     /// \param type The type of the datasource client. Based on the value of
     ///             type, a specific backend library is used, by appending the
     ///             string '_ds.so' to the given type, and loading that as the
@@ -169,8 +171,9 @@ public:
     /// \param config Type-specific configuration data, see the documentation
     ///               of the datasource backend type for information on what
     ///               configuration data to pass.
-    DataSourceClientContainer(const std::string& type,
-                              isc::data::ConstElementPtr config);
+    DataSourceClientContainer(const std::string& datasrc_name,
+                              const std::string& type,
+                              bundy::data::ConstElementPtr config);
 
     /// \brief Destructor
     virtual ~DataSourceClientContainer();
@@ -194,7 +197,7 @@ typedef boost::shared_ptr<DataSourceClientContainer>
     DataSourceClientContainerPtr;
 
 } // end namespace datasrc
-} // end namespace isc
+} // end namespace bundy
 #endif  // DATA_SOURCE_FACTORY_H
 // Local Variables:
 // mode: c++

@@ -21,7 +21,7 @@
 #ifndef OPCODE_H
 #define OPCODE_H 1
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 /// \brief The \c Opcode class objects represent standard OPCODEs
@@ -71,7 +71,7 @@ public:
     /// \brief Constructor from the code value.
     ///
     /// Since OPCODEs are 4-bit values, parameters larger than 15 are invalid.
-    /// If \c code is larger than 15 an exception of class \c isc::OutOfRange
+    /// If \c code is larger than 15 an exception of class \c bundy::OutOfRange
     /// will be thrown.
     ///
     /// \param code The underlying code value of the \c Opcode.

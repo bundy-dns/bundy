@@ -17,7 +17,7 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-namespace isc {
+namespace bundy {
 namespace perfdhcp {
 
 /// \brief A message sending rate control class for perfdhcp.
@@ -117,13 +117,13 @@ public:
     ///
     /// \param aggressivity A new value of aggressivity. This value must be
     /// a positive integer.
-    /// \throw isc::BadValue if new value is not a positive integer.
+    /// \throw bundy::BadValue if new value is not a positive integer.
     void setAggressivity(const int aggressivity);
 
     /// \brief Sets the new rate.
     ///
     /// \param rate A new value of rate. This value must not be negative.
-    /// \throw isc::BadValue if new rate is negative.
+    /// \throw bundy::BadValue if new rate is negative.
     void setRate(const int rate);
 
     /// \brief Sets the value of the due time.

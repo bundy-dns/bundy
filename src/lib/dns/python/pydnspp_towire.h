@@ -27,7 +27,7 @@
 
 #include "messagerenderer_python.h"
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace python {
 
@@ -73,7 +73,7 @@ toWireWrapper(const PYSTRUCT* const self, PyObject* args) {
         PyObject* bytes; // this won't have own reference, no risk of leak.
         if (PyArg_ParseTuple(args, "O", &bytes) && PySequence_Check(bytes)) {
             // render the object into a buffer (this can throw)
-            isc::util::OutputBuffer buffer(0);
+            bundy::util::OutputBuffer buffer(0);
             self->cppobj->toWire(buffer);
 
             // convert the rendered data into PyObject.  This could leak later,
@@ -81,13 +81,13 @@ toWireWrapper(const PYSTRUCT* const self, PyObject* args) {
             PyObject* rd_bytes = PyBytes_FromStringAndSize(
                 static_cast<const char*>(buffer.getData()),
                 buffer.getLength());
-            isc::util::python::PyObjectContainer rd_bytes_container(rd_bytes);
+            bundy::util::python::PyObjectContainer rd_bytes_container(rd_bytes);
 
             // concat the latest data to the given existing sequence.  concat
             // operation could fail, so we use a container to clean it up
             // safely should that happen.
             PyObject* result = PySequence_InPlaceConcat(bytes, rd_bytes);
-            isc::util::python::PyObjectContainer result_container(result);
+            bundy::util::python::PyObjectContainer result_container(result);
 
             return (result_container.release());
         }
@@ -119,7 +119,7 @@ toWireWrapper(const PYSTRUCT* const self, PyObject* args) {
 }
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 #endif // LIBDNS_PYTHON_TOWIRE_H
 
 // Local Variables:

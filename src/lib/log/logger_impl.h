@@ -34,7 +34,7 @@
 #include <log/message_types.h>
 #include <log/interprocess/interprocess_sync.h>
 
-namespace isc {
+namespace bundy {
 namespace log {
 
 /// \brief Console Logger Implementation
@@ -46,14 +46,14 @@ namespace log {
 /// This particular implementation is based on log4cplus (from sourceforge:
 /// http://log4cplus.sourceforge.net).  Particular items of note:
 ///
-/// a) BIND 10 loggers have names of the form "program.sublogger".  In other
+/// a) BUNDY loggers have names of the form "program.sublogger".  In other
 /// words, each of the loggers is a sub-logger of the main program logger.
 /// In log4cplus, there is a root logger (called "root" according to the
 /// documentation, but actually unnamed) and all loggers created are subloggers
 /// if it.
 ///
 /// In this implementation, the log4cplus root logger is unused.  Instead, the
-/// BIND 10 root logger is created as a child of the log4cplus root logger,
+/// BUNDY root logger is created as a child of the log4cplus root logger,
 /// and all other loggers used in the program are created as sub-loggers of
 /// that.  In this way, the logging system can just include the name of the
 /// logger in each message without the need to specially consider if the
@@ -178,7 +178,7 @@ public:
     /// synchronizing output of log messages. It should be deletable and
     /// the ownership is transferred to the logger implementation.
     /// If NULL is passed, a BadInterprocessSync exception is thrown.
-    void setInterprocessSync(isc::log::interprocess::InterprocessSync* sync);
+    void setInterprocessSync(bundy::log::interprocess::InterprocessSync* sync);
 
     /// \brief Equality
     ///
@@ -193,11 +193,11 @@ public:
 private:
     std::string                  name_;   ///< Full name of this logger
     log4cplus::Logger            logger_; ///< Underlying log4cplus logger
-    isc::log::interprocess::InterprocessSync* sync_;
+    bundy::log::interprocess::InterprocessSync* sync_;
 };
 
 } // namespace log
-} // namespace isc
+} // namespace bundy
 
 
 #endif // LOGGER_IMPL_H

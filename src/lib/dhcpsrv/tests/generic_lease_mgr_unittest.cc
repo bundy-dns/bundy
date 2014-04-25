@@ -19,9 +19,9 @@
 #include <sstream>
 
 using namespace std;
-using namespace isc::asiolink;
+using namespace bundy::asiolink;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 namespace test {
 
@@ -895,7 +895,7 @@ GenericLeaseMgrTest::testGetLease4HWAddrSize() {
     // (The 42 is a random value put in each byte of the address.)
     /// @todo: 2589 will make this test impossible
     leases[1]->hwaddr_.resize(HWAddr::MAX_HWADDR_LEN + 100, 42);
-    EXPECT_THROW(lmptr_->addLease(leases[1]), isc::dhcp::DbOperationError);
+    EXPECT_THROW(lmptr_->addLease(leases[1]), bundy::dhcp::DbOperationError);
 }
 
 void
@@ -949,7 +949,7 @@ GenericLeaseMgrTest::testGetLease4HWAddrSubnetId() {
     EXPECT_THROW(returned = lmptr_->getLease4(HWAddr(leases[1]->hwaddr_,
                                                     HTYPE_ETHER),
                                              leases[1]->subnet_id_),
-                 isc::dhcp::MultipleRecords);
+                 bundy::dhcp::MultipleRecords);
 
 
 }
@@ -976,7 +976,7 @@ GenericLeaseMgrTest::testGetLease4HWAddrSubnetIdSize() {
     // Database should not let us add one that is too big
     // (The 42 is a random value put in each byte of the address.)
     leases[1]->hwaddr_.resize(HWAddr::MAX_HWADDR_LEN + 100, 42);
-    EXPECT_THROW(lmptr_->addLease(leases[1]), isc::dhcp::DbOperationError);
+    EXPECT_THROW(lmptr_->addLease(leases[1]), bundy::dhcp::DbOperationError);
 }
 
 void
@@ -1362,11 +1362,11 @@ GenericLeaseMgrTest::testUpdateLease4() {
 
     // Try to update the lease with the too long hostname.
     leases[1]->hostname_.assign(256, 'a');
-    EXPECT_THROW(lmptr_->updateLease4(leases[1]), isc::dhcp::DbOperationError);
+    EXPECT_THROW(lmptr_->updateLease4(leases[1]), bundy::dhcp::DbOperationError);
 
     // Try updating a lease not in the database.
     lmptr_->deleteLease(ioaddress4_[2]);
-    EXPECT_THROW(lmptr_->updateLease4(leases[2]), isc::dhcp::NoSuchLease);
+    EXPECT_THROW(lmptr_->updateLease4(leases[2]), bundy::dhcp::NoSuchLease);
 }
 
 void
@@ -1420,10 +1420,10 @@ GenericLeaseMgrTest::testUpdateLease6() {
 
     // Try to update the lease with the too long hostname.
     leases[1]->hostname_.assign(256, 'a');
-    EXPECT_THROW(lmptr_->updateLease6(leases[1]), isc::dhcp::DbOperationError);
+    EXPECT_THROW(lmptr_->updateLease6(leases[1]), bundy::dhcp::DbOperationError);
 
     // Try updating a lease not in the database.
-    EXPECT_THROW(lmptr_->updateLease6(leases[2]), isc::dhcp::NoSuchLease);
+    EXPECT_THROW(lmptr_->updateLease6(leases[2]), bundy::dhcp::NoSuchLease);
 }
 
 void
@@ -1509,4 +1509,4 @@ GenericLeaseMgrTest::testRecreateLease6() {
 
 }; // namespace test
 }; // namespace dhcp
-}; // namespace isc
+}; // namespace bundy

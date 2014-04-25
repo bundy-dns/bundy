@@ -19,7 +19,7 @@
 
 #include <boost/noncopyable.hpp>
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace internal {
 class CacheConfig;

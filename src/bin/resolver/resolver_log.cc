@@ -16,4 +16,4 @@
 
 #include "resolver_log.h"
 
-isc::log::Logger resolver_logger("resolver");
+bundy::log::Logger resolver_logger("resolver");

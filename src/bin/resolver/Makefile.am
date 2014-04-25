@@ -10,7 +10,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/src/lib/asiolink
 AM_CPPFLAGS += -I$(top_builddir)/src/lib/asiolink
 AM_CPPFLAGS += $(BOOST_INCLUDES)
 
-AM_CXXFLAGS = $(B10_CXXFLAGS)
+AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 
 if USE_STATIC_LINK
 AM_LDFLAGS = -static
@@ -22,20 +22,20 @@ CLEANFILES  = *.gcno *.gcda
 CLEANFILES += resolver.spec spec_config.h
 CLEANFILES += resolver_messages.cc resolver_messages.h s-messages
 
-man_MANS = b10-resolver.8
+man_MANS = bundy-resolver.8
 DISTCLEANFILES = $(man_MANS)
-EXTRA_DIST = $(man_MANS) b10-resolver.xml resolver_messages.mes
+EXTRA_DIST = $(man_MANS) bundy-resolver.xml resolver_messages.mes
 
 if GENERATE_DOCS
 
-b10-resolver.8: b10-resolver.xml
-	@XSLTPROC@ --novalid --xinclude --nonet -o $@ http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $(srcdir)/b10-resolver.xml
+bundy-resolver.8: bundy-resolver.xml
+	@XSLTPROC@ --novalid --xinclude --nonet -o $@ http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $(srcdir)/bundy-resolver.xml
 
 else
 
 $(man_MANS):
 	@echo Man generation disabled.  Creating dummy $@.  Configure with --enable-generate-docs to enable it.
-	@echo Man generation disabled.  Remove this file, configure with --enable-generate-docs, and rebuild BIND 10 > $@
+	@echo Man generation disabled.  Remove this file, configure with --enable-generate-docs, and rebuild BUNDY > $@
 
 endif
 
@@ -54,33 +54,33 @@ s-messages: resolver_messages.mes
 
 BUILT_SOURCES = spec_config.h resolver_messages.cc resolver_messages.h
 
-pkglibexec_PROGRAMS = b10-resolver
-b10_resolver_SOURCES = resolver.cc resolver.h
-b10_resolver_SOURCES += resolver_log.cc resolver_log.h
-b10_resolver_SOURCES += response_scrubber.cc response_scrubber.h
-b10_resolver_SOURCES += $(top_builddir)/src/bin/auth/common.h
-b10_resolver_SOURCES += main.cc
-b10_resolver_SOURCES += common.cc common.h
+pkglibexec_PROGRAMS = bundy-resolver
+bundy_resolver_SOURCES = resolver.cc resolver.h
+bundy_resolver_SOURCES += resolver_log.cc resolver_log.h
+bundy_resolver_SOURCES += response_scrubber.cc response_scrubber.h
+bundy_resolver_SOURCES += $(top_builddir)/src/bin/auth/common.h
+bundy_resolver_SOURCES += main.cc
+bundy_resolver_SOURCES += common.cc common.h
 
-nodist_b10_resolver_SOURCES = resolver_messages.cc resolver_messages.h
+nodist_bundy_resolver_SOURCES = resolver_messages.cc resolver_messages.h
 
 
-b10_resolver_LDADD =  $(top_builddir)/src/lib/dns/libb10-dns++.la
-b10_resolver_LDADD += $(top_builddir)/src/lib/config/libb10-cfgclient.la
-b10_resolver_LDADD += $(top_builddir)/src/lib/cc/libb10-cc.la
-b10_resolver_LDADD += $(top_builddir)/src/lib/util/libb10-util.la
-b10_resolver_LDADD += $(top_builddir)/src/lib/acl/libb10-dnsacl.la
-b10_resolver_LDADD += $(top_builddir)/src/lib/exceptions/libb10-exceptions.la
-b10_resolver_LDADD += $(top_builddir)/src/lib/asiodns/libb10-asiodns.la
-b10_resolver_LDADD += $(top_builddir)/src/lib/asiolink/libb10-asiolink.la
-b10_resolver_LDADD += $(top_builddir)/src/lib/log/libb10-log.la
-b10_resolver_LDADD += $(top_builddir)/src/lib/server_common/libb10-server-common.la
-b10_resolver_LDADD += $(top_builddir)/src/lib/cache/libb10-cache.la
-b10_resolver_LDADD += $(top_builddir)/src/lib/nsas/libb10-nsas.la
-b10_resolver_LDADD += $(top_builddir)/src/lib/resolve/libb10-resolve.la
-b10_resolver_LDFLAGS = -pthread
+bundy_resolver_LDADD =  $(top_builddir)/src/lib/dns/libbundy-dns++.la
+bundy_resolver_LDADD += $(top_builddir)/src/lib/config/libbundy-cfgclient.la
+bundy_resolver_LDADD += $(top_builddir)/src/lib/cc/libbundy-cc.la
+bundy_resolver_LDADD += $(top_builddir)/src/lib/util/libbundy-util.la
+bundy_resolver_LDADD += $(top_builddir)/src/lib/acl/libbundy-dnsacl.la
+bundy_resolver_LDADD += $(top_builddir)/src/lib/exceptions/libbundy-exceptions.la
+bundy_resolver_LDADD += $(top_builddir)/src/lib/asiodns/libbundy-asiodns.la
+bundy_resolver_LDADD += $(top_builddir)/src/lib/asiolink/libbundy-asiolink.la
+bundy_resolver_LDADD += $(top_builddir)/src/lib/log/libbundy-log.la
+bundy_resolver_LDADD += $(top_builddir)/src/lib/server_common/libbundy-server-common.la
+bundy_resolver_LDADD += $(top_builddir)/src/lib/cache/libbundy-cache.la
+bundy_resolver_LDADD += $(top_builddir)/src/lib/nsas/libbundy-nsas.la
+bundy_resolver_LDADD += $(top_builddir)/src/lib/resolve/libbundy-resolve.la
+bundy_resolver_LDFLAGS = -pthread
 
 # TODO: config.h.in is wrong because doesn't honor pkgdatadir
 # and can't use @datadir@ because doesn't expand default ${prefix}
-b10_resolverdir = $(pkgdatadir)
-b10_resolver_DATA = resolver.spec
+bundy_resolverdir = $(pkgdatadir)
+bundy_resolver_DATA = resolver.spec

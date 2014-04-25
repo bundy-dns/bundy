@@ -31,7 +31,7 @@
 
 #include <sys/socket.h>         // for sockaddr
 
-namespace isc {
+namespace bundy {
 namespace asiolink {
 
 /// \brief The \c IOEndpoint class is an abstract base class to represent
@@ -167,7 +167,7 @@ public:
 /// output stream \c os.
 ///
 /// This method converts the address and port of the endpoint in the textual
-/// format that other BIND 10 modules would use in logging, i.e.,
+/// format that other BUNDY modules would use in logging, i.e.,
 /// - For IPv6 address: [&lt;address&gt;]:port (e.g., [2001:db8::5300]:53)
 /// - For IPv4 address: &lt;address&gt;:port (e.g., 192.0.2.53:5300)
 ///
@@ -183,7 +183,7 @@ public:
 /// parameter \c os after the insertion operation.
 std::ostream& operator<<(std::ostream& os, const IOEndpoint& endpoint);
 } // namespace asiolink
-} // namespace isc
+} // namespace bundy
 #endif // IO_ENDPOINT_H
 
 // Local Variables:

@@ -24,14 +24,14 @@
 #include "hash_key.h"
 #include "hash_table.h"
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 
 /// \brief Invalid Iterator
 ///
 /// Thrown if an attempt was made to access the iterator - the pointer into
 /// the LRU list where this element is located - when it is marked as invalid.
-class InvalidLruIterator : public isc::Exception {
+class InvalidLruIterator : public bundy::Exception {
 public:
     InvalidLruIterator(const char* file, size_t line, const char* what) :
         Exception(file, line, what)
@@ -93,7 +93,7 @@ public:
     /// Sets the iterator of an object and, as a side effect, marks it as valid.
     ///
     /// \param iterator Iterator of this element in the list
-    virtual void setLruIterator(typename isc::util::LruList<T>::iterator iterator) {
+    virtual void setLruIterator(typename bundy::util::LruList<T>::iterator iterator) {
         iterator_ = iterator;
         valid_ = true;
     }
@@ -103,9 +103,9 @@ public:
     /// \return iterator Iterator of this element in the list.
     ///
     /// \exception InvalidLruIterator Thrown if the iterator is not valid.
-    virtual typename isc::util::LruList<T>::iterator getLruIterator() const {
+    virtual typename bundy::util::LruList<T>::iterator getLruIterator() const {
         if (! valid_) {
-            isc_throw(InvalidLruIterator,
+            bundy_throw(InvalidLruIterator,
                 "pointer of element into LRU list was not valid");
         }
         return iterator_;
@@ -127,12 +127,12 @@ public:
     }
 
 private:
-    typename isc::util::LruList<T>::iterator  iterator_;  ///< Handle into the LRU List
+    typename bundy::util::LruList<T>::iterator  iterator_;  ///< Handle into the LRU List
     bool                           valid_;     ///< true if handle is valid
 };
 
 } // namespace nsas
-} // namespace isc
+} // namespace bundy
 
 
 #endif // NSAS_ENTRY_H

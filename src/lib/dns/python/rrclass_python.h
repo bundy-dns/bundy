@@ -17,7 +17,7 @@
 
 #include <Python.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 class RRClass;
 
@@ -60,7 +60,7 @@ const RRClass& PyRRClass_ToRRClass(const PyObject* rrclass_obj);
 
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 #endif // PYTHON_RRCLASS_H
 
 // Local Variables:

@@ -12,15 +12,15 @@
 // OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 // PERFORMANCE OF THIS SOFTWARE.
 
-/// Defines the logger used by the top-level component of b10-dhcp4.
+/// Defines the logger used by the top-level component of bundy-dhcp4.
 
 #include <dhcp4/dhcp4_log.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
-isc::log::Logger dhcp4_logger("dhcp4");
+bundy::log::Logger dhcp4_logger("dhcp4");
 
 } // namespace dhcp
-} // namespace isc
+} // namespace bundy
 

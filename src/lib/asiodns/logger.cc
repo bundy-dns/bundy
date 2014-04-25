@@ -14,12 +14,12 @@
 
 #include <asiodns/logger.h>
 
-namespace isc {
+namespace bundy {
 namespace asiodns {
 
 /// Use the ASIO logger
 
-isc::log::Logger logger("asiodns");
+bundy::log::Logger logger("asiodns");
 
 }
 }

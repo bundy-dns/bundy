@@ -21,7 +21,7 @@
 #ifndef ISC_CRYPTO_HMAC_H
 #define ISC_CRYPTO_HMAC_H
 
-namespace isc {
+namespace bundy {
 namespace cryptolink {
 
 /// Forward declaration, pimpl style
@@ -86,7 +86,7 @@ public:
     ///        value is smaller than the algorithms output size, the
     ///        result will be truncated. If this value is larger, or 0
     ///        (the default), it will be ignored
-    void sign(isc::util::OutputBuffer& result, size_t len = 0);
+    void sign(bundy::util::OutputBuffer& result, size_t len = 0);
 
     /// \brief Calculate the final signature
     ///
@@ -162,7 +162,7 @@ void signHMAC(const void* data,
               const void* secret,
               size_t secret_len,
               const HashAlgorithm hash_algorithm,
-              isc::util::OutputBuffer& result,
+              bundy::util::OutputBuffer& result,
               size_t len = 0);
 
 /// \brief Verify an HMAC signature for the given data
@@ -203,7 +203,7 @@ bool verifyHMAC(const void* data,
 void deleteHMAC(HMAC* hmac);
 
 } // namespace cryptolink
-} // namespace isc
+} // namespace bundy
 
 #endif // ISC_CRYPTO_HMAC_H
 

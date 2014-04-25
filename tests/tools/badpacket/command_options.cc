@@ -28,9 +28,9 @@
 #include "version.h"
 
 using namespace std;
-using namespace isc;
+using namespace bundy;
 
-namespace isc {
+namespace bundy {
 namespace badpacket {
 
 // Reset stored values to the defaults.
@@ -159,7 +159,7 @@ CommandOptions::parse(int argc, char* const argv[]) {
                 break;
 
             default:
-                isc_throw(isc::InvalidParameter,
+                bundy_throw(bundy::InvalidParameter,
                           "unknown option given on the command line");
         }
     }
@@ -170,7 +170,7 @@ CommandOptions::parse(int argc, char* const argv[]) {
     }
 
     if (optind < argc) {
-        isc_throw(isc::InvalidParameter,
+        bundy_throw(bundy::InvalidParameter,
                   "only a single (optional) parameter may be specified on the command line");
     }
 }
@@ -264,9 +264,9 @@ CommandOptions::processOptionValue(int c, const char* value) {
     uint32_t maxval = OptionInfo::maxval(index);
 
     // Split the string up into one or two tokens.
-    vector<string> tokens = isc::util::str::tokens(string(value), "-");
+    vector<string> tokens = bundy::util::str::tokens(string(value), "-");
     if ((tokens.size() < 1) || (tokens.size() > 2)) {
-        isc_throw(isc::BadValue, "value given for " << name << " is '" << value <<
+        bundy_throw(bundy::BadValue, "value given for " << name << " is '" << value <<
                   "': it must be in the form 'int' or 'int1-int2'");
     }
 
@@ -279,7 +279,7 @@ CommandOptions::processOptionValue(int c, const char* value) {
             options_[index].maximum = options_[index].minimum;
         }
     } catch (boost::bad_lexical_cast) {
-        isc_throw(isc::BadValue, "value given for " << name << " is '" << value <<
+        bundy_throw(bundy::BadValue, "value given for " << name << " is '" << value <<
                   "': it must be in the form 'int' or 'int1-int2'");
     }
 
@@ -291,15 +291,15 @@ CommandOptions::processOptionValue(int c, const char* value) {
     // Check that tokens lie inside the allowed ranges.
     if ((tokens.size() == 1) &&
         ((options_[index].minimum < OptionInfo::minval(index)) || (options_[index].maximum > maxval))) {
-        isc_throw(isc::BadValue, "the value of " << options_[index].minimum <<
+        bundy_throw(bundy::BadValue, "the value of " << options_[index].minimum <<
                   " given for " << name << " is outside the range of " <<
                   minval << " to " << maxval);
     } else if (options_[index].minimum < minval) {
-        isc_throw(isc::BadValue, "the lower limit of " << options_[index].minimum <<
+        bundy_throw(bundy::BadValue, "the lower limit of " << options_[index].minimum <<
                   " given for " << name << " is below the minimum permitted"
                   " value of " << minval);
     } else if (options_[index].maximum > maxval) {
-        isc_throw(isc::BadValue, "the upper limit of " << options_[index].maximum <<
+        bundy_throw(bundy::BadValue, "the upper limit of " << options_[index].maximum <<
                   " given for " << name << " is above the maximum permitted"
                   " value of " << maxval);
     }
@@ -330,4 +330,4 @@ CommandOptions::present(int index) const {
 }
 
 } // namespace badpacket
-} // namespace isc
+} // namespace bundy

@@ -34,14 +34,14 @@
 #include <set>
 #include <string>
 
-using namespace isc::dns;
+using namespace bundy::dns;
 
 using boost::shared_ptr;
 using std::vector;
 using std::string;
 using std::set;
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace unittest {
 
@@ -54,21 +54,21 @@ public:
     Name getOrigin() const { return (origin_); }
     // The rest is not to be called, so just have them
     RRClass getClass() const {
-        isc_throw(isc::NotImplemented, "Not implemented");
+        bundy_throw(bundy::NotImplemented, "Not implemented");
     }
     shared_ptr<Context> find(const Name&, const RRType&,
                              const FindOptions)
     {
-        isc_throw(isc::NotImplemented, "Not implemented");
+        bundy_throw(bundy::NotImplemented, "Not implemented");
     }
     shared_ptr<Context> findAll(const Name&,
                                 vector<ConstRRsetPtr>&,
                                 const FindOptions)
     {
-        isc_throw(isc::NotImplemented, "Not implemented");
+        bundy_throw(bundy::NotImplemented, "Not implemented");
     }
     FindNSEC3Result findNSEC3(const Name&, bool) {
-        isc_throw(isc::NotImplemented, "Not implemented");
+        bundy_throw(bundy::NotImplemented, "Not implemented");
     }
 private:
     Name origin_;
@@ -107,12 +107,12 @@ public:
 
         it_ = rrsets_.begin();
     }
-    virtual isc::dns::ConstRRsetPtr getNextRRset() {
+    virtual bundy::dns::ConstRRsetPtr getNextRRset() {
         ConstRRsetPtr result = *it_;
         ++it_;
         return (result);
     }
-    virtual isc::dns::ConstRRsetPtr getSOA() const {
+    virtual bundy::dns::ConstRRsetPtr getSOA() const {
         return (soa_);
     }
 private:
@@ -126,7 +126,7 @@ private:
 // A test data source. It pretends it has some zones.
 
 MockDataSourceClient::MockDataSourceClient(const char* zone_names[]) :
-    have_a_(true), use_baditerator_(true)
+    DataSourceClient("mock"), have_a_(true), use_baditerator_(true)
 {
     for (const char** zone = zone_names; *zone; ++zone) {
         zones.insert(Name(*zone));
@@ -138,6 +138,7 @@ MockDataSourceClient::MockDataSourceClient(const char* zone_names[]) :
 MockDataSourceClient::MockDataSourceClient(
     const string& type,
     const data::ConstElementPtr& configuration) :
+    DataSourceClient("mock"),
     type_(type),
     configuration_(configuration),
     have_a_(true), use_baditerator_(true)
@@ -179,15 +180,15 @@ MockDataSourceClient::findZone(const Name& name) const {
 ZoneIteratorPtr
 MockDataSourceClient::getIterator(const Name& name, bool) const {
     if (use_baditerator_ && name == Name("noiter.org")) {
-        isc_throw(isc::NotImplemented, "Asked not to be implemented");
+        bundy_throw(bundy::NotImplemented, "Asked not to be implemented");
     } else if (use_baditerator_ && name == Name("null.org")) {
         return (ZoneIteratorPtr());
     } else {
         FindResult result(findZone(name));
-        if (result.code == isc::datasrc::result::SUCCESS) {
+        if (result.code == bundy::datasrc::result::SUCCESS) {
             return (ZoneIteratorPtr(new Iterator(name, have_a_)));
         } else {
-            isc_throw(NoSuchZone, "No such zone");
+            bundy_throw(NoSuchZone, "No such zone");
         }
     }
 }

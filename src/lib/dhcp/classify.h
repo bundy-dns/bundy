@@ -34,7 +34,7 @@
 /// yet, as the Pkt4 and Pkt6 classes have server-side implementation, even
 /// though they reside in the dhcp directory.
 
-namespace isc {
+namespace bundy {
 
 namespace dhcp {
 

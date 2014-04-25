@@ -15,7 +15,7 @@
 #include <gtest/gtest.h>
 #include <acl/check.h>
 
-using namespace isc::acl;
+using namespace bundy::acl;
 
 namespace {
 

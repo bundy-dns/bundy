@@ -34,8 +34,8 @@
 /// restricted interface to the CalloutManager, and a lot of the support
 /// structure for the tests is common.
 
-using namespace isc;
-using namespace isc::hooks;
+using namespace bundy;
+using namespace bundy::hooks;
 using namespace std;
 
 namespace {

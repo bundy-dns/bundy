@@ -33,9 +33,9 @@
 
 using namespace std;
 
-using namespace isc::dns;
+using namespace bundy::dns;
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace unittest {
 
@@ -53,7 +53,7 @@ createSQLite3Client(RRClass zclass, const Name& zname,
 {
     ifstream ifs(zone_file, ios_base::in);
     if (ifs.fail()) {
-        isc_throw(isc::Unexpected, "Failed to open test zone file: "
+        bundy_throw(bundy::Unexpected, "Failed to open test zone file: "
                   << zone_file);
     }
     return (createSQLite3Client(zclass, zname, db_file, ifs));
@@ -70,13 +70,13 @@ createSQLite3Client(RRClass zclass, const Name& zname,
         "/rwtest.sqlite3 ";
     const string install_cmd = string(install_cmd_prefix) + db_file;
     if (system(install_cmd.c_str()) != 0) {
-        isc_throw(isc::Unexpected,
+        bundy_throw(bundy::Unexpected,
                   "Error setting up; command failed: " << install_cmd);
     }
 
     boost::shared_ptr<SQLite3Accessor> accessor(
         new SQLite3Accessor(db_file, zclass.toText()));
-    boost::shared_ptr<DatabaseClient> client(new DatabaseClient(zclass,
+    boost::shared_ptr<DatabaseClient> client(new DatabaseClient("test", zclass,
                                                                 accessor));
 
     ZoneUpdaterPtr updater = client->getUpdater(zname, true);

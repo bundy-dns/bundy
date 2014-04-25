@@ -15,8 +15,8 @@ check-local:
 	for pytest in $(PYTESTS) ; do \
 	echo Running test: $$pytest ; \
 	$(LIBRARY_PATH_PLACEHOLDER) \
-	B10_LOCKFILE_DIR_FROM_BUILD=$(abs_top_builddir) \
-	PYTHONPATH=$(COMMON_PYTHON_PATH):$(abs_top_srcdir)/src/bin:$(abs_top_builddir)/src/bin/bind10:$(abs_top_builddir)/src/lib/util/io/.libs \
+	BUNDY_LOCKFILE_DIR_FROM_BUILD=$(abs_top_builddir) \
+	PYTHONPATH=$(COMMON_PYTHON_PATH):$(abs_top_srcdir)/src/bin:$(abs_top_builddir)/src/bin/bundy:$(abs_top_builddir)/src/lib/util/io/.libs \
 		$(PYCOVERAGE_RUN) $(abs_srcdir)/$$pytest || exit ; \
 	done
 
@@ -30,7 +30,7 @@ AM_CPPFLAGS += -DINSTALL_PROG=\"$(abs_top_srcdir)/install-sh\"
 CLEANFILES  = $(builddir)/interfaces.txt $(builddir)/logger_lockfile
 CLEANFILES += $(builddir)/load_marker.txt $(builddir)/unload_marker.txt
 
-AM_CXXFLAGS = $(B10_CXXFLAGS)
+AM_CXXFLAGS = $(BUNDY_CXXFLAGS)
 if USE_CLANGPP
 # Disable unused parameter warning caused by some Boost headers when compiling with clang
 AM_CXXFLAGS += -Wno-unused-parameter
@@ -47,7 +47,7 @@ if HAVE_GTEST
 # Use of these switches will guarantee that the .so files are created in the
 # .libs folder and they can be dlopened.
 # Note that the shared libraries with callouts should not be used together with
-# the --enable-static-link option. With this option, the bind10 libraries are
+# the --enable-static-link option. With this option, the bundy libraries are
 # statically linked with the program and if the callout invokes the methods
 # which belong to these libraries, the library with the callout will get its
 # own copy of the static objects (e.g. logger, ServerHooks) and that will lead
@@ -94,17 +94,17 @@ dhcp6_unittests_CPPFLAGS = $(AM_CPPFLAGS) $(GTEST_INCLUDES)
 dhcp6_unittests_LDFLAGS = $(AM_LDFLAGS) $(GTEST_LDFLAGS)
 dhcp6_unittests_LDADD = $(GTEST_LDADD)
 dhcp6_unittests_LDADD += $(top_builddir)/src/lib/dhcp/tests/libdhcptest.la
-dhcp6_unittests_LDADD += $(top_builddir)/src/lib/asiolink/libb10-asiolink.la
-dhcp6_unittests_LDADD += $(top_builddir)/src/lib/cc/libb10-cc.la
-dhcp6_unittests_LDADD += $(top_builddir)/src/lib/config/libb10-cfgclient.la
-dhcp6_unittests_LDADD += $(top_builddir)/src/lib/dhcp/libb10-dhcp++.la
+dhcp6_unittests_LDADD += $(top_builddir)/src/lib/asiolink/libbundy-asiolink.la
+dhcp6_unittests_LDADD += $(top_builddir)/src/lib/cc/libbundy-cc.la
+dhcp6_unittests_LDADD += $(top_builddir)/src/lib/config/libbundy-cfgclient.la
+dhcp6_unittests_LDADD += $(top_builddir)/src/lib/dhcp/libbundy-dhcp++.la
 dhcp6_unittests_LDADD += $(top_builddir)/src/lib/dhcp/tests/libdhcptest.la
-dhcp6_unittests_LDADD += $(top_builddir)/src/lib/dhcp_ddns/libb10-dhcp_ddns.la
-dhcp6_unittests_LDADD += $(top_builddir)/src/lib/dhcpsrv/libb10-dhcpsrv.la
-dhcp6_unittests_LDADD += $(top_builddir)/src/lib/hooks/libb10-hooks.la
-dhcp6_unittests_LDADD += $(top_builddir)/src/lib/exceptions/libb10-exceptions.la
-dhcp6_unittests_LDADD += $(top_builddir)/src/lib/log/libb10-log.la
-dhcp6_unittests_LDADD += $(top_builddir)/src/lib/util/libb10-util.la
+dhcp6_unittests_LDADD += $(top_builddir)/src/lib/dhcp_ddns/libbundy-dhcp_ddns.la
+dhcp6_unittests_LDADD += $(top_builddir)/src/lib/dhcpsrv/libbundy-dhcpsrv.la
+dhcp6_unittests_LDADD += $(top_builddir)/src/lib/hooks/libbundy-hooks.la
+dhcp6_unittests_LDADD += $(top_builddir)/src/lib/exceptions/libbundy-exceptions.la
+dhcp6_unittests_LDADD += $(top_builddir)/src/lib/log/libbundy-log.la
+dhcp6_unittests_LDADD += $(top_builddir)/src/lib/util/libbundy-util.la
 endif
 
 noinst_PROGRAMS = $(TESTS)

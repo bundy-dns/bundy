@@ -25,7 +25,7 @@
 // utility area.
 //
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace encode {
 
@@ -52,7 +52,7 @@ std::string encodeBase64(const std::vector<uint8_t>& binary);
 /// length of string must be a multiple of 4 bytes with necessary paddings.
 /// Also it must be encoded using the canonical encoding (see RFC4648).
 /// If any of these conditions is not met, an exception of class
-/// \c isc::BadValue will be thrown.
+/// \c bundy::BadValue will be thrown.
 ///
 /// If \c result doesn't have sufficient capacity to store all decoded %data
 /// and memory allocation fails, a corresponding standard exception will be
@@ -70,7 +70,7 @@ void decodeBase64(const std::string& input, std::vector<uint8_t>& result);
 
 } // namespace encode
 } // namespace util
-} // namespace isc
+} // namespace bundy
 
 #endif  // BASE64_H
 

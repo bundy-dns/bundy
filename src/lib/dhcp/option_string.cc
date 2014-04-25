@@ -14,7 +14,7 @@
 
 #include <dhcp/option_string.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 OptionString::OptionString(const Option::Universe u, const uint16_t type,
@@ -46,7 +46,7 @@ OptionString::setValue(const std::string& value) {
     // This is a requirement for all currently defined options which
     // carry a string value.
     if (value.empty()) {
-        isc_throw(isc::OutOfRange, "string value carried by the option '"
+        bundy_throw(bundy::OutOfRange, "string value carried by the option '"
                   << getType() << "' must not be empty");
     }
 
@@ -60,7 +60,7 @@ OptionString::len() {
 }
 
 void
-OptionString::pack(isc::util::OutputBuffer& buf) {
+OptionString::pack(bundy::util::OutputBuffer& buf) {
     // Pack option header.
     packHeader(buf);
     // Pack data.
@@ -75,12 +75,12 @@ void
 OptionString::unpack(OptionBufferConstIter begin,
                      OptionBufferConstIter end) {
     if (std::distance(begin, end) == 0) {
-        isc_throw(isc::OutOfRange, "failed to parse an option '"
+        bundy_throw(bundy::OutOfRange, "failed to parse an option '"
                   << getType() << "' holding string value"
                   << " - empty value is not accepted");
     }
     setData(begin, end);
 }
 
-} // end of isc::dhcp namespace
-} // end of isc namespace
+} // end of bundy::dhcp namespace
+} // end of bundy namespace

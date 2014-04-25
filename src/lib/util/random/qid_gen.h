@@ -27,7 +27,7 @@
 
 #include <stdint.h>
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace random {
 
@@ -84,6 +84,6 @@ private:
 
 } // namespace random
 } // namespace util
-} // namespace isc
+} // namespace bundy
 
 #endif // QID_GEN_H

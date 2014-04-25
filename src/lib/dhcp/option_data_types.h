@@ -22,21 +22,21 @@
 
 #include <stdint.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief Exception to be thrown when invalid type specified as template parameter.
 class InvalidDataType : public Exception {
 public:
     InvalidDataType(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Exception to be thrown when cast to the data type was unsuccessful.
 class BadDataTypeCast : public Exception {
 public:
     BadDataTypeCast(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 
@@ -230,7 +230,7 @@ public:
     /// @param buf input buffer.
     /// @param family address family: AF_INET or AF_INET6.
     /// 
-    /// @throw isc::dhcp::BadDataTypeCast when the data being read
+    /// @throw bundy::dhcp::BadDataTypeCast when the data being read
     /// is truncated.
     /// @return address being read.
     static asiolink::IOAddress readAddress(const std::vector<uint8_t>& buf,
@@ -255,7 +255,7 @@ public:
     ///
     /// @param buf input buffer.
     ///
-    /// @throw isc::dhcp::BadDataTypeCast when the data being read
+    /// @throw bundy::dhcp::BadDataTypeCast when the data being read
     /// is truncated or the value is invalid (neither 1 nor 0).
     /// @return boolean value read from a buffer.
     static bool readBool(const std::vector<uint8_t>& buf);
@@ -274,18 +274,18 @@ public:
     /// @param buf input buffer.
     /// @tparam integer type of the returned value.
     ///
-    /// @throw isc::dhcp::BadDataTypeCast when the data in the buffer
+    /// @throw bundy::dhcp::BadDataTypeCast when the data in the buffer
     /// is truncated.
     /// @return integer value being read.
     template<typename T>
     static T readInt(const std::vector<uint8_t>& buf) {
         if (!OptionDataTypeTraits<T>::integer_type) {
-            isc_throw(isc::dhcp::InvalidDataType, "specified data type to be returned"
+            bundy_throw(bundy::dhcp::InvalidDataType, "specified data type to be returned"
                       " by readInteger is unsupported integer type");
         }
 
         if (buf.size() < OptionDataTypeTraits<T>::len) {
-            isc_throw(isc::dhcp::BadDataTypeCast,
+            bundy_throw(bundy::dhcp::BadDataTypeCast,
                       "failed to read an integer value from a buffer"
                       << " - buffer is truncated.");
         }
@@ -298,17 +298,17 @@ public:
         case 2:
             // Calling readUint16 works either for unsigned
             // or signed types.
-            value = isc::util::readUint16(&(*buf.begin()), buf.size());
+            value = bundy::util::readUint16(&(*buf.begin()), buf.size());
             break;
         case 4:
             // Calling readUint32 works either for unsigned
             // or signed types.
-            value = isc::util::readUint32(&(*buf.begin()), buf.size());
+            value = bundy::util::readUint32(&(*buf.begin()), buf.size());
             break;
         default:
             // This should not happen because we made checks on data types
             // but it does not hurt to keep throw statement here.
-            isc_throw(isc::dhcp::InvalidDataType,
+            bundy_throw(bundy::dhcp::InvalidDataType,
                       "invalid size of the data type to be read as integer.");
         }
         return (value);
@@ -323,7 +323,7 @@ public:
     static void writeInt(const T value,
                          std::vector<uint8_t>& buf) {
         if (!OptionDataTypeTraits<T>::integer_type) {
-            isc_throw(InvalidDataType, "provided data type is not the supported.");
+            bundy_throw(InvalidDataType, "provided data type is not the supported.");
         }
         switch (OptionDataTypeTraits<T>::len) {
         case 1:
@@ -331,11 +331,11 @@ public:
             break;
         case 2:
             buf.resize(buf.size() + 2);
-            isc::util::writeUint16(static_cast<uint16_t>(value), &buf[buf.size() - 2], 2);
+            bundy::util::writeUint16(static_cast<uint16_t>(value), &buf[buf.size() - 2], 2);
             break;
         case 4:
             buf.resize(buf.size() + 4);
-            isc::util::writeUint32(static_cast<uint32_t>(value), &buf[buf.size() - 4], 4);
+            bundy::util::writeUint32(static_cast<uint32_t>(value), &buf[buf.size() - 4], 4);
             break;
         default:
             // The cases above cover whole range of possible data lengths because
@@ -369,7 +369,7 @@ public:
     /// @param downcase indicates if the FQDN should be converted to lower
     /// case (if true). By default it is not converted.
     ///
-    /// @throw isc::dhcp::BadDataTypeCast if provided FQDN
+    /// @throw bundy::dhcp::BadDataTypeCast if provided FQDN
     /// is invalid.
     static void writeFqdn(const std::string& fqdn,
                           std::vector<uint8_t>& buf,
@@ -383,7 +383,7 @@ public:
     ///
     /// @return A number of labels in the provided name or 0 if the
     /// name string is empty.
-    /// @throw isc::dhcp::BadDataTypeCast if provided name is malformed.
+    /// @throw bundy::dhcp::BadDataTypeCast if provided name is malformed.
     static unsigned int getLabelCount(const std::string& text_name);
 
     /// @brief Read string value from a buffer.
@@ -439,7 +439,7 @@ private:
 };
 
 
-} // isc::dhcp namespace
-} // isc namespace
+} // bundy::dhcp namespace
+} // bundy namespace
 
 #endif // OPTION_DATA_TYPES_H

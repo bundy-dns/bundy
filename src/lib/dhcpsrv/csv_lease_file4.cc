@@ -14,10 +14,10 @@
 
 #include <dhcpsrv/csv_lease_file4.h>
 
-using namespace isc::asiolink;
-using namespace isc::util;
+using namespace bundy::asiolink;
+using namespace bundy::util;
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 CSVLeaseFile4::CSVLeaseFile4(const std::string& filename)
@@ -118,7 +118,7 @@ HWAddr
 CSVLeaseFile4::readHWAddr(const CSVRow& row) {
     HWAddr hwaddr = HWAddr::fromText(row.readAt(getColumnIndex("hwaddr")));
     if (hwaddr.hwaddr_.empty()) {
-        isc_throw(isc::BadValue, "hardware address in the lease file"
+        bundy_throw(bundy::BadValue, "hardware address in the lease file"
                   " must not be empty");
     }
     return (hwaddr);
@@ -174,5 +174,5 @@ CSVLeaseFile4::readHostname(const CSVRow& row) {
     return (hostname);
 }
 
-} // end of namespace isc::dhcp
-} // end of namespace isc
+} // end of namespace bundy::dhcp
+} // end of namespace bundy

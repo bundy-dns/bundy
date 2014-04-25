@@ -19,9 +19,9 @@
 #include <util/buffer.h>
 #include <gtest/gtest.h>
 
-using namespace isc;
-using namespace isc::dhcp;
-using namespace isc::util;
+using namespace bundy;
+using namespace bundy::dhcp;
+using namespace bundy::util;
 
 namespace {
 
@@ -82,7 +82,7 @@ TEST(OptionVendorClass, addTuple) {
     // Attempt to add the tuple with 1 byte long length field should fail
     // for DHCPv6 option.
     OpaqueDataTuple tuple2(OpaqueDataTuple::LENGTH_1_BYTE);
-    EXPECT_THROW(vendor_class.addTuple(tuple2), isc::BadValue);
+    EXPECT_THROW(vendor_class.addTuple(tuple2), bundy::BadValue);
 }
 
 // This test checks that it is possible to replace existing tuple.
@@ -118,12 +118,12 @@ TEST(OptionVendorClass, setTuple) {
 
     // For out of range position, exception should be thrown.
     tuple = "foo";
-    EXPECT_THROW(vendor_class.setTuple(2, tuple), isc::OutOfRange);
+    EXPECT_THROW(vendor_class.setTuple(2, tuple), bundy::OutOfRange);
 
     // Attempt to add the tuple with 2 byte long length field should fail
     // for DHCPv4 option.
     OpaqueDataTuple tuple2(OpaqueDataTuple::LENGTH_2_BYTES);
-    EXPECT_THROW(vendor_class.addTuple(tuple2), isc::BadValue);
+    EXPECT_THROW(vendor_class.addTuple(tuple2), bundy::BadValue);
 }
 
 // Check that the returned length of the DHCPv4 option is correct.
@@ -342,7 +342,7 @@ TEST(OptionVendorClass, unpack4Truncated) {
     OptionBuffer buf(buf_data, buf_data + sizeof(buf_data));
 
     EXPECT_THROW(OptionVendorClass (Option::V4, buf.begin(), buf.end()),
-                 isc::OutOfRange);
+                 bundy::OutOfRange);
 }
 
 // This test checks that exception is thrown when parsing truncated DHCPv6
@@ -358,7 +358,7 @@ TEST(OptionVendorClass, unpack6Truncated) {
     OptionBuffer buf(buf_data, buf_data + sizeof(buf_data));
 
     EXPECT_THROW(OptionVendorClass (Option::V6, buf.begin(), buf.end()),
-                 isc::dhcp::OpaqueDataTupleError);
+                 bundy::dhcp::OpaqueDataTupleError);
 }
 
 // This test checks that exception is thrown when parsing DHCPv4 V-I Vendor
@@ -375,7 +375,7 @@ TEST(OptionVendorClass, unpack4NoTuple) {
     OptionBuffer buf(buf_data, buf_data + sizeof(buf_data));
 
     ASSERT_THROW(OptionVendorClass (Option::V4, buf.begin(), buf.end()),
-                 isc::OutOfRange);
+                 bundy::OutOfRange);
 }
 
 // This test checks that the DHCPv6 Vendor Class option containing no opaque

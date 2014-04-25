@@ -17,7 +17,7 @@
 
 #include <cryptolink/cryptolink.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 class Name;
@@ -166,7 +166,7 @@ public:
     const Name& getAlgorithmName() const;
 
     /// Return the hash algorithm name in the form of cryptolink::HashAlgorithm
-    isc::cryptolink::HashAlgorithm getAlgorithm() const;
+    bundy::cryptolink::HashAlgorithm getAlgorithm() const;
 
     /// Return the length of the TSIG secret in bytes.
     size_t getSecretLength() const;

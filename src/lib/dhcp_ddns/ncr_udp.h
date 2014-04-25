@@ -45,7 +45,7 @@
 ///
 /// Both the listener and sender implementations utilize the same underlying
 /// construct to move NCRs to and from a UDP socket. This construct consists
-/// of a set of classes centered around isc::asiolink::UDPSocket.  UDPSocket
+/// of a set of classes centered around bundy::asiolink::UDPSocket.  UDPSocket
 /// is a templated class that supports asio asynchronous event processing; and
 /// which accepts as its parameter, the name of a callback class.
 ///
@@ -122,14 +122,14 @@
 /// to interpret the raw data provided by the service outcome.   The
 /// UDPCallback operator implementation is mostly a pass through.
 ///
-namespace isc {
+namespace bundy {
 namespace dhcp_ddns {
 
 /// @brief Thrown when a UDP level exception occurs.
-class NcrUDPError : public isc::Exception {
+class NcrUDPError : public bundy::Exception {
 public:
     NcrUDPError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 class UDPCallback;
@@ -315,7 +315,7 @@ public:
 };
 
 /// @brief Convenience type for UDP socket based listener
-typedef isc::asiolink::UDPSocket<UDPCallback> NameChangeUDPSocket;
+typedef bundy::asiolink::UDPSocket<UDPCallback> NameChangeUDPSocket;
 
 /// @brief Provides the ability to receive NameChangeRequests via  UDP socket
 ///
@@ -326,7 +326,7 @@ typedef isc::asiolink::UDPSocket<UDPCallback> NameChangeUDPSocket;
 class NameChangeUDPListener : public NameChangeListener {
 public:
     /// @brief Defines the maximum size packet that can be received.
-    static const size_t RECV_BUF_MAX = isc::asiolink::
+    static const size_t RECV_BUF_MAX = bundy::asiolink::
                                        UDPSocket<UDPCallback>::MIN_SIZE;
 
     /// @brief Constructor
@@ -341,7 +341,7 @@ public:
     /// It defaults to false.
     ///
     /// @throw base class throws NcrListenerError if handler is invalid.
-    NameChangeUDPListener(const isc::asiolink::IOAddress& ip_address,
+    NameChangeUDPListener(const bundy::asiolink::IOAddress& ip_address,
                           const uint32_t port,
                           const NameChangeFormat format,
                           RequestReceiveHandler& ncr_recv_handler,
@@ -358,7 +358,7 @@ public:
     /// @param io_service the IOService which will monitor the socket.
     ///
     /// @throw NcrUDPError if the open fails.
-    virtual void open(isc::asiolink::IOService& io_service);
+    virtual void open(bundy::asiolink::IOService& io_service);
 
     /// @brief Closes the UDPSocket.
     ///
@@ -406,7 +406,7 @@ public:
                                   const UDPCallback* recv_callback);
 private:
     /// @brief IP address on which to listen for requests.
-    isc::asiolink::IOAddress ip_address_;
+    bundy::asiolink::IOAddress ip_address_;
 
     /// @brief Port number on which to listen for requests.
     uint32_t port_;
@@ -466,8 +466,8 @@ public:
     /// @param reuse_address enables IP address sharing when true
     /// It defaults to false.
     ///
-    NameChangeUDPSender(const isc::asiolink::IOAddress& ip_address,
-        const uint32_t port, const isc::asiolink::IOAddress& server_address,
+    NameChangeUDPSender(const bundy::asiolink::IOAddress& ip_address,
+        const uint32_t port, const bundy::asiolink::IOAddress& server_address,
         const uint32_t server_port, const NameChangeFormat format,
         RequestSendHandler& ncr_send_handler,
         const size_t send_que_max = NameChangeSender::MAX_QUEUE_DEFAULT,
@@ -485,7 +485,7 @@ public:
     /// @param io_service the IOService which will monitor the socket.
     ///
     /// @throw NcrUDPError if the open fails.
-    virtual void open(isc::asiolink::IOService& io_service);
+    virtual void open(bundy::asiolink::IOService& io_service);
 
 
     /// @brief Closes the UDPSocket.
@@ -549,13 +549,13 @@ public:
 
 private:
     /// @brief IP address from which to send.
-    isc::asiolink::IOAddress ip_address_;
+    bundy::asiolink::IOAddress ip_address_;
 
     /// @brief Port from which to send.
     uint32_t port_;
 
     /// @brief IP address of the target listener.
-    isc::asiolink::IOAddress server_address_;
+    bundy::asiolink::IOAddress server_address_;
 
     /// @brief Port of the target listener.
     uint32_t server_port_;
@@ -570,7 +570,7 @@ private:
     boost::shared_ptr<NameChangeUDPSocket> socket_;
 
     /// @brief Endpoint of the target listener.
-    boost::shared_ptr<isc::asiolink::UDPEndpoint> server_endpoint_;
+    boost::shared_ptr<bundy::asiolink::UDPEndpoint> server_endpoint_;
 
     /// @brief Pointer to the send callback
     boost::shared_ptr<UDPCallback> send_callback_;
@@ -582,7 +582,7 @@ private:
     WatchSocketPtr watch_socket_;
 };
 
-} // namespace isc::dhcp_ddns
-} // namespace isc
+} // namespace bundy::dhcp_ddns
+} // namespace bundy
 
 #endif

@@ -30,12 +30,12 @@
 #include <util/unittests/wiredata.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dns;
-using namespace isc::util;
-using namespace isc::dns::rdata;
-using isc::UnitTestUtil;
-using isc::util::unittests::matchWireData;
+using namespace bundy;
+using namespace bundy::dns;
+using namespace bundy::util;
+using namespace bundy::dns::rdata;
+using bundy::UnitTestUtil;
+using bundy::util::unittests::matchWireData;
 
 namespace {
 class Rdata_NSEC3PARAM_Test : public RdataTest {
@@ -47,7 +47,7 @@ protected:
     {}
 
     void checkFromText_None(const string& rdata_str) {
-        checkFromText<generic::NSEC3PARAM, isc::Exception, isc::Exception>(
+        checkFromText<generic::NSEC3PARAM, bundy::Exception, bundy::Exception>(
             rdata_str, rdata_nsec3param, false, false);
     }
 
@@ -71,7 +71,7 @@ protected:
                                  const generic::NSEC3PARAM& rdata)
     {
         checkFromText
-            <generic::NSEC3PARAM, InvalidRdataText, isc::Exception>(
+            <generic::NSEC3PARAM, InvalidRdataText, bundy::Exception>(
                 rdata_str, rdata, true, false);
     }
 

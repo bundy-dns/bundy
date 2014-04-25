@@ -16,7 +16,7 @@
 #include <fstream>
 #include <sstream>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 namespace test {
 
@@ -63,7 +63,7 @@ LeaseFileIO::writeFile(const std::string& contents) const {
     }
 }
 
-} // end of namespace isc::dhcp::test
-} // end of namespace isc::dhcp
-} // end of namespace isc
+} // end of namespace bundy::dhcp::test
+} // end of namespace bundy::dhcp
+} // end of namespace bundy
 

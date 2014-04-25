@@ -25,7 +25,7 @@
 #include <vector>
 
 
-namespace isc {
+namespace bundy {
 namespace perfdhcp {
 
 /// \brief Command Options Helper class.
@@ -137,7 +137,7 @@ private:
     }
 };
 
-} // namespace isc::perfdhcp
-} // namespace isc
+} // namespace bundy::perfdhcp
+} // namespace bundy
 
 #endif // COMMAND_OPTIONS_HELPER_H

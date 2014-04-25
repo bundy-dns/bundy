@@ -24,7 +24,7 @@
 #include <asiolink/interval_timer.h>
 #include <asiolink/io_service.h>
 
-namespace isc {
+namespace bundy {
 namespace asiolink {
 
 /// This class holds a call back function of asynchronous operations.
@@ -79,12 +79,12 @@ IntervalTimerImpl::setup(const IntervalTimer::Callback& cbfunc,
 {
     // Interval should not be less than or equal to 0.
     if (interval <= 0) {
-        isc_throw(isc::BadValue, "Interval should not be less than or "
+        bundy_throw(bundy::BadValue, "Interval should not be less than or "
                                  "equal to 0");
     }
     // Call back function should not be empty.
     if (cbfunc.empty()) {
-        isc_throw(isc::InvalidParameter, "Callback function is empty");
+        bundy_throw(bundy::InvalidParameter, "Callback function is empty");
     }
     cbfunc_ = cbfunc;
     interval_ = interval;
@@ -105,7 +105,7 @@ IntervalTimerImpl::update() {
                                       shared_from_this(),
                                       asio::placeholders::error));
     } catch (const asio::system_error& e) {
-        isc_throw(isc::Unexpected, "Failed to update timer: " << e.what());
+        bundy_throw(bundy::Unexpected, "Failed to update timer: " << e.what());
     } catch (const boost::bad_weak_ptr&) {
         // Can't happen. It means a severe internal bug.
         assert(0);
@@ -150,4 +150,4 @@ IntervalTimer::getInterval() const {
 }
 
 } // namespace asiolink
-} // namespace isc
+} // namespace bundy

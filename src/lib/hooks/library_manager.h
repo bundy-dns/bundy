@@ -21,7 +21,7 @@
 
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace hooks {
 
 /// @brief No Callout Manager
@@ -31,7 +31,7 @@ namespace hooks {
 class NoCalloutManager : public Exception {
 public:
     NoCalloutManager(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) {}
+        bundy::Exception(file, line, what) {}
 };
 
 class CalloutManager;
@@ -170,7 +170,7 @@ protected:
     ///
     /// With the library open, accesses the "version()" function and, if
     /// present, checks the returned value against the hooks version symbol
-    /// for the currently running BIND 10.  The "version()" function is
+    /// for the currently running BUNDY.  The "version()" function is
     /// mandatory and must be present (and return the correct value) for the
     /// library to load.
     ///
@@ -226,6 +226,6 @@ private:
 };
 
 } // namespace hooks
-} // namespace isc
+} // namespace bundy
 
 #endif  // LIBRARY_MANAGER_H

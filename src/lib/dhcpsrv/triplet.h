@@ -17,7 +17,7 @@
 
 #include <exceptions/exceptions.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief this template specifies a parameter value
@@ -66,7 +66,7 @@ public:
     Triplet(T min, T def, T max)
         :min_(min), default_(def), max_(max) {
         if ( (min_ > def) || (def > max_) ) {
-            isc_throw(BadValue, "Invalid triplet values.");
+            bundy_throw(BadValue, "Invalid triplet values.");
         }
     }
 
@@ -109,7 +109,7 @@ protected:
 };
 
 
-} // namespace isc::dhcp
-} // namespace isc
+} // namespace bundy::dhcp
+} // namespace bundy
 
 #endif // ifdef TRIPLET_H

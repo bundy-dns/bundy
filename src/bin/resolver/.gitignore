@@ -1,9 +1,9 @@
-/b10-resolver
+/bundy-resolver
 /resolver.spec
 /resolver.spec.pre
 /resolver_messages.cc
 /resolver_messages.h
 /spec_config.h
 /spec_config.h.pre
-/b10-resolver.8
+/bundy-resolver.8
 /s-messages

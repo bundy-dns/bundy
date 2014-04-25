@@ -25,14 +25,14 @@
 /// @file labeled_value.h This file defines classes: LabeledValue and
 /// LabeledValueSet.
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 /// @brief Thrown if an error is encountered handling a LabeledValue.
-class LabeledValueError : public isc::Exception {
+class LabeledValueError : public bundy::Exception {
 public:
     LabeledValueError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Implements the concept of a constant value with a text label.
@@ -179,6 +179,6 @@ private:
     LabeledValueMap map_;
 };
 
-} // namespace isc::d2
-} // namespace isc
+} // namespace bundy::d2
+} // namespace bundy
 #endif

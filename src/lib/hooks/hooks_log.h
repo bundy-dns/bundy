@@ -18,7 +18,7 @@
 #include <log/macros.h>
 #include <hooks/hooks_messages.h>
 
-namespace isc {
+namespace bundy {
 namespace hooks {
 
 /// @brief Hooks debug Logging levels
@@ -42,9 +42,9 @@ const int HOOKS_DBG_EXTENDED_CALLS = DBGLVL_TRACE_DETAIL_DATA;
 /// Define the logger used to log messages.  We could define it in multiple
 /// modules, but defining in a single module and linking to it saves time and
 /// space.
-extern isc::log::Logger hooks_logger;
+extern bundy::log::Logger hooks_logger;
 
 } // namespace hooks
-} // namespace isc
+} // namespace bundy
 
 #endif // HOOKS_LOG_H

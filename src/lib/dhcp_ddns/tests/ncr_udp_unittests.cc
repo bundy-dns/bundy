@@ -27,8 +27,8 @@
 #include <sys/select.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dhcp_ddns;
+using namespace bundy;
+using namespace bundy::dhcp_ddns;
 
 namespace {
 
@@ -88,9 +88,9 @@ public:
 /// 1. Given valid parameters, the listener constructor works
 TEST(NameChangeUDPListenerBasicTest, constructionTests) {
     // Verify the default constructor works.
-    isc::asiolink::IOAddress ip_address(TEST_ADDRESS);
+    bundy::asiolink::IOAddress ip_address(TEST_ADDRESS);
     uint32_t port = LISTENER_PORT;
-    isc::asiolink::IOService io_service;
+    bundy::asiolink::IOService io_service;
     SimpleListenHandler ncr_handler;
     // Verify that valid constructor works.
     EXPECT_NO_THROW(NameChangeUDPListener(ip_address, port, FMT_JSON,
@@ -105,9 +105,9 @@ TEST(NameChangeUDPListenerBasicTest, constructionTests) {
 /// 4. Return to the listening state after stopping
 TEST(NameChangeUDPListenerBasicTest, basicListenTests) {
     // Verify the default constructor works.
-    isc::asiolink::IOAddress ip_address(TEST_ADDRESS);
+    bundy::asiolink::IOAddress ip_address(TEST_ADDRESS);
     uint32_t port = LISTENER_PORT;
-    isc::asiolink::IOService io_service;
+    bundy::asiolink::IOService io_service;
     SimpleListenHandler ncr_handler;
 
     NameChangeListenerPtr listener;
@@ -156,12 +156,12 @@ bool checkSendVsReceived(NameChangeRequestPtr sent_ncr,
 class NameChangeUDPListenerTest : public virtual ::testing::Test,
                                   NameChangeListener::RequestReceiveHandler {
 public:
-    isc::asiolink::IOService io_service_;
+    bundy::asiolink::IOService io_service_;
     NameChangeListener::Result result_;
     NameChangeRequestPtr sent_ncr_;
     NameChangeRequestPtr received_ncr_;
     NameChangeListenerPtr listener_;
-    isc::asiolink::IntervalTimer test_timer_;
+    bundy::asiolink::IntervalTimer test_timer_;
 
     /// @brief Constructor
     //
@@ -170,7 +170,7 @@ public:
     NameChangeUDPListenerTest()
         : io_service_(), result_(NameChangeListener::SUCCESS),
           test_timer_(io_service_) {
-        isc::asiolink::IOAddress addr(TEST_ADDRESS);
+        bundy::asiolink::IOAddress addr(TEST_ADDRESS);
         listener_.reset(new NameChangeUDPListener(addr, LISTENER_PORT,
                                               FMT_JSON, *this, true));
 
@@ -192,7 +192,7 @@ public:
         ASSERT_NO_THROW(sent_ncr_ = NameChangeRequest::fromJSON(msg));
 
         // Now use the NCR to write JSON to an output buffer.
-        isc::util::OutputBuffer ncr_buffer(1024);
+        bundy::util::OutputBuffer ncr_buffer(1024);
         ASSERT_NO_THROW(sent_ncr_->toFormat(FMT_JSON, ncr_buffer));
 
         // Create a UDP socket through which our "sender" will send the NCR.
@@ -295,9 +295,9 @@ public:
 /// 3. Default construction provides default max queue size
 /// 4. Construction with a custom max queue size works
 TEST(NameChangeUDPSenderBasicTest, constructionTests) {
-    isc::asiolink::IOAddress ip_address(TEST_ADDRESS);
+    bundy::asiolink::IOAddress ip_address(TEST_ADDRESS);
     uint32_t port = SENDER_PORT;
-    isc::asiolink::IOService io_service;
+    bundy::asiolink::IOService io_service;
     SimpleSendHandler ncr_handler;
 
     // Verify that constructing with an queue size of zero is not allowed.
@@ -325,8 +325,8 @@ TEST(NameChangeUDPSenderBasicTest, constructionTests) {
 /// @brief Tests NameChangeUDPSender basic send functionality
 /// This test verifies that:
 TEST(NameChangeUDPSenderBasicTest, basicSendTests) {
-    isc::asiolink::IOAddress ip_address(TEST_ADDRESS);
-    isc::asiolink::IOService io_service;
+    bundy::asiolink::IOAddress ip_address(TEST_ADDRESS);
+    bundy::asiolink::IOService io_service;
     SimpleSendHandler ncr_handler;
 
     // Tests are based on a list of messages, get the count now.
@@ -451,8 +451,8 @@ TEST(NameChangeUDPSenderBasicTest, basicSendTests) {
 /// @brief Tests that sending gets kick-started if the queue isn't empty
 /// when startSending is called.
 TEST(NameChangeUDPSenderBasicTest, autoStart) {
-    isc::asiolink::IOAddress ip_address(TEST_ADDRESS);
-    isc::asiolink::IOService io_service;
+    bundy::asiolink::IOAddress ip_address(TEST_ADDRESS);
+    bundy::asiolink::IOService io_service;
     SimpleSendHandler ncr_handler;
 
     // Tests are based on a list of messages, get the count now.
@@ -502,9 +502,9 @@ TEST(NameChangeUDPSenderBasicTest, autoStart) {
 
 /// @brief Tests NameChangeUDPSender basic send  with INADDR_ANY and port 0.
 TEST(NameChangeUDPSenderBasicTest, anyAddressSend) {
-    isc::asiolink::IOAddress ip_address(TEST_ADDRESS);
-    isc::asiolink::IOAddress any_address("0.0.0.0");
-    isc::asiolink::IOService io_service;
+    bundy::asiolink::IOAddress ip_address(TEST_ADDRESS);
+    bundy::asiolink::IOAddress any_address("0.0.0.0");
+    bundy::asiolink::IOService io_service;
     SimpleSendHandler ncr_handler;
 
     // Tests are based on a list of messages, get the count now.
@@ -537,9 +537,9 @@ TEST(NameChangeUDPSenderBasicTest, anyAddressSend) {
 
 /// @brief Test the NameChangeSender::assumeQueue method.
 TEST(NameChangeSender, assumeQueue) {
-    isc::asiolink::IOAddress ip_address(TEST_ADDRESS);
+    bundy::asiolink::IOAddress ip_address(TEST_ADDRESS);
     uint32_t port = SENDER_PORT;
-    isc::asiolink::IOService io_service;
+    bundy::asiolink::IOService io_service;
     SimpleSendHandler ncr_handler;
     NameChangeRequestPtr ncr;
 
@@ -611,12 +611,12 @@ class NameChangeUDPTest : public virtual ::testing::Test,
                           NameChangeListener::RequestReceiveHandler,
                           NameChangeSender::RequestSendHandler {
 public:
-    isc::asiolink::IOService io_service_;
+    bundy::asiolink::IOService io_service_;
     NameChangeListener::Result recv_result_;
     NameChangeSender::Result send_result_;
     NameChangeListenerPtr listener_;
     NameChangeSenderPtr   sender_;
-    isc::asiolink::IntervalTimer test_timer_;
+    bundy::asiolink::IntervalTimer test_timer_;
 
     std::vector<NameChangeRequestPtr> sent_ncrs_;
     std::vector<NameChangeRequestPtr> received_ncrs_;
@@ -624,7 +624,7 @@ public:
     NameChangeUDPTest()
         : io_service_(), recv_result_(NameChangeListener::SUCCESS),
           send_result_(NameChangeSender::SUCCESS), test_timer_(io_service_) {
-        isc::asiolink::IOAddress addr(TEST_ADDRESS);
+        bundy::asiolink::IOAddress addr(TEST_ADDRESS);
         // Create our listener instance. Note that reuse_address is true.
         listener_.reset(
             new NameChangeUDPListener(addr, LISTENER_PORT, FMT_JSON,
@@ -727,8 +727,8 @@ TEST_F (NameChangeUDPTest, roundTripTest) {
 // Tests error handling of a failure to mark the watch socket ready, when
 // sendRequestt() is called.
 TEST(NameChangeUDPSenderBasicTest, watchClosedBeforeSendRequest) {
-    isc::asiolink::IOAddress ip_address(TEST_ADDRESS);
-    isc::asiolink::IOService io_service;
+    bundy::asiolink::IOAddress ip_address(TEST_ADDRESS);
+    bundy::asiolink::IOService io_service;
     SimpleSendHandler ncr_handler;
 
     // Create the sender and put into send mode.
@@ -759,8 +759,8 @@ TEST(NameChangeUDPSenderBasicTest, watchClosedBeforeSendRequest) {
 // Tests error handling of a failure to mark the watch socket ready, when
 // sendNext() is called during completion handling.
 TEST(NameChangeUDPSenderBasicTest, watchClosedAfterSendRequest) {
-    isc::asiolink::IOAddress ip_address(TEST_ADDRESS);
-    isc::asiolink::IOService io_service;
+    bundy::asiolink::IOAddress ip_address(TEST_ADDRESS);
+    bundy::asiolink::IOService io_service;
     SimpleSendHandler ncr_handler;
 
     // Create the sender and put into send mode.
@@ -798,8 +798,8 @@ TEST(NameChangeUDPSenderBasicTest, watchClosedAfterSendRequest) {
 // Tests error handling of a failure to clear the watch socket during
 // completion handling.
 TEST(NameChangeUDPSenderBasicTest, watchSocketBadRead) {
-    isc::asiolink::IOAddress ip_address(TEST_ADDRESS);
-    isc::asiolink::IOService io_service;
+    bundy::asiolink::IOAddress ip_address(TEST_ADDRESS);
+    bundy::asiolink::IOService io_service;
     SimpleSendHandler ncr_handler;
 
     // Create the sender and put into send mode.

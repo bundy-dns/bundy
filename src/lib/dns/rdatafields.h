@@ -19,7 +19,7 @@
 
 #include <cstddef>
 
-namespace isc {
+namespace bundy {
 namespace util {
 class OutputBuffer;
 }
@@ -403,7 +403,7 @@ public:
     /// If it fails, a corresponding standard exception will be thrown.
     ///
     /// \param buffer An output buffer to store the wire data.
-    void toWire(isc::util::OutputBuffer& buffer) const;
+    void toWire(bundy::util::OutputBuffer& buffer) const;
     //@}
 
 private:

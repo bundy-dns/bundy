@@ -346,21 +346,21 @@
                 "item_type": "string",
                 "item_optional": true,
                 "item_default": "127.0.0.1",
-                "item_description" : "IP address of b10-dhcp-ddns (IPv4 or IPv6)"
+                "item_description" : "IP address of bundy-dhcp-ddns (IPv4 or IPv6)"
             },
             {
                 "item_name": "server-port",
                 "item_type": "integer",
                 "item_optional": true,
                 "item_default": 53001,
-                "item_description" : "port number of b10-dhcp-ddns"
+                "item_description" : "port number of bundy-dhcp-ddns"
             },
             {
                 "item_name": "ncr-protocol",
                 "item_type": "string",
                 "item_optional": true,
                 "item_default": "UDP",
-                "item_description" : "Socket protocol to use with b10-dhcp-ddns"
+                "item_description" : "Socket protocol to use with bundy-dhcp-ddns"
             },
             {
                 "item_name": "ncr-format",

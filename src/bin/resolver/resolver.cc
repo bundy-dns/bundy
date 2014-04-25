@@ -58,17 +58,17 @@
 #include "resolver_log.h"
 
 using namespace std;
-using namespace isc;
-using namespace isc::util;
-using namespace isc::acl;
-using isc::acl::dns::RequestACL;
-using namespace isc::dns;
-using namespace isc::data;
-using namespace isc::config;
-using namespace isc::asiodns;
-using namespace isc::asiolink;
-using namespace isc::server_common;
-using namespace isc::server_common::portconfig;
+using namespace bundy;
+using namespace bundy::util;
+using namespace bundy::acl;
+using bundy::acl::dns::RequestACL;
+using namespace bundy::dns;
+using namespace bundy::data;
+using namespace bundy::config;
+using namespace bundy::asiodns;
+using namespace bundy::asiolink;
+using namespace bundy::server_common;
+using namespace bundy::server_common::portconfig;
 
 class ResolverImpl {
 private:
@@ -93,8 +93,8 @@ public:
     }
 
     void querySetup(DNSServiceBase& dnss,
-                    isc::nsas::NameserverAddressStore& nsas,
-                    isc::cache::ResolverCache& cache)
+                    bundy::nsas::NameserverAddressStore& nsas,
+                    bundy::cache::ResolverCache& cache)
     {
         assert(!rec_query_); // queryShutdown must be called first
         LOG_DEBUG(resolver_logger, RESOLVER_DBG_INIT, RESOLVER_QUERY_SETUP);
@@ -152,8 +152,8 @@ public:
         }
     }
     
-    void resolve(const isc::dns::QuestionPtr& question,
-        const isc::resolve::ResolverInterface::CallbackPtr& callback);
+    void resolve(const bundy::dns::QuestionPtr& question,
+        const bundy::resolve::ResolverInterface::CallbackPtr& callback);
 
     enum NormalQueryResult { RECURSION, DROPPED, ERROR };
     NormalQueryResult processNormalQuery(const IOMessage& io_message,
@@ -215,7 +215,7 @@ public:
 };
 
 
-// TODO: REMOVE, USE isc::resolve::MakeErrorMessage?
+// TODO: REMOVE, USE bundy::resolve::MakeErrorMessage?
 void
 makeErrorMessage(MessagePtr message, MessagePtr answer_message,
                  OutputBufferPtr buffer, const Rcode& rcode)
@@ -359,18 +359,18 @@ Resolver::~Resolver() {
 }
 
 void
-Resolver::setDNSService(isc::asiodns::DNSServiceBase& dnss) {
+Resolver::setDNSService(bundy::asiodns::DNSServiceBase& dnss) {
     dnss_ = &dnss;
 }
 
 void
-Resolver::setNameserverAddressStore(isc::nsas::NameserverAddressStore& nsas)
+Resolver::setNameserverAddressStore(bundy::nsas::NameserverAddressStore& nsas)
 {
     nsas_ = &nsas;
 }
 
 void
-Resolver::setCache(isc::cache::ResolverCache& cache)
+Resolver::setCache(bundy::cache::ResolverCache& cache)
 {
     cache_ = &cache;
 }
@@ -387,8 +387,8 @@ Resolver::getConfigSession() const {
 }
 
 void
-Resolver::resolve(const isc::dns::QuestionPtr& question,
-    const isc::resolve::ResolverInterface::CallbackPtr& callback)
+Resolver::resolve(const bundy::dns::QuestionPtr& question,
+    const bundy::resolve::ResolverInterface::CallbackPtr& callback)
 {
     impl_->resolve(question, callback);
 }
@@ -418,7 +418,7 @@ Resolver::processMessage(const IOMessage& io_message,
             server->resume(false);
             return;
         }
-    } catch (const isc::Exception& ex) {
+    } catch (const bundy::Exception& ex) {
         LOG_DEBUG(resolver_logger, RESOLVER_DBG_IO,
                   RESOLVER_HEADER_PROCESSING_FAILED).arg(ex.what());
         server->resume(false);
@@ -436,7 +436,7 @@ Resolver::processMessage(const IOMessage& io_message,
                          buffer, error.getRcode());
         server->resume(true);
         return;
-    } catch (const isc::Exception& ex) {
+    } catch (const bundy::Exception& ex) {
         LOG_DEBUG(resolver_logger, RESOLVER_DBG_IO,
                   RESOLVER_MESSAGE_PROCESSING_FAILED)
                   .arg(ex.what()).arg(Rcode::SERVFAIL());
@@ -492,7 +492,7 @@ Resolver::processMessage(const IOMessage& io_message,
 
 void
 ResolverImpl::resolve(const QuestionPtr& question,
-    const isc::resolve::ResolverInterface::CallbackPtr& callback)
+    const bundy::resolve::ResolverInterface::CallbackPtr& callback)
 {
     rec_query_->resolve(question, callback);
 }
@@ -515,13 +515,13 @@ ResolverImpl::processNormalQuery(const IOMessage& io_message,
         getQueryACL().execute(acl::dns::RequestContext(
                                   client.getRequestSourceIPAddress(),
                                   query_message->getTSIGRecord())));
-    if (query_action == isc::acl::REJECT) {
+    if (query_action == bundy::acl::REJECT) {
         LOG_INFO(resolver_logger, RESOLVER_QUERY_REJECTED)
             .arg(question->getName()).arg(qtype).arg(qclass).arg(client);
         makeErrorMessage(query_message, answer_message, buffer,
                          Rcode::REFUSED());
         return (ERROR);
-    } else if (query_action == isc::acl::DROP) {
+    } else if (query_action == bundy::acl::DROP) {
         LOG_INFO(resolver_logger, RESOLVER_QUERY_DROPPED)
             .arg(question->getName()).arg(qtype).arg(qclass).arg(client);
         return (DROPPED);
@@ -609,7 +609,7 @@ Resolver::updateConfig(ConstElementPtr config, bool startup) {
             if (qtimeout < -1) {
                 LOG_ERROR(resolver_logger, RESOLVER_QUERY_TIME_SMALL)
                           .arg(qtimeout);
-                isc_throw(BadValue, "Query timeout too small");
+                bundy_throw(BadValue, "Query timeout too small");
             }
             set_timeouts = true;
         }
@@ -618,7 +618,7 @@ Resolver::updateConfig(ConstElementPtr config, bool startup) {
             if (ctimeout < -1) {
                 LOG_ERROR(resolver_logger, RESOLVER_CLIENT_TIME_SMALL)
                           .arg(ctimeout);
-                isc_throw(BadValue, "Client timeout too small");
+                bundy_throw(BadValue, "Client timeout too small");
             }
             set_timeouts = true;
         }
@@ -627,7 +627,7 @@ Resolver::updateConfig(ConstElementPtr config, bool startup) {
             if (ltimeout < -1) {
                 LOG_ERROR(resolver_logger, RESOLVER_LOOKUP_TIME_SMALL)
                           .arg(ltimeout);
-                isc_throw(BadValue, "Lookup timeout too small");
+                bundy_throw(BadValue, "Lookup timeout too small");
             }
             set_timeouts = true;
         }
@@ -638,7 +638,7 @@ Resolver::updateConfig(ConstElementPtr config, bool startup) {
             if (retriesE->intValue() < 0) {
                 LOG_ERROR(resolver_logger, RESOLVER_NEGATIVE_RETRIES)
                           .arg(retriesE->intValue());
-                isc_throw(BadValue, "Negative number of retries");
+                bundy_throw(BadValue, "Negative number of retries");
             }
             retries = retriesE->intValue();
             set_timeouts = true;
@@ -675,13 +675,13 @@ Resolver::updateConfig(ConstElementPtr config, bool startup) {
             impl_->queryShutdown();
             impl_->querySetup(*dnss_, *nsas_, *cache_);
         }
-        return (isc::config::createAnswer());
+        return (bundy::config::createAnswer());
 
-    } catch (const isc::Exception& error) {
+    } catch (const bundy::Exception& error) {
 
         // Configuration error
         LOG_ERROR(resolver_logger, RESOLVER_CONFIG_ERROR).arg(error.what());
-        return (isc::config::createAnswer(1, error.what()));
+        return (bundy::config::createAnswer(1, error.what()));
     }
 }
 
@@ -763,7 +763,7 @@ Resolver::getQueryACL() const {
 void
 Resolver::setQueryACL(boost::shared_ptr<const RequestACL> new_acl) {
     if (!new_acl) {
-        isc_throw(InvalidParameter, "NULL pointer is passed to setQueryACL");
+        bundy_throw(InvalidParameter, "NULL pointer is passed to setQueryACL");
     }
 
     LOG_INFO(resolver_logger, RESOLVER_SET_QUERY_ACL);

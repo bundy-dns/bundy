@@ -17,12 +17,12 @@
  *   Internet Systems Consortium, Inc.
  *   950 Charter Street
  *   Redwood City, CA 94063
- *   <info@isc.org>
- *   https://www.isc.org/
+ *   <info@bundy.org>
+ *   https://www.bundy.org/
  *
  * This software has been written for Internet Systems Consortium
  * by Ted Lemon in cooperation with Vixie Enterprises.  To learn more
- * about Internet Systems Consortium, see ``https://www.isc.org''.
+ * about Internet Systems Consortium, see ``https://www.bundy.org''.
  * To learn more about Vixie Enterprises, see ``http://www.vix.com''.
  */
 
@@ -36,7 +36,7 @@
 
 #include <stdint.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /* IPv4 Broadcast address */
@@ -199,11 +199,11 @@ static const uint16_t RAI_OPTION_VIRTUAL_SUBNET_SELECT_CTRL = 152; //RFC6607
 #define FQDN_SUBOPTION_COUNT            8
 
 /* Enterprise Suboptions: */
-#define VENDOR_ISC_SUBOPTIONS           2495
+#define VENDOR_BUNDY_SUBOPTIONS           2495
 
 #endif
 
-} // end of isc::dhcp namespace
-} // end of isc namespace
+} // end of bundy::dhcp namespace
+} // end of bundy namespace
 
 #endif /* DHCP_H */

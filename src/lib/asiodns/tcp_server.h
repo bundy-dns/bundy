@@ -28,7 +28,7 @@
 #include "dns_lookup.h"
 #include "dns_answer.h"
 
-namespace isc {
+namespace bundy {
 namespace asiodns {
 
 /// \brief A TCP-specific \c DNSServer object.
@@ -43,8 +43,8 @@ public:
     /// \param af address family of the socket, either AF_INET or AF_INET6
     /// \param lookup the callbackprovider for DNS lookup events
     /// \param answer the callbackprovider for DNS answer events
-    /// \throw isc::InvalidParameter if af is neither AF_INET nor AF_INET6
-    /// \throw isc::asiolink::IOError when a low-level error happens, like the
+    /// \throw bundy::InvalidParameter if af is neither AF_INET nor AF_INET6
+    /// \throw bundy::asiolink::IOError when a low-level error happens, like the
     ///     fd is not a valid descriptor or it can't be listened on.
     TCPServer(asio::io_service& io_service, int fd, int af,
               const DNSLookup* lookup = NULL, const DNSAnswer* answer = NULL);
@@ -107,13 +107,13 @@ private:
     boost::shared_ptr<asio::ip::tcp::socket> socket_;
 
     // The buffer into which the response is written
-    boost::shared_ptr<isc::util::OutputBuffer> respbuf_;
+    boost::shared_ptr<bundy::util::OutputBuffer> respbuf_;
 
     // \c IOMessage and \c Message objects to be passed to the
     // DNS lookup and answer providers
-    boost::shared_ptr<isc::asiolink::IOMessage> io_message_;
-    isc::dns::MessagePtr query_message_;
-    isc::dns::MessagePtr answer_message_;
+    boost::shared_ptr<bundy::asiolink::IOMessage> io_message_;
+    bundy::dns::MessagePtr query_message_;
+    bundy::dns::MessagePtr answer_message_;
 
     // The buffer into which the query packet is written
     boost::shared_array<char>data_;
@@ -126,8 +126,8 @@ private:
     const DNSLookup* lookup_callback_;
     const DNSAnswer* answer_callback_;
 
-    boost::shared_ptr<isc::asiolink::IOEndpoint> peer_;
-    boost::shared_ptr<isc::asiolink::IOSocket> iosock_;
+    boost::shared_ptr<bundy::asiolink::IOEndpoint> peer_;
+    boost::shared_ptr<bundy::asiolink::IOSocket> iosock_;
 
     // Timer used to timeout on tcp connections
     // This is a shared pointer because we need to have something
@@ -142,5 +142,5 @@ private:
 };
 
 } // namespace asiodns
-} // namespace isc
+} // namespace bundy
 #endif // TCP_SERVER_H

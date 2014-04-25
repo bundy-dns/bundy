@@ -25,9 +25,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-using namespace isc::util::io;
-using namespace isc::util::io::internal;
-using namespace isc::socket_creator;
+using namespace bundy::util::io;
+using namespace bundy::util::io::internal;
+using namespace bundy::socket_creator;
 
 namespace {
 
@@ -35,14 +35,14 @@ namespace {
 void
 readMessage(const int fd, void* where, const size_t length) {
     if (read_data(fd, where, length) < length) {
-        isc_throw(ReadError, "Error reading from socket creator client");
+        bundy_throw(ReadError, "Error reading from socket creator client");
     }
 }
 
 void
 writeMessage(const int fd, const void* what, const size_t length) {
     if (!write_data(fd, what, length)) {
-        isc_throw(WriteError, "Error writing to socket creator client");
+        bundy_throw(WriteError, "Error writing to socket creator client");
     }
 }
 
@@ -57,7 +57,7 @@ protocolError(const int fd, const char reason = 'I') {
     writeMessage(fd, message, sizeof(message));
 
     // ... and exit
-    isc_throw(ProtocolError, "Fatal error, reason: " << reason);
+    bundy_throw(ProtocolError, "Fatal error, reason: " << reason);
 }
 
 // Return appropriate socket type constant for the socket type requested.
@@ -95,7 +95,7 @@ getErrorCode(const int status) {
             break;
 
         default:
-            isc_throw(InternalError, "Error creating socket");
+            bundy_throw(InternalError, "Error creating socket");
     }
     return (error_code);
 }
@@ -165,13 +165,13 @@ handleRequest(const int input_fd, const int output_fd,
             // Error.  Close the socket (ignore any error from that operation)
             // and abort.
             close_fun(result);
-            isc_throw(InternalError, "Error sending descriptor");
+            bundy_throw(InternalError, "Error sending descriptor");
         }
 
         // Successfully sent the socket, so free up resources we still hold
         // for it.
         if (close_fun(result) == -1) {
-            isc_throw(InternalError, "Error closing socket");
+            bundy_throw(InternalError, "Error closing socket");
         }
     } else {
         // Error.  Tell the client.
@@ -187,7 +187,7 @@ handleRequest(const int input_fd, const int output_fd,
 }
 
 // Sets the MTU related flags for IPv6 UDP sockets.
-// It is borrowed from bind-9 lib/isc/unix/socket.c and modified
+// It is borrowed from bind-9 lib/bundy/unix/socket.c and modified
 // to compile here.
 //
 // The function returns -2 if it fails or the socket file descriptor
@@ -226,7 +226,7 @@ mtu(int fd) {
 int maybeClose(const int result, const int socket, const close_t close_fun) {
     if (result < 0) {
         if (close_fun(socket) == -1) {
-            isc_throw(InternalError, "Error closing socket");
+            bundy_throw(InternalError, "Error closing socket");
         }
     }
     return (result);
@@ -234,7 +234,7 @@ int maybeClose(const int result, const int socket, const close_t close_fun) {
 
 } // Anonymous namespace
 
-namespace isc {
+namespace bundy {
 namespace socket_creator {
 
 // Get the socket and bind to it.

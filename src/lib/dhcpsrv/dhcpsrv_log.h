@@ -18,7 +18,7 @@
 #include <dhcpsrv/dhcpsrv_messages.h>
 #include <log/macros.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 ///@{
@@ -61,9 +61,9 @@ const int DHCPSRV_DBG_HOOKS = DBGLVL_TRACE_BASIC;
 /// Define the logger used to log messages.  We could define it in multiple
 /// modules, but defining in a single module and linking to it saves time and
 /// space.
-extern isc::log::Logger dhcpsrv_logger;
+extern bundy::log::Logger dhcpsrv_logger;
 
 } // namespace dhcp
-} // namespace isc
+} // namespace bundy
 
 #endif // DHCPSRV_LOG_H

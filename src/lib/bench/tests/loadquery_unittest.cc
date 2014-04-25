@@ -30,9 +30,9 @@
 #include <gtest/gtest.h>
 
 using namespace std;
-using namespace isc::bench;
-using namespace isc::dns;
-using namespace isc::util;
+using namespace bundy::bench;
+using namespace bundy::dns;
+using namespace bundy::util;
 
 namespace {
 typedef pair<string, string> QueryParam;

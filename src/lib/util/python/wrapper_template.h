@@ -17,7 +17,7 @@
 
 #include <Python.h>
 
-namespace isc {
+namespace bundy {
 namespace @MODULE@ {
 class @CPPCLASS@;
 
@@ -51,7 +51,7 @@ PyObject* create@CPPCLASS@Object(const @CPPCLASS@& source);
 
 } // namespace python
 } // namespace @MODULE@
-} // namespace isc
+} // namespace bundy
 #endif // PYTHON_@CPPCLASS@_H
 
 // Local Variables:

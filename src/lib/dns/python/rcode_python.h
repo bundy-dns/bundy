@@ -17,7 +17,7 @@
 
 #include <Python.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 class Rcode;
 
@@ -56,7 +56,7 @@ const Rcode& PyRcode_ToRcode(const PyObject* rcode_obj);
 
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 #endif // PYTHON_RCODE_H
 
 // Local Variables:

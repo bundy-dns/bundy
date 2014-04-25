@@ -21,7 +21,7 @@
 #include <nsas/nameserver_address_store.h>
 #include <cache/resolver_cache.h>
 
-namespace isc {
+namespace bundy {
 namespace asiodns {
 
 /// \brief RTT Recorder
@@ -108,8 +108,8 @@ public:
     /// \param retries how many times we try again (0 means just send and
     ///     and return if it returs).
     RecursiveQuery(DNSServiceBase& dns_service,
-                   isc::nsas::NameserverAddressStore& nsas,
-                   isc::cache::ResolverCache& cache,
+                   bundy::nsas::NameserverAddressStore& nsas,
+                   bundy::cache::ResolverCache& cache,
                    const std::vector<std::pair<std::string, uint16_t> >&
                    upstream,
                    const std::vector<std::pair<std::string, uint16_t> >&
@@ -146,8 +146,8 @@ public:
     /// \param question The question being answered <qname/qclass/qtype>
     /// \param callback Callback object. See
     ///        \c ResolverInterface::Callback for more information
-    AbstractRunningQuery* resolve(const isc::dns::QuestionPtr& question,
-        const isc::resolve::ResolverInterface::CallbackPtr callback);
+    AbstractRunningQuery* resolve(const bundy::dns::QuestionPtr& question,
+        const bundy::resolve::ResolverInterface::CallbackPtr callback);
 
 
     /// \brief Initiates resolving for the given question.
@@ -169,9 +169,9 @@ public:
     ///         such as unit tests.
     ///         Returns NULL if the data was found internally and no actual
     ///         query was sent.
-    AbstractRunningQuery* resolve(const isc::dns::Question& question,
-                          isc::dns::MessagePtr answer_message,
-                          isc::util::OutputBufferPtr buffer,
+    AbstractRunningQuery* resolve(const bundy::dns::Question& question,
+                          bundy::dns::MessagePtr answer_message,
+                          bundy::util::OutputBufferPtr buffer,
                           DNSServer* server);
 
     /// \brief Initiates forwarding for the given query.
@@ -189,12 +189,12 @@ public:
     ///         this object should delete itself in normal circumstances,
     ///         and can normally be ignored by the caller, but a pointer
     ///         is returned for use-cases such as unit tests.
-    AbstractRunningQuery* forward(isc::dns::ConstMessagePtr query_message,
-                 isc::dns::MessagePtr answer_message,
-                 isc::util::OutputBufferPtr buffer,
+    AbstractRunningQuery* forward(bundy::dns::ConstMessagePtr query_message,
+                 bundy::dns::MessagePtr answer_message,
+                 bundy::util::OutputBufferPtr buffer,
                  DNSServer* server,
-                 isc::resolve::ResolverInterface::CallbackPtr callback =
-                     isc::resolve::ResolverInterface::CallbackPtr());
+                 bundy::resolve::ResolverInterface::CallbackPtr callback =
+                     bundy::resolve::ResolverInterface::CallbackPtr());
 
     /// \brief Set Test Server
     ///
@@ -210,8 +210,8 @@ public:
 
 private:
     DNSServiceBase& dns_service_;
-    isc::nsas::NameserverAddressStore& nsas_;
-    isc::cache::ResolverCache& cache_;
+    bundy::nsas::NameserverAddressStore& nsas_;
+    bundy::cache::ResolverCache& cache_;
     boost::shared_ptr<std::vector<std::pair<std::string, uint16_t> > >
         upstream_;
     boost::shared_ptr<std::vector<std::pair<std::string, uint16_t> > >
@@ -225,5 +225,5 @@ private:
 };
 
 }      // namespace asiodns
-}      // namespace isc
+}      // namespace bundy
 #endif // RECURSIVE_QUERY_H

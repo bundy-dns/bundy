@@ -18,7 +18,7 @@
 #include <dhcp/pkt_filter6.h>
 #include <boost/scoped_array.hpp>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// @brief A DHCPv6 packet handling class using datagram sockets.
@@ -47,10 +47,10 @@ public:
     /// group.
     ///
     /// @return A structure describing a primary and fallback socket.
-    /// @throw isc::dhcp::SocketConfigError if error occured when opening
+    /// @throw bundy::dhcp::SocketConfigError if error occured when opening
     /// or configuring a socket.
     virtual SocketInfo openSocket(const Iface& iface,
-                                  const isc::asiolink::IOAddress& addr,
+                                  const bundy::asiolink::IOAddress& addr,
                                   const uint16_t port,
                                   const bool join_multicast);
 
@@ -65,7 +65,7 @@ public:
     /// @param socket_info A structure holding socket information.
     ///
     /// @return A pointer to received message.
-    /// @throw isc::dhcp::SocketReadError if error occurred during packet
+    /// @throw bundy::dhcp::SocketReadError if error occurred during packet
     /// reception.
     virtual Pkt6Ptr receive(const SocketInfo& socket_info);
 
@@ -80,7 +80,7 @@ public:
     /// @param pkt A packet to be sent.
     ///
     /// @return A result of sending the message. It is 0 if successful.
-    /// @throw isc::dhcp::SocketWriteError if error occured when sending a
+    /// @throw bundy::dhcp::SocketWriteError if error occured when sending a
     /// packet.
     virtual int send(const Iface& iface, uint16_t sockfd,
                      const Pkt6Ptr& pkt);
@@ -92,7 +92,7 @@ private:
     boost::scoped_array<char> control_buf_;
 };
 
-} // namespace isc::dhcp
-} // namespace isc
+} // namespace bundy::dhcp
+} // namespace bundy
 
 #endif // PKT_FILTER_INET6_H

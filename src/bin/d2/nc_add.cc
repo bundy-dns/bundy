@@ -22,7 +22,7 @@
 #include <util/buffer.h>
 #include <dns/rdataclass.h>
 
-namespace isc {
+namespace bundy {
 namespace d2 {
 
 // NameAddTransaction states
@@ -40,8 +40,8 @@ NameAddTransaction(IOServicePtr& io_service,
                    DdnsDomainPtr& forward_domain,
                    DdnsDomainPtr& reverse_domain)
     : NameChangeTransaction(io_service, ncr, forward_domain, reverse_domain) {
-    if (ncr->getChangeType() != isc::dhcp_ddns::CHG_ADD) {
-        isc_throw (NameAddTransactionError,
+    if (ncr->getChangeType() != bundy::dhcp_ddns::CHG_ADD) {
+        bundy_throw (NameAddTransactionError,
                    "NameAddTransaction, request type must be CHG_ADD");
     }
 }
@@ -140,7 +140,7 @@ NameAddTransaction::readyHandler() {
         break;
     default:
         // Event is invalid.
-        isc_throw(NameAddTransactionError,
+        bundy_throw(NameAddTransactionError,
                   "Wrong event for context: " << getContextStr());
     }
 }
@@ -159,7 +159,7 @@ NameAddTransaction::selectingFwdServerHandler() {
         break;
     default:
         // Event is invalid.
-        isc_throw(NameAddTransactionError,
+        bundy_throw(NameAddTransactionError,
                   "Wrong event for context: " << getContextStr());
     }
 
@@ -279,7 +279,7 @@ NameAddTransaction::addingFwdAddrsHandler() {
 
     default:
         // Event is invalid.
-        isc_throw(NameAddTransactionError,
+        bundy_throw(NameAddTransactionError,
                   "Wrong event for context: " << getContextStr());
     }
 }
@@ -396,7 +396,7 @@ NameAddTransaction::replacingFwdAddrsHandler() {
 
     default:
         // Event is invalid.
-        isc_throw(NameAddTransactionError,
+        bundy_throw(NameAddTransactionError,
                   "Wrong event for context: " << getContextStr());
     }
 }
@@ -415,7 +415,7 @@ NameAddTransaction::selectingRevServerHandler() {
         break;
     default:
         // Event is invalid.
-        isc_throw(NameAddTransactionError,
+        bundy_throw(NameAddTransactionError,
                   "Wrong event for context: " << getContextStr());
     }
 
@@ -530,7 +530,7 @@ NameAddTransaction::replacingRevPtrsHandler() {
 
     default:
         // Event is invalid.
-        isc_throw(NameAddTransactionError,
+        bundy_throw(NameAddTransactionError,
                   "Wrong event for context: " << getContextStr());
     }
 }
@@ -546,7 +546,7 @@ NameAddTransaction::processAddOkHandler() {
         break;
     default:
         // Event is invalid.
-        isc_throw(NameAddTransactionError,
+        bundy_throw(NameAddTransactionError,
                   "Wrong event for context: " << getContextStr());
     }
 }
@@ -563,7 +563,7 @@ NameAddTransaction::processAddFailedHandler() {
         break;
     default:
         // Event is invalid.
-        isc_throw(NameAddTransactionError,
+        bundy_throw(NameAddTransactionError,
                   "Wrong event for context: " << getContextStr());
     }
 }
@@ -702,5 +702,5 @@ NameAddTransaction::buildReplaceRevPtrsRequest() {
     setDnsUpdateRequest(request);
 }
 
-} // namespace isc::d2
-} // namespace isc
+} // namespace bundy::d2
+} // namespace bundy

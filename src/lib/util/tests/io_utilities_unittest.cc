@@ -15,7 +15,7 @@
 /// \brief Test of asiolink utilties
 ///
 /// Tests the functionality of the asiolink utilities code by comparing them
-/// with the equivalent methods in isc::dns::[Input/Output]Buffer.
+/// with the equivalent methods in bundy::dns::[Input/Output]Buffer.
 
 #include <cstddef>
 
@@ -25,7 +25,7 @@
 #include <util/buffer.h>
 #include <util/io_utilities.h>
 
-using namespace isc::util;
+using namespace bundy::util;
 
 TEST(asioutil, readUint16) {
 
@@ -49,7 +49,7 @@ TEST(asioutil, readUint16) {
 
 TEST(asioutil, readUint16OutOfRange) {
     uint8_t data;
-    EXPECT_THROW(readUint16(&data, sizeof(data)), isc::OutOfRange);
+    EXPECT_THROW(readUint16(&data, sizeof(data)), bundy::OutOfRange);
 }
 
 TEST(asioutil, writeUint16) {
@@ -80,7 +80,7 @@ TEST(asioutil, writeUint16) {
 TEST(asioutil, writeUint16OutOfRange) {
     uint16_t i16 = 42;
     uint8_t data;
-    EXPECT_THROW(writeUint16(i16, &data, sizeof(data)), isc::OutOfRange);
+    EXPECT_THROW(writeUint16(i16, &data, sizeof(data)), bundy::OutOfRange);
 }
 
 // test data shared amount readUint32 and writeUint32 tests
@@ -110,7 +110,7 @@ TEST(asioutil, readUint32) {
 
 TEST(asioutil, readUint32OutOfRange) {
     uint8_t data[3];
-    EXPECT_THROW(readUint32(data, sizeof(data)), isc::OutOfRange);
+    EXPECT_THROW(readUint32(data, sizeof(data)), bundy::OutOfRange);
 }
 
 TEST(asioutil, writeUint32) {
@@ -136,5 +136,5 @@ TEST(asioutil, writeUint32) {
 TEST(asioutil, writeUint32OutOfRange) {
     uint32_t i32 = 28;
     uint8_t data[3];
-    EXPECT_THROW(writeUint32(i32, data, sizeof(data)), isc::OutOfRange);
+    EXPECT_THROW(writeUint32(i32, data, sizeof(data)), bundy::OutOfRange);
 }

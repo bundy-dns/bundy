@@ -20,6 +20,6 @@ int
 main(int argc, char* argv[])
 {
     ::testing::InitGoogleTest(&argc, argv);         // Initialize Google test
-    isc::log::initLogger();
-    return (isc::util::unittests::run_all());
+    bundy::log::initLogger();
+    return (bundy::util::unittests::run_all());
 }

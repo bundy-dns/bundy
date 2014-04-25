@@ -22,7 +22,7 @@
 
 #include <dns/messagerenderer.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 class OldMessageRenderer : public AbstractMessageRenderer {

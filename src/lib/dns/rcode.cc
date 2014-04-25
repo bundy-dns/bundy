@@ -22,7 +22,7 @@
 
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace {
 // This diagram shows the wire-format representation of the 12-bit extended
@@ -63,7 +63,7 @@ const char* const rcodetext[] = {
 
 Rcode::Rcode(const uint16_t code) : code_(code) {
     if (code_ > MAX_RCODE) {
-        isc_throw(OutOfRange, "Rcode is too large to construct");
+        bundy_throw(OutOfRange, "Rcode is too large to construct");
     }
 }
 
@@ -71,7 +71,7 @@ Rcode::Rcode(const uint8_t code, const uint8_t extended_code) :
     code_((extended_code << EXTRCODE_SHIFT) | (code & RCODE_MASK))
 {
     if (code > RCODE_MASK) {
-        isc_throw(OutOfRange,
+        bundy_throw(OutOfRange,
                   "Base Rcode is too large to construct: "
                   << static_cast<unsigned int>(code));
     }

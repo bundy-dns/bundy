@@ -25,9 +25,9 @@
 #include <string.h>
 
 using namespace std;
-using namespace isc::util;
+using namespace bundy::util;
 
-// BEGIN_ISC_NAMESPACE
+// BEGIN_BUNDY_NAMESPACE
 // BEGIN_RDATA_NAMESPACE
 
 /// \brief Constructor.
@@ -76,7 +76,7 @@ OPT::OPT() :
 OPT::OPT(const std::string&) :
     impl_(NULL)
 {
-    isc_throw(InvalidRdataText, "OPT RR cannot be constructed from text");
+    bundy_throw(InvalidRdataText, "OPT RR cannot be constructed from text");
 }
 
 /// \brief Constructor with a context of MasterLexer.
@@ -88,7 +88,7 @@ OPT::OPT(MasterLexer&, const Name*,
          MasterLoader::Options, MasterLoaderCallbacks&) :
     impl_(NULL)
 {
-    isc_throw(InvalidRdataText, "OPT RR cannot be constructed from text");
+    bundy_throw(InvalidRdataText, "OPT RR cannot be constructed from text");
 }
 
 OPT::OPT(InputBuffer& buffer, size_t rdata_len) :
@@ -102,7 +102,7 @@ OPT::OPT(InputBuffer& buffer, size_t rdata_len) :
         }
 
         if (rdata_len < 4) {
-            isc_throw(InvalidRdataLength,
+            bundy_throw(InvalidRdataLength,
                       "Pseudo OPT RR record too short: "
                       << rdata_len << " bytes");
         }
@@ -114,14 +114,14 @@ OPT::OPT(InputBuffer& buffer, size_t rdata_len) :
         if (static_cast<uint16_t>(impl_ptr->rdlength_ + option_length) <
             impl_ptr->rdlength_)
         {
-            isc_throw(InvalidRdataText,
+            bundy_throw(InvalidRdataText,
                       "Option length " << option_length
                       << " would overflow OPT RR RDLEN (currently "
                       << impl_ptr->rdlength_ << ").");
         }
 
         if (rdata_len < option_length) {
-            isc_throw(InvalidRdataLength, "Corrupt pseudo OPT RR record");
+            bundy_throw(InvalidRdataLength, "Corrupt pseudo OPT RR record");
         }
 
         boost::shared_ptr<std::vector<uint8_t> >
@@ -159,7 +159,7 @@ OPT::~OPT() {
 
 std::string
 OPT::toText() const {
-    isc_throw(isc::InvalidOperation,
+    bundy_throw(bundy::InvalidOperation,
               "OPT RRs do not have a presentation format");
 }
 
@@ -189,7 +189,7 @@ OPT::toWire(AbstractMessageRenderer& renderer) const {
 
 int
 OPT::compare(const Rdata&) const {
-    isc_throw(isc::InvalidOperation,
+    bundy_throw(bundy::InvalidOperation,
               "It is meaningless to compare a set of OPT pseudo RRs; "
               "they have unspecified order");
     return (0);
@@ -203,7 +203,7 @@ OPT::appendPseudoRR(uint16_t code, const uint8_t* data, uint16_t length) {
     if (static_cast<uint16_t>(impl_->rdlength_ + length) <
         impl_->rdlength_)
     {
-        isc_throw(isc::InvalidParameter,
+        bundy_throw(bundy::InvalidParameter,
                   "Option length " << length
                   << " would overflow OPT RR RDLEN (currently "
                   << impl_->rdlength_ << ").");
@@ -222,4 +222,4 @@ OPT::getPseudoRRs() const {
 }
 
 // END_RDATA_NAMESPACE
-// END_ISC_NAMESPACE
+// END_BUNDY_NAMESPACE

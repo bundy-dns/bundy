@@ -1,5 +1,5 @@
 PYCOVERAGE_RUN=@PYCOVERAGE_RUN@
-PYTESTS = b10-cmdctl-usermgr_test.py
+PYTESTS = bundy-cmdctl-usermgr_test.py
 EXTRA_DIST = $(PYTESTS)
 
 CLEANFILES = *.csv
@@ -17,6 +17,6 @@ endif
 	PYTHONPATH=$(COMMON_PYTHON_PATH):$(abs_top_builddir)/src/bin/cmdctl \
 	CMDCTL_BUILD_PATH=$(abs_top_builddir)/src/bin/cmdctl \
 	CMDCTL_SRC_PATH=$(abs_top_srcdir)/src/bin/cmdctl \
-	B10_LOCKFILE_DIR_FROM_BUILD=$(abs_top_builddir) \
+	BUNDY_LOCKFILE_DIR_FROM_BUILD=$(abs_top_builddir) \
 	$(PYCOVERAGE_RUN) $(abs_srcdir)/$$pytest || exit ; \
 	done

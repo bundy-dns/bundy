@@ -19,7 +19,7 @@
 
 #include "localized_option.h"
 
-namespace isc {
+namespace bundy {
 namespace perfdhcp {
 
 /// \brief Read and write raw data to DHCP packets.
@@ -75,8 +75,8 @@ public:
     ///
     /// This method handles the parsing of packets that have non-default
     /// options or transaction ID offsets. The client class has to use
-    /// \ref isc::dhcp::Pkt6::addOption to specify which options to parse.
-    /// Each option should be of the \ref isc::perfdhcp::LocalizedOption
+    /// \ref bundy::dhcp::Pkt6::addOption to specify which options to parse.
+    /// Each option should be of the \ref bundy::perfdhcp::LocalizedOption
     /// type with the offset value specified.
     ///
     /// \param universe universe used, V4 or V6
@@ -133,7 +133,7 @@ private:
     /// \param out_buffer output buffer with "packed" options.
     /// \param options options collection with actual data and offsets.
     ///
-    /// \throw isc::Unexpected if options update failed.
+    /// \throw bundy::Unexpected if options update failed.
     static void packOptions(const dhcp::OptionBuffer& in_buffer,
                             const dhcp::OptionCollection& options,
                             util::OutputBuffer& out_buffer);
@@ -157,13 +157,13 @@ private:
     /// \param options oprions collection with their offsets
     /// in input buffer specified.
     ///
-    /// \throw isc::Unexpected if options unpack failed.
+    /// \throw bundy::Unexpected if options unpack failed.
     static void unpackOptions(const dhcp::OptionBuffer& in_buffer,
                               const dhcp::OptionCollection& options);
 
 };
 
 } // namespace perfdhcp
-} // namespace isc
+} // namespace bundy
 
 #endif // PKT_TRANSFORM_H

@@ -26,9 +26,9 @@
 #include <sstream>
 
 using namespace std;
-using namespace isc;
-using namespace isc::config;
-using namespace isc::d2;
+using namespace bundy;
+using namespace bundy::config;
+using namespace bundy::d2;
 using namespace boost::posix_time;
 
 namespace {
@@ -66,7 +66,7 @@ public:
 
     /// @brief Constructor
     D2ProcessTest() : D2Process("d2test",
-                                IOServicePtr(new isc::asiolink::IOService())) {
+                                IOServicePtr(new bundy::asiolink::IOService())) {
     }
 
     /// @brief Destructor
@@ -75,12 +75,12 @@ public:
 
     /// @brief Callback that will invoke shutdown method.
     void genShutdownCallback() {
-        shutdown(isc::data::ConstElementPtr());
+        shutdown(bundy::data::ConstElementPtr());
     }
 
     /// @brief Callback that throws an exception.
     void genFatalErrorCallback() {
-        isc_throw (DProcessBaseError, "simulated fatal error");
+        bundy_throw (DProcessBaseError, "simulated fatal error");
     }
 
     /// @brief Reconfigures and starts the queue manager given a configuration.
@@ -100,9 +100,9 @@ public:
             return res;
         }
 
-        isc::data::ConstElementPtr answer = configure(config_set_);
-        isc::data::ConstElementPtr comment;
-        comment = isc::config::parseAnswer(rcode, answer);
+        bundy::data::ConstElementPtr answer = configure(config_set_);
+        bundy::data::ConstElementPtr comment;
+        comment = bundy::config::parseAnswer(rcode, answer);
 
         if (rcode) {
             return (::testing::AssertionFailure(::testing::Message() <<
@@ -148,7 +148,7 @@ TEST(D2Process, construction) {
     EXPECT_THROW (D2Process("TestProcess", lcl_io_service), DProcessBaseError);
 
     // Verify that the constructor succeeds with a valid io_service
-    lcl_io_service.reset(new isc::asiolink::IOService());
+    lcl_io_service.reset(new bundy::asiolink::IOService());
     ASSERT_NO_THROW (D2Process("TestProcess", lcl_io_service));
 
     // Verify that the configuration, queue, and update managers
@@ -187,7 +187,7 @@ TEST_F(D2ProcessTest, configure) {
     ASSERT_TRUE(fromJSON(valid_d2_config));
 
     // Invoke configure() with a valid D2 configuration.
-    isc::data::ConstElementPtr answer = configure(config_set_);
+    bundy::data::ConstElementPtr answer = configure(config_set_);
 
     // Verify that configure result is success and reconfigure queue manager
     // flag is true.
@@ -366,7 +366,7 @@ TEST_F(D2ProcessTest, badConfigureRecovery) {
 
     // Invoke configure() with a valid config that contains an unusable IP
     ASSERT_TRUE(fromJSON(bad_ip_d2_config));
-    isc::data::ConstElementPtr answer = configure(config_set_);
+    bundy::data::ConstElementPtr answer = configure(config_set_);
 
     // Verify that configure result is success and reconfigure queue manager
     // flag is true.
@@ -407,8 +407,8 @@ TEST_F(D2ProcessTest, command) {
     // return a failure response.
     int rcode = -1;
     string args = "{ \"arg1\": 77 } ";
-    isc::data::ElementPtr json = isc::data::Element::fromJSON(args);
-    isc::data::ConstElementPtr answer = command("bogus_command", json);
+    bundy::data::ElementPtr json = bundy::data::Element::fromJSON(args);
+    bundy::data::ConstElementPtr answer = command("bogus_command", json);
     parseAnswer(rcode, answer);
     EXPECT_EQ(COMMAND_INVALID, rcode);
 }
@@ -420,8 +420,8 @@ TEST_F(D2ProcessTest, command) {
 /// success response; and for invalid values: sets the shutdown flag to false
 /// and returns a failure response.
 TEST_F(D2ProcessTest, shutdownArgs) {
-    isc::data::ElementPtr args;
-    isc::data::ConstElementPtr answer;
+    bundy::data::ElementPtr args;
+    bundy::data::ConstElementPtr answer;
     const char* default_args = "{}";
     const char* normal_args =  "{ \"type\" : \"normal\" }";
     const char* drain_args = "{ \"type\" : \"drain_first\" }";
@@ -429,35 +429,35 @@ TEST_F(D2ProcessTest, shutdownArgs) {
     const char* bogus_args = "{ \"type\" : \"bogus\" }";
 
     // Verify defaulting to SD_NORMAL if no argument is given.
-    ASSERT_NO_THROW(args = isc::data::Element::fromJSON(default_args));
+    ASSERT_NO_THROW(args = bundy::data::Element::fromJSON(default_args));
     EXPECT_NO_THROW(answer = shutdown(args));
     ASSERT_TRUE(checkAnswer(answer, 0));
     EXPECT_EQ(SD_NORMAL, getShutdownType());
     EXPECT_TRUE(shouldShutdown());
 
     // Verify argument value "normal".
-    ASSERT_NO_THROW(args = isc::data::Element::fromJSON(normal_args));
+    ASSERT_NO_THROW(args = bundy::data::Element::fromJSON(normal_args));
     EXPECT_NO_THROW(answer = shutdown(args));
     ASSERT_TRUE(checkAnswer(answer, 0));
     EXPECT_EQ(SD_NORMAL, getShutdownType());
     EXPECT_TRUE(shouldShutdown());
 
     // Verify argument value "drain_first".
-    ASSERT_NO_THROW(args = isc::data::Element::fromJSON(drain_args));
+    ASSERT_NO_THROW(args = bundy::data::Element::fromJSON(drain_args));
     EXPECT_NO_THROW(answer = shutdown(args));
     ASSERT_TRUE(checkAnswer(answer, 0));
     EXPECT_EQ(SD_DRAIN_FIRST, getShutdownType());
     EXPECT_TRUE(shouldShutdown());
 
     // Verify argument value "now".
-    ASSERT_NO_THROW(args = isc::data::Element::fromJSON(now_args));
+    ASSERT_NO_THROW(args = bundy::data::Element::fromJSON(now_args));
     EXPECT_NO_THROW(answer = shutdown(args));
     ASSERT_TRUE(checkAnswer(answer, 0));
     EXPECT_EQ(SD_NOW, getShutdownType());
     EXPECT_TRUE(shouldShutdown());
 
     // Verify correct handling of an invalid value.
-    ASSERT_NO_THROW(args = isc::data::Element::fromJSON(bogus_args));
+    ASSERT_NO_THROW(args = bundy::data::Element::fromJSON(bogus_args));
     EXPECT_NO_THROW(answer = shutdown(args));
     ASSERT_TRUE(checkAnswer(answer, 1));
     EXPECT_FALSE(shouldShutdown());
@@ -558,7 +558,7 @@ TEST_F(D2ProcessTest, canShutdown) {
 TEST_F(D2ProcessTest, normalShutdown) {
     // Use an asiolink IntervalTimer and callback to generate the
     // shutdown invocation. (Note IntervalTimer setup is in milliseconds).
-    isc::asiolink::IntervalTimer timer(*getIoService());
+    bundy::asiolink::IntervalTimer timer(*getIoService());
     timer.setup(boost::bind(&D2ProcessTest::genShutdownCallback, this),
                 2 * 1000);
 
@@ -583,7 +583,7 @@ TEST_F(D2ProcessTest, normalShutdown) {
 TEST_F(D2ProcessTest, fatalErrorShutdown) {
     // Use an asiolink IntervalTimer and callback to generate the
     // the exception.  (Note IntervalTimer setup is in milliseconds).
-    isc::asiolink::IntervalTimer timer(*getIoService());
+    bundy::asiolink::IntervalTimer timer(*getIoService());
     timer.setup(boost::bind(&D2ProcessTest::genFatalErrorCallback, this),
                 2 * 1000);
 

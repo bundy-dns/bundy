@@ -22,7 +22,7 @@ a constant and strips the values.
 The purpose is just to save some work with keeping both the source and
 header. The source syntax must be limited already, because it's used to
 generate the python module (by the
-lib/python/isc/util/pythonize_constants.py script).
+lib/python/bundy/util/pythonize_constants.py script).
 '''
 
 import sys
@@ -45,8 +45,8 @@ with open(filename_in) as file_in, open(filename_out, "w") as file_out:
         if preproc.match(line):
             # There's only one preprocessor line in the .cc file. We abuse
             # that to position the top part of the header.
-            file_out.write("#ifndef BIND10_COMMON_DEFS_H\n" +
-                           "#define BIND10_COMMON_DEFS_H\n" +
+            file_out.write("#ifndef BUNDY_COMMON_DEFS_H\n" +
+                           "#define BUNDY_COMMON_DEFS_H\n" +
                            "\n" +
                            "// \\file " + filename_out + "\n" +
 '''// \\brief Common shared constants\n

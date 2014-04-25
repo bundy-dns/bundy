@@ -38,13 +38,13 @@
 #include <vector>
 #include <string>
 
-using namespace isc::dns;
-using namespace isc::dns::rdata;
-using namespace isc::datasrc::memory;
-using namespace isc::testutils;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
+using namespace bundy::datasrc::memory;
+using namespace bundy::testutils;
 using std::string;
 using std::vector;
-using isc::datasrc::memory::detail::SegmentObjectHolder;
+using bundy::datasrc::memory::detail::SegmentObjectHolder;
 using boost::lexical_cast;
 
 namespace {
@@ -69,7 +69,7 @@ protected:
     }
 
     // Helper for checking common cases against both versions of create()
-    typedef boost::function<RdataSet*(isc::util::MemorySegment&, RdataEncoder&,
+    typedef boost::function<RdataSet*(bundy::util::MemorySegment&, RdataEncoder&,
                                       ConstRRsetPtr, ConstRRsetPtr)> CreateFn;
     void checkCreateManyRRs(CreateFn create_fn, size_t n_old_rdata);
     void checkCreateManyRRSIGs(CreateFn create_fn, size_t n_old_sig);
@@ -77,7 +77,7 @@ protected:
 
     const RRClass rrclass;
     ConstRRsetPtr a_rrset_, rrsig_rrset_;
-    isc::util::MemorySegmentLocal mem_sgmt_;
+    bundy::util::MemorySegmentLocal mem_sgmt_;
     RdataEncoder encoder_;
 
     // These are placeholder for default expected values used in checkRdataSet.
@@ -89,7 +89,7 @@ protected:
 // RRTTL object.
 RRTTL
 restoreTTL(const void* ttl_data) {
-    isc::util::InputBuffer b(ttl_data, sizeof(uint32_t));
+    bundy::util::InputBuffer b(ttl_data, sizeof(uint32_t));
     return (RRTTL(b));
 }
 
@@ -102,7 +102,7 @@ checkData(const void* data, size_t size, const RRType* rrtype,
 {
     ASSERT_TRUE(*it != it_end); // shouldn't reach the end yet
 
-    isc::util::InputBuffer b(data, size);
+    bundy::util::InputBuffer b(data, size);
     const RdataPtr& actual(createRdata(*rrtype, RRClass::IN(), b, size));
     const RdataPtr& expected(createRdata(*rrtype, RRClass::IN(), **it));
     EXPECT_EQ(0, actual->compare(*expected)) << actual->toText() <<
@@ -304,7 +304,7 @@ TEST_F(RdataSetTest, subtract) {
     // It throws if no Rdata passed.
     EXPECT_THROW(RdataSet::subtract(mem_sgmt_, encoder_, null_rrset,
                                     null_rrset, *holder_old.get()),
-                 isc::BadValue);
+                 bundy::BadValue);
 
     // If we remove everything, it returns NULL
     EXPECT_EQ(NULL, RdataSet::subtract(mem_sgmt_, encoder_, a_rrsets,
@@ -482,12 +482,12 @@ getRRSIGWithRdataCount(size_t sig_count) {
         rdata::createRdata(RRType::RRSIG(), RRClass::IN(),
                            "A 5 2 3600 20120814220826 20120715220826 1234 "
                            "example.com. FAKE");
-    isc::util::OutputBuffer ob(0);
+    bundy::util::OutputBuffer ob(0);
     rrsig_base->toWire(ob);
     for (size_t i = 0; i < sig_count; ++i) {
         ob.writeUint16At((i >> 16) & 0xffff, 4);
         ob.writeUint16At(i & 0xffff, 6);
-        isc::util::InputBuffer ib(ob.getData(), ob.getLength());
+        bundy::util::InputBuffer ib(ob.getData(), ob.getLength());
         rrset->addRdata(rdata::createRdata(RRType::RRSIG(), RRClass::IN(),
                                            ib, ib.getLength()));
     }
@@ -571,17 +571,17 @@ void
 RdataSetTest::checkBadCreate(CreateFn create_fn) {
     // Neither the RRset nor RRSIG RRset is given
     EXPECT_THROW(create_fn(mem_sgmt_, encoder_, ConstRRsetPtr(),
-                           ConstRRsetPtr()), isc::BadValue);
+                           ConstRRsetPtr()), bundy::BadValue);
 
     // Empty RRset (An RRset without RDATA)
     ConstRRsetPtr empty_rrset(new RRset(Name("example.com"), RRClass::IN(),
                                         RRType::A(), RRTTL(3600)));
     EXPECT_THROW(create_fn(mem_sgmt_, encoder_, empty_rrset,
-                           ConstRRsetPtr()), isc::BadValue);
+                           ConstRRsetPtr()), bundy::BadValue);
     ConstRRsetPtr empty_rrsig(new RRset(Name("example.com"), RRClass::IN(),
                                         RRType::RRSIG(), RRTTL(3600)));
     EXPECT_THROW(create_fn(mem_sgmt_, encoder_, ConstRRsetPtr(),
-                           empty_rrsig), isc::BadValue);
+                           empty_rrsig), bundy::BadValue);
 
     // The RRset type and RRSIG's type covered don't match
     ConstRRsetPtr bad_rrsig(textToRRset(
@@ -589,15 +589,15 @@ RdataSetTest::checkBadCreate(CreateFn create_fn) {
                                 "NS 5 2 3600 20120814220826 20120715220826 "
                                 "1234 example.com. FAKE"));
     EXPECT_THROW(create_fn(mem_sgmt_, encoder_, a_rrset_, bad_rrsig),
-                 isc::BadValue);
+                 bundy::BadValue);
 
     // Pass non RRSIG for the sig parameter
     EXPECT_THROW(create_fn(mem_sgmt_, encoder_, a_rrset_, a_rrset_),
-                 isc::BadValue);
+                 bundy::BadValue);
 
     // Pass RRSIG for normal RRset (the RdataEncoder will catch this and throw)
     EXPECT_THROW(create_fn(mem_sgmt_, encoder_, rrsig_rrset_, rrsig_rrset_),
-                 isc::BadValue);
+                 bundy::BadValue);
 
     // RR class doesn't match between RRset and RRSIG
     ConstRRsetPtr badclass_rrsig(textToRRset(
@@ -606,7 +606,7 @@ RdataSetTest::checkBadCreate(CreateFn create_fn) {
                                      "20120715220826 1234 example.com. FAKE",
                                      RRClass::CH()));
     EXPECT_THROW(create_fn(mem_sgmt_, encoder_, a_rrset_, badclass_rrsig),
-                 isc::BadValue);
+                 bundy::BadValue);
 }
 
 TEST_F(RdataSetTest, badCreate) {
@@ -628,10 +628,10 @@ TEST_F(RdataSetTest, badMergeCreate) {
     // Type mismatch: this case is specific to the merge create.
     EXPECT_THROW(RdataSet::create(mem_sgmt_, encoder_, a_rrset_,
                                   ConstRRsetPtr(), holder.get()),
-                 isc::BadValue);
+                 bundy::BadValue);
     EXPECT_THROW(RdataSet::create(mem_sgmt_, encoder_, ConstRRsetPtr(),
                                   rrsig_rrset_, holder.get()),
-                 isc::BadValue);
+                 bundy::BadValue);
 }
 
 TEST_F(RdataSetTest, varyingTTL) {
@@ -723,32 +723,32 @@ TEST_F(RdataSetTest, badParams) {
     holder.set(RdataSet::create(mem_sgmt_, encoder_, a_rrset, sig_rrset));
     // Empty RRset as rdata
     EXPECT_THROW(RdataSet::create(mem_sgmt_, encoder_, empty_rrset, sig_rrset),
-                 isc::BadValue);
+                 bundy::BadValue);
     // The same for rrsig
     EXPECT_THROW(RdataSet::create(mem_sgmt_, encoder_, a_rrset, empty_rrsig),
-                 isc::BadValue);
+                 bundy::BadValue);
     // Mismatched type
     EXPECT_THROW(RdataSet::create(mem_sgmt_, encoder_, empty_rrset, a_rrset),
-                 isc::BadValue);
+                 bundy::BadValue);
     // Similar for subtract
     EXPECT_THROW(RdataSet::subtract(mem_sgmt_, encoder_, empty_rrset,
                                     sig_rrset, *holder.get()),
-                 isc::BadValue);
+                 bundy::BadValue);
     EXPECT_THROW(RdataSet::subtract(mem_sgmt_, encoder_, a_rrset, empty_rrset,
                                     *holder.get()),
-                 isc::BadValue);
+                 bundy::BadValue);
     // Class mismatch
     EXPECT_THROW(RdataSet::create(mem_sgmt_, encoder_, a_rrset, sig_rrset_ch),
-                 isc::BadValue);
+                 bundy::BadValue);
     EXPECT_THROW(RdataSet::subtract(mem_sgmt_, encoder_, a_rrset,
                                     sig_rrset_ch, *holder.get()),
-                 isc::BadValue);
+                 bundy::BadValue);
     // Bad rrtype
     EXPECT_THROW(RdataSet::create(mem_sgmt_, encoder_, aaaa_rrset,
                                   ConstRRsetPtr(), holder.get()),
-                 isc::BadValue);
+                 bundy::BadValue);
     EXPECT_THROW(RdataSet::subtract(mem_sgmt_, encoder_, aaaa_rrset,
                                     ConstRRsetPtr(), *holder.get()),
-                 isc::BadValue);
+                 bundy::BadValue);
 }
 }

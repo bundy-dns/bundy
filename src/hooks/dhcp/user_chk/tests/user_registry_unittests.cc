@@ -81,7 +81,7 @@ TEST(UserRegistry, userBasics) {
     EXPECT_FALSE(found_user);
 }
 
-/// @brief Tests finding users by isc::dhcp::HWaddr instance.
+/// @brief Tests finding users by bundy::dhcp::HWaddr instance.
 TEST(UserRegistry, findByHWAddr) {
     // Create the registry.
     UserRegistryPtr reg;
@@ -93,7 +93,7 @@ TEST(UserRegistry, findByHWAddr) {
     ASSERT_NO_THROW(reg->addUser(user));
 
     // Make a HWAddr instance using the same id value.
-    isc::dhcp::HWAddr hwaddr(user->getUserId().getId(), isc::dhcp::HTYPE_ETHER);
+    bundy::dhcp::HWAddr hwaddr(user->getUserId().getId(), bundy::dhcp::HTYPE_ETHER);
 
     // Verify user can be found by HWAddr.
     UserPtr found_user;
@@ -102,7 +102,7 @@ TEST(UserRegistry, findByHWAddr) {
     EXPECT_EQ(found_user->getUserId(), user->getUserId());
 }
 
-/// @brief Tests finding users by isc::dhcp::DUID instance.
+/// @brief Tests finding users by bundy::dhcp::DUID instance.
 TEST(UserRegistry, findByDUID) {
     // Create the registry.
     UserRegistryPtr reg;
@@ -114,7 +114,7 @@ TEST(UserRegistry, findByDUID) {
     ASSERT_NO_THROW(reg->addUser(user));
 
     // Make a DUID instance using the same id value.
-    isc::dhcp::DUID duid(user->getUserId().getId());
+    bundy::dhcp::DUID duid(user->getUserId().getId());
 
     // Verify user can be found by DUID.
     UserPtr found_user;

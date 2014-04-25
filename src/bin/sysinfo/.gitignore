@@ -1,4 +1,4 @@
-/isc-sysinfo
-/isc-sysinfo.1
+/bundy-sysinfo
+/bundy-sysinfo.1
 /run_sysinfo.sh
 /sysinfo.py

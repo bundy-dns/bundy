@@ -15,7 +15,7 @@
 #include "sockcreator.h"
 #include <unistd.h>
 
-using namespace isc::socket_creator;
+using namespace bundy::socket_creator;
 
 int
 main() {
@@ -24,7 +24,7 @@ main() {
      * but ability to bind ports? It would be nice.
      */
     try {
-        run(STDIN_FILENO, STDOUT_FILENO, getSock, isc::util::io::send_fd, close);
+        run(STDIN_FILENO, STDOUT_FILENO, getSock, bundy::util::io::send_fd, close);
     } catch (const SocketCreatorError& ec) {
         return (ec.getExitCode());
     }

@@ -19,7 +19,7 @@
 
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace util {
 namespace str {
 
@@ -136,7 +136,7 @@ getToken(std::istringstream& iss) {
     string token;
     iss >> token;
     if (iss.bad() || iss.fail()) {
-        isc_throw(StringTokenError, "could not read token from string");
+        bundy_throw(StringTokenError, "could not read token from string");
     }
     return (token);
 }
@@ -144,4 +144,4 @@ getToken(std::istringstream& iss) {
 
 } // namespace str
 } // namespace util
-} // namespace isc
+} // namespace bundy

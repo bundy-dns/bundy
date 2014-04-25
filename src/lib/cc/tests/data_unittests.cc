@@ -19,7 +19,7 @@
 
 #include <cc/data.h>
 
-using namespace isc::data;
+using namespace bundy::data;
 
 #include <sstream>
 #include <iostream>
@@ -121,7 +121,7 @@ TEST(Element, from_and_to_json) {
     // some parse errors
     try {
         Element::fromJSON("{1}");
-    } catch (const isc::data::JSONError& pe) {
+    } catch (const bundy::data::JSONError& pe) {
         std::string s = std::string(pe.what());
         EXPECT_EQ("String expected in <string>:1:3", s);
     }
@@ -146,7 +146,7 @@ TEST(Element, from_and_to_json) {
 
 
     BOOST_FOREACH(std::string s, sv) {
-        EXPECT_THROW(el = Element::fromJSON(s), isc::data::JSONError);
+        EXPECT_THROW(el = Element::fromJSON(s), bundy::data::JSONError);
     }
 
     // some json specific format tests, here the str() output is
@@ -658,24 +658,24 @@ TEST(Element, to_and_from_wire) {
     EXPECT_EQ("1", Element::fromWire(ss, 1)->str());
 
     // Some malformed JSON input
-    EXPECT_THROW(Element::fromJSON("{ "), isc::data::JSONError);
-    EXPECT_THROW(Element::fromJSON("{ \"a\" "), isc::data::JSONError);
-    EXPECT_THROW(Element::fromJSON("{ \"a\": "), isc::data::JSONError);
-    EXPECT_THROW(Element::fromJSON("{ \"a\": \"b\""), isc::data::JSONError);
-    EXPECT_THROW(Element::fromJSON("{ \"a\": {"), isc::data::JSONError);
-    EXPECT_THROW(Element::fromJSON("{ \"a\": {}"), isc::data::JSONError);
-    EXPECT_THROW(Element::fromJSON("{ \"a\": []"), isc::data::JSONError);
-    EXPECT_THROW(Element::fromJSON("{ \"a\": [ }"), isc::data::JSONError);
-    EXPECT_THROW(Element::fromJSON("{\":"), isc::data::JSONError);
-    EXPECT_THROW(Element::fromJSON("]"), isc::data::JSONError);
-    EXPECT_THROW(Element::fromJSON("[ 1, 2, }"), isc::data::JSONError);
-    EXPECT_THROW(Element::fromJSON("[ 1, 2, {}"), isc::data::JSONError);
-    EXPECT_THROW(Element::fromJSON("[ 1, 2, { ]"), isc::data::JSONError);
-    EXPECT_THROW(Element::fromJSON("[ "), isc::data::JSONError);
-    EXPECT_THROW(Element::fromJSON("{{}}"), isc::data::JSONError);
-    EXPECT_THROW(Element::fromJSON("{[]}"), isc::data::JSONError);
-    EXPECT_THROW(Element::fromJSON("{ \"a\", \"b\" }"), isc::data::JSONError);
-    EXPECT_THROW(Element::fromJSON("[ \"a\": \"b\" ]"), isc::data::JSONError);
+    EXPECT_THROW(Element::fromJSON("{ "), bundy::data::JSONError);
+    EXPECT_THROW(Element::fromJSON("{ \"a\" "), bundy::data::JSONError);
+    EXPECT_THROW(Element::fromJSON("{ \"a\": "), bundy::data::JSONError);
+    EXPECT_THROW(Element::fromJSON("{ \"a\": \"b\""), bundy::data::JSONError);
+    EXPECT_THROW(Element::fromJSON("{ \"a\": {"), bundy::data::JSONError);
+    EXPECT_THROW(Element::fromJSON("{ \"a\": {}"), bundy::data::JSONError);
+    EXPECT_THROW(Element::fromJSON("{ \"a\": []"), bundy::data::JSONError);
+    EXPECT_THROW(Element::fromJSON("{ \"a\": [ }"), bundy::data::JSONError);
+    EXPECT_THROW(Element::fromJSON("{\":"), bundy::data::JSONError);
+    EXPECT_THROW(Element::fromJSON("]"), bundy::data::JSONError);
+    EXPECT_THROW(Element::fromJSON("[ 1, 2, }"), bundy::data::JSONError);
+    EXPECT_THROW(Element::fromJSON("[ 1, 2, {}"), bundy::data::JSONError);
+    EXPECT_THROW(Element::fromJSON("[ 1, 2, { ]"), bundy::data::JSONError);
+    EXPECT_THROW(Element::fromJSON("[ "), bundy::data::JSONError);
+    EXPECT_THROW(Element::fromJSON("{{}}"), bundy::data::JSONError);
+    EXPECT_THROW(Element::fromJSON("{[]}"), bundy::data::JSONError);
+    EXPECT_THROW(Element::fromJSON("{ \"a\", \"b\" }"), bundy::data::JSONError);
+    EXPECT_THROW(Element::fromJSON("[ \"a\": \"b\" ]"), bundy::data::JSONError);
 }
 
 ConstElementPtr

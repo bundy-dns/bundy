@@ -35,11 +35,11 @@
 #include <dns/name_internal.h>
 
 using namespace std;
-using namespace isc::util;
-using namespace isc::util::encode;
-using namespace isc::util::hash;
-using namespace isc::dns;
-using namespace isc::dns::rdata;
+using namespace bundy::util;
+using namespace bundy::util::encode;
+using namespace bundy::util::hash;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
 
 namespace {
 
@@ -66,7 +66,7 @@ public:
         digest_(SHA1_HASHSIZE), obuf_(Name::MAX_WIRE)
     {
         if (algorithm_ != NSEC3_HASH_SHA1) {
-            isc_throw(UnknownNSEC3HashAlgorithm, "Unknown NSEC3 algorithm: " <<
+            bundy_throw(UnknownNSEC3HashAlgorithm, "Unknown NSEC3 algorithm: " <<
                       static_cast<unsigned int>(algorithm_));
         }
 
@@ -137,7 +137,7 @@ NSEC3HashRFC5155::calculateForWiredata(const uint8_t* data,
 
         *p2++ = *p1++;
         while (len--) {
-            *p2++ = isc::dns::name::internal::maptolower[*p1++];
+            *p2++ = bundy::dns::name::internal::maptolower[*p1++];
         }
     }
 
@@ -215,7 +215,7 @@ getNSEC3HashCreator() {
 
 } // end of unnamed namespace
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 NSEC3Hash*
@@ -266,4 +266,4 @@ setNSEC3HashCreator(const NSEC3HashCreator* new_creator) {
 }
 
 } // namespace dns
-} // namespace isc
+} // namespace bundy

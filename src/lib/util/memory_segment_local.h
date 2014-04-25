@@ -20,7 +20,7 @@
 #include <string>
 #include <map>
 
-namespace isc {
+namespace bundy {
 namespace util {
 
 /// \brief malloc/free based Memory Segment class
@@ -51,7 +51,7 @@ public:
 
     /// \brief Free/release a segment of memory.
     ///
-    /// This method may throw <code>isc::OutOfRange</code> if \c size is
+    /// This method may throw <code>bundy::OutOfRange</code> if \c size is
     /// not equal to the originally allocated size.
     ///
     /// \param ptr Pointer to the block of memory to free/release. This
@@ -99,7 +99,7 @@ private:
 };
 
 } // namespace util
-} // namespace isc
+} // namespace bundy
 
 #endif // MEMORY_SEGMENT_LOCAL_H
 

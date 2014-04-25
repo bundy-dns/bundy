@@ -38,11 +38,11 @@
 ///    (Make sure that the packet is expanded in the view. The text file will
 ///    contain whatever expansion level you have in the graphical tree.)
 
-using namespace isc::dhcp;
-using namespace isc::asiolink;
+using namespace bundy::dhcp;
+using namespace bundy::asiolink;
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace test {
 
 void Dhcpv6SrvTest::captureSetDefaultFields(const Pkt6Ptr& pkt) {
@@ -96,7 +96,7 @@ Pkt6Ptr Dhcpv6SrvTest::captureRelayedSolicit() {
 
     // Decode the hex string and store it in bin (which happens
     // to be OptionBuffer format)
-    isc::util::encode::decodeHex(hex_string, bin);
+    bundy::util::encode::decodeHex(hex_string, bin);
 
     Pkt6Ptr pkt(new Pkt6(&bin[0], bin.size()));
     captureSetDefaultFields(pkt);
@@ -105,7 +105,7 @@ Pkt6Ptr Dhcpv6SrvTest::captureRelayedSolicit() {
 }
 
 /// returns a buffer with relayed SOLICIT (from DOCSIS3.0 cable modem)
-Pkt6Ptr isc::test::Dhcpv6SrvTest::captureDocsisRelayedSolicit() {
+Pkt6Ptr bundy::test::Dhcpv6SrvTest::captureDocsisRelayedSolicit() {
 
     // This is an actual DOCSIS packet
     // RELAY-FORW (12)
@@ -158,7 +158,7 @@ Pkt6Ptr isc::test::Dhcpv6SrvTest::captureDocsisRelayedSolicit() {
 
     // Decode the hex string and store it in bin (which happens
     // to be OptionBuffer format)
-    isc::util::encode::decodeHex(hex_string, bin);
+    bundy::util::encode::decodeHex(hex_string, bin);
 
     Pkt6Ptr pkt(new Pkt6(&bin[0], bin.size()));
     captureSetDefaultFields(pkt);
@@ -166,7 +166,7 @@ Pkt6Ptr isc::test::Dhcpv6SrvTest::captureDocsisRelayedSolicit() {
 }
 
 /// returns a buffer with relayed SOLICIT (from DOCSIS3.0 eRouter)
-Pkt6Ptr isc::test::Dhcpv6SrvTest::captureeRouterRelayedSolicit() {
+Pkt6Ptr bundy::test::Dhcpv6SrvTest::captureeRouterRelayedSolicit() {
 
 /* Packet description exported from wireshark:
 DHCPv6
@@ -294,14 +294,14 @@ DHCPv6
 
     // Decode the hex string and store it in bin (which happens
     // to be OptionBuffer format)
-    isc::util::encode::decodeHex(hex_string, bin);
+    bundy::util::encode::decodeHex(hex_string, bin);
 
     Pkt6Ptr pkt(new Pkt6(&bin[0], bin.size()));
     captureSetDefaultFields(pkt);
     return (pkt);
 }
 
-Pkt6Ptr isc::test::Dhcpv6SrvTest::captureCableLabsShortVendorClass() {
+Pkt6Ptr bundy::test::Dhcpv6SrvTest::captureCableLabsShortVendorClass() {
     // This is a simple non-relayed Solicit:
     // - client-identifier
     // - IA_NA
@@ -317,7 +317,7 @@ Pkt6Ptr isc::test::Dhcpv6SrvTest::captureCableLabsShortVendorClass() {
 
     // Decode the hex string and store it in bin (which happens
     // to be OptionBuffer format)
-    isc::util::encode::decodeHex(hex_string, bin);
+    bundy::util::encode::decodeHex(hex_string, bin);
 
     Pkt6Ptr pkt(new Pkt6(&bin[0], bin.size()));
     captureSetDefaultFields(pkt);
@@ -325,5 +325,5 @@ Pkt6Ptr isc::test::Dhcpv6SrvTest::captureCableLabsShortVendorClass() {
 
 }
 
-}; // end of isc::test namespace
-}; // end of isc namespace
+}; // end of bundy::test namespace
+}; // end of bundy namespace

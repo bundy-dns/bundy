@@ -23,7 +23,7 @@
 #include <util/lru_list.h>
 #include "rrset_cache.h"
 
-namespace isc {
+namespace bundy {
 namespace cache {
 
 /// \brief Message Cache
@@ -60,34 +60,34 @@ public:
     /// \return return true if the message can be found in cache, or else,
     /// return false.
     //TODO Maybe some user just want to get the message_entry.
-    bool lookup(const isc::dns::Name& qname,
-                const isc::dns::RRType& qtype,
-                isc::dns::Message& message);
+    bool lookup(const bundy::dns::Name& qname,
+                const bundy::dns::RRType& qtype,
+                bundy::dns::Message& message);
 
     /// \brief Update the message in the cache with the new one.
     /// If the message doesn't exist in the cache, it will be added
     /// directly.
-    bool update(const isc::dns::Message& msg);
+    bool update(const bundy::dns::Message& msg);
 protected:
     /// \brief Get the hash key for the message entry in the cache.
     /// \param name query name of the message.
     /// \param type query type of the message.
     /// \return return the hash key.
-    isc::nsas::HashKey getEntryHashKey(const isc::dns::Name& name,
-                                       const isc::dns::RRType& type) const;
+    bundy::nsas::HashKey getEntryHashKey(const bundy::dns::Name& name,
+                                       const bundy::dns::RRType& type) const;
 
     // Make these variants be protected for easy unittest.
 protected:
     uint16_t message_class_; // The class of the message cache.
     RRsetCachePtr rrset_cache_;
     RRsetCachePtr negative_soa_cache_;
-    isc::nsas::HashTable<MessageEntry> message_table_;
-    isc::util::LruList<MessageEntry> message_lru_;
+    bundy::nsas::HashTable<MessageEntry> message_table_;
+    bundy::util::LruList<MessageEntry> message_lru_;
 };
 
 typedef boost::shared_ptr<MessageCache> MessageCachePtr;
 
 } // namespace cache
-} // namespace isc
+} // namespace bundy
 
 #endif // MESSAGE_CACHE_H

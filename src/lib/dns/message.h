@@ -27,7 +27,7 @@
 #include <dns/question.h>
 #include <dns/rrset.h>
 
-namespace isc {
+namespace bundy {
 namespace util {
 class InputBuffer;
 }
@@ -41,10 +41,10 @@ class TSIGRecord;
 /// message parser encounters a short length of data that don't even contain
 /// the full header section.
 ///
-class MessageTooShort : public isc::dns::Exception {
+class MessageTooShort : public bundy::dns::Exception {
 public:
     MessageTooShort(const char* file, size_t line, const char* what) :
-        isc::dns::Exception(file, line, what) {}
+        bundy::dns::Exception(file, line, what) {}
 };
 
 ///
@@ -52,10 +52,10 @@ public:
 /// is being constructed for an incompatible section.  Specifically, this
 /// happens RRset iterator is being constructed for a Question section.
 ///
-class InvalidMessageSection : public isc::dns::Exception {
+class InvalidMessageSection : public bundy::dns::Exception {
 public:
     InvalidMessageSection(const char* file, size_t line, const char* what) :
-        isc::dns::Exception(file, line, what) {}
+        bundy::dns::Exception(file, line, what) {}
 };
 
 ///
@@ -63,10 +63,10 @@ public:
 /// class method is called that is prohibited for the current mode of
 /// the message.
 ///
-class InvalidMessageOperation : public isc::dns::Exception {
+class InvalidMessageOperation : public bundy::dns::Exception {
 public:
     InvalidMessageOperation(const char* file, size_t line, const char* what) :
-        isc::dns::Exception(file, line, what) {}
+        bundy::dns::Exception(file, line, what) {}
 };
 
 ///
@@ -74,10 +74,10 @@ public:
 /// smaller than the standard default maximum (DEFAULT_MAX_UDPSIZE) is
 /// being specified for the message.
 ///
-class InvalidMessageUDPSize : public isc::dns::Exception {
+class InvalidMessageUDPSize : public bundy::dns::Exception {
 public:
     InvalidMessageUDPSize(const char* file, size_t line, const char* what) :
-        isc::dns::Exception(file, line, what) {}
+        bundy::dns::Exception(file, line, what) {}
 };
 
 typedef uint16_t qid_t;
@@ -602,7 +602,7 @@ public:
     /// NOTE: If the header has already been parsed by a previous call
     /// to this method, this method simply returns (i.e., it does not
     /// read from the \c buffer).
-    void parseHeader(isc::util::InputBuffer& buffer);
+    void parseHeader(bundy::util::InputBuffer& buffer);
 
     /// \brief (Re)build a \c Message object from wire-format data.
     ///
@@ -640,7 +640,7 @@ public:
     /// \param buffer A input buffer object that stores the wire
     /// data. This method reads from position 0 in the passed buffer.
     /// \param options Parse options
-    void fromWire(isc::util::InputBuffer& buffer, ParseOptions options
+    void fromWire(bundy::util::InputBuffer& buffer, ParseOptions options
         = PARSE_DEFAULT);
 
     ///

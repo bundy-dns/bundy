@@ -17,7 +17,7 @@
 In each of these tests we start several virtual components. They are
 not the real components, no external processes are started. They are
 just simple mock objects running each in its own thread and pretending
-to be bind10 modules. This helps testing the stats http server in a
+to be bundy modules. This helps testing the stats http server in a
 close to real environment.
 """
 
@@ -42,14 +42,14 @@ try:
 except ImportError:
     lxml_etree = None
 
-import isc
-import isc.log
+import bundy
+import bundy.log
 import stats_httpd
 import stats
 from test_utils import ThreadingServerManager, SignalHandler, \
     MyStatsHttpd, CONST_BASETIME
-from isc.testutils.ccsession_mock import MockModuleCCSession
-from isc.config import RPCRecipientMissing, RPCError
+from bundy.testutils.ccsession_mock import MockModuleCCSession
+from bundy.config import RPCRecipientMissing, RPCError
 
 # This test suite uses xml.etree.ElementTree.XMLParser via
 # xml.etree.ElementTree.parse. On the platform where expat isn't
@@ -197,7 +197,7 @@ class TestItemNameList(unittest.TestCase):
                 {'a':{'b':[1,2,3], 'c':1}}, 'a/c'))
         # for specifying a wrong identifier which is not found in
         # element
-        self.assertRaises(isc.cc.data.DataNotFoundError,
+        self.assertRaises(bundy.cc.data.DataNotFoundError,
                          stats_httpd.item_name_list, {'x':1}, 'a')
         # for specifying a string in element and an empty string in
         # identifier
@@ -208,15 +208,15 @@ class TestItemNameList(unittest.TestCase):
                          stats_httpd.item_name_list('', ''))
         # for specifying wrong element, which is an non-empty string,
         # and an non-empty string in identifier
-        self.assertRaises(isc.cc.data.DataTypeError,
+        self.assertRaises(bundy.cc.data.DataTypeError,
                          stats_httpd.item_name_list, 'a', 'a')
         # for specifying None in element and identifier
-        self.assertRaises(isc.cc.data.DataTypeError,
+        self.assertRaises(bundy.cc.data.DataTypeError,
                          stats_httpd.item_name_list, None, None)
         # for specifying non-dict in element
-        self.assertRaises(isc.cc.data.DataTypeError,
+        self.assertRaises(bundy.cc.data.DataTypeError,
                          stats_httpd.item_name_list, [1,2,3], 'a')
-        self.assertRaises(isc.cc.data.DataTypeError,
+        self.assertRaises(bundy.cc.data.DataTypeError,
                          stats_httpd.item_name_list, [1,2,3], '')
         # for checking key names sorted which consist of element
         num = 11
@@ -292,7 +292,7 @@ class TestHttpHandler(unittest.TestCase):
             self.assertEqual(id_list, item_list)
             for elem in root:
                 attr = elem.attrib
-                value = isc.cc.data.find(DUMMY_DATA, attr['identifier'])
+                value = bundy.cc.data.find(DUMMY_DATA, attr['identifier'])
                 # No 'value' attribute should be found in the 'item'
                 # element when datatype of the value is list or dict.
                 if type(value) is list or type(value) is dict:
@@ -306,7 +306,7 @@ class TestHttpHandler(unittest.TestCase):
                 else:
                     self.assertEqual(attr['value'], value)
 
-        # URL is '/bind10/statistics/xml'
+        # URL is '/bundy/statistics/xml'
         check_XML_URL_PATH()
         for path in stats_httpd.item_name_list(DUMMY_DATA, ''):
             check_XML_URL_PATH(path)
@@ -328,7 +328,7 @@ class TestHttpHandler(unittest.TestCase):
             self.assertEqual(root.attrib['targetNamespace'],
                              stats_httpd.XSD_NAMESPACE)
 
-        # URL is '/bind10/statistics/xsd'
+        # URL is '/bundy/statistics/xsd'
         check_XSD_URL_PATH()
 
         def check_XSL_URL_PATH():
@@ -345,7 +345,7 @@ class TestHttpHandler(unittest.TestCase):
             url_xhtml = '{%s}' % XMLNS_XHTML
             self.assertEqual(root.tag, url_trans + 'stylesheet')
 
-        # URL is '/bind10/statistics/xsl'
+        # URL is '/bundy/statistics/xsl'
         check_XSL_URL_PATH()
 
         # 302 redirect
@@ -365,12 +365,12 @@ class TestHttpHandler(unittest.TestCase):
         response = self.client.getresponse()
         self.assertEqual(response.status, 404)
         self.client._http_vsn_str = 'HTTP/1.0'
-        self.client.putrequest('GET', '/bind10/foo')
+        self.client.putrequest('GET', '/bundy/foo')
         self.client.endheaders()
         response = self.client.getresponse()
         self.assertEqual(response.status, 404)
         self.client._http_vsn_str = 'HTTP/1.0'
-        self.client.putrequest('GET', '/bind10/statistics/foo')
+        self.client.putrequest('GET', '/bundy/statistics/foo')
         self.client.endheaders()
         response = self.client.getresponse()
         self.assertEqual(response.status, 404)
@@ -459,7 +459,7 @@ class TestHttpHandler(unittest.TestCase):
         # failure case (Stats is down, so rpc_call() results in an exception)
         # Note: this should eventually be RPCRecipientMissing.
         self.stats_httpd._rpc_answers.append(
-            isc.cc.session.SessionTimeout('timeout'))
+            bundy.cc.session.SessionTimeout('timeout'))
 
         # request XML
         self.client.putrequest('GET', stats_httpd.XML_URL_PATH + '/')
@@ -871,29 +871,29 @@ class TestStatsHttpd(unittest.TestCase):
     def test_commands(self):
         self.stats_httpd = MyStatsHttpd(get_availaddr())
         self.assertEqual(self.stats_httpd.command_handler("status", None),
-                         isc.config.ccsession.create_answer(
+                         bundy.config.ccsession.create_answer(
                 0, "Stats Httpd is up. (PID " + str(os.getpid()) + ")"))
         self.stats_httpd.running = True
         self.assertEqual(self.stats_httpd.command_handler("shutdown", None),
-                         isc.config.ccsession.create_answer(0))
+                         bundy.config.ccsession.create_answer(0))
         self.assertFalse(self.stats_httpd.running)
         self.assertEqual(
             self.stats_httpd.command_handler("__UNKNOWN_COMMAND__", None),
-            isc.config.ccsession.create_answer(
+            bundy.config.ccsession.create_answer(
                 1, "Unknown command: __UNKNOWN_COMMAND__"))
 
     def test_config(self):
         self.stats_httpd = MyStatsHttpd(get_availaddr())
         self.assertEqual(
             self.stats_httpd.config_handler(dict(_UNKNOWN_KEY_=None)),
-            isc.config.ccsession.create_answer(
+            bundy.config.ccsession.create_answer(
                 1, "unknown item _UNKNOWN_KEY_"))
 
         addresses = get_availaddr()
         self.assertEqual(
             self.stats_httpd.config_handler(
                 dict(listen_on=[dict(address=addresses[0],port=addresses[1])])),
-            isc.config.ccsession.create_answer(0))
+            bundy.config.ccsession.create_answer(0))
         self.assertTrue("listen_on" in self.stats_httpd.config)
         for addr in self.stats_httpd.config["listen_on"]:
             self.assertTrue("address" in addr)
@@ -906,7 +906,7 @@ class TestStatsHttpd(unittest.TestCase):
             self.assertEqual(
                 self.stats_httpd.config_handler(
                 dict(listen_on=[dict(address=addresses[0],port=addresses[1])])),
-                isc.config.ccsession.create_answer(0))
+                bundy.config.ccsession.create_answer(0))
             self.assertTrue("listen_on" in self.stats_httpd.config)
             for addr in self.stats_httpd.config["listen_on"]:
                 self.assertTrue("address" in addr)
@@ -918,14 +918,14 @@ class TestStatsHttpd(unittest.TestCase):
         self.assertEqual(
             self.stats_httpd.config_handler(
                 dict(listen_on=[dict(address=addresses[0],port=addresses[1])])),
-            isc.config.ccsession.create_answer(0))
+            bundy.config.ccsession.create_answer(0))
         self.assertTrue("listen_on" in self.stats_httpd.config)
         for addr in self.stats_httpd.config["listen_on"]:
             self.assertTrue("address" in addr)
             self.assertTrue("port" in addr)
             self.assertTrue(addr["address"] == addresses[0])
             self.assertTrue(addr["port"] == addresses[1])
-        (ret, arg) = isc.config.ccsession.parse_answer(
+        (ret, arg) = bundy.config.ccsession.parse_answer(
             self.stats_httpd.config_handler(
                 dict(listen_on=[dict(address="1.2.3.4",port=543210)]))
             )
@@ -1023,7 +1023,7 @@ class TestStatsHttpd(unittest.TestCase):
         names = stats_httpd.item_name_list(stats_data, '')
         for i in range(0, len(names)):
             self.assertEqual('%s/%s' % (module_name, names[i]), stats_xml[i].attrib['identifier'])
-            value = isc.cc.data.find(stats_data, names[i])
+            value = bundy.cc.data.find(stats_data, names[i])
             if type(value) is int:
                 value = str(value)
             if type(value) is dict or type(value) is list:
@@ -1034,7 +1034,7 @@ class TestStatsHttpd(unittest.TestCase):
             self.assertEqual(urllib.parse.quote('%s/%s/%s' % (stats_httpd.XML_URL_PATH,
                                                               module_name, names[i])),
                              stats_xml[i].attrib['uri'])
-            spec = isc.config.find_spec_part(stats_spec, names[i])
+            spec = bundy.config.find_spec_part(stats_spec, names[i])
             self.assertEqual(spec['item_name'], stats_xml[i].attrib['name'])
             self.assertEqual(spec['item_type'], stats_xml[i].attrib['type'])
             self.assertEqual(spec['item_description'], stats_xml[i].attrib['description'])
@@ -1092,7 +1092,7 @@ class TestStatsHttpd(unittest.TestCase):
         stats_xsl = xml.etree.ElementTree.fromstring(xsl_string)
         nst = '{%s}' % XMLNS_XSL
         nsx = '{%s}' % XMLNS_XHTML
-        self.assertEqual("bind10:statistics", stats_xsl[2].attrib['match'])
+        self.assertEqual("bundy:statistics", stats_xsl[2].attrib['match'])
         stats_xsl = stats_xsl[2].find('%stable' % nsx)
         self.assertEqual('item', stats_xsl[1].attrib['select'])
         stats_xsl = stats_xsl[1].find('%str' % nsx)
@@ -1106,7 +1106,7 @@ class TestStatsHttpd(unittest.TestCase):
         self.assertEqual('@description', stats_xsl[2].find('%sif/%svalue-of' % ((nst,)*2)).attrib['select'])
 
 class Z_TestOSEnv(unittest.TestCase):
-    def test_for_without_B10_FROM_SOURCE(self):
+    def test_for_without_BUNDY_FROM_SOURCE(self):
         # Note: this test is sensitive due to its substantial side effect of
         # reloading.  For exmaple, it affects tests that tweak module
         # attributes (such as test_init_hterr).  It also breaks logging
@@ -1114,15 +1114,15 @@ class Z_TestOSEnv(unittest.TestCase):
         # workaround: make it very likely to run at the end of the tests
         # by naming the test class "Z_".
 
-        # just lets it go through the code without B10_FROM_SOURCE env
+        # just lets it go through the code without BUNDY_FROM_SOURCE env
         # variable
-        if "B10_FROM_SOURCE" in os.environ:
-            tmppath = os.environ["B10_FROM_SOURCE"]
-            os.environ.pop("B10_FROM_SOURCE")
+        if "BUNDY_FROM_SOURCE" in os.environ:
+            tmppath = os.environ["BUNDY_FROM_SOURCE"]
+            os.environ.pop("BUNDY_FROM_SOURCE")
             imp.reload(stats_httpd)
-            os.environ["B10_FROM_SOURCE"] = tmppath
+            os.environ["BUNDY_FROM_SOURCE"] = tmppath
             imp.reload(stats_httpd)
 
 if __name__ == "__main__":
-    isc.log.resetUnitTestRootLogger()
+    bundy.log.resetUnitTestRootLogger()
     unittest.main()

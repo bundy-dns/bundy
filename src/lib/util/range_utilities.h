@@ -23,7 +23,7 @@
 // a range of container elements. Currently the collection is limited,
 // but it is expected to grow.
 
-namespace isc {
+namespace bundy {
 namespace util {
 
 /// @brief Checks if specified range in a container contains only zeros
@@ -64,7 +64,7 @@ fillRandom(Iterator begin, Iterator end) {
     }
 }
 
-} // end of isc::util namespace
-} // end of isc namespace
+} // end of bundy::util namespace
+} // end of bundy namespace
 
 #endif  // RANGE_UTIL_H

@@ -23,10 +23,10 @@
 #include <memory>
 #include <string>
 
-using namespace isc::data;
-using namespace isc::config;
-using namespace isc::server_common;
-using namespace isc::dns;
+using namespace bundy::data;
+using namespace bundy::config;
+using namespace bundy::server_common;
+using namespace bundy::dns;
 
 namespace {
 
@@ -41,7 +41,7 @@ public:
         mccs.reset(new ModuleCCSession(specfile, session, NULL, NULL,
                                        false, false));
     }
-    isc::cc::FakeSession session;
+    bundy::cc::FakeSession session;
     std::auto_ptr<ModuleCCSession> mccs;
     std::string specfile;
     void doInit(bool with_key = true) {

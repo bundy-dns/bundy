@@ -32,7 +32,7 @@ using asio::ip::tcp;
 
 using namespace std;
 
-namespace isc {
+namespace bundy {
 namespace asiolink {
 
 // XXX: we cannot simply construct the address in the initialization list,
@@ -41,7 +41,7 @@ IOAddress::IOAddress(const std::string& address_str) {
     asio::error_code err;
     asio_address_ = ip::address::from_string(address_str, err);
     if (err) {
-        isc_throw(IOError, "Failed to convert string to address '"
+        bundy_throw(IOError, "Failed to convert string to address '"
                   << address_str << "': " << err.message());
     }
 }
@@ -63,10 +63,10 @@ IOAddress::toText() const {
 IOAddress
 IOAddress::fromBytes(short family, const uint8_t* data) {
     if (data == NULL) {
-        isc_throw(BadValue, "NULL pointer received.");
+        bundy_throw(BadValue, "NULL pointer received.");
     } else
     if ( (family != AF_INET) && (family != AF_INET6) ) {
-        isc_throw(BadValue, "Invalid family type. Only AF_INET and AF_INET6"
+        bundy_throw(BadValue, "Invalid family type. Only AF_INET and AF_INET6"
                   << "are supported");
     }
 
@@ -120,7 +120,7 @@ IOAddress::operator uint32_t() const {
     if (asio_address_.is_v4()) {
         return (asio_address_.to_v4().to_ulong());
     } else {
-        isc_throw(BadValue, "Can't convert " << toText()
+        bundy_throw(BadValue, "Can't convert " << toText()
                   << " address to IPv4.");
     }
 }
@@ -132,4 +132,4 @@ operator<<(std::ostream& os, const IOAddress& address) {
 }
 
 } // namespace asiolink
-} // namespace isc
+} // namespace bundy

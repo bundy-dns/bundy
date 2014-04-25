@@ -21,9 +21,9 @@
 #include "pydnspp_common.h"
 #include "rcode_python.h"
 
-using namespace isc::dns;
-using namespace isc::dns::python;
-using namespace isc::util::python;
+using namespace bundy::dns;
+using namespace bundy::dns::python;
+using namespace bundy::util::python;
 
 namespace {
 // The s_* Class simply covers one instantiation of the object.
@@ -98,7 +98,7 @@ Rcode_init(s_Rcode* const self, PyObject* args) {
             self->cppobj = new Rcode(code, ext_code);
         }
         self->static_code = false;
-    } catch (const isc::OutOfRange& ex) {
+    } catch (const bundy::OutOfRange& ex) {
             PyErr_SetString(PyExc_OverflowError, ex.what());
             return (-1);
     } catch (...) {
@@ -181,7 +181,7 @@ Rcode_richcmp(const s_Rcode* const self, const s_Rcode* const other,
 }
 } // end of unnamed namespace
 
-namespace isc {
+namespace bundy {
 namespace dns {
 namespace python {
 PyTypeObject rcode_type = {
@@ -245,7 +245,7 @@ createRcodeObject(const Rcode& source) {
 bool
 PyRcode_Check(PyObject* obj) {
     if (obj == NULL) {
-        isc_throw(PyCPPWrapperException, "obj argument NULL in typecheck");
+        bundy_throw(PyCPPWrapperException, "obj argument NULL in typecheck");
     }
     return (PyObject_TypeCheck(obj, &rcode_type));
 }
@@ -253,7 +253,7 @@ PyRcode_Check(PyObject* obj) {
 const Rcode&
 PyRcode_ToRcode(const PyObject* rcode_obj) {
     if (rcode_obj == NULL) {
-        isc_throw(PyCPPWrapperException,
+        bundy_throw(PyCPPWrapperException,
                   "obj argument NULL in Rcode PyObject conversion");
     }
     const s_Rcode* rcode = static_cast<const s_Rcode*>(rcode_obj);
@@ -262,4 +262,4 @@ PyRcode_ToRcode(const PyObject* rcode_obj) {
 
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy

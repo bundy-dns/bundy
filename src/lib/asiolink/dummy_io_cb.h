@@ -22,7 +22,7 @@
 #include <asio/error.hpp>
 #include <asio/error_code.hpp>
 
-namespace isc {
+namespace bundy {
 namespace asiolink {
 
 /// \brief Asynchronous I/O Completion Callback
@@ -49,7 +49,7 @@ public:
         // the program (this class should not be used as the callback
         // class).  As the asiolink module is too low-level for logging
         // errors, throw an exception.
-        isc_throw(isc::Unexpected,
+        bundy_throw(bundy::Unexpected,
                   "DummyIOCallback::operator() must not be called");
     }
 
@@ -63,12 +63,12 @@ public:
         // the program (this class should not be used as the callback
         // class).  As the asiolink module is too low-level for logging
         // errors, throw an exception.
-        isc_throw(isc::Unexpected,
+        bundy_throw(bundy::Unexpected,
                   "DummyIOCallback::operator() must not be called");
     }
 };
 
 } // namespace asiolink
-} // namespace isc
+} // namespace bundy
 
 #endif // DUMMY_IO_CB_H

@@ -38,7 +38,7 @@
 #include <dns/rdataclass.h>
 #include "../nsas_entry.h"
 
-namespace isc {
+namespace bundy {
 namespace dns {
 
 /// \brief Class Types
@@ -107,7 +107,7 @@ public:
     ///
     //@{
     /// \brief Render the \c Rdata in the wire format to a buffer
-    virtual void toWire(isc::util::OutputBuffer& buffer) const;
+    virtual void toWire(bundy::util::OutputBuffer& buffer) const;
 
     /// \brief render the \Rdata in the wire format to a \c MessageRenderer
     virtual void toWire(AbstractMessageRenderer& renderer) const;
@@ -122,7 +122,7 @@ private:
 };
 
 template <typename T>
-void RdataTest<T>::toWire(isc::util::OutputBuffer&) const {
+void RdataTest<T>::toWire(bundy::util::OutputBuffer&) const {
 }
 
 template <typename T>
@@ -135,9 +135,9 @@ int RdataTest<T>::compare(const rdata::Rdata&) const {
 }
 
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 
 /// \brief Test Entry Class
@@ -153,7 +153,7 @@ public:
     /// \param name Name that will be used for the object.  This will form
     /// part of the key.
     /// \param class_code Class associated with the object.
-    TestEntry(std::string name, const isc::dns::RRClass& class_code) :
+    TestEntry(std::string name, const bundy::dns::RRClass& class_code) :
         name_(name), class_code_(class_code)
     {}
 
@@ -186,23 +186,23 @@ public:
     /// \brief Get the Class
     ///
     /// \return Class code assigned to this object
-    virtual const isc::dns::RRClass& getClass() const {
+    virtual const bundy::dns::RRClass& getClass() const {
         return class_code_;
     }
 
     /// \brief Set the Class
     ///
     /// \param class_code New class code of the object
-    virtual void setClass(const isc::dns::RRClass& class_code) {
+    virtual void setClass(const bundy::dns::RRClass& class_code) {
         class_code_ = class_code;
     }
 
 private:
     std::string name_;          ///< Name of the object
-    isc::dns::RRClass    class_code_;    ///< Class of the object
+    bundy::dns::RRClass    class_code_;    ///< Class of the object
 };
 
-/// \brief isc::nsas Constants
+/// \brief bundy::nsas Constants
 ///
 /// Some constants used in the various tests.
 
@@ -216,45 +216,45 @@ static const std::string MIXED_EXAMPLE_CO_UK("EXAmple.co.uk.");
 
 class TestWithRdata : public ::testing::Test {
 protected:
-    typedef boost::shared_ptr<isc::dns::RRset> RRsetPtr;
+    typedef boost::shared_ptr<bundy::dns::RRset> RRsetPtr;
     /// \brief Constructor
     ///
     /// Initializes the RRsets used in the tests.  The RRsets themselves
     /// have to be initialized with the basic data on their
     /// construction. The Rdata for them is added in SetUp().
     TestWithRdata() :
-        rrv4_(new isc::dns::RRset(isc::dns::Name(EXAMPLE_CO_UK),
-                                  isc::dns::RRClass::IN(),
-                                  isc::dns::RRType::A(),
-                                  isc::dns::RRTTL(1200))),
-        rrcase_(new isc::dns::RRset(isc::dns::Name(MIXED_EXAMPLE_CO_UK),
-                                    isc::dns::RRClass::IN(),
-                                    isc::dns::RRType::A(),
-                                    isc::dns::RRTTL(1200))),
-        rrch_(new isc::dns::RRset(isc::dns::Name(EXAMPLE_CO_UK),
-                                  isc::dns::RRClass::CH(),
-                                  isc::dns::RRType::A(),
-                                  isc::dns::RRTTL(1200))),
-        rrns_(new isc::dns::RRset(isc::dns::Name(EXAMPLE_CO_UK),
-                                  isc::dns::RRClass::IN(),
-                                  isc::dns::RRType::NS(),
-                                  isc::dns::RRTTL(1200))),
-        rr_single_(new isc::dns::RRset(isc::dns::Name(EXAMPLE_CO_UK),
-                                       isc::dns::RRClass::IN(),
-                                       isc::dns::RRType::NS(),
-                                       isc::dns::RRTTL(600))),
-        rr_empty_(new isc::dns::RRset(isc::dns::Name(EXAMPLE_CO_UK),
-                                      isc::dns::RRClass::IN(),
-                                      isc::dns::RRType::NS(),
-                                      isc::dns::RRTTL(600))),
-        rrv6_(new isc::dns::RRset(isc::dns::Name(EXAMPLE_CO_UK),
-                                  isc::dns::RRClass::IN(),
-                                  isc::dns::RRType::AAAA(),
-                                  isc::dns::RRTTL(900))),
-        rrnet_(new isc::dns::RRset(isc::dns::Name(EXAMPLE_NET),
-                                   isc::dns::RRClass::IN(),
-                                   isc::dns::RRType::A(),
-                                   isc::dns::RRTTL(600))),
+        rrv4_(new bundy::dns::RRset(bundy::dns::Name(EXAMPLE_CO_UK),
+                                  bundy::dns::RRClass::IN(),
+                                  bundy::dns::RRType::A(),
+                                  bundy::dns::RRTTL(1200))),
+        rrcase_(new bundy::dns::RRset(bundy::dns::Name(MIXED_EXAMPLE_CO_UK),
+                                    bundy::dns::RRClass::IN(),
+                                    bundy::dns::RRType::A(),
+                                    bundy::dns::RRTTL(1200))),
+        rrch_(new bundy::dns::RRset(bundy::dns::Name(EXAMPLE_CO_UK),
+                                  bundy::dns::RRClass::CH(),
+                                  bundy::dns::RRType::A(),
+                                  bundy::dns::RRTTL(1200))),
+        rrns_(new bundy::dns::RRset(bundy::dns::Name(EXAMPLE_CO_UK),
+                                  bundy::dns::RRClass::IN(),
+                                  bundy::dns::RRType::NS(),
+                                  bundy::dns::RRTTL(1200))),
+        rr_single_(new bundy::dns::RRset(bundy::dns::Name(EXAMPLE_CO_UK),
+                                       bundy::dns::RRClass::IN(),
+                                       bundy::dns::RRType::NS(),
+                                       bundy::dns::RRTTL(600))),
+        rr_empty_(new bundy::dns::RRset(bundy::dns::Name(EXAMPLE_CO_UK),
+                                      bundy::dns::RRClass::IN(),
+                                      bundy::dns::RRType::NS(),
+                                      bundy::dns::RRTTL(600))),
+        rrv6_(new bundy::dns::RRset(bundy::dns::Name(EXAMPLE_CO_UK),
+                                  bundy::dns::RRClass::IN(),
+                                  bundy::dns::RRType::AAAA(),
+                                  bundy::dns::RRTTL(900))),
+        rrnet_(new bundy::dns::RRset(bundy::dns::Name(EXAMPLE_NET),
+                                   bundy::dns::RRClass::IN(),
+                                   bundy::dns::RRType::A(),
+                                   bundy::dns::RRTTL(600))),
         ns_name_("ns.example.net.")
     {}
 
@@ -266,41 +266,41 @@ protected:
     virtual void SetUp() {
 
         // A records
-        rrv4_->addRdata(isc::dns::rdata::ConstRdataPtr
-                        (new isc::dns::RdataTest<isc::dns::A>("1.2.3.4")));
-        rrv4_->addRdata(isc::dns::rdata::ConstRdataPtr
-                        (new isc::dns::RdataTest<isc::dns::A>("5.6.7.8")));
-        rrv4_->addRdata(isc::dns::rdata::ConstRdataPtr
-                        (new isc::dns::RdataTest<isc::dns::A>("9.10.11.12")));
+        rrv4_->addRdata(bundy::dns::rdata::ConstRdataPtr
+                        (new bundy::dns::RdataTest<bundy::dns::A>("1.2.3.4")));
+        rrv4_->addRdata(bundy::dns::rdata::ConstRdataPtr
+                        (new bundy::dns::RdataTest<bundy::dns::A>("5.6.7.8")));
+        rrv4_->addRdata(bundy::dns::rdata::ConstRdataPtr
+                        (new bundy::dns::RdataTest<bundy::dns::A>("9.10.11.12")));
 
         // A records
-        rrcase_->addRdata(isc::dns::rdata::ConstRdataPtr
-                          (new isc::dns::RdataTest<isc::dns::A>
+        rrcase_->addRdata(bundy::dns::rdata::ConstRdataPtr
+                          (new bundy::dns::RdataTest<bundy::dns::A>
                            ("13.14.15.16")));
 
         // No idea what Chaosnet address look like other than they are 16 bits
         // The fact that they are type A is probably also incorrect.
-        rrch_->addRdata(isc::dns::rdata::ConstRdataPtr
-                        (new isc::dns::RdataTest<isc::dns::A>("1324")));
+        rrch_->addRdata(bundy::dns::rdata::ConstRdataPtr
+                        (new bundy::dns::RdataTest<bundy::dns::A>("1324")));
 
         // NS records take a single name
-        rrns_->addRdata(isc::dns::rdata::generic::NS("example.fr."));
-        rrns_->addRdata(isc::dns::rdata::generic::NS("example.de."));
+        rrns_->addRdata(bundy::dns::rdata::generic::NS("example.fr."));
+        rrns_->addRdata(bundy::dns::rdata::generic::NS("example.de."));
 
         // Single NS record with 0 TTL
-        rr_single_->addRdata(isc::dns::rdata::generic::NS(ns_name_));
+        rr_single_->addRdata(bundy::dns::rdata::generic::NS(ns_name_));
 
         // AAAA records
-        rrv6_->addRdata(isc::dns::rdata::ConstRdataPtr
-                        (new isc::dns::RdataTest<isc::dns::AAAA>
+        rrv6_->addRdata(bundy::dns::rdata::ConstRdataPtr
+                        (new bundy::dns::RdataTest<bundy::dns::AAAA>
                          ("2001::1002")));
-        rrv6_->addRdata(isc::dns::rdata::ConstRdataPtr
-                        (new isc::dns::RdataTest<isc::dns::AAAA>
+        rrv6_->addRdata(bundy::dns::rdata::ConstRdataPtr
+                        (new bundy::dns::RdataTest<bundy::dns::AAAA>
                          ("dead:beef:feed::")));
 
         // A record for example.net
-        rrnet_->addRdata(isc::dns::rdata::ConstRdataPtr
-                         (new isc::dns::RdataTest<isc::dns::A>
+        rrnet_->addRdata(bundy::dns::rdata::ConstRdataPtr
+                         (new bundy::dns::RdataTest<bundy::dns::A>
                           ("17.18.18.20")));
     }
 
@@ -313,10 +313,10 @@ protected:
     RRsetPtr rr_empty_;       ///< NS RRset without any nameservers
     RRsetPtr rrv6_;           ///< Standard RRset, IN, AAAA, lowercase name
     RRsetPtr rrnet_;          ///< example.net A RRset
-    isc::dns::Name ns_name_;  ///< Nameserver name of ns.example.net
+    bundy::dns::Name ns_name_;  ///< Nameserver name of ns.example.net
 };
 
 } // namespace nsas
-} // namespace isc
+} // namespace bundy
 
 #endif // NSAS_TEST_H

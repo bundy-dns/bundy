@@ -2,7 +2,7 @@
 ;; (VERSION.BIND.) and authors (AUTHORS.BIND.) information. You can add
 ;; more records or modify this zone file like any other zone file. If
 ;; you modify this file, you can reload the zone by issuing the
-;; following command in the bindctl program:
+;; following command in the bundyctl program:
 ;;
 ;;     Auth loadzone CH BIND
 

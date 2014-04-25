@@ -18,8 +18,8 @@
 
 #include <log/logger_name.h>
 
-using namespace isc;
-using namespace isc::log;
+using namespace bundy;
+using namespace bundy::log;
 
 // Test class.  To avoid disturbing the root logger configuration in other
 // tests in the suite, the root logger name is saved in the constructor and

@@ -19,13 +19,13 @@
 #include <log/macros.h>
 #include <dhcp_ddns/dhcp_ddns_messages.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp_ddns {
 
 /// Define the logger for the "dhcp_ddns" logging.
-extern isc::log::Logger dhcp_ddns_logger;
+extern bundy::log::Logger dhcp_ddns_logger;
 
 } // namespace dhcp_ddns
-} // namespace isc
+} // namespace bundy
 
 #endif // DHCP_DDNS_LOG_H

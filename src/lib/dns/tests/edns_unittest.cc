@@ -34,11 +34,11 @@
 #include <util/unittests/wiredata.h>
 
 using namespace std;
-using namespace isc::dns;
-using namespace isc::util;
-using namespace isc::dns::rdata;
-using isc::UnitTestUtil;
-using isc::util::unittests::matchWireData;
+using namespace bundy::dns;
+using namespace bundy::util;
+using namespace bundy::dns::rdata;
+using bundy::UnitTestUtil;
+using bundy::util::unittests::matchWireData;
 
 const uint8_t EDNS::SUPPORTED_VERSION;
 
@@ -68,7 +68,7 @@ const RRTTL rrttl_do_off(0);         // DO=off
 const RRTTL rrttl_badver(0x00018000); // version=1, DO=on
 
 TEST_F(EDNSTest, badVerConstruct) {
-    EXPECT_THROW(EDNS(1), isc::InvalidParameter);
+    EXPECT_THROW(EDNS(1), bundy::InvalidParameter);
 }
 
 TEST_F(EDNSTest, DNSSECDOBit) {
@@ -122,7 +122,7 @@ TEST_F(EDNSTest, getVersion) {
 TEST_F(EDNSTest, BadWireData) {
     // Incompatible RR type
     EXPECT_THROW(EDNS(Name::ROOT_NAME(), rrclass, RRType::A(),
-                      rrttl_do_on, *opt_rdata), isc::InvalidParameter);
+                      rrttl_do_on, *opt_rdata), bundy::InvalidParameter);
 
     // OPT RR of a non root name
     EXPECT_THROW(EDNS(Name("example.com"), rrclass, rrtype,

@@ -2,7 +2,7 @@ SUBDIRS = . tests
 
 AM_CPPFLAGS  = -I$(top_builddir)/src/lib -I$(top_srcdir)/src/lib
 AM_CPPFLAGS += $(BOOST_INCLUDES)
-AM_CXXFLAGS  = $(B10_CXXFLAGS)
+AM_CXXFLAGS  = $(BUNDY_CXXFLAGS)
 
 # Some versions of GCC warn about some versions of Boost regarding
 # missing initializer for members in its posix_time.
@@ -57,11 +57,11 @@ libdhcp_user_chk_la_LDFLAGS  += -avoid-version -export-dynamic -module
 # convenience archive, resulting in shared modules
 libdhcp_user_chk_la_LDFLAGS  += -rpath /nowhere
 libdhcp_user_chk_la_LIBADD  =
-libdhcp_user_chk_la_LIBADD  += $(top_builddir)/src/lib/hooks/libb10-hooks.la
-libdhcp_user_chk_la_LIBADD  += $(top_builddir)/src/lib/log/libb10-log.la
-libdhcp_user_chk_la_LIBADD  += $(top_builddir)/src/lib/exceptions/libb10-exceptions.la
-libdhcp_user_chk_la_LIBADD  += $(top_builddir)/src/lib/util/libb10-util.la
-libdhcp_user_chk_la_LIBADD  += $(top_builddir)/src/lib/util/threads/libb10-threads.la
+libdhcp_user_chk_la_LIBADD  += $(top_builddir)/src/lib/hooks/libbundy-hooks.la
+libdhcp_user_chk_la_LIBADD  += $(top_builddir)/src/lib/log/libbundy-log.la
+libdhcp_user_chk_la_LIBADD  += $(top_builddir)/src/lib/exceptions/libbundy-exceptions.la
+libdhcp_user_chk_la_LIBADD  += $(top_builddir)/src/lib/util/libbundy-util.la
+libdhcp_user_chk_la_LIBADD  += $(top_builddir)/src/lib/util/threads/libbundy-threads.la
 
 
 if USE_CLANGPP

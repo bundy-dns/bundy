@@ -30,12 +30,12 @@
 #include <util/unittests/wiredata.h>
 
 using namespace std;
-using namespace isc;
-using namespace isc::dns;
-using namespace isc::util;
-using namespace isc::dns::rdata;
-using isc::UnitTestUtil;
-using isc::util::unittests::matchWireData;
+using namespace bundy;
+using namespace bundy::dns;
+using namespace bundy::util;
+using namespace bundy::dns::rdata;
+using bundy::UnitTestUtil;
+using bundy::util::unittests::matchWireData;
 
 namespace {
 class Rdata_DNSKEY_Test : public RdataTest {
@@ -55,7 +55,7 @@ protected:
     {}
 
     void checkFromText_None(const string& rdata_str) {
-        checkFromText<generic::DNSKEY, isc::Exception, isc::Exception>(
+        checkFromText<generic::DNSKEY, bundy::Exception, bundy::Exception>(
             rdata_str, rdata_dnskey2, false, false);
     }
 
@@ -82,7 +82,7 @@ protected:
 
     void checkFromText_BadString(const string& rdata_str) {
         checkFromText
-            <generic::DNSKEY, InvalidRdataText, isc::Exception>(
+            <generic::DNSKEY, InvalidRdataText, bundy::Exception>(
                 rdata_str, rdata_dnskey2, true, false);
     }
 
@@ -188,7 +188,7 @@ TEST_F(Rdata_DNSKEY_Test, getTag) {
 
     // Short keydata with algorithm RSA/MD5 must throw.
     const generic::DNSKEY rdata_dnskey_short_keydata1("1 1 1 YQ==");
-    EXPECT_THROW(rdata_dnskey_short_keydata1.getTag(), isc::OutOfRange);
+    EXPECT_THROW(rdata_dnskey_short_keydata1.getTag(), bundy::OutOfRange);
 
     // Short keydata with algorithm not RSA/MD5 must not throw.
     const generic::DNSKEY rdata_dnskey_short_keydata2("257 3 5 YQ==");

@@ -17,11 +17,11 @@
 #include <config.h>
 #include "hash_key.h"
 
-namespace isc {
+namespace bundy {
 namespace nsas {
 
 /// Hash Equality Function
-bool HashKey::operator==(const isc::nsas::HashKey& other) {
+bool HashKey::operator==(const bundy::nsas::HashKey& other) {
 
     // Check key lengths
     if (other.keylen == keylen) {
@@ -48,4 +48,4 @@ bool HashKey::operator==(const isc::nsas::HashKey& other) {
 }
 
 } // namespace nsas
-} // namespace isc
+} // namespace bundy

@@ -20,7 +20,7 @@
 
 #include <sstream>
 
-using namespace isc::dns;
+using namespace bundy::dns;
 using namespace master_lexer_internal;
 
 namespace {

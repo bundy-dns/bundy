@@ -32,10 +32,10 @@
 #include <cstring>
 #include <new>                  // for the placement new
 
-using namespace isc::dns;
-using namespace isc::dns::rdata;
+using namespace bundy::dns;
+using namespace bundy::dns::rdata;
 
-namespace isc {
+namespace bundy {
 namespace datasrc {
 namespace memory {
 
@@ -45,7 +45,7 @@ getCoveredType(const Rdata& rdata) {
     const generic::RRSIG* rrsig_rdata =
         dynamic_cast<const generic::RRSIG*>(&rdata);
     if (!rrsig_rdata) {
-        isc_throw(BadValue, "Non RRSIG is given where it's expected");
+        bundy_throw(BadValue, "Non RRSIG is given where it's expected");
     }
     return (rrsig_rdata->typeCovered());
 }
@@ -53,7 +53,7 @@ getCoveredType(const Rdata& rdata) {
 // A helper for lowestTTL: restore RRTTL object from wire-format 32-bit data.
 RRTTL
 restoreTTL(const void* ttl_data) {
-    isc::util::InputBuffer b(ttl_data, sizeof(uint32_t));
+    bundy::util::InputBuffer b(ttl_data, sizeof(uint32_t));
     return (RRTTL(b));
 }
 
@@ -89,19 +89,19 @@ sanityChecks(const ConstRRsetPtr& rrset, const ConstRRsetPtr &sig_rrset,
 {
     // Check basic validity
     if (!rrset && !sig_rrset) {
-        isc_throw(BadValue, "Both RRset and RRSIG are NULL");
+        bundy_throw(BadValue, "Both RRset and RRSIG are NULL");
     }
     if (rrset && rrset->getRdataCount() == 0) {
-        isc_throw(BadValue, "Empty RRset");
+        bundy_throw(BadValue, "Empty RRset");
     }
     if (sig_rrset && sig_rrset->getRdataCount() == 0) {
-        isc_throw(BadValue, "Empty SIG RRset");
+        bundy_throw(BadValue, "Empty SIG RRset");
     }
     if (sig_rrset && sig_rrset->getType() != RRType::RRSIG()) {
-        isc_throw(BadValue, "SIG RRset doesn't have type RRSIG");
+        bundy_throw(BadValue, "SIG RRset doesn't have type RRSIG");
     }
     if (rrset && sig_rrset && rrset->getClass() != sig_rrset->getClass()) {
-        isc_throw(BadValue, "RR class doesn't match between RRset and RRSIG");
+        bundy_throw(BadValue, "RR class doesn't match between RRset and RRSIG");
     }
 
     const RRClass rrclass = rrset ? rrset->getClass() : sig_rrset->getClass();
@@ -109,7 +109,7 @@ sanityChecks(const ConstRRsetPtr& rrset, const ConstRRsetPtr &sig_rrset,
         getCoveredType(sig_rrset->getRdataIterator()->getCurrent());
 
     if (old_rdataset && old_rdataset->type != rrtype) {
-        isc_throw(BadValue, "RR type doesn't match between RdataSets");
+        bundy_throw(BadValue, "RR type doesn't match between RdataSets");
     }
 
     return (std::pair<RRClass, RRType>(rrclass, rrtype));
@@ -167,7 +167,7 @@ RdataSet::create(util::MemorySegment& mem_sgmt, RdataEncoder& encoder,
         }
     }
     if (rdata_count > MAX_RDATA_COUNT) {
-        isc_throw(RdataSetError, "Too many RDATAs for RdataSet: "
+        bundy_throw(RdataSetError, "Too many RDATAs for RdataSet: "
                   << rrset->getRdataCount() << ", must be <= "
                   << MAX_RDATA_COUNT);
     }
@@ -180,7 +180,7 @@ RdataSet::create(util::MemorySegment& mem_sgmt, RdataEncoder& encoder,
              it->next())
         {
             if (getCoveredType(it->getCurrent()) != rrtype) {
-                isc_throw(BadValue, "Type covered doesn't match");
+                bundy_throw(BadValue, "Type covered doesn't match");
             }
             if (encoder.addSIGRdata(it->getCurrent())) {
                 ++rrsig_count;
@@ -188,7 +188,7 @@ RdataSet::create(util::MemorySegment& mem_sgmt, RdataEncoder& encoder,
         }
     }
     if (rrsig_count > MAX_RRSIG_COUNT) {
-        isc_throw(RdataSetError, "Too many RRSIGs for RdataSet: "
+        bundy_throw(RdataSetError, "Too many RRSIGs for RdataSet: "
                   << sig_rrset->getRdataCount() << ", must be <= "
                   << MAX_RRSIG_COUNT);
     }

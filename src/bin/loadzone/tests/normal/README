@@ -9,5 +9,5 @@ dnssec-signzone -S sql1.example.com
 dnssec-signzone -Sg example.com
 
 # load the zone files into the on-disk database
-../b10-loadzone example.com.signed
-../b10-loadzone sql1.example.com.signed
+../bundy-loadzone example.com.signed
+../bundy-loadzone sql1.example.com.signed

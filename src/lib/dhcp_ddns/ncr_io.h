@@ -53,7 +53,7 @@
 /// These two classes present a public interface for asynchronous
 /// communications that is independent of the IO layer mechanisms.  While the
 /// type and details of the IO mechanism are not relevant to either class, it
-/// is presumed to use isc::asiolink library for asynchronous event processing.
+/// is presumed to use bundy::asiolink library for asynchronous event processing.
 ///
 
 #include <asiolink/io_address.h>
@@ -63,7 +63,7 @@
 
 #include <deque>
 
-namespace isc {
+namespace bundy {
 namespace dhcp_ddns {
 
 /// @brief Defines the list of socket protocols supported.
@@ -83,7 +83,7 @@ enum NameChangeProtocol {
 ///
 /// @return NameChangeProtocol value which maps to the given string.
 ///
-/// @throw isc::BadValue if given a string value which does not map to an
+/// @throw bundy::BadValue if given a string value which does not map to an
 /// enum value.
 extern NameChangeProtocol stringToNcrProtocol(const std::string& protocol_str);
 
@@ -96,24 +96,24 @@ extern NameChangeProtocol stringToNcrProtocol(const std::string& protocol_str);
 extern std::string ncrProtocolToString(NameChangeProtocol protocol);
 
 /// @brief Exception thrown if an NcrListenerError encounters a general error.
-class NcrListenerError : public isc::Exception {
+class NcrListenerError : public bundy::Exception {
 public:
     NcrListenerError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Exception thrown if an error occurs during IO source open.
-class NcrListenerOpenError : public isc::Exception {
+class NcrListenerOpenError : public bundy::Exception {
 public:
     NcrListenerOpenError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Exception thrown if an error occurs initiating an IO receive.
-class NcrListenerReceiveError : public isc::Exception {
+class NcrListenerReceiveError : public bundy::Exception {
 public:
     NcrListenerReceiveError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 
@@ -226,7 +226,7 @@ public:
     ///
     /// @throw NcrListenError if the listener is already "listening" or
     /// in the event the open or doReceive methods fail.
-    void startListening(isc::asiolink::IOService& io_service);
+    void startListening(bundy::asiolink::IOService& io_service);
 
     /// @brief Closes the IO source and stops listen logic.
     ///
@@ -242,7 +242,7 @@ protected:
     /// should not be called outside this method to ensure context information
     /// integrity.
     ///
-    /// @throw Derivation's doReceive method may throw isc::Exception upon
+    /// @throw Derivation's doReceive method may throw bundy::Exception upon
     /// error.
     void receiveNext();
 
@@ -281,8 +281,8 @@ protected:
     /// @param io_service is the IOService that process IO events.
     ///
     /// @throw If the implementation encounters an error it MUST
-    /// throw it as an isc::Exception or derivative.
-    virtual void open(isc::asiolink::IOService& io_service) = 0;
+    /// throw it as an bundy::Exception or derivative.
+    virtual void open(bundy::asiolink::IOService& io_service) = 0;
 
     /// @brief Abstract method which closes the IO source.
     ///
@@ -290,7 +290,7 @@ protected:
     /// "close" the IO source.
     ///
     /// @throw If the implementation encounters an error it  MUST
-    /// throw it as an isc::Exception or derivative.
+    /// throw it as an bundy::Exception or derivative.
     virtual void close() = 0;
 
     /// @brief Initiates an IO layer asynchronous read.
@@ -300,7 +300,7 @@ protected:
     /// derivation's IO layer handler as the IO completion callback.
     ///
     /// @throw If the implementation encounters an error it  MUST
-    /// throw it as an isc::Exception or derivative.
+    /// throw it as an bundy::Exception or derivative.
     virtual void doReceive() = 0;
 
 public:
@@ -353,31 +353,31 @@ typedef boost::shared_ptr<NameChangeListener> NameChangeListenerPtr;
 
 
 /// @brief Thrown when a NameChangeSender encounters an error.
-class NcrSenderError : public isc::Exception {
+class NcrSenderError : public bundy::Exception {
 public:
     NcrSenderError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Exception thrown if an error occurs during IO source open.
-class NcrSenderOpenError : public isc::Exception {
+class NcrSenderOpenError : public bundy::Exception {
 public:
     NcrSenderOpenError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Exception thrown if an error occurs initiating an IO send.
-class NcrSenderQueueFull : public isc::Exception {
+class NcrSenderQueueFull : public bundy::Exception {
 public:
     NcrSenderQueueFull(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 /// @brief Exception thrown if an error occurs initiating an IO send.
-class NcrSenderSendError : public isc::Exception {
+class NcrSenderSendError : public bundy::Exception {
 public:
     NcrSenderSendError(const char* file, size_t line, const char* what) :
-        isc::Exception(file, line, what) { };
+        bundy::Exception(file, line, what) { };
 };
 
 
@@ -527,7 +527,7 @@ public:
     ///
     /// @throw NcrSenderError if the sender is already "sending" or
     /// NcrSenderOpenError if the open fails.
-    void startSending(isc::asiolink::IOService & io_service);
+    void startSending(bundy::asiolink::IOService & io_service);
 
     /// @brief Closes the IO sink and stops send logic.
     ///
@@ -626,8 +626,8 @@ protected:
     /// @param io_service is the IOService that process IO events.
     ///
     /// @throw If the implementation encounters an error it MUST
-    /// throw it as an isc::Exception or derivative.
-    virtual void open(isc::asiolink::IOService& io_service) = 0;
+    /// throw it as an bundy::Exception or derivative.
+    virtual void open(bundy::asiolink::IOService& io_service) = 0;
 
     /// @brief Abstract method which closes the IO sink.
     ///
@@ -635,7 +635,7 @@ protected:
     /// "close" the IO sink.
     ///
     /// @throw If the implementation encounters an error it MUST
-    /// throw it as an isc::Exception or derivative.
+    /// throw it as an bundy::Exception or derivative.
     virtual void close() = 0;
 
     /// @brief Initiates an IO layer asynchronous send
@@ -647,7 +647,7 @@ protected:
     /// derivation's IO layer handler as the IO completion callback.
     ///
     /// @throw If the implementation encounters an error it MUST
-    /// throw it as an isc::Exception or derivative.
+    /// throw it as an bundy::Exception or derivative.
     virtual void doSend(NameChangeRequestPtr& ncr) = 0;
 
 public:
@@ -784,7 +784,7 @@ private:
 /// @brief Defines a smart pointer to an instance of a sender.
 typedef boost::shared_ptr<NameChangeSender> NameChangeSenderPtr;
 
-} // namespace isc::dhcp_ddns
-} // namespace isc
+} // namespace bundy::dhcp_ddns
+} // namespace bundy
 
 #endif

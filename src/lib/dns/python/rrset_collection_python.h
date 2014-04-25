@@ -17,7 +17,7 @@
 
 #include <Python.h>
 
-namespace isc {
+namespace bundy {
 namespace dns {
 class RRsetCollectionBase;
 
@@ -50,7 +50,7 @@ bool initModulePart_RRsetCollection(PyObject* mod);
 
 } // namespace python
 } // namespace dns
-} // namespace isc
+} // namespace bundy
 #endif // PYTHON_RRSETCOLLECTION_H
 
 // Local Variables:

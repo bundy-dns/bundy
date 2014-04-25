@@ -17,7 +17,7 @@
 
 #include <string>
 
-namespace isc {
+namespace bundy {
 namespace log {
 namespace interprocess {
 
@@ -146,6 +146,6 @@ protected:
 
 } // namespace interprocess
 } // namespace log
-} // namespace isc
+} // namespace bundy
 
 #endif // INTERPROCESS_SYNC_H

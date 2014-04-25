@@ -17,12 +17,12 @@
 
 #include <exceptions/exceptions.h>
 
-namespace isc {
+namespace bundy {
 namespace dhcp {
 
 /// An exception that is thrown if a DHCPv6 protocol violation occurs while
 /// processing a message (e.g. a mandatory option is missing)
-class RFCViolation : public isc::Exception {
+class RFCViolation : public bundy::Exception {
 public:
 
 /// @brief constructor
@@ -31,10 +31,10 @@ public:
 /// @param line line of the file, where exception occurred
 /// @param what text description of the issue that caused exception
 RFCViolation(const char* file, size_t line, const char* what) :
-    isc::Exception(file, line, what) {}
+    bundy::Exception(file, line, what) {}
 };
 
-}; // namespace isc::dhcp
-}; // namespace isc
+}; // namespace bundy::dhcp
+}; // namespace bundy
 
 #endif // DHCPSRV_UTILS_H
