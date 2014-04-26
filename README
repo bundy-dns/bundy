@@ -5,7 +5,7 @@ components are included for statistics collection and reporting and
 remote configuration and control are included, as is an experimental
 recursive nameserver with support for forwarding. It is the
 continuation of the BIND 10 project from the ISC hosted at
-http://bind10.isc.org/. 
+http://bind10.isc.org/.
 
 Since the June 2013 1.1.0 BIND 10 release, the new DNS highlights
 include incoming zone transfer statistics, support for CAA and TLSA
@@ -30,9 +30,9 @@ https://lists.isc.org/mailman/listinfo/kea-users.
 For the full commit history, please see the ChangeLog and the git
 Log.
 
-Installation details are documented in the Guide 
+Installation details are documented in the Guide
 (http://bundy-dns.de/documentation.html).
-  
+
 The ./configure options --disable-dns and --disable-dhcp
 may be used to provide an optional DHCP- or DNS-only build and
 installation.
