@@ -108,20 +108,25 @@ class MemorySegmentBuilder:
             zones = clist.get_zone_table_accessor(dsrc_name, True)
 
         for _, zone_name in zones:
-            catch_load_error = (zone_name is None) # install empty zone initially
-            result, writer = clist.get_cached_zone_writer(zone_name, catch_load_error,
+            # install empty zone initially
+            catch_load_error = (zone_name is None)
+            result, writer = clist.get_cached_zone_writer(zone_name,
+                                                          catch_load_error,
                                                           dsrc_name)
             if result != ConfigurableClientList.CACHE_STATUS_ZONE_SUCCESS:
-                logger.error(LIBMEMMGR_BUILDER_GET_ZONE_WRITER_ERROR, zone_name, dsrc_name)
+                logger.error(LIBMEMMGR_BUILDER_GET_ZONE_WRITER_ERROR,
+                             zone_name, dsrc_name)
                 continue
 
             try:
                 error = writer.load()
                 if error is not None:
-                    logger.error(LIBMEMMGR_BUILDER_ZONE_WRITER_LOAD_1_ERROR, zone_name, dsrc_name, error)
+                    logger.error(LIBMEMMGR_BUILDER_ZONE_WRITER_LOAD_1_ERROR,
+                                 zone_name, dsrc_name, error)
                     continue
             except Exception as e:
-                logger.error(LIBMEMMGR_BUILDER_ZONE_WRITER_LOAD_2_ERROR, zone_name, dsrc_name, str(e))
+                logger.error(LIBMEMMGR_BUILDER_ZONE_WRITER_LOAD_2_ERROR,
+                             zone_name, dsrc_name, str(e))
                 continue
             writer.install()
             writer.cleanup()
@@ -168,8 +173,10 @@ class MemorySegmentBuilder:
                         # See the comments for __handle_load() for
                         # details of the tuple passed to the "load"
                         # command.
-                        _, zone_name, dsrc_info, rrclass, dsrc_name = command_tuple
-                        self.__handle_load(zone_name, dsrc_info, rrclass, dsrc_name)
+                        _, zone_name, dsrc_info, rrclass, dsrc_name = \
+                            command_tuple
+                        self.__handle_load(zone_name, dsrc_info, rrclass,
+                                           dsrc_name)
                     elif command == 'shutdown':
                         self.__handle_shutdown()
                         # When the shutdown command is received, we do
