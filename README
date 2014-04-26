@@ -37,3 +37,10 @@ The ./configure options --disable-dns and --disable-dhcp
 may be used to provide an optional DHCP- or DNS-only build and
 installation.
 
+Bundy was a sponsored development project (under the name BIND 10)
+from April 2009 to April 2014, and would not be possible without the
+generous support of the past sponsors: AFNIC, Afilias, CIRA, CNNIC,
+CZ.NIC, DENIC eG, Google, IIS.SE, JPRS, Nominet, .nz Registry
+Services, RIPE NCC, Registro.br, SIDN, and Technical Center of
+Internet.  Support for the new DHCPv4 and DHCPv6 components is
+provided by Comcast.
