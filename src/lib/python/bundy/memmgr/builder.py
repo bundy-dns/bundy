@@ -73,6 +73,14 @@ class MemorySegmentBuilder:
         self._response_queue.append(('bad_command',))
         self._shutdown = True
 
+    def __handle_open(self, args):
+        logger.debug(logger.DBGLVL_TRACE_BASIC(LIBMEMMGR_BUILDER_SEGMENT_OPEN,
+                                               dsrc_name, rrclass))
+        _, zone_name, dsrc_info, rrclass, dsrc_name, action = args
+        result = action()
+        self._response_queue.append(('open-completed', dsrc_info, rrclass,
+                                     dsrc_name, result))
+
     def __handle_load(self, zone_name, dsrc_info, rrclass, dsrc_name):
         # This method is called when handling the 'load' command. The
         # following tuple is passed:
@@ -99,7 +107,7 @@ class MemorySegmentBuilder:
         clist.reset_memory_segment(dsrc_name,
                                    ConfigurableClientList.READ_WRITE,
                                    params)
-        logger.debug(logger.DBGLVL_TRACE_BASIC, LIBMEMMGR_BUILDER_SEGMENT_OPEND,
+        logger.debug(logger.DBGLVL_TRACE_BASIC, LIBMEMMGR_BUILDER_SEGMENT_RESET,
                      dsrc_name, rrclass)
 
         if zone_name is not None:
@@ -169,7 +177,9 @@ class MemorySegmentBuilder:
                     command = command_tuple[0]
                     logger.debug(logger.DBGLVL_TRACE_BASIC,
                                  LIBMEMMGR_BUILDER_RECEIVED_COMMAND, command)
-                    if command == 'load':
+                    if command == 'open':
+                        self.__handle_open(command_tuple)
+                    elif command == 'load':
                         # See the comments for __handle_load() for
                         # details of the tuple passed to the "load"
                         # command.

@@ -150,7 +150,8 @@ class TestMemorySegmentBuilder(unittest.TestCase):
         cfg_data = MockConfigData(
             {"classes":
                  {"IN": [{"type": "MasterFiles",
-                          "params": { "example.com": TESTDATA_PATH + "example.com.zone" },
+                          "params": { "example.com": TESTDATA_PATH +
+                                      "example.com.zone" },
                           "cache-enable": True,
                           "cache-type": "mapped"}]
                   }
@@ -165,7 +166,7 @@ class TestMemorySegmentBuilder(unittest.TestCase):
         self.assertEqual(clients_map, datasrc_info.clients_map)
         self.assertEqual(1, len(datasrc_info.segment_info_map))
         sgmt_info = datasrc_info.segment_info_map[(RRClass.IN, 'MasterFiles')]
-        self.assertIsNone(sgmt_info.get_reset_param(SegmentInfo.READER))
+        self.assertIsNotNone(sgmt_info.get_reset_param(SegmentInfo.READER))
         self.assertIsNotNone(sgmt_info.get_reset_param(SegmentInfo.WRITER))
 
         param = sgmt_info.get_reset_param(SegmentInfo.WRITER)

@@ -13,6 +13,7 @@
 # NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
 # WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+import json
 import os
 from collections import deque
 
@@ -36,10 +37,19 @@ class SegmentInfo:
 
     A summarized (and simplified) state transition diagram (for __state)
     would be as follows:
-                                                +--sync_reader()/remove_reader()
-                                                |  still have old readers
-                                                |          |
-                UPDATING-----complete_--->SYNCHRONIZING<---+
+
+          INIT-----start_------->R_VALIDATING
+                validate()           |
+                             complete_validate()
+                                     |
+   W_VALIDATING<-----------V_SYNCHRONIZING----sync_reader()/remove_reader()
+           |   (no more reader)          ^    still have old readers
+           |                             +--------+
+        complete_
+       validate()                               +--sync_reader()/remove_reader()
+           |                                    |          |
+           |                                    |          |
+           +--> UPDATING-----complete_--->SYNCHRONIZING<---+
                   ^          update()           |
     start_update()|                             | sync_reader()/remove_reader()
     events        |                             V no more old reader
@@ -48,26 +58,30 @@ class SegmentInfo:
 
     """
     # Common constants of user type: reader or writer
-    READER = 0
+    READER = 0 # TODO...
     WRITER = 1
 
     # Enumerated values for state:
-    UPDATING = 0 # the segment is being updated (by the builder thread,
+    INIT = -1
+    R_VALIDATING = 0
+    V_SYNCHRONIZING = 1
+    W_VALIDATING = 2
+    UPDATING = 3 # the segment is being updated (by the builder thread,
                  # although SegmentInfo won't care about this level of
                  # details).
-    SYNCHRONIZING = 1 # one pair of underlying segments has been
+    SYNCHRONIZING = 4 # one pair of underlying segments has been
                       # updated, and readers are now migrating to the
                       # updated version of the segment.
-    COPYING = 2 # all readers that used the old version of segment have
+    COPYING = 5 # all readers that used the old version of segment have
                 # been migrated to the updated version, and the old
                 # segment is now being updated.
-    READY = 3 # both segments of the pair have been updated. it can now
+    READY = 6 # both segments of the pair have been updated. it can now
               # handle further updates (e.g., from xfrin).
 
     def __init__(self):
         # Holds the state of SegmentInfo. See the class description
         # above for the state transition diagram.
-        self.__state = self.READY
+        self.__state = self.INIT
         # __readers is a set of 'reader_session_id' private to
         # SegmentInfo. It consists of the (ID of) reader modules that
         # are using the "current" reader version of the segment.
@@ -87,8 +101,8 @@ class SegmentInfo:
         self.__events = deque()
 
     def get_state(self):
-        """Returns the state of SegmentInfo (UPDATING, SYNCHRONIZING,
-        COPYING or READY)."""
+        """Returns the state of SegmentInfo (UPDATING, SYNCHRONIZING, etc)"""
+
         return self.__state
 
     def get_readers(self):
@@ -107,11 +121,14 @@ class SegmentInfo:
         """Returns a list of pending events in the order they arrived."""
         return list(self.__events)
 
-    # Helper method used in complete_update(), sync_reader() and
+    # Helper method used in complete_validate/update(), sync_reader() and
     # remove_reader().
     def __sync_reader_helper(self):
         if not self.__old_readers:
-            self.__state = self.COPYING
+            if self.__state is self.SYNCHRONIZING:
+                self.__state = self.COPYING
+            else:
+                self.__state = self.W_VALIDATING
             if self.__events:
                 return self.__events.popleft()
 
@@ -141,10 +158,50 @@ class SegmentInfo:
         the main thread itself (which also handles communications) and
         only have the builder in a different thread."""
         if reader_session_id in self.__readers:
-            raise SegmentInfoError('Reader session ID is already in readers set: ' +
-                                   str(reader_session_id))
+            raise SegmentInfoError('Reader session ID is already in readers ' +
+                                   'set: ' + str(reader_session_id))
 
         self.__readers.add(reader_session_id)
+
+    def start_validate(self):
+        "TODO"
+        if self.__state != self.INIT:
+            raise SegmentInfoError('start_validate can only be called once, ' +
+                                   'initially')
+        self.__state = self.R_VALIDATING
+        return self._start_validate()
+
+    def complete_validate(self, validated):
+        """Update status of a segment info on completion of an open command.
+
+        TODO: more description
+
+        Parameter:
+        - validated (bool): True if validation succeeded; False otherwise.
+
+        """
+        self._complete_validate(validated)
+        if self.__state == self.R_VALIDATING:
+            self.__state = self.V_SYNCHRONIZING
+            self.__old_readers = self.__readers
+            self.__readers = set()
+            return self.__sync_reader_helper()
+        elif self.__state == self.W_VALIDATING:
+            self.__state = self.UPDATING
+            # There should be a command for the initial load.  We shouldn't
+            # pop it yet.
+            return self.__events[0]
+        else:                   # buggy case
+            raise SegmentInfoError('complete_validate() called in ' +
+                                   'incorrect state: ' + str(self.__state))
+
+    def _complete_validate(self, validated):
+        """A subslass specific processing of complete_validate.
+
+        A specific can override this method; by default it does nothing.
+
+        """
+        return
 
     def start_update(self):
         """If the current state is READY and there are pending events,
@@ -207,7 +264,7 @@ class SegmentInfo:
         to care about the differences based on the internal state.
 
         """
-        if self.__state != self.SYNCHRONIZING:
+        if self.__state not in (self.V_SYNCHRONIZING, self.SYNCHRONIZING):
             return None
 
         if reader_session_id not in self.__old_readers:
@@ -238,7 +295,7 @@ class SegmentInfo:
 
         """
         if reader_session_id in self.__old_readers:
-            assert(self.__state == self.SYNCHRONIZING)
+            assert(self.__state in (self.V_SYNCHRONIZING, self.SYNCHRONIZING))
             self.__old_readers.remove(reader_session_id)
             return self.__sync_reader_helper()
         elif reader_session_id in self.__readers:
@@ -344,28 +401,82 @@ class MappedSegmentInfo(SegmentInfo):
         # writer.  In this initial implementation we assume that all possible
         # readers are waiting for a new version (not using pre-existing one),
         # and the writer is expected to build a new segment as version "0".
-        self.__reader_ver = None # => 0 => 1 => 0 => 1 ...
-        self.__writer_ver = 0    # => 1 => 0 => 1 => 0 ...
+        self.__reader_ver = None
+        self.__writer_ver = None
 
-    def get_reset_param(self, user_type):
-        ver = self.__reader_ver if user_type == self.READER else \
-            self.__writer_ver
-        if ver is None:
-            return None
+        # State of mapped file for readers: becomes true if validated
+        # successfully or switched from successfully updated writer version.
+        # Unless it's true, we won't tell readers the mapped file as it won't
+        # be usable. For writer (which is actually the memmgr itself, in
+        # practice), we'll always try to open/create it for any update attempt.
+        self.__reader_file_validated = False
+
+        self.__map_versions_file = self.__mapped_file_base + '-vers.json'
+        if os.path.exists(self.__map_versions_file):
+            try:
+                with open(self.__map_versions_file) as f:
+                    versions = json.load(f)
+
+                # reset both versions at once; if either of the values is
+                # unavailable, neither variables will be reset.
+                rver, wver = versions['reader'], versions['writer']
+                assert((rver == 0 and wver == 1) or (rver == 1 and wver == 0))
+                self.__reader_ver = rver
+                self.__writer_ver = wver
+            except Exception as ex:
+                # somewhat unexpected, but not fatal; we could still rebuild
+                # segments from scratch
+                print('unexpected: ' + str(ex))
+                pass            # TODO: log it
+
+        reader_file = None if self.__reader_ver is None else \
+                      '%s.%d' % (self.__mapped_file_base, self.__reader_ver)
+        writer_file = None if self.__writer_ver is None else \
+                      '%s.%d' % (self.__mapped_file_base, self.__writer_ver)
+        self.__rvalidate_action = lambda: False if reader_file is None else \
+                                  os.path.exists(reader_file)
+        self.__wvalidate_action = lambda: False if writer_file is None else \
+                                  os.path.exists(writer_file)
+
+        # If the versions are not yet known, we'll begin with the defaults.
+        if self.__reader_ver is None and self.__writer_ver is None:
+            self.__reader_ver = 0
+            self.__writer_ver = 1
+
+    def get_reset_param(self, utype):
+        # See the description of __reader_file_validated in constructor; we
+        # don't tell readers a possibly broken or non-existent file.
+        if utype == self.READER and not self.__reader_file_validated:
+            return {'mapped-file': None}
+
+        ver = self.__reader_ver if utype == self.READER else self.__writer_ver
         mapped_file = self.__mapped_file_base + '.' + str(ver)
         return {'mapped-file': mapped_file}
 
+    def _start_validate(self):
+        return self.__rvalidate_action, self.__wvalidate_action
+
+    def _complete_validate(self, validated):
+        if validated and self.get_state() == self.R_VALIDATING:
+            self.__reader_file_validated = True
+
     def _switch_versions(self):
         # Swith the versions as noted in the constructor.
+        self.__reader_ver = 1 - self.__reader_ver
         self.__writer_ver = 1 - self.__writer_ver
-
-        if self.__reader_ver is None:
-            self.__reader_ver = 0
-        else:
-            self.__reader_ver = 1 - self.__reader_ver
 
         # Versions should be different
         assert(self.__reader_ver != self.__writer_ver)
+
+        # Now reader file should be ready
+        self.__reader_file_validated = True
+
+        # write/update versions file
+        versions = {'reader': self.__reader_ver, 'writer': self.__writer_ver}
+        try:
+            with open(self.__map_versions_file, 'w') as f:
+                f.write(json.dumps(versions) + '\n')
+        except: pass            # TODO log it
 
 class DataSrcInfo:
     """A container for datasrc.ConfigurableClientLists and associated
