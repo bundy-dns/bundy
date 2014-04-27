@@ -34,6 +34,17 @@ Informational message.  The MemorySegmentBuilder thread reset a
 memory segment used with the shown data source to the read-write mode
 for further updates.
 
+% LIBMEMMGR_BUILDER_SEGMENT_VALIDATE Validating memory segment data for data source '%1/%2'
+Informational message.  The memory segment builder thread is
+validating memory segment data in a segment specific way.
+
+% LIBMEMMGR_BUILDER_SEGMENT_VALIDATE_FAIL Failed to validate memory segment data for data source '%1/%2': %3
+An exception occurred when validating a memory segment.  This is
+generally unexpected (errors are expected to be reported without an
+exception), so it's more likely to be a bug of the segment specific
+implementation.  Nevertheless, this is considered a validation failure
+and is reported to the main memmgr thread.
+
 % LIBMEMMGR_BUILDER_ZONE_WRITER_LOAD_1_ERROR Error loading zone '%1', data source '%2': '%3'
 The MemorySegmentBuilder failed to load the specified zone when handling
 the load command. This zone will be skipped.
@@ -42,6 +53,3 @@ the load command. This zone will be skipped.
 An exception occurred when the MemorySegmentBuilder tried to load the
 specified zone when handling the load command. This zone will be
 skipped.
-
-% LIBMEMMGR_BUILDER_SEGMENT_OPEN Opening a
-TBD

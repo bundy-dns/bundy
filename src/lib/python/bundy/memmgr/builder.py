@@ -73,12 +73,30 @@ class MemorySegmentBuilder:
         self._response_queue.append(('bad_command',))
         self._shutdown = True
 
-    def __handle_open(self, args):
-        logger.debug(logger.DBGLVL_TRACE_BASIC(LIBMEMMGR_BUILDER_SEGMENT_OPEN,
-                                               dsrc_name, rrclass))
-        _, zone_name, dsrc_info, rrclass, dsrc_name, action = args
-        result = action()
-        self._response_queue.append(('open-completed', dsrc_info, rrclass,
+    def __handle_validate(self, args):
+        """Handle 'validate' command.
+
+        Command arguments are the same 'load' except the last one:
+        'action': callable without any parameter itself, encapsulating
+                  any segment-specific validation logic.  It returns
+                  a result of the validation.
+
+        This method simply calls the passed action, and returns the result
+        back to the memmgr with other command arguments.  This is run in
+        the builder thread simply because it may take time.
+
+        """
+        _, dsrc_info, rrclass, dsrc_name, action = args
+
+        logger.debug(logger.DBGLVL_TRACE_BASIC,
+                     LIBMEMMGR_BUILDER_SEGMENT_VALIDATE, dsrc_name, rrclass)
+        try:
+            result = action()
+        except Exception as ex:
+            logger.error(LIBMEMMGR_BUILDER_SEGMENT_VALIDATE_FAIL, dsrc_name,
+                         rrclass, ex)
+            result = False
+        self._response_queue.append(('validate-completed', dsrc_info, rrclass,
                                      dsrc_name, result))
 
     def __handle_load(self, zone_name, dsrc_info, rrclass, dsrc_name):
@@ -177,8 +195,8 @@ class MemorySegmentBuilder:
                     command = command_tuple[0]
                     logger.debug(logger.DBGLVL_TRACE_BASIC,
                                  LIBMEMMGR_BUILDER_RECEIVED_COMMAND, command)
-                    if command == 'open':
-                        self.__handle_open(command_tuple)
+                    if command == 'validate':
+                        self.__handle_validate(command_tuple)
                     elif command == 'load':
                         # See the comments for __handle_load() for
                         # details of the tuple passed to the "load"

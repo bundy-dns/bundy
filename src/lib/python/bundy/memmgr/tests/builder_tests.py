@@ -235,6 +235,39 @@ class TestMemorySegmentBuilder(unittest.TestCase):
         self.assertEqual(len(self._builder_command_queue), 0)
         self.assertEqual(len(self._builder_response_queue), 0)
 
+    def test_validate(self):
+        def raise_ex():
+            raise ValueError('test error')
+        action_true = lambda: True
+        action_false = lambda: False
+        action_raise = lambda: raise_ex()
+
+        self._builder_thread.start()
+
+        # issue two validate commands and then stop the thread
+        with self._builder_cv:
+            self._builder_command_queue.append(('validate', 'd', 'c', 'n',
+                                                action_true))
+            self._builder_command_queue.append(('validate', 'd', 'c', 'n',
+                                                action_false))
+            # if the action raises an exception, it'll be caught and responded
+            # as a validation failure
+            self._builder_command_queue.append(('validate', 'd', 'c', 'n',
+                                                action_raise))
+            self._builder_command_queue.append(('shutdown',))
+            self._builder_cv.notify_all()
+        self._builder_thread.join(5)
+        self.assertFalse(self._builder_thread.isAlive())
+
+        # Confirm the responses
+        self.assertEqual(len(self._builder_response_queue), 3)
+        self.assertEqual(('validate-completed', 'd', 'c', 'n', True),
+                         self._builder_response_queue[0])
+        self.assertEqual(('validate-completed', 'd', 'c', 'n', False),
+                         self._builder_response_queue[1])
+        self.assertEqual(('validate-completed', 'd', 'c', 'n', False),
+                         self._builder_response_queue[2])
+
 if __name__ == "__main__":
     bundy.log.init("bundy-test")
     bundy.log.resetUnitTestRootLogger()
