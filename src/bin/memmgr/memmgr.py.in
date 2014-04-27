@@ -477,14 +477,24 @@ class Memmgr(BUNDYServer):
     def _init_segments(self, datasrc_info):
         for key, sgmt_info in datasrc_info.segment_info_map.items():
             rrclass, dsrc_name = key
-            cmd = ('load', None, datasrc_info, rrclass, dsrc_name)
+
             for reader in self._segment_readers.keys():
                 sgmt_info.add_reader(reader)
-            sgmt_info.add_event(cmd)
-            send_cmd = sgmt_info.start_update()
-            assert cmd == send_cmd and sgmt_info.get_state() == \
-                SegmentInfo.UPDATING
+
+            # Initiate validating memory segments, send command for the reader
+            # segment to the builder
+            rvalidate_arg, wvalidate_arg = sgmt_info.start_validate()
+            cmd = ('validate', datasrc_info, rrclass, dsrc_name, rvalidate_arg)
             self._cmd_to_builder(cmd)
+
+            # Schedule additional initial commands: validating the writer
+            # segment, followed by the initial full load.
+            cmd = ('validate', datasrc_info, rrclass, dsrc_name, wvalidate_arg)
+            sgmt_info.add_event(cmd)
+            cmd = ('load', None, datasrc_info, rrclass, dsrc_name)
+            sgmt_info.add_event(cmd)
+
+            assert sgmt_info.get_state() == SegmentInfo.R_VALIDATING
 
 def main():
     mgr = Memmgr()

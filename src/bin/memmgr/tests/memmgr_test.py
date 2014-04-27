@@ -65,7 +65,6 @@ class MockSegmentInfo(SegmentInfo):
     def __init__(self):
         super().__init__()
         self.events = []
-        self.__state = None
         self.added_readers = []
         self.old_readers = set()
         self.ret_sync_reader = None # return value of sync_reader()
@@ -73,13 +72,9 @@ class MockSegmentInfo(SegmentInfo):
 
     def add_event(self, cmd):
         self.events.append(cmd)
-        self.__state = SegmentInfo.UPDATING
 
     def start_update(self):
         return self.events[0]
-
-    def get_state(self):
-        return self.__state
 
     def add_reader(self, reader):
         super().add_reader(reader)
@@ -98,6 +93,9 @@ class MockSegmentInfo(SegmentInfo):
         if self.raise_on_sync_reader:
             raise ValueError('exception from sync_reader')
         return self.ret_sync_reader
+
+    def _start_validate(self):
+        return 'action1', 'action2'
 
 class MockMemmgr(memmgr.Memmgr):
     def __init__(self):
@@ -230,8 +228,7 @@ class TestMemmgr(unittest.TestCase):
         self.assertEqual(1, answer[0])
         self.assertIsNotNone(re.search('not a directory', answer[1]))
 
-    @unittest.skipIf(os.getuid() == 0,
-                     'test cannot be run as root user')
+    @unittest.skipIf(os.getuid() == 0, 'test cannot be run as root user')
     def test_configure_bad_permissions(self):
         self.__mgr._setup_ccsession()
 
@@ -388,10 +385,19 @@ class TestMemmgr(unittest.TestCase):
         added_readers.sort()
         self.assertEqual(['reader1', 'reader2'], added_readers)
 
-        # The event was pushed into the segment info
-        command = ('load', None, dsrc_info, bundy.dns.RRClass.IN, 'name')
-        self.assertEqual([command], sgmt_info.events)
-        self.assertEqual([command], self.__mgr._builder_command_queue)
+        # Check the first command sent to the builder thread.
+        self.assertEqual(self.__mgr._builder_command_queue,
+                         [('validate', dsrc_info, bundy.dns.RRClass.IN, 'name',
+                          'action1')])
+
+        # Check pending events pushed into the segment info
+        self.assertEqual(len(sgmt_info.events), 2)
+        self.assertEqual(sgmt_info.events[0],
+                         ('validate', dsrc_info, bundy.dns.RRClass.IN, 'name',
+                          'action2'))
+        self.assertEqual(sgmt_info.events[1],
+                         ('load', None, dsrc_info, bundy.dns.RRClass.IN,
+                          'name'))
         del self.__mgr._builder_command_queue[:]
 
     def test_notify_from_builder(self):
