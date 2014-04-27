@@ -29,6 +29,39 @@ skipped.
 Informational message.  The MemorySegmentBuilder thread received a
 command from the main memmgr thread.
 
+% LIBMEMMGR_BUILDER_RESET_SEGMENT_ERROR Error resetting memory segment for '%1/%2': %3
+The MemorySegmentBuilder thread for memmgr failed to to reset a memory
+segment in the read-write mode for updates.  This is an unexpected
+event, but can still happen if a file-based segment has been corrupted
+and it's not detected in the initial validation.  It's not necessarily
+fatal; the builder thread will try to re-create a new segment and load
+all data from the scratch.  It may take time, but if it's completed
+successfully the memmgr can start working correctly again.
+
+% LIBMEMMGR_BUILDER_SEGMENT_CREATED Re-created memory segment for '%1/%2'
+The MemorySegmentBuilder thread created a new memory segment.  This is
+not an expected event under normal condition, even if reusable segment
+data doesn't exist before, since in that case the reset attempt in the
+read-write mode should have automatically created it.  This explicit
+create operation is therefore a recovery process from an unexpected
+failure.  Although unexpected, it can happen, especially after such
+events as an abrupt system reboot, so unless it happens frequently and
+as long as the creation succeeds this is not a problem.
+
+% LIBMEMMGR_BUILDER_SEGMENT_CREATE_ERROR Error creating memory segment for '%1/%2': %3
+The MemorySegmentBuilder thread created a new memory segment after a
+failure of resetting it, but even the create attempt failed.
+Something should be fundamentally broken, e.g, corruption at the file
+system level, and memmgr itself cannot recover from it by itself.
+The administrator needs to take a closer look at the cause and fix it.
+
+% LIBMEMMGR_BUILDER_SEGMENT_LOAD_ALL Loading all zones instead of just '%1/%2' in a new memory segment for data source '%3'
+The MemorySegmentBuilder thread tried to load a specific zone into a
+memory segment, but due to a failure it had to create a fresh new
+memory segment, and is now going to all zones.  This should normally
+not happen, but can be possible in a recover process from data
+corruption.  See also LIBMEMMGR_BUILDER_SEGMENT_CREATED.
+
 % LIBMEMMGR_BUILDER_SEGMENT_RESET reset memory segment for update with data source '%1/%2'
 Informational message.  The MemorySegmentBuilder thread reset a
 memory segment used with the shown data source to the read-write mode
