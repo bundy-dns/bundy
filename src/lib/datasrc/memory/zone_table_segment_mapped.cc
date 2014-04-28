@@ -15,6 +15,7 @@
 #include <datasrc/memory/zone_table_segment_mapped.h>
 #include <datasrc/memory/zone_table.h>
 #include <datasrc/memory/segment_object_holder.h>
+#include <datasrc/memory/logger.h>
 
 #include <memory>
 
@@ -40,7 +41,9 @@ const char* const ZONE_TABLE_HEADER_NAME = "zone_table_header";
 ZoneTableSegmentMapped::ZoneTableSegmentMapped(const RRClass& rrclass) :
     ZoneTableSegment(rrclass),
     impl_type_("mapped"),
-    rrclass_(rrclass)
+    rrclass_(rrclass),
+    current_mode_(CREATE), // not matter until usable, but init it explicitly
+    cached_ro_header_(NULL)     // ditto
 {
 }
 
@@ -230,6 +233,23 @@ ZoneTableSegmentMapped::openReadOnly(const std::string& filename) {
     return (segment.release());
 }
 
+namespace {
+// A trivial helper for log message(s).
+std::string
+modeString(ZoneTableSegment::MemorySegmentOpenMode mode) {
+    switch (mode) {
+    case ZoneTableSegment::CREATE:
+        return ("create");
+    case ZoneTableSegment::READ_WRITE:
+        return ("read-write");
+    case ZoneTableSegment::READ_ONLY:
+        return ("read-only");
+    default:
+        return ("unknown"); // we could assert here, but maybe not worth it.
+    }
+}
+}
+
 void
 ZoneTableSegmentMapped::reset(MemorySegmentOpenMode mode,
                               bundy::data::ConstElementPtr params)
@@ -245,9 +265,21 @@ ZoneTableSegmentMapped::reset(MemorySegmentOpenMode mode,
     }
 
     ConstElementPtr mapped_file = params->get("mapped-file");
-    if ((!mapped_file) || (mapped_file->getType() != Element::string)) {
+    if ((!mapped_file) || (mapped_file->getType() != Element::string &&
+                           mapped_file->getType() != Element::null)) {
         bundy_throw(bundy::InvalidParameter,
-                  "Value of \"mapped-file\" is not a string");
+                  "Invalid value of \"mapped-file\": must be string or null");
+    }
+    if (mapped_file->getType() == Element::null) {
+        LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_MEM_UNMAP_SEGMENT).
+            arg(current_filename_.empty() ?
+                std::string("<none>") : current_filename_);
+        clear();
+        current_filename_.clear();
+        // see the constructor; not a big deal in practice, but to be clean
+        current_mode_ = CREATE;
+        cached_ro_header_ = NULL;
+        return;
     }
 
     const std::string filename = mapped_file->stringValue();
@@ -260,6 +292,9 @@ ZoneTableSegmentMapped::reset(MemorySegmentOpenMode mode,
     } else {
         sync();
     }
+
+    LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_MEM_RESET_MAPPED_SEGMENT).
+        arg(filename).arg(modeString(mode));
 
     // In case current_filename_ below fails, we want the segment to be
     // automatically destroyed.

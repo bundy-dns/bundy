@@ -194,9 +194,20 @@ problem with provided data.
 Debug information. A set of RRs are being removed from the in-memory data
 source.
 
+% DATASRC_MEMORY_MEM_RESET_MAPPED_SEGMENT resetting mapped memory segment on %1 in %2 mode
+Debug information.  The process is trying to reset a mapped memory segment
+for DNS zone data on the shown file in the shown mode.
+
 % DATASRC_MEMORY_MEM_SINGLETON trying to add multiple RRs for domain '%1' and type '%2'
 Some resource types are singletons -- only one is allowed in a domain
 (for example CNAME or SOA). This indicates a problem with provided data.
+
+% DATASRC_MEMORY_MEM_UNMAP_SEGMENT unmapping zone tabale memory segment on file %1
+Debug information.  The application is unmapping a file that may have been
+mapped for a zone table.  After that, any attempt to access to the zone
+table will result in a failure.  For a higher level application such as
+authoritative name server, this means that queries to any zones served from
+the data source will result in server failure.
 
 % DATASRC_MEMORY_MEM_WILDCARD_DNAME DNAME record in wildcard domain '%1'
 The software refuses to load DNAME records into a wildcard domain.  It isn't
