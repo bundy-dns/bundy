@@ -761,6 +761,19 @@ TEST_F(DataSrcClientsBuilderTest,
     const boost::shared_ptr<ConfigurableClientList> list =
         (*clients_map)[RRClass::IN()];
     EXPECT_EQ(SEGMENT_WAITING, list->getStatus()[0].getSegmentState());
+    // Send the update command with inuse-only.  Since the status is 'waiting',
+    // this should be ignored.
+    const ElementPtr noop_command_args = Element::fromJSON(
+        "{"
+        "  \"data-source-name\": \"MasterFiles\","
+        "  \"data-source-class\": \"IN\","
+        "  \"inuse-only\": true"
+        "}");
+    noop_command_args->set("segment-params", segment_config);
+    builder.handleCommand(Command(SEGMENT_INFO_UPDATE, noop_command_args,
+                                  FinishedCallback()));
+    EXPECT_EQ(SEGMENT_WAITING, list->getStatus()[0].getSegmentState());
+
     // Send the command
     const ElementPtr command_args = Element::fromJSON(
         "{"
