@@ -238,23 +238,22 @@ class Memmgr(BUNDYServer):
             self._builder_cv.notify_all()
 
     def __notify_readers(self, rrclass, dsrc_name, sgmt_info, readers,
-                         skip_ok=False):
+                         inuse_only=False):
         """Helper to form and send segment_info_update message to readers.
 
-        Unless 'skip_ok' is explicitly set to True a segment for readers
-        must be available.
+        If 'inuse_only' is True, tell the readers to reset the segment
+        only if they are currently using another segment.
 
         """
 
         reset_param = sgmt_info.get_reset_param(SegmentInfo.READER)
-        if reset_param is None:
-            assert(skip_ok)
-            return
         params = {
             'data-source-class': str(rrclass),
             'data-source-name': dsrc_name,
             'segment-params': reset_param
         }
+        if inuse_only:
+            params['inuse-only'] = True
         for reader in readers:
             params['reader'] = reader
             rcmd = bundy.config.create_command('segment_info_update', params)
@@ -280,25 +279,36 @@ class Memmgr(BUNDYServer):
             del self._builder_response_queue[:]
         for notification in notifications:
             notif_name = notification[0]
-            if notif_name == 'load-completed':
-                (_, dsrc_info, rrclass, dsrc_name) = notification
+            if notif_name in ('validate-completed', 'load-completed'):
+                (_, dsrc_info, rrclass, dsrc_name, result) = notification
                 sgmt_info = dsrc_info.segment_info_map[(rrclass, dsrc_name)]
-                cmd = sgmt_info.complete_update()
-                # It may return another load command on the same data source.
+                if notif_name == 'validate-completed':
+                    cmd = sgmt_info.complete_validate(result)
+                else:
+                    cmd = sgmt_info.complete_update()
+
+                # It may return another builder command on the same data source.
                 # If it is so, we execute it too, before we start
                 # synchronizing with the readers.
                 if cmd is not None:
                     self._cmd_to_builder(cmd)
 
                 # If there are readers of the old version of this segment,
-                # notify them so they'll move to the newly loaded version.
+                # notify them so they'll move to the new version of segment.
+                # If this is on completion of validation, we'll only have them
+                # actually reset the segment when they are currently using
+                # another one, just so the memmgr can safely update the 'writer'
+                # version of the segment; otherwise we'd rather tell them to
+                # switch when the latest data are loaded.
                 old_readers = sgmt_info.get_old_readers()
+                inuse_only = (notif_name == 'validate-completed')
                 if old_readers:
                     self.__notify_readers(rrclass, dsrc_name, sgmt_info,
-                                          old_readers)
-                logger.debug(logger.DBGLVL_TRACE_BASIC, MEMMGR_LOAD_COMPLETED,
-                             dsrc_name, rrclass,
-                             'without' if cmd is None else 'with',
+                                          old_readers, inuse_only=inuse_only)
+                logger.debug(logger.DBGLVL_TRACE_BASIC,
+                             MEMMGR_COMMAND_COMPLETED,
+                             notif_name.replace('-completed', ''), dsrc_name,
+                             rrclass, 'without' if cmd is None else 'with',
                              len(old_readers))
             else:
                 raise ValueError('Unknown notification name: ' + notif_name)
@@ -390,12 +400,12 @@ class Memmgr(BUNDYServer):
                 for dsrc_info in self._datasrc_info_list:
                     for key, sgmt_info in dsrc_info.segment_info_map.items():
                         sgmt_info.add_reader(reader)
-                        rrclass, dsrc_name = key
-                        # If a reader segment is ready, we should tell the
-                        # reader about it.  It's possible a readable segment
-                        # isn't ready yet, so set skip_ok to True.
-                        self.__notify_readers(rrclass, dsrc_name, sgmt_info,
-                                              [reader], skip_ok=True)
+                        # If a reader segment has been loaded, we should tell
+                        # the reader about it.
+                        if sgmt_info.loaded():
+                            rrclass, dsrc_name = key
+                            self.__notify_readers(rrclass, dsrc_name, sgmt_info,
+                                                  [reader])
         else:                   # must be 'unsubscribed'
             if not reader in self._segment_readers:
                 logger.warn(MEMMGR_CCMEMBER_DUP_UNSUBSCRIBED, reader)

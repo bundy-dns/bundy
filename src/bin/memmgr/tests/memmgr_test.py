@@ -69,6 +69,7 @@ class MockSegmentInfo(SegmentInfo):
         self.old_readers = set()
         self.ret_sync_reader = None # return value of sync_reader()
         self.raise_on_sync_reader = False
+        self.loaded_result = False # return value of loaded(), tweakable
 
     def add_event(self, cmd):
         self.events.append(cmd)
@@ -79,6 +80,9 @@ class MockSegmentInfo(SegmentInfo):
     def add_reader(self, reader):
         super().add_reader(reader)
         self.added_readers.append(reader)
+
+    def complete_validate(self, validated):
+        return 'command'
 
     def complete_update(self):
         return 'command'
@@ -96,6 +100,9 @@ class MockSegmentInfo(SegmentInfo):
 
     def _start_validate(self):
         return 'action1', 'action2'
+
+    def loaded(self):
+        return self.loaded_result
 
 class MockMemmgr(memmgr.Memmgr):
     def __init__(self):
@@ -158,7 +165,8 @@ class TestMemmgr(unittest.TestCase):
         if os.path.isdir(self.__test_mapped_file_dir):
             os.rmdir(self.__test_mapped_file_dir)
 
-    def __check_segment_info_update(self, sgmt_info, expected_reader):
+    def __check_segment_info_update(self, sgmt_info, expected_reader,
+                                    inuse_only=False):
         """Helper method for common set of checks on sent segment_info_update.
 
         This method assumes the caller to setup the test case with
@@ -173,10 +181,13 @@ class TestMemmgr(unittest.TestCase):
         self.assertEqual(expected_reader, cc)
         command, val = bundy.config.parse_command(cmd)
         self.assertEqual('segment_info_update', command)
-        self.assertEqual({'data-source-class': 'IN',
-                          'data-source-name': 'name',
-                          'segment-params': 'test-segment-params',
-                          'reader': expected_reader}, val)
+        expected_params = {'data-source-class': 'IN',
+                           'data-source-name': 'name',
+                           'segment-params': 'test-segment-params',
+                           'reader': expected_reader}
+        if inuse_only:
+            expected_params['inuse-only'] = True
+        self.assertEqual(expected_params, val)
 
         # Confirm the number of outstanding updates is managed.
         self.assertEqual(
@@ -400,6 +411,43 @@ class TestMemmgr(unittest.TestCase):
                           'name'))
         del self.__mgr._builder_command_queue[:]
 
+    def __check_notify_from_builder(self, notif_name, notif_ref, dsrc_info,
+                                    sgmt_info, commands):
+        sgmt_info.complete_update = lambda: 'command'
+        sgmt_info.complete_validate = lambda x: 'command'
+        del commands[:]
+        del self.__mgr.mod_ccsession.sendmsg_params[:]
+        sgmt_info.old_readers.clear()
+
+        notif_ref.append((notif_name, dsrc_info, bundy.dns.RRClass.IN,
+                          'name', True))
+        # Wake up the main thread and let it process the notifications
+        self.__mgr._notify_from_builder()
+        # All notifications are now eaten
+        self.assertEqual([], notif_ref)
+        self.assertEqual(['command'], commands)
+        del commands[:]
+        # no message to readers
+        self.assertEqual(0, len(self.__mgr.mod_ccsession.sendmsg_params))
+
+        # The new command is sent
+        # Once again the same, but with the last command - nothing new pushed,
+        # but a notification should be sent to readers
+        #sgmt_info.old_readers.clear()
+        sgmt_info.old_readers.add('reader1')
+        self.__mgr._segment_readers['reader1'] = {}
+        sgmt_info.complete_update = lambda: None
+        sgmt_info.complete_validate = lambda x: None
+        notif_ref.append((notif_name, dsrc_info, bundy.dns.RRClass.IN,
+                          'name', True))
+        self.__mgr._notify_from_builder()
+        self.assertEqual([], notif_ref)
+        self.assertEqual([], commands)
+        self.assertEqual(1, len(self.__mgr.mod_ccsession.sendmsg_params))
+        (cmd, group, cc) = self.__mgr.mod_ccsession.sendmsg_params[0]
+        self.__check_segment_info_update(sgmt_info, 'reader1',
+                                         notif_name == 'validate-completed')
+
     def test_notify_from_builder(self):
         """
         Check the notify from builder thing eats the notifications and
@@ -416,35 +464,18 @@ class TestMemmgr(unittest.TestCase):
         def mock_cmd_to_builder(cmd):
             commands.append(cmd)
         self.__mgr._cmd_to_builder = mock_cmd_to_builder
+        self.__mgr._mod_cc = MyCCSession(None, None, None) # fake mod_ccsession
 
         self.__mgr._builder_lock = threading.Lock()
         # Extract the reference for the queue. We get a copy of the reference
         # to check it is cleared, not a new empty one installed
         notif_ref = self.__mgr._builder_response_queue
-        notif_ref.append(('load-completed', dsrc_info, bundy.dns.RRClass.IN,
-                          'name'))
-        # Wake up the main thread and let it process the notifications
-        self.__mgr._notify_from_builder()
-        # All notifications are now eaten
-        self.assertEqual([], notif_ref)
-        self.assertEqual(['command'], commands)
-        del commands[:]
 
-        # The new command is sent
-        # Once again the same, but with the last command - nothing new pushed,
-        # but a notification should be sent to readers
-        self.__mgr._mod_cc = MyCCSession(None, None, None) # fake mod_ccsession
-        sgmt_info.old_readers.add('reader1')
-        self.__mgr._segment_readers['reader1'] = {}
-        sgmt_info.complete_update = lambda: None
-        notif_ref.append(('load-completed', dsrc_info, bundy.dns.RRClass.IN,
-                          'name'))
-        self.__mgr._notify_from_builder()
-        self.assertEqual([], notif_ref)
-        self.assertEqual([], commands)
-        self.assertEqual(1, len(self.__mgr.mod_ccsession.sendmsg_params))
-        (cmd, group, cc) = self.__mgr.mod_ccsession.sendmsg_params[0]
-        self.__check_segment_info_update(sgmt_info, 'reader1')
+        self.__check_notify_from_builder('load-completed', notif_ref, dsrc_info,
+                                         sgmt_info, commands)
+        self.__check_notify_from_builder('validate-completed', notif_ref,
+                                         dsrc_info, sgmt_info, commands)
+
         # This is invalid (unhandled) notification name
         notif_ref.append(('unhandled',))
         self.assertRaises(ValueError, self.__mgr._notify_from_builder)
@@ -628,6 +659,7 @@ class TestMemmgr(unittest.TestCase):
 
         # basic case of new subscriber.  the reader should be added to the
         # segment info, and info_update should be sent to the reader.
+        sgmt_info.loaded_result = True
         self.__mgr._reader_notification('subscribed',
                                         {'client': 'foo',
                                          'group': 'SegmentReader'})
@@ -643,7 +675,7 @@ class TestMemmgr(unittest.TestCase):
 
         # if a reader segment isn't yet available, no info_update will be sent.
         self.__mgr.mod_ccsession.sendmsg_params = []
-        sgmt_info.get_reset_param = lambda x: None
+        sgmt_info.loaded_result = False
         self.__mgr._reader_notification('subscribed',
                                         {'client': 'bar',
                                          'group': 'SegmentReader'})
