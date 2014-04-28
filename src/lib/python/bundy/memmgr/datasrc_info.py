@@ -16,6 +16,8 @@
 import json
 import os
 from collections import deque
+from bundy.log_messages.libmemmgr_messages import *
+from bundy.memmgr.logger import logger
 
 class SegmentInfoError(Exception):
     """An exception raised for general errors in the SegmentInfo class."""
@@ -56,16 +58,31 @@ class SegmentInfo:
     exist       READY<------complete_----------COPYING
                             update()
 
+    A segment always begins with the 'INIT' stage, and completes validating
+    segments for readers and the writer.  This phase is intended to be used
+    to perform some initial validation on the segments before actually
+    using them (e.g., some segment implementation may check data integrity),
+    but details are up to the specific segment implementation and can even be
+    no-op.  This phase is also intended to be used to be synchronized
+    with existing readers that may be using segments in case memmgr has
+    restarted.  At the completion of the V_SYNCHRONIZING state, the memmgr
+    can be sure that no reader is using the writer version of the segment.
+    On the completion of W_VALIDATING, the segment is in use, and will
+    run normal cylce of updating.
+
     """
     # Common constants of user type: reader or writer
-    READER = 0 # TODO...
+    READER = 0
     WRITER = 1
 
     # Enumerated values for state:
-    INIT = -1
-    R_VALIDATING = 0
-    V_SYNCHRONIZING = 1
-    W_VALIDATING = 2
+    INIT = -1 # Placeholdr for the initial state, immediatelly move to
+              # R_VALIDATING
+    R_VALIDATING = 0 # The segment for readers is being verified.
+    V_SYNCHRONIZING = 1 # similar to SYNCHRONIZING below, but used for
+                        # the transition from R_VALIDATING to W_VALIDATING.
+    W_VALIDATING = 2 # The segment for the writer (memmgr) is being verified.
+                     # Once this is completed, the segments are ready for use.
     UPDATING = 3 # the segment is being updated (by the builder thread,
                  # although SegmentInfo won't care about this level of
                  # details).
@@ -99,6 +116,8 @@ class SegmentInfo:
         # they arrived. SegmentInfo doesn't have to know the details of
         # the stored data; it only matters for the memmgr.
         self.__events = deque()
+        # See loaded():
+        self.__loaded = False
 
     def get_state(self):
         """Returns the state of SegmentInfo (UPDATING, SYNCHRONIZING, etc)"""
@@ -164,7 +183,24 @@ class SegmentInfo:
         self.__readers.add(reader_session_id)
 
     def start_validate(self):
-        "TODO"
+        """Start validation of memory segments.
+
+        The use of SegmentInfo always begins with this method.  It initiates
+        the state transition from INIT to R_VALIDATING.
+
+        It returns 2 callable objects in a tuple: 1st is to be used to
+        validate the reader segment; 2nd is to be used to validate the writer
+        segment.  The caller is expected to pass these to the builder thread
+        and evaluate them as the initial two commands for the segment.
+        The specific details of how the callable works depends on the
+        specific subclass of SegmentInfo, and the returned callables
+        are given from the _start_validate() "protected" method (each
+        subclass must implement that method).  In general, it is advisable
+        that the callable does not share any state of this object, since
+        it's evaluated in a separate thread and there can be a race condition
+        if it refers to a shared state.
+
+        """
         if self.__state != self.INIT:
             raise SegmentInfoError('start_validate can only be called once, ' +
                                    'initially')
@@ -172,9 +208,20 @@ class SegmentInfo:
         return self._start_validate()
 
     def complete_validate(self, validated):
-        """Update status of a segment info on completion of an open command.
+        """Update status of a segment info on completion of a validate command.
 
-        TODO: more description
+        This method is expected to be called when the validation command
+        is comleted by the builder thread and the main thread is notified
+        of the result.  The notification should include the result of
+        validation, and it's passed to this method.
+
+        This method changes the state from R_VALIDATING and V_SYNCHRONIZING,
+        and W_VALIDATING to UPDATING.  In both cases, there should be
+        an outstanding event for the builder thread, and it's returned to
+        the caller.
+
+        A subclass can add its specific handling in the _complete_validate()
+        'protected' method.
 
         Parameter:
         - validated (bool): True if validation succeeded; False otherwise.
@@ -229,7 +276,13 @@ class SegmentInfo:
         readers using the "old" version of segment, it pops the head
         (oldest) event from the pending events queue and returns it. It
         is an error if this method is called in other states than
-        UPDATING and COPYING."""
+        UPDATING and COPYING.
+
+        """
+        # If this method is called, it means at least one load attempt is
+        # completed.
+        self.__loaded = True
+
         if self.__state == self.UPDATING:
             self._switch_versions()
             self.__state = self.SYNCHRONIZING
@@ -242,6 +295,16 @@ class SegmentInfo:
         else:
             raise SegmentInfoError('complete_update() called in ' +
                                    'incorrect state: ' + str(self.__state))
+
+    def loaded(self):
+        """Return true iff at least one load attempt has been completed.
+
+        This returns True even if the load attempt failed; the main purpose
+        is to tell the caller that the available segment has not just been
+        validated, but also is the latest.
+
+        """
+        return self.__loaded
 
     def sync_reader(self, reader_session_id):
         """Synchronize segment info with a reader.
@@ -378,6 +441,18 @@ class SegmentInfo:
         """
         raise SegmentInfoError('_switch_versions is not implemented')
 
+def _validate_mapped_segment_file(filename):
+    """Callable used by MappedSegmentInfo, validating a mapped segment file.
+
+    In this initial version, we just check the existence of the file.
+
+    """
+    validated = filename is not None and os.path.exists(filename)
+    logger.info(LIBMEMMGR_MAPPED_SEGMENT_VALIDATE,
+                filename if filename is not None else '<unknown>',
+                'ok' if validated else 'failed')
+    return validated
+
 class MappedSegmentInfo(SegmentInfo):
     """SegmentInfo implementation of 'mapped' type memory segments.
 
@@ -420,23 +495,31 @@ class MappedSegmentInfo(SegmentInfo):
                 # reset both versions at once; if either of the values is
                 # unavailable, neither variables will be reset.
                 rver, wver = versions['reader'], versions['writer']
-                assert((rver == 0 and wver == 1) or (rver == 1 and wver == 0))
+                if not ((rver == 0 and wver == 1) or (rver == 1 and wver == 0)):
+                    raise SegmentInfoError('broken segment version')
                 self.__reader_ver = rver
                 self.__writer_ver = wver
             except Exception as ex:
-                # somewhat unexpected, but not fatal; we could still rebuild
-                # segments from scratch
-                print('unexpected: ' + str(ex))
-                pass            # TODO: log it
+                # This is somewhat unexpected, but not fatal; we could still
+                # rebuild segments from scratch.
+                logger.error(LIBMEMMGR_MAPPED_SEGMENT_BADVERFILE,
+                             self.__map_versions_file, ex)
+                try:            # ignore any error on unlink
+                    os.unlink(self.__map_versions_file)
+                except: pass
 
+        # Prepare validate callables.  To avoid leaving a reference to
+        # this object (the callables will be run in a separate thread), we
+        # now build the file name as string (or None if unknown) and embed
+        # in the callable closures.
         reader_file = None if self.__reader_ver is None else \
                       '%s.%d' % (self.__mapped_file_base, self.__reader_ver)
         writer_file = None if self.__writer_ver is None else \
                       '%s.%d' % (self.__mapped_file_base, self.__writer_ver)
-        self.__rvalidate_action = lambda: False if reader_file is None else \
-                                  os.path.exists(reader_file)
-        self.__wvalidate_action = lambda: False if writer_file is None else \
-                                  os.path.exists(writer_file)
+        self.__rvalidate_action = \
+            lambda: _validate_mapped_segment_file(reader_file)
+        self.__wvalidate_action = \
+            lambda: _validate_mapped_segment_file(writer_file)
 
         # If the versions are not yet known, we'll begin with the defaults.
         if self.__reader_ver is None and self.__writer_ver is None:
@@ -476,7 +559,9 @@ class MappedSegmentInfo(SegmentInfo):
         try:
             with open(self.__map_versions_file, 'w') as f:
                 f.write(json.dumps(versions) + '\n')
-        except: pass            # TODO log it
+        except Exception as ex:
+            logger.error(LIBMEMMGR_MAPPED_SEGMENT_VERFILE_UPDATE_FAIL,
+                         self.__map_versions_file, ex)
 
 class DataSrcInfo:
     """A container for datasrc.ConfigurableClientLists and associated

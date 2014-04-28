@@ -86,3 +86,29 @@ the load command. This zone will be skipped.
 An exception occurred when the MemorySegmentBuilder tried to load the
 specified zone when handling the load command. This zone will be
 skipped.
+
+% LIBMEMMGR_MAPPED_SEGMENT_BADVERFILE version file for mapped memory segment '%1' is corrupted: %2
+In the initialization of a mapped-file based memory segment, a corresponding
+version file existed but extracting the versions failed.  This is an
+unexpected error, and the file is probably corrupted.  The version file
+is for optimization, and failure of reading it is not fatal, but it's
+advisable to figure out the cause and fix it.
+
+% LIBMEMMGR_MAPPED_SEGMENT_VALIDATE Validation on mapped memory segment for file %1 %2
+The validation on a file for mapped-memory based memory segment was
+completed.  It shows either success or failure with the corresponding
+file name (if the file name was not known at the time of validation,
+the validation should fail, and '<unknown>' is shown for the file in
+the log message).  In this context, it's considered a 'failure' if the
+file does not exist, but this is actually an expected result if this
+is the first time to generate a mapped file or an existing file has
+been removed for some reason such as data corruption.  In general,
+if the validation fails, the subsequent load phase will create a new
+segment without any content and load all data into it.
+
+% LIBMEMMGR_MAPPED_SEGMENT_VERFILE_UPDATE_FAIL failed to update version file for mapped memory segment '%1': %2
+There was a change in reader/writer versions of a mapped-file based
+memory segment, but updating the version file failed.  This is
+unexpected although not fatal.  See
+LIBMEMMGR_MAPPED_SEGMENT_BADVERFILE; the same explanation and suggestion
+apply.

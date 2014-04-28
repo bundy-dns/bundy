@@ -546,6 +546,22 @@ class TestSegmentInfo(unittest.TestCase):
                           SegmentInfo.WRITER)
         self.assertRaises(SegmentInfoError, TestSegmentInfo()._switch_versions)
 
+    def test_loaded(self):
+        self.assertFalse(self.__sgmt_info.loaded())
+        self.__si_to_rvalidate_state()
+        self.assertFalse(self.__sgmt_info.loaded())
+        self.__si_to_vsynchronizing_state()
+        self.assertFalse(self.__sgmt_info.loaded())
+        self.__si_to_updating_state()
+        self.assertFalse(self.__sgmt_info.loaded())
+
+        # It's considered 'loaded' on the first transition to SYNCHRONIZING,
+        # and after that it's always so.
+        self.__si_to_synchronizing_state()
+        self.assertTrue(self.__sgmt_info.loaded())
+        self.__si_to_copying_state()
+        self.assertTrue(self.__sgmt_info.loaded())
+
 class MockClientList:
     """A mock ConfigurableClientList class.
 
