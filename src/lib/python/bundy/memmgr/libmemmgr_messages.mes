@@ -20,10 +20,13 @@ The MemorySegmentBuilder has received a bad command in its input command
 queue. This is likely a programming error. If the builder runs in a
 separate thread, this would cause it to exit the thread.
 
-% LIBMEMMGR_BUILDER_GET_ZONE_WRITER_ERROR Unable to get zone writer for zone '%1', data source '%2'. Skipping.
+% LIBMEMMGR_BUILDER_GET_ZONE_WRITER_ERROR Unable to get zone writer for zone '%1', data source '%2' (%3). Skipping.
 The MemorySegmentBuilder was unable to get a ZoneWriter for the
 specified zone when handling the load command. This zone will be
-skipped.
+skipped.  Sometimes this can happen in a lower layer error in the
+data source (such as database locking issue).  If the zone is frequently
+updated and the issue is temporary, the zone will be eventually be
+synchronized.  Otherwise it may have to be reloaded manually.
 
 % LIBMEMMGR_BUILDER_RECEIVED_COMMAND received command '%1'
 Informational message.  The MemorySegmentBuilder thread received a
