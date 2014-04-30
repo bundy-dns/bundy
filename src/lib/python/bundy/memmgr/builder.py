@@ -63,6 +63,16 @@ class MemorySegmentBuilder:
         self._response_queue = response_queue
         self._shutdown = False
 
+    def __send_response(self, response_msg):
+        with self._cv:
+            self._response_queue.append(response_msg)
+
+        # Notify (any main thread) on the socket about a
+        # response. Otherwise, the main thread may wait in its
+        # loop without knowing there was a problem.
+        while self._sock.send(b'x') != 1:
+            continue
+
     def __handle_shutdown(self):
         # This method is called when handling the 'shutdown' command. The
         # following tuple is passed:
@@ -76,7 +86,7 @@ class MemorySegmentBuilder:
         # from the main thread which would need to be notified. Instead
         # return this in the response queue.
         logger.error(LIBMEMMGR_BUILDER_BAD_COMMAND_ERROR, bad_command)
-        self._response_queue.append(('bad_command',))
+        self.__send_response(('bad_command',))
         self._shutdown = True
 
     def __handle_validate(self, args):
@@ -102,8 +112,8 @@ class MemorySegmentBuilder:
             logger.error(LIBMEMMGR_BUILDER_SEGMENT_VALIDATE_FAIL, dsrc_name,
                          rrclass, ex)
             result = False
-        self._response_queue.append(('validate-completed', dsrc_info, rrclass,
-                                     dsrc_name, result))
+        self.__send_response(('validate-completed', dsrc_info, rrclass,
+                              dsrc_name, result))
 
     def __reset_segment(self, clist, dsrc_name, rrclass, params):
         try:
@@ -154,8 +164,8 @@ class MemorySegmentBuilder:
         params = json.dumps(sgmt_info.get_reset_param(SegmentInfo.WRITER))
         result = self.__reset_segment(clist, dsrc_name, rrclass, params)
         if result == self.__RESET_SEGMENT_FAILED:
-            self._response_queue.append(('load-completed', dsrc_info, rrclass,
-                                         dsrc_name, False))
+            self.__send_response(('load-completed', dsrc_info, rrclass,
+                                  dsrc_name, False))
             return
 
         # If we were told to load a single zone but had to create a new
@@ -212,8 +222,8 @@ class MemorySegmentBuilder:
         # At this point, we consider the load a failure only if loading a
         # specific zone has failed.
         succeeded = True if (zone_name is None or errors == 0) else False
-        self._response_queue.append(('load-completed', dsrc_info, rrclass,
-                                     dsrc_name, succeeded))
+        self.__send_response(('load-completed', dsrc_info, rrclass, dsrc_name,
+                              succeeded))
 
     def run(self):
         """ This is the method invoked when the builder thread is
@@ -224,11 +234,10 @@ class MemorySegmentBuilder:
             response_queue must be synchronized by acquiring the lock in
             the condition variable. This method must normally terminate
             only when the 'shutdown' command is sent to it.
-        """
 
-        # Acquire the condition variable while running the loop.
-        with self._cv:
-            while not self._shutdown:
+        """
+        while not self._shutdown:
+            with self._cv:
                 while not self._command_queue:
                     self._cv.wait()
                 # Move the queue content to a local queue. Be careful of
@@ -236,37 +245,30 @@ class MemorySegmentBuilder:
                 local_command_queue = self._command_queue[:]
                 del self._command_queue[:]
 
-                # Run commands passed in the command queue sequentially
-                # in the given order.  For now, it only supports the
-                # "shutdown" command, which just exits the thread.
-                for command_tuple in local_command_queue:
-                    command = command_tuple[0]
-                    logger.debug(logger.DBGLVL_TRACE_BASIC,
-                                 LIBMEMMGR_BUILDER_RECEIVED_COMMAND, command)
-                    if command == 'validate':
-                        self.__handle_validate(command_tuple)
-                    elif command == 'load':
-                        # See the comments for _handle_load() for
-                        # details of the tuple passed to the "load"
-                        # command.
-                        _, zone_name, dsrc_info, rrclass, dsrc_name = \
-                            command_tuple
-                        self._handle_load(zone_name, dsrc_info, rrclass,
-                                          dsrc_name)
-                    elif command == 'shutdown':
-                        self.__handle_shutdown()
-                        # When the shutdown command is received, we do
-                        # not process any further commands.
-                        break
-                    else:
-                        self.__handle_bad_command(command)
-                        # When a bad command is received, we do not
-                        # process any further commands.
-                        break
-
-                # Notify (any main thread) on the socket about a
-                # response. Otherwise, the main thread may wait in its
-                # loop without knowing there was a problem.
-                if self._response_queue:
-                    while self._sock.send(b'x') != 1:
-                        continue
+            # Run commands passed in the command queue sequentially
+            # in the given order.  For now, it only supports the
+            # "shutdown" command, which just exits the thread.
+            for command_tuple in local_command_queue:
+                command = command_tuple[0]
+                logger.debug(logger.DBGLVL_TRACE_BASIC,
+                             LIBMEMMGR_BUILDER_RECEIVED_COMMAND, command)
+                if command == 'validate':
+                    self.__handle_validate(command_tuple)
+                elif command == 'load':
+                    # See the comments for _handle_load() for
+                    # details of the tuple passed to the "load"
+                    # command.
+                    _, zone_name, dsrc_info, rrclass, dsrc_name = \
+                        command_tuple
+                    self._handle_load(zone_name, dsrc_info, rrclass,
+                                      dsrc_name)
+                elif command == 'shutdown':
+                    self.__handle_shutdown()
+                    # When the shutdown command is received, we do
+                    # not process any further commands.
+                    break
+                else:
+                    self.__handle_bad_command(command)
+                    # When a bad command is received, we do not
+                    # process any further commands.
+                    break

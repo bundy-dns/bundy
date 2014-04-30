@@ -278,13 +278,17 @@ class TestMemorySegmentBuilderWithoutThread(unittest.TestCase):
         self.__install_ok = True
         self.__response_queue = []
         self.__zone_table_result = [] # for get_zone_table_accessor mock
-        self.__builder = MemorySegmentBuilder(None, None, [],
+        builder_cv = threading.Condition(lock=threading.Lock())
+        self.__builder = MemorySegmentBuilder(self, builder_cv, [],
                                               self.__response_queue)
         self.clients_map = {RRClass.IN: self} # pretend to be client list
         self.dsrc_info = self
         self.segment_info_map = \
             {(RRClass.IN, 'testsrc'): self} # pretend to be segment info
         self.cleanup = lambda: None         # Mock ZoneWriter.cleanup
+
+    def send(self, x):          # mock socket.send()
+        return 1
 
     # Mock SegmentInfo.get_reset_param().
     def get_reset_param(self, unused):
