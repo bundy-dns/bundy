@@ -84,7 +84,7 @@ class MockSegmentInfo(SegmentInfo):
     def complete_validate(self, validated):
         return 'command'
 
-    def complete_update(self):
+    def complete_update(self, succeeded):
         return 'command'
 
     def get_reset_param(self, type):
@@ -413,7 +413,7 @@ class TestMemmgr(unittest.TestCase):
 
     def __check_notify_from_builder(self, notif_name, notif_ref, dsrc_info,
                                     sgmt_info, commands):
-        sgmt_info.complete_update = lambda: 'command'
+        sgmt_info.complete_update = lambda x: 'command'
         sgmt_info.complete_validate = lambda x: 'command'
         del commands[:]
         del self.__mgr.mod_ccsession.sendmsg_params[:]
@@ -436,7 +436,7 @@ class TestMemmgr(unittest.TestCase):
         #sgmt_info.old_readers.clear()
         sgmt_info.old_readers.add('reader1')
         self.__mgr._segment_readers['reader1'] = {}
-        sgmt_info.complete_update = lambda: None
+        sgmt_info.complete_update = lambda x: None
         sgmt_info.complete_validate = lambda x: None
         notif_ref.append((notif_name, dsrc_info, bundy.dns.RRClass.IN,
                           'name', True))
