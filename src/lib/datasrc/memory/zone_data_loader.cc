@@ -238,17 +238,36 @@ generateRRsetFromIterator(ZoneIterator* iterator,
     }
 }
 
+ConstRRsetPtr
+nextDiff(std::vector<ConstRRsetPtr>::const_iterator& it,
+         const std::vector<ConstRRsetPtr>::const_iterator& it_end,
+         ZoneJournalReaderPtr& jnl_reader)
+{
+    ConstRRsetPtr next_diff;    // null by default
+    if (it != it_end) {
+        next_diff = *it;
+        ++it;
+    } else if (jnl_reader) {
+        next_diff = jnl_reader->getNextDiff();
+    }
+    return (next_diff);
+}
+
 // The installer called for ZoneDataLoader using a zone journal reader.
 // It performs some minimal sanity checks on the sequence of data, but
 // the basic assumption is that any invalid data mean implementation defect
 // (not bad user input) and shouldn't happen anyway.
 void
-applyDiffs(ZoneJournalReaderPtr jnl_reader,
+applyDiffs(const std::vector<ConstRRsetPtr>* saved_diffs,
+           ZoneJournalReaderPtr jnl_reader,
            ZoneDataLoaderHelper::LoadCallback callback)
 {
     enum DIFF_MODE {INIT, ADD, DELETE} mode = INIT;
     ConstRRsetPtr rrset;
-    while ((rrset = jnl_reader->getNextDiff())) {
+    std::vector<ConstRRsetPtr>::const_iterator it = saved_diffs->begin();
+    const std::vector<ConstRRsetPtr>::const_iterator it_end =
+        saved_diffs->end();
+    while ((rrset = nextDiff(it, it_end, jnl_reader))) {
         if (rrset->getType() == RRType::SOA()) {
             mode = (mode == INIT || mode == ADD) ? DELETE : ADD;
         } else if (mode == INIT) {
@@ -351,6 +370,7 @@ private:
         SegmentObjectHolder<ZoneData, RRClass>* data_holder,
         RRsetInstaller installer);
     ZoneJournalReaderPtr getJournalReader(uint32_t begin, uint32_t end) const;
+    void saveDiffs();
 
     util::MemorySegment& mem_sgmt_;
     const dns::RRClass rrclass_;
@@ -360,6 +380,15 @@ private:
     ZoneData* const old_data_;
     const boost::optional<dns::Serial> old_serial_;
     ZoneJournalReaderPtr jnl_reader_;
+
+    // To minimize the risk of hitting an exception from the journal reader
+    // in commitDiffs(), we save up to MAX_SAVED_DIFFS_ diff RRs in the
+    // load() phase.  While it doesn't guarantee a success in commitDiffs()
+    // (if it fails we fall back to invalidate the zone and reload the entire
+    // zone), this should work for many cases with small updates (like in
+    // dynamic updates).
+    static const unsigned int MAX_SAVED_DIFFS_ = 100;
+    std::vector<ConstRRsetPtr> saved_diffs_;
 };
 
 ZoneDataLoader::LoadResult
@@ -400,7 +429,7 @@ ZoneDataLoader::ZoneDataLoaderImpl::doLoad() {
                     arg(new_serial->getValue()).
                     arg(datasrc_client_->getDataSourceName());
                 iterator.reset(); // we don't need the iterator any more.
-                //saveDiffs(jnl_reader);
+                saveDiffs();
                 return (LoadResult(old_data_, false));
             }
         }
@@ -428,9 +457,29 @@ ZoneDataLoader::ZoneDataLoaderImpl::getJournalReader(uint32_t begin,
     return (ZoneJournalReaderPtr());
 }
 
+void
+ZoneDataLoader::ZoneDataLoaderImpl::saveDiffs() {
+    int count = 0;
+    ConstRRsetPtr rrset;
+    while (count++ < MAX_SAVED_DIFFS_ && (rrset = jnl_reader_->getNextDiff())) {
+        saved_diffs_.push_back(rrset);
+    }
+    if (!rrset) {
+        jnl_reader_.reset();
+        if (saved_diffs_.empty()) {
+            // In our expected form of diff sequence, it shouldn't be empty,
+            // since there should be at least begin and end SOAs.  Eliminating
+            // this case at this point makes the later processing easier.
+            bundy_throw(ZoneValidationError,
+                        "empty diff sequence is provided for load");
+        }
+    }
+}
+
 ZoneData*
 ZoneDataLoader::ZoneDataLoaderImpl::commitDiffs(ZoneData* update_data) {
-    if (!jnl_reader_) { // we need 'commit' only when we use journal reader
+    // we need 'commit' only when we load diffs
+    if (!jnl_reader_ && saved_diffs_.empty()) {
         return (update_data);
     }
 
@@ -444,6 +493,7 @@ ZoneDataLoader::ZoneDataLoaderImpl::commitDiffs(ZoneData* update_data) {
         holder->set(update_data);
         // If doLoadCommon returns the holder should have released the data.
         return (doLoadCommon(holder.get(), boost::bind(applyDiffs,
+                                                       &saved_diffs_,
                                                        jnl_reader_, _1)).first);
     } catch (...) {
         holder->release();

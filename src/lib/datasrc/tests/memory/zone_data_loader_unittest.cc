@@ -301,14 +301,23 @@ TEST_F(ZoneDataLoaderTest, loadFromDataSource) {
     EXPECT_FALSE(result6.second);
     EXPECT_EQ(zone_data_, loader6.commit(zone_data_));
 
-    // broken data from journal.  commit() propagates the exception.
-    dsc.serial_ = 15;
-    dsc.use_broken_journal_ = true;
+    // increase the end serial sufficiently large so the internal vector
+    // will be full and JournalReader still has some data.
+    dsc.serial_ = 120;
     ZoneDataLoader loader7(mem_sgmt_, zclass_, origin, dsc, zone_data_);
     const ZoneDataLoader::LoadResult result7 = loader7.load();
     EXPECT_EQ(zone_data_, result7.first);
     EXPECT_FALSE(result7.second);
-    EXPECT_THROW(loader7.commit(zone_data_), ZoneDataUpdater::RemoveError);
+    EXPECT_EQ(zone_data_, loader7.commit(zone_data_));
+
+    // broken data from journal.  commit() propagates the exception.
+    dsc.serial_ = 125;
+    dsc.use_broken_journal_ = true;
+    ZoneDataLoader loader8(mem_sgmt_, zclass_, origin, dsc, zone_data_);
+    const ZoneDataLoader::LoadResult result8 = loader8.load();
+    EXPECT_EQ(zone_data_, result8.first);
+    EXPECT_FALSE(result8.second);
+    EXPECT_THROW(loader8.commit(zone_data_), ZoneDataUpdater::RemoveError);
 }
 
 TEST_F(ZoneDataLoaderTest, loadFromBadDataSource) {
