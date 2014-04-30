@@ -117,7 +117,7 @@ class TestSegmentInfo(unittest.TestCase):
 
     def __si_to_ready_state(self):
         self.__si_to_copying_state()
-        self.__sgmt_info.complete_update()
+        self.__sgmt_info.complete_update(True)
         # purge any existing readers so we can begin from a fresh 'ready' state
         for r in list(self.__sgmt_info.get_readers()):
             self.__sgmt_info.remove_reader(r)
@@ -144,7 +144,7 @@ class TestSegmentInfo(unittest.TestCase):
 
     def __si_to_synchronizing_state(self):
         self.__si_to_updating_state()
-        self.__sgmt_info.complete_update()
+        self.__sgmt_info.complete_update(True)
         self.assertEqual(self.__sgmt_info.get_state(),
                          SegmentInfo.SYNCHRONIZING)
 
@@ -221,7 +221,8 @@ class TestSegmentInfo(unittest.TestCase):
 
         # in READY state
         self.__si_to_ready_state()
-        self.assertRaises(SegmentInfoError, self.__sgmt_info.complete_update)
+        self.assertRaises(SegmentInfoError,
+                          self.__sgmt_info.complete_update, True)
         self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.READY)
 
         # in UPDATING state this is the same as calling
@@ -231,21 +232,38 @@ class TestSegmentInfo(unittest.TestCase):
         # a) with no events
         self.__si_to_updating_state()
         self.__sgmt_info._switch_versions = lambda: count_verswitch()
-        e = self.__sgmt_info.complete_update()
+        e = self.__sgmt_info.complete_update(True)
         self.assertIsNone(e)
         self.assertEqual(self.__sgmt_info.get_state(),
                          SegmentInfo.SYNCHRONIZING)
         self.assertEqual(1, self.__ver_switched)
 
+        # a') with no events, update fails
+        self.__si_to_updating_state()
+        self.__sgmt_info._switch_versions = lambda: count_verswitch()
+        e = self.__sgmt_info.complete_update(False)
+        self.assertIsNone(e)
+        self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.READY)
+        self.assertEqual(1, self.__ver_switched) # no switch
+
         # b) with events
         self.__si_to_updating_state()
         self.__sgmt_info._switch_versions = lambda: count_verswitch()
         self.__sgmt_info.add_event((81,))
-        e = self.__sgmt_info.complete_update()
+        e = self.__sgmt_info.complete_update(True)
         self.assertIsNone(e) # old_readers is not empty
         self.assertEqual(self.__sgmt_info.get_state(),
                          SegmentInfo.SYNCHRONIZING)
         self.assertEqual(2, self.__ver_switched)
+
+        # b') with events, update fails
+        self.__si_to_updating_state()
+        self.__sgmt_info._switch_versions = lambda: count_verswitch()
+        self.__sgmt_info.add_event((81,))
+        e = self.__sgmt_info.complete_update(False)
+        self.assertIsNone(e)
+        self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.READY)
+        self.assertEqual(2, self.__ver_switched) # no switch
 
         # c) with no readers, complete_update() from UPDATING must go
         # directly to COPYING state
@@ -256,20 +274,21 @@ class TestSegmentInfo(unittest.TestCase):
         self.assertTupleEqual(e, (42,))
         self.assertSetEqual(self.__sgmt_info.get_readers(), set())
         self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.UPDATING)
-        e = self.__sgmt_info.complete_update()
+        e = self.__sgmt_info.complete_update(True)
         self.assertEqual(3, self.__ver_switched) # version still switched
         self.assertTupleEqual(e, (42,))
         self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.COPYING)
 
         # in SYNCHRONIZING state
         self.__si_to_synchronizing_state()
-        self.assertRaises(SegmentInfoError, self.__sgmt_info.complete_update)
+        self.assertRaises(SegmentInfoError,
+                          self.__sgmt_info.complete_update, True)
         self.assertEqual(self.__sgmt_info.get_state(),
                          SegmentInfo.SYNCHRONIZING)
 
         # in COPYING state.  No version switch in this case.
         self.__si_to_copying_state()
-        e = self.__sgmt_info.complete_update()
+        e = self.__sgmt_info.complete_update(True)
         self.assertIsNone(e)
         self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.READY)
         self.assertEqual(3, self.__ver_switched)
@@ -366,7 +385,7 @@ class TestSegmentInfo(unittest.TestCase):
         if in_validate_stage:
             self.__sgmt_info.complete_validate(True)
         else:
-            self.__sgmt_info.complete_update()
+            self.__sgmt_info.complete_update(True)
         self.assertEqual(self.__sgmt_info.get_state(), cur_state)
         self.assertSetEqual(self.__sgmt_info.get_old_readers(), {3, 4})
         self.assertSetEqual(self.__sgmt_info.get_readers(), set())
@@ -459,7 +478,7 @@ class TestSegmentInfo(unittest.TestCase):
         if in_validate_stage:
             self.__sgmt_info.complete_validate(True)
         else:
-            self.__sgmt_info.complete_update()
+            self.__sgmt_info.complete_update(True)
         self.__sgmt_info.add_reader(5)
         self.assertEqual(self.__sgmt_info.get_state(), cur_state)
         self.assertSetEqual(self.__sgmt_info.get_old_readers(), {3, 4})
