@@ -169,31 +169,35 @@ class MemorySegmentBuilder:
         else:
             zones = clist.get_zone_table_accessor(dsrc_name, True)
 
-        for _, zone_name in zones:
+        errors = 0
+        for _, zname in zones:  # note: don't override zone_name here
             # install empty zone initially
-            catch_load_error = (zone_name is None)
+            catch_load_error = (zname is None)
             try:
-                result, writer = clist.get_cached_zone_writer(zone_name,
+                result, writer = clist.get_cached_zone_writer(zname,
                                                               catch_load_error,
                                                               dsrc_name)
                 if result != ConfigurableClientList.CACHE_STATUS_ZONE_SUCCESS:
-                    # handle this with other genuine exception below
+                    # handle this with other genuine exceptions below
                     raise bundy.datasrc.Error('result=%d' % result)
             except bundy.datasrc.Error as ex:
                 logger.error(LIBMEMMGR_BUILDER_GET_ZONE_WRITER_ERROR,
-                             zone_name, dsrc_name, ex)
+                             zname, dsrc_name, ex)
+                errors += 1
                 continue
 
             try:
                 error = writer.load()
                 if error is not None:
                     logger.error(LIBMEMMGR_BUILDER_ZONE_WRITER_LOAD_1_ERROR,
-                                 zone_name, dsrc_name, error)
+                                 zname, dsrc_name, error)
+                    errors += 1
                     continue
                 writer.install()
             except Exception as e:
                 logger.error(LIBMEMMGR_BUILDER_ZONE_WRITER_LOAD_2_ERROR,
-                             zone_name, dsrc_name, e)
+                             zname, dsrc_name, e)
+                errors += 1
                 # fall through to cleanup
             writer.cleanup()
 
@@ -205,8 +209,11 @@ class MemorySegmentBuilder:
                                    ConfigurableClientList.READ_ONLY,
                                    params)
 
+        # At this point, we consider the load a failure only if loading a
+        # specific zone has failed.
+        succeeded = True if (zone_name is None or errors == 0) else False
         self._response_queue.append(('load-completed', dsrc_info, rrclass,
-                                     dsrc_name, True))
+                                     dsrc_name, succeeded))
 
     def run(self):
         """ This is the method invoked when the builder thread is

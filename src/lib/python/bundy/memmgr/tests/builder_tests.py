@@ -271,18 +271,30 @@ class TestMemorySegmentBuilder(unittest.TestCase):
 # Exercise some detailed cases without bothering to handle threads
 class TestMemorySegmentBuilderWithoutThread(unittest.TestCase):
     def setUp(self):
+        self.__reset_ok = True
         self.__create_ok = False
+        self.__get_cached_zone_writer_ok = True
+        self.__load_ok = True
+        self.__install_ok = True
         self.__response_queue = []
+        self.__zone_table_result = [] # for get_zone_table_accessor mock
         self.__builder = MemorySegmentBuilder(None, None, [],
                                               self.__response_queue)
         self.clients_map = {RRClass.IN: self} # pretend to be client list
         self.dsrc_info = self
         self.segment_info_map = \
             {(RRClass.IN, 'testsrc'): self} # pretend to be segment info
+        self.cleanup = lambda: None         # Mock ZoneWriter.cleanup
 
     # Mock SegmentInfo.get_reset_param().
     def get_reset_param(self, unused):
         return {}
+
+    # Mock ConfigurableClientList.get_cached_zone_writer()
+    def get_cached_zone_writer(self, name, catch_error, dsrc_name):
+        if self.__get_cached_zone_writer_ok:
+            return (ConfigurableClientList.CACHE_STATUS_ZONE_SUCCESS, self)
+        raise bundy.datasrc.Error('test')
 
     # Mock ConfigurableClientList.reset_memory_segment()
     def reset_memory_segment(self, dsrc_name, reset_type, param):
@@ -290,6 +302,9 @@ class TestMemorySegmentBuilderWithoutThread(unittest.TestCase):
 
         # for now, we always make read-only reset succeed
         if reset_type == ConfigurableClientList.READ_ONLY:
+            return
+
+        if self.__reset_ok:     # OK: configured to succeed
             return
 
         # if it's a create attempt and is configured so, make it succeed.
@@ -301,9 +316,17 @@ class TestMemorySegmentBuilderWithoutThread(unittest.TestCase):
 
     # Mock ConfigurableClientList.get_zone_table_accessor()
     def get_zone_table_accessor(self, arg1, arg2):
-        return []
+        return self.__zone_table_result
 
-    def __check_load_fail(self, name, create_ok):
+    def load(self):             # mock ZoneWriter.load()
+        if not self.__load_ok:
+            raise ValueError('load fail')
+
+    def install(self):          # mock ZoneWriter.install()
+        if not self.__install_ok:
+            raise ValueError('install fail')
+
+    def __check_reset_fail(self, name, create_ok):
         self.__reset_called = 0
         del self.__response_queue[:]
         self.__create_ok = create_ok
@@ -321,11 +344,40 @@ class TestMemorySegmentBuilderWithoutThread(unittest.TestCase):
                           create_ok))
         self.assertEqual(self.__reset_called, 3 if create_ok else 2)
 
+    def test_reset_fail(self):
+        self.__reset_ok = False
+        self.__check_reset_fail(Name('test.example'), True)
+        self.__check_reset_fail(Name('test.example'), False)
+        self.__check_reset_fail(None, True)
+        self.__check_reset_fail(None, False)
+
+    def __check_load_fail(self, name, writer_ok, load_ok, install_ok):
+        self.__reset_called = 0
+        del self.__response_queue[:]
+        self.__get_cached_zone_writer_ok = writer_ok
+        self.__load_ok = load_ok
+        self.__install_ok = install_ok
+        self.__builder._handle_load(name, self, RRClass.IN, 'testsrc')
+
+        # if any of the above fails, loading a specific zone is considered
+        # a failure; full load is considered to be succeeded as long as load
+        # was attmpted.
+        expect_success = name is None
+        self.assertEqual(self.__response_queue[0],
+                         ('load-completed', self, RRClass.IN, 'testsrc',
+                          expect_success))
+
     def test_load_fail(self):
-        self.__check_load_fail(Name('test.example'), True)
-        self.__check_load_fail(Name('test.example'), False)
-        self.__check_load_fail(None, True)
-        self.__check_load_fail(None, False)
+        # To load a specific load, any intermediate error makes load fail
+        self.__check_load_fail(Name('test.example'), False, None, None)
+        self.__check_load_fail(Name('test.example'), True, False, None)
+        self.__check_load_fail(Name('test.example'), True, True, False)
+
+        # for full load, it's considered a success as long as load is tried.
+        self.__zone_table_result = [(None, Name('test.example'))]
+        self.__check_load_fail(None, False, None, None)
+        self.__check_load_fail(None, True, False, None)
+        self.__check_load_fail(None, True, True, False)
 
 if __name__ == "__main__":
     bundy.log.init("bundy-test")
