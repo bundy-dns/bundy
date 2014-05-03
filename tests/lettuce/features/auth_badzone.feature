@@ -12,13 +12,13 @@ Feature: Authoritative DNS server with a bad zone
         # will be logged and we cannot use the 'new' keyword to wait for
         # 3 different log messages. *There could still be a race here if
         # auth starts very quickly.*
-        And wait for new bundy stderr message DATASRC_LOAD_ZONE_ERROR
-        And wait for new bundy stderr message DATASRC_LOAD_ZONE_ERROR
-        And wait for new bundy stderr message DATASRC_LOAD_ZONE_ERROR
+        And wait for new bundy log message DATASRC_LOAD_ZONE_ERROR
+        And wait for new bundy log message DATASRC_LOAD_ZONE_ERROR
+        And wait for new bundy log message DATASRC_LOAD_ZONE_ERROR
 
-        And wait for bundy stderr message BUNDY_STARTED_CC
-        And wait for bundy stderr message CMDCTL_STARTED
-        And wait for bundy stderr message AUTH_SERVER_STARTED
+        And wait for bundy log message BUNDY_STARTED_CC
+        And wait for bundy log message CMDCTL_STARTED
+        And wait for bundy log message AUTH_SERVER_STARTED
 
         bundy module Auth should be running
         And bundy module Resolver should not be running

@@ -9,13 +9,13 @@ Feature: Multiple instances
 
         # This config should have two running instances
         Given I have bundy running with configuration multi_instance/multi_auth.config
-        And wait for bundy stderr message BUNDY_STARTED_CC
-        And wait for bundy stderr message CMDCTL_STARTED
+        And wait for bundy log message BUNDY_STARTED_CC
+        And wait for bundy log message CMDCTL_STARTED
 
         # This is a hack. We should actually check if bundy-auth and
         # bundy-auth-2 are started by name. But there's currently no way
         # for a component to find out its name and log it.
-        And wait 2 times for bundy stderr message AUTH_SERVER_STARTED
+        And wait 2 times for bundy log message AUTH_SERVER_STARTED
 
         bundy module Auth should be running
         And bundy module Resolver should not be running
@@ -35,7 +35,7 @@ Feature: Multiple instances
         And remember the pid of process bundy-auth-2
 
         When I remove bundy configuration Init/components value bundy-auth-2
-        And wait for new bundy stderr message BUNDY_PROCESS_ENDED
+        And wait for new bundy log message BUNDY_PROCESS_ENDED
 
         Then the pid of process bundy-auth should not have changed
         And a query for example.com should have rcode REFUSED
@@ -47,13 +47,13 @@ Feature: Multiple instances
         config set Init/components/bundy-auth-2/kind needed
         config commit
         """
-        And wait for new bundy stderr message AUTH_SERVER_STARTED
+        And wait for new bundy log message AUTH_SERVER_STARTED
         And remember the pid of process bundy-auth-2
 
         Then the pid of process bundy-auth should not have changed
         A query for example.com should have rcode REFUSED
 
         When I remove bundy configuration Init/components value bundy-auth
-        And wait for new bundy stderr message BUNDY_PROCESS_ENDED
+        And wait for new bundy log message BUNDY_PROCESS_ENDED
         Then the pid of process bundy-auth-2 should not have changed
         A query for example.com should have rcode REFUSED

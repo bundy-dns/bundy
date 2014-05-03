@@ -6,9 +6,9 @@ Feature: Querying feature
     Scenario: Glue
         # Check the auth server returns the correct glue when asked for it.
         Given I have bundy running with configuration glue.config
-        And wait for bundy stderr message BUNDY_STARTED_CC
-        And wait for bundy stderr message CMDCTL_STARTED
-        And wait for bundy stderr message AUTH_SERVER_STARTED
+        And wait for bundy log message BUNDY_STARTED_CC
+        And wait for bundy log message CMDCTL_STARTED
+        And wait for bundy log message AUTH_SERVER_STARTED
 
         # This query should result in a delegation with two NS; one in the
         # delegated zone and one in a so called out-of-bailiwick zone for which
@@ -50,16 +50,16 @@ Feature: Querying feature
 
     Scenario: Repeated queries
         Given I have bundy running with configuration example.org.inmem.config
-        And wait for bundy stderr message BUNDY_STARTED_CC
-        And wait for bundy stderr message CMDCTL_STARTED
-        And wait for bundy stderr message AUTH_SERVER_STARTED
+        And wait for bundy log message BUNDY_STARTED_CC
+        And wait for bundy log message CMDCTL_STARTED
+        And wait for bundy log message AUTH_SERVER_STARTED
 
         # DATASRC_LIBRARY_ERROR must be generated due to
         # "broken_libraries_should_be_skipped" in
         # example.org.inmem.config
-        And wait for bundy stderr message DATASRC_LIBRARY_ERROR
+        And wait for bundy log message DATASRC_LIBRARY_ERROR
 
-        And wait for bundy stderr message STATS_STARTING
+        And wait for bundy log message STATS_STARTING
 
         bundy module Auth should be running
         And bundy module Stats should be running
@@ -69,13 +69,13 @@ Feature: Querying feature
         And bundy module Xfrin should not be running
         And bundy module StatsHttpd should not be running
 
-        When I wait for new bundy stderr message STATS_SEND_STATISTICS_REQUEST
+        When I wait for new bundy log message STATS_SEND_STATISTICS_REQUEST
         # make sure Auth module receives a command
-        And wait for new bundy stderr message AUTH_RECEIVED_COMMAND
+        And wait for new bundy log message AUTH_RECEIVED_COMMAND
         # make sure Auth module replied to the command
-        And wait for new bundy stderr message CC_REPLY
+        And wait for new bundy log message CC_REPLY
         # make sure the response is for 'getstats'
-        And wait for new bundy stderr message v4
+        And wait for new bundy log message v4
         Then I query statistics zones of bundy module Auth
         And last bundyctl output should not contain "error"
         The statistics counters are 0 in category .Auth.zones._SERVER_
@@ -103,15 +103,15 @@ Feature: Querying feature
 
         # Make sure handling statistics command handling checked below is
         # after this query
-        And wait for bundy stderr message AUTH_SEND_NORMAL_RESPONSE
+        And wait for bundy log message AUTH_SEND_NORMAL_RESPONSE
 
-        When I wait for new bundy stderr message STATS_SEND_STATISTICS_REQUEST
+        When I wait for new bundy log message STATS_SEND_STATISTICS_REQUEST
         # make sure Auth module receives a command
-        And wait for new bundy stderr message AUTH_RECEIVED_COMMAND
+        And wait for new bundy log message AUTH_RECEIVED_COMMAND
         # make sure Auth module replied to the command
-        And wait for new bundy stderr message CC_REPLY
+        And wait for new bundy log message CC_REPLY
         # make sure the response is for 'getstats'
-        And wait for new bundy stderr message v4
+        And wait for new bundy log message v4
         Then I query statistics zones of bundy module Auth
         And last bundyctl output should not contain "error"
         The statistics counters are 0 in category .Auth.zones._SERVER_ except for the following items
@@ -149,15 +149,15 @@ Feature: Querying feature
 
         # Make sure handling statistics command handling checked below is
         # after this query
-        And wait for new bundy stderr message AUTH_SEND_NORMAL_RESPONSE
+        And wait for new bundy log message AUTH_SEND_NORMAL_RESPONSE
 
-        When I wait for new bundy stderr message STATS_SEND_STATISTICS_REQUEST
+        When I wait for new bundy log message STATS_SEND_STATISTICS_REQUEST
         # make sure Auth module receives a command
-        And wait for new bundy stderr message AUTH_RECEIVED_COMMAND
+        And wait for new bundy log message AUTH_RECEIVED_COMMAND
         # make sure Auth module replied to the command
-        And wait for new bundy stderr message CC_REPLY
+        And wait for new bundy log message CC_REPLY
         # make sure the response is for 'getstats'
-        And wait for new bundy stderr message v4
+        And wait for new bundy log message v4
         Then I query statistics zones of bundy module Auth
         And last bundyctl output should not contain "error"
         The statistics counters are 0 in category .Auth.zones._SERVER_ except for the following items
@@ -183,15 +183,15 @@ Feature: Querying feature
 
         # Make sure handling statistics command handling checked below is
         # after this query
-        And wait for new bundy stderr message AUTH_SEND_NORMAL_RESPONSE
+        And wait for new bundy log message AUTH_SEND_NORMAL_RESPONSE
 
-        When I wait for new bundy stderr message STATS_SEND_STATISTICS_REQUEST
+        When I wait for new bundy log message STATS_SEND_STATISTICS_REQUEST
         # make sure Auth module receives a command
-        And wait for new bundy stderr message AUTH_RECEIVED_COMMAND
+        And wait for new bundy log message AUTH_RECEIVED_COMMAND
         # make sure Auth module replied to the command
-        And wait for new bundy stderr message CC_REPLY
+        And wait for new bundy log message CC_REPLY
         # make sure the response is for 'getstats'
-        And wait for new bundy stderr message v4
+        And wait for new bundy log message v4
         Then I query statistics zones of bundy module Auth
         And last bundyctl output should not contain "error"
         The statistics counters are 0 in category .Auth.zones._SERVER_ except for the following items
@@ -208,9 +208,9 @@ Feature: Querying feature
 
     Scenario: ANY query
         Given I have bundy running with configuration example.org.inmem.config
-        And wait for bundy stderr message BUNDY_STARTED_CC
-        And wait for bundy stderr message CMDCTL_STARTED
-        And wait for bundy stderr message AUTH_SERVER_STARTED
+        And wait for bundy log message BUNDY_STARTED_CC
+        And wait for bundy log message CMDCTL_STARTED
+        And wait for bundy log message AUTH_SERVER_STARTED
 
         bundy module Auth should be running
         And bundy module Stats should be running
@@ -220,13 +220,13 @@ Feature: Querying feature
         And bundy module Xfrin should not be running
         And bundy module StatsHttpd should not be running
 
-        When I wait for new bundy stderr message STATS_SEND_STATISTICS_REQUEST
+        When I wait for new bundy log message STATS_SEND_STATISTICS_REQUEST
         # make sure Auth module receives a command
-        And wait for new bundy stderr message AUTH_RECEIVED_COMMAND
+        And wait for new bundy log message AUTH_RECEIVED_COMMAND
         # make sure Auth module replied to the command
-        And wait for new bundy stderr message CC_REPLY
+        And wait for new bundy log message CC_REPLY
         # make sure the response is for 'getstats'
-        And wait for new bundy stderr message v4
+        And wait for new bundy log message v4
         Then I query statistics zones of bundy module Auth
         And last bundyctl output should not contain "error"
         The statistics counters are 0 in category .Auth.zones._SERVER_
@@ -252,15 +252,15 @@ Feature: Querying feature
 
         # Make sure handling statistics command handling checked below is
         # after this query
-        And wait for bundy stderr message AUTH_SEND_NORMAL_RESPONSE
+        And wait for bundy log message AUTH_SEND_NORMAL_RESPONSE
 
-        When I wait for new bundy stderr message STATS_SEND_STATISTICS_REQUEST
+        When I wait for new bundy log message STATS_SEND_STATISTICS_REQUEST
         # make sure Auth module receives a command
-        And wait for new bundy stderr message AUTH_RECEIVED_COMMAND
+        And wait for new bundy log message AUTH_RECEIVED_COMMAND
         # make sure Auth module replied to the command
-        And wait for new bundy stderr message CC_REPLY
+        And wait for new bundy log message CC_REPLY
         # make sure the response is for 'getstats'
-        And wait for new bundy stderr message v4
+        And wait for new bundy log message v4
         Then I query statistics zones of bundy module Auth
         And last bundyctl output should not contain "error"
         The statistics counters are 0 in category .Auth.zones._SERVER_ except for the following items
@@ -275,17 +275,17 @@ Feature: Querying feature
 
     Scenario: Delegation query for unsigned child zone
         Given I have bundy running with configuration example.org.inmem.config
-        And wait for bundy stderr message BUNDY_STARTED_CC
-        And wait for bundy stderr message CMDCTL_STARTED
-        And wait for bundy stderr message AUTH_SERVER_STARTED
+        And wait for bundy log message BUNDY_STARTED_CC
+        And wait for bundy log message CMDCTL_STARTED
+        And wait for bundy log message AUTH_SERVER_STARTED
 
-        When I wait for new bundy stderr message STATS_SEND_STATISTICS_REQUEST
+        When I wait for new bundy log message STATS_SEND_STATISTICS_REQUEST
         # make sure Auth module receives a command
-        And wait for new bundy stderr message AUTH_RECEIVED_COMMAND
+        And wait for new bundy log message AUTH_RECEIVED_COMMAND
         # make sure Auth module replied to the command
-        And wait for new bundy stderr message CC_REPLY
+        And wait for new bundy log message CC_REPLY
         # make sure the response is for 'getstats'
-        And wait for new bundy stderr message v4
+        And wait for new bundy log message v4
         Then I query statistics zones of bundy module Auth
         And last bundyctl output should not contain "error"
         The statistics counters are 0 in category .Auth.zones._SERVER_
@@ -307,15 +307,15 @@ Feature: Querying feature
 
         # Make sure handling statistics command handling checked below is
         # after this query
-        And wait for bundy stderr message AUTH_SEND_NORMAL_RESPONSE
+        And wait for bundy log message AUTH_SEND_NORMAL_RESPONSE
 
-        When I wait for new bundy stderr message STATS_SEND_STATISTICS_REQUEST
+        When I wait for new bundy log message STATS_SEND_STATISTICS_REQUEST
         # make sure Auth module receives a command
-        And wait for new bundy stderr message AUTH_RECEIVED_COMMAND
+        And wait for new bundy log message AUTH_RECEIVED_COMMAND
         # make sure Auth module replied to the command
-        And wait for new bundy stderr message CC_REPLY
+        And wait for new bundy log message CC_REPLY
         # make sure the response is for 'getstats'
-        And wait for new bundy stderr message v4
+        And wait for new bundy log message v4
         Then I query statistics zones of bundy module Auth
         And last bundyctl output should not contain "error"
         The statistics counters are 0 in category .Auth.zones._SERVER_ except for the following items
@@ -334,9 +334,9 @@ Feature: Querying feature
     Scenario: RRSIG query
         # Directly querying for RRSIGs should result in rcode=REFUSED.
         Given I have bundy running with configuration nsec3/nsec3_auth.config
-        And wait for bundy stderr message BUNDY_STARTED_CC
-        And wait for bundy stderr message CMDCTL_STARTED
-        And wait for bundy stderr message AUTH_SERVER_STARTED
+        And wait for bundy log message BUNDY_STARTED_CC
+        And wait for bundy log message CMDCTL_STARTED
+        And wait for bundy log message AUTH_SERVER_STARTED
 
         bundy module Auth should be running
         And bundy module Resolver should not be running
@@ -356,9 +356,9 @@ Feature: Querying feature
     Scenario: SSHFP query
         # We are testing one more RR type for a normal successful case
         Given I have bundy running with configuration example.org.inmem.config
-        And wait for bundy stderr message BUNDY_STARTED_CC
-        And wait for bundy stderr message CMDCTL_STARTED
-        And wait for bundy stderr message AUTH_SERVER_STARTED
+        And wait for bundy log message BUNDY_STARTED_CC
+        And wait for bundy log message CMDCTL_STARTED
+        And wait for bundy log message AUTH_SERVER_STARTED
 
         bundy module Auth should be running
         And bundy module Stats should be running
@@ -368,13 +368,13 @@ Feature: Querying feature
         And bundy module Xfrin should not be running
         And bundy module StatsHttpd should not be running
 
-        When I wait for new bundy stderr message STATS_SEND_STATISTICS_REQUEST
+        When I wait for new bundy log message STATS_SEND_STATISTICS_REQUEST
         # make sure Auth module receives a command
-        And wait for new bundy stderr message AUTH_RECEIVED_COMMAND
+        And wait for new bundy log message AUTH_RECEIVED_COMMAND
         # make sure Auth module replied to the command
-        And wait for new bundy stderr message CC_REPLY
+        And wait for new bundy log message CC_REPLY
         # make sure the response is for 'getstats'
-        And wait for new bundy stderr message v4
+        And wait for new bundy log message v4
         Then I query statistics zones of bundy module Auth
         And last bundyctl output should not contain "error"
         The statistics counters are 0 in category .Auth.zones._SERVER_
@@ -384,15 +384,15 @@ Feature: Querying feature
 
         # Make sure handling statistics command handling checked below is
         # after this query
-        And wait for bundy stderr message AUTH_SEND_NORMAL_RESPONSE
+        And wait for bundy log message AUTH_SEND_NORMAL_RESPONSE
 
-        When I wait for new bundy stderr message STATS_SEND_STATISTICS_REQUEST
+        When I wait for new bundy log message STATS_SEND_STATISTICS_REQUEST
         # make sure Auth module receives a command
-        And wait for new bundy stderr message AUTH_RECEIVED_COMMAND
+        And wait for new bundy log message AUTH_RECEIVED_COMMAND
         # make sure Auth module replied to the command
-        And wait for new bundy stderr message CC_REPLY
+        And wait for new bundy log message CC_REPLY
         # make sure the response is for 'getstats'
-        And wait for new bundy stderr message v4
+        And wait for new bundy log message v4
         Then I query statistics zones of bundy module Auth
         And last bundyctl output should not contain "error"
         The statistics counters are 0 in category .Auth.zones._SERVER_ except for the following items
@@ -413,15 +413,15 @@ Feature: Querying feature
         """
         # Make sure handling statistics command handling checked below is
         # after this query
-        And wait for bundy stderr message AUTH_SEND_NORMAL_RESPONSE
+        And wait for bundy log message AUTH_SEND_NORMAL_RESPONSE
 
-        When I wait for new bundy stderr message STATS_SEND_STATISTICS_REQUEST
+        When I wait for new bundy log message STATS_SEND_STATISTICS_REQUEST
         # make sure Auth module receives a command
-        And wait for new bundy stderr message AUTH_RECEIVED_COMMAND
+        And wait for new bundy log message AUTH_RECEIVED_COMMAND
         # make sure Auth module replied to the command
-        And wait for new bundy stderr message CC_REPLY
+        And wait for new bundy log message CC_REPLY
         # make sure the response is for 'getstats'
-        And wait for new bundy stderr message v4
+        And wait for new bundy log message v4
         Then I query statistics zones of bundy module Auth
         And last bundyctl output should not contain "error"
         The statistics counters are 0 in category .Auth.zones._SERVER_ except for the following items
@@ -437,9 +437,9 @@ Feature: Querying feature
 
     Scenario: Querying non-existing name in root zone from sqlite3 should work
         Given I have bundy running with configuration root.config
-        And wait for bundy stderr message BUNDY_STARTED_CC
-        And wait for bundy stderr message CMDCTL_STARTED
-        And wait for bundy stderr message AUTH_SERVER_STARTED
+        And wait for bundy log message BUNDY_STARTED_CC
+        And wait for bundy log message CMDCTL_STARTED
+        And wait for bundy log message AUTH_SERVER_STARTED
 
         bundy module Auth should be running
         And bundy module Stats should be running
@@ -451,14 +451,14 @@ Feature: Querying feature
 
         A query for . type SOA should have rcode NOERROR
         A query for nonexistent. type A should have rcode NXDOMAIN
-        Then wait for bundy stderr message AUTH_SEND_NORMAL_RESPONSE not AUTH_PROCESS_FAIL
+        Then wait for bundy log message AUTH_SEND_NORMAL_RESPONSE not AUTH_PROCESS_FAIL
 
     Scenario: CH class static zone query
         # We are testing one more RR type for a normal successful case
         Given I have bundy running with configuration static.config
-        And wait for bundy stderr message BUNDY_STARTED_CC
-        And wait for bundy stderr message CMDCTL_STARTED
-        And wait for bundy stderr message AUTH_SERVER_STARTED
+        And wait for bundy log message BUNDY_STARTED_CC
+        And wait for bundy log message CMDCTL_STARTED
+        And wait for bundy log message AUTH_SERVER_STARTED
 
         bundy module Auth should be running
         And bundy module Stats should be running
@@ -479,7 +479,7 @@ Feature: Querying feature
         config commit
         """
 
-        And wait for new bundy stderr message AUTH_DATASRC_CLIENTS_BUILDER_RECONFIGURE_SUCCESS
+        And wait for new bundy log message AUTH_DATASRC_CLIENTS_BUILDER_RECONFIGURE_SUCCESS
 
         A query for version.bind. type TXT class CH should have rcode NOERROR
         The last query response should have ancount 1

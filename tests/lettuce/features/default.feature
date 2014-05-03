@@ -3,9 +3,9 @@ Feature: default bundy config
 
     Scenario: Check that only the default components are running
     Given I have bundy running with configuration default.config
-    And wait for bundy stderr message BUNDY_STARTED_CC
-    And wait for bundy stderr message CMDCTL_STARTED
-    And wait for bundy stderr message STATS_STARTING
+    And wait for bundy log message BUNDY_STARTED_CC
+    And wait for bundy log message CMDCTL_STARTED
+    And wait for bundy log message STATS_STARTING
 
     # These should be running
     bundy module Init should be running
