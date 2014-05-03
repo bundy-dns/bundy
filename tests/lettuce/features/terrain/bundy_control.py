@@ -71,9 +71,8 @@ def start_bundy(step, config_file, cmdctl_port, msgq_sockfile, process_name):
     world.processes.add_process(step, process_name, args)
 
     # check output to know when startup has been completed
-    (message, line) = world.processes.wait_for_stderr_str(process_name,
-                                                     ["BUNDY_STARTUP_COMPLETE",
-                                                      "BUNDY_STARTUP_ERROR"])
+    (message, line) = world.processes.wait_for_log_str(
+        process_name, ["BUNDY_STARTUP_COMPLETE", "BUNDY_STARTUP_ERROR"])
     assert message == "BUNDY_STARTUP_COMPLETE", "Got: " + str(line)
 
 @step('wait for bundy auth (?:of (\w+) )?to start')
@@ -86,8 +85,8 @@ def wait_for_auth(step, process_name):
     """
     if process_name is None:
         process_name = "bundy"
-    world.processes.wait_for_stderr_str(process_name, ['AUTH_SERVER_STARTED'],
-                                        False)
+    world.processes.wait_for_log_str(process_name, ['AUTH_SERVER_STARTED'],
+                                     False)
 
 @step('wait for bundy xfrout (?:of (\w+) )?to start')
 def wait_for_xfrout(step, process_name):
@@ -99,9 +98,9 @@ def wait_for_xfrout(step, process_name):
     """
     if process_name is None:
         process_name = "bundy"
-    world.processes.wait_for_stderr_str(process_name,
-                                        ['XFROUT_NEW_CONFIG_DONE'],
-                                        False)
+    world.processes.wait_for_log_str(process_name,
+                                     ['XFROUT_NEW_CONFIG_DONE'],
+                                     False)
 
 @step('have bundy running(?: with configuration ([\S]+))?' +\
       '(?: with cmdctl port (\d+))?' +\

@@ -127,6 +127,7 @@ class RunningProcess:
         self.remove_files_on_exit = (os.environ.get(KEEP_OUTPUT) != '1')
         self._check_output_dir()
         self._create_filenames()
+        args = self.__mangle_config(args)
         self._start_process(args)
 
         # used in _wait_for_output_str, map from (filename, (strings))
@@ -142,11 +143,55 @@ class RunningProcess:
         """
         stderr_write = open(self.stderr_filename, "w")
         stdout_write = open(self.stdout_filename, "w")
+        # We'll create an empty log file first, so we can open it below,
+        # even if the process doesn't create it soon enough.
+        with open(self.__log_filename, "w"): pass
+        #                                 stdout_write, stderr_write)
         self.process = subprocess.Popen(args, 0, None, subprocess.PIPE,
                                         stdout_write, stderr_write)
         # open them again, this time for reading
         self.stderr = open(self.stderr_filename, "r")
         self.stdout = open(self.stdout_filename, "r")
+        self.__logfile = open(self.__log_filename, "r")
+
+    def __mangle_config(self, args):
+        """Tweak command line arguments with runtime logging setting.
+
+        This method inspects the arguments, and if it contains a -c option,
+        assuming its argument is a bundy configuration file, inserts
+        a run time logging configuration so that log messages will be dumped
+        to a file corresponding to the test.  It then dumps the updated
+        configuration to a separate file, modifies the argument so that
+        the option argument of -c refers to the new file, and returns the
+        (possibly) updated arguments.
+
+        """
+        if not args:
+            return args
+        # Extract tuples of -c and -p options and optargs, if included.
+        # Sort the result to make sure -c will be the first.
+        conf_opts = sorted([x for x in zip(args, args[1:])
+                            if x[0] in ('-c', '-p')])
+        if conf_opts:
+            # For simplicity, we assume -c is specified if we know either
+            # or both of -c/-p is specified.
+            path = '.' if len(conf_opts) == 1 else conf_opts[1][1]
+            conf_file = path + '/' + conf_opts[0][1]
+
+            # Build the log setting and dump the revised config
+            output_options = ('"output_options": [{"output": "%s",'
+                              '"destination": "file", '
+                              '"maxsize": 0}]') % self.__log_filename
+            with open(conf_file) as f:
+                mangled_conf = f.read().replace('OUTPUT_OPTIONS',
+                                                output_options)
+            with open(conf_file + '.run', 'w') as f:
+                f.write(mangled_conf)
+
+            # adjust the command line argument, replacing the -c optarg.
+            args = [args[0]] + [x[1] + '.run' if x[0] == '-c' else x[1]
+                                for x in zip(args, args[1:])]
+        return args
 
     def mangle_filename(self, filebase, extension):
         """
@@ -182,9 +227,9 @@ class RunningProcess:
 
     def _create_filenames(self):
         """
-        Derive the filenames for stdout/stderr redirection from the
+        Derive the filenames for stdout/stderr redirection or logs from the
         feature, scenario, and process name. The base will be
-        "<Feature>-<Scenario>-<process name>.[stdout|stderr]"
+        "<Feature>-<Scenario>-<process name>.[stdout|stderr|log]"
         """
         filebase = self.step.scenario.feature.name + "-" +\
                    self.step.scenario.name + "-" + self.process_name
@@ -192,6 +237,8 @@ class RunningProcess:
                                self.mangle_filename(filebase, "stderr")
         self.stdout_filename = self._output_dir + os.sep +\
                                self.mangle_filename(filebase, "stdout")
+        self.__log_filename = self._output_dir + os.sep +\
+                              self.mangle_filename(filebase, "log")
 
     def stop_process(self):
         """
@@ -212,6 +259,7 @@ class RunningProcess:
         """
         os.remove(self.stderr_filename)
         os.remove(self.stdout_filename)
+        os.remove(self.__log_filename)
 
     def _wait_for_output_str(self, filename, running_file, strings, only_new,
                              matches=1):
@@ -306,6 +354,12 @@ class RunningProcess:
         (OUTPUT_WAIT_INTERVAL * OUTPUT_WAIT_MAX_INTERVALS).
         """
         return self._wait_for_output_str(self.stdout_filename, self.stdout,
+                                         strings, only_new, matches)
+
+    def wait_for_log_str(self, strings, only_new=True, matches=1):
+        "Same for other wait_for_xxx, but search Bundy log file."
+
+        return self._wait_for_output_str(self.__log_filename, self.__logfile,
                                          strings, only_new, matches)
 
 # Container class for a number of running processes
@@ -409,6 +463,14 @@ class RunningProcesses:
         return self.processes[process_name].wait_for_stdout_str(strings,
                                                                 only_new,
                                                                 matches)
+
+    def wait_for_log_str(self, process_name, strings, only_new=True, matches=1):
+        "Same for other wait_for_xxx, but search Bundy log file."
+
+        assert process_name in self.processes,\
+           "Process " + process_name + " unknown"
+        return self.processes[process_name].wait_for_log_str(strings, only_new,
+                                                             matches)
 
 @before.each_scenario
 def initialize(scenario):
