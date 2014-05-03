@@ -1,0 +1,7 @@
+Most (if not all) of the tests parse the output of log file from bundy
+processes.  To make it possible, please make sure that the "Logging"
+configuration contains the special keyword of "OUTPUT_OPTIONS".  The
+test terrain scripts will automatically replace this keyword with
+valid configuration parameters for a specific test scenario.  The
+specific way of embedding the keyword should be obvious from existing
+configuration files as an example.
