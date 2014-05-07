@@ -609,7 +609,7 @@ class TestSecureHTTPServer(unittest.TestCase):
     def test_get_user_info(self):
         self.assertIsNone(self.server.get_user_info('root'))
         self.server._create_user_info(SRC_FILE_PATH + 'cmdctl-accounts.csv')
-        self.assertIn('6f0c73bd33101a5ec0294b3ca39fec90ef4717fe',
+        self.assertIn('633f636fd32d2a5b82856830b537ab69ac44da12',
                       self.server.get_user_info('root'))
 
         # When the file is not changed calling _create_user_info() again
