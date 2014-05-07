@@ -294,10 +294,13 @@ class TestConfigData(unittest.TestCase):
         self.assertEqual(False, default)
         self.assertRaises(bundy.cc.data.DataNotFoundError, self.cd.get_value, "item6/no_such_item")
 
+        self.assertEqual((0, True), self.cd.get_value("_generation_id"))
+
     def test_get_default_value(self):
         self.assertEqual(1, self.cd.get_default_value("item1"))
         self.assertEqual('default', self.cd.get_default_value("item6/value1"))
         self.assertEqual(None, self.cd.get_default_value("item6/value2"))
+        self.assertEqual(0, self.cd.get_default_value("_generation_id"))
 
         # set some local values to something else, and see if we
         # still get the default
@@ -330,19 +333,31 @@ class TestConfigData(unittest.TestCase):
 
     def test_get_item_list(self):
         name_list = self.cd.get_item_list()
-        self.assertEqual(['item1', 'item2', 'item3', 'item4', 'item5', 'item6'], name_list)
+        self.assertEqual(['item1', 'item2', 'item3', 'item4', 'item5',
+                          'item6', '_generation_id'],
+                         name_list)
         name_list = self.cd.get_item_list("", True)
-        self.assertEqual(['item1', 'item2', 'item3', 'item4', 'item5', 'item6/value1', 'item6/value2'], name_list)
+        self.assertEqual(['item1', 'item2', 'item3', 'item4', 'item5',
+                          'item6/value1', 'item6/value2', '_generation_id'],
+                         name_list)
         name_list = self.cd.get_item_list("item6", False)
         self.assertEqual(['item6/value1', 'item6/value2'], name_list)
 
     def test_get_full_config(self):
         full_config = self.cd.get_full_config()
-        self.assertEqual({ "item1": 1, "item2": 1.1, "item3": True, "item4": "test", "item5": ['a', 'b'], "item6/value1": 'default', 'item6/value2': None}, full_config)
-        my_config = { "item1": 2, "item2": 2.2, "item3": False, "item4": "asdf", "item5": [ "c", "d" ] }
+        self.assertEqual({ "item1": 1, "item2": 1.1, "item3": True,
+                           "item4": "test", "item5": ['a', 'b'],
+                           "item6/value1": 'default', 'item6/value2': None,
+                           "_generation_id": 0},
+                         full_config)
+        my_config = { "item1": 2, "item2": 2.2, "item3": False, "item4": "asdf",
+                      "item5": [ "c", "d" ], "_generation_id": 1 }
         self.cd.set_local_config(my_config)
         full_config = self.cd.get_full_config()
-        self.assertEqual({ "item1": 2, "item2": 2.2, "item3": False, "item4": "asdf", "item5": [ "c", "d" ], "item6/value1": 'default', 'item6/value2': None}, full_config)
+        self.assertEqual({ "item1": 2, "item2": 2.2, "item3": False,
+                           "item4": "asdf", "item5": [ "c", "d" ],
+                           "item6/value1": 'default', 'item6/value2': None,
+                           "_generation_id": 1}, full_config)
 
 class TestMultiConfigData(unittest.TestCase):
     def setUp(self):
