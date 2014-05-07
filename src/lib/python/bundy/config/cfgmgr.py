@@ -141,8 +141,8 @@ class ConfigManagerData:
         logger.info(CFGMGR_CONFIG_FILE, config.db_filename)
         file = None
         try:
-            file = open(config.db_filename, 'r')
-            file_config = json.loads(file.read())
+            with open(config.db_filename, 'r') as file:
+                file_config = json.loads(file.read())
             # handle different versions here
             # If possible, we automatically convert to the new
             # scheme and update the configuration
