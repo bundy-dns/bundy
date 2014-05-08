@@ -464,7 +464,7 @@ ModuleSpec::validateSpec(ConstElementPtr spec, ConstElementPtr data,
 // spec is a list of maps, data is a map
 bool
 ModuleSpec::validateSpecList(ConstElementPtr spec, ConstElementPtr data,
-                               const bool full, ElementPtr errors) const
+                             const bool full, ElementPtr errors) const
 {
     bool validated = true;
     BOOST_FOREACH(ConstElementPtr cur_spec_el, spec->listValue()) {
@@ -476,8 +476,9 @@ ModuleSpec::validateSpecList(ConstElementPtr spec, ConstElementPtr data,
     typedef std::pair<std::string, ConstElementPtr> maptype;
     
     BOOST_FOREACH(maptype m, data->mapValue()) {
-        // Ignore 'version' as a config element
-        if (m.first.compare("version") != 0) {
+        // Ignore 'version' and other system reserved items as a config element.
+        // The latter is hardcoded for now, as there's only one such case.
+        if (m.first != "version" && m.first != "_generation_id") {
             bool found = false;
             BOOST_FOREACH(ConstElementPtr cur_spec_el, spec->listValue()) {
                 if (cur_spec_el->get("item_name")->stringValue().compare(m.first) == 0) {
