@@ -71,11 +71,15 @@ private:
     bundy::testutils::TestSocketRequestor sock_requestor_;
 };
 
-TEST_F(AuthConfigTest, versionConfig) {
-    // make sure it does not throw on 'version'
+TEST_F(AuthConfigTest, reservedConfig) {
+    // make sure it does not throw on 'version' or '_generation_id'
     EXPECT_NO_THROW(configureAuthServer(
                         server,
                         Element::fromJSON("{\"version\": 0}")));
+
+    EXPECT_NO_THROW(configureAuthServer(
+                        server,
+                        Element::fromJSON("{\"_generation_id\": 42}")));
 }
 
 TEST_F(AuthConfigTest, exceptionGuarantee) {
@@ -119,7 +123,7 @@ TEST_F(AuthConfigTest, unknownConfigVar) {
 
 TEST_F(AuthConfigTest, exceptionFromCommit) {
     EXPECT_THROW(configureAuthServer(server, Element::fromJSON(
-                                         "{\"_commit_throw\": 10}")),
+                                         "{\"-commit_throw\": 10}")),
                  FatalError);
 }
 
