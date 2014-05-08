@@ -28,7 +28,7 @@ import sys
 
 class ConfigDataError(Exception): pass
 
-BUNDY_CONFIG_DATA_VERSION = 3
+BUNDY_CONFIG_DATA_VERSION = 4
 
 # Helper functions
 def spec_part_is_list(spec_part):

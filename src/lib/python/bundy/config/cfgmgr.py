@@ -119,6 +119,22 @@ class ConfigManagerData:
                     # any config in this case, so warn about it
                     logger.warn(CFGMGR_CONFIG_UPDATE_BOSS_AND_INIT_FOUND)
             new_data_version = 3
+        if new_data_version == 3:
+            # items beginning with '_' are now reserved for internal system
+            # use.  any possible conflict (none known) is rejected here.
+            for mod, mod_conf in config.items():
+                if mod == 'version':
+                    continue
+                reserved = [x for x in mod_conf.keys() if x and x[0] == '_']
+                if reserved:
+                    raise ConfigManagerDataReadError('system reserved items '
+                                                     'should not exist until '
+                                                     'version 4: ' +
+                                                     ', '.join(reserved))
+                # _generation_id is currently the only defined system reserved
+                # item.
+                mod_conf['_generation_id'] = 1
+            new_data_version = 4
 
         config['version'] = new_data_version
         logger.info(CFGMGR_AUTOMATIC_CONFIG_DATABASE_UPDATE, data_version,

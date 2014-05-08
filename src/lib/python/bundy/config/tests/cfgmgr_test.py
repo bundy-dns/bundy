@@ -56,41 +56,61 @@ class TestConfigManagerData(unittest.TestCase):
         updated_config = ConfigManagerData.check_for_updates(file_config)
         self.assertEqual(file_config, updated_config)
 
+    def __config_with_generation_id(self, config):
+        # first, remove 'version' from the old config
+        del config['version']
+        # insert the generation ID for each module's config
+        for mod_conf in config.values():
+            mod_conf['_generation_id'] = 1
+        # then update the version
+        config['version'] = config_data.BUNDY_CONFIG_DATA_VERSION
+        return config
+
     def test_check_for_updates_from_1(self):
         config = { "version": 1,
-                   "foo": "bar",
-                   "something": [ 1, 2, 3 ] }
+                   "foo": {"bar": 1},
+                   "something": {"baz": [ 1, 2, 3 ]} }
         updated = ConfigManagerData.check_for_updates(config)
-        config['version'] = config_data.BUNDY_CONFIG_DATA_VERSION
+        config = self.__config_with_generation_id(config)
         self.assertEqual(config, updated)
 
     def test_check_for_updates_from_2(self):
         # No 'Boss' present, no change (except version)
         config = { "version": 2,
-                   "foo": "bar",
-                   "something": [ 1, 2, 3 ] }
+                   "foo": {"bar": 1},
+                   "something": {"baz": [ 1, 2, 3 ]} }
         updated = ConfigManagerData.check_for_updates(config)
-        config['version'] = config_data.BUNDY_CONFIG_DATA_VERSION
+        config = self.__config_with_generation_id(config)
         self.assertEqual(config, updated)
 
         # With Boss, should be changed to 'Init'
         config = { "version": 2,
                    "Boss": { "some config": 1 },
-                   "something": [ 1, 2, 3 ] }
+                   "something": {"other config": [ 1, 2, 3 ]} }
         updated = ConfigManagerData.check_for_updates(config)
         config = { "version": config_data.BUNDY_CONFIG_DATA_VERSION,
-                   "Init": { "some config": 1 },
-                   "something": [ 1, 2, 3 ] }
+                   "Init": { "_generation_id": 1, "some config": 1 },
+                   "something": { "_generation_id": 1,
+                                  "other config": [ 1, 2, 3 ]} }
         self.assertEqual(config, updated)
 
         # With Boss AND Init, no change
         config = { "version": 2,
                    "Boss": { "some config": 1 },
                    "Init": { "some other config": 1 },
-                   "something": [ 1, 2, 3 ] }
+                   "something": { "yet other config": [ 1, 2, 3 ]} }
         updated = ConfigManagerData.check_for_updates(config)
-        config['version'] = config_data.BUNDY_CONFIG_DATA_VERSION
+        config = self.__config_with_generation_id(config)
         self.assertEqual(config, updated)
+
+    def test_check_for_updates_from_3(self):
+        # Most cases were covered above.  We only check system specific
+        # items should not be included in an old version.
+        config = { "version": 3,
+                   "Init": { "_generation_id": 0,
+                             "_to_be_defined": True, "some config": 1 }}
+        self.assertRaises(ConfigManagerDataReadError,
+                          ConfigManagerData.check_for_updates, config)
 
     def test_read_from_file(self):
         ConfigManagerData.read_from_file(self.writable_data_path, "bundy-config.db")
