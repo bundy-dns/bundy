@@ -12,8 +12,8 @@
 // OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 // PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef ISC_TESTUTILS_SRVTEST_H
-#define ISC_TESTUTILS_SRVTEST_H 1
+#ifndef BUNDY_TESTUTILS_SRVTEST_H
+#define BUNDY_TESTUTILS_SRVTEST_H 1
 
 #include <util/buffer.h>
 #include <dns/name.h>
@@ -112,7 +112,7 @@ protected:
 };
 } // end of namespace testutils
 } // end of namespace bundy
-#endif  // ISC_TESTUTILS_SRVTEST_H
+#endif  // BUNDY_TESTUTILS_SRVTEST_H
 
 // Local Variables:
 // mode: c++

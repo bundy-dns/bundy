@@ -12,8 +12,8 @@
 // OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 // PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef ISC_RESOLVE_H
-#define ISC_RESOLVE_H 1
+#ifndef BUNDY_RESOLVE_H
+#define BUNDY_RESOLVE_H 1
 
 /// This file includes all other libresolve headers, and provides
 /// several helper functions used in resolving.
@@ -92,4 +92,4 @@ void copyResponseMessage(const bundy::dns::Message& source,
 } // namespace resolve
 } // namespace bundy
 
-#endif // ISC_RESOLVE_H_
+#endif // BUNDY_RESOLVE_H_

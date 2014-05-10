@@ -12,8 +12,8 @@
 // OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 // PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef ISC_RESOLVER_CALLBACK_H
-#define ISC_RESOLVER_CALLBACK_H 1
+#ifndef BUNDY_RESOLVER_CALLBACK_H
+#define BUNDY_RESOLVER_CALLBACK_H 1
 
 #include <asiodns/dns_server.h>
 #include <dns/message.h>
@@ -47,4 +47,4 @@ private:
 } //namespace resolve
 } //namespace bundy
 
-#endif // ISC_RESOLVER_CALLBACK_H_
+#endif // BUNDY_RESOLVER_CALLBACK_H_

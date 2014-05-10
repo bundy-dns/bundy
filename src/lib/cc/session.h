@@ -12,8 +12,8 @@
 // OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 // PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef ISC_SESSION_H
-#define ISC_SESSION_H 1
+#ifndef BUNDY_SESSION_H
+#define BUNDY_SESSION_H 1
 
 #include <cc/data.h>
 #include <cc/session_config.h>
@@ -185,7 +185,7 @@ namespace bundy {
     } // namespace cc
 } // namespace bundy
 
-#endif // ISC_SESSION_H
+#endif // BUNDY_SESSION_H
 
 // Local Variables:
 // mode: c++
