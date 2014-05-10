@@ -158,8 +158,10 @@ class DDNSServer:
         # can examine them; but they are essentially private to the class.
         #
         # Datasource client list used for handling update requests.
-        # This is a dict: RRClass=>ConfigurableClientList
-        self._datasrc_clients = {}
+        # This is a tuple of (int/None, dict):
+        # - _datasrc_clients[0] is the generation ID (or None on initialization)
+        # - _datasrc_clients[1]: RRClass=>ConfigurableClientList
+        self._datasrc_clients = (None, {})
         # A set of secondary zones, retrieved from zonemgr configuration.
         self._secondary_zones = None
         # The manager to keep track of data source configuration.
@@ -278,7 +280,7 @@ class DDNSServer:
         try:
             self._datasrc_clients_mgr.reconfigure(new_config, config_data)
             genid, clients_map = self._datasrc_clients_mgr.get_clients_map()
-            self._datasrc_clients = clients_map
+            self._datasrc_clients = (genid, clients_map)
             logger.info(DDNS_DATASRC_RECONFIGURED, genid)
         except bundy.server_common.datasrc_clients_mgr.ConfigError as ex:
             logger.error(DDNS_DATASRC_CONFIG_ERROR, ex)
@@ -437,7 +439,7 @@ class DDNSServer:
         # Let an update session object handle the request.  Note: things around
         # ZoneConfig will soon be substantially revised.  For now we don't
         # bother to generalize it.
-        zone_cfg = ZoneConfig(self._secondary_zones, self._datasrc_clients,
+        zone_cfg = ZoneConfig(self._secondary_zones, self._datasrc_clients[1],
                               self._zone_config)
         update_session = self._UpdateSessionClass(self.__request_msg,
                                                   remote_addr, zone_cfg)
@@ -456,6 +458,7 @@ class DDNSServer:
         if result == bundy.ddns.session.UPDATE_SUCCESS:
             self._cc.notify('ZoneUpdateListener', 'zone_updated',
                             { 'datasource': datasrc_name,
+                              'generation_id': self._datasrc_clients[0],
                               'origin': str(zname),
                               'class': str(zclass) })
             self.__notify_xfrout(zname, zclass)
