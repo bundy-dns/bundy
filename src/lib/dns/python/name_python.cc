@@ -606,7 +606,8 @@ PyTypeObject name_comparison_result_type = {
     NULL,                                     // tp_subclasses
     NULL,                                     // tp_weaklist
     NULL,                                     // tp_del
-    0                                         // tp_version_tag
+    0,                                        // tp_version_tag
+    BUNDY_UTIL_PYTHON_PyVarObject_TAIL_INIT
 };
 
 PyTypeObject name_type = {
@@ -661,7 +662,8 @@ PyTypeObject name_type = {
     // Note: not sure if the following are correct.  Added them just to
     // make the compiler happy.
     NULL,                               // tp_del
-    0                                   // tp_version_tag
+    0,                                  // tp_version_tag
+    BUNDY_UTIL_PYTHON_PyVarObject_TAIL_INIT
 };
 
 PyObject*

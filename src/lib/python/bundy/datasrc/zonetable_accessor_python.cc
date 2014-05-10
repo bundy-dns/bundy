@@ -22,6 +22,8 @@
 
 #include <datasrc/zone_table_accessor.h>
 
+#include <util/python/pycppwrapper_util.h>
+
 #include "datasrc.h"
 #include "zonetable_accessor_python.h"
 #include "zonetable_iterator_python.h"
@@ -158,7 +160,8 @@ PyTypeObject zonetableaccessor_type = {
     NULL,                               // tp_subclasses
     NULL,                               // tp_weaklist
     NULL,                               // tp_del
-    0                                   // tp_version_tag
+    0,                                  // tp_version_tag
+    BUNDY_UTIL_PYTHON_PyVarObject_TAIL_INIT
 };
 
 PyObject*
