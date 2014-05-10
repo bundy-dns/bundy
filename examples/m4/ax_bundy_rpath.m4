@@ -41,8 +41,8 @@ if test x$rpath != xno; then
             BUNDY_RPATH_FLAG=-Wl,-R
         ],[ AC_MSG_RESULT(no)
             AC_MSG_CHECKING([whether -R flag is available in linker])
-            CXXFLAGS="$CXXFLAGS_SAVED -R"
-            CCFLAGS="$CCFLAGS_SAVED -R"
+            CXXFLAGS="$CXXFLAGS_SAVED -R/usr/lib"
+            CCFLAGS="$CCFLAGS_SAVED -R/usr/lib"
         AC_TRY_LINK([], [],
             [ AC_MSG_RESULT([yes; note that -R is more sensitive about the position in option arguments])
                 BUNDY_RPATH_FLAG=-R
