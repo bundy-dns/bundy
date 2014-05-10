@@ -1840,7 +1840,8 @@ class Xfrin:
         # find() on the client list and use of ZoneFinder (in _get_zone_soa())
         # should be completed within the same single thread.
         datasrc_client = None
-        clist = self._datasrc_clients_mgr.get_client_list(rrclass)
+        genid, clients_map = self._datasrc_clients_mgr.get_clients_map()
+        clist = clients_map.get(rrclass)
         if clist is None:
             return (1, 'no data source is configured for class %s' % rrclass)
 

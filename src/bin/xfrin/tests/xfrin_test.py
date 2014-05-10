@@ -245,7 +245,7 @@ class MockDataSourceClient():
 
 class MockDataSrcClientsMgr():
     def __init__(self):
-        # Default faked result of get_client_list, customizable by tests
+        # Used in faked result of get_clients_map, customizable by tests
         self.found_datasrc_client_list = self
 
         # Default faked result of find(), customizable by tests
@@ -253,11 +253,11 @@ class MockDataSrcClientsMgr():
 
         self.reconfigure_param = [] # for inspection
 
-    def get_client_list(self, rrclass):
-        return self.found_datasrc_client_list
+    def get_clients_map(self):
+        return 1, {RRClass.IN: self.found_datasrc_client_list}
 
     def reconfigure(self, arg1, arg2):
-        # the only current test simply needs to know this is called with
+        # the current test simply needs to know this is called with
         # the expected arguments and exceptions are handled.  if we need more
         # variations in tests, this mock method should be extended.
         self.reconfigure_param.append((arg1, arg2))
