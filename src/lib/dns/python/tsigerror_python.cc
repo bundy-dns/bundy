@@ -277,7 +277,8 @@ PyTypeObject tsigerror_type = {
     NULL,                               // tp_subclasses
     NULL,                               // tp_weaklist
     NULL,                               // tp_del
-    0                                   // tp_version_tag
+    0,                                  // tp_version_tag
+    BUNDY_UTIL_PYTHON_PyVarObject_TAIL_INIT
 };
 
 PyObject*

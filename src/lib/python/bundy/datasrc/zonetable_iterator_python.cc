@@ -21,6 +21,7 @@
 #include <Python.h>
 
 #include <datasrc/zone_table_accessor.h>
+#include <util/python/pycppwrapper_util.h>
 #include <dns/python/name_python.h>
 
 #include "datasrc.h"
@@ -172,7 +173,8 @@ PyTypeObject zonetableiterator_type = {
     NULL,                               // tp_subclasses
     NULL,                               // tp_weaklist
     NULL,                               // tp_del
-    0                                   // tp_version_tag
+    0,                                  // tp_version_tag
+    BUNDY_UTIL_PYTHON_PyVarObject_TAIL_INIT
 };
 
 PyObject*
