@@ -18,8 +18,8 @@
 
 #include <cryptolink/cryptolink.h>
 
-#ifndef ISC_CRYPTO_HMAC_H
-#define ISC_CRYPTO_HMAC_H
+#ifndef BUNDY_CRYPTO_HMAC_H
+#define BUNDY_CRYPTO_HMAC_H
 
 namespace bundy {
 namespace cryptolink {
@@ -205,5 +205,5 @@ void deleteHMAC(HMAC* hmac);
 } // namespace cryptolink
 } // namespace bundy
 
-#endif // ISC_CRYPTO_HMAC_H
+#endif // BUNDY_CRYPTO_HMAC_H
 

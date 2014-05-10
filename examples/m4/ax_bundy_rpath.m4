@@ -4,13 +4,13 @@ dnl @summary figure out whether and which "rpath" linker option is available
 dnl
 dnl This macro checks if the linker supports an option to embed a path
 dnl to a runtime library (often installed in an uncommon place), such as the
-dnl commonly used -R option.  If found, it sets the ISC_RPATH_FLAG variable to
+dnl commonly used -R option.  If found, it sets the BUNDY_RPATH_FLAG variable to
 dnl the found option flag.  The main configure.ac can use it as follows:
 dnl if test "x$BUNDY_RPATH_FLAG" != "x"; then
 dnl     LDFLAGS="$LDFLAGS ${BUNDY_RPATH_FLAG}/usr/local/lib/some_library"
 dnl fi
 dnl
-dnl If you pass --disable-rpath to configure, ISC_RPATH_FLAG is not set
+dnl If you pass --disable-rpath to configure, BUNDY_RPATH_FLAG is not set
 
 AC_DEFUN([AX_BUNDY_RPATH], [
 
@@ -38,14 +38,14 @@ if test x$rpath != xno; then
     AC_MSG_CHECKING([whether -Wl,-R flag is available in linker])
     AC_TRY_LINK([],[],
         [ AC_MSG_RESULT(yes)
-            ISC_RPATH_FLAG=-Wl,-R
+            BUNDY_RPATH_FLAG=-Wl,-R
         ],[ AC_MSG_RESULT(no)
             AC_MSG_CHECKING([whether -R flag is available in linker])
             CXXFLAGS="$CXXFLAGS_SAVED -R"
             CCFLAGS="$CCFLAGS_SAVED -R"
         AC_TRY_LINK([], [],
             [ AC_MSG_RESULT([yes; note that -R is more sensitive about the position in option arguments])
-                ISC_RPATH_FLAG=-R
+                BUNDY_RPATH_FLAG=-R
             ],[ AC_MSG_RESULT(no) ])
         ])
 

@@ -12,8 +12,8 @@
 // OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 // PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef ISC_DATA_H
-#define ISC_DATA_H 1
+#ifndef BUNDY_DATA_H
+#define BUNDY_DATA_H 1
 
 #include <string>
 #include <vector>
@@ -589,7 +589,7 @@ std::ostream& operator<<(std::ostream& out, const Element& e);
 bool operator==(const Element& a, const Element& b);
 bool operator!=(const Element& a, const Element& b);
 } }
-#endif // ISC_DATA_H
+#endif // BUNDY_DATA_H
 
 // Local Variables:
 // mode: c++

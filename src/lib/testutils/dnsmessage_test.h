@@ -12,8 +12,8 @@
 // OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 // PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef ISC_TESTUTILS_DNSMESSAGETEST_H
-#define ISC_TESTUTILS_DNSMESSAGETEST_H 1
+#ifndef BUNDY_TESTUTILS_DNSMESSAGETEST_H
+#define BUNDY_TESTUTILS_DNSMESSAGETEST_H 1
 
 #include <algorithm>
 #include <functional>
@@ -390,7 +390,7 @@ rrsetsCheck(const std::string& expected,
 
 } // end of namespace testutils
 } // end of namespace bundy
-#endif  // ISC_TESTUTILS_DNSMESSAGETEST_H
+#endif  // BUNDY_TESTUTILS_DNSMESSAGETEST_H
 
 // Local Variables:
 // mode: c++

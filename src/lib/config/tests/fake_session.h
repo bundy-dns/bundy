@@ -12,8 +12,8 @@
 // OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 // PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef ISC_FAKESESSION_H
-#define ISC_FAKESESSION_H 1
+#ifndef BUNDY_FAKESESSION_H
+#define BUNDY_FAKESESSION_H 1
 
 #include <string>
 
@@ -113,7 +113,7 @@ private:
 } // namespace cc
 } // namespace bundy
 
-#endif // ISC_FAKESESSION_H
+#endif // BUNDY_FAKESESSION_H
 
 // Local Variables:
 // mode: c++
