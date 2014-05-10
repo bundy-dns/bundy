@@ -433,7 +433,15 @@ class ConfigManager:
         else:
             return ccsession.create_answer(0, self.config.data)
 
-    def __handle_set_config_module(self, module_name, cmd):
+    def __handle_set_config_module(self, module_name, new_conf):
+        # Reject attempts of overridding system reserved items.
+        reserved_items = [item for item in new_conf.keys()
+                          if item and item[0] == '_']
+        if reserved_items:
+            return ccsession.create_answer(
+                1, 'system reserved items cannot be set manually: ' +
+                ' '.join(reserved_items))
+
         # the answer comes (or does not come) from the relevant module
         # so we need a variable to see if we got it
         answer = None
@@ -443,12 +451,16 @@ class ConfigManager:
         update_cmd = None
         use_part = None
         if conf_part:
-            data.merge(conf_part, cmd)
+            data.merge(conf_part, new_conf)
             use_part = conf_part
         else:
             conf_part = data.set(self.config.data, module_name, {})
-            data.merge(conf_part[module_name], cmd)
+            data.merge(conf_part[module_name], new_conf)
             use_part = conf_part[module_name]
+
+        # set/increment the generation ID of the module config
+        old_genid = use_part.get('_generation_id')
+        use_part['_generation_id'] = 1 if old_genid is None else old_genid + 1
 
         # The command to send
         update_cmd = ccsession.create_command(ccsession.COMMAND_CONFIG_UPDATE,

@@ -441,7 +441,7 @@ class TestConfigManager(unittest.TestCase):
                                              self.spec.get_statistics_spec()}]})
 
 
-    def __test_handle_msg_update_config_helper(self, new_config):
+    def __test_handle_msg_update_config_helper(self, new_config, gen):
         # Helper function for the common pattern in
         # test_handle_msg_update_config; send 'set config', check for
         # update message, check if config has indeed been updated
@@ -452,19 +452,20 @@ class TestConfigManager(unittest.TestCase):
 
         config_version = config_data.BUNDY_CONFIG_DATA_VERSION
         self._handle_msg_helper({ "command": [ "set_config",
-                                               [ { "version": config_version,
-                                                 self.name: new_config } ] ] },
+                                               [ {"version": config_version,
+                                                  self.name: new_config} ] ] },
                                 my_ok_answer)
 
         # The cfgmgr should have eaten the ok message, and sent out an update
         # message
+        new_config['_generation_id'] = gen
         self.assertEqual(len(self.fake_session.message_queue), 1)
-        self.assertEqual({'command': [ 'config_update', new_config]},
+        self.assertEqual({'command': ['config_update', new_config]},
                          self.fake_session.get_message(self.name, None))
 
         # Config should have been updated
         self.assertEqual(self.cm.config.data, {self.name: new_config,
-                            'version': config_version})
+                                               'version': config_version})
 
         # and the queue should now be empty again
         self.assertEqual(len(self.fake_session.message_queue), 0)
@@ -472,32 +473,40 @@ class TestConfigManager(unittest.TestCase):
     def test_handle_msg_update_config(self):
         # Update the configuration and check results a few times
         # only work the first time
-        self.__test_handle_msg_update_config_helper({ "test": 123 })
+        genid = 1
+        self.__test_handle_msg_update_config_helper({ "test": 123 }, genid)
+        genid += 1
 
-        self.__test_handle_msg_update_config_helper({ "test": 124 })
+        self.__test_handle_msg_update_config_helper({ "test": 124 }, genid)
+        genid += 1
 
-        self.__test_handle_msg_update_config_helper({ "test": 125 })
+        self.__test_handle_msg_update_config_helper({ "test": 125 }, genid)
+        genid += 1
 
-        self.__test_handle_msg_update_config_helper({ "test": 126 })
+        self.__test_handle_msg_update_config_helper({ "test": 126 }, genid)
 
         # Now send an error result (i.e. config not accepted)
         my_bad_answer = { 'result': [1, "bad config"] }
         self.fake_session.group_sendmsg(my_bad_answer, "ConfigManager")
-        self._handle_msg_helper({ "command": [ "set_config",
+        self._handle_msg_helper({ "command": [ ccsession.COMMAND_SET_CONFIG,
                                                [self.name, { "test": 127 }] ] },
                                 my_bad_answer )
         self.assertEqual(len(self.fake_session.message_queue), 1)
-        self.assertEqual({'command': [ 'config_update', {'test': 127}]},
+        self.assertEqual({'command': [ ccsession.COMMAND_CONFIG_UPDATE,
+                                       {'test': 127,
+                                        '_generation_id': genid + 1}]},
                          self.fake_session.get_message(self.name, None))
         # Config should not be updated due to the error
         self.cm.read_config()
-        self.assertEqual(self.cm.config.data, { self.name: {'test': 126},
-                            'version': config_data.BUNDY_CONFIG_DATA_VERSION})
+        self.assertEqual(self.cm.config.data,
+                         { self.name: {'test': 126, '_generation_id': genid},
+                           'version': config_data.BUNDY_CONFIG_DATA_VERSION})
 
         self.assertEqual(len(self.fake_session.message_queue), 0)
 
         self.fake_session.group_sendmsg(None, 'ConfigManager')
-        self._handle_msg_helper({ "command": [ "set_config", [ ] ] },
+        self._handle_msg_helper({ "command":
+                                  [ ccsession.COMMAND_SET_CONFIG, [ ] ] },
                                 {'result': [1, 'Wrong number of arguments']} )
         self._handle_msg_helper({ "command": [ "set_config",
                                                [ self.name, { "test": 128 }]]},
@@ -509,7 +518,8 @@ class TestConfigManager(unittest.TestCase):
         self.assertEqual(len(self.fake_session.message_queue), 1)
         self.assertEqual(
             ccsession.create_command(ccsession.COMMAND_CONFIG_UPDATE,
-                                     { "test": 128 }),
+                                     { "test": 128,
+                                       '_generation_id': genid + 1 }),
             self.fake_session.get_message("TestModule", None))
 
         # Make sure queue is empty now
@@ -520,6 +530,13 @@ class TestConfigManager(unittest.TestCase):
                                   ["shutdown"]
                                 },
                                 {'result': [0]})
+
+    def test_handle_msg_update_config_with_reserved_items(self):
+        # Check that attemps of setting system reserved items will be rejected
+        err_hdr = 'system reserved items cannot be set manually: '
+        self._handle_msg_helper({ "command": [ "set_config",
+                                               [ self.name, { "_test": 128 }]]},
+                                { 'result': [1, err_hdr + '_test']} )
 
     def test_stopping_message(self):
         # Update the system by announcing this module
@@ -581,8 +598,9 @@ class TestConfigManager(unittest.TestCase):
             if expectedResult[0] == 0:
                 # Check it provided the correct notification
                 self.assertEqual(len(self.fake_session.message_queue), 1)
-                self.assertEqual({'command': [ 'config_update',
-                                 {'item1': value}]},
+                self.assertEqual({'command': [ ccsession.COMMAND_CONFIG_UPDATE,
+                                               {'item1': value,
+                                                '_generation_id': 1}]},
                                  self.fake_session.get_message('Spec2', None))
                 # and the queue should now be empty again
                 self.assertEqual(len(self.fake_session.message_queue), 0)
@@ -609,14 +627,14 @@ class TestConfigManager(unittest.TestCase):
         self.cm.handle_msg(ccsession.create_command(
             ccsession.COMMAND_SET_CONFIG, ["test", { "value1": 123 }]))
         self.assertEqual({"version": config_data.BUNDY_CONFIG_DATA_VERSION,
-                          "test": { "value1": 123 }
+                          "test": { "value1": 123, "_generation_id": 1 }
                          }, self.cm.config.data)
 
         self.fake_session.group_sendmsg(my_ok_answer, "ConfigManager")
         self.cm.handle_msg(ccsession.create_command(
             ccsession.COMMAND_SET_CONFIG, ["test", { "value1": 124 }]))
         self.assertEqual({"version": config_data.BUNDY_CONFIG_DATA_VERSION,
-                          "test": { "value1": 124 }
+                          "test": { "value1": 124, "_generation_id": 2 }
                          }, self.cm.config.data)
 
         self.fake_session.group_sendmsg(my_ok_answer, "ConfigManager")
@@ -624,7 +642,8 @@ class TestConfigManager(unittest.TestCase):
             ccsession.COMMAND_SET_CONFIG, ["test", { "value2": True }]))
         self.assertEqual({"version": config_data.BUNDY_CONFIG_DATA_VERSION,
                           "test": { "value1": 124,
-                                    "value2": True
+                                    "value2": True,
+                                    "_generation_id": 3
                                   }
                          }, self.cm.config.data)
 
@@ -634,7 +653,8 @@ class TestConfigManager(unittest.TestCase):
         self.assertEqual({"version": config_data.BUNDY_CONFIG_DATA_VERSION,
                           "test": { "value1": 124,
                                     "value2": True,
-                                    "value3": [ 1, 2, 3 ]
+                                    "value3": [ 1, 2, 3 ],
+                                    "_generation_id": 4
                                   }
                          }, self.cm.config.data)
 
@@ -644,7 +664,8 @@ class TestConfigManager(unittest.TestCase):
         self.assertEqual({"version": config_data.BUNDY_CONFIG_DATA_VERSION,
                           "test": { "value1": 124,
                                     "value2": False,
-                                    "value3": [ 1, 2, 3 ]
+                                    "value3": [ 1, 2, 3 ],
+                                    "_generation_id": 5
                                   }
                          }, self.cm.config.data)
 
@@ -653,7 +674,8 @@ class TestConfigManager(unittest.TestCase):
             ccsession.COMMAND_SET_CONFIG, ["test", { "value1": None }]))
         self.assertEqual({"version": config_data.BUNDY_CONFIG_DATA_VERSION,
                           "test": { "value2": False,
-                                    "value3": [ 1, 2, 3 ]
+                                    "value3": [ 1, 2, 3 ],
+                                    "_generation_id": 6
                                   }
                          }, self.cm.config.data)
 
@@ -662,7 +684,8 @@ class TestConfigManager(unittest.TestCase):
             ccsession.COMMAND_SET_CONFIG, ["test", { "value3": [ 1 ] }]))
         self.assertEqual({"version": config_data.BUNDY_CONFIG_DATA_VERSION,
                           "test": { "value2": False,
-                                    "value3": [ 1 ]
+                                    "value3": [ 1 ],
+                                    "_generation_id": 7
                                   }
                          }, self.cm.config.data)
 
