@@ -516,8 +516,13 @@ class Memmgr(BUNDYServer):
             self._datasrc_clients_mgr.reconfigure(new_config, config_data)
             genid, clients_map = self._datasrc_clients_mgr.get_clients_map()
             datasrc_info = DataSrcInfo(genid, clients_map, self._config_params)
+
+            # Cancel any outstanding operations running in the builder for the
+            # now-deprecated generation of segments
             if self._datasrc_info is not None:
+                self._cmd_to_builder(('cancel', self._datasrc_info))
                 self._old_datasrc_info.add(self._datasrc_info)
+
             self._datasrc_info = datasrc_info
             self._init_segments(datasrc_info)
             # Full datasrc reconfig will be rare, so would be worth logging
