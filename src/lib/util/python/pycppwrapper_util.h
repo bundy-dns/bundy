@@ -57,6 +57,20 @@ namespace bundy {
 namespace util {
 namespace python {
 
+// Newer versions of Python defines new members at the end of PyTypeObject,
+// which can trigger "missing field initializer" warning for code that
+// initializes this struct, which can then be promoted a compile error
+// depending on the compile option.  But for backward compatibility we cannot
+// simply add the new field.  This ugly macro provides a wrapper that hides
+// these details, and is expected to be placed at the end of PyTypeObject
+// initialization code.  Unfortunately this must be a macro, and to avoid
+// name conflict we add some verbose prefix to its name.
+#ifdef Py_TPFLAGS_HAVE_FINALIZE
+#define BUNDY_UTIL_PYTHON_PyVarObject_TAIL_INIT NULL
+#else
+#define BUNDY_UTIL_PYTHON_PyVarObject_TAIL_INIT
+#endif
+
 /// This is thrown inside this utility when it finds a NULL pointer is passed
 /// when it should not be NULL.
 class PyCPPWrapperException : public bundy::Exception {
