@@ -63,7 +63,7 @@ class MyCCSession(MockModuleCCSession, bundy.config.ConfigData):
 # Test mock of SegmentInfo.  Faking many methods with hooks for easy inspection.
 class MockSegmentInfo(SegmentInfo):
     def __init__(self):
-        super().__init__()
+        super().__init__(0)
         self.events = []
         self.added_readers = []
         self.old_readers = set()

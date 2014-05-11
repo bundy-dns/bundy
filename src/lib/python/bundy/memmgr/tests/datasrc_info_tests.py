@@ -71,6 +71,7 @@ class TestSegmentInfo(unittest.TestCase):
         self.__check_sgmt_reset_param(SegmentInfo.READER, None)
 
         self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.INIT)
+        self.assertEqual(self.__sgmt_info.get_generation_id(), 0)
         self.assertEqual(len(self.__sgmt_info.get_readers()), 0)
         self.assertEqual(len(self.__sgmt_info.get_old_readers()), 0)
         self.assertEqual(len(self.__sgmt_info.get_events()), 0)
@@ -558,7 +559,8 @@ class TestSegmentInfo(unittest.TestCase):
     def test_missing_methods(self):
         # Bad subclass of SegmentInfo that doesn't implement mandatory methods.
         class TestSegmentInfo(SegmentInfo):
-            pass
+            def __init__(self):
+                super().__init__(0)
 
         self.assertRaises(SegmentInfoError,
                           TestSegmentInfo().get_reset_param,

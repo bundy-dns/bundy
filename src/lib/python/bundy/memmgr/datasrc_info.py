@@ -96,7 +96,9 @@ class SegmentInfo:
     READY = 6 # both segments of the pair have been updated. it can now
               # handle further updates (e.g., from xfrin).
 
-    def __init__(self):
+    def __init__(self, genid):
+        # The generation ID of the corresponding data source.
+        self.__genid = genid
         # Holds the state of SegmentInfo. See the class description
         # above for the state transition diagram.
         self.__state = self.INIT
@@ -119,6 +121,11 @@ class SegmentInfo:
         self.__events = deque()
         # See loaded():
         self.__loaded = False
+
+    def get_generation_id(self):
+        "Returns the generation ID of the corresponding data source."
+
+        return self.__genid
 
     def get_state(self):
         """Returns the state of SegmentInfo (UPDATING, SYNCHRONIZING, etc)"""
@@ -485,7 +492,7 @@ class MappedSegmentInfo(SegmentInfo):
 
     """
     def __init__(self, genid, rrclass, datasrc_name, mgr_config):
-        super().__init__()
+        super().__init__(genid)
 
         # Something like "/var/bundy/zone-IN-1-sqlite3-mapped"
         self.__mapped_file_base = mgr_config['mapped_file_dir'] + os.sep + \
