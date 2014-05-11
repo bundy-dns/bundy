@@ -38,6 +38,13 @@ reader.  This can be either a defect of memmgr or msgq, or there might be a
 malicious module in the system pretending to be the msgq.  memmgr keeps
 running, but it's suggested to check the entire system.
 
+% MEMMGR_COMMAND_COMPLETED %1 command completed for '%2/%3', %4 more command, %5 readers notified
+An informational message.  The memmgr was notified from a helper
+thread of the completion of validating or loading zone data.  The
+corresponding data source and RR class names are shown.  It also shows
+whether a new command was immediately sent to the thread, and how many
+segment readers were notified.
+
 % MEMMGR_CONFIG_FAIL failed to apply configuration updates: %1
 The memmgr daemon tried to apply configuration updates but found an error.
 The cause of the error is included in the message.  None of the received
@@ -80,19 +87,8 @@ suggested to check the entire system.
 % MEMMGR_LOADZONE received a load command for %1/%2 in data source '%3'
 An informational message.  The memmgr received a loadzone command.
 
-% MEMMGR_UPDATE_ZONE received a zone update event for %1/%2 in data source '%3'
-An informational message.  The memmgr received an update notification
-for a zone from other module.
-
 % MEMMGR_LOADZONE_FAIL failed to handle command: %1
 Error happend in handling the zoneload command.
-
-% MEMMGR_COMMAND_COMPLETED %1 command completed for '%2/%3', %4 more command, %5 readers notified
-An informational message.  The memmgr was notified from a helper
-thread of the completion of validating or loading zone data.  The
-corresponding data source and RR class names are shown.  It also shows
-whether a new command was immediately sent to the thread, and how many
-segment readers were notified.
 
 % MEMMGR_NO_DATASRC_CONF failed to add data source configuration: %1
 The memmgr daemon tried to incorporate data source configuration on
@@ -107,3 +103,14 @@ work without data sources, so it immediately terminates itself.
 An informational message.  The memmgr received a memory segment info
 update ack command in response to an update message it has sent.
 The corresponding data source and RR class names are shown.
+
+% MEMMGR_UPDATEZONE_NOGENERATION generation %1 not found to update zone %2/%3 in data source '%4'
+The memmgr daemon received a notification from another module on an update
+to a zone, but failed to find the configuration generation ID for the
+corresponding data source.  This is an exceptional case but can happen
+if the data source is just reconfigured, and the other module has made
+an update on an older or newer generation of data source.
+
+% MEMMGR_UPDATE_ZONE received a zone update event for %1/%2 in data source '%3'
+An informational message.  The memmgr received an update notification
+for a zone from other module.
