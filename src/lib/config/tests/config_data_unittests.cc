@@ -74,6 +74,11 @@ TEST(ConfigData, getValue) {
     EXPECT_THROW(cd.getValue("value6/no_such_item")->str(), DataNotFoundError);
     EXPECT_THROW(cd.getValue("value8/b")->str(), DataNotFoundError);
 
+    // The default generation ID is 0.
+    EXPECT_EQ(0, cd.getValue("_generation_id")->intValue());
+    EXPECT_EQ(0, cd.getValue(is_default, "_generation_id")->intValue());
+    EXPECT_TRUE(is_default);
+
     ModuleSpec spec1 = moduleSpecFromFile(std::string(TEST_DATA_PATH) + "/spec1.spec");
     ConfigData cd1 = ConfigData(spec1);
     EXPECT_THROW(cd1.getValue("anything")->str(), DataNotFoundError);
@@ -84,9 +89,16 @@ TEST(ConfigData, getDefaultValue) {
     ConfigData cd = ConfigData(spec31);
     EXPECT_EQ("[  ]", cd.getDefaultValue("first_list_items")->str());
     EXPECT_EQ("\"foo\"", cd.getDefaultValue("first_list_items/foo")->str());
-    EXPECT_EQ("{  }", cd.getDefaultValue("first_list_items/second_list_items/map_element")->str());
-    EXPECT_EQ("[  ]", cd.getDefaultValue("first_list_items/second_list_items/map_element/list1")->str());
-    EXPECT_EQ("1", cd.getDefaultValue("first_list_items/second_list_items/map_element/list1/number")->str());
+    EXPECT_EQ("{  }", cd.getDefaultValue(
+                  "first_list_items/second_list_items/map_element")->str());
+    EXPECT_EQ("[  ]", cd.getDefaultValue(
+                  "first_list_items/second_list_items/map_element/list1")->
+              str());
+    EXPECT_EQ("1", cd.getDefaultValue(
+                  "first_list_items/second_list_items/map_element/list1/number")
+              ->str());
+
+    EXPECT_EQ(cd.getDefaultValue("_generation_id")->intValue(), 0);
 
     EXPECT_THROW(cd.getDefaultValue("doesnotexist")->str(), DataNotFoundError);
     EXPECT_THROW(cd.getDefaultValue("first_list_items/second_list_items/map_element/list1/doesnotexist")->str(), DataNotFoundError);
@@ -129,27 +141,60 @@ TEST(ConfigData, getLocalConfig) {
 }
 
 TEST(ConfigData, getItemList) {
-    ModuleSpec spec2 = moduleSpecFromFile(std::string(TEST_DATA_PATH) + "/spec2.spec");
-    ConfigData cd = ConfigData(spec2);
+    const ModuleSpec spec2 = moduleSpecFromFile(std::string(TEST_DATA_PATH) +
+                                                "/spec2.spec");
+    const ConfigData cd = ConfigData(spec2);
 
-    EXPECT_EQ("[ \"item1\", \"item2\", \"item3\", \"item4\", \"item5\", \"item6\" ]", cd.getItemList()->str());
-    EXPECT_EQ("[ \"item1\", \"item2\", \"item3\", \"item4\", \"item5\", \"item6/value1\", \"item6/value2\" ]", cd.getItemList("", true)->str());
-    EXPECT_EQ("[ \"item6/value1\", \"item6/value2\" ]", cd.getItemList("item6")->str());
+    // Top-level search, non recursive.  Reserved item included.  If the top
+    // level is specified as "/", this and an additional slash will be
+    // prepended to non-reserved items (although they won't be accessible via
+    // getValue(), so probably less useful in practice).
+    EXPECT_EQ("[ \"item1\", \"item2\", \"item3\", \"item4\", \"item5\", "
+              "\"item6\", \"_generation_id\" ]", cd.getItemList()->str());
+    EXPECT_EQ("[ \"//item1\", \"//item2\", \"//item3\", \"//item4\", "
+              "\"//item5\", \"//item6\", \"_generation_id\" ]",
+              cd.getItemList("/")->str());
+    // Top-level search, recursive.  Reserved item included.
+    EXPECT_EQ("[ \"item1\", \"item2\", \"item3\", \"item4\", \"item5\", "
+              "\"item6/value1\", \"item6/value2\", \"_generation_id\" ]",
+              cd.getItemList("", true)->str());
+    // Search at a specific level.  Reserved item NOT included.
+    EXPECT_EQ("[ \"item6/value1\", \"item6/value2\" ]",
+              cd.getItemList("item6")->str());
 }
 
 TEST(ConfigData, getFullConfig) {
-    ModuleSpec spec2 = moduleSpecFromFile(std::string(TEST_DATA_PATH) + "/spec2.spec");
+    const ModuleSpec spec2 = moduleSpecFromFile(std::string(TEST_DATA_PATH) +
+                                                "/spec2.spec");
     ConfigData cd = ConfigData(spec2);
 
-    EXPECT_EQ("{ \"item1\": 1, \"item2\": 1.1, \"item3\": true, \"item4\": \"test\", \"item5\": [ \"a\", \"b\" ], \"item6\": {  } }", cd.getFullConfig()->str());
-    ElementPtr my_config = Element::fromJSON("{ \"item1\": 2 }");
+    // Default config values
+    EXPECT_EQ("{ \"_generation_id\": 0, \"item1\": 1, \"item2\": 1.1, "
+              "\"item3\": true, \"item4\": \"test\", "
+              "\"item5\": [ \"a\", \"b\" ], \"item6\": {  } }",
+              cd.getFullConfig()->str());
+
+    // Partially update the config, then the local and default will be merged.
+    const ElementPtr my_config = Element::fromJSON(
+        "{ \"_generation_id\": 1, \"item1\": 2 }");
     cd.setLocalConfig(my_config);
-    EXPECT_EQ("{ \"item1\": 2, \"item2\": 1.1, \"item3\": true, \"item4\": \"test\", \"item5\": [ \"a\", \"b\" ], \"item6\": {  } }", cd.getFullConfig()->str());
-    ElementPtr my_config2 = Element::fromJSON("{ \"item6\": { \"value1\": \"a\" } }");
+    EXPECT_EQ("{ \"_generation_id\": 1, \"item1\": 2, \"item2\": 1.1, "
+              "\"item3\": true, \"item4\": \"test\", "
+              "\"item5\": [ \"a\", \"b\" ], \"item6\": {  } }",
+              cd.getFullConfig()->str());
+    const ElementPtr my_config2 =
+        Element::fromJSON("{ \"item6\": { \"value1\": \"a\" } }");
     cd.setLocalConfig(my_config2);
-    EXPECT_EQ("{ \"item1\": 1, \"item2\": 1.1, \"item3\": true, \"item4\": \"test\", \"item5\": [ \"a\", \"b\" ], \"item6\": { \"value1\": \"a\" } }", cd.getFullConfig()->str());
-    ElementPtr my_config3 = Element::fromJSON("{ \"item6\": { \"value2\": 123 } }");
+    EXPECT_EQ("{ \"_generation_id\": 0, \"item1\": 1, \"item2\": 1.1, "
+              "\"item3\": true, \"item4\": \"test\", "
+              "\"item5\": [ \"a\", \"b\" ], "
+              "\"item6\": { \"value1\": \"a\" } }", cd.getFullConfig()->str());
+    const ElementPtr my_config3 =
+        Element::fromJSON("{ \"item6\": { \"value2\": 123 } }");
     cd.setLocalConfig(my_config3);
-    EXPECT_EQ("{ \"item1\": 1, \"item2\": 1.1, \"item3\": true, \"item4\": \"test\", \"item5\": [ \"a\", \"b\" ], \"item6\": { \"value2\": 123 } }", cd.getFullConfig()->str());
+    EXPECT_EQ("{ \"_generation_id\": 0, \"item1\": 1, \"item2\": 1.1, "
+              "\"item3\": true, \"item4\": \"test\", "
+              "\"item5\": [ \"a\", \"b\" ], \"item6\": { \"value2\": 123 } }",
+              cd.getFullConfig()->str());
 }
 

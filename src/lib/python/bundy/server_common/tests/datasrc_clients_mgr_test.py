@@ -120,20 +120,22 @@ class DataSrcClientsMgrTest(unittest.TestCase):
         # This is basically a trivial getter, so it should be sufficient
         # to check we can call it as we expect.
 
-        # Initially map iss empty, the generation ID is 0.
-        self.assertEqual((0, {}), self.__mgr.get_clients_map())
+        # Initially map is empty, the generation ID is None.
+        self.assertEqual((None, {}), self.__mgr.get_clients_map())
 
+        # gen Id is not in spec, so we need to set it by hand
+        self.__datasrc_cfg.data['_generation_id'] = 1
         self.__mgr.reconfigure({}, self.__datasrc_cfg)
         genid, clients_map = self.__mgr.get_clients_map()
         self.assertEqual(1, genid)
         self.assertEqual(2, len(clients_map)) # should contain 'IN' and 'CH'
 
         # Check the retrieved map is usable even after further reconfig().
-        self.__datasrc_cfg.set_local_config({"classes": {"IN": []}})
+        self.__datasrc_cfg.set_local_config({"classes": {"IN": []},
+                                             "_generation_id": 2})
         self.__mgr.reconfigure({}, self.__datasrc_cfg)
         self.check_client_list_content(clients_map[RRClass.CH])
-
-        # generation ID should be incremented again
+        # confirm generation ID is updated
         self.assertEqual(2, self.__mgr.get_clients_map()[0])
 
 if __name__ == "__main__":

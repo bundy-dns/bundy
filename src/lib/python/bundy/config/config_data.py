@@ -28,7 +28,7 @@ import sys
 
 class ConfigDataError(Exception): pass
 
-BUNDY_CONFIG_DATA_VERSION = 3
+BUNDY_CONFIG_DATA_VERSION = 4
 
 # Helper functions
 def spec_part_is_list(spec_part):
@@ -214,7 +214,7 @@ def _find_spec_part_single(cur_spec, id_part):
     else:
         raise bundy.cc.data.DataNotFoundError("Not a correct config specification")
 
-def find_spec_part(element, identifier, strict_identifier = True):
+def find_spec_part(element, identifier, strict_identifier=True):
     """find the data definition for the given identifier
        returns either a map with 'item_name' etc, or a list of those
        Parameters:
@@ -308,6 +308,16 @@ class ConfigData:
         self.specification = specification
         self.data = {}
 
+    def __find_default_value(self, identifier, strict_identifier):
+        if identifier == '_generation_id':
+            return 0, True
+
+        spec = find_spec_part(self.specification.get_config_spec(), identifier,
+                              strict_identifier)
+        if spec and 'item_default' in spec:
+            return spec['item_default'], True
+        return None, False
+
     def get_value(self, identifier):
         """Returns a tuple where the first item is the value at the
            given identifier, and the second item is a bool which is
@@ -316,10 +326,7 @@ class ConfigData:
         value = bundy.cc.data.find_no_exc(self.data, identifier)
         if value != None:
             return value, False
-        spec = find_spec_part(self.specification.get_config_spec(), identifier)
-        if spec and 'item_default' in spec:
-            return spec['item_default'], True
-        return None, False
+        return self.__find_default_value(identifier, False)
 
     def get_default_value(self, identifier):
         """Returns the default from the specification, or None if there
@@ -328,12 +335,7 @@ class ConfigData:
         # strict_identifier to false (in fact, we need to; we may not know
         # some list indices, or they may not exist, we are looking for
         # a default value for a reason here).
-        spec = find_spec_part(self.specification.get_config_spec(),
-                              identifier, False)
-        if spec and 'item_default' in spec:
-            return spec['item_default']
-        else:
-            return None
+        return self.__find_default_value(identifier, False)[0]
 
     def get_module_spec(self):
         """Returns the ModuleSpec object associated with this ConfigData"""
@@ -347,14 +349,26 @@ class ConfigData:
         """Returns the non-default config values in a dict"""
         return self.data
 
-    def get_item_list(self, identifier = None, recurse = False):
+    def __add_reserved_items(self, items):
+        """A helper method of get_item_list: add top-level configuration items
+        that are reserved for the configuration system.
+
+        """
+        # for now we only have one such item, so hardcode it.
+        items.append('_generation_id')
+        return items
+
+    def get_item_list(self, identifier=None, recurse=False):
         """Returns a list of strings containing the full identifiers of
            all 'sub'options at the given identifier. If recurse is True,
            it will also add all identifiers of all children, if any"""
         if identifier:
-            spec = find_spec_part(self.specification.get_config_spec(), identifier)
+            spec = find_spec_part(self.specification.get_config_spec(),
+                                  identifier)
             return spec_name_list(spec, identifier + "/")
-        return spec_name_list(self.specification.get_config_spec(), "", recurse)
+        items = spec_name_list(self.specification.get_config_spec(), "",
+                               recurse)
+        return self.__add_reserved_items(items)
 
     def get_full_config(self):
         """Returns a dict containing identifier: value elements, for

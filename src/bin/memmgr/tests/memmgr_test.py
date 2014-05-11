@@ -202,7 +202,8 @@ class TestMemmgr(unittest.TestCase):
         # should confirm the manager object is instantiated enabling in-memory
         # cache.
         cfg_data = MockConfigData(
-            {"classes": {"IN": [{"type": "MasterFiles",
+            {"_generation_id": 1,
+             "classes": {"IN": [{"type": "MasterFiles",
                                  "cache-enable": True, "params": {}}]}})
         self.__mgr._datasrc_clients_mgr.reconfigure({}, cfg_data)
         clist = \
@@ -325,7 +326,8 @@ class TestMemmgr(unittest.TestCase):
         # A simple (boring) case with real class implementations.  This
         # confirms the methods are called as expected.
         cfg_data = MockConfigData(
-            {"classes": {"IN": [{"type": "MasterFiles",
+            {"_generation_id": 1,
+             "classes": {"IN": [{"type": "MasterFiles",
                                  "cache-enable": True, "params": {}}]}})
         self.__init_called = None
         def mock_init_segments(param):

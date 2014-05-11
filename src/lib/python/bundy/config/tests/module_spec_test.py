@@ -87,25 +87,34 @@ class TestModuleSpec(unittest.TestCase):
         self.assertRaises(ModuleSpecError, self.read_spec_file, "spec37.spec")
         self.assertRaises(ModuleSpecError, self.read_spec_file, "spec38.spec")
 
-    def validate_data(self, specfile_name, datafile_name):
+    def __check_validate_data(self, specfile_name, datafile_name, expected):
         dd = self.read_spec_file(specfile_name);
         with open(self.spec_file(datafile_name)) as data_file:
             data_str = data_file.read()
         data = bundy.cc.data.parse_value_str(data_str)
-        return dd.validate_config(True, data)
+        self.assertEqual(expected, dd.validate_config(True, data))
+
+        # Adding known reserved items should be accepted, even if it's not in
+        # the module spec.
+        data['_generation_id'] = 42
+        self.assertEqual(expected, dd.validate_config(True, data))
+
+        # Unknown reserved items will cause an error.
+        data['_unknown'] = True
+        self.assertEqual(False, dd.validate_config(True, data))
         
     def test_data_validation(self):
-        self.assertEqual(True, self.validate_data("spec22.spec", "data22_1.data"))
-        self.assertEqual(False, self.validate_data("spec22.spec", "data22_2.data"))
-        self.assertEqual(False, self.validate_data("spec22.spec", "data22_3.data"))
-        self.assertEqual(False, self.validate_data("spec22.spec", "data22_4.data"))
-        self.assertEqual(False, self.validate_data("spec22.spec", "data22_5.data"))
-        self.assertEqual(True, self.validate_data("spec22.spec", "data22_6.data"))
-        self.assertEqual(True, self.validate_data("spec22.spec", "data22_7.data"))
-        self.assertEqual(False, self.validate_data("spec22.spec", "data22_8.data"))
-        self.assertEqual(True, self.validate_data("spec32.spec", "data32_1.data"))
-        self.assertEqual(False, self.validate_data("spec32.spec", "data32_2.data"))
-        self.assertEqual(False, self.validate_data("spec32.spec", "data32_3.data"))
+        self.__check_validate_data("spec22.spec", "data22_1.data", True)
+        self.__check_validate_data("spec22.spec", "data22_2.data", False)
+        self.__check_validate_data("spec22.spec", "data22_3.data", False)
+        self.__check_validate_data("spec22.spec", "data22_4.data", False)
+        self.__check_validate_data("spec22.spec", "data22_5.data", False)
+        self.__check_validate_data("spec22.spec", "data22_6.data", True)
+        self.__check_validate_data("spec22.spec", "data22_7.data", True)
+        self.__check_validate_data("spec22.spec", "data22_8.data", False)
+        self.__check_validate_data("spec32.spec", "data32_1.data", True)
+        self.__check_validate_data("spec32.spec", "data32_2.data", False)
+        self.__check_validate_data("spec32.spec", "data32_3.data", False)
 
     def validate_command_params(self, specfile_name, datafile_name, cmd_name):
         dd = self.read_spec_file(specfile_name);
