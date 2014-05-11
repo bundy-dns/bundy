@@ -255,6 +255,8 @@ class MockDataSrcClientsMgr():
 
         self.reconfigure_param = [] # for inspection
 
+        self.throw_on_reconfigure = False # allow tests to override
+
     def get_clients_map(self):
         return (self.TEST_DATASRC_GENID,
                 {RRClass.IN: self.found_datasrc_client_list})
@@ -264,8 +266,9 @@ class MockDataSrcClientsMgr():
         # the expected arguments and exceptions are handled.  if we need more
         # variations in tests, this mock method should be extended.
         self.reconfigure_param.append((arg1, arg2))
-        raise bundy.server_common.datasrc_clients_mgr.ConfigError(
-            'reconfigure failure')
+        if self.throw_on_reconfigure:
+            raise bundy.server_common.datasrc_clients_mgr.ConfigError(
+                'reconfigure failure')
 
     def find(self, zone_name, want_exact_match, want_finder):
         """Pretending find method on the object returned by get_clinet_list"""
@@ -3136,6 +3139,13 @@ class TestXfrin(unittest.TestCase):
         # exception doesn't cause disruption.
         self.xfr._datasrc_config_handler(True, False)
         self.assertEqual([(True, False)],
+                         self.xfr._datasrc_clients_mgr.reconfigure_param)
+
+        # A similar test, but exercise the case where reconfigure() results in
+        # an exception (checking no propagation of the exception).
+        self.xfr._datasrc_clients_mgr.throw_on_reconfigure = True
+        self.xfr._datasrc_config_handler(1, 2)
+        self.assertEqual([(True, False), (1, 2)],
                          self.xfr._datasrc_clients_mgr.reconfigure_param)
 
 def raise_interrupt():

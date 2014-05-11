@@ -1579,6 +1579,8 @@ class Xfrin:
         """
         try:
             self._datasrc_clients_mgr.reconfigure(new_config, config_data)
+            logger.info(XFRIN_DATASRC_RECONFIGURED,
+                        self._datasrc_clients_mgr.get_clients_map()[0])
         except bundy.server_common.datasrc_clients_mgr.ConfigError as ex:
             logger.error(XFRIN_DATASRC_CONFIG_ERROR, ex)
 
