@@ -70,9 +70,11 @@ class Memmgr(BUNDYServer):
         # segment_info_update for the reader.
         self._segment_readers = {}
 
-        # List of DataSrcInfo.  Used as a queue to maintain info for all
-        # active configuration generations.  Allow tests to inspec it.
-        self._datasrc_info_list = []
+        # Current DataSrcInfo and older generation ones (waiting for cleanup).
+        # Allow tests to inspec it (otherwise shouldn't be referenced from
+        # outside of the class)
+        self._datasrc_info = None
+        self._old_datasrc_info = set() # order doesn't matter
 
         self._builder_setup = False
         self._builder_command_queue = []
@@ -88,11 +90,8 @@ class Memmgr(BUNDYServer):
         """
         # Leaner search, but should be okay as we don't expect many generations
         # are managed at the same time.
-        for dsrc_info in self._datasrc_info_list:
-            if dsrc_info.gen_id == genid:
-                return dsrc_info
-            if dsrc_info.gen_id > genid:
-                break
+        if self._datasrc_info.gen_id == genid:
+            return self._datasrc_info
         if must_exist:
             raise _LoadZoneError(
                 'data source info for generation %s not found' % str(genid))
@@ -173,7 +172,7 @@ class Memmgr(BUNDYServer):
         if (not 'class' in args or not 'datasource' in args or
             not 'origin' in args):
             raise _LoadZoneError('missing parameters')
-        if len(self._datasrc_info_list) == 0:
+        if self._datasrc_info is None:
             raise _LoadZoneError('no data source is configured')
 
         try:
@@ -204,7 +203,7 @@ class Memmgr(BUNDYServer):
                             genid, zone_name, rrclass, dsrc_name)
                 return None, None, None, None, None
         else:
-            dsrc_info = self._datasrc_info_list[-1]
+            dsrc_info = self._datasrc_info
 
         try:
             sgmt_info = dsrc_info.segment_info_map[(rrclass, dsrc_name)]
@@ -441,25 +440,24 @@ class Memmgr(BUNDYServer):
                 logger.info(MEMMGR_CCMEMBER_DUP_SUBSCRIBED, reader)
             else:
                 self._segment_readers[reader] = {}
-                for dsrc_info in self._datasrc_info_list:
-                    for key, sgmt_info in dsrc_info.segment_info_map.items():
-                        sgmt_info.add_reader(reader)
-                        # If a reader segment has been loaded, we should tell
-                        # the reader about it.
-                        if sgmt_info.loaded():
-                            rrclass, dsrc_name = key
-                            self.__notify_readers(rrclass, dsrc_name, sgmt_info,
-                                                  [reader])
+                for key, sgmt_info in \
+                    self._datasrc_info.segment_info_map.items():
+                    sgmt_info.add_reader(reader)
+                    # If a reader segment has been loaded, we should tell
+                    # the reader about it.
+                    if sgmt_info.loaded():
+                        rrclass, dsrc_name = key
+                        self.__notify_readers(rrclass, dsrc_name, sgmt_info,
+                                              [reader])
         else:                   # must be 'unsubscribed'
             if not reader in self._segment_readers:
                 logger.warn(MEMMGR_CCMEMBER_DUP_UNSUBSCRIBED, reader)
             else:
                 del self._segment_readers[reader]
-                for dsrc_info in self._datasrc_info_list:
-                    for sgmt_info in dsrc_info.segment_info_map.values():
-                        bcmd = sgmt_info.remove_reader(reader)
-                        if bcmd is not None:
-                            self._cmd_to_builder(bcmd)
+                for sgmt_info in self._datasrc_info.segment_info_map.values():
+                    bcmd = sgmt_info.remove_reader(reader)
+                    if bcmd is not None:
+                        self._cmd_to_builder(bcmd)
 
     def _setup_module(self):
         """Module specific initialization for BUNDYServer."""
@@ -498,6 +496,7 @@ class Memmgr(BUNDYServer):
             # about exceptions to catch.
             self.mod_ccsession.add_remote_config_by_name(
                 'data_sources', self._datasrc_config_handler)
+            # TODO: case where it's still None
         except (ModuleSpecError, ModuleCCSessionError) as ex:
             logger.error(MEMMGR_NO_DATASRC_CONF, ex)
             raise BUNDYServerFatal('failed to setup memmgr module')
@@ -518,9 +517,10 @@ class Memmgr(BUNDYServer):
             self._datasrc_clients_mgr.reconfigure(new_config, config_data)
             genid, clients_map = self._datasrc_clients_mgr.get_clients_map()
             datasrc_info = DataSrcInfo(genid, clients_map, self._config_params)
-            self._datasrc_info_list.append(datasrc_info)
+            if self._datasrc_info is not None:
+                self._old_datasrc_info.add(self._datasrc_info)
+            self._datasrc_info = datasrc_info
             self._init_segments(datasrc_info)
-
             # Full datasrc reconfig will be rare, so would be worth logging
             # at the info level.
             logger.info(MEMMGR_DATASRC_RECONFIGURED, genid)

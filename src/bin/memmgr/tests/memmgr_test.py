@@ -201,7 +201,7 @@ class TestMemmgr(unittest.TestCase):
     def test_init(self):
         """Check some initial conditions"""
         self.assertIsNone(self.__mgr._config_params)
-        self.assertEqual([], self.__mgr._datasrc_info_list)
+        self.assertEqual(None, self.__mgr._datasrc_info)
 
         # Try to configure a data source clients with the manager.  This
         # should confirm the manager object is instantiated enabling in-memory
@@ -339,9 +339,9 @@ class TestMemmgr(unittest.TestCase):
             self.__init_called = param
         self.__mgr._init_segments = mock_init_segments
         self.__mgr._datasrc_config_handler({}, cfg_data)
-        self.assertEqual(1, len(self.__mgr._datasrc_info_list))
-        self.assertEqual(1, self.__mgr._datasrc_info_list[0].gen_id)
-        self.assertEqual(self.__init_called, self.__mgr._datasrc_info_list[0])
+        self.assertIsNotNone(self.__mgr._datasrc_info)
+        self.assertEqual(1, self.__mgr._datasrc_info.gen_id)
+        self.assertEqual(self.__init_called, self.__mgr._datasrc_info)
 
         # Below we're using a mock DataSrcClientMgr for easier tests
         class MockDataSrcClientMgr:
@@ -368,17 +368,18 @@ class TestMemmgr(unittest.TestCase):
         self.__mgr._datasrc_clients_mgr = \
             MockDataSrcClientMgr([('sqlite3', 'mapped', None)])
         self.__mgr._datasrc_config_handler(None, None) # params don't matter
-        self.assertEqual(2, len(self.__mgr._datasrc_info_list))
-        self.assertEqual(self.__init_called, self.__mgr._datasrc_info_list[1])
+        self.assertIsNotNone(self.__mgr._datasrc_info)
+        self.assertEqual(1, len(self.__mgr._old_datasrc_info))
+        self.assertEqual(self.__init_called, self.__mgr._datasrc_info)
         self.assertIsNotNone(
-            self.__mgr._datasrc_info_list[1].segment_info_map[
-                (RRClass.IN, 'sqlite3')])
+            self.__mgr._datasrc_info.segment_info_map[(RRClass.IN, 'sqlite3')])
 
         # Emulate the case reconfigure() fails.  Exception isn't propagated,
-        # but the list doesn't change.
+        # but the status doesn't change.
         self.__mgr._datasrc_clients_mgr = MockDataSrcClientMgr(None, True)
         self.__mgr._datasrc_config_handler(None, None)
-        self.assertEqual(2, len(self.__mgr._datasrc_info_list))
+        self.assertIsNotNone(self.__mgr._datasrc_info)
+        self.assertEqual(1, len(self.__mgr._old_datasrc_info))
 
     def test_init_segments(self):
         """Test the initialization of segments.
@@ -511,7 +512,7 @@ class TestMemmgr(unittest.TestCase):
 
         sgmt_info = MockSegmentInfo()
         dsrc_info = MockDataSrcInfo(sgmt_info)
-        self.__mgr._datasrc_info_list.append(dsrc_info)
+        self.__mgr._datasrc_info = dsrc_info
 
         # If sync_reader() returns None, no command should be sent to
         # the segment builder.  We emulate the situation where there are
@@ -556,7 +557,7 @@ class TestMemmgr(unittest.TestCase):
             'segment_info_update_ack', {}))
         sgmt_info = MockSegmentInfo()
         dsrc_info = MockDataSrcInfo(sgmt_info)
-        self.__mgr._datasrc_info_list.append(dsrc_info)
+        self.__mgr._datasrc_info = dsrc_info
         # missing necesary keys or invalid values
         self.assertIsNone(self.__mgr._mod_command_handler(
             'segment_info_update_ack', {}))
@@ -612,7 +613,7 @@ class TestMemmgr(unittest.TestCase):
 
         sgmt_info = MockSegmentInfo()
         dsrc_info = MockDataSrcInfo(sgmt_info)
-        self.__mgr._datasrc_info_list.append(dsrc_info)
+        self.__mgr._datasrc_info = dsrc_info
 
         # Expected builder event for the loadzone parameters
         expected_event = ('load', bundy.dns.Name('zone'), dsrc_info,
@@ -652,7 +653,7 @@ class TestMemmgr(unittest.TestCase):
 
         sgmt_info = MockSegmentInfo()
         dsrc_info = MockDataSrcInfo(sgmt_info)
-        self.__mgr._datasrc_info_list.append(dsrc_info)
+        self.__mgr._datasrc_info = dsrc_info
 
         # missing necesary keys or invalid values
         self.assertEqual(1, parse_answer(self.__mgr._mod_command_handler(
@@ -675,7 +676,7 @@ class TestMemmgr(unittest.TestCase):
         """
         sgmt_info = MockSegmentInfo()
         dsrc_info = MockDataSrcInfo(sgmt_info)
-        self.__mgr._datasrc_info_list.append(dsrc_info)
+        self.__mgr._datasrc_info = dsrc_info
         sgmt_info.start_update = lambda: None
 
         # missing generation ID
@@ -706,7 +707,7 @@ class TestMemmgr(unittest.TestCase):
         self.__mgr._mod_cc = MyCCSession(None, None, None) # fake mod_ccsession
         sgmt_info = MockSegmentInfo()
         dsrc_info = MockDataSrcInfo(sgmt_info)
-        self.__mgr._datasrc_info_list.append(dsrc_info)
+        self.__mgr._datasrc_info = dsrc_info
 
         # basic case of new subscriber.  the reader should be added to the
         # segment info, and info_update should be sent to the reader.
