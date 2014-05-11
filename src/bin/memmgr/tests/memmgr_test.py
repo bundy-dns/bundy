@@ -391,7 +391,8 @@ class TestMemmgr(unittest.TestCase):
             self.__mgr._datasrc_info.segment_info_map[(RRClass.IN, 'sqlite3')])
         # The old info should be moved to the 'old' set, and a cancel command
         # should have been sent to the builder.
-        self.assertSetEqual({old_datasrc_info}, self.__mgr._old_datasrc_info)
+        self.assertSetEqual({old_datasrc_info},
+                            set(self.__mgr._old_datasrc_info.values()))
         self.assertEqual([('cancel', old_datasrc_info)],
                          self.__mgr._builder_command_queue)
         del self.__mgr._builder_command_queue[:] # for tearDown

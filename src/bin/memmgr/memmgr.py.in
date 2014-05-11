@@ -74,7 +74,7 @@ class Memmgr(BUNDYServer):
         # Allow tests to inspec it (otherwise shouldn't be referenced from
         # outside of the class)
         self._datasrc_info = None
-        self._old_datasrc_info = set() # order doesn't matter
+        self._old_datasrc_info = {} # dict genid(int)=>DataSrcInfo
 
         self._builder_setup = False
         self._builder_command_queue = []
@@ -305,8 +305,8 @@ class Memmgr(BUNDYServer):
             self._segment_readers[reader][sgmt_info] += 1
 
     def _notify_from_builder(self):
-        """
-        Read the notifications from the builder thread.
+        """Read the notifications from the builder thread.
+
         """
         self._master_sock.recv(1) # Clear the wake-up data
         notifications = None
@@ -362,7 +362,8 @@ class Memmgr(BUNDYServer):
         # We get responses from the builder thread on this socket pair.
         (self._master_sock, self._builder_sock) = \
             socket.socketpair(socket.AF_UNIX, socket.SOCK_STREAM)
-        self.watch_fileno(self._master_sock, rcallback=self._notify_from_builder)
+        self.watch_fileno(self._master_sock,
+                          rcallback=self._notify_from_builder)
 
         # See the documentation for MemorySegmentBuilder on how the
         # following are used.
@@ -521,7 +522,7 @@ class Memmgr(BUNDYServer):
             # now-deprecated generation of segments
             if self._datasrc_info is not None:
                 self._cmd_to_builder(('cancel', self._datasrc_info))
-                self._old_datasrc_info.add(self._datasrc_info)
+                self._old_datasrc_info[genid] = self._datasrc_info
 
             self._datasrc_info = datasrc_info
             self._init_segments(datasrc_info)
