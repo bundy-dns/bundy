@@ -619,8 +619,10 @@ class TestMemmgr(unittest.TestCase):
                           bundy.dns.RRClass('IN'), 'name')
 
         # If start_update() returns an event, it's passed to the builder.
-        ans = handler(cmd, {'datasource': 'name',
-                            'class': 'IN', 'origin': 'zone'})
+        cmd_args = {'datasource': 'name', 'class': 'IN', 'origin': 'zone'}
+        if cmd == 'zone_updated':
+            cmd_args['generation-id'] = TEST_GENERATION_ID
+        ans = handler(cmd, cmd_args)
         if cmd == 'loadzone':
             self.assertEqual(0, parse_answer(ans)[0])
         self.assertEqual([expected_event], sgmt_info.events)
@@ -629,8 +631,7 @@ class TestMemmgr(unittest.TestCase):
         # If start_update() returns None, the event is only stored in the
         # segment info.
         sgmt_info.start_update = lambda: None
-        ans = handler(cmd, {'datasource': 'name',
-                            'class': 'IN', 'origin': 'zone'})
+        ans = handler(cmd, cmd_args)
         if cmd == 'loadzone':
             self.assertEqual(0, parse_answer(ans)[0])
         self.assertEqual([expected_event, expected_event], sgmt_info.events)
@@ -665,6 +666,31 @@ class TestMemmgr(unittest.TestCase):
         self.assertEqual(1, parse_answer(self.__mgr._mod_command_handler(
             'loadzone', {'class': 'IN', 'datasource': 'noname',
                          'origin': 'zone'}))[0])
+
+    def test_bad_zone_updated(self):
+        """Check various invalid/rare cases of 'zone_updated' command.
+
+        In either case, no new event for the segment should happen.
+
+        """
+        sgmt_info = MockSegmentInfo()
+        dsrc_info = MockDataSrcInfo(sgmt_info)
+        self.__mgr._datasrc_info_list.append(dsrc_info)
+        sgmt_info.start_update = lambda: None
+
+        # missing generation ID
+        self.__mgr._zone_update_notification('zone_updated',
+                                       {'class': 'IN', 'datasource': 'name',
+                                        'origin': 'zone'})
+        self.assertFalse(sgmt_info.events)
+
+        # generation ID mismatch
+        self.__mgr._zone_update_notification('zone_updated',
+                                       {'class': 'IN', 'datasource': 'name',
+                                        'origin': 'zone',
+                                        'generation-id':
+                                        TEST_GENERATION_ID + 1})
+        self.assertFalse(sgmt_info.events)
 
     def test_reader_notification(self):
         "Test module membership notification callback."

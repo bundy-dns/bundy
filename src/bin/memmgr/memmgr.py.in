@@ -139,10 +139,12 @@ class Memmgr(BUNDYServer):
 
         try:
             dsrc_info, rrclass, dsrc_name, zone_name, sgmt_info = \
-                self.__handle_loadzone_args(args)
+                self.__handle_loadzone_args(cmd, args)
             # If it's manually invoked, it will be helpeful to consider
             # missing segment info an error; if it's update notification,
-            # this is a normal condition for a 'local' segment.
+            # this is a normal condition for a 'local' segment, or (relatively
+            # rarely) too old or new generation is given at the timing of
+            # reconfiguring the data source.
             if sgmt_info is None and cmd == 'loadzone':
                 raise _LoadZoneError("no memory segment in '%s' for"
                                      "RR class %s" % (dsrc_name, rrclass))
@@ -165,15 +167,15 @@ class Memmgr(BUNDYServer):
             logger.debug(logger.DBGLVL_TRACE_BASIC, MEMMGR_UPDATE_ZONE,
                          zone_name, rrclass, dsrc_name)
 
-    def __handle_loadzone_args(self, args):
+    def __handle_loadzone_args(self, cmd, args):
         "Parse loadzone args and return helpful error on failure"
 
-        if len(self._datasrc_info_list) == 0:
-            raise _LoadZoneError('no data source is configured')
-        dsrc_info = self._datasrc_info_list[-1]
         if (not 'class' in args or not 'datasource' in args or
             not 'origin' in args):
             raise _LoadZoneError('missing parameters')
+        if len(self._datasrc_info_list) == 0:
+            raise _LoadZoneError('no data source is configured')
+
         try:
             rrclass = bundy.dns.RRClass(args['class'])
         except bundy.dns.InvalidRRClass as ex:
@@ -183,6 +185,27 @@ class Memmgr(BUNDYServer):
         except Exception as ex: # there can be many types of error
             raise _LoadZoneError('bad zone origin:' + str(ex))
         dsrc_name = args['datasource']
+
+        # Identify the generation of data sources to be updated.  In case of
+        # an internal command from other modules, it's possible we can't find
+        # it in memmgr's list, depending on the timing of update and
+        # reconfiguration of data source.  Basically, we can ignore this case:
+        # older generations won't be used, and newer generations will be
+        # handled at the time of reconfiguration.
+        # For load command invoked by a user, the latest generation will be
+        # used.
+        if cmd == 'zone_updated':
+            genid = args.get('generation-id')
+            if genid is None:
+                raise _LoadZoneError('missing generation ID')
+            dsrc_info = self.__find_datasrc_info_bygen(genid, False)
+            if dsrc_info is None:
+                logger.info(MEMMGR_UPDATEZONE_NOGENERATION,
+                            genid, zone_name, rrclass, dsrc_name)
+                return None, None, None, None, None
+        else:
+            dsrc_info = self._datasrc_info_list[-1]
+
         try:
             sgmt_info = dsrc_info.segment_info_map[(rrclass, dsrc_name)]
         except KeyError as ex:
