@@ -111,6 +111,7 @@ class MockMemmgr(memmgr.Memmgr):
     def __init__(self):
         super().__init__()
         self.builder_thread_created = False
+        self.sent_commands = []
 
     def _setup_ccsession(self):
         orig_cls = bundy.config.ModuleCCSession
@@ -336,6 +337,9 @@ class TestMemmgr(unittest.TestCase):
                           self.__mgr._setup_module)
 
     def test_datasrc_config_handler(self):
+        # Pretend to have the builder thread
+        self.__mgr._builder_cv = threading.Condition()
+
         self.__mgr._config_params = {'mapped_file_dir': '/some/path'}
 
         # A simple (boring) case with real class implementations.  This
@@ -352,6 +356,7 @@ class TestMemmgr(unittest.TestCase):
         self.assertIsNotNone(self.__mgr._datasrc_info)
         self.assertEqual(1, self.__mgr._datasrc_info.gen_id)
         self.assertEqual(self.__init_called, self.__mgr._datasrc_info)
+        self.assertEqual([], self.__mgr._builder_command_queue)
 
         # Below we're using a mock DataSrcClientMgr for easier tests
         class MockDataSrcClientMgr:
@@ -375,6 +380,7 @@ class TestMemmgr(unittest.TestCase):
         # From memmgr's point of view it should be enough we have an object
         # in segment_info_map.  Note also that the new DataSrcInfo is appended
         # to the list
+        old_datasrc_info = self.__mgr._datasrc_info
         self.__mgr._datasrc_clients_mgr = \
             MockDataSrcClientMgr([('sqlite3', 'mapped', None)])
         self.__mgr._datasrc_config_handler(None, None) # params don't matter
@@ -383,6 +389,12 @@ class TestMemmgr(unittest.TestCase):
         self.assertEqual(self.__init_called, self.__mgr._datasrc_info)
         self.assertIsNotNone(
             self.__mgr._datasrc_info.segment_info_map[(RRClass.IN, 'sqlite3')])
+        # The old info should be moved to the 'old' set, and a cancel command
+        # should have been sent to the builder.
+        self.assertSetEqual({old_datasrc_info}, self.__mgr._old_datasrc_info)
+        self.assertEqual([('cancel', old_datasrc_info)],
+                         self.__mgr._builder_command_queue)
+        del self.__mgr._builder_command_queue[:] # for tearDown
 
         # Emulate the case reconfigure() fails.  Exception isn't propagated,
         # but the status doesn't change.
