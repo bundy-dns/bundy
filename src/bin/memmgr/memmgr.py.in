@@ -250,7 +250,8 @@ class Memmgr(BUNDYServer):
         params = {
             'data-source-class': str(rrclass),
             'data-source-name': dsrc_name,
-            'segment-params': reset_param
+            'segment-params': reset_param,
+            'generation-id': sgmt_info.get_generation_id()
         }
         if inuse_only:
             params['inuse-only'] = True

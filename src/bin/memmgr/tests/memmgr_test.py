@@ -63,7 +63,7 @@ class MyCCSession(MockModuleCCSession, bundy.config.ConfigData):
 # Test mock of SegmentInfo.  Faking many methods with hooks for easy inspection.
 class MockSegmentInfo(SegmentInfo):
     def __init__(self):
-        super().__init__(0)
+        super().__init__(42)
         self.events = []
         self.added_readers = []
         self.old_readers = set()
@@ -184,7 +184,8 @@ class TestMemmgr(unittest.TestCase):
         expected_params = {'data-source-class': 'IN',
                            'data-source-name': 'name',
                            'segment-params': 'test-segment-params',
-                           'reader': expected_reader}
+                           'reader': expected_reader,
+                           'generation-id': 42} # genID is from MockSegmentInfo
         if inuse_only:
             expected_params['inuse-only'] = True
         self.assertEqual(expected_params, val)
