@@ -277,6 +277,10 @@ class TestMemmgr(unittest.TestCase):
         # Set _config_params to empty config; enough for the test
         self.__mgr._config_params = {}
 
+        # Pretend data source will have been configured correctly.  In most
+        # cases below, this is okay.
+        self.__mgr._datasrc_info = True
+
         # check what _setup_module should do:
         # 1. start the builder thread
         # 2. add data_sources remote module with expected parameters
@@ -306,6 +310,12 @@ class TestMemmgr(unittest.TestCase):
                          self.__mgr.mod_ccsession.add_remote_params)
         self.assertEqual([('members', 'Msgq', {'group': 'SegmentReader'})],
                          self.__mgr.mod_ccsession.rpc_call_params)
+
+        # Failure of initial data source configuration is considered fatal.
+        self.__mgr._datasrc_info = None
+        self.assertRaises(bundy.server_common.bundy_server.BUNDYServerFatal,
+                          self.__mgr._setup_module)
+        self.__mgr._datasrc_info = True # fake again for the rest of the tests
 
         # If data source isn't configured it's considered fatal (checking the
         # same scenario with two possible exception types)
