@@ -465,7 +465,8 @@ class TestDataSrcInfo(unittest.TestCase):
 
         """
         cfg_data = MockConfigData(
-            {"classes":
+            {"_generation_id": 1,
+             "classes":
                  {"IN": [{"type": "sqlite3", "cache-enable": True,
                           "cache-type": "mapped", "cache-zones": [],
                           "params": {"database_file": self.__sqlite3_dbfile}}]
