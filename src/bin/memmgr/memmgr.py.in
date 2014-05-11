@@ -80,23 +80,6 @@ class Memmgr(BUNDYServer):
         self._builder_command_queue = []
         self._builder_response_queue = []
 
-    def __find_datasrc_info_bygen(self, genid, must_exist):
-        """Helper to find DataSrcInfo for the given genid.
-
-        If 'must_exist' is True, it assumes the matching DataSrcInfo exists
-        and raises an exception if it's not found.  Otherwise it returns None
-        if no matching DataSrcInfo is found.
-
-        """
-        # Leaner search, but should be okay as we don't expect many generations
-        # are managed at the same time.
-        if self._datasrc_info.gen_id == genid:
-            return self._datasrc_info
-        if must_exist:
-            raise _LoadZoneError(
-                'data source info for generation %s not found' % str(genid))
-        return None
-
     def _mod_command_handler(self, cmd, args):
         if cmd == 'segment_info_update_ack':
             # We usually expect the following to succeed, as long as the
@@ -107,11 +90,12 @@ class Memmgr(BUNDYServer):
             # be returned with an answer, so we return either None or False
             # (separating these for testing purposes).
             try:
-                dsrc_info = self.__find_datasrc_info_bygen(
-                    args['generation-id'], True)
+                if self._datasrc_info.gen_id != args['generation-id']:
+                    return False
                 rrclass = bundy.dns.RRClass(args['data-source-class'])
                 dsrc_name = args['data-source-name']
-                sgmt_info = dsrc_info.segment_info_map[(rrclass, dsrc_name)]
+                sgmt_info = self._datasrc_info.segment_info_map[(rrclass,
+                                                                 dsrc_name)]
                 reader = args['reader']
                 if not reader in self._segment_readers:
                     logger.info(MEMMGR_DATASRC_SGMTINFO_ACK_NOREADER, reader)
@@ -184,30 +168,27 @@ class Memmgr(BUNDYServer):
         dsrc_name = args['datasource']
 
         # Identify the generation of data sources to be updated.  In case of
-        # an internal command from other modules, it's possible we can't find
-        # it in memmgr's list, depending on the timing of update and
-        # reconfiguration of data source.  Basically, we can ignore this case:
-        # older generations won't be used, and newer generations will be
-        # handled at the time of reconfiguration.
+        # an internal command from other modules, it's possible the generaion
+        # ID doesn't match of that for memmgr, depending on the timing of
+        # update and reconfiguration of data source.  Basically, we can ignore
+        # this case: older generations won't be used, and newer generations
+        # will be handled at the time of reconfiguration.
         # For load command invoked by a user, the latest generation will be
         # used.
         if cmd == 'zone_updated':
             genid = args.get('generation-id')
             if genid is None:
                 raise _LoadZoneError('missing generation ID')
-            dsrc_info = self.__find_datasrc_info_bygen(genid, False)
-            if dsrc_info is None:
+            if self._datasrc_info.gen_id != genid:
                 logger.info(MEMMGR_UPDATEZONE_NOGENERATION,
                             genid, zone_name, rrclass, dsrc_name)
                 return None, None, None, None, None
-        else:
-            dsrc_info = self._datasrc_info
-
         try:
-            sgmt_info = dsrc_info.segment_info_map[(rrclass, dsrc_name)]
+            sgmt_info = self._datasrc_info.segment_info_map[(rrclass,
+                                                             dsrc_name)]
         except KeyError as ex:
             sgmt_info = None    # not necessarily an error, maybe it's 'local'
-        return dsrc_info, rrclass, dsrc_name, zone_name, sgmt_info
+        return self._datasrc_info, rrclass, dsrc_name, zone_name, sgmt_info
 
     def _config_handler(self, new_config):
         """Configuration handler, called via BUNDYServer.

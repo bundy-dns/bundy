@@ -598,15 +598,20 @@ class TestMemmgr(unittest.TestCase):
             'segment_info_update_ack', {'data-source-class': 'IN',
                                         'data-source-name': 'name',
                                         'generation-id': TEST_GENERATION_ID}))
-        self.assertIsNone(self.__mgr._mod_command_handler(
-            'segment_info_update_ack', {'data-source-class': 'IN',
-                                        'data-source-name': 'name',
-                                        'generation-id': TEST_GENERATION_ID + 1,
-                                        'reader': 'reader0'}))
-        self.assertIsNone(self.__mgr._mod_command_handler(
+
+        # getting segment_info_update_ack for an older generation is possible,
+        # if the data source is reconfigured while waiting for the response.
+        # Getting it for a newer generation shouldn't happen, but the end result
+        # is the same (ignore the ack), so we don't differentiate them.
+        self.assertFalse(self.__mgr._mod_command_handler(
             'segment_info_update_ack', {'data-source-class': 'IN',
                                         'data-source-name': 'name',
                                         'generation-id': TEST_GENERATION_ID - 1,
+                                        'reader': 'reader0'}))
+        self.assertFalse(self.__mgr._mod_command_handler(
+            'segment_info_update_ack', {'data-source-class': 'IN',
+                                        'data-source-name': 'name',
+                                        'generation-id': TEST_GENERATION_ID + 1,
                                         'reader': 'reader0'}))
 
         # not necessarily invalid, but less common case: reader has been
