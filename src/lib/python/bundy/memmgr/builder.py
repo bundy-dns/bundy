@@ -216,14 +216,28 @@ class MemorySegmentBuilder:
         # public API to just clear the segment).  This 'reset' should succeed,
         # so we'll let any exception be propagated.
         clist.reset_memory_segment(dsrc_name,
-                                   ConfigurableClientList.READ_ONLY,
-                                   params)
+                                   ConfigurableClientList.READ_ONLY, params)
 
         # At this point, we consider the load a failure only if loading a
         # specific zone has failed.
         succeeded = True if (zone_name is None or errors == 0) else False
         self.__send_response(('load-completed', dsrc_info, rrclass, dsrc_name,
                               succeeded))
+
+    def _handle_cancels(self, commands):
+        # Make a set of data source info objects that are to be canceled
+        canceled_info = set()
+        [canceled_info.add(cmd[1]) for cmd in commands if cmd[0] == 'cancel']
+
+        # filter out commands involving canceled data source info
+        active_commands = []
+        for cmd in commands:
+            if cmd[0] == 'validate' and cmd[1] in canceled_info:
+                continue
+            if cmd[0] == 'load' and cmd[2] in canceled_info:
+                continue
+            active_commands.append(cmd)
+        return active_commands
 
     def run(self):
         """ This is the method invoked when the builder thread is
@@ -244,6 +258,10 @@ class MemorySegmentBuilder:
                 # not making assignments to reference variables.
                 local_command_queue = self._command_queue[:]
                 del self._command_queue[:]
+
+            # discard any commands that involve data source info that is to
+            # be canceled
+            local_command_queue = self._handle_cancels(local_command_queue)
 
             # Run commands passed in the command queue sequentially
             # in the given order.  For now, it only supports the
@@ -267,6 +285,10 @@ class MemorySegmentBuilder:
                     # When the shutdown command is received, we do
                     # not process any further commands.
                     break
+                elif command == 'cancel':
+                    # _handle_cancels() has done most of the work.  we can
+                    # simply report it's completed.
+                    self.__send_response(('cancel-completed', command_tuple[1]))
                 else:
                     self.__handle_bad_command(command)
                     # When a bad command is received, we do not
