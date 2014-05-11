@@ -26,6 +26,9 @@ import memmgr
 from bundy.memmgr.datasrc_info import SegmentInfo
 from bundy.testutils.ccsession_mock import MockModuleCCSession
 
+# Commonly used constant for data source generation ID
+TEST_GENERATION_ID = 42
+
 class MyCCSession(MockModuleCCSession, bundy.config.ConfigData):
     def __init__(self, specfile, config_handler, command_handler):
         super().__init__()
@@ -63,7 +66,7 @@ class MyCCSession(MockModuleCCSession, bundy.config.ConfigData):
 # Test mock of SegmentInfo.  Faking many methods with hooks for easy inspection.
 class MockSegmentInfo(SegmentInfo):
     def __init__(self):
-        super().__init__(42)
+        super().__init__(TEST_GENERATION_ID)
         self.events = []
         self.added_readers = []
         self.old_readers = set()
@@ -123,6 +126,7 @@ class MockMemmgr(memmgr.Memmgr):
 class MockDataSrcInfo:
     def __init__(self, sgmt_info):
         self.segment_info_map = {(bundy.dns.RRClass.IN, "name"): sgmt_info}
+        self.gen_id = TEST_GENERATION_ID
 
 # Defined for easier tests with DataSrcClientsMgr.reconfigure(), which
 # only needs get_value() method
@@ -520,6 +524,7 @@ class TestMemmgr(unittest.TestCase):
             self.assertEqual(False, self.__mgr._mod_command_handler(
                 'segment_info_update_ack', {'data-source-class': 'IN',
                                             'data-source-name': 'name',
+                                            'generation-id': TEST_GENERATION_ID,
                                             'reader': 'reader0'}))
             self.assertEqual([], commands)
             if i == 0:
@@ -534,6 +539,7 @@ class TestMemmgr(unittest.TestCase):
             self.assertEqual(False, self.__mgr._mod_command_handler(
                 'segment_info_update_ack', {'data-source-class': 'IN',
                                             'data-source-name': 'name',
+                                            'generation-id': TEST_GENERATION_ID,
                                             'reader': 'reader0'}))
             if i == 0:
                 self.assertEqual(1, sgmt_readers['reader0'][sgmt_info])
@@ -555,15 +561,29 @@ class TestMemmgr(unittest.TestCase):
         self.assertIsNone(self.__mgr._mod_command_handler(
             'segment_info_update_ack', {}))
         self.assertIsNone(self.__mgr._mod_command_handler(
-            'segment_info_update_ack', {'data-source-class': 'badclass'}))
-        self.assertIsNone(self.__mgr._mod_command_handler(
-            'segment_info_update_ack', {'data-source-class': 'IN'}))
-        self.assertIsNone(self.__mgr._mod_command_handler(
-            'segment_info_update_ack', {'data-source-class': 'IN',
-                                        'data-source-name': 'noname'}))
+            'segment_info_update_ack', {'data-source-class': 'badclass',
+                                        'generation-id': TEST_GENERATION_ID}))
         self.assertIsNone(self.__mgr._mod_command_handler(
             'segment_info_update_ack', {'data-source-class': 'IN',
-                                        'data-source-name': 'name'}))
+                                        'generation-id': TEST_GENERATION_ID}))
+        self.assertIsNone(self.__mgr._mod_command_handler(
+            'segment_info_update_ack', {'data-source-class': 'IN',
+                                        'data-source-name': 'noname',
+                                        'generation-id': TEST_GENERATION_ID}))
+        self.assertIsNone(self.__mgr._mod_command_handler(
+            'segment_info_update_ack', {'data-source-class': 'IN',
+                                        'data-source-name': 'name',
+                                        'generation-id': TEST_GENERATION_ID}))
+        self.assertIsNone(self.__mgr._mod_command_handler(
+            'segment_info_update_ack', {'data-source-class': 'IN',
+                                        'data-source-name': 'name',
+                                        'generation-id': TEST_GENERATION_ID + 1,
+                                        'reader': 'reader0'}))
+        self.assertIsNone(self.__mgr._mod_command_handler(
+            'segment_info_update_ack', {'data-source-class': 'IN',
+                                        'data-source-name': 'name',
+                                        'generation-id': TEST_GENERATION_ID - 1,
+                                        'reader': 'reader0'}))
 
         # not necessarily invalid, but less common case: reader has been
         # removed by the time of handling update_ack.
@@ -572,6 +592,7 @@ class TestMemmgr(unittest.TestCase):
                              'segment_info_update_ack',
                              {'data-source-class': 'IN',
                               'data-source-name': 'name',
+                              'generation-id': TEST_GENERATION_ID,
                               'reader': 'reader0'}))
 
         # exception from sync_readers
@@ -580,6 +601,7 @@ class TestMemmgr(unittest.TestCase):
         self.assertIsNone(self.__mgr._mod_command_handler(
             'segment_info_update_ack', {'data-source-class': 'IN',
                                         'data-source-name': 'name',
+                                        'generation-id': TEST_GENERATION_ID,
                                         'reader': 'reader0'}))
 
     def __check_load_or_update_zone(self, cmd, handler):

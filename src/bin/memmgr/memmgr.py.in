@@ -78,6 +78,26 @@ class Memmgr(BUNDYServer):
         self._builder_command_queue = []
         self._builder_response_queue = []
 
+    def __find_datasrc_info_bygen(self, genid, must_exist):
+        """Helper to find DataSrcInfo for the given genid.
+
+        If 'must_exist' is True, it assumes the matching DataSrcInfo exists
+        and raises an exception if it's not found.  Otherwise it returns None
+        if no matching DataSrcInfo is found.
+
+        """
+        # Leaner search, but should be okay as we don't expect many generations
+        # are managed at the same time.
+        for dsrc_info in self._datasrc_info_list:
+            if dsrc_info.gen_id == genid:
+                return dsrc_info
+            if dsrc_info.gen_id > genid:
+                break
+        if must_exist:
+            raise _LoadZoneError(
+                'data source info for generation %s not found' % str(genid))
+        return None
+
     def _mod_command_handler(self, cmd, args):
         if cmd == 'segment_info_update_ack':
             # We usually expect the following to succeed, as long as the
@@ -88,8 +108,8 @@ class Memmgr(BUNDYServer):
             # be returned with an answer, so we return either None or False
             # (separating these for testing purposes).
             try:
-                # TODO: we should eventually handle multiple generations
-                dsrc_info = self._datasrc_info_list[-1]
+                dsrc_info = self.__find_datasrc_info_bygen(
+                    args['generation-id'], True)
                 rrclass = bundy.dns.RRClass(args['data-source-class'])
                 dsrc_name = args['data-source-name']
                 sgmt_info = dsrc_info.segment_info_map[(rrclass, dsrc_name)]
