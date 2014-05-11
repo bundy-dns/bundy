@@ -172,8 +172,6 @@ class Memmgr(BUNDYServer):
         if (not 'class' in args or not 'datasource' in args or
             not 'origin' in args):
             raise _LoadZoneError('missing parameters')
-        if self._datasrc_info is None:
-            raise _LoadZoneError('no data source is configured')
 
         try:
             rrclass = bundy.dns.RRClass(args['class'])
@@ -496,7 +494,8 @@ class Memmgr(BUNDYServer):
             # about exceptions to catch.
             self.mod_ccsession.add_remote_config_by_name(
                 'data_sources', self._datasrc_config_handler)
-            # TODO: case where it's still None
+            if self._datasrc_info is None:
+                raise BUNDYServerFatal('failed to initialize data sources')
         except (ModuleSpecError, ModuleCCSessionError) as ex:
             logger.error(MEMMGR_NO_DATASRC_CONF, ex)
             raise BUNDYServerFatal('failed to setup memmgr module')
