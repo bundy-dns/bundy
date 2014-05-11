@@ -1193,9 +1193,9 @@ def __get_initial_xfr_type(zone_soa, request_ixfr, zname, zclass, master_addr):
                      AddressFormatter(master_addr))
     return RRType.IXFR
 
-def __process_xfrin(server, zone_name, rrclass, datasrc_client, zone_soa,
-                    shutdown_event, master_addrinfo, check_soa, tsig_key,
-                    request_ixfr, counters, conn_class):
+def __process_xfrin(server, zone_name, rrclass, datasrc_genid, datasrc_client,
+                    zone_soa, shutdown_event, master_addrinfo, check_soa,
+                    tsig_key, request_ixfr, counters, conn_class):
     conn = None
     exception = None
     ret = XFRIN_FAIL
@@ -1259,15 +1259,17 @@ def __process_xfrin(server, zone_name, rrclass, datasrc_client, zone_soa,
     # Publish the zone transfer result news, so zonemgr can reset the
     # zone timer, and xfrout can notify the zone's slaves if the result
     # is success.
-    server.publish_xfrin_news(datasrc_client.get_datasource_name(), zone_name,
+    server.publish_xfrin_news(datasrc_genid,
+                              datasrc_client.get_datasource_name(), zone_name,
                               rrclass, ret)
 
     if exception is not None:
         raise exception
 
-def process_xfrin(server, xfrin_recorder, zone_name, rrclass, datasrc_client,
-                  zone_soa, shutdown_event, master_addrinfo, check_soa,
-                  tsig_key, request_ixfr, counters, conn_class=XfrinConnection):
+def process_xfrin(server, xfrin_recorder, zone_name, rrclass, datasrc_genid,
+                  datasrc_client, zone_soa, shutdown_event, master_addrinfo,
+                  check_soa, tsig_key, request_ixfr, counters,
+                  conn_class=XfrinConnection):
     # Even if it should be rare, the main process of xfrin session can
     # raise an exception.  In order to make sure the lock in xfrin_recorder
     # is released in any cases, we delegate the main part to the helper
@@ -1275,9 +1277,10 @@ def process_xfrin(server, xfrin_recorder, zone_name, rrclass, datasrc_client,
     xfrin_recorder.increment(zone_name)
     exception = None
     try:
-        __process_xfrin(server, zone_name, rrclass, datasrc_client, zone_soa,
-                        shutdown_event, master_addrinfo, check_soa, tsig_key,
-                        request_ixfr, counters, conn_class)
+        __process_xfrin(server, zone_name, rrclass, datasrc_genid,
+                        datasrc_client, zone_soa, shutdown_event,
+                        master_addrinfo, check_soa, tsig_key, request_ixfr,
+                        counters, conn_class)
     except Exception as ex:
         # don't log it until we complete decrement().
         exception = ex
@@ -1458,7 +1461,7 @@ class ZoneInfo:
         return (self.master_addr.family, socket.SOCK_STREAM,
                 (str(self.master_addr), self.master_port))
 
-def _notify_zoneupdate(server, dsrc_name, zone_name, zone_class):
+def _notify_zoneupdate(server, dsrc_genid, dsrc_name, zone_name, zone_class):
     """Helper for notifying interested modules of the update.
 
     This is defined here so it can be used from tests.  It's essentially a
@@ -1469,7 +1472,8 @@ def _notify_zoneupdate(server, dsrc_name, zone_name, zone_class):
     params = {
         'origin': str(zone_name),
         'class': str(zone_class),
-        'datasource': dsrc_name
+        'datasource': dsrc_name,
+        'generation_id': dsrc_genid
     }
 
     # Unfortunately we cannot use ModuleCCSession.notify() (see
@@ -1757,7 +1761,8 @@ class Xfrin:
 
         return (addr.family, socket.SOCK_STREAM, (str(addr), port))
 
-    def publish_xfrin_news(self, dsrc_name, zone_name, zone_class, xfr_result):
+    def publish_xfrin_news(self, dsrc_genid, dsrc_name, zone_name, zone_class,
+                           xfr_result):
         """Send command to xfrout/zone manager module.
 
         If xfrin has finished successfully for one zone, tell the good
@@ -1772,7 +1777,8 @@ class Xfrin:
             # Note: this mostly solves the FIXME below (except that it cannot
             # use ModuleCCSession).  We should eventually migrate to the
             # general notification for xfrout and zonemgr, too.
-            _notify_zoneupdate(self, dsrc_name, zone_name, zone_class)
+            _notify_zoneupdate(self, dsrc_genid, dsrc_name, zone_name,
+                               zone_class)
 
             # FIXME: Due to the hack with two different CC sessions
             # (see the _cc_setup comment) and the fact the rpc_call
@@ -1861,7 +1867,7 @@ class Xfrin:
 
         xfrin_thread = threading.Thread(target=process_xfrin,
                                         args=(self, self.recorder,
-                                              zone_name, rrclass,
+                                              zone_name, rrclass, genid,
                                               datasrc_client, zone_soa,
                                               self._shutdown_event,
                                               master_addrinfo, check_soa,
