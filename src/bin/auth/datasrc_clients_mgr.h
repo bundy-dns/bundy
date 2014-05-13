@@ -625,18 +625,24 @@ private:
     // implementation really does nothing.
     void doNoop() {}
 
-    void doReconfigure(const data::ConstElementPtr& config) {
-        if (config) {
+    void doReconfigure(const data::ConstElementPtr& mod_config) {
+        if (mod_config) {
             LOG_INFO(auth_logger,
                      AUTH_DATASRC_CLIENTS_BUILDER_RECONFIGURE_STARTED);
             try {
+                // Perform the rest of argument validation:
+                if (!mod_config->contains("classes")) {
+                    bundy_throw(InvalidParameter, "invalid data source "
+                                "configuration: must have 'classes'");
+                }
+
                 // Define new_clients_map outside of the block that
                 // has the lock scope; this way, after the swap,
                 // the lock is guaranteed to be released before
                 // the old data is destroyed, minimizing the lock
                 // duration.
                 datasrc::ClientListMapPtr new_clients_map =
-                    configureDataSource(config);
+                    configureDataSource(mod_config->get("classes"));
                 {
                     typename MutexType::Locker locker(*map_mutex_);
                     new_clients_map.swap(*clients_map_);
