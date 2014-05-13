@@ -211,25 +211,29 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
 
     // A config that doesn't do much except be accepted
     ConstElementPtr good_config = Element::fromJSON(
-        "{"
-        "\"IN\": [{"
-        "   \"type\": \"MasterFiles\","
-        "   \"params\": {},"
-        "   \"cache-enable\": true"
-        "}]"
-        "}"
+        "{\"classes\":"
+        "  {"
+        "  \"IN\": [{"
+        "     \"type\": \"MasterFiles\","
+        "     \"params\": {},"
+        "     \"cache-enable\": true"
+        "   }]"
+        "  },"
+        " \"_generation_id\": 1}"
     );
 
     // A configuration that is 'correct' in the top-level, but contains
     // bad data for the type it specifies
     ConstElementPtr bad_config = Element::fromJSON(
-        "{"
-        "\"IN\": [{"
-        "   \"type\": \"MasterFiles\","
-        "   \"params\": { \"foo\": [ 1, 2, 3, 4  ]},"
-        "   \"cache-enable\": true"
-        "}]"
-        "}"
+        "{\"classes\":"
+        "  {"
+        "  \"IN\": [{"
+        "     \"type\": \"MasterFiles\","
+        "     \"params\": { \"foo\": [ 1, 2, 3, 4  ]},"
+        "     \"cache-enable\": true"
+        "   }]"
+        "  },"
+        " \"_generation_id\": 1}"
     );
 
     reconfig_cmd.params = good_config;
@@ -243,7 +247,8 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
     // If a 'bad' command argument got here, the config validation should
     // have failed already, but still, the handler should return true,
     // and the clients_map should not be updated.
-    reconfig_cmd.params = Element::create("{ \"foo\": \"bar\" }");
+    reconfig_cmd.params = Element::create(
+        "{\"classes\": { \"foo\": \"bar\" }, \"_generation_id\": 1}");
     EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
     EXPECT_EQ(working_config_clients, clients_map);
     // Building failed, so map mutex should not have been locked again
@@ -265,6 +270,12 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
     EXPECT_EQ(working_config_clients, clients_map);
     EXPECT_EQ(1, map_mutex.lock_count);
 
+    // Missing mandatory config items
+    reconfig_cmd.params = Element::fromJSON("{\"_generation_id\": 1}");
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
+    EXPECT_EQ(working_config_clients, clients_map);
+    EXPECT_EQ(1, map_mutex.lock_count);
+
     // Reconfigure again with the same good clients, the result should
     // be a different map than the original, but not an empty one.
     reconfig_cmd.params = good_config;
@@ -274,7 +285,8 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
     EXPECT_EQ(2, map_mutex.lock_count);
 
     // And finally, try an empty config to disable all datasource clients
-    reconfig_cmd.params = Element::createMap();
+    reconfig_cmd.params =
+        Element::fromJSON("{\"classes\": {}, \"_generation_id\": 1}");
     EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
     EXPECT_EQ(0, clients_map->size());
     EXPECT_EQ(3, map_mutex.lock_count);

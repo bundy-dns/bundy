@@ -108,12 +108,18 @@ datasrcConfigHandler(AuthSrv* server, bool* first_time,
         // Further updates will work the usual way.
         assert(config_session != NULL);
         *first_time = false;
+        ElementPtr new_conf = Element::createMap();
+        new_conf->set("_generation_id",
+                      config_session->getRemoteConfigValue("data_sources",
+                                                           "_generation_id"));
+        new_conf->set("classes",
+                      config_session->getRemoteConfigValue("data_sources",
+                                                           "classes"));
         server->getDataSrcClientsMgr().reconfigure(
-            config_session->getRemoteConfigValue("data_sources", "classes"),
-            boost::bind(&AuthSrv::listsReconfigured, server));
+            new_conf, boost::bind(&AuthSrv::listsReconfigured, server));
     } else if (config->contains("classes")) {
-        server->getDataSrcClientsMgr().reconfigure(config->get("classes"),
-            boost::bind(&AuthSrv::listsReconfigured, server));
+        server->getDataSrcClientsMgr().reconfigure(
+            config, boost::bind(&AuthSrv::listsReconfigured, server));
     }
 }
 
