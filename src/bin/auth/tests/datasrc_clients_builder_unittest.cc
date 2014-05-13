@@ -295,6 +295,45 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
     EXPECT_EQ(3, map_mutex.unlock_count);
 }
 
+// This relies on the fact that mapped memory segment is initially in the
+// 'WAITING' state, and only works for that type of segment.
+TEST_F(DataSrcClientsBuilderTest,
+#ifdef USE_SHARED_MEMORY
+       reconfigurePending
+#else
+       DISABLED_reconfigurePending
+#endif
+    )
+{
+    Command reconfig_cmd(RECONFIGURE, ConstElementPtr(), FinishedCallback());
+
+    // One data source client in the entire configuration requires a mapped
+    // segment, making the new config pending until the segment is ready for
+    // reset.
+    const ConstElementPtr config = Element::fromJSON(
+        "{\"classes\":"
+        "  {"
+        "   \"CH\": ["
+        "    {\"type\": \"MasterFiles\", \"params\": {}, "
+        "     \"cache-enable\": true}],"
+        "   \"IN\": ["
+        "    {\"type\": \"MasterFiles\", \"name\": \"dsrc1\", \"params\": {}, "
+        "     \"cache-enable\": true},"
+        "    {\"type\": \"MasterFiles\","
+        "     \"params\": {\"test1.example\": \"" +
+        std::string(TEST_DATA_BUILDDIR "/test1.zone.copied") + "\"},"
+        "     \"cache-enable\": true,"
+        "     \"cache-type\": \"mapped\"}]},"
+        " \"_generation_id\": 1}"
+    );
+    reconfig_cmd.params = config;
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
+
+    // No swap should have happened.
+    EXPECT_EQ(0, clients_map->size());
+    EXPECT_EQ(0, map_mutex.lock_count);
+}
+
 TEST_F(DataSrcClientsBuilderTest, shutdown) {
     EXPECT_FALSE(builder.handleCommand(shutdown_cmd));
 }
