@@ -10,14 +10,14 @@ Feature: control with bundyctl
         # there is a Init command 'show_processes' but it's output is
         # currently less standardized than 'help')
         Given I have bundy running with configuration bundyctl_commands.config
-        And wait for bundy stderr message BUNDY_STARTED_CC
-        And wait for bundy stderr message CMDCTL_STARTED
-        And wait for bundy stderr message ZONEMGR_STARTED
-        And wait for bundy stderr message AUTH_SERVER_STARTED
-        And wait for bundy stderr message XFRIN_STARTED
-        And wait for bundy stderr message XFROUT_STARTED
-        And wait for bundy stderr message STATS_STARTING
-        And wait for bundy stderr message STATSHTTPD_STARTED
+        And wait for bundy log message BUNDY_STARTED_CC
+        And wait for bundy log message CMDCTL_STARTED
+        And wait for bundy log message ZONEMGR_STARTED
+        And wait for bundy log message AUTH_SERVER_STARTED
+        And wait for bundy log message XFRIN_STARTED
+        And wait for bundy log message XFROUT_STARTED
+        And wait for bundy log message STATS_STARTING
+        And wait for bundy log message STATSHTTPD_STARTED
 
         Then remove bundy configuration Init/components/NOSUCHMODULE
         last bundyctl output should contain Error
@@ -31,29 +31,29 @@ Feature: control with bundyctl
         bundy module Resolver should not be running
 
         Then remove bundy configuration Init/components value bundy-xfrout
-        And wait for new bundy stderr message BUNDY_PROCESS_ENDED
+        And wait for new bundy log message BUNDY_PROCESS_ENDED
         last bundyctl output should not contain Error
 
         # assuming it won't error for further modules (if it does, the final
         # 'should not be running' tests would fail anyway)
         Then remove bundy configuration Init/components value bundy-stats-httpd
-        And wait for new bundy stderr message BUNDY_PROCESS_ENDED
+        And wait for new bundy log message BUNDY_PROCESS_ENDED
         last bundyctl output should not contain Error
 
         Then remove bundy configuration Init/components value bundy-stats
-        And wait for new bundy stderr message BUNDY_PROCESS_ENDED
+        And wait for new bundy log message BUNDY_PROCESS_ENDED
         last bundyctl output should not contain Error
 
         Then remove bundy configuration Init/components value bundy-zonemgr
-        And wait for new bundy stderr message BUNDY_PROCESS_ENDED
+        And wait for new bundy log message BUNDY_PROCESS_ENDED
         last bundyctl output should not contain Error
 
         Then remove bundy configuration Init/components value bundy-xfrin
-        And wait for new bundy stderr message BUNDY_PROCESS_ENDED
+        And wait for new bundy log message BUNDY_PROCESS_ENDED
         last bundyctl output should not contain Error
 
         Then remove bundy configuration Init/components value bundy-auth
-        And wait for new bundy stderr message BUNDY_PROCESS_ENDED
+        And wait for new bundy log message BUNDY_PROCESS_ENDED
         last bundyctl output should not contain Error
 
         # After these ^^^ have been stopped...
@@ -69,8 +69,8 @@ Feature: control with bundyctl
         # This test tests the 'execute' command, which reads and executes
         # bundyctl commands from a file
         Given I have bundy running with configuration bundyctl/bundyctl.config
-        And wait for bundy stderr message BUNDY_STARTED_CC
-        And wait for bundy stderr message CMDCTL_STARTED
+        And wait for bundy log message BUNDY_STARTED_CC
+        And wait for bundy log message CMDCTL_STARTED
 
         # first a few bad commands
         When I send bundy the command execute
@@ -119,8 +119,8 @@ Feature: control with bundyctl
 
     Scenario: Executing builting script init_authoritative_server
         Given I have bundy running with configuration bundyctl/bundyctl.config
-        And wait for bundy stderr message BUNDY_STARTED_CC
-        And wait for bundy stderr message CMDCTL_STARTED
+        And wait for bundy log message BUNDY_STARTED_CC
+        And wait for bundy log message CMDCTL_STARTED
 
         When I send bundy the command execute init_authoritative_server show
         # just test some parts of the output
@@ -144,10 +144,10 @@ Feature: control with bundyctl
         execute init_authoritative_server
         config commit
         """
-        And wait for bundy stderr message AUTH_SERVER_STARTED
-        And wait for bundy stderr message ZONEMGR_STARTED
-        And wait for bundy stderr message XFRIN_STARTED
-        And wait for bundy stderr message XFROUT_STARTED
+        And wait for bundy log message AUTH_SERVER_STARTED
+        And wait for bundy log message ZONEMGR_STARTED
+        And wait for bundy log message XFRIN_STARTED
+        And wait for bundy log message XFROUT_STARTED
 
         last bundyctl output should not contain Error
         bundy module Auth should be running
@@ -163,9 +163,9 @@ Feature: control with bundyctl
         # shutdown.  So "send bundy command" will fail (it cannot complete
         # "quit").
         Given I have bundy running with configuration bundyctl/bundyctl.config
-        And wait for bundy stderr message BUNDY_STARTED_CC
-        And wait for bundy stderr message CMDCTL_STARTED
+        And wait for bundy log message BUNDY_STARTED_CC
+        And wait for bundy log message CMDCTL_STARTED
 
         When I send bundy ignoring failure the command Cmdctl shutdown
-        And wait for bundy stderr message CMDCTL_EXITING
-        And wait for bundy stderr message BUNDY_SHUTDOWN_COMPLETE
+        And wait for bundy log message CMDCTL_EXITING
+        And wait for bundy log message BUNDY_SHUTDOWN_COMPLETE

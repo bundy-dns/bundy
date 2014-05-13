@@ -8,9 +8,9 @@ Feature: Example feature
 
     Scenario: A simple example
         Given I have bundy running with configuration example.org.config
-        And wait for bundy stderr message BUNDY_STARTED_CC
-        And wait for bundy stderr message CMDCTL_STARTED
-        And wait for bundy stderr message AUTH_SERVER_STARTED
+        And wait for bundy log message BUNDY_STARTED_CC
+        And wait for bundy log message CMDCTL_STARTED
+        And wait for bundy log message AUTH_SERVER_STARTED
 
         bundy module Auth should be running
         And bundy module Resolver should not be running
@@ -39,9 +39,9 @@ Feature: Example feature
         # one to start the server
         When I start bundy with configuration no_db_file.config
 
-        And wait for bundy stderr message BUNDY_STARTED_CC
-        And wait for bundy stderr message CMDCTL_STARTED
-        And wait for bundy stderr message AUTH_SERVER_STARTED
+        And wait for bundy log message BUNDY_STARTED_CC
+        And wait for bundy log message CMDCTL_STARTED
+        And wait for bundy log message AUTH_SERVER_STARTED
 
         # Now we use the first step again to see if the file has been created
         The file data/test_nonexistent_db.sqlite3 should exist
@@ -72,9 +72,9 @@ Feature: Example feature
         # This is a compound statement that starts and waits for the
         # started message
         Given I have bundy running with configuration example.org.config
-        And wait for bundy stderr message BUNDY_STARTED_CC
-        And wait for bundy stderr message CMDCTL_STARTED
-        And wait for bundy stderr message AUTH_SERVER_STARTED
+        And wait for bundy log message BUNDY_STARTED_CC
+        And wait for bundy log message CMDCTL_STARTED
+        And wait for bundy log message AUTH_SERVER_STARTED
 
         bundy module Auth should be running
         And bundy module Resolver should not be running
@@ -140,9 +140,9 @@ Feature: Example feature
         # http://tools.ietf.org/html/draft-vixie-dnsext-dns0x20-00
 
         Given I have bundy running with configuration example.org.config
-        And wait for bundy stderr message BUNDY_STARTED_CC
-        And wait for bundy stderr message CMDCTL_STARTED
-        And wait for bundy stderr message AUTH_SERVER_STARTED
+        And wait for bundy log message BUNDY_STARTED_CC
+        And wait for bundy log message CMDCTL_STARTED
+        And wait for bundy log message AUTH_SERVER_STARTED
 
         bundy module Auth should be running
         And bundy module Resolver should not be running
@@ -176,9 +176,9 @@ Feature: Example feature
         # the system
 
         When I start bundy with configuration example.org.config
-        And wait for bundy stderr message BUNDY_STARTED_CC
-        And wait for bundy stderr message CMDCTL_STARTED
-        And wait for bundy stderr message AUTH_SERVER_STARTED
+        And wait for bundy log message BUNDY_STARTED_CC
+        And wait for bundy log message CMDCTL_STARTED
+        And wait for bundy log message AUTH_SERVER_STARTED
 
         bundy module Auth should be running
         And bundy module Resolver should not be running
@@ -189,28 +189,28 @@ Feature: Example feature
         And bundy module StatsHttpd should not be running
 
         A query for www.example.org should have rcode NOERROR
-        Wait for new bundy stderr message AUTH_SEND_NORMAL_RESPONSE
+        Wait for new bundy log message AUTH_SEND_NORMAL_RESPONSE
         Then set bundy configuration data_sources/classes/IN[0]/params to {"database_file": "data/empty_db.sqlite3"}
         # The 'not missing placeholder' check is for #2743
-        And wait for new bundy stderr message DATASRC_SQLITE_CONNOPEN not Missing placeholder
+        And wait for new bundy log message DATASRC_SQLITE_CONNOPEN not Missing placeholder
         A query for www.example.org should have rcode REFUSED
-        Wait for new bundy stderr message AUTH_SEND_NORMAL_RESPONSE
+        Wait for new bundy log message AUTH_SEND_NORMAL_RESPONSE
         Then set bundy configuration data_sources/classes/IN[0]/params to {"database_file": "data/example.org.sqlite3"}
         # The 'not missing placeholder' check is for #2743
-        And wait for new bundy stderr message DATASRC_SQLITE_CONNOPEN not Missing placeholder
+        And wait for new bundy log message DATASRC_SQLITE_CONNOPEN not Missing placeholder
         A query for www.example.org should have rcode NOERROR
 
     Scenario: two bundy instances
         # This is more a test of the test system, start 2 bundy's
         When I start bundy with configuration example.org.config as bundy_one
-        And wait for bundy_one stderr message BUNDY_STARTED_CC
-        And wait for bundy_one stderr message CMDCTL_STARTED
-        And wait for bundy_one stderr message AUTH_SERVER_STARTED
+        And wait for bundy_one log message BUNDY_STARTED_CC
+        And wait for bundy_one log message CMDCTL_STARTED
+        And wait for bundy_one log message AUTH_SERVER_STARTED
 
         And I start bundy with configuration example2.org.config with cmdctl port 56174 as bundy_two
-        And wait for bundy_two stderr message BUNDY_STARTED_CC
-        And wait for bundy_two stderr message CMDCTL_STARTED
-        And wait for bundy_two stderr message AUTH_SERVER_STARTED
+        And wait for bundy_two log message BUNDY_STARTED_CC
+        And wait for bundy_two log message CMDCTL_STARTED
+        And wait for bundy_two log message AUTH_SERVER_STARTED
 
         A query for www.example.org to 127.0.0.1:56176 should have rcode NOERROR
         A query for www.example.org to [::1]:56177 should have rcode NOERROR
@@ -219,7 +219,7 @@ Feature: Example feature
         The SOA serial for example.org at ::1:56177 should be 1234
 
         Then set bundy configuration data_sources/classes/IN[0]/params to {"database_file": "data/empty_db.sqlite3"}
-        And wait for bundy_one stderr message DATASRC_SQLITE_CONNOPEN
+        And wait for bundy_one log message DATASRC_SQLITE_CONNOPEN
 
         A query for www.example.org to 127.0.0.1:56176 should have rcode REFUSED
         A query for www.example.org to [::1]:56177 should have rcode NOERROR

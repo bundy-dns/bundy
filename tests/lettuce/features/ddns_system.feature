@@ -5,8 +5,8 @@ Feature: DDNS System
     Scenario: Module tests
         # The given config has bundy-ddns disabled
         Given I have bundy running with configuration ddns/noddns.config
-        And wait for bundy stderr message BUNDY_STARTED_CC
-        And wait for bundy stderr message AUTH_SERVER_STARTED
+        And wait for bundy log message BUNDY_STARTED_CC
+        And wait for bundy log message AUTH_SERVER_STARTED
 
         # Sanity check
         bundy module DDNS should not be running
@@ -19,7 +19,7 @@ Feature: DDNS System
 
         # Test 2
         When I configure bundy to run DDNS
-        And wait for new bundy stderr message DDNS_STARTED
+        And wait for new bundy log message DDNS_STARTED
         bundy module DDNS should be running
 
         # Test 3
@@ -39,44 +39,44 @@ Feature: DDNS System
         # Test 5
         When I use DDNS to set the SOA serial to 1237
         # also check if Auth server reloaded
-        And wait for new bundy stderr message AUTH_DATASRC_CLIENTS_BUILDER_LOAD_ZONE
+        And wait for new bundy log message AUTH_DATASRC_CLIENTS_BUILDER_LOAD_ZONE
         The DDNS response should be SUCCESS
         And the SOA serial for example.org should be 1237
 
         # Test 6
         When I send bundy the command DDNS shutdown
-        And wait for new bundy stderr message DDNS_STOPPED
+        And wait for new bundy log message DDNS_STOPPED
 
         # Test 7
         # Init should restart it
-        And wait for new bundy stderr message DDNS_STARTED
+        And wait for new bundy log message DDNS_STARTED
 
         # Test 8
         When I use DDNS to set the SOA serial to 1238
-        And wait for new bundy stderr message AUTH_DATASRC_CLIENTS_BUILDER_LOAD_ZONE
+        And wait for new bundy log message AUTH_DATASRC_CLIENTS_BUILDER_LOAD_ZONE
         The DDNS response should be SUCCESS
         And the SOA serial for example.org should be 1238
 
         When I use DDNS to set the SOA serial to 1239
-        And wait for new bundy stderr message AUTH_DATASRC_CLIENTS_BUILDER_LOAD_ZONE
+        And wait for new bundy log message AUTH_DATASRC_CLIENTS_BUILDER_LOAD_ZONE
         The DDNS response should be SUCCESS
         And the SOA serial for example.org should be 1239
 
         # Test 9
         When I send bundy the command Auth shutdown
-        And wait for new bundy stderr message AUTH_SHUTDOWN
+        And wait for new bundy log message AUTH_SHUTDOWN
         # Init should restart it automatically
-        And wait for new bundy stderr message AUTH_SERVER_STARTED
+        And wait for new bundy log message AUTH_SERVER_STARTED
 
         # Test 10
         When I use DDNS to set the SOA serial to 1240
-        And wait for new bundy stderr message AUTH_DATASRC_CLIENTS_BUILDER_LOAD_ZONE
+        And wait for new bundy log message AUTH_DATASRC_CLIENTS_BUILDER_LOAD_ZONE
         The DDNS response should be SUCCESS
         And the SOA serial for example.org should be 1240
 
         # Test 11
         When I configure BUNDY to stop running DDNS
-        And wait for new bundy stderr message DDNS_STOPPED
+        And wait for new bundy log message DDNS_STOPPED
 
         bundy module DDNS should not be running
 
@@ -88,9 +88,9 @@ Feature: DDNS System
 
     Scenario: ACL
         Given I have bundy running with configuration ddns/ddns.config
-        And wait for bundy stderr message BUNDY_STARTED_CC
-        And wait for bundy stderr message AUTH_SERVER_STARTED
-        And wait for bundy stderr message DDNS_STARTED
+        And wait for bundy log message BUNDY_STARTED_CC
+        And wait for bundy log message AUTH_SERVER_STARTED
+        And wait for bundy log message DDNS_STARTED
 
         # Sanity check
         A query for new1.example.org should have rcode NXDOMAIN
@@ -120,9 +120,9 @@ Feature: DDNS System
 
     Scenario: Zone validation check
         Given I have bundy running with configuration ddns/ddns.config
-        And wait for bundy stderr message BUNDY_STARTED_CC
-        And wait for bundy stderr message AUTH_SERVER_STARTED
-        And wait for bundy stderr message DDNS_STARTED
+        And wait for bundy log message BUNDY_STARTED_CC
+        And wait for bundy log message AUTH_SERVER_STARTED
+        And wait for bundy log message DDNS_STARTED
 
         # Sanity check
         A query for example.org type NS should have rcode NOERROR
@@ -160,13 +160,13 @@ Feature: DDNS System
     ## reasons). So for now this test is only an outline, the configs
     ## themselves have not been set up yet
     #    When I start bundy with configuration ddns/primary.config as primary
-    #    And wait for primary stderr message AUTH_SERVER_STARTED
-    #    And wait for primary stderr message XFROUT_STARTED
-    #    And wait for primary stderr message DDNS_STARTED
+    #    And wait for primary log message AUTH_SERVER_STARTED
+    #    And wait for primary log message XFROUT_STARTED
+    #    And wait for primary log message DDNS_STARTED
 
     #    And I start bundy with configuration example2.org.config with cmdctl port 56174 as secondary
-    #    And wait for secondary stderr message AUTH_SERVER_STARTED
-    #    And wait for secondary stderr message XFRIN_STARTED
+    #    And wait for secondary log message AUTH_SERVER_STARTED
+    #    And wait for secondary log message XFRIN_STARTED
 
     #    # Sanity check
     #    The SOA serial for example.org should be 1234

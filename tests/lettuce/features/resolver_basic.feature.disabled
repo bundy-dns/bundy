@@ -11,9 +11,9 @@ Feature: Basic Resolver
         # to be revised (as it would then leak, which is probably true
         # for any resolver system test)
         When I start bundy with configuration resolver/resolver_basic.config
-        And wait for bundy stderr message BUNDY_STARTED_CC
-        And wait for bundy stderr message CMDCTL_STARTED
-        And wait for bundy stderr message RESOLVER_STARTED
+        And wait for bundy log message BUNDY_STARTED_CC
+        And wait for bundy log message CMDCTL_STARTED
+        And wait for bundy log message RESOLVER_STARTED
 
         bundy module Resolver should be running
         And bundy module Auth should not be running

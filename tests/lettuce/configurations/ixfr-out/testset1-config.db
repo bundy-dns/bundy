@@ -15,12 +15,7 @@
                 {
                     "debuglevel": 99,
                     "severity": "DEBUG",
-                    "output_options": [
-                        {
-                            "output": "stderr",
-                            "flush": true
-                        }
-                    ],
+		    OUTPUT_OPTIONS,
                     "name": "*"
                 }
         ]

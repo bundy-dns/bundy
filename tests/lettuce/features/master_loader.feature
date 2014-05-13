@@ -4,9 +4,9 @@ Feature: Master loader feature
 
     Scenario: $GENERATE support
         Given I have bundy running with configuration generate.config
-        And wait for bundy stderr message BUNDY_STARTED_CC
-        And wait for bundy stderr message CMDCTL_STARTED
-        And wait for bundy stderr message AUTH_SERVER_STARTED
+        And wait for bundy log message BUNDY_STARTED_CC
+        And wait for bundy log message CMDCTL_STARTED
+        And wait for bundy log message AUTH_SERVER_STARTED
 
         bundy module Auth should be running
         And bundy module Resolver should not be running
