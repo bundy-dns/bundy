@@ -1294,6 +1294,8 @@ if test "x$have_sqlite" = "xyes" ; then
   enable_features="$enable_features SQLite3"
 
   AX_PYTHON_SQLITE3
+else
+  AC_MSG_ERROR([Currently SQLite3 is mandatory to build Bundy.  If it's installed under some uncommon path, it may help to set PKG_CONFIG_PATH so it includes the directory that contains sqlite3.pc])
 fi
 
 #

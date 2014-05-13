@@ -12,6 +12,17 @@ dnl in PATH.
 
 AC_DEFUN([AX_SQLITE3_FOR_BUNDY], [
 
+# A special workaround for MacOS X + Homebrew: some latest versions of the OS
+# have its own sqlite3 without its developer tools (header files and library),
+# so Homebrew installs its own sqlite3 under an uncommon path that pkg-config
+# do not search by default.  System specific hack like this is bad, but we
+# don't want to force users to struggle for purism.
+SAVED_PKG_CONFIG_PATH=$PKG_CONFIG_PATH
+if test -d /usr/local/opt/sqlite/lib/pkgconfig; then
+  PKG_CONFIG_PATH=/usr/local/opt/sqlite/lib/pkgconfig:${SAVED_PKG_CONFIG_PATH}
+  export PKG_CONFIG_PATH
+fi
+
 PKG_CHECK_MODULES(SQLITE, sqlite3 >= 3.3.9,
     [have_sqlite="yes"
 dnl Determine the SQLite version, used mainly for config.report.
@@ -38,5 +49,7 @@ AC_PATH_PROG(SQLITE3_PROGRAM, sqlite3, no)
 AM_CONDITIONAL(HAVE_SQLITE3_PROGRAM, test "x$SQLITE3_PROGRAM" != "xno")
 
 # TODO: check for _sqlite3.py module
+
+PKG_CONFIG_PATH=$SAVED_PKG_CONFIG_PATH
 
 ])dnl AX_SQLITE3_FOR_BUNDY
