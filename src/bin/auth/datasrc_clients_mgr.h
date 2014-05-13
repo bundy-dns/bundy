@@ -625,6 +625,29 @@ private:
     // implementation really does nothing.
     void doNoop() {}
 
+    // The following three methods are helper to determine whether a new
+    // generation of data source clients are ready for use: they are considered
+    // ready iff all memory segments are in a state other than WAITING.
+    static bool segmentWaiting(const datasrc::DataSourceStatus& status) {
+        return (status.getSegmentState() == datasrc::SEGMENT_WAITING);
+    }
+
+    static bool
+    isClientListWaiting(const std::pair<dns::RRClass,
+                        boost::shared_ptr<datasrc::ConfigurableClientList> >&
+                        listpair)
+    {
+        const std::vector<datasrc::DataSourceStatus>& statuses =
+            listpair.second->getStatus();
+        return (std::find_if(statuses.begin(), statuses.end(), segmentWaiting)
+                != statuses.end());
+    }
+
+    static bool isClientsReady(const ClientListsMap& clients_map) {
+        return (std::find_if(clients_map.begin(), clients_map.end(),
+                             isClientListWaiting) == clients_map.end());
+    }
+
     void doReconfigure(const data::ConstElementPtr& mod_config) {
         if (mod_config) {
             LOG_INFO(auth_logger,
@@ -635,20 +658,37 @@ private:
                     bundy_throw(InvalidParameter, "invalid data source "
                                 "configuration: must have 'classes'");
                 }
+                if (!mod_config->contains("_generation_id")) {
+                    bundy_throw(InvalidParameter, "invalid data source "
+                                "configuration: must have '_generation_id'");
+                }
+                const int64_t genid =
+                    mod_config->get("_generation_id")->intValue();
 
                 // Define new_clients_map outside of the block that
                 // has the lock scope; this way, after the swap,
                 // the lock is guaranteed to be released before
                 // the old data is destroyed, minimizing the lock
                 // duration.
-                datasrc::ClientListMapPtr new_clients_map =
-                    configureDataSource(mod_config->get("classes"));
+                pending_map_.reset(
+                    new PendingClientListMap(
+                        configureDataSource(mod_config->get("classes")),
+                        genid));
+                if (!isClientsReady(*pending_map_->clients_map_)) {
+                    LOG_INFO(auth_logger,
+                             AUTH_DATASRC_CLIENTS_BUILDER_RECONFIGURE_PENDING).
+                        arg(genid);
+                    return;
+                }
+
                 {
                     typename MutexType::Locker locker(*map_mutex_);
-                    new_clients_map.swap(*clients_map_);
+                    pending_map_->clients_map_.swap(*clients_map_);
                 } // lock is released by leaving scope
+                pending_map_.reset();
                 LOG_INFO(auth_logger,
-                         AUTH_DATASRC_CLIENTS_BUILDER_RECONFIGURE_SUCCESS);
+                         AUTH_DATASRC_CLIENTS_BUILDER_RECONFIGURE_SUCCESS).
+                    arg(genid);
             } catch (const datasrc::ConfigurableClientList::ConfigurationError&
                      config_error) {
                 LOG_ERROR(auth_logger,
@@ -740,6 +780,18 @@ private:
     datasrc::ClientListMapPtr* clients_map_;
     MutexType* map_mutex_;
     int wake_fd_;
+
+    // Placeholder for pending new generation of data source clients.  Defined
+    // as a struct just for handling the members as a tuple.
+    struct PendingClientListMap {
+        PendingClientListMap(datasrc::ClientListMapPtr clients_map,
+                             int64_t gen_id) :
+            clients_map_(clients_map), gen_id_(gen_id)
+        {}
+        datasrc::ClientListMapPtr clients_map_;
+        const int64_t gen_id_;
+    };
+    boost::scoped_ptr<PendingClientListMap> pending_map_;
 };
 
 // Shortcut typedef for normal use
@@ -836,7 +888,7 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::handleCommand(
         doReconfigure(command.params);
         break;
     case LOADZONE:
-    case UPDATEZONE:            // need test
+    case UPDATEZONE:
         doUpdateZone(command.id, command.params);
         break;
     case SEGMENT_INFO_UPDATE:

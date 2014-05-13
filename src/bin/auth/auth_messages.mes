@@ -137,11 +137,17 @@ configuration first. The system is still running with the data sources that
 were previously configured (i.e. as if the configuration has not changed).
 The specific problem is printed in the log message.
 
+% AUTH_DATASRC_CLIENTS_BUILDER_RECONFIGURE_PENDING data source reconfiguration pending for some memory segments (generation %1)
+The thread for maintaining data source clients has received a new generation
+of data source configuration, but the new configuration is not fully activated
+because some memory segments for in-memory cache are to be reset.  This is
+common if a mapped memory segment is used.
+
 % AUTH_DATASRC_CLIENTS_BUILDER_RECONFIGURE_STARTED data source reconfiguration started
 The thread for maintaining data source clients has received a command to
 reconfigure, and has now started this process.
 
-% AUTH_DATASRC_CLIENTS_BUILDER_RECONFIGURE_SUCCESS data source reconfiguration completed successfully
+% AUTH_DATASRC_CLIENTS_BUILDER_RECONFIGURE_SUCCESS data source reconfiguration completed successfully (generation %1)
 The thread for maintaining data source clients has finished reconfiguring
 the data source clients, and is now running with the new configuration.
 
