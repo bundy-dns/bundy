@@ -770,23 +770,23 @@ TEST_F(DataSrcClientsBuilderTest,
 #endif
       )
 {
-    ConstElementPtr segment_config = createSegments();
-    const ConstElementPtr config = Element::fromJSON(
-        "{"
-        "\"IN\": [{"
-        "   \"type\": \"MasterFiles\","
-        "   \"params\": {"
-        "       \"test1.example\": \""
-        TEST_DATA_BUILDDIR "/test1.zone.copied\"},"
-        "   \"cache-enable\": true,"
-        "   \"cache-type\": \"mapped\""
-        "}]}");
+    const ConstElementPtr segment_config = createSegments();
+    Command reconfig_cmd(RECONFIGURE, ConstElementPtr(), FinishedCallback());
 
-    // Create a new map without the segments set
-    clients_map = configureDataSource(config);
-    const boost::shared_ptr<ConfigurableClientList> list =
-        (*clients_map)[RRClass::IN()];
-    EXPECT_EQ(SEGMENT_WAITING, list->getStatus()[0].getSegmentState());
+    // Configure a new map without resetting the segments set
+    const ConstElementPtr config = Element::fromJSON(
+        "{\"classes\": "
+        " {"
+        "  \"IN\": ["
+        "  {\"type\": \"MasterFiles\","
+        "   \"params\": {\"test1.example\": \""
+        TEST_DATA_BUILDDIR "/test1.zone.copied\"},"
+        "   \"cache-enable\": true, \"cache-type\": \"mapped\"}]},"
+        " \"_generation_id\": 42}");
+    reconfig_cmd.params = config;
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
+
+    //clients_map = configureDataSource(config);
     // Send the update command with inuse-only.  Since the status is 'waiting',
     // this should be ignored.
     const ElementPtr noop_command_args = Element::fromJSON(
@@ -799,10 +799,10 @@ TEST_F(DataSrcClientsBuilderTest,
     noop_command_args->set("segment-params", segment_config);
     builder.handleCommand(Command(SEGMENT_INFO_UPDATE, noop_command_args,
                                   FinishedCallback()));
-    EXPECT_EQ(SEGMENT_WAITING, list->getStatus()[0].getSegmentState());
+    EXPECT_EQ(0, clients_map->size()); // still empty
 
-    // Send the command
-    const ElementPtr command_args = Element::fromJSON(
+    // Send the update command, making the pending map active.
+    ElementPtr command_args = Element::fromJSON(
         "{"
         "  \"data-source-name\": \"MasterFiles\","
         "  \"data-source-class\": \"IN\","
@@ -811,10 +811,17 @@ TEST_F(DataSrcClientsBuilderTest,
     command_args->set("segment-params", segment_config);
     builder.handleCommand(Command(SEGMENT_INFO_UPDATE, command_args,
                                   FinishedCallback()));
-    // The segment is now used.
-    EXPECT_EQ(SEGMENT_INUSE, list->getStatus()[0].getSegmentState());
+    EXPECT_EQ(1, clients_map->size()); // now the new configuration is active.
+
+    // updates on an older generation will be just ignored.
+    const size_t locks = map_mutex.lock_count;
+    command_args->set("generation-id", Element::create(41));
+    builder.handleCommand(Command(SEGMENT_INFO_UPDATE, command_args,
+                                  FinishedCallback()));
+    EXPECT_EQ(locks, map_mutex.lock_count); // no reset should have happened
 
     // Some invalid inputs (wrong class, different name of data source, etc).
+    command_args->set("generation-id", Element::create(42)); // set correct gid
 
     // Copy the confing and modify
     const ElementPtr bad_name = Element::fromJSON(command_args->toWire());
@@ -921,5 +928,11 @@ TEST_F(DataSrcClientsBuilderTest,
                                   FinishedCallback()));
     EXPECT_EQ(2, clients_map->size());
     EXPECT_EQ(3, map_mutex.lock_count);
+
+    // updates on an older generation will be just ignored.
+    command_args->set("generation-id", Element::create(41));
+    builder.handleCommand(Command(SEGMENT_INFO_UPDATE, command_args,
+                                  FinishedCallback()));
+    EXPECT_EQ(3, map_mutex.lock_count); // no reset should have happened
 }
 } // unnamed namespace
