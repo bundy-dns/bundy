@@ -388,6 +388,7 @@ public:
             "data-source-name",
             "data-source-class",
             "segment-params",
+            "generation-id",
             NULL
         };
         for (const char** param = params; *param; ++param) {
@@ -763,7 +764,7 @@ private:
                 name(arg->get("data-source-name")->stringValue());
             const bundy::data::ConstElementPtr& segment_params =
                 arg->get("segment-params");
-            const int64_t genid = arg->get("_generation_id")->intValue();
+            const int64_t genid = arg->get("generation-id")->intValue();
             const bool inuse_only = (arg->contains("inuse-only") &&
                                      arg->get("inuse-only")->boolValue());
 

@@ -794,7 +794,7 @@ TEST_F(DataSrcClientsBuilderTest,
         "  \"data-source-name\": \"MasterFiles\","
         "  \"data-source-class\": \"IN\","
         "  \"inuse-only\": true,"
-        "  \"_generation_id\": 42"
+        "  \"generation-id\": 42"
         "}");
     noop_command_args->set("segment-params", segment_config);
     builder.handleCommand(Command(SEGMENT_INFO_UPDATE, noop_command_args,
@@ -806,7 +806,7 @@ TEST_F(DataSrcClientsBuilderTest,
         "{"
         "  \"data-source-name\": \"MasterFiles\","
         "  \"data-source-class\": \"IN\","
-        "  \"_generation_id\": 42"
+        "  \"generation-id\": 42"
         "}");
     command_args->set("segment-params", segment_config);
     builder.handleCommand(Command(SEGMENT_INFO_UPDATE, command_args,
@@ -902,7 +902,7 @@ TEST_F(DataSrcClientsBuilderTest,
         "{"
         "  \"data-source-name\": \"dsrc1\","
         "  \"data-source-class\": \"IN\","
-        "  \"_generation_id\": 42"
+        "  \"generation-id\": 42"
         "}");
     command_args->set("segment-params", segment_config);
     builder.handleCommand(Command(SEGMENT_INFO_UPDATE, command_args,

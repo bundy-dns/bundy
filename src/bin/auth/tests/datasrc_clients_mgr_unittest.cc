@@ -293,19 +293,23 @@ TEST(DataSrcClientsMgrTest, segmentUpdate) {
 
     bundy::data::ElementPtr args =
         bundy::data::Element::fromJSON("{\"data-source-class\": \"IN\","
-                                     " \"data-source-name\": \"sqlite3\","
-                                     " \"segment-params\": {}}");
+                                       " \"data-source-name\": \"sqlite3\","
+                                       " \"segment-params\": {},"
+                                       " \"generation-id\": 1}");
     mgr.segmentInfoUpdate(args);
     EXPECT_EQ(1, FakeDataSrcClientsBuilder::command_queue->size());
     // Some invalid inputs
     EXPECT_THROW(mgr.segmentInfoUpdate(bundy::data::Element::fromJSON(
-        "{\"data-source-class\": \"IN\","
+        "{\"data-source-class\": \"IN\", \"generation-id\": 1,"
         " \"data-source-name\": \"sqlite3\"}")), CommandError);
     EXPECT_THROW(mgr.segmentInfoUpdate(bundy::data::Element::fromJSON(
-        "{\"data-source-name\": \"sqlite3\","
+        "{\"data-source-name\": \"sqlite3\", \"generation-id\": 1,"
         " \"segment-params\": {}}")), CommandError);
     EXPECT_THROW(mgr.segmentInfoUpdate(bundy::data::Element::fromJSON(
-        "{\"data-source-class\": \"IN\","
+        "{\"data-source-class\": \"IN\", \"generation-id\": 1,"
+        " \"segment-params\": {}}")), CommandError);
+    EXPECT_THROW(mgr.segmentInfoUpdate(bundy::data::Element::fromJSON(
+        "{\"data-source-class\": \"IN\", \"data-source-name\": \"sqlite3\","
         " \"segment-params\": {}}")), CommandError);
     EXPECT_EQ(1, FakeDataSrcClientsBuilder::command_queue->size());
 }
