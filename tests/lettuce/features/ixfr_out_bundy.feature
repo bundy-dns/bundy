@@ -32,12 +32,12 @@ Feature: IXFR out
     Scenario: Test Set 1
         Given I have bundy running with configuration ixfr-out/testset1-config.db
 
-        And wait for bundy stderr message BUNDY_STARTED_CC
-        And wait for bundy stderr message CMDCTL_STARTED
-        And wait for bundy stderr message AUTH_SERVER_STARTED
-        And wait for bundy stderr message XFROUT_STARTED
-        And wait for bundy stderr message XFRIN_STARTED
-        And wait for bundy stderr message ZONEMGR_STARTED
+        And wait for bundy log message BUNDY_STARTED_CC
+        And wait for bundy log message CMDCTL_STARTED
+        And wait for bundy log message AUTH_SERVER_STARTED
+        And wait for bundy log message XFROUT_STARTED
+        And wait for bundy log message XFRIN_STARTED
+        And wait for bundy log message ZONEMGR_STARTED
 
         The SOA serial for example.com should be 22
 
@@ -154,12 +154,12 @@ Feature: IXFR out
     Scenario: Test Set 2
         Given I have bundy running with configuration ixfr-out/testset1-config.db
 
-        And wait for bundy stderr message BUNDY_STARTED_CC
-        And wait for bundy stderr message CMDCTL_STARTED
-        And wait for bundy stderr message AUTH_SERVER_STARTED
-        And wait for bundy stderr message XFROUT_STARTED
-        And wait for bundy stderr message XFRIN_STARTED
-        And wait for bundy stderr message ZONEMGR_STARTED
+        And wait for bundy log message BUNDY_STARTED_CC
+        And wait for bundy log message CMDCTL_STARTED
+        And wait for bundy log message AUTH_SERVER_STARTED
+        And wait for bundy log message XFROUT_STARTED
+        And wait for bundy log message XFRIN_STARTED
+        And wait for bundy log message ZONEMGR_STARTED
 
         The SOA serial for example.com should be 22
 

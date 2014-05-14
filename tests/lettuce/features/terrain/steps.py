@@ -30,18 +30,17 @@ def stop_a_named_process(step, process_name):
     """
     world.processes.stop_process(process_name)
 
-@step('wait (?:(\d+) times )?for (new )?(\w+) stderr message (\S+)(?: not (\S+))?')
-def wait_for_stderr_message(step, times, new, process_name, message, not_message):
+@step('wait (?:(\d+) times )?for (new )?(\w+) log message (\S+)(?: not (\S+))?')
+def wait_for_log_message(step, times, new, process_name, message, not_message):
     """
-    Block until the given message is printed to the given process's stderr
-    output.
+    Block until the given message is printed to the given process's log file.
     Parameter:
     times: Check for the string this many times.
     new: (' new', optional): Only check the output from the process that has
                              not been covered in previous calls to this
                              function.  See RunningProcess._wait_for_output_str
                              for details.
-    process_name ('<name> stderr'): Name of the process to check the output of.
+    process_name ('<name> log'): Name of the process to check the output of.
     message ('message <message>'): Output (part) to wait for.
     not_message ('not <message>'): Output (part) to wait for, and fail
     Fails if the message is not found after 10 seconds.
@@ -51,7 +50,7 @@ def wait_for_stderr_message(step, times, new, process_name, message, not_message
         strings.append(not_message)
     if times is None:
         times = 1
-    (found, line) = world.processes.wait_for_stderr_str(process_name, strings, new, int(times))
+    (found, line) = world.processes.wait_for_log_str(process_name, strings, new, int(times))
     if not_message is not None:
         assert found != not_message, line
 

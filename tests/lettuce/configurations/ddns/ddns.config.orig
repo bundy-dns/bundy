@@ -5,7 +5,8 @@
             {
                 "debuglevel": 99,
                 "severity": "DEBUG",
-                "name": "*"
+                "name": "*",
+		OUTPUT_OPTIONS
             }
         ]
     },

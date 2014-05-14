@@ -6,11 +6,11 @@ Feature: Xfrout
     Load 100 records for zone example.org to DB file data/xfrout.sqlite3
 
     Given I have bundy running with configuration xfrout_master.conf
-    And wait for bundy stderr message BUNDY_STARTED_CC
-    And wait for bundy stderr message CMDCTL_STARTED
-    And wait for bundy stderr message AUTH_SERVER_STARTED
-    And wait for bundy stderr message XFROUT_STARTED
-    And wait for bundy stderr message ZONEMGR_STARTED
+    And wait for bundy log message BUNDY_STARTED_CC
+    And wait for bundy log message CMDCTL_STARTED
+    And wait for bundy log message AUTH_SERVER_STARTED
+    And wait for bundy log message XFROUT_STARTED
+    And wait for bundy log message ZONEMGR_STARTED
 
     # The transferred zone should have the generated 100 RRs plush one
     # trailing SOA.
@@ -29,11 +29,11 @@ Feature: Xfrout
     Load 50000 records for zone example.org to DB file data/xfrout.sqlite3
 
     Given I have bundy running with configuration xfrout_master.conf
-    And wait for bundy stderr message BUNDY_STARTED_CC
-    And wait for bundy stderr message CMDCTL_STARTED
-    And wait for bundy stderr message AUTH_SERVER_STARTED
-    And wait for bundy stderr message XFROUT_STARTED
-    And wait for bundy stderr message ZONEMGR_STARTED
+    And wait for bundy log message BUNDY_STARTED_CC
+    And wait for bundy log message CMDCTL_STARTED
+    And wait for bundy log message AUTH_SERVER_STARTED
+    And wait for bundy log message XFROUT_STARTED
+    And wait for bundy log message ZONEMGR_STARTED
 
     When I do a customized AXFR transfer of example.org from [::1]:56176 with pause of 5 seconds
     Then transfer result should have 50001 rrs
