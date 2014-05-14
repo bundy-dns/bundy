@@ -605,7 +605,8 @@ public:
         ) :
         command_queue_(command_queue), callback_queue_(callback_queue),
         cond_(cond), queue_mutex_(queue_mutex),
-        clients_map_(clients_map), map_mutex_(map_mutex), wake_fd_(wake_fd)
+        clients_map_(clients_map), map_mutex_(map_mutex), wake_fd_(wake_fd),
+        gen_id_(-1)
     {}
 
     /// \brief The main loop.
@@ -659,9 +660,10 @@ private:
             typename MutexType::Locker locker(*map_mutex_);
             pending_map_->clients_map_.swap(*clients_map_);
         } // lock is released by leaving scope
-        LOG_INFO(auth_logger, AUTH_DATASRC_CLIENTS_BUILDER_RECONFIGURE_SUCCESS).
-            arg(pending_map_->gen_id_);
+        gen_id_ = pending_map_->gen_id_;
         pending_map_.reset();
+        LOG_INFO(auth_logger, AUTH_DATASRC_CLIENTS_BUILDER_RECONFIGURE_SUCCESS).
+            arg(gen_id_);
     }
 
     void doReconfigure(const data::ConstElementPtr& mod_config) {
@@ -774,7 +776,7 @@ private:
                 if (isClientsReady(*pending_map_->clients_map_)) {
                     installClientsMap();
                 }
-            } else {
+            } else if (gen_id_ == genid) {
                 resetSegment(**clients_map_, rrclass, name, segment_params,
                              inuse_only);
             }
@@ -808,6 +810,7 @@ private:
     MutexType* map_mutex_;
     int wake_fd_;
 
+    // These are local to the builder thread:
     // Placeholder for pending new generation of data source clients.  Defined
     // as a struct just for handling the members as a tuple.
     struct PendingClientListMap {
@@ -819,6 +822,8 @@ private:
         const int64_t gen_id_;
     };
     boost::scoped_ptr<PendingClientListMap> pending_map_;
+    int64_t gen_id_;    // effective generation ID of the current clients_map_
+                        // begin with -1, and >= 0 once configured.
 };
 
 // Shortcut typedef for normal use
