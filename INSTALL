@@ -8,6 +8,6 @@ To then build from source:
 For detailed installation directions, see the guide
 at doc/guide/bundy-guide.txt or doc/guide/bundy-guide.html.
 
-You can find user-contributed OS-specific build/installation
+<!--You can find user-contributed OS-specific build/installation
 instructions on the BUNDY wiki:
-http://bundy.bundy.org/wiki/SystemSpecificNotes
+http://bundy.bundy.org/wiki/SystemSpecificNotes--> not a working link anymore, if there is a new one, please update or delete Section
