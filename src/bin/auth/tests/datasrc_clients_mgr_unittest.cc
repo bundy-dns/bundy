@@ -119,8 +119,9 @@ TEST(DataSrcClientsMgrTest, reconfigure) {
 
     // A valid reconfigure argument
     ConstElementPtr reconfigure_arg = Element::fromJSON(
-        "{""\"IN\": [{\"type\": \"MasterFiles\", \"params\": {},"
-        "             \"cache-enable\": true}]}");
+        "{\"classes\": {""\"IN\": [{\"type\": \"MasterFiles\", \"params\": {},"
+        "             \"cache-enable\": true}]},"
+        " \"_generation_id\": 1}");
 
     // On reconfigure(), it just send the RECONFIGURE command to the builder
     // thread with the given argument intact.
