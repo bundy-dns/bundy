@@ -77,6 +77,7 @@ protected:
 
     void configureZones();      // used for loadzone related tests
     void checkLoadOrUpdateZone(CommandID cmdid);
+    ConstElementPtr createSegments() const;
 
     ClientListMapPtr clients_map; // configured clients
     std::list<Command> command_queue; // test command queue
@@ -293,45 +294,6 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
 
     // Also check if it has been cleanly unlocked every time
     EXPECT_EQ(3, map_mutex.unlock_count);
-}
-
-// This relies on the fact that mapped memory segment is initially in the
-// 'WAITING' state, and only works for that type of segment.
-TEST_F(DataSrcClientsBuilderTest,
-#ifdef USE_SHARED_MEMORY
-       reconfigurePending
-#else
-       DISABLED_reconfigurePending
-#endif
-    )
-{
-    Command reconfig_cmd(RECONFIGURE, ConstElementPtr(), FinishedCallback());
-
-    // One data source client in the entire configuration requires a mapped
-    // segment, making the new config pending until the segment is ready for
-    // reset.
-    const ConstElementPtr config = Element::fromJSON(
-        "{\"classes\":"
-        "  {"
-        "   \"CH\": ["
-        "    {\"type\": \"MasterFiles\", \"params\": {}, "
-        "     \"cache-enable\": true}],"
-        "   \"IN\": ["
-        "    {\"type\": \"MasterFiles\", \"name\": \"dsrc1\", \"params\": {}, "
-        "     \"cache-enable\": true},"
-        "    {\"type\": \"MasterFiles\","
-        "     \"params\": {\"test1.example\": \"" +
-        std::string(TEST_DATA_BUILDDIR "/test1.zone.copied") + "\"},"
-        "     \"cache-enable\": true,"
-        "     \"cache-type\": \"mapped\"}]},"
-        " \"_generation_id\": 1}"
-    );
-    reconfig_cmd.params = config;
-    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
-
-    // No swap should have happened.
-    EXPECT_EQ(0, clients_map->size());
-    EXPECT_EQ(0, map_mutex.lock_count);
 }
 
 TEST_F(DataSrcClientsBuilderTest, shutdown) {
@@ -761,6 +723,41 @@ TEST_F(DataSrcClientsBuilderTest,
                             FinishedCallback())));
 }
 
+// A helper to create a mapped memory segment that can be used for the "reset"
+// operation used in some the tests below.  It returns a config element that
+// can be used as the argument of SEGMENT_INFO_UPDATE command for the builder.
+ConstElementPtr
+DataSrcClientsBuilderTest::createSegments() const {
+    // First, prepare the file image to be mapped
+    ConstElementPtr datasrc_config = Element::fromJSON(
+        "{\"IN\": [{\"type\": \"MasterFiles\","
+        "           \"params\": {\"test1.example\": \""
+        TEST_DATA_BUILDDIR "/test1.zone.copied\"},"
+        "           \"cache-enable\": true, \"cache-type\": \"mapped\"}]}");
+    ConstElementPtr segment_config = Element::fromJSON(
+        "{\"mapped-file\": \"" TEST_DATA_BUILDDIR "/test1.zone.image\"}");
+    // placeholder clients for memory segment:
+    ClientListMapPtr tmp_clients_map = configureDataSource(datasrc_config);
+    {
+        const boost::shared_ptr<ConfigurableClientList> list =
+            (*tmp_clients_map)[RRClass::IN()];
+        list->resetMemorySegment("MasterFiles",
+                                 memory::ZoneTableSegment::CREATE,
+                                 segment_config);
+        const ConfigurableClientList::ZoneWriterPair result =
+            list->getCachedZoneWriter(bundy::dns::Name("test1.example"), false,
+                                      "MasterFiles");
+        EXPECT_EQ(ConfigurableClientList::ZONE_SUCCESS, result.first);
+        result.second->load();
+        result.second->install();
+        // not absolutely necessary, but just in case
+        result.second->cleanup();
+    } // Release this list. That will release the file with the image too,
+      // so we can map it read only from somewhere else.
+
+    return (segment_config);
+}
+
 // Test the SEGMENT_INFO_UPDATE command. This test is little bit
 // indirect. It doesn't seem possible to fake the client list inside
 // easily. So we create a real image to load and load it. Then we check
@@ -773,7 +770,7 @@ TEST_F(DataSrcClientsBuilderTest,
 #endif
       )
 {
-    // First, prepare the file image to be mapped
+    ConstElementPtr segment_config = createSegments();
     const ConstElementPtr config = Element::fromJSON(
         "{"
         "\"IN\": [{"
@@ -784,30 +781,8 @@ TEST_F(DataSrcClientsBuilderTest,
         "   \"cache-enable\": true,"
         "   \"cache-type\": \"mapped\""
         "}]}");
-    const ConstElementPtr segment_config = Element::fromJSON(
-        "{"
-        "  \"mapped-file\": \""
-        TEST_DATA_BUILDDIR "/test1.zone.image" "\"}");
-    clients_map = configureDataSource(config);
-    {
-        const boost::shared_ptr<ConfigurableClientList> list =
-            (*clients_map)[RRClass::IN()];
-        list->resetMemorySegment("MasterFiles",
-                                 memory::ZoneTableSegment::CREATE,
-                                 segment_config);
-        const ConfigurableClientList::ZoneWriterPair result =
-            list->getCachedZoneWriter(bundy::dns::Name("test1.example"), false,
-                                      "MasterFiles");
-        ASSERT_EQ(ConfigurableClientList::ZONE_SUCCESS, result.first);
-        result.second->load();
-        result.second->install();
-        // not absolutely necessary, but just in case
-        result.second->cleanup();
-    } // Release this list. That will release the file with the image too,
-      // so we can map it read only from somewhere else.
 
-    // Create a new map, with the same configuration, but without the segments
-    // set
+    // Create a new map without the segments set
     clients_map = configureDataSource(config);
     const boost::shared_ptr<ConfigurableClientList> list =
         (*clients_map)[RRClass::IN()];
@@ -818,7 +793,8 @@ TEST_F(DataSrcClientsBuilderTest,
         "{"
         "  \"data-source-name\": \"MasterFiles\","
         "  \"data-source-class\": \"IN\","
-        "  \"inuse-only\": true"
+        "  \"inuse-only\": true,"
+        "  \"_generation_id\": 42"
         "}");
     noop_command_args->set("segment-params", segment_config);
     builder.handleCommand(Command(SEGMENT_INFO_UPDATE, noop_command_args,
@@ -829,7 +805,8 @@ TEST_F(DataSrcClientsBuilderTest,
     const ElementPtr command_args = Element::fromJSON(
         "{"
         "  \"data-source-name\": \"MasterFiles\","
-        "  \"data-source-class\": \"IN\""
+        "  \"data-source-class\": \"IN\","
+        "  \"_generation_id\": 42"
         "}");
     command_args->set("segment-params", segment_config);
     builder.handleCommand(Command(SEGMENT_INFO_UPDATE, command_args,
@@ -876,4 +853,73 @@ TEST_F(DataSrcClientsBuilderTest,
     }, "");
 }
 
+// This relies on the fact that mapped memory segment is initially in the
+// 'WAITING' state, and only works for that type of segment.
+TEST_F(DataSrcClientsBuilderTest,
+#ifdef USE_SHARED_MEMORY
+       reconfigurePending
+#else
+       DISABLED_reconfigurePending
+#endif
+    )
+{
+    Command reconfig_cmd(RECONFIGURE, ConstElementPtr(), FinishedCallback());
+
+    // Two data source clients in the entire configuration require a mapped
+    // segment, making the new config pending until the segment is ready for
+    // reset.
+    const ConstElementPtr config = Element::fromJSON(
+        "{\"classes\":"
+        "  {"
+        "   \"CH\": ["
+        "    {\"type\": \"MasterFiles\", \"params\": {}, "
+        "     \"cache-enable\": true}],"
+        "   \"IN\": ["
+        // The first data source instance with mapped memory segment
+        "    {\"type\": \"MasterFiles\", \"name\": \"dsrc1\","
+        "     \"params\": {\"test1.example\": \"" +
+        std::string(TEST_DATA_BUILDDIR "/test1.zone.copied") + "\"},"
+        "     \"cache-enable\": true,"
+        "     \"cache-type\": \"mapped\"},"
+        // The 2nd data source instance with mapped memory segment
+        "    {\"type\": \"MasterFiles\", \"name\": \"dsrc2\","
+        "     \"params\": {\"test1.example\": \"" +
+        std::string(TEST_DATA_BUILDDIR "/test1.zone.copied") + "\"},"
+        "     \"cache-enable\": true,"
+        "     \"cache-type\": \"mapped\"}]},"
+        " \"_generation_id\": 42}"
+    );
+    reconfig_cmd.params = config;
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
+
+    // No swap should have happened.
+    EXPECT_EQ(0, clients_map->size());
+    EXPECT_EQ(0, map_mutex.lock_count);
+
+    // reset the memory segment for the first data source client.
+    ConstElementPtr segment_config = createSegments();
+    ElementPtr command_args = Element::fromJSON(
+        "{"
+        "  \"data-source-name\": \"dsrc1\","
+        "  \"data-source-class\": \"IN\","
+        "  \"_generation_id\": 42"
+        "}");
+    command_args->set("segment-params", segment_config);
+    builder.handleCommand(Command(SEGMENT_INFO_UPDATE, command_args,
+                                  FinishedCallback()));
+
+    // The entire map is not fully ready, so the map size doesn't change, but
+    // for the reset operation there should have been one lock acquired.
+    EXPECT_EQ(0, clients_map->size());
+    EXPECT_EQ(1, map_mutex.lock_count);
+
+    // reset the memory segment for the second data source client, and then
+    // the new config is now fully effective.  map size will be adjusted, and
+    // there should be two more lock acquisitions (1 for reset, and 1 for swap).
+    command_args->set("data-source-name", Element::create("dsrc2"));
+    builder.handleCommand(Command(SEGMENT_INFO_UPDATE, command_args,
+                                  FinishedCallback()));
+    EXPECT_EQ(2, clients_map->size());
+    EXPECT_EQ(3, map_mutex.lock_count);
+}
 } // unnamed namespace

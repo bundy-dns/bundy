@@ -648,6 +648,21 @@ private:
                              isClientListWaiting) == clients_map.end());
     }
 
+    // Swap pending clients map with the current when all waiting memory
+    // segments are ready.
+    void installClientsMap() {
+        // Define new_clients_map outside of the block that has the lock scope;
+        // this way, after the swap, the lock is guaranteed to be released
+        // before the old data is destroyed, minimizing the lock duration.
+        {
+            typename MutexType::Locker locker(*map_mutex_);
+            pending_map_->clients_map_.swap(*clients_map_);
+        } // lock is released by leaving scope
+        LOG_INFO(auth_logger, AUTH_DATASRC_CLIENTS_BUILDER_RECONFIGURE_SUCCESS).
+            arg(pending_map_->gen_id_);
+        pending_map_.reset();
+    }
+
     void doReconfigure(const data::ConstElementPtr& mod_config) {
         if (mod_config) {
             LOG_INFO(auth_logger,
@@ -665,11 +680,10 @@ private:
                 const int64_t genid =
                     mod_config->get("_generation_id")->intValue();
 
-                // Define new_clients_map outside of the block that
-                // has the lock scope; this way, after the swap,
-                // the lock is guaranteed to be released before
-                // the old data is destroyed, minimizing the lock
-                // duration.
+                // Consider any new configuration to be "pending" first, and
+                // check if all memory segments are ready: if not, we are done
+                // for now, waiting for segment info updates; if so, apply the
+                // new config now.
                 pending_map_.reset(
                     new PendingClientListMap(
                         configureDataSource(mod_config->get("classes")),
@@ -680,15 +694,7 @@ private:
                         arg(genid);
                     return;
                 }
-
-                {
-                    typename MutexType::Locker locker(*map_mutex_);
-                    pending_map_->clients_map_.swap(*clients_map_);
-                } // lock is released by leaving scope
-                pending_map_.reset();
-                LOG_INFO(auth_logger,
-                         AUTH_DATASRC_CLIENTS_BUILDER_RECONFIGURE_SUCCESS).
-                    arg(genid);
+                installClientsMap();
             } catch (const datasrc::ConfigurableClientList::ConfigurationError&
                      config_error) {
                 LOG_ERROR(auth_logger,
@@ -710,6 +716,45 @@ private:
         }
     }
 
+    void resetSegment(ClientListsMap& clients_map, const dns::RRClass& rrclass,
+                      const std::string& dsrc_name,
+                      const data::ConstElementPtr& segment_params,
+                      bool inuse_only)
+    {
+        const boost::shared_ptr<bundy::datasrc::ConfigurableClientList>&
+            list = (clients_map)[rrclass];
+        if (!list) {
+            LOG_FATAL(auth_logger,
+                      AUTH_DATASRC_CLIENTS_BUILDER_SEGMENT_UNKNOWN_CLASS)
+                .arg(rrclass);
+            std::terminate();
+        }
+        if (inuse_only) {
+            BOOST_FOREACH(const datasrc::DataSourceStatus& st,
+                          list->getStatus()) {
+                if (st.getName() != dsrc_name) {
+                    continue;
+                }
+                if (st.getSegmentState() != bundy::datasrc::SEGMENT_INUSE) {
+                    LOG_DEBUG(auth_logger, DBGLVL_TRACE_BASIC,
+                              AUTH_DATASRC_CLIENTS_SKIP_SEGMENT_RESET).
+                        arg(dsrc_name).arg(rrclass);
+                    return;
+                }
+            }
+        }
+
+        typename MutexType::Locker locker(*map_mutex_);
+        if (!list->resetMemorySegment(
+                dsrc_name, bundy::datasrc::memory::ZoneTableSegment::READ_ONLY,
+                segment_params)) {
+            LOG_FATAL(auth_logger,
+                      AUTH_DATASRC_CLIENTS_BUILDER_SEGMENT_NO_DATASRC)
+                .arg(rrclass).arg(dsrc_name);
+            std::terminate();
+        }
+    }
+
     void doSegmentUpdate(const bundy::data::ConstElementPtr& arg) {
         try {
             const bundy::dns::RRClass
@@ -718,38 +763,19 @@ private:
                 name(arg->get("data-source-name")->stringValue());
             const bundy::data::ConstElementPtr& segment_params =
                 arg->get("segment-params");
-            const boost::shared_ptr<bundy::datasrc::ConfigurableClientList>&
-                list = (**clients_map_)[rrclass];
-            if (!list) {
-                LOG_FATAL(auth_logger,
-                          AUTH_DATASRC_CLIENTS_BUILDER_SEGMENT_UNKNOWN_CLASS)
-                    .arg(rrclass);
-                std::terminate();
-            }
-            if (arg->contains("inuse-only") &&
-                arg->get("inuse-only")->boolValue()) {
-                BOOST_FOREACH(const datasrc::DataSourceStatus& st,
-                              list->getStatus()) {
-                    if (st.getName() != name) {
-                        continue;
-                    }
-                    if (st.getSegmentState() != bundy::datasrc::SEGMENT_INUSE) {
-                        LOG_DEBUG(auth_logger, DBGLVL_TRACE_BASIC,
-                                  AUTH_DATASRC_CLIENTS_SKIP_SEGMENT_RESET).
-                            arg(name).arg(rrclass);
-                        return;
-                    }
-                }
-            }
+            const int64_t genid = arg->get("_generation_id")->intValue();
+            const bool inuse_only = (arg->contains("inuse-only") &&
+                                     arg->get("inuse-only")->boolValue());
 
-            typename MutexType::Locker locker(*map_mutex_);
-            if (!list->resetMemorySegment(name,
-                    bundy::datasrc::memory::ZoneTableSegment::READ_ONLY,
-                    segment_params)) {
-                LOG_FATAL(auth_logger,
-                          AUTH_DATASRC_CLIENTS_BUILDER_SEGMENT_NO_DATASRC)
-                    .arg(rrclass).arg(name);
-                std::terminate();
+            if (pending_map_ && pending_map_->gen_id_ == genid) {
+                resetSegment(*pending_map_->clients_map_, rrclass, name,
+                             segment_params, inuse_only);
+                if (isClientsReady(*pending_map_->clients_map_)) {
+                    installClientsMap();
+                }
+            } else {
+                resetSegment(**clients_map_, rrclass, name, segment_params,
+                             inuse_only);
             }
         } catch (const bundy::dns::InvalidRRClass& irce) {
             LOG_FATAL(auth_logger,
