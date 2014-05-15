@@ -683,14 +683,18 @@ private:
                 const int64_t genid =
                     mod_config->get("_generation_id")->intValue();
 
-                // Consider any new configuration to be "pending" first, and
-                // check if all memory segments are ready: if not, we are done
-                // for now, waiting for segment info updates; if so, apply the
-                // new config now.
+                // Consider any new configuration to be "pending" first.  Note
+                // that we override any existing pending generation; it does
+                // not make sense to complete such an intermediate version, and
+                // even memmgr may have stopped completing it.
                 pending_map_.reset(
                     new PendingClientListMap(
                         configureDataSource(mod_config->get("classes")),
                         genid));
+
+                // Check if all memory segments are ready: if not, we are done
+                // for now, waiting for segment info updates; if so, apply the
+                // new config now.
                 if (!isClientsReady(*pending_map_->clients_map_)) {
                     LOG_INFO(auth_logger,
                              AUTH_DATASRC_CLIENTS_BUILDER_RECONFIGURE_PENDING).
@@ -770,15 +774,34 @@ private:
             const bool inuse_only = (arg->contains("inuse-only") &&
                                      arg->get("inuse-only")->boolValue());
 
-            if (pending_map_ && pending_map_->gen_id_ == genid) {
+            if (gen_id_ == genid) {
+                // normal case: update on the current generation; just apply it.
+                resetSegment(**clients_map_, rrclass, name, segment_params,
+                             inuse_only);
+            } else if (pending_map_ && pending_map_->gen_id_ == genid) {
+                // update for a pending generation: apply it, and see if it's
+                // now ready, and if so, perform swap now.
                 resetSegment(*pending_map_->clients_map_, rrclass, name,
                              segment_params, inuse_only);
                 if (isClientsReady(*pending_map_->clients_map_)) {
                     installClientsMap();
                 }
-            } else if (gen_id_ == genid) {
-                resetSegment(**clients_map_, rrclass, name, segment_params,
-                             inuse_only);
+            } else {
+                // We should be able to ignore all other cases: We shouldn't
+                // get an update for a future generation (even newer one than
+                // pending generation) since the update must follow a data
+                // source reconfiguration, which should have been broadcasted
+                // to all modules at the same time.  Getting an older generation
+                // should also be impossible, but even if that happens we can
+                // just ignore it since we'll never need it.  Getting an
+                // intermediate generation between the current and pending
+                // might be possible if multiple generations of reconfiguration
+                // happen very rapidly, but we can ignore it, too since we'll
+                // never need that generation.  We'll still send an ack to the
+                // memmgr just in case it really waits for it.
+                LOG_INFO(auth_logger,
+                         AUTH_DATASRC_CLIENTS_BUILDER_SEGMENT_UNKNOWNGEN).
+                    arg(genid).arg(gen_id_);
             }
         } catch (const bundy::dns::InvalidRRClass& irce) {
             LOG_FATAL(auth_logger,
