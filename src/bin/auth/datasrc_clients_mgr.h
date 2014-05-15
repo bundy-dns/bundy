@@ -682,6 +682,12 @@ private:
                 }
                 const int64_t genid =
                     mod_config->get("_generation_id")->intValue();
+                // make sure it's non-negative and always increasing (the
+                // initial value of gen_id_ is -1, so this condition is enough)
+                if (genid <= gen_id_) {
+                    bundy_throw(InvalidParameter, "invalid data source "
+                                "configuration: bad generation: " << genid);
+                }
 
                 // Consider any new configuration to be "pending" first.  Note
                 // that we override any existing pending generation; it does
