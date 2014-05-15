@@ -977,11 +977,10 @@ AuthSrv::listsReconfigured() {
 }
 
 void
-AuthSrv::reconfigureDone(ConstElementPtr params) {
+AuthSrv::sendCommandAck(const std::string& cmd, ConstElementPtr params) {
     // ACK the segment
     impl_->config_session_->
-        groupSendMsg(bundy::config::createCommand("segment_info_update_ack",
-                                                params), "Memmgr");
+        groupSendMsg(bundy::config::createCommand(cmd, params), "Memmgr");
 }
 
 void
@@ -990,7 +989,11 @@ AuthSrv::foreignCommand(const std::string& command, const std::string&,
 {
     if (command == "segment_info_update") {
         impl_->datasrc_clients_mgr_.
-            segmentInfoUpdate(params, boost::bind(&AuthSrv::reconfigureDone,
-                                                  this, params));
+            segmentInfoUpdate(params, boost::bind(&AuthSrv::sendCommandAck,
+                                                  this,
+                                                  "segment_info_update_ack",
+                                                  params));
+    } else if (command == "release_segments") {
+        sendCommandAck("release_segments_ack", params);
     }
 }
