@@ -287,7 +287,8 @@ public:
                      const bundy::data::ConstElementPtr& params);
 
 private:
-    void reconfigureDone(bundy::data::ConstElementPtr request);
+    void sendCommandAck(const std::string& cmd,
+                        bundy::data::ConstElementPtr request);
     void foreignCommand(const std::string& command, const std::string&,
                         const bundy::data::ConstElementPtr& params);
     AuthSrvImpl* impl_;
