@@ -168,6 +168,16 @@ given data source, but no data source by that name was found. The
 authoritative server aborts because this indicates that the system is in
 an inconsistent state. This is likely caused by a bug in the code.
 
+% AUTH_DATASRC_CLIENTS_BUILDER_SEGMENT_UNKNOWNGEN received memory segment update on an unknown generation (%1, current=%2), ignored
+The data source builder thread received a command to reset a shared
+memory segment for zone data provided that the segment is currently
+used by the authoritative server, but its generation ID does not match
+the currently used generation or (if it's in the middle of reconfiguration)
+a pending next generation.  This is generally considered an impossible
+situation, but could still happen in some rare cases such as when rapidly
+updating multiple generations of data source configuration.  In any case,
+such unknown updates should be able to be safely ignored.
+
 % AUTH_DATASRC_CLIENTS_BUILDER_SEGMENT_UNKNOWN_CLASS unknown class %1 at segment update
 A memory segment update message was sent to the authoritative
 server. The class name for which the update should happen is valid, but

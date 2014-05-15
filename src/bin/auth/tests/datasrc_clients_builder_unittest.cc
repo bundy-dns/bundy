@@ -875,7 +875,7 @@ TEST_F(DataSrcClientsBuilderTest,
     // Two data source clients in the entire configuration require a mapped
     // segment, making the new config pending until the segment is ready for
     // reset.
-    const ConstElementPtr config = Element::fromJSON(
+    const ElementPtr config = Element::fromJSON(
         "{\"classes\":"
         "  {"
         "   \"CH\": ["
@@ -929,10 +929,46 @@ TEST_F(DataSrcClientsBuilderTest,
     EXPECT_EQ(2, clients_map->size());
     EXPECT_EQ(3, map_mutex.lock_count);
 
-    // updates on an older generation will be just ignored.
+    // updates on an older/newer generation will be just ignored.
     command_args->set("generation-id", Element::create(41));
     builder.handleCommand(Command(SEGMENT_INFO_UPDATE, command_args,
                                   FinishedCallback()));
     EXPECT_EQ(3, map_mutex.lock_count); // no reset should have happened
+
+    command_args->set("generation-id", Element::create(43));
+    builder.handleCommand(Command(SEGMENT_INFO_UPDATE, command_args,
+                                  FinishedCallback()));
+    EXPECT_EQ(3, map_mutex.lock_count); // no change in the lock count
+
+    // Another sets of reconfiguration: two generations come in rapidly,
+    // so the 1st one will be effectively ignored.
+    config->set("_generation_id", Element::create(43));
+    reconfig_cmd.params = config;
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
+    EXPECT_EQ(3, map_mutex.lock_count); // not yet ready
+
+    config->set("_generation_id", Element::create(44));
+    reconfig_cmd.params = config;
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
+    EXPECT_EQ(3, map_mutex.lock_count); // also not yet ready
+
+    // An update for the "intermediate" generation will be ignored.
+    command_args->set("generation-id", Element::create(43));
+    builder.handleCommand(Command(SEGMENT_INFO_UPDATE, command_args,
+                                  FinishedCallback()));
+    EXPECT_EQ(3, map_mutex.lock_count);
+
+    // updates to the latest pending generation will apply, and make the
+    // reconfiguration completed.
+    command_args->set("generation-id", Element::create(44));
+    builder.handleCommand(Command(SEGMENT_INFO_UPDATE, command_args,
+                                  FinishedCallback()));
+    EXPECT_EQ(4, map_mutex.lock_count); // for reset
+
+    command_args->set("data-source-name", Element::create("dsrc1"));
+    command_args->set("generation-id", Element::create(44));
+    builder.handleCommand(Command(SEGMENT_INFO_UPDATE, command_args,
+                                  FinishedCallback()));
+    EXPECT_EQ(6, map_mutex.lock_count); // 1 for reset and 1 for swap
 }
 } // unnamed namespace
