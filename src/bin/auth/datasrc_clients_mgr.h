@@ -94,7 +94,13 @@ enum CommandID {
 };
 
 /// \brief Callback to be called when the command is completed.
-typedef boost::function<void ()> FinishedCallback;
+///
+/// It takes an argument of \c ConstElementPtr.  Specific content of \c arg
+/// varies for each callback.
+typedef boost::function<void (data::ConstElementPtr arg)> FinishedCallback;
+
+/// \brief A pair of the callback functor and its argument.
+typedef std::pair<FinishedCallback, data::ConstElementPtr> FinishedCallbackPair;
 
 /// \brief The data type passed from DataSrcClientsMgr to
 ///     DataSrcClientsBuilder.
@@ -517,16 +523,16 @@ private:
         }
 
         // Steal the callbacks into local copy.
-        std::list<datasrc_clientmgr_internal::FinishedCallback> queue;
+        std::list<datasrc_clientmgr_internal::FinishedCallbackPair> queue;
         {
             typename MutexType::Locker locker(queue_mutex_);
             queue.swap(callback_queue_);
         }
 
         // Execute the callbacks
-        BOOST_FOREACH(const datasrc_clientmgr_internal::FinishedCallback&
-                      callback, queue) {
-            callback();
+        BOOST_FOREACH(const datasrc_clientmgr_internal::FinishedCallbackPair&
+                      cbpair, queue) {
+            cbpair.first(cbpair.second);
         }
     }
 
@@ -539,7 +545,7 @@ private:
     // While the command queue is for sending commands from the main thread
     // to the work thread, this one is for the other direction. Protected
     // by the same mutex (queue_mutex_).
-    std::list<datasrc_clientmgr_internal::FinishedCallback> callback_queue_;
+    std::list<datasrc_clientmgr_internal::FinishedCallbackPair> callback_queue_;
     CondVarType cond_;          // condition variable for queue operations
     MutexType queue_mutex_;     // mutex to protect the queue
     datasrc::ClientListMapPtr clients_map_;
@@ -597,7 +603,7 @@ public:
     ///
     /// \throw None
     DataSrcClientsBuilderBase(std::list<Command>* command_queue,
-                              std::list<FinishedCallback>* callback_queue,
+                              std::list<FinishedCallbackPair>* callback_queue,
                               CondVarType* cond, MutexType* queue_mutex,
                               datasrc::ClientListMapPtr* clients_map,
                               MutexType* map_mutex,
@@ -619,13 +625,17 @@ public:
     /// command test individually.  In any case, this class itself is
     /// generally considered private.
     ///
-    /// \return true if the builder should keep running; false otherwise.
-    bool handleCommand(const Command& command);
+    /// \return Pair of bool and ConstElementPtr: the first element is true if
+    /// the builder should keep running; false otherwise.  The second element
+    /// is the callback argument if the command is expected to call a callback
+    /// (if the callback is not expected this element will be ignored).
+    std::pair<bool, data::ConstElementPtr>
+    handleCommand(const Command& command);
 
 private:
     // NOOP command handler.  We use this so tests can override it; the default
     // implementation really does nothing.
-    void doNoop() {}
+    data::ConstElementPtr doNoop() { return (data::ConstElementPtr()); }
 
     // The following three methods are helper to determine whether a new
     // generation of data source clients are ready for use: they are considered
@@ -832,7 +842,7 @@ private:
 
     // The following are shared with the manager
     std::list<Command>* command_queue_;
-    std::list<FinishedCallback> *callback_queue_;
+    std::list<FinishedCallbackPair> *callback_queue_;
     CondVarType* cond_;
     MutexType* queue_mutex_;
     datasrc::ClientListMapPtr* clients_map_;
@@ -879,8 +889,12 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::run() {
             } // the lock is released here.
 
             while (keep_running && !current_commands.empty()) {
+                data::ConstElementPtr cbarg;
                 try {
-                    keep_running = handleCommand(current_commands.front());;
+                    const std::pair<bool, data::ConstElementPtr> result =
+                        handleCommand(current_commands.front());
+                    keep_running = result.first;
+                    cbarg = result.second;
                 } catch (const InternalCommandError& e) {
                     LOG_ERROR(auth_logger,
                               AUTH_DATASRC_CLIENTS_BUILDER_COMMAND_ERROR).
@@ -889,11 +903,12 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::run() {
                 if (current_commands.front().callback) {
                     // Lock the queue
                     typename MutexType::Locker locker(*queue_mutex_);
-                    callback_queue_->
-                        push_back(current_commands.front().callback);
+                    callback_queue_->push_back(
+                        FinishedCallbackPair(current_commands.front().callback,
+                                             cbarg));
                     // Wake up the other end. If it would block, there are data
                     // and it'll wake anyway.
-                    int result = send(wake_fd_, "w", 1, MSG_DONTWAIT);
+                    const int result = send(wake_fd_, "w", 1, MSG_DONTWAIT);
                     if (result == -1 &&
                         (errno != EWOULDBLOCK && errno != EAGAIN)) {
                         // Note: the strerror might not be thread safe, as
@@ -928,7 +943,7 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::run() {
 }
 
 template <typename MutexType, typename CondVarType>
-bool
+std::pair<bool, data::ConstElementPtr>
 DataSrcClientsBuilderBase<MutexType, CondVarType>::handleCommand(
     const Command& command)
 {
@@ -944,6 +959,7 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::handleCommand(
     };
     LOG_DEBUG(auth_logger, DBGLVL_TRACE_BASIC,
               AUTH_DATASRC_CLIENTS_BUILDER_COMMAND).arg(command_desc.at(cid));
+    data::ConstElementPtr cbarg;
     switch (command.id) {
     case RECONFIGURE:
         doReconfigure(command.params);
@@ -956,14 +972,14 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::handleCommand(
         doSegmentUpdate(command.params);
         break;
     case SHUTDOWN:
-        return (false);
+        return (std::pair<bool, data::ConstElementPtr>(false, cbarg));
     case NOOP:
-        doNoop();
+        cbarg = doNoop();
         break;
     case NUM_COMMANDS:
         assert(false);          // we rejected this case above
     }
-    return (true);
+    return (std::pair<bool, data::ConstElementPtr>(true, cbarg));
 }
 
 template <typename MutexType, typename CondVarType>
