@@ -880,30 +880,6 @@ AuthSrv::setTCPRecvTimeout(size_t timeout) {
     dnss_->setTCPRecvTimeout(timeout);
 }
 
-namespace {
-
-bool
-hasMappedSegment(auth::DataSrcClientsMgr& mgr) {
-    auth::DataSrcClientsMgr::Holder holder(mgr);
-    const std::vector<dns::RRClass>& classes(holder.getClasses());
-    BOOST_FOREACH(const dns::RRClass& rrclass, classes) {
-        const boost::shared_ptr<datasrc::ConfigurableClientList>&
-            list(holder.findClientList(rrclass));
-        const std::vector<DataSourceStatus>& states(list->getStatus());
-        BOOST_FOREACH(const datasrc::DataSourceStatus& status, states) {
-            if (status.getSegmentState() != datasrc::SEGMENT_UNUSED &&
-                status.getSegmentType() == "mapped")
-                // We use some segment and it's not a local one, so it
-                // must be remote.
-                return true;
-        }
-    }
-    // No remote segment found in any of the lists
-    return false;
-}
-
-}
-
 void
 AuthSrv::zoneUpdated(const std::string& event_name,
                      const ConstElementPtr& params)
@@ -923,8 +899,8 @@ AuthSrv::zoneUpdated(const std::string& event_name,
 }
 
 void
-AuthSrv::listsReconfigured(const bundy::data::ConstElementPtr& /*arg*/) {
-    const bool has_remote = hasMappedSegment(impl_->datasrc_clients_mgr_);
+AuthSrv::listsReconfigured(const bundy::data::ConstElementPtr& arg) {
+    const bool has_remote = arg->boolValue();
     if (has_remote && !impl_->readers_group_subscribed_) {
         impl_->config_session_->subscribe("SegmentReader");
         impl_->config_session_->
