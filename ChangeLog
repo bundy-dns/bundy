@@ -1,3 +1,14 @@
+779.	[build]		jinmei
+	Fixed multiple build issues for MacOS X:
+	- Fixed incorrect detection for the availability of the -R linker option
+	- Updated autoconf so it can identify SQLite3 installed via Homebrew
+	  (under an unusual path)
+	- Fixed some compile errors that were rejected by recent versions of
+	  clang++
+	(git 2fd2fda5c15db2f7b9bba49875e27b7258d4b5aa
+	 git d575ac307ca3d075729d6635347ae0a4585ebb4f
+	 git 4f0428bcfd3a53be15bcef8713c677ca0165005e)
+
 bind10-1.2.0 released on April 17, 2014
 
 bind10-1.2.0rc1 released on April 8, 2014
