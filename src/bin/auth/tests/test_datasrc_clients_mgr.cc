@@ -14,6 +14,7 @@
 
 #include <exceptions/exceptions.h>
 #include <auth/datasrc_config.h>
+#include <cc/data.h>
 
 #include "test_datasrc_clients_mgr.h"
 
@@ -26,9 +27,10 @@ namespace datasrc_clientmgr_internal {
 // Define static DataSrcClientsBuilder member variables.
 bool FakeDataSrcClientsBuilder::started = false;
 std::list<Command>* FakeDataSrcClientsBuilder::command_queue = NULL;
-std::list<FinishedCallback>* FakeDataSrcClientsBuilder::callback_queue = NULL;
+std::list<FinishedCallbackPair>* FakeDataSrcClientsBuilder::callback_queue =
+    NULL;
 std::list<Command> FakeDataSrcClientsBuilder::command_queue_copy;
-std::list<FinishedCallback> FakeDataSrcClientsBuilder::callback_queue_copy;
+std::list<FinishedCallbackPair> FakeDataSrcClientsBuilder::callback_queue_copy;
 TestCondVar* FakeDataSrcClientsBuilder::cond = NULL;
 TestCondVar FakeDataSrcClientsBuilder::cond_copy;
 TestMutex* FakeDataSrcClientsBuilder::queue_mutex = NULL;
@@ -43,7 +45,7 @@ FakeDataSrcClientsBuilder::thread_throw_on_wait =
 int FakeDataSrcClientsBuilder::wakeup_fd = -1;
 
 template<>
-void
+data::ConstElementPtr
 TestDataSrcClientsBuilder::doNoop() {
     ++queue_mutex_->noop_count;
     switch (queue_mutex_->throw_from_noop) {
@@ -56,6 +58,9 @@ TestDataSrcClientsBuilder::doNoop() {
     case TestMutex::INTERNAL:
         bundy_throw(InternalCommandError, "internal error, should be ignored");
     }
+
+    // It returns a fixed constant so the test can examine it.
+    return (data::Element::create(true));
 }
 } // namespace datasrc_clientmgr_internal
 

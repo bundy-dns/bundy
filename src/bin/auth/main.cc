@@ -116,10 +116,10 @@ datasrcConfigHandler(AuthSrv* server, bool* first_time,
                       config_session->getRemoteConfigValue("data_sources",
                                                            "classes"));
         server->getDataSrcClientsMgr().reconfigure(
-            new_conf, boost::bind(&AuthSrv::listsReconfigured, server));
+            new_conf, boost::bind(&AuthSrv::listsReconfigured, server, _1));
     } else if (config->contains("classes")) {
         server->getDataSrcClientsMgr().reconfigure(
-            config, boost::bind(&AuthSrv::listsReconfigured, server));
+            config, boost::bind(&AuthSrv::listsReconfigured, server, _1));
     }
 }
 

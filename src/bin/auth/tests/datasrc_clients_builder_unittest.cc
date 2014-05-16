@@ -82,7 +82,7 @@ protected:
     ClientListMapPtr clients_map; // configured clients
     std::list<Command> command_queue; // test command queue
     std::list<Command> delayed_command_queue; // commands available after wait
-    std::list<FinishedCallback> callback_queue; // Callbacks from commands
+    std::list<FinishedCallbackPair> callback_queue; // Callbacks from commands
     int write_end, read_end;
     TestDataSrcClientsBuilder builder;
     TestCondVar cond;
@@ -120,7 +120,7 @@ TEST_F(DataSrcClientsBuilderTest, runSingleCommand) {
 }
 
 // Just to have a valid function callback to pass
-void emptyCallsback() {}
+void emptyCallsback(ConstElementPtr) {}
 
 // Check a command finished callback is passed
 TEST_F(DataSrcClientsBuilderTest, commandFinished) {
@@ -134,7 +134,8 @@ TEST_F(DataSrcClientsBuilderTest, commandFinished) {
     // There's one callback in the queue
     ASSERT_EQ(1, callback_queue.size());
     // Not using EXPECT_EQ, as that produces warning in printing out the result
-    EXPECT_TRUE(emptyCallsback == callback_queue.front());
+    EXPECT_TRUE(emptyCallsback == callback_queue.front().first);
+    EXPECT_FALSE(callback_queue.front().second); // NULL arg by default
     // And we are woken up.
     char c;
     int result = recv(read_end, &c, 1, MSG_DONTWAIT);
@@ -153,14 +154,18 @@ TEST_F(DataSrcClientsBuilderTest, finishedCrash) {
 
 TEST_F(DataSrcClientsBuilderTest, runMultiCommands) {
     // Two NOOP commands followed by SHUTDOWN.  We should see two doNoop()
-    // calls.
+    // calls.  One of the noop calls triggers a callback with an argument.
+    const Command noop_cmd_withcb(NOOP, ConstElementPtr(), emptyCallsback);
     command_queue.push_back(noop_cmd);
-    command_queue.push_back(noop_cmd);
+    command_queue.push_back(noop_cmd_withcb);
     command_queue.push_back(shutdown_cmd);
     builder.run();
+    EXPECT_EQ(1, callback_queue.size());
+    EXPECT_TRUE(emptyCallsback == callback_queue.front().first);
+    EXPECT_TRUE(callback_queue.front().second->boolValue());
     EXPECT_TRUE(command_queue.empty());
-    EXPECT_EQ(1, queue_mutex.lock_count);
-    EXPECT_EQ(1, queue_mutex.unlock_count);
+    EXPECT_EQ(2, queue_mutex.lock_count); // 1 lock for command, 1 for callback
+    EXPECT_EQ(2, queue_mutex.unlock_count);
     EXPECT_EQ(2, queue_mutex.noop_count);
 }
 
@@ -238,7 +243,7 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
     );
 
     reconfig_cmd.params = good_config;
-    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
     EXPECT_EQ(1, clients_map->size());
     EXPECT_EQ(1, map_mutex.lock_count);
 
@@ -250,7 +255,7 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
     // and the clients_map should not be updated.
     reconfig_cmd.params = Element::create(
         "{\"classes\": { \"foo\": \"bar\" }, \"_generation_id\": 2}");
-    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
     EXPECT_EQ(working_config_clients, clients_map);
     // Building failed, so map mutex should not have been locked again
     EXPECT_EQ(1, map_mutex.lock_count);
@@ -259,7 +264,7 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
     // specifies
     reconfig_cmd.params = bad_config;
     builder.handleCommand(reconfig_cmd);
-    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
     EXPECT_EQ(working_config_clients, clients_map);
     // Building failed, so map mutex should not have been locked again
     EXPECT_EQ(1, map_mutex.lock_count);
@@ -267,26 +272,26 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
     // The same goes for an empty parameter (it should at least be
     // an empty map)
     reconfig_cmd.params = ConstElementPtr();
-    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
     EXPECT_EQ(working_config_clients, clients_map);
     EXPECT_EQ(1, map_mutex.lock_count);
 
     // Missing mandatory config items
     reconfig_cmd.params = Element::fromJSON("{\"_generation_id\": 2}");
-    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
     EXPECT_EQ(working_config_clients, clients_map);
     EXPECT_EQ(1, map_mutex.lock_count);
 
     // bad generation IDs (must not be negative, and must increase)
     reconfig_cmd.params =
         Element::fromJSON("{\"classes\": {}, \"_generation_id\": -10}");
-    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
     EXPECT_EQ(working_config_clients, clients_map);
     EXPECT_EQ(1, map_mutex.lock_count);
 
     reconfig_cmd.params =
         Element::fromJSON("{\"classes\": {}, \"_generation_id\": 1}");
-    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
     EXPECT_EQ(working_config_clients, clients_map);
     EXPECT_EQ(1, map_mutex.lock_count);
 
@@ -294,7 +299,7 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
     // be a different map than the original, but not an empty one.
     good_config->set("_generation_id", Element::create(2));
     reconfig_cmd.params = good_config;
-    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
     EXPECT_NE(working_config_clients, clients_map);
     EXPECT_EQ(1, clients_map->size());
     EXPECT_EQ(2, map_mutex.lock_count);
@@ -302,7 +307,7 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
     // And finally, try an empty config to disable all datasource clients
     reconfig_cmd.params =
         Element::fromJSON("{\"classes\": {}, \"_generation_id\": 3}");
-    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
     EXPECT_EQ(0, clients_map->size());
     EXPECT_EQ(3, map_mutex.lock_count);
 
@@ -311,7 +316,7 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
 }
 
 TEST_F(DataSrcClientsBuilderTest, shutdown) {
-    EXPECT_FALSE(builder.handleCommand(shutdown_cmd));
+    EXPECT_FALSE(builder.handleCommand(shutdown_cmd).first);
 }
 
 TEST_F(DataSrcClientsBuilderTest, badCommand) {
@@ -404,7 +409,7 @@ TEST_F(DataSrcClientsBuilderTest, loadZone) {
                                    "{\"class\": \"IN\","
                                    " \"origin\": \"test1.example\"}"),
                                FinishedCallback());
-    EXPECT_TRUE(builder.handleCommand(loadzone_cmd));
+    EXPECT_TRUE(builder.handleCommand(loadzone_cmd).first);
 
     // loadZone involves two critical sections: one for getting the zone
     // writer, and one for actually updating the zone data.  So the lock/unlock
@@ -468,7 +473,7 @@ DataSrcClientsBuilderTest::checkLoadOrUpdateZone(CommandID cmdid) {
                           "{\"class\": \"IN\","
                           " \"origin\": \"example.org\"}"),
                       FinishedCallback());
-    EXPECT_TRUE(builder.handleCommand(cmd));
+    EXPECT_TRUE(builder.handleCommand(cmd).first);
     // And now it should be present too.
     EXPECT_EQ(ZoneFinder::SUCCESS,
               clients_map->find(rrclass)->second->
@@ -734,7 +739,7 @@ TEST_F(DataSrcClientsBuilderTest,
                                 "{\"origin\": \"test1.example\","
                                 " \"class\": \"IN\","
                                 " \"datasource\": \"MasterFiles\"}"),
-                            FinishedCallback())));
+                            FinishedCallback())).first);
 }
 
 // A helper to create a mapped memory segment that can be used for the "reset"
@@ -798,7 +803,7 @@ TEST_F(DataSrcClientsBuilderTest,
         "   \"cache-enable\": true, \"cache-type\": \"mapped\"}]},"
         " \"_generation_id\": 42}");
     reconfig_cmd.params = config;
-    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
 
     //clients_map = configureDataSource(config);
     // Send the update command with inuse-only.  Since the status is 'waiting',
@@ -911,7 +916,7 @@ TEST_F(DataSrcClientsBuilderTest,
         " \"_generation_id\": 42}"
     );
     reconfig_cmd.params = config;
-    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
 
     // No swap should have happened.
     EXPECT_EQ(0, clients_map->size());
@@ -958,12 +963,12 @@ TEST_F(DataSrcClientsBuilderTest,
     // so the 1st one will be effectively ignored.
     config->set("_generation_id", Element::create(43));
     reconfig_cmd.params = config;
-    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
     EXPECT_EQ(3, map_mutex.lock_count); // not yet ready
 
     config->set("_generation_id", Element::create(44));
     reconfig_cmd.params = config;
-    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
     EXPECT_EQ(3, map_mutex.lock_count); // also not yet ready
 
     // An update for the "intermediate" generation will be ignored.
