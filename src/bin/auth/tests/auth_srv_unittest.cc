@@ -2162,7 +2162,7 @@ TEST_F(AuthSrvTest, DISABLED_postReconfigure) {
                                       false);
     server.setConfigSession(&mccs);
     // First, no lists are there, so no reason to subscribe
-    server.listsReconfigured();
+    server.listsReconfigured(ConstElementPtr());
     EXPECT_FALSE(session.haveSubscription("SegmentReader", "*"));
     // Enable remote segment
     updateInMemory(server, "example.", CONFIG_INMEMORY_EXAMPLE, false, true);
@@ -2172,7 +2172,7 @@ TEST_F(AuthSrvTest, DISABLED_postReconfigure) {
         EXPECT_EQ(SEGMENT_WAITING, holder.findClientList(RRClass::IN())->
                   getStatus()[0].getSegmentState());
     }
-    server.listsReconfigured();
+    server.listsReconfigured(ConstElementPtr());
     EXPECT_TRUE(session.haveSubscription("SegmentReader", "*"));
     // Set the segment to local again
     updateInMemory(server, "example.", CONFIG_INMEMORY_EXAMPLE);
@@ -2184,7 +2184,7 @@ TEST_F(AuthSrvTest, DISABLED_postReconfigure) {
         EXPECT_EQ("local", holder.findClientList(RRClass::IN())->
                   getStatus()[0].getSegmentType());
     }
-    server.listsReconfigured();
+    server.listsReconfigured(ConstElementPtr());
     EXPECT_FALSE(session.haveSubscription("SegmentReader", "*"));
 }
 

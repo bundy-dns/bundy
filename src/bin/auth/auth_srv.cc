@@ -923,7 +923,7 @@ AuthSrv::zoneUpdated(const std::string& event_name,
 }
 
 void
-AuthSrv::listsReconfigured() {
+AuthSrv::listsReconfigured(const bundy::data::ConstElementPtr& /*arg*/) {
     const bool has_remote = hasMappedSegment(impl_->datasrc_clients_mgr_);
     if (has_remote && !impl_->readers_group_subscribed_) {
         impl_->config_session_->subscribe("SegmentReader");
