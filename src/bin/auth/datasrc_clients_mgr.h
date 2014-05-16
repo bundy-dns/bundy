@@ -670,13 +670,20 @@ private:
             typename MutexType::Locker locker(*map_mutex_);
             pending_map_->clients_map_.swap(*clients_map_);
         } // lock is released by leaving scope
+          // old clients_map_ data is released by leaving scope
+
         gen_id_ = pending_map_->gen_id_;
         pending_map_.reset();
         LOG_INFO(auth_logger, AUTH_DATASRC_CLIENTS_BUILDER_RECONFIGURE_SUCCESS).
             arg(gen_id_);
     }
 
-    void doReconfigure(const data::ConstElementPtr& mod_config) {
+    // This method returns a bool element, whose value is true iff shared-type
+    // memory segment is going to be used.  It will be used as a callback
+    // argument so it can be used in the callback to determine whether to
+    // start listening to segment info updates.
+    data::ConstElementPtr
+    doReconfigure(const data::ConstElementPtr& mod_config) {
         if (mod_config) {
             LOG_INFO(auth_logger,
                      AUTH_DATASRC_CLIENTS_BUILDER_RECONFIGURE_STARTED);
@@ -715,7 +722,16 @@ private:
                     LOG_INFO(auth_logger,
                              AUTH_DATASRC_CLIENTS_BUILDER_RECONFIGURE_PENDING).
                         arg(genid);
-                    return;
+
+                    // We use shared-type memory segments iff we are here:
+                    // if we use a shared segment, it should always begin with
+                    // the WAITING state, so we should be here; if we don't use
+                    // a shared segment, all segments should be immediately
+                    // INUSE, and so we shouldn't be here.  Also, in the latter
+                    // case we immediately switch to the new generation below,
+                    // so it doesn't matter whether or not we use a shared
+                    // segment in the current generation.
+                    return (data::Element::create(true));
                 }
                 installClientsMap();
             } catch (const datasrc::ConfigurableClientList::ConfigurationError&
@@ -734,9 +750,8 @@ private:
             }
             // other exceptions are propagated, see
             // http://bundy.bundy.org/ticket/2210#comment:13
-
-            // old clients_map_ data is released by leaving scope
         }
+        return (data::Element::create(false));
     }
 
     void resetSegment(ClientListsMap& clients_map, const dns::RRClass& rrclass,
@@ -962,7 +977,7 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::handleCommand(
     data::ConstElementPtr cbarg;
     switch (command.id) {
     case RECONFIGURE:
-        doReconfigure(command.params);
+        cbarg = doReconfigure(command.params);
         break;
     case LOADZONE:
     case UPDATEZONE:
