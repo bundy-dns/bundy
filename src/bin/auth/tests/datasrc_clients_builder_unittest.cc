@@ -244,6 +244,9 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
 
     reconfig_cmd.params = good_config;
     EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
+    // handleCommand returns false value of element unless it involves mapped
+    // memory segment.
+    EXPECT_FALSE(builder.handleCommand(reconfig_cmd).second->boolValue());
     EXPECT_EQ(1, clients_map->size());
     EXPECT_EQ(1, map_mutex.lock_count);
 
@@ -265,6 +268,7 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
     reconfig_cmd.params = bad_config;
     builder.handleCommand(reconfig_cmd);
     EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
+    EXPECT_FALSE(builder.handleCommand(reconfig_cmd).second->boolValue());
     EXPECT_EQ(working_config_clients, clients_map);
     // Building failed, so map mutex should not have been locked again
     EXPECT_EQ(1, map_mutex.lock_count);
@@ -273,12 +277,14 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
     // an empty map)
     reconfig_cmd.params = ConstElementPtr();
     EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
+    EXPECT_FALSE(builder.handleCommand(reconfig_cmd).second->boolValue());
     EXPECT_EQ(working_config_clients, clients_map);
     EXPECT_EQ(1, map_mutex.lock_count);
 
     // Missing mandatory config items
     reconfig_cmd.params = Element::fromJSON("{\"_generation_id\": 2}");
     EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
+    EXPECT_FALSE(builder.handleCommand(reconfig_cmd).second->boolValue());
     EXPECT_EQ(working_config_clients, clients_map);
     EXPECT_EQ(1, map_mutex.lock_count);
 
@@ -286,12 +292,14 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
     reconfig_cmd.params =
         Element::fromJSON("{\"classes\": {}, \"_generation_id\": -10}");
     EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
+    EXPECT_FALSE(builder.handleCommand(reconfig_cmd).second->boolValue());
     EXPECT_EQ(working_config_clients, clients_map);
     EXPECT_EQ(1, map_mutex.lock_count);
 
     reconfig_cmd.params =
         Element::fromJSON("{\"classes\": {}, \"_generation_id\": 1}");
     EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
+    EXPECT_FALSE(builder.handleCommand(reconfig_cmd).second->boolValue());
     EXPECT_EQ(working_config_clients, clients_map);
     EXPECT_EQ(1, map_mutex.lock_count);
 
@@ -300,6 +308,7 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
     good_config->set("_generation_id", Element::create(2));
     reconfig_cmd.params = good_config;
     EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
+    EXPECT_FALSE(builder.handleCommand(reconfig_cmd).second->boolValue());
     EXPECT_NE(working_config_clients, clients_map);
     EXPECT_EQ(1, clients_map->size());
     EXPECT_EQ(2, map_mutex.lock_count);
@@ -308,6 +317,7 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
     reconfig_cmd.params =
         Element::fromJSON("{\"classes\": {}, \"_generation_id\": 3}");
     EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
+    EXPECT_FALSE(builder.handleCommand(reconfig_cmd).second->boolValue());
     EXPECT_EQ(0, clients_map->size());
     EXPECT_EQ(3, map_mutex.lock_count);
 
@@ -917,6 +927,10 @@ TEST_F(DataSrcClientsBuilderTest,
     );
     reconfig_cmd.params = config;
     EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
+    // If this config uses mapped memory segment (or anything that waits for
+    // a separate reset), the command handler returns a bool element with a
+    // true value.
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd).second->boolValue());
 
     // No swap should have happened.
     EXPECT_EQ(0, clients_map->size());
