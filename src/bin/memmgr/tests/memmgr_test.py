@@ -128,6 +128,10 @@ class MockDataSrcInfo:
     def __init__(self, sgmt_info):
         self.segment_info_map = {(bundy.dns.RRClass.IN, "name"): sgmt_info}
         self.gen_id = TEST_GENERATION_ID
+        self.all_readers = set()
+
+    def cancel(self, reader):
+        return self.all_readers
 
 # Defined for easier tests with DataSrcClientsMgr.reconfigure(), which
 # only needs get_value() method
@@ -442,6 +446,8 @@ class TestMemmgr(unittest.TestCase):
                           'name'))
         del self.__mgr._builder_command_queue[:]
 
+    # Check the handling of 'update/validate-completed' notification from
+    # the builder.
     def __check_notify_from_builder(self, notif_name, notif_ref, dsrc_info,
                                     sgmt_info, commands):
         sgmt_info.complete_update = lambda x: 'command'
@@ -464,7 +470,6 @@ class TestMemmgr(unittest.TestCase):
         # The new command is sent
         # Once again the same, but with the last command - nothing new pushed,
         # but a notification should be sent to readers
-        #sgmt_info.old_readers.clear()
         sgmt_info.old_readers.add('reader1')
         self.__mgr._segment_readers['reader1'] = {}
         sgmt_info.complete_update = lambda x: None
@@ -478,6 +483,36 @@ class TestMemmgr(unittest.TestCase):
         (cmd, group, cc) = self.__mgr.mod_ccsession.sendmsg_params[0]
         self.__check_segment_info_update(sgmt_info, 'reader1',
                                          notif_name == 'validate-completed')
+
+    # Check the handling of cancel-command notification from builder.
+    def __check_cancel_completed_from_builder(self, notif_ref, dsrc_info):
+        # If there's no reader, the data source info is immediately cleaned up.
+        notif_ref.append(('cancel-completed', dsrc_info))
+        self.__mgr._old_datasrc_info[TEST_GENERATION_ID] = dsrc_info
+        self.__mgr._notify_from_builder()
+        self.assertFalse(TEST_GENERATION_ID in self.__mgr._old_datasrc_info)
+
+        # Otherwise, 'release_segments' command will be sent to the reader.
+        self.__mgr.mod_ccsession.sendmsg_params.clear()
+        self.__mgr._old_datasrc_info[TEST_GENERATION_ID] = dsrc_info
+        dsrc_info.all_readers = set({'reader1', 'reader2'})
+        notif_ref.append(('cancel-completed', dsrc_info))
+        self.__mgr._notify_from_builder()
+        self.assertEqual(2, len(self.__mgr.mod_ccsession.sendmsg_params))
+        cmds = []
+        groups = set()
+        recipients = set()
+        [(cmds.append(cmd), groups.add(g), recipients.add(cc)) for cmd, g, cc in
+         self.__mgr.mod_ccsession.sendmsg_params]
+        self.assertEqual(set({'reader1', 'reader2'}), recipients)
+        self.assertEqual(set({'SegmentReader'}), groups)
+        command, val = bundy.config.parse_command(cmds[0])
+        self.assertEqual('release_segments', command)
+        self.assertEqual(TEST_GENERATION_ID, val['generation-id'])
+
+        # not yet cleaned up
+        self.assertEqual(dsrc_info,
+                         self.__mgr._old_datasrc_info[TEST_GENERATION_ID])
 
     def test_notify_from_builder(self):
         """
@@ -506,6 +541,7 @@ class TestMemmgr(unittest.TestCase):
                                          sgmt_info, commands)
         self.__check_notify_from_builder('validate-completed', notif_ref,
                                          dsrc_info, sgmt_info, commands)
+        self.__check_cancel_completed_from_builder(notif_ref, dsrc_info)
 
         # This is invalid (unhandled) notification name
         notif_ref.append(('unhandled',))
