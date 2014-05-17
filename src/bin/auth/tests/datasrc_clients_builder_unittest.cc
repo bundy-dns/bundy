@@ -996,4 +996,64 @@ TEST_F(DataSrcClientsBuilderTest,
                                   FinishedCallback()));
     EXPECT_EQ(6, map_mutex.lock_count); // 1 for reset and 1 for swap
 }
+
+TEST_F(DataSrcClientsBuilderTest, releaseSegments) {
+    // Set up a generation of data sources.
+    ElementPtr dsrc_config = Element::fromJSON(
+        "{\"classes\":{\"IN\": [{\"type\": \"MasterFiles\","
+        "                        \"params\": {}, \"cache-enable\": true}]},"
+        " \"_generation_id\": 42}"
+    );
+    const Command reconfig_cmd(RECONFIGURE, dsrc_config, FinishedCallback());
+    builder.handleCommand(reconfig_cmd);
+
+    // Then send a release segments command for the generation.  The callback
+    // will be pending until the next generation of data sources is ready.
+    builder.handleCommand(Command(RELEASE_SEGMENTS,
+                                  Element::fromJSON("{\"generation-id\": 42}"),
+                                  emptyCallsback));
+    EXPECT_TRUE(builder.getInternalCallbacks().empty());
+
+    // On completion of the next generation of data sources, it also completes
+    // releasing the segments of the previous generation.  The pending callback
+    // is now scheduled.
+    dsrc_config->set("_generation_id", Element::create(43));
+    builder.handleCommand(reconfig_cmd);
+    EXPECT_EQ(1, builder.getInternalCallbacks().size());
+    EXPECT_TRUE(builder.getInternalCallbacks().front().first == emptyCallsback);
+
+    // New or old generation of command is effectively no-op, and the callback
+    // is immediately scheduled.
+    builder.handleCommand(Command(RELEASE_SEGMENTS,
+                                  Element::fromJSON("{\"generation-id\": 41}"),
+                                  emptyCallsback));
+    EXPECT_EQ(2, builder.getInternalCallbacks().size()); // CB is appended
+
+    builder.handleCommand(Command(RELEASE_SEGMENTS,
+                                  Element::fromJSON("{\"generation-id\": 44}"),
+                                  emptyCallsback));
+    EXPECT_EQ(3, builder.getInternalCallbacks().size());
+
+    // Bogus arguments will result in InternalCommandError.  no callback
+    // will be scheduled for these.
+    EXPECT_THROW(builder.handleCommand(Command(RELEASE_SEGMENTS,
+                                               ConstElementPtr(),
+                                               emptyCallsback)),
+                 TestDataSrcClientsBuilder::InternalCommandError);
+    EXPECT_EQ(3, builder.getInternalCallbacks().size());
+
+    EXPECT_THROW(builder.handleCommand(
+                     Command(RELEASE_SEGMENTS,
+                             Element::fromJSON("{\"_generation-id\": 44}"),
+                             emptyCallsback)),
+                 TestDataSrcClientsBuilder::InternalCommandError);
+    EXPECT_EQ(3, builder.getInternalCallbacks().size());
+
+    EXPECT_THROW(builder.handleCommand(
+                     Command(RELEASE_SEGMENTS,
+                             Element::fromJSON("{\"generation-id\":true}"),
+                             emptyCallsback)),
+                 TestDataSrcClientsBuilder::InternalCommandError);
+    EXPECT_EQ(3, builder.getInternalCallbacks().size());
+}
 } // unnamed namespace
