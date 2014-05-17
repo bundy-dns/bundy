@@ -458,7 +458,7 @@ class DDNSServer:
         if result == bundy.ddns.session.UPDATE_SUCCESS:
             self._cc.notify('ZoneUpdateListener', 'zone_updated',
                             { 'datasource': datasrc_name,
-                              'generation_id': self._datasrc_clients[0],
+                              'generation-id': self._datasrc_clients[0],
                               'origin': str(zname),
                               'class': str(zclass) })
             self.__notify_xfrout(zname, zclass)

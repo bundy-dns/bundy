@@ -1113,7 +1113,7 @@ class TestDDNSSession(unittest.TestCase):
         # be conslidated into a single notify to the group 'ZoneUpdateListener'
         # whose parameter should be:
         # {'zone_updated': {'datasource': <data_source_name>,
-        #                   'generation_id': <gen ID of the data source>,
+        #                   'generation-id': <gen ID of the data source>,
         #                   'origin': <updated_zone_name>,
         #                   'class': <updated_zone_class>}}
         # Until it's completed, we'll also notify specific modules, which is
@@ -1139,7 +1139,7 @@ class TestDDNSSession(unittest.TestCase):
             self.assertEqual(TEST_ZONE_NAME.to_text(), sent_cmd[1]['origin'])
             self.assertEqual(TEST_RRCLASS.to_text(), sent_cmd[1]['class'])
             self.assertEqual('testsrc', sent_cmd[1]['datasource'])
-            self.assertEqual(1, sent_cmd[1]['generation_id'])
+            self.assertEqual(1, sent_cmd[1]['generation-id'])
             msg_cnt += 1
             sent_msg, sent_group = self.__cc_session._sent_msg[msg_cnt]
             sent_cmd = sent_msg['command']
