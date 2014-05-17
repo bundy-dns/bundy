@@ -89,6 +89,9 @@ enum CommandID {
                   ///  (implicitly assuming it's shared-memory based and is
                   ///  updated by another module).
     SEGMENT_INFO_UPDATE, ///< The memory manager sent an update about segments.
+    RELEASE_SEGMENTS, ///< The memory manager requested to release specific
+                      /// generation of memory segments.  This happens on
+                      /// data source reconfiguration.
     SHUTDOWN,     ///< Shutdown the builder; no argument
     NUM_COMMANDS
 };
@@ -409,6 +412,16 @@ public:
                     callback);
     }
 
+    void releaseSegments(const data::ConstElementPtr& args,
+                         const datasrc_clientmgr_internal::FinishedCallback&
+                         callback =
+                         datasrc_clientmgr_internal::FinishedCallback())
+    {
+        // TBD validation
+        sendCommand(datasrc_clientmgr_internal::RELEASE_SEGMENTS, args,
+                    callback);
+    }
+
 private:
     // This is expected to be called at the end of the destructor.  It
     // actually does nothing, but provides a customization point for
@@ -625,12 +638,16 @@ public:
     /// command test individually.  In any case, this class itself is
     /// generally considered private.
     ///
-    /// \return Pair of bool and ConstElementPtr: the first element is true if
-    /// the builder should keep running; false otherwise.  The second element
-    /// is the callback argument if the command is expected to call a callback
-    /// (if the callback is not expected this element will be ignored).
-    std::pair<bool, data::ConstElementPtr>
-    handleCommand(const Command& command);
+    /// \return true if the builder should keep running; false otherwise.
+    bool handleCommand(const Command& command);
+
+    /// \brief Expose an internal list of post-command callback.
+    ///
+    /// This is provided for testing purposes only and should not be used
+    /// otherwise.
+    const std::list<FinishedCallbackPair>& getInternalCallbacks() const {
+        return (callbacks_);
+    }
 
 private:
     // NOOP command handler.  We use this so tests can override it; the default
@@ -854,6 +871,7 @@ private:
         datasrc::ConfigurableClientList& client_list,
         const std::string& datasrc_name, const dns::RRClass& rrclass,
         const dns::Name& origin);
+    void doReleaseSegments(const bundy::data::ConstElementPtr& params);
 
     // The following are shared with the manager
     std::list<Command>* command_queue_;
@@ -878,6 +896,9 @@ private:
     boost::scoped_ptr<PendingClientListMap> pending_map_;
     int64_t gen_id_;    // effective generation ID of the current clients_map_
                         // begin with -1, and >= 0 once configured.
+
+    // local queue of call backs to be purged at the end of command handling
+    std::list<FinishedCallbackPair> callbacks_;
 };
 
 // Shortcut typedef for normal use
@@ -906,21 +927,17 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::run() {
             while (keep_running && !current_commands.empty()) {
                 data::ConstElementPtr cbarg;
                 try {
-                    const std::pair<bool, data::ConstElementPtr> result =
-                        handleCommand(current_commands.front());
-                    keep_running = result.first;
-                    cbarg = result.second;
+                    keep_running = handleCommand(current_commands.front());
                 } catch (const InternalCommandError& e) {
                     LOG_ERROR(auth_logger,
                               AUTH_DATASRC_CLIENTS_BUILDER_COMMAND_ERROR).
                         arg(e.what());
                 }
-                if (current_commands.front().callback) {
-                    // Lock the queue
+                if (!callbacks_.empty()) {
+                    // Lock the queue, and move scheduled callbacks to the
+                    // shared queue.
                     typename MutexType::Locker locker(*queue_mutex_);
-                    callback_queue_->push_back(
-                        FinishedCallbackPair(current_commands.front().callback,
-                                             cbarg));
+                    callback_queue_->splice(callback_queue_->end(), callbacks_);
                     // Wake up the other end. If it would block, there are data
                     // and it'll wake anyway.
                     const int result = send(wake_fd_, "w", 1, MSG_DONTWAIT);
@@ -958,7 +975,7 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::run() {
 }
 
 template <typename MutexType, typename CondVarType>
-std::pair<bool, data::ConstElementPtr>
+bool
 DataSrcClientsBuilderBase<MutexType, CondVarType>::handleCommand(
     const Command& command)
 {
@@ -970,11 +987,12 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::handleCommand(
 
     const boost::array<const char*, NUM_COMMANDS> command_desc = {
         {"NOOP", "RECONFIGURE", "LOADZONE", "UPDATEZONE", "SEGMENT_INFO_UPDATE",
-         "SHUTDOWN"}
+         "RELEASE_SEGMENTS", "SHUTDOWN"}
     };
     LOG_DEBUG(auth_logger, DBGLVL_TRACE_BASIC,
               AUTH_DATASRC_CLIENTS_BUILDER_COMMAND).arg(command_desc.at(cid));
     data::ConstElementPtr cbarg;
+    const bool keep_running = (command.id != SHUTDOWN);
     switch (command.id) {
     case RECONFIGURE:
         cbarg = doReconfigure(command.params);
@@ -986,15 +1004,24 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::handleCommand(
     case SEGMENT_INFO_UPDATE:
         doSegmentUpdate(command.params);
         break;
+    case RELEASE_SEGMENTS:
+        doReleaseSegments(command.params);
+        break;
     case SHUTDOWN:
-        return (std::pair<bool, data::ConstElementPtr>(false, cbarg));
+        break;
     case NOOP:
         cbarg = doNoop();
         break;
     case NUM_COMMANDS:
         assert(false);          // we rejected this case above
     }
-    return (std::pair<bool, data::ConstElementPtr>(true, cbarg));
+
+    // By default, if callback is specified we'll schedule it to be called.
+    if (command.callback) {
+        callbacks_.push_back(FinishedCallbackPair(command.callback, cbarg));
+    }
+
+    return (keep_running);
 }
 
 template <typename MutexType, typename CondVarType>
@@ -1122,6 +1149,19 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::getZoneWriter(
     }
 
     return (boost::shared_ptr<datasrc::memory::ZoneWriter>());
+}
+
+template <typename MutexType, typename CondVarType>
+void
+DataSrcClientsBuilderBase<MutexType, CondVarType>::doReleaseSegments(
+    const bundy::data::ConstElementPtr& params)
+{
+    try {
+        const int64_t genid = params->get("generation-id")->intValue();
+        if (gen_id_ == genid) {
+            ;
+        }
+    } catch (...) {}
 }
 } // namespace datasrc_clientmgr_internal
 
