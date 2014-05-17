@@ -129,8 +129,10 @@ class MockDataSrcInfo:
         self.segment_info_map = {(bundy.dns.RRClass.IN, "name"): sgmt_info}
         self.gen_id = TEST_GENERATION_ID
         self.all_readers = set()
+        self.canceled_readers = []
 
     def cancel(self, reader):
+        self.canceled_readers.append(reader)
         return self.all_readers
 
 # Defined for easier tests with DataSrcClientsMgr.reconfigure(), which
@@ -669,6 +671,62 @@ class TestMemmgr(unittest.TestCase):
                                         'generation-id': TEST_GENERATION_ID,
                                         'reader': 'reader0'}))
 
+    def test_release_segments_ack(self):
+        "Test handling of release_segments_ack command."
+
+        sgmt_info = MockSegmentInfo()
+        dsrc_info = MockDataSrcInfo(sgmt_info)
+        self.__mgr._datasrc_info = dsrc_info
+        self.__mgr._old_datasrc_info[TEST_GENERATION_ID] = dsrc_info
+
+        # A valid release_segments_ack always cause canceling of the sender
+        # reader for the corresponding data source info.  If there's still
+        # a reader, that info should still stay in _old_datasrc_info.
+        dsrc_info.all_readers = set({'more-reader'})
+        self.__mgr._mod_command_handler('release_segments_ack',
+                                        {'generation-id': TEST_GENERATION_ID,
+                                         'reader': 'reader0'})
+        self.assertEqual(['reader0'], dsrc_info.canceled_readers)
+        self.assertEqual(dsrc_info,
+                         self.__mgr._old_datasrc_info[TEST_GENERATION_ID])
+
+        # If there's no more reader, that generation of data source info should
+        # be cleaned up.
+        dsrc_info.canceled_readers.clear()
+        dsrc_info.all_readers.clear()
+        self.__mgr._mod_command_handler('release_segments_ack',
+                                        {'generation-id': TEST_GENERATION_ID,
+                                         'reader': 'reader1'})
+        self.assertEqual(['reader1'], dsrc_info.canceled_readers)
+        self.assertFalse(TEST_GENERATION_ID in self.__mgr._old_datasrc_info)
+
+        # Test invalid cases: these shouldn't cause disruption, and data
+        # source info should be intact.
+        dsrc_info.canceled_readers.clear()
+        dsrc_info.all_readers.clear()
+        self.__mgr._old_datasrc_info[TEST_GENERATION_ID] = dsrc_info
+        # missing generation-id
+        self.__mgr._mod_command_handler('release_segments_ack',
+                                        {'reader': 'reader2'})
+        # missing 'reader'
+        self.__mgr._mod_command_handler('release_segments_ack',
+                                        {'generation-id': TEST_GENERATION_ID})
+        # generation-id mismatch
+        self.__mgr._mod_command_handler('release_segments_ack',
+                                        {'generation-id': 1,
+                                         'reader': 'reader1'})
+        # cancel() raises an exception
+        def raiser(): raise ValueError('test error')
+        dsrc_info.cancel = lambda x: raiser()
+        self.__mgr._mod_command_handler('release_segments_ack',
+                                        {'generation-id': TEST_GENERATION_ID,
+                                         'reader': 'reader1'})
+
+        # no call to cancel() except for the faked one
+        self.assertFalse(dsrc_info.canceled_readers)
+        self.assertEqual(dsrc_info,
+                         self.__mgr._old_datasrc_info[TEST_GENERATION_ID])
+
     def __check_load_or_update_zone(self, cmd, handler):
         "Common checks for load or update zone callbacks."
 
@@ -821,6 +879,29 @@ class TestMemmgr(unittest.TestCase):
         self.__mgr._reader_notification('unsubscribed',
                                         {'client': 'baz',
                                          'group': 'SegmentReader'})
+
+    def test_reader_unsubscribe_and_cancel(self):
+        # Specific tests in the case of unsubscribed reader that causes
+        # canceling deprecated data source info.
+        sgmt_info = MockSegmentInfo()
+        dsrc_info = MockDataSrcInfo(sgmt_info)
+        self.__mgr._datasrc_info = dsrc_info
+        self.__mgr._segment_readers['reader0'] = {}
+
+        # Set up some "old" data source info.  One of them would return a
+        # non-empty set for cancel() and should survive.
+        for i in range(0, 3):
+            info = MockDataSrcInfo(sgmt_info)
+            info.gen_id = i
+            self.__mgr._old_datasrc_info[i] = info
+        self.__mgr._old_datasrc_info[2].all_readers = set({'reader'})
+
+        # Send unsubsribed notification, and check completed info is cleaned up
+        self.__mgr._reader_notification('unsubscribed',
+                                        {'client': 'reader0',
+                                         'group': 'SegmentReader'})
+        self.assertEqual({2: self.__mgr._old_datasrc_info[2]},
+                         self.__mgr._old_datasrc_info)
 
     def test_zone_update_notification(self):
         "Test zone update notification callback."
