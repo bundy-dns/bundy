@@ -210,7 +210,7 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
     // the error handling
 
     // A command structure we'll modify to send different commands
-    Command reconfig_cmd(RECONFIGURE, ConstElementPtr(), FinishedCallback());
+    Command reconfig_cmd(RECONFIGURE, ConstElementPtr(), emptyCallsback);
 
     // Initially, no clients should be there
     EXPECT_TRUE(clients_map->empty());
@@ -243,10 +243,10 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
     );
 
     reconfig_cmd.params = good_config;
-    EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
-    // handleCommand returns false value of element unless it involves mapped
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
+    // The callback argument of reconfigure is false unless it involves mapped
     // memory segment.
-    EXPECT_FALSE(builder.handleCommand(reconfig_cmd).second->boolValue());
+    EXPECT_FALSE(builder.getInternalCallbacks().front().second->boolValue());
     EXPECT_EQ(1, clients_map->size());
     EXPECT_EQ(1, map_mutex.lock_count);
 
@@ -258,7 +258,7 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
     // and the clients_map should not be updated.
     reconfig_cmd.params = Element::create(
         "{\"classes\": { \"foo\": \"bar\" }, \"_generation_id\": 2}");
-    EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
     EXPECT_EQ(working_config_clients, clients_map);
     // Building failed, so map mutex should not have been locked again
     EXPECT_EQ(1, map_mutex.lock_count);
@@ -267,8 +267,7 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
     // specifies
     reconfig_cmd.params = bad_config;
     builder.handleCommand(reconfig_cmd);
-    EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
-    EXPECT_FALSE(builder.handleCommand(reconfig_cmd).second->boolValue());
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
     EXPECT_EQ(working_config_clients, clients_map);
     // Building failed, so map mutex should not have been locked again
     EXPECT_EQ(1, map_mutex.lock_count);
@@ -276,30 +275,26 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
     // The same goes for an empty parameter (it should at least be
     // an empty map)
     reconfig_cmd.params = ConstElementPtr();
-    EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
-    EXPECT_FALSE(builder.handleCommand(reconfig_cmd).second->boolValue());
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
     EXPECT_EQ(working_config_clients, clients_map);
     EXPECT_EQ(1, map_mutex.lock_count);
 
     // Missing mandatory config items
     reconfig_cmd.params = Element::fromJSON("{\"_generation_id\": 2}");
-    EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
-    EXPECT_FALSE(builder.handleCommand(reconfig_cmd).second->boolValue());
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
     EXPECT_EQ(working_config_clients, clients_map);
     EXPECT_EQ(1, map_mutex.lock_count);
 
     // bad generation IDs (must not be negative, and must increase)
     reconfig_cmd.params =
         Element::fromJSON("{\"classes\": {}, \"_generation_id\": -10}");
-    EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
-    EXPECT_FALSE(builder.handleCommand(reconfig_cmd).second->boolValue());
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
     EXPECT_EQ(working_config_clients, clients_map);
     EXPECT_EQ(1, map_mutex.lock_count);
 
     reconfig_cmd.params =
         Element::fromJSON("{\"classes\": {}, \"_generation_id\": 1}");
-    EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
-    EXPECT_FALSE(builder.handleCommand(reconfig_cmd).second->boolValue());
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
     EXPECT_EQ(working_config_clients, clients_map);
     EXPECT_EQ(1, map_mutex.lock_count);
 
@@ -307,8 +302,7 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
     // be a different map than the original, but not an empty one.
     good_config->set("_generation_id", Element::create(2));
     reconfig_cmd.params = good_config;
-    EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
-    EXPECT_FALSE(builder.handleCommand(reconfig_cmd).second->boolValue());
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
     EXPECT_NE(working_config_clients, clients_map);
     EXPECT_EQ(1, clients_map->size());
     EXPECT_EQ(2, map_mutex.lock_count);
@@ -316,8 +310,7 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
     // And finally, try an empty config to disable all datasource clients
     reconfig_cmd.params =
         Element::fromJSON("{\"classes\": {}, \"_generation_id\": 3}");
-    EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
-    EXPECT_FALSE(builder.handleCommand(reconfig_cmd).second->boolValue());
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
     EXPECT_EQ(0, clients_map->size());
     EXPECT_EQ(3, map_mutex.lock_count);
 
@@ -326,7 +319,7 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
 }
 
 TEST_F(DataSrcClientsBuilderTest, shutdown) {
-    EXPECT_FALSE(builder.handleCommand(shutdown_cmd).first);
+    EXPECT_FALSE(builder.handleCommand(shutdown_cmd));
 }
 
 TEST_F(DataSrcClientsBuilderTest, badCommand) {
@@ -419,7 +412,7 @@ TEST_F(DataSrcClientsBuilderTest, loadZone) {
                                    "{\"class\": \"IN\","
                                    " \"origin\": \"test1.example\"}"),
                                FinishedCallback());
-    EXPECT_TRUE(builder.handleCommand(loadzone_cmd).first);
+    EXPECT_TRUE(builder.handleCommand(loadzone_cmd));
 
     // loadZone involves two critical sections: one for getting the zone
     // writer, and one for actually updating the zone data.  So the lock/unlock
@@ -483,7 +476,7 @@ DataSrcClientsBuilderTest::checkLoadOrUpdateZone(CommandID cmdid) {
                           "{\"class\": \"IN\","
                           " \"origin\": \"example.org\"}"),
                       FinishedCallback());
-    EXPECT_TRUE(builder.handleCommand(cmd).first);
+    EXPECT_TRUE(builder.handleCommand(cmd));
     // And now it should be present too.
     EXPECT_EQ(ZoneFinder::SUCCESS,
               clients_map->find(rrclass)->second->
@@ -749,7 +742,7 @@ TEST_F(DataSrcClientsBuilderTest,
                                 "{\"origin\": \"test1.example\","
                                 " \"class\": \"IN\","
                                 " \"datasource\": \"MasterFiles\"}"),
-                            FinishedCallback())).first);
+                            FinishedCallback())));
 }
 
 // A helper to create a mapped memory segment that can be used for the "reset"
@@ -800,7 +793,7 @@ TEST_F(DataSrcClientsBuilderTest,
       )
 {
     const ConstElementPtr segment_config = createSegments();
-    Command reconfig_cmd(RECONFIGURE, ConstElementPtr(), FinishedCallback());
+    Command reconfig_cmd(RECONFIGURE, ConstElementPtr(), emptyCallsback);
 
     // Configure a new map without resetting the segments set
     const ConstElementPtr config = Element::fromJSON(
@@ -813,7 +806,10 @@ TEST_F(DataSrcClientsBuilderTest,
         "   \"cache-enable\": true, \"cache-type\": \"mapped\"}]},"
         " \"_generation_id\": 42}");
     reconfig_cmd.params = config;
-    EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
+    // If this config uses mapped memory segment (or anything that waits for
+    // a separate reset), the call back argument (a bool element) will be true.
+    EXPECT_TRUE(builder.getInternalCallbacks().front().second->boolValue());
 
     //clients_map = configureDataSource(config);
     // Send the update command with inuse-only.  Since the status is 'waiting',
@@ -926,11 +922,7 @@ TEST_F(DataSrcClientsBuilderTest,
         " \"_generation_id\": 42}"
     );
     reconfig_cmd.params = config;
-    EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
-    // If this config uses mapped memory segment (or anything that waits for
-    // a separate reset), the command handler returns a bool element with a
-    // true value.
-    EXPECT_TRUE(builder.handleCommand(reconfig_cmd).second->boolValue());
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
 
     // No swap should have happened.
     EXPECT_EQ(0, clients_map->size());
@@ -977,12 +969,12 @@ TEST_F(DataSrcClientsBuilderTest,
     // so the 1st one will be effectively ignored.
     config->set("_generation_id", Element::create(43));
     reconfig_cmd.params = config;
-    EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
     EXPECT_EQ(3, map_mutex.lock_count); // not yet ready
 
     config->set("_generation_id", Element::create(44));
     reconfig_cmd.params = config;
-    EXPECT_TRUE(builder.handleCommand(reconfig_cmd).first);
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
     EXPECT_EQ(3, map_mutex.lock_count); // also not yet ready
 
     // An update for the "intermediate" generation will be ignored.
