@@ -332,6 +332,19 @@ class Memmgr(BUNDYServer):
                              notif_name.replace('-completed', ''), dsrc_name,
                              rrclass, 'without' if cmd is None else 'with',
                              len(old_readers))
+            elif notif_name == 'cancel-completed':
+                # ask all possible readers for releasing segments of the
+                # canceled generation
+                _, dsrc_info = notification
+                readers = dsrc_info.cancel(None)
+                prms = {'generation-id': dsrc_info.gen_id}
+                for reader in readers:
+                    prms['reader'] = reader
+                    rcmd = bundy.config.create_command('release_segments', prms)
+                    self.mod_ccsession._session.group_sendmsg(
+                        rcmd, SEGMENT_READER_GROUP, to=reader)
+                if not readers: # cleanup completed
+                    del self._old_datasrc_info[dsrc_info.gen_id]
             else:
                 raise ValueError('Unknown notification name: ' + notif_name)
 
@@ -503,7 +516,8 @@ class Memmgr(BUNDYServer):
             # now-deprecated generation of segments
             if self._datasrc_info is not None:
                 self._cmd_to_builder(('cancel', self._datasrc_info))
-                self._old_datasrc_info[genid] = self._datasrc_info
+                self._old_datasrc_info[self._datasrc_info.gen_id] = \
+                    self._datasrc_info
 
             self._datasrc_info = datasrc_info
             self._init_segments(datasrc_info)
