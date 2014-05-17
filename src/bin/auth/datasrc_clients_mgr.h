@@ -417,7 +417,9 @@ public:
                          callback =
                          datasrc_clientmgr_internal::FinishedCallback())
     {
-        // TBD validation
+        // We defer argument validation to the builder; since this command
+        // isn't expected an answer, early rejection doesn't help and is just
+        // redundant.
         sendCommand(datasrc_clientmgr_internal::RELEASE_SEGMENTS, args,
                     callback);
     }
@@ -689,6 +691,12 @@ private:
         } // lock is released by leaving scope
           // old clients_map_ data is released by leaving scope
 
+        if (pending_callback_) {
+            callbacks_.push_back(FinishedCallbackPair(pending_callback_,
+                                                      data::ConstElementPtr()));
+            pending_callback_ = FinishedCallback();
+        }
+
         gen_id_ = pending_map_->gen_id_;
         pending_map_.reset();
         LOG_INFO(auth_logger, AUTH_DATASRC_CLIENTS_BUILDER_RECONFIGURE_SUCCESS).
@@ -766,7 +774,7 @@ private:
                     arg(bundy_error.what());
             }
             // other exceptions are propagated, see
-            // http://bundy.bundy.org/ticket/2210#comment:13
+            // http://bind10.isc.org/ticket/2210#comment:13
         }
         return (data::Element::create(false));
     }
@@ -871,7 +879,7 @@ private:
         datasrc::ConfigurableClientList& client_list,
         const std::string& datasrc_name, const dns::RRClass& rrclass,
         const dns::Name& origin);
-    void doReleaseSegments(const bundy::data::ConstElementPtr& params);
+    FinishedCallback doReleaseSegments(const Command& command);
 
     // The following are shared with the manager
     std::list<Command>* command_queue_;
@@ -899,6 +907,9 @@ private:
 
     // local queue of call backs to be purged at the end of command handling
     std::list<FinishedCallbackPair> callbacks_;
+
+    // placeholder for pending callback of RELEASE_SEGMENTS command.
+    FinishedCallback pending_callback_;
 };
 
 // Shortcut typedef for normal use
@@ -992,6 +1003,7 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::handleCommand(
     LOG_DEBUG(auth_logger, DBGLVL_TRACE_BASIC,
               AUTH_DATASRC_CLIENTS_BUILDER_COMMAND).arg(command_desc.at(cid));
     data::ConstElementPtr cbarg;
+    FinishedCallback callback = command.callback;
     const bool keep_running = (command.id != SHUTDOWN);
     switch (command.id) {
     case RECONFIGURE:
@@ -1005,7 +1017,7 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::handleCommand(
         doSegmentUpdate(command.params);
         break;
     case RELEASE_SEGMENTS:
-        doReleaseSegments(command.params);
+        callback = doReleaseSegments(command);
         break;
     case SHUTDOWN:
         break;
@@ -1017,8 +1029,8 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::handleCommand(
     }
 
     // By default, if callback is specified we'll schedule it to be called.
-    if (command.callback) {
-        callbacks_.push_back(FinishedCallbackPair(command.callback, cbarg));
+    if (callback) {
+        callbacks_.push_back(FinishedCallbackPair(callback, cbarg));
     }
 
     return (keep_running);
@@ -1152,16 +1164,38 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::getZoneWriter(
 }
 
 template <typename MutexType, typename CondVarType>
-void
+FinishedCallback
 DataSrcClientsBuilderBase<MutexType, CondVarType>::doReleaseSegments(
-    const bundy::data::ConstElementPtr& params)
+    const Command& command)
 {
     try {
-        const int64_t genid = params->get("generation-id")->intValue();
-        if (gen_id_ == genid) {
-            ;
+        if (!command.params) {
+            bundy_throw(InvalidParameter, "NULL argument");
         }
-    } catch (...) {}
+        if (!command.params->contains("generation-id")) {
+            bundy_throw(InvalidParameter, "missing 'generation-id'");
+        }
+        const int64_t genid = command.params->get("generation-id")->intValue();
+        if (gen_id_ == genid) {
+            pending_callback_ = command.callback;
+            return (FinishedCallback());
+        } else {
+            // Similar to generation mismatch for doSegmentUpdate(), it
+            // shouldn't be possible to get this command for an older or future
+            // generation.  An intermediate generation can be simply ignored
+            // (and the callback can be scheduled immediately).
+            LOG_INFO(auth_logger,
+                     AUTH_DATASRC_CLIENTS_BUILDER_RELEASE_SEGMENTS_UNKNOWNGEN).
+                arg(genid).arg(gen_id_);
+        }
+    } catch (const bundy::Exception& ex) {
+        // Should be a bug of the sender module.  Ignore the command, but
+        // don't crash.
+        bundy_throw(InternalCommandError,
+                    "error in parsing arguments for 'release segments': "
+                    << ex.what());
+    }
+    return (command.callback);
 }
 } // namespace datasrc_clientmgr_internal
 

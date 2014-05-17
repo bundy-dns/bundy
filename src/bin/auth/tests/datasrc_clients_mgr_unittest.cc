@@ -291,7 +291,7 @@ TEST(DataSrcClientsMgrTest, segmentUpdate) {
     EXPECT_TRUE(FakeDataSrcClientsBuilder::started);
     EXPECT_TRUE(FakeDataSrcClientsBuilder::command_queue->empty());
 
-    bundy::data::ElementPtr args =
+    const bundy::data::ConstElementPtr args =
         bundy::data::Element::fromJSON("{\"data-source-class\": \"IN\","
                                        " \"data-source-name\": \"sqlite3\","
                                        " \"segment-params\": {},"
@@ -312,6 +312,23 @@ TEST(DataSrcClientsMgrTest, segmentUpdate) {
         "{\"data-source-class\": \"IN\", \"data-source-name\": \"sqlite3\","
         " \"segment-params\": {}}")), CommandError);
     EXPECT_EQ(1, FakeDataSrcClientsBuilder::command_queue->size());
+}
+
+TEST(DataSrcClientsMgrTest, releaseSegments) {
+    TestDataSrcClientsMgr mgr;
+    EXPECT_TRUE(FakeDataSrcClientsBuilder::started);
+    EXPECT_TRUE(FakeDataSrcClientsBuilder::command_queue->empty());
+
+    // releaseSegments() is a straightforward wrapper, so it should suffice to
+    // check the right command with the passed args is sent to the queue.
+    const bundy::data::ConstElementPtr args =
+        bundy::data::Element::fromJSON("{\"generation-id\": 1}");
+    mgr.releaseSegments(args);
+    EXPECT_EQ(1, FakeDataSrcClientsBuilder::command_queue->size());
+    EXPECT_EQ(RELEASE_SEGMENTS,
+              FakeDataSrcClientsBuilder::command_queue->front().id);
+    EXPECT_EQ(args,
+              FakeDataSrcClientsBuilder::command_queue->front().params);
 }
 
 void

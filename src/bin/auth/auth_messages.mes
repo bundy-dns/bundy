@@ -151,6 +151,12 @@ reconfigure, and has now started this process.
 The thread for maintaining data source clients has finished reconfiguring
 the data source clients, and is now running with the new configuration.
 
+% AUTH_DATASRC_CLIENTS_BUILDER_RELEASE_SEGMENTS_UNKNOWNGEN received a command for releasing memory segments on unknown generation (%1, current=%2), ignored.
+The data source builder thread received a command to release memory
+segments for data sources whose generation ID does not match the
+currently used generation.  Similar to AUTH_DATASRC_CLIENTS_BUILDER_SEGMENT_UNKNOWNGEN,
+this should be quite rare but still possible to happen.
+
 % AUTH_DATASRC_CLIENTS_BUILDER_SEGMENT_BAD_CLASS invalid RRclass %1 at segment update
 A memory segment update message was sent to the authoritative
 server. But the class contained there is invalid. This means that the
