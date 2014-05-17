@@ -918,7 +918,8 @@ AuthSrv::listsReconfigured(const bundy::data::ConstElementPtr& arg) {
 
 void
 AuthSrv::sendCommandAck(const std::string& cmd, ConstElementPtr params) {
-    // ACK the segment
+    // ACK a foreign command.  Right now, the recipient (sender of the command)
+    // module should always be Memmgr, so it's hardcoded.
     impl_->config_session_->
         groupSendMsg(bundy::config::createCommand(cmd, params), "Memmgr");
 }
@@ -934,6 +935,8 @@ AuthSrv::foreignCommand(const std::string& command, const std::string&,
                                                   "segment_info_update_ack",
                                                   params));
     } else if (command == "release_segments") {
-        sendCommandAck("release_segments_ack", params);
+        impl_->datasrc_clients_mgr_.releaseSegments(
+            params, boost::bind(&AuthSrv::sendCommandAck, this,
+                                "release_segments_ack", params));
     }
 }
