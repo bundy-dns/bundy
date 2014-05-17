@@ -112,6 +112,19 @@ class Memmgr(BUNDYServer):
             logger.debug(logger.DBGLVL_TRACE_BASIC, MEMMGR_SGMTINFO_ACK,
                          dsrc_name, rrclass)
             return False
+        elif cmd == 'release_segments_ack':
+            genid = 'unknown'
+            try:
+                genid = args['generation-id']
+                reader = args['reader']
+                datasrc_info = self._old_datasrc_info[genid]
+                if not datasrc_info.cancel(reader):
+                    del self._old_datasrc_info[genid]
+                logger.debug(logger.DBGLVL_TRACE_BASIC,
+                             MEMMGR_DATASRC_RELEASESGMT_ACK, reader, genid)
+            except Exception as ex:
+                logger.error(MEMMGR_DATASRC_RELEASESGMT_ACK_FAIL, str(genid),
+                             ex)
         elif cmd == 'loadzone':
             return self.__update_zone(cmd, args)
         else:
@@ -447,6 +460,9 @@ class Memmgr(BUNDYServer):
                 logger.warn(MEMMGR_CCMEMBER_DUP_UNSUBSCRIBED, reader)
             else:
                 del self._segment_readers[reader]
+                for old_dsrc_info in list(self._old_datasrc_info.values()):
+                    if not old_dsrc_info.cancel(reader):
+                        del self._old_datasrc_info[old_dsrc_info.gen_id]
                 for sgmt_info in self._datasrc_info.segment_info_map.values():
                     bcmd = sgmt_info.remove_reader(reader)
                     if bcmd is not None:
