@@ -67,7 +67,7 @@ namespace { // unnamed namespace
 // do it, but since we cannot guarantee the adding/removing operation is
 // exception free, we don't choose that option to maintain the common
 // expectation for destructors.
-class ZoneDataLoaderHelper : boost::noncopyable {
+class ZoneDataUpdaterHelper : boost::noncopyable {
 public:
     enum OP_MODE {ADD, DELETE};
 
@@ -75,7 +75,7 @@ public:
     typedef boost::function<void(bundy::dns::ConstRRsetPtr, OP_MODE)>
     LoadCallback;
 
-    ZoneDataLoaderHelper(util::MemorySegment& mem_sgmt,
+    ZoneDataUpdaterHelper(util::MemorySegment& mem_sgmt,
                          const bundy::dns::RRClass& rrclass,
                          const bundy::dns::Name& zone_name,
                          ZoneData& zone_data) :
@@ -101,7 +101,8 @@ private:
 };
 
 void
-ZoneDataLoaderHelper::updateFromLoad(const ConstRRsetPtr& rrset, OP_MODE mode) {
+ZoneDataUpdaterHelper::updateFromLoad(const ConstRRsetPtr& rrset, OP_MODE mode)
+{
     // Set current mode.  If the mode is changing, we first need to flush all
     // changes in the previous mode.
     if (current_mode_ && *current_mode_ != mode) {
@@ -133,7 +134,7 @@ ZoneDataLoaderHelper::updateFromLoad(const ConstRRsetPtr& rrset, OP_MODE mode) {
 }
 
 void
-ZoneDataLoaderHelper::flushNodeRRsets() {
+ZoneDataUpdaterHelper::flushNodeRRsets() {
     // There has been no add or remove operation.  Then flush is no-op too.
     if (!current_mode_) {
         return;
@@ -178,7 +179,7 @@ ZoneDataLoaderHelper::flushNodeRRsets() {
 }
 
 const Name&
-ZoneDataLoaderHelper::getCurrentName() const {
+ZoneDataUpdaterHelper::getCurrentName() const {
     if (!node_rrsets_.empty()) {
         return (node_rrsets_.begin()->second->getName());
     }
@@ -268,7 +269,7 @@ public:
     }
 
 private:
-    typedef boost::function<bool(ZoneDataLoaderHelper::LoadCallback,
+    typedef boost::function<bool(ZoneDataUpdaterHelper::LoadCallback,
                                  size_t count_limit)> RRsetInstaller;
 protected:
     LoadResult doLoadCommon(RRsetInstaller installer, size_t count_limit);
@@ -296,6 +297,9 @@ protected:
                 }
             }
         }
+        update_helper_.reset(new ZoneDataUpdaterHelper(mem_sgmt_, rrclass_,
+                                                       zone_name_,
+                                                       *data_holder_->get()));
     }
 
 protected:
@@ -305,6 +309,8 @@ protected:
     ZoneData* const old_data_;
     const boost::optional<dns::Serial> old_serial_;
     boost::scoped_ptr<SegmentObjectHolder<ZoneData, RRClass> > data_holder_;
+private:
+    boost::scoped_ptr<ZoneDataUpdaterHelper> update_helper_;
 };
 
 ZoneDataLoader::LoadResult
@@ -318,19 +324,20 @@ ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon(RRsetInstaller installer,
             // It is handled inside here.
             created = true;
 
-            ZoneDataLoaderHelper loader(mem_sgmt_, rrclass_, zone_name_,
-                                        *data_holder_->get());
             const size_t local_count_limit = 10000;
             bool completed = false;
             do {
                 completed =
-                    installer(boost::bind(&ZoneDataLoaderHelper::updateFromLoad,
-                                          &loader, _1, _2),
+                    installer(boost::bind(
+                                  &ZoneDataUpdaterHelper::updateFromLoad,
+                                  update_helper_.get(), _1, _2),
                               count_limit == 0 ? local_count_limit :
                               std::min(count_limit, local_count_limit));
             } while (!completed && count_limit == 0);
             // Add any last RRsets that were left
-            loader.flushNodeRRsets();
+            update_helper_->flushNodeRRsets();
+            // we're done with the updater.  Release internal resources sooner.
+            update_helper_.reset();
 
             const ZoneNode* origin_node = data_holder_->get()->getOriginNode();
             const RdataSet* rdataset = origin_node->getData();
@@ -401,13 +408,13 @@ public:
                                          this, _1, _2), count_limit));
     }
 
-    bool installer(ZoneDataLoaderHelper::LoadCallback callback,
+    bool installer(ZoneDataUpdaterHelper::LoadCallback callback,
                    size_t count_limit)
     {
         if (!master_loader_) {
             rrcollator_.reset(
                 new dns::RRCollator(boost::bind(callback, _1,
-                                                ZoneDataLoaderHelper::ADD)));
+                                                ZoneDataUpdaterHelper::ADD)));
             master_loader_.reset(
                 new dns::MasterLoader(zone_file_.c_str(), zone_name_, rrclass_,
                                       createMasterLoaderCallbacks(zone_name_,
@@ -451,14 +458,14 @@ public:
     }
 
     // The installer called for ZoneDataLoader using a zone iterator
-    bool installer(ZoneDataLoaderHelper::LoadCallback callback,
+    bool installer(ZoneDataUpdaterHelper::LoadCallback callback,
                    size_t count_limit)
     {
         size_t count = 0;
         ConstRRsetPtr rrset;
         while (count < count_limit &&
                (rrset = iterator_->getNextRRset()) != NULL) {
-            callback(rrset, ZoneDataLoaderHelper::ADD);
+            callback(rrset, ZoneDataUpdaterHelper::ADD);
             count++;
         }
         return (!rrset);   // we are done iff we reach end of the iterator
@@ -538,7 +545,7 @@ private:
     // the basic assumption is that any invalid data mean implementation defect
     // (not bad user input) and shouldn't happen anyway.
     bool
-    applyDiffs(ZoneDataLoaderHelper::LoadCallback callback, size_t) {
+    applyDiffs(ZoneDataUpdaterHelper::LoadCallback callback, size_t) {
         enum DIFF_MODE {INIT, ADD, DELETE} mode = INIT;
         ConstRRsetPtr rrset;
         std::vector<ConstRRsetPtr>::const_iterator it = saved_diffs_.begin();
@@ -555,7 +562,8 @@ private:
             }
             callback(rrset,
                      (mode == ADD) ?
-                     ZoneDataLoaderHelper::ADD : ZoneDataLoaderHelper::DELETE);
+                     ZoneDataUpdaterHelper::ADD :
+                     ZoneDataUpdaterHelper::DELETE);
         }
         if (mode != ADD) {
             // Diff must end in the add mode (there should at least be one
