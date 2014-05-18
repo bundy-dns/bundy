@@ -288,7 +288,7 @@ public:
 protected:
     bool doLoadCommon(size_t count_limit);
 
-    void initUpdate(ZoneData* const zone_data) {
+    virtual void initUpdate(ZoneData* const zone_data) {
         while (true) {
             try {
                 boost::scoped_ptr<SegmentObjectHolder<ZoneData, RRClass> >
@@ -318,8 +318,7 @@ protected:
 
     ZoneDataLoader::LoadResult finishUpdate();
 
-    virtual bool updateRRsets(ZoneDataUpdaterHelper::LoadCallback callback,
-                              size_t count_limit) = 0;
+    virtual bool updateRRsets(size_t count_limit) = 0;
 
 protected:
     util::MemorySegment& mem_sgmt_;
@@ -328,7 +327,6 @@ protected:
     ZoneData* const old_data_;
     const boost::optional<dns::Serial> old_serial_;
     boost::scoped_ptr<SegmentObjectHolder<ZoneData, RRClass> > data_holder_;
-private:
     boost::scoped_ptr<ZoneDataUpdaterHelper> update_helper_;
 };
 
@@ -389,10 +387,7 @@ ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon(const size_t count_limit) {
             std::min(count_limit, local_count_limit);
         bool completed = false;
         do {
-            completed = updateRRsets(boost::bind(
-                                      &ZoneDataUpdaterHelper::updateFromLoad,
-                                      update_helper_.get(), _1, _2),
-                                     actual_count_limit);
+            completed = updateRRsets(actual_count_limit);
         } while (!completed && count_limit == 0);
         // Add any last RRsets that were left
         update_helper_->flushNodeRRsets();
@@ -422,20 +417,31 @@ public:
     virtual ~MasterFileLoader() {}
 
 protected:
-    virtual bool updateRRsets(ZoneDataUpdaterHelper::LoadCallback callback,
-                              size_t count_limit)
-    {
-        if (!master_loader_) {
-            rrcollator_.reset(
-                new dns::RRCollator(boost::bind(callback, _1,
-                                                ZoneDataUpdaterHelper::ADD)));
-            master_loader_.reset(
-                new dns::MasterLoader(zone_file_.c_str(), zone_name_, rrclass_,
-                                      createMasterLoaderCallbacks(zone_name_,
-                                                                  rrclass_,
-                                                                  &load_ok_),
-                                      rrcollator_->getCallback()));
-        }
+    virtual void initUpdate(ZoneData* const zone_data) {
+        // perform common initialization, and create MasterLoader (we need to
+        // hold off creating it until this point since we need update_helper_).
+        ZoneDataLoader::ZoneDataLoaderImpl::initUpdate(zone_data);
+
+        // Below, we convert the two callback types.  Note the mostly redundant
+        // wrapper of boost::bind.  It converts function<void(ConstRRsetPtr)>
+        // to function<void(RRsetPtr)> (MasterLoader expects the latter).
+        // SunStudio doesn't seem to do this conversion if we just pass a
+        // combined boost::bind object.
+        ZoneDataUpdaterHelper::LoadCallback update_helper_callback =
+            boost::bind(&ZoneDataUpdaterHelper::updateFromLoad,
+                        update_helper_.get(), _1, _2);
+        rrcollator_.reset(
+            new dns::RRCollator(boost::bind(update_helper_callback, _1,
+                                            ZoneDataUpdaterHelper::ADD)));
+        master_loader_.reset(
+            new dns::MasterLoader(zone_file_.c_str(), zone_name_, rrclass_,
+                                  createMasterLoaderCallbacks(zone_name_,
+                                                              rrclass_,
+                                                              &load_ok_),
+                                  rrcollator_->getCallback()));
+    }
+
+    virtual bool updateRRsets(size_t count_limit) {
         try {
             if (!master_loader_->loadIncremental(count_limit)) {
                 return (false);
@@ -467,14 +473,12 @@ public:
 
 protected:
     // The installer called for ZoneDataLoader using a zone iterator
-    virtual bool updateRRsets(ZoneDataUpdaterHelper::LoadCallback callback,
-                              size_t count_limit)
-    {
+    virtual bool updateRRsets(size_t count_limit) {
         size_t count = 0;
         ConstRRsetPtr rrset;
         while (count < count_limit &&
                (rrset = iterator_->getNextRRset()) != NULL) {
-            callback(rrset, ZoneDataUpdaterHelper::ADD);
+            update_helper_->updateFromLoad(rrset, ZoneDataUpdaterHelper::ADD);
             count++;
         }
         return (!rrset);   // we are done iff we reach end of the iterator
@@ -496,7 +500,7 @@ public:
         return (ZoneDataLoader::LoadResult(old_data_, false));
     }
 protected:
-    virtual bool updateRRsets(ZoneDataUpdaterHelper::LoadCallback, size_t) {
+    virtual bool updateRRsets(size_t) {
         assert(false);          // this version shouldn't be called
     }
 };
@@ -538,7 +542,7 @@ protected:
     // the basic assumption is that any invalid data mean implementation defect
     // (not bad user input) and shouldn't happen anyway.
     virtual bool
-    updateRRsets(ZoneDataUpdaterHelper::LoadCallback callback, size_t) {
+    updateRRsets(size_t) {
         enum DIFF_MODE {INIT, ADD, DELETE} mode = INIT;
         ConstRRsetPtr rrset;
         std::vector<ConstRRsetPtr>::const_iterator it = saved_diffs_.begin();
@@ -553,10 +557,10 @@ protected:
                 bundy_throw(bundy::Unexpected,
                             "broken journal reader: diff not begin with SOA");
             }
-            callback(rrset,
-                     (mode == ADD) ?
-                     ZoneDataUpdaterHelper::ADD :
-                     ZoneDataUpdaterHelper::DELETE);
+            update_helper_->updateFromLoad(rrset,
+                                           (mode == ADD) ?
+                                           ZoneDataUpdaterHelper::ADD :
+                                           ZoneDataUpdaterHelper::DELETE);
         }
         if (mode != ADD) {
             // Diff must end in the add mode (there should at least be one
