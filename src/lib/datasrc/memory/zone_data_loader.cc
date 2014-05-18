@@ -262,17 +262,19 @@ public:
         validateOldData(zone_name, old_data);
     }
 
-    virtual LoadResult doLoad(size_t count_limit) = 0;
+    virtual LoadResult doLoad(size_t count_limit) {
+        initUpdate(NULL);
+        const bool completed = doLoadCommon(count_limit);
+        assert(completed);
+        return (finishUpdate());
+    }
 
     virtual ZoneData* commitDiffs(ZoneData* update_data) {
         return (update_data);
     }
 
-private:
-    typedef boost::function<bool(ZoneDataUpdaterHelper::LoadCallback,
-                                 size_t count_limit)> RRsetInstaller;
 protected:
-    bool doLoadCommon(RRsetInstaller installer, size_t count_limit);
+    bool doLoadCommon(size_t count_limit);
 
     void initUpdate(ZoneData* const zone_data) {
         while (true) {
@@ -303,6 +305,9 @@ protected:
     }
 
     ZoneDataLoader::LoadResult finishUpdate();
+
+    virtual bool updateRRsets(ZoneDataUpdaterHelper::LoadCallback callback,
+                              size_t count_limit) = 0;
 
 protected:
     util::MemorySegment& mem_sgmt_;
@@ -364,18 +369,18 @@ ZoneDataLoader::ZoneDataLoaderImpl::finishUpdate() {
 }
 
 bool
-ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon(RRsetInstaller installer,
-                                                 const size_t count_limit)
-{
+ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon(const size_t count_limit) {
     try {
         const size_t local_count_limit = 10000;
+        const size_t actual_count_limit =
+            count_limit == 0 ? local_count_limit :
+            std::min(count_limit, local_count_limit);
         bool completed = false;
         do {
-            completed = installer(boost::bind(
+            completed = updateRRsets(boost::bind(
                                       &ZoneDataUpdaterHelper::updateFromLoad,
                                       update_helper_.get(), _1, _2),
-                                  count_limit == 0 ? local_count_limit :
-                                  std::min(count_limit, local_count_limit));
+                                     actual_count_limit);
         } while (!completed && count_limit == 0);
         // Add any last RRsets that were left
         update_helper_->flushNodeRRsets();
@@ -404,15 +409,9 @@ public:
     {}
     virtual ~MasterFileLoader() {}
 
-    virtual ZoneDataLoader::LoadResult doLoad(size_t count_limit) {
-        initUpdate(NULL);
-        doLoadCommon(boost::bind(&MasterFileLoader::installer, this, _1, _2),
-                     count_limit); // must return true
-        return (finishUpdate());
-    }
-
-    bool installer(ZoneDataUpdaterHelper::LoadCallback callback,
-                   size_t count_limit)
+protected:
+    virtual bool updateRRsets(ZoneDataUpdaterHelper::LoadCallback callback,
+                              size_t count_limit)
     {
         if (!master_loader_) {
             rrcollator_.reset(
@@ -453,16 +452,11 @@ public:
         iterator_(iterator)
     {}
     virtual ~IteratorLoader() {}
-    virtual ZoneDataLoader::LoadResult doLoad(size_t count_limit) {
-        initUpdate(NULL);
-        doLoadCommon(boost::bind(&IteratorLoader::installer, this, _1, _2),
-                     count_limit); // must return true
-        return (finishUpdate());
-    }
 
+protected:
     // The installer called for ZoneDataLoader using a zone iterator
-    bool installer(ZoneDataUpdaterHelper::LoadCallback callback,
-                   size_t count_limit)
+    virtual bool updateRRsets(ZoneDataUpdaterHelper::LoadCallback callback,
+                              size_t count_limit)
     {
         size_t count = 0;
         ConstRRsetPtr rrset;
@@ -489,6 +483,10 @@ public:
     virtual ZoneDataLoader::LoadResult doLoad(size_t) {
         return (ZoneDataLoader::LoadResult(old_data_, false));
     }
+protected:
+    virtual bool updateRRsets(ZoneDataUpdaterHelper::LoadCallback, size_t) {
+        assert(false);          // this version shouldn't be called
+    }
 };
 
 class JournalLoader : public ZoneDataLoader::ZoneDataLoaderImpl {
@@ -514,8 +512,7 @@ public:
         initUpdate(update_data);
         try {
             // On success, finishUpdate release the zone data in the holder.
-            doLoadCommon(boost::bind(&JournalLoader::applyDiffs, this, _1, _2),
-                         0);    // must return true
+            doLoadCommon(0);    // must return true
             return (finishUpdate().first);
         } catch (...) {
             data_holder_->release();
@@ -523,33 +520,13 @@ public:
         }
     }
 
-private:
-    void saveDiffs() {
-        int count = 0;
-        ConstRRsetPtr rrset;
-        while (count++ < MAX_SAVED_DIFFS_ &&
-               (rrset = jnl_reader_->getNextDiff())) {
-            saved_diffs_.push_back(rrset);
-        }
-        if (!rrset) {
-            jnl_reader_.reset();
-            if (saved_diffs_.empty()) {
-                // In our expected form of diff sequence, it shouldn't be empty,
-                // since there should be at least begin and end SOAs.
-                // Eliminating this case at this point makes the later
-                // processing easier.
-                bundy_throw(ZoneValidationError,
-                            "empty diff sequence is provided for load");
-            }
-        }
-    }
-
+protected:
     // The installer called for ZoneDataLoader using a zone journal reader.
     // It performs some minimal sanity checks on the sequence of data, but
     // the basic assumption is that any invalid data mean implementation defect
     // (not bad user input) and shouldn't happen anyway.
-    bool
-    applyDiffs(ZoneDataUpdaterHelper::LoadCallback callback, size_t) {
+    virtual bool
+    updateRRsets(ZoneDataUpdaterHelper::LoadCallback callback, size_t) {
         enum DIFF_MODE {INIT, ADD, DELETE} mode = INIT;
         ConstRRsetPtr rrset;
         std::vector<ConstRRsetPtr>::const_iterator it = saved_diffs_.begin();
@@ -576,6 +553,27 @@ private:
         }
 
         return (true);
+    }
+
+private:
+    void saveDiffs() {
+        int count = 0;
+        ConstRRsetPtr rrset;
+        while (count++ < MAX_SAVED_DIFFS_ &&
+               (rrset = jnl_reader_->getNextDiff())) {
+            saved_diffs_.push_back(rrset);
+        }
+        if (!rrset) {
+            jnl_reader_.reset();
+            if (saved_diffs_.empty()) {
+                // In our expected form of diff sequence, it shouldn't be empty,
+                // since there should be at least begin and end SOAs.
+                // Eliminating this case at this point makes the later
+                // processing easier.
+                bundy_throw(ZoneValidationError,
+                            "empty diff sequence is provided for load");
+            }
+        }
     }
 
     ConstRRsetPtr
