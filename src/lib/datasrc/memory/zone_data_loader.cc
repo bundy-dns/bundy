@@ -271,9 +271,7 @@ private:
     typedef boost::function<bool(ZoneDataLoaderHelper::LoadCallback,
                                  size_t count_limit)> RRsetInstaller;
 protected:
-    LoadResult doLoadCommon(
-        SegmentObjectHolder<ZoneData, RRClass>*,
-        RRsetInstaller installer, size_t count_limit);
+    LoadResult doLoadCommon(RRsetInstaller installer, size_t count_limit);
 
     void initUpdate(ZoneData* const zone_data) {
         while (true) {
@@ -310,9 +308,8 @@ protected:
 };
 
 ZoneDataLoader::LoadResult
-ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon(
-    SegmentObjectHolder<ZoneData, RRClass>*,
-    RRsetInstaller installer, size_t count_limit)
+ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon(RRsetInstaller installer,
+                                                 size_t count_limit)
 {
     while (true) { // Try as long as it takes to load and grow the segment
         bool created = false;
@@ -400,8 +397,8 @@ public:
 
     virtual ZoneDataLoader::LoadResult doLoad(size_t count_limit) {
         initUpdate(NULL);
-        return (doLoadCommon(NULL, boost::bind(&MasterFileLoader::installer,
-                                               this, _1, _2), count_limit));
+        return (doLoadCommon(boost::bind(&MasterFileLoader::installer,
+                                         this, _1, _2), count_limit));
     }
 
     bool installer(ZoneDataLoaderHelper::LoadCallback callback,
@@ -448,8 +445,8 @@ public:
     virtual ~IteratorLoader() {}
     virtual ZoneDataLoader::LoadResult doLoad(size_t count_limit) {
         initUpdate(NULL);
-        return (doLoadCommon(NULL, boost::bind(&IteratorLoader::installer,
-                                               this, _1, _2),
+        return (doLoadCommon(boost::bind(&IteratorLoader::installer,
+                                         this, _1, _2),
                              count_limit));
     }
 
@@ -507,8 +504,7 @@ public:
         initUpdate(update_data);
         try {
             // If doLoadCommon returns the holder should have released the data.
-            return (doLoadCommon(NULL,
-                                 boost::bind(&JournalLoader::applyDiffs, this,
+            return (doLoadCommon(boost::bind(&JournalLoader::applyDiffs, this,
                                              _1, _2), 0).first);
         } catch (...) {
             data_holder_->release();
