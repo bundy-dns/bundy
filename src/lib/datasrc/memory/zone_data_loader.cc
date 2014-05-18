@@ -302,6 +302,9 @@ protected:
                                                        *data_holder_->get()));
     }
 
+private:
+    ZoneDataLoader::LoadResult finishUpdate();
+
 protected:
     util::MemorySegment& mem_sgmt_;
     const dns::RRClass rrclass_;
@@ -314,79 +317,77 @@ private:
 };
 
 ZoneDataLoader::LoadResult
+ZoneDataLoader::ZoneDataLoaderImpl::finishUpdate() {
+    const ZoneNode* origin_node = data_holder_->get()->getOriginNode();
+    const RdataSet* rdataset = origin_node->getData();
+    ZoneData* const loaded_data = data_holder_->get();
+    // If the zone is and NSEC3-signed, check if it has NSEC3PARAM.
+    // If not, it may either just go to NSEC3-unsigned, or there's an
+    // operational error in that step, depending on whether there's any
+    // NSEC3 RRs in the zone.
+    if (loaded_data->isNSEC3Signed() &&
+        RdataSet::find(rdataset, RRType::NSEC3PARAM()) == NULL) {
+        if (loaded_data->getNSEC3Data()->isEmpty()) {
+            // becoming NSEC3-unsigned.
+            LOG_INFO(logger, DATASRC_MEMORY_MEM_NSEC3_UNSIGNED).arg(zone_name_).
+                arg(rrclass_);
+            NSEC3Data* old_n3data = loaded_data->setNSEC3Data(NULL);
+            NSEC3Data::destroy(mem_sgmt_, old_n3data, rrclass_);
+        } else {
+            LOG_WARN(logger, DATASRC_MEMORY_MEM_NO_NSEC3PARAM).arg(zone_name_).
+                arg(rrclass_);
+        }
+    }
+
+    RRsetCollection collection(*loaded_data, rrclass_);
+    const dns::ZoneCheckerCallbacks
+        callbacks(boost::bind(&logError, &zone_name_, &rrclass_, _1),
+                  boost::bind(&logWarning, &zone_name_, &rrclass_, _1));
+    if (!dns::checkZone(zone_name_, rrclass_, collection, callbacks)) {
+        bundy_throw(ZoneValidationError, "Errors found when validating zone: "
+                    << zone_name_ << "/" << rrclass_);
+    }
+
+    // Check loaded serial.  Note that if checkZone() passed, we
+    // should have SOA in the ZoneData.
+    const dns::Serial new_serial =
+        *getSerialFromZoneData(rrclass_, loaded_data);
+    if (old_serial_ && *old_serial_ >= new_serial) {
+        LOG_WARN(logger, DATASRC_MEMORY_LOADED_SERIAL_NOT_INCREASED).
+            arg(zone_name_).arg(rrclass_).
+            arg(old_serial_->getValue()).arg(new_serial.getValue());
+    }
+    LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_LOADED).
+        arg(zone_name_).arg(rrclass_).arg(new_serial.getValue()).
+        arg(loaded_data->isSigned() ? " (DNSSEC signed)" : "");
+
+    return (LoadResult(data_holder_->release(), true));
+}
+
+ZoneDataLoader::LoadResult
 ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon(RRsetInstaller installer,
                                                  size_t count_limit)
 {
-    while (true) { // Try as long as it takes to load and grow the segment
-        bool created = false;
-        try {
-            // Nothing from this point on should throw MemorySegmentGrown.
-            // It is handled inside here.
-            created = true;
+    try {
+        const size_t local_count_limit = 10000;
+        bool completed = false;
+        do {
+            completed = installer(boost::bind(
+                                      &ZoneDataUpdaterHelper::updateFromLoad,
+                                      update_helper_.get(), _1, _2),
+                                  count_limit == 0 ? local_count_limit :
+                                  std::min(count_limit, local_count_limit));
+        } while (!completed && count_limit == 0);
+        // Add any last RRsets that were left
+        update_helper_->flushNodeRRsets();
+        // we're done with the updater.  Release internal resources sooner.
+        update_helper_.reset();
 
-            const size_t local_count_limit = 10000;
-            bool completed = false;
-            do {
-                completed =
-                    installer(boost::bind(
-                                  &ZoneDataUpdaterHelper::updateFromLoad,
-                                  update_helper_.get(), _1, _2),
-                              count_limit == 0 ? local_count_limit :
-                              std::min(count_limit, local_count_limit));
-            } while (!completed && count_limit == 0);
-            // Add any last RRsets that were left
-            update_helper_->flushNodeRRsets();
-            // we're done with the updater.  Release internal resources sooner.
-            update_helper_.reset();
-
-            const ZoneNode* origin_node = data_holder_->get()->getOriginNode();
-            const RdataSet* rdataset = origin_node->getData();
-            ZoneData* const loaded_data = data_holder_->get();
-            // If the zone is and NSEC3-signed, check if it has NSEC3PARAM.
-            // If not, it may either just go to NSEC3-unsigned, or there's an
-            // operational error in that step, depending on whether there's any
-            // NSEC3 RRs in the zone.
-            if (loaded_data->isNSEC3Signed() &&
-                RdataSet::find(rdataset, RRType::NSEC3PARAM()) == NULL) {
-                if (loaded_data->getNSEC3Data()->isEmpty()) {
-                    // becoming NSEC3-unsigned.
-                    LOG_INFO(logger, DATASRC_MEMORY_MEM_NSEC3_UNSIGNED).
-                        arg(zone_name_).arg(rrclass_);
-                    NSEC3Data* old_n3data = loaded_data->setNSEC3Data(NULL);
-                    NSEC3Data::destroy(mem_sgmt_, old_n3data, rrclass_);
-                } else {
-                    LOG_WARN(logger, DATASRC_MEMORY_MEM_NO_NSEC3PARAM).
-                        arg(zone_name_).arg(rrclass_);
-                }
-            }
-
-            RRsetCollection collection(*loaded_data, rrclass_);
-            const dns::ZoneCheckerCallbacks
-                callbacks(boost::bind(&logError, &zone_name_, &rrclass_, _1),
-                          boost::bind(&logWarning, &zone_name_, &rrclass_, _1));
-            if (!dns::checkZone(zone_name_, rrclass_, collection, callbacks)) {
-                bundy_throw(ZoneValidationError,
-                            "Errors found when validating zone: "
-                            << zone_name_ << "/" << rrclass_);
-            }
-
-            // Check loaded serial.  Note that if checkZone() passed, we
-            // should have SOA in the ZoneData.
-            const dns::Serial new_serial =
-                *getSerialFromZoneData(rrclass_, loaded_data);
-            if (old_serial_ && *old_serial_ >= new_serial) {
-                LOG_WARN(logger, DATASRC_MEMORY_LOADED_SERIAL_NOT_INCREASED).
-                    arg(zone_name_).arg(rrclass_).
-                    arg(old_serial_->getValue()).arg(new_serial.getValue());
-            }
-            LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_LOADED).
-                arg(zone_name_).arg(rrclass_).arg(new_serial.getValue()).
-                arg(loaded_data->isSigned() ? " (DNSSEC signed)" : "");
-
-            return (LoadResult(data_holder_->release(), true));
-        } catch (const util::MemorySegmentGrown&) {
-            assert(!created);
-        }
+        return (finishUpdate());
+    } catch (const util::MemorySegmentGrown&) {
+        // Nothing after creating the data holder should throw
+        // MemorySegmentGrown.  We make it sure here.
+        assert(false);
     }
 }
 
