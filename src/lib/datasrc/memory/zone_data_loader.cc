@@ -202,34 +202,6 @@ logError(const dns::Name* zone_name, const dns::RRClass* rrclass,
         arg(reason);
 }
 
-// A wrapper for dns::MasterLoader used by ZoneDataLoader.  Essentially
-// it converts the two callback types.  Note the mostly redundant wrapper of
-// boost::bind.  It converts function<void(ConstRRsetPtr)> to
-// function<void(RRsetPtr)> (MasterLoader expects the latter).  SunStudio
-// doesn't seem to do this conversion if we just pass 'callback'.
-bool
-masterLoaderWrapper(const char* const filename, const Name& origin,
-                    const RRClass& zone_class,
-                    ZoneDataLoaderHelper::LoadCallback callback,
-                    size_t)
-{
-    bool load_ok = false;       // (we don't use it)
-    dns::RRCollator collator(boost::bind(callback, _1,
-                                         ZoneDataLoaderHelper::ADD));
-
-    try {
-        dns::MasterLoader(filename, origin, zone_class,
-                          createMasterLoaderCallbacks(origin, zone_class,
-                                                      &load_ok),
-                          collator.getCallback()).load();
-        collator.flush();
-    } catch (const dns::MasterLoaderError& e) {
-        bundy_throw(ZoneLoaderException, e.what());
-    }
-
-    return (true);
-}
-
 // The installer called for ZoneDataLoader using a zone iterator
 bool
 generateRRsetFromIterator(ZoneIterator* iterator,
@@ -339,18 +311,17 @@ validateOldData(const Name& origin, ZoneData* old_data) {
                     "origin=" << old_name << ", expecting " << origin);
     }
 }
-
 } // end of unnamed namespace
 
 class ZoneDataLoader::ZoneDataLoaderImpl {
 public:
+    virtual ~ZoneDataLoaderImpl() {}
     ZoneDataLoaderImpl(util::MemorySegment& mem_sgmt,
                        const dns::RRClass& rrclass,
                        const dns::Name& zone_name,
-                       const std::string& zone_file,
                        ZoneData* old_data) :
         mem_sgmt_(mem_sgmt), rrclass_(rrclass), zone_name_(zone_name),
-        zone_file_(zone_file), datasrc_client_(NULL), old_data_(old_data),
+        datasrc_client_(NULL), old_data_(old_data),
         old_serial_(getSerialFromZoneData(rrclass, old_data))
     {
         validateOldData(zone_name, old_data);
@@ -368,23 +339,25 @@ public:
         validateOldData(zone_name, old_data);
     }
 
-    LoadResult doLoad(size_t count_limit);
+    virtual LoadResult doLoad(size_t count_limit);
 
     ZoneData* commitDiffs(ZoneData* update_data);
 
 private:
     typedef boost::function<bool(ZoneDataLoaderHelper::LoadCallback,
                                  size_t count_limit)> RRsetInstaller;
+protected:
     LoadResult doLoadCommon(
         SegmentObjectHolder<ZoneData, RRClass>* data_holder,
         RRsetInstaller installer, size_t count_limit);
+private:
     ZoneJournalReaderPtr getJournalReader(uint32_t begin, uint32_t end) const;
     void saveDiffs();
 
     util::MemorySegment& mem_sgmt_;
+protected:
     const dns::RRClass rrclass_;
     const dns::Name zone_name_;
-    const std::string zone_file_;
     const DataSourceClient* const datasrc_client_;
     ZoneData* const old_data_;
     const boost::optional<dns::Serial> old_serial_;
@@ -446,12 +419,8 @@ ZoneDataLoader::ZoneDataLoaderImpl::doLoad(size_t count_limit) {
         return (doLoadCommon(NULL, boost::bind(generateRRsetFromIterator,
                                                iterator.get(), _1, _2),
                              count_limit));
-    } else {
-        return (doLoadCommon(NULL, boost::bind(masterLoaderWrapper,
-                                               zone_file_.c_str(),
-                                               zone_name_, rrclass_,
-                                               _1, _2), count_limit));
     }
+    assert(false);
 }
 
 ZoneJournalReaderPtr
@@ -598,6 +567,56 @@ ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon(
     }
 }
 
+namespace {
+class MasterFileLoader : public ZoneDataLoader::ZoneDataLoaderImpl {
+  public:
+    MasterFileLoader(util::MemorySegment& mem_sgmt, const dns::RRClass& rrclass,
+                     const dns::Name& zone_name, const std::string& zone_file,
+                     ZoneData* old_data) :
+        ZoneDataLoader::ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name,
+                                           old_data),
+        zone_file_(zone_file)
+    {}
+    virtual ~MasterFileLoader() {}
+
+    virtual ZoneDataLoader::LoadResult doLoad(size_t count_limit) {
+        return (doLoadCommon(NULL, boost::bind(&MasterFileLoader::installer,
+                                               this, _1, _2), count_limit));
+    }
+
+    bool installer(ZoneDataLoaderHelper::LoadCallback callback,
+                   size_t count_limit)
+    {
+        if (!master_loader_) {
+            rrcollator_.reset(
+                new dns::RRCollator(boost::bind(callback, _1,
+                                                ZoneDataLoaderHelper::ADD)));
+            master_loader_.reset(
+                new dns::MasterLoader(zone_file_.c_str(), zone_name_, rrclass_,
+                                      createMasterLoaderCallbacks(zone_name_,
+                                                                  rrclass_,
+                                                                  &load_ok_),
+                                      rrcollator_->getCallback()));
+        }
+        try {
+            if (!master_loader_->loadIncremental(count_limit)) {
+                return (false);
+            }
+            rrcollator_->flush();
+        } catch (const dns::MasterLoaderError& e) {
+            bundy_throw(ZoneLoaderException, e.what());
+        }
+        return (true);
+    }
+
+  private:
+    bool load_ok_; // we actually don't use it; only need a placeholder
+    const std::string zone_file_;
+    boost::scoped_ptr<dns::RRCollator> rrcollator_;
+    boost::scoped_ptr<dns::MasterLoader> master_loader_;
+};
+}
+
 ZoneDataLoader::ZoneDataLoader(util::MemorySegment& mem_sgmt,
                                const dns::RRClass& rrclass,
                                const dns::Name& zone_name,
@@ -608,8 +627,8 @@ ZoneDataLoader::ZoneDataLoader(util::MemorySegment& mem_sgmt,
     LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_MEM_LOAD_FROM_FILE).
         arg(zone_name).arg(rrclass).arg(zone_file);
 
-    impl_ = new ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name, zone_file,
-                                   old_data);
+    impl_ = new MasterFileLoader(mem_sgmt, rrclass, zone_name, zone_file,
+                                 old_data);
 }
 
 ZoneDataLoader::ZoneDataLoader(util::MemorySegment& mem_sgmt,

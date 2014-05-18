@@ -48,6 +48,8 @@ protected:
     ZoneDataLoader() : impl_(NULL) {}
 
 public:
+    class ZoneDataLoaderImpl;
+
     /// \brief Constructor for loading from a file.
     ///
     /// \param mem_sgmt The memory segment.
@@ -129,7 +131,6 @@ public:
     virtual ZoneData* commit(ZoneData* update_data);
 
 private:
-    class ZoneDataLoaderImpl;
     ZoneDataLoaderImpl* impl_;
 };
 } // namespace memory
