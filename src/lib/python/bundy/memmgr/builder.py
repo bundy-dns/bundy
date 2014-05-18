@@ -197,11 +197,16 @@ class MemorySegmentBuilder:
                 continue
 
             try:
-                error = writer.load()
-                if error is not None:
+                try:
+                    writer.load()
+                except bundy.datasrc.Error as error:
                     logger.error(LIBMEMMGR_BUILDER_ZONE_WRITER_LOAD_1_ERROR,
                                  zname, dsrc_name, error)
                     errors += 1
+                    # If this is initial full load, we'll add an empty zone
+                    # for failed zones.
+                    if catch_load_error:
+                        writer.install()
                     continue
                 writer.install()
             except Exception as e:

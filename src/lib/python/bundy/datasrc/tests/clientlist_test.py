@@ -256,10 +256,10 @@ class ClientListTest(unittest.TestCase):
         result, self.__zone_writer = \
             self.clist.get_cached_zone_writer(bundy.dns.Name("example.com"),
                                               False)
-        self.assertEqual(bundy.datasrc.ConfigurableClientList.CACHE_STATUS_ZONE_SUCCESS,
-                         result)
-        err_msg = self.__zone_writer.load()
-        self.assertIsNone(err_msg)
+        self.assertEqual(
+            bundy.datasrc.ConfigurableClientList.CACHE_STATUS_ZONE_SUCCESS,
+            result)
+        self.assertTrue(self.__zone_writer.load())
         self.__zone_writer.install()
         self.__zone_writer.cleanup()
 
@@ -275,23 +275,39 @@ class ClientListTest(unittest.TestCase):
         # The segment is still in READ_ONLY mode.
         self.find_helper()
 
+    def test_zone_writer_load_incremental(self):
+        self.clist = bundy.datasrc.ConfigurableClientList(bundy.dns.RRClass.IN)
+        self.configure_helper()
+        result, self.__zone_writer = \
+            self.clist.get_cached_zone_writer(bundy.dns.Name("example.com"),
+                                              False)
+        self.assertEqual(
+            bundy.datasrc.ConfigurableClientList.CACHE_STATUS_ZONE_SUCCESS,
+            result)
+        # We can safely assume that it's not enough to load just one "item"
+        # to complete the whole load.
+        self.assertFalse(self.__zone_writer.load(1))
+        while not self.__zone_writer.load(2):
+            pass # this should eventually succeed
+        self.__zone_writer.cleanup()
+
     def test_zone_writer_load_twice(self):
         """
         Test that the zone writer throws when load() is called more than
         once.
-        """
 
+        """
         self.clist = bundy.datasrc.ConfigurableClientList(bundy.dns.RRClass.IN)
         self.configure_helper()
 
         result, self.__zone_writer = \
             self.clist.get_cached_zone_writer(bundy.dns.Name("example.com"),
                                               False)
-        self.assertEqual(bundy.datasrc.ConfigurableClientList.CACHE_STATUS_ZONE_SUCCESS,
-                         result)
-        err_msg = self.__zone_writer.load()
-        self.assertIsNone(err_msg)
-        self.assertRaises(bundy.datasrc.Error, self.__zone_writer.load)
+        self.assertEqual(
+            bundy.datasrc.ConfigurableClientList.CACHE_STATUS_ZONE_SUCCESS,
+            result)
+        self.assertTrue(self.__zone_writer.load())
+        self.assertRaises(SystemError, self.__zone_writer.load)
         self.__zone_writer.cleanup()
 
     def test_zone_writer_load_without_raise(self):
@@ -311,11 +327,14 @@ class ClientListTest(unittest.TestCase):
         result, self.__zone_writer = \
             self.clist.get_cached_zone_writer(bundy.dns.Name("example.com"),
                                               True)
-        self.assertEqual(bundy.datasrc.ConfigurableClientList.CACHE_STATUS_ZONE_SUCCESS,
-                         result)
-        err_msg = self.__zone_writer.load()
-        self.assertIsNotNone(err_msg)
-        self.assertTrue('Errors found when validating zone' in err_msg)
+        self.assertEqual(
+            bundy.datasrc.ConfigurableClientList.CACHE_STATUS_ZONE_SUCCESS,
+            result)
+        try:
+            self.__zone_writer.load()
+            self.fail('exception expected, not raised')
+        except bundy.datasrc.Error as err_msg:
+            self.assertTrue('Errors found when validating zone' in str(err_msg))
         self.__zone_writer.cleanup()
 
     def test_zone_writer_install_without_load(self):
