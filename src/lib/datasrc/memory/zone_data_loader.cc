@@ -267,19 +267,7 @@ public:
                        const dns::Name& zone_name,
                        ZoneData* old_data) :
         mem_sgmt_(mem_sgmt), rrclass_(rrclass), zone_name_(zone_name),
-        datasrc_client_(NULL), old_data_(old_data),
-        old_serial_(getSerialFromZoneData(rrclass, old_data))
-    {
-        validateOldData(zone_name, old_data);
-    }
-
-    ZoneDataLoaderImpl(util::MemorySegment& mem_sgmt,
-                       const dns::RRClass& rrclass,
-                       const dns::Name& zone_name,
-                       const DataSourceClient& datasrc_client,
-                       ZoneData* old_data) :
-        mem_sgmt_(mem_sgmt), rrclass_(rrclass), zone_name_(zone_name),
-        datasrc_client_(&datasrc_client), old_data_(old_data),
+        old_data_(old_data),
         old_serial_(getSerialFromZoneData(rrclass, old_data))
     {
         validateOldData(zone_name, old_data);
@@ -298,31 +286,14 @@ protected:
     LoadResult doLoadCommon(
         SegmentObjectHolder<ZoneData, RRClass>* data_holder,
         RRsetInstaller installer, size_t count_limit);
-private:
-    ZoneJournalReaderPtr getJournalReader(uint32_t begin, uint32_t end) const;
 
 protected:
     util::MemorySegment& mem_sgmt_;
     const dns::RRClass rrclass_;
     const dns::Name zone_name_;
-    const DataSourceClient* const datasrc_client_;
     ZoneData* const old_data_;
     const boost::optional<dns::Serial> old_serial_;
 };
-
-ZoneJournalReaderPtr
-ZoneDataLoader::ZoneDataLoaderImpl::getJournalReader(uint32_t begin,
-                                                     uint32_t end) const
-{
-    try {
-        const std::pair<ZoneJournalReader::Result, ZoneJournalReaderPtr>
-            result = datasrc_client_->getJournalReader(zone_name_, begin, end);
-        return (result.second);
-    } catch (const bundy::NotImplemented&) {
-        // handle this case just like no journal is available for the serials.
-    }
-    return (ZoneJournalReaderPtr());
-}
 
 ZoneDataLoader::LoadResult
 ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon(
