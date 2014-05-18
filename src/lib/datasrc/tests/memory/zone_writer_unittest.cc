@@ -63,7 +63,8 @@ public:
         load_called_(load_called), load_throw_(load_throw),
         load_loader_throw_(load_loader_throw), load_null_(load_null),
         load_data_(load_data), throw_on_commit_(throw_on_commit),
-        num_committed_(0), segment_(segment), old_data_(old_data)
+        num_committed_(0), segment_(segment), old_data_(old_data),
+        loaded_data_(NULL), incremental_called_(false)
     {}
     virtual ~MockLoader() {}
     virtual bool isDataReused() const {
@@ -76,7 +77,7 @@ public:
         return (false);
     }
     virtual ZoneData* getLoadedData() const {
-        return (NULL);
+        return (loaded_data_);
     }
     virtual ZoneData* load() {
         // We got called
@@ -93,6 +94,7 @@ public:
             return (NULL);
         }
         if (old_data_) {
+            loaded_data_ = old_data_;
             return (old_data_);
         }
         ZoneData* data = ZoneData::create(segment_, Name("example.org"));
@@ -103,10 +105,18 @@ public:
             data->insertName(segment_, Name("subdomain.example.org"), &node);
             EXPECT_NE(static_cast<ZoneNode*>(NULL), node);
         }
+        loaded_data_ = data;
         return (data);
     }
-    virtual bool loadIncremental(size_t) {
-        return (true);
+    virtual bool loadIncremental(size_t count_limit) {
+        // If non-0 count_limit is specified, this mock version always returns
+        // false on first call and return true on the second.
+        if (count_limit == 0 || incremental_called_) {
+            load();
+            return (true);
+        }
+        incremental_called_ = true;
+        return (false);
     }
     virtual ZoneData* commit(ZoneData* update_data) {
         // If so specified, throw MemorySegmentGrown once.
@@ -134,6 +144,8 @@ public:
 private:
     bundy::util::MemorySegment& segment_;
     ZoneData* const old_data_;
+    ZoneData* loaded_data_;
+    bool incremental_called_;
 };
 
 class ZoneWriterTest : public ::testing::Test {
@@ -186,7 +198,7 @@ public:
                                &load_data_, &throw_on_commit_, old_data));
     }
 protected:
-    void reloadCommon(bool grow_on_commit);
+    void reloadCommon(bool grow_on_commit, size_t count_limit);
     void commitFailCommon(int exception_type);
 };
 
@@ -241,12 +253,17 @@ TEST_F(ZoneWriterTest, correctCall) {
 }
 
 void
-ZoneWriterTest::reloadCommon(bool grow_on_commit) {
+ZoneWriterTest::reloadCommon(bool grow_on_commit, size_t count_limit) {
     const Name zname("example.org");
     reuse_old_data_ = true;
 
     // First load.  New data should be created.
-    writer_->load();
+    if (count_limit > 0) {      // mocked zone data loader requires 2 attempts
+        EXPECT_FALSE(writer_->load(count_limit));
+        EXPECT_TRUE(writer_->load(count_limit));
+    } else {
+        writer_->load();
+    }
     writer_->install();
     writer_->cleanup();
     const ZoneData* const zd1 =
@@ -262,7 +279,12 @@ ZoneWriterTest::reloadCommon(bool grow_on_commit) {
                                  boost::bind(&ZoneWriterTest::loaderCreator,
                                              this, _1, _2),
                                  zname, RRClass::IN(), false));
-    writer_->load();
+    if (count_limit > 0) {
+        EXPECT_FALSE(writer_->load(count_limit));
+        EXPECT_TRUE(writer_->load(count_limit));
+    } else {
+        writer_->load();
+    }
     writer_->install();
     writer_->cleanup();
 
@@ -274,11 +296,19 @@ ZoneWriterTest::reloadCommon(bool grow_on_commit) {
 }
 
 TEST_F(ZoneWriterTest, reloadOverridden) {
-    reloadCommon(false);
+    reloadCommon(false, 0);
 }
 
 TEST_F(ZoneWriterTest, growOnCommit) {
-    reloadCommon(true);
+    reloadCommon(true, 0);
+}
+
+TEST_F(ZoneWriterTest, reloadOverriddenIncremental) {
+    reloadCommon(false, 1000);
+}
+
+TEST_F(ZoneWriterTest, growOnCommitIncremental) {
+    reloadCommon(true, 10000);
 }
 
 // Common test logic for the case where ZoneDataLoader::commit() throws
@@ -423,7 +453,7 @@ TEST_F(ZoneWriterTest, loadLoaderException) {
                                  boost::bind(&ZoneWriterTest::loaderCreator,
                                              this, _1, _2),
                                  Name("example.org"), RRClass::IN(), false));
-    EXPECT_THROW(writer_->load(&error_msg), ZoneLoaderException);
+    EXPECT_THROW(writer_->load(0, &error_msg), ZoneLoaderException);
     EXPECT_EQ("", error_msg);
 
     // If we specify allowing load error, load() will succeed and install()
@@ -452,7 +482,7 @@ TEST_F(ZoneWriterTest, loadLoaderException) {
                                  boost::bind(&ZoneWriterTest::loaderCreator,
                                              this, _1, _2),
                                  Name("example.org"), RRClass::IN(), true));
-    writer_->load(&error_msg);
+    writer_->load(0, &error_msg);
     EXPECT_NE("", error_msg);
 
     // In case of no error, the placeholder will be intact.
@@ -462,7 +492,7 @@ TEST_F(ZoneWriterTest, loadLoaderException) {
                                  boost::bind(&ZoneWriterTest::loaderCreator,
                                              this, _1, _2),
                                  Name("example.org"), RRClass::IN(), true));
-    writer_->load(&error_msg);
+    writer_->load(0, &error_msg);
     EXPECT_EQ("", error_msg);
 }
 

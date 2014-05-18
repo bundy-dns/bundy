@@ -76,6 +76,7 @@ struct ZoneWriter::Impl {
     const dns::RRClass rrclass_;
     enum State {
         ZW_UNUSED,
+        ZW_LOADING,
         ZW_LOADED,
         ZW_INSTALLED,
         ZW_CLEANED
@@ -117,23 +118,31 @@ getZoneTable(ZoneTableSegment& table_sgmt) {
 }
 }
 
-void
-ZoneWriter::load(std::string* error_msg) {
-    if (impl_->state_ != Impl::ZW_UNUSED) {
+bool
+ZoneWriter::load(size_t count_limit, std::string* error_msg) {
+    if (impl_->state_ != Impl::ZW_UNUSED && impl_->state_ != Impl::ZW_LOADING) {
         bundy_throw(bundy::InvalidOperation, "Trying to load twice");
     }
 
-    ZoneTable* const table = getZoneTable(impl_->segment_);
-    const ZoneTable::MutableFindResult ztresult =
-        table->findZone(impl_->origin_);
-    ZoneData* const old_data =
-        (ztresult.code == result::SUCCESS) ? ztresult.zone_data : NULL;
-
     try {
-        impl_->loader_.reset(impl_->loader_creator_(
-                                 impl_->segment_.getMemorySegment(), old_data));
+        // If this is the first call, initialize some stuff.
+        if (!impl_->loader_) {
+            ZoneTable* const table = getZoneTable(impl_->segment_);
+            const ZoneTable::MutableFindResult ztresult =
+                table->findZone(impl_->origin_);
+            ZoneData* const old_data =
+                (ztresult.code == result::SUCCESS) ? ztresult.zone_data : NULL;
+            impl_->loader_.reset(impl_->loader_creator_(
+                                     impl_->segment_.getMemorySegment(),
+                                     old_data));
+            impl_->state_ = Impl::ZW_LOADING;
+        }
         impl_->destroy_old_data_ = !impl_->loader_->isDataReused();
-        ZoneData* const zone_data = impl_->loader_->load();
+        const bool completed = impl_->loader_->loadIncremental(count_limit);
+        if (!completed) {
+            return (false);
+        }
+        ZoneData* const zone_data = impl_->loader_->getLoadedData();
 
         if (!zone_data) {
             // Bug inside ZoneDataLoader.
@@ -152,6 +161,7 @@ ZoneWriter::load(std::string* error_msg) {
     }
 
     impl_->state_ = Impl::ZW_LOADED;
+    return (true);
 }
 
 // This is called when ZoneDataLoader::commit() fails in install() other
