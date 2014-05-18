@@ -272,7 +272,7 @@ private:
     typedef boost::function<bool(ZoneDataUpdaterHelper::LoadCallback,
                                  size_t count_limit)> RRsetInstaller;
 protected:
-    LoadResult doLoadCommon(RRsetInstaller installer, size_t count_limit);
+    bool doLoadCommon(RRsetInstaller installer, size_t count_limit);
 
     void initUpdate(ZoneData* const zone_data) {
         while (true) {
@@ -302,7 +302,6 @@ protected:
                                                        *data_holder_->get()));
     }
 
-private:
     ZoneDataLoader::LoadResult finishUpdate();
 
 protected:
@@ -364,9 +363,9 @@ ZoneDataLoader::ZoneDataLoaderImpl::finishUpdate() {
     return (LoadResult(data_holder_->release(), true));
 }
 
-ZoneDataLoader::LoadResult
+bool
 ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon(RRsetInstaller installer,
-                                                 size_t count_limit)
+                                                 const size_t count_limit)
 {
     try {
         const size_t local_count_limit = 10000;
@@ -380,10 +379,12 @@ ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon(RRsetInstaller installer,
         } while (!completed && count_limit == 0);
         // Add any last RRsets that were left
         update_helper_->flushNodeRRsets();
+        if (!completed) {
+            return (false);
+        }
         // we're done with the updater.  Release internal resources sooner.
         update_helper_.reset();
-
-        return (finishUpdate());
+        return (true);
     } catch (const util::MemorySegmentGrown&) {
         // Nothing after creating the data holder should throw
         // MemorySegmentGrown.  We make it sure here.
@@ -405,8 +406,9 @@ public:
 
     virtual ZoneDataLoader::LoadResult doLoad(size_t count_limit) {
         initUpdate(NULL);
-        return (doLoadCommon(boost::bind(&MasterFileLoader::installer,
-                                         this, _1, _2), count_limit));
+        doLoadCommon(boost::bind(&MasterFileLoader::installer, this, _1, _2),
+                     count_limit); // must return true
+        return (finishUpdate());
     }
 
     bool installer(ZoneDataUpdaterHelper::LoadCallback callback,
@@ -453,9 +455,9 @@ public:
     virtual ~IteratorLoader() {}
     virtual ZoneDataLoader::LoadResult doLoad(size_t count_limit) {
         initUpdate(NULL);
-        return (doLoadCommon(boost::bind(&IteratorLoader::installer,
-                                         this, _1, _2),
-                             count_limit));
+        doLoadCommon(boost::bind(&IteratorLoader::installer, this, _1, _2),
+                     count_limit); // must return true
+        return (finishUpdate());
     }
 
     // The installer called for ZoneDataLoader using a zone iterator
@@ -511,9 +513,10 @@ public:
         // it.
         initUpdate(update_data);
         try {
-            // If doLoadCommon returns the holder should have released the data.
-            return (doLoadCommon(boost::bind(&JournalLoader::applyDiffs, this,
-                                             _1, _2), 0).first);
+            // On success, finishUpdate release the zone data in the holder.
+            doLoadCommon(boost::bind(&JournalLoader::applyDiffs, this, _1, _2),
+                         0);    // must return true
+            return (finishUpdate().first);
         } catch (...) {
             data_holder_->release();
             throw;
