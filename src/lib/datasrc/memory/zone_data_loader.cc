@@ -254,10 +254,10 @@ public:
     ZoneDataLoaderImpl(util::MemorySegment& mem_sgmt,
                        const dns::RRClass& rrclass,
                        const dns::Name& zone_name,
-                       ZoneData* old_data) :
+                       ZoneData* old_data,
+                       const boost::optional<dns::Serial>& old_serial) :
         mem_sgmt_(mem_sgmt), rrclass_(rrclass), zone_name_(zone_name),
-        old_data_(old_data),
-        old_serial_(getSerialFromZoneData(rrclass, old_data))
+        old_data_(old_data), old_serial_(old_serial)
     {
         validateOldData(zone_name, old_data);
     }
@@ -399,7 +399,8 @@ public:
                      const dns::Name& zone_name, const std::string& zone_file,
                      ZoneData* old_data) :
         ZoneDataLoader::ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name,
-                                           old_data),
+                                           old_data,
+                                           boost::optional<dns::Serial>()),
         zone_file_(zone_file)
     {}
     virtual ~MasterFileLoader() {}
@@ -452,9 +453,10 @@ class IteratorLoader : public ZoneDataLoader::ZoneDataLoaderImpl {
 public:
     IteratorLoader(util::MemorySegment& mem_sgmt, const dns::RRClass& rrclass,
                    const dns::Name& zone_name, ZoneIteratorPtr iterator,
-                   ZoneData* old_data) :
+                   ZoneData* old_data,
+                   const boost::optional<dns::Serial>& old_serial) :
         ZoneDataLoader::ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name,
-                                           old_data),
+                                           old_data, old_serial),
         iterator_(iterator)
     {}
     virtual ~IteratorLoader() {}
@@ -479,10 +481,16 @@ class ReuseLoader : public ZoneDataLoader::ZoneDataLoaderImpl {
 public:
     ReuseLoader(util::MemorySegment& mem_sgmt,
                 const dns::RRClass& rrclass, const dns::Name& zone_name,
-                ZoneData* old_data) :
+                ZoneData* old_data,
+                const boost::optional<dns::Serial>& old_serial,
+                const std::string& dsrc_name) :
         ZoneDataLoader::ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name,
-                                           old_data)
-    {}
+                                           old_data, old_serial)
+    {
+        LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_LOAD_SAME_SERIAL).
+            arg(zone_name).arg(rrclass).arg(old_serial->getValue()).
+            arg(dsrc_name);
+    }
     virtual ~ReuseLoader() {}
     virtual ZoneDataLoader::LoadResult doLoad(size_t) {
         return (ZoneDataLoader::LoadResult(old_data_, false));
@@ -497,11 +505,24 @@ class JournalLoader : public ZoneDataLoader::ZoneDataLoaderImpl {
 public:
     JournalLoader(util::MemorySegment& mem_sgmt,
                   const dns::RRClass& rrclass, const dns::Name& zone_name,
-                  ZoneJournalReaderPtr jnl_reader, ZoneData* old_data) :
+                  ZoneData* old_data,
+                  const boost::optional<dns::Serial>& old_serial,
+                  const dns::Serial& new_serial,
+                  const DataSourceClient& datasrc_client) :
         ZoneDataLoader::ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name,
-                                           old_data),
-        jnl_reader_(jnl_reader)
-    {}
+                                           old_data, old_serial)
+    {
+        const std::pair<ZoneJournalReader::Result, ZoneJournalReaderPtr>
+            result = datasrc_client.getJournalReader(
+                zone_name, old_serial->getValue(), new_serial.getValue());
+        jnl_reader_ = result.second;
+        if (jnl_reader_) {
+            LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_LOAD_USE_JOURNAL).
+                arg(zone_name_).arg(rrclass_).arg(old_serial->getValue()).
+                arg(new_serial.getValue()).
+                arg(datasrc_client.getDataSourceName());
+        }
+    }
     virtual ~JournalLoader() {}
     virtual ZoneDataLoader::LoadResult doLoad(size_t) {
         saveDiffs();
@@ -529,8 +550,7 @@ protected:
     // It performs some minimal sanity checks on the sequence of data, but
     // the basic assumption is that any invalid data mean implementation defect
     // (not bad user input) and shouldn't happen anyway.
-    virtual bool
-    updateRRsets(size_t) {
+    virtual bool updateRRsets(size_t) {
         enum DIFF_MODE {INIT, ADD, DELETE} mode = INIT;
         ConstRRsetPtr rrset;
         std::vector<ConstRRsetPtr>::const_iterator it = saved_diffs_.begin();
@@ -628,8 +648,9 @@ ZoneDataLoader::ZoneDataLoader(util::MemorySegment& mem_sgmt,
                                ZoneData* old_data) :
     impl_(NULL)
 {
+    const std::string& dsrc_name = datasrc_client.getDataSourceName();
     LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_MEM_LOAD_FROM_DATASRC).
-        arg(zone_name).arg(rrclass).arg(datasrc_client.getDataSourceName());
+        arg(zone_name).arg(rrclass).arg(dsrc_name);
 
     ZoneIteratorPtr iterator = datasrc_client.getIterator(zone_name);
     if (!iterator) {
@@ -645,43 +666,28 @@ ZoneDataLoader::ZoneDataLoader(util::MemorySegment& mem_sgmt,
         // If the source data source doesn't contain SOA, post-load check
         // will fail anyway, so rejecting loading at this point makes sense.
         bundy_throw(ZoneValidationError, "No SOA found for "
-                    << zone_name << "/" << rrclass << "in " <<
-                    datasrc_client.getDataSourceName());
+                    << zone_name << "/" << rrclass << "in " << dsrc_name);
     }
     const boost::optional<dns::Serial> old_serial =
         getSerialFromZoneData(rrclass, old_data);
     const boost::optional<dns::Serial> new_serial =
         getSerialFromRRset(*new_soarrset);
     if (old_serial && (*old_serial == *new_serial)) {
-        LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_LOAD_SAME_SERIAL).
-            arg(zone_name).arg(rrclass).arg(old_serial->getValue()).
-            arg(datasrc_client.getDataSourceName());
-        impl_ = new ReuseLoader(mem_sgmt, rrclass, zone_name, old_data);
+        impl_ = new ReuseLoader(mem_sgmt, rrclass, zone_name, old_data,
+                                old_serial, dsrc_name);
         return;
     } else if (old_serial && (*old_serial < *new_serial)) {
         try {
-            const std::pair<ZoneJournalReader::Result, ZoneJournalReaderPtr>
-                result = datasrc_client.getJournalReader(
-                    zone_name, old_serial->getValue(), new_serial->getValue());
-            ZoneJournalReaderPtr jnl_reader = result.second;
-            if (jnl_reader) {
-                LOG_DEBUG(logger, DBG_TRACE_BASIC,
-                          DATASRC_MEMORY_LOAD_USE_JOURNAL).
-                    arg(zone_name).arg(rrclass).arg(old_serial->getValue()).
-                    arg(new_serial->getValue()).
-                    arg(datasrc_client.getDataSourceName());
-                iterator.reset(); // we don't need the iterator any more.
-            }
-            impl_ = new JournalLoader(mem_sgmt, rrclass, zone_name, jnl_reader,
-                                      old_data);
+            impl_ = new JournalLoader(mem_sgmt, rrclass, zone_name, old_data,
+                                      old_serial, *new_serial, datasrc_client);
             return;
         } catch (const bundy::NotImplemented&) {
             // handle this case just like no journal is available for the
-            //serials.
+            // serials.
         }
     }
     impl_ = new IteratorLoader(mem_sgmt, rrclass, zone_name, iterator,
-                               old_data);
+                               old_data, old_serial);
 }
 
 ZoneDataLoader::~ZoneDataLoader() {
