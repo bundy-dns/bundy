@@ -26,6 +26,7 @@
 #include <util/python/pycppwrapper_util.h>
 
 #include <datasrc/memory/zone_writer.h>
+#include <datasrc/exceptions.h>
 
 #include "zonewriter_python.h"
 #include "datasrc.h"
@@ -84,20 +85,33 @@ ZoneWriter_destroy(PyObject* po_self) {
 }
 
 PyObject*
-ZoneWriter_load(PyObject* po_self, PyObject*) {
+ZoneWriter_load(PyObject* po_self, PyObject* args) {
     s_ZoneWriter* self = static_cast<s_ZoneWriter*>(po_self);
+    unsigned int count_limit = 0;
+
+    if (!PyArg_ParseTuple(args, "|I", &count_limit)) {
+        return (NULL);
+    }
     try {
         std::string error_msg;
-        self->cppobj->load(0, &error_msg);
+        const bool completed = self->cppobj->load(count_limit, &error_msg);
         if (!error_msg.empty()) {
-            return (Py_BuildValue("s", error_msg.c_str()));
+            PyErr_SetString(getDataSourceException("Error"),
+                            error_msg.c_str());
+            return (NULL);
         }
+        if (completed) {
+            Py_RETURN_TRUE;
+        } else {
+            Py_RETURN_FALSE;
+        }
+    } catch (const ZoneLoaderException& ex) {
+        PyErr_SetString(getDataSourceException("Error"), ex.what());
     } catch (const std::exception& exc) {
-        PyErr_SetString(getDataSourceException("Error"), exc.what());
+        PyErr_SetString(PyExc_SystemError, exc.what());
         return (NULL);
     } catch (...) {
-        PyErr_SetString(getDataSourceException("Error"),
-                        "Unknown C++ exception");
+        PyErr_SetString(PyExc_SystemError, "Unknown C++ exception");
         return (NULL);
     }
 
@@ -145,7 +159,7 @@ ZoneWriter_cleanup(PyObject* po_self, PyObject*) {
 // 3. Argument type
 // 4. Documentation
 PyMethodDef ZoneWriter_methods[] = {
-    { "load", ZoneWriter_load, METH_NOARGS,
+    { "load", ZoneWriter_load, METH_VARARGS,
       ZoneWriter_load_doc },
     { "install", ZoneWriter_install, METH_NOARGS,
       ZoneWriter_install_doc },
