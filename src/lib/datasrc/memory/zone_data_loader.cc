@@ -284,8 +284,33 @@ private:
                                  size_t count_limit)> RRsetInstaller;
 protected:
     LoadResult doLoadCommon(
-        SegmentObjectHolder<ZoneData, RRClass>* data_holder,
+        SegmentObjectHolder<ZoneData, RRClass>*,
         RRsetInstaller installer, size_t count_limit);
+
+    void initUpdate(ZoneData* const zone_data) {
+        while (true) {
+            try {
+                boost::scoped_ptr<SegmentObjectHolder<ZoneData, RRClass> >
+                    holder(new SegmentObjectHolder<ZoneData, RRClass>
+                           (mem_sgmt_, rrclass_));
+                if (zone_data) {
+                    holder->set(zone_data);
+                } else {
+                    holder->set(ZoneData::create(mem_sgmt_, zone_name_));
+                }
+                data_holder_.swap(holder);
+                break;
+            } catch (const util::MemorySegmentGrown&) {
+                // If we are using existing zone data, this exception must be
+                // handled at a higher level that holds the ownership of the
+                // original data.  Otherwise, try as long as it takes to load
+                // and grow the segment.
+                if (zone_data) {
+                    throw;
+                }
+            }
+        }
+    }
 
 protected:
     util::MemorySegment& mem_sgmt_;
@@ -293,31 +318,23 @@ protected:
     const dns::Name zone_name_;
     ZoneData* const old_data_;
     const boost::optional<dns::Serial> old_serial_;
+    boost::scoped_ptr<SegmentObjectHolder<ZoneData, RRClass> > data_holder_;
 };
 
 ZoneDataLoader::LoadResult
 ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon(
-    SegmentObjectHolder<ZoneData, RRClass>* data_holder,
+    SegmentObjectHolder<ZoneData, RRClass>*,
     RRsetInstaller installer, size_t count_limit)
 {
     while (true) { // Try as long as it takes to load and grow the segment
         bool created = false;
         try {
-            boost::scoped_ptr<SegmentObjectHolder<ZoneData, RRClass> >
-                local_holder;
-            if (!data_holder) {
-                local_holder.reset(new SegmentObjectHolder<ZoneData, RRClass>
-                                   (mem_sgmt_, rrclass_));
-                local_holder->set(ZoneData::create(mem_sgmt_, zone_name_));
-                data_holder = local_holder.get();
-            }
-
             // Nothing from this point on should throw MemorySegmentGrown.
             // It is handled inside here.
             created = true;
 
             ZoneDataLoaderHelper loader(mem_sgmt_, rrclass_, zone_name_,
-                                        *data_holder->get());
+                                        *data_holder_->get());
             const size_t local_count_limit = 10000;
             bool completed = false;
             do {
@@ -330,9 +347,9 @@ ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon(
             // Add any last RRsets that were left
             loader.flushNodeRRsets();
 
-            const ZoneNode* origin_node = data_holder->get()->getOriginNode();
+            const ZoneNode* origin_node = data_holder_->get()->getOriginNode();
             const RdataSet* rdataset = origin_node->getData();
-            ZoneData* const loaded_data = data_holder->get();
+            ZoneData* const loaded_data = data_holder_->get();
             // If the zone is and NSEC3-signed, check if it has NSEC3PARAM.
             // If not, it may either just go to NSEC3-unsigned, or there's an
             // operational error in that step, depending on whether there's any
@@ -374,7 +391,7 @@ ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon(
                 arg(zone_name_).arg(rrclass_).arg(new_serial->getValue()).
                 arg(loaded_data->isSigned() ? " (DNSSEC signed)" : "");
 
-            return (LoadResult(data_holder->release(), true));
+            return (LoadResult(data_holder_->release(), true));
         } catch (const util::MemorySegmentGrown&) {
             assert(!created);
         }
@@ -394,6 +411,7 @@ public:
     virtual ~MasterFileLoader() {}
 
     virtual ZoneDataLoader::LoadResult doLoad(size_t count_limit) {
+        initUpdate(NULL);
         return (doLoadCommon(NULL, boost::bind(&MasterFileLoader::installer,
                                                this, _1, _2), count_limit));
     }
@@ -441,6 +459,7 @@ public:
     {}
     virtual ~IteratorLoader() {}
     virtual ZoneDataLoader::LoadResult doLoad(size_t count_limit) {
+        initUpdate(NULL);
         return (doLoadCommon(NULL, boost::bind(&IteratorLoader::installer,
                                                this, _1, _2),
                              count_limit));
@@ -497,17 +516,14 @@ public:
         // invalid.  But before propagating the exception, we should release the
         // data because the caller has the ownership and we shouldn't destroy
         // it.
-        boost::scoped_ptr<SegmentObjectHolder<ZoneData, RRClass> >
-            holder(new SegmentObjectHolder<ZoneData, RRClass>(mem_sgmt_,
-                                                              rrclass_));
+        initUpdate(update_data);
         try {
-            holder->set(update_data);
             // If doLoadCommon returns the holder should have released the data.
-            return (doLoadCommon(holder.get(),
+            return (doLoadCommon(NULL,
                                  boost::bind(&JournalLoader::applyDiffs, this,
                                              _1, _2), 0).first);
         } catch (...) {
-            holder->release();
+            data_holder_->release();
             throw;
         }
     }
