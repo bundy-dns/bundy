@@ -217,57 +217,6 @@ generateRRsetFromIterator(ZoneIterator* iterator,
     return (!rrset);   // we are done iff we reach end of the iterator
 }
 
-ConstRRsetPtr
-nextDiff(std::vector<ConstRRsetPtr>::const_iterator& it,
-         const std::vector<ConstRRsetPtr>::const_iterator& it_end,
-         ZoneJournalReaderPtr& jnl_reader)
-{
-    ConstRRsetPtr next_diff;    // null by default
-    if (it != it_end) {
-        next_diff = *it;
-        ++it;
-    } else if (jnl_reader) {
-        next_diff = jnl_reader->getNextDiff();
-    }
-    return (next_diff);
-}
-
-// The installer called for ZoneDataLoader using a zone journal reader.
-// It performs some minimal sanity checks on the sequence of data, but
-// the basic assumption is that any invalid data mean implementation defect
-// (not bad user input) and shouldn't happen anyway.
-bool
-applyDiffs(const std::vector<ConstRRsetPtr>* saved_diffs,
-           ZoneJournalReaderPtr jnl_reader,
-           ZoneDataLoaderHelper::LoadCallback callback, size_t)
-{
-    enum DIFF_MODE {INIT, ADD, DELETE} mode = INIT;
-    ConstRRsetPtr rrset;
-    std::vector<ConstRRsetPtr>::const_iterator it = saved_diffs->begin();
-    const std::vector<ConstRRsetPtr>::const_iterator it_end =
-        saved_diffs->end();
-    while ((rrset = nextDiff(it, it_end, jnl_reader))) {
-        if (rrset->getType() == RRType::SOA()) {
-            mode = (mode == INIT || mode == ADD) ? DELETE : ADD;
-        } else if (mode == INIT) {
-            // diff sequence doesn't begin with SOA. It means broken journal
-            // reader implementation.
-            bundy_throw(bundy::Unexpected,
-                        "broken journal reader: diff not begin with SOA");
-        }
-        callback(rrset,
-                 (mode == ADD) ?
-                 ZoneDataLoaderHelper::ADD : ZoneDataLoaderHelper::DELETE);
-    }
-    if (mode != ADD) {
-        // Diff must end in the add mode (there should at least be one
-        // add for the final SOA)
-        bundy_throw(bundy::Unexpected, "broken journal reader: incomplete");
-    }
-
-    return (true);
-}
-
 // The following two are helper to extract SOA serial from the zone data
 // or the underlying data source.  The returned object is dynamically allocated
 // and must be explicitly deleted by the caller (in practice, the returned
@@ -352,7 +301,9 @@ public:
 
     virtual LoadResult doLoad(size_t count_limit);
 
-    ZoneData* commitDiffs(ZoneData* update_data);
+    virtual ZoneData* commitDiffs(ZoneData* update_data) {
+        return (update_data);
+    }
 
 private:
     typedef boost::function<bool(ZoneDataLoaderHelper::LoadCallback,
@@ -363,25 +314,14 @@ protected:
         RRsetInstaller installer, size_t count_limit);
 private:
     ZoneJournalReaderPtr getJournalReader(uint32_t begin, uint32_t end) const;
-    void saveDiffs();
 
-    util::MemorySegment& mem_sgmt_;
 protected:
+    util::MemorySegment& mem_sgmt_;
     const dns::RRClass rrclass_;
     const dns::Name zone_name_;
     const DataSourceClient* const datasrc_client_;
     ZoneData* const old_data_;
-    boost::scoped_ptr<const dns::Serial> old_serial_;
-    ZoneJournalReaderPtr jnl_reader_;
-
-    // To minimize the risk of hitting an exception from the journal reader
-    // in commitDiffs(), we save up to MAX_SAVED_DIFFS_ diff RRs in the
-    // load() phase.  While it doesn't guarantee a success in commitDiffs()
-    // (if it fails we fall back to invalidate the zone and reload the entire
-    // zone), this should work for many cases with small updates (like in
-    // dynamic updates).
-    static const unsigned int MAX_SAVED_DIFFS_ = 100;
-    std::vector<ConstRRsetPtr> saved_diffs_;
+    const boost::optional<dns::Serial> old_serial_;
 };
 
 ZoneDataLoader::LoadResult
@@ -410,18 +350,7 @@ ZoneDataLoader::ZoneDataLoaderImpl::doLoad(size_t count_limit) {
         if (old_serial_ && (*old_serial_ == *new_serial)) {
             assert(false);      // covered in ReuseLoader
         } else if (old_serial_ && (*old_serial_ < *new_serial)) {
-            jnl_reader_ = getJournalReader(old_serial_->getValue(),
-                                           new_serial->getValue());
-            if (jnl_reader_) {
-                LOG_DEBUG(logger, DBG_TRACE_BASIC,
-                          DATASRC_MEMORY_LOAD_USE_JOURNAL).
-                    arg(zone_name_).arg(rrclass_).arg(old_serial_->getValue()).
-                    arg(new_serial->getValue()).
-                    arg(datasrc_client_->getDataSourceName());
-                iterator.reset(); // we don't need the iterator any more.
-                saveDiffs();
-                return (LoadResult(old_data_, false));
-            }
+            ;                   // non journal case covered in JournalLoader
         }
         return (doLoadCommon(NULL, boost::bind(generateRRsetFromIterator,
                                                iterator.get(), _1, _2),
@@ -442,50 +371,6 @@ ZoneDataLoader::ZoneDataLoaderImpl::getJournalReader(uint32_t begin,
         // handle this case just like no journal is available for the serials.
     }
     return (ZoneJournalReaderPtr());
-}
-
-void
-ZoneDataLoader::ZoneDataLoaderImpl::saveDiffs() {
-    int count = 0;
-    ConstRRsetPtr rrset;
-    while (count++ < MAX_SAVED_DIFFS_ && (rrset = jnl_reader_->getNextDiff())) {
-        saved_diffs_.push_back(rrset);
-    }
-    if (!rrset) {
-        jnl_reader_.reset();
-        if (saved_diffs_.empty()) {
-            // In our expected form of diff sequence, it shouldn't be empty,
-            // since there should be at least begin and end SOAs.  Eliminating
-            // this case at this point makes the later processing easier.
-            bundy_throw(ZoneValidationError,
-                        "empty diff sequence is provided for load");
-        }
-    }
-}
-
-ZoneData*
-ZoneDataLoader::ZoneDataLoaderImpl::commitDiffs(ZoneData* update_data) {
-    // we need 'commit' only when we load diffs
-    if (!jnl_reader_ && saved_diffs_.empty()) {
-        return (update_data);
-    }
-
-    // Constructing SegmentObjectHolder result in MemorySegmentGrown.
-    // This needs to be handled at the caller as update_data could now be
-    // invalid.  But before propagating the exception, we should release the
-    // data because the caller has the ownership and we shouldn't destroy it.
-    boost::scoped_ptr<SegmentObjectHolder<ZoneData, RRClass> >
-        holder(new SegmentObjectHolder<ZoneData, RRClass>(mem_sgmt_, rrclass_));
-    try {
-        holder->set(update_data);
-        // If doLoadCommon returns the holder should have released the data.
-        return (doLoadCommon(holder.get(),
-                             boost::bind(applyDiffs, &saved_diffs_,
-                                         jnl_reader_, _1, _2), 0).first);
-    } catch (...) {
-        holder->release();
-        throw;
-    }
 }
 
 ZoneDataLoader::LoadResult
@@ -629,16 +514,127 @@ public:
                 const dns::RRClass& rrclass, const dns::Name& zone_name,
                 ZoneData* old_data) :
         ZoneDataLoader::ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name,
-                                           old_data),
-        old_data_(old_data)
+                                           old_data)
     {}
     virtual ~ReuseLoader() {}
     virtual ZoneDataLoader::LoadResult doLoad(size_t) {
         return (ZoneDataLoader::LoadResult(old_data_, false));
     }
+};
+
+class JournalLoader : public ZoneDataLoader::ZoneDataLoaderImpl {
+public:
+    JournalLoader(util::MemorySegment& mem_sgmt,
+                  const dns::RRClass& rrclass, const dns::Name& zone_name,
+                  ZoneJournalReaderPtr jnl_reader, ZoneData* old_data) :
+        ZoneDataLoader::ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name,
+                                           old_data),
+        jnl_reader_(jnl_reader)
+    {}
+    virtual ~JournalLoader() {}
+    virtual ZoneDataLoader::LoadResult doLoad(size_t) {
+        saveDiffs();
+        return (ZoneDataLoader::LoadResult(old_data_, false));
+    }
+    virtual ZoneData* commitDiffs(ZoneData* update_data) {
+        // Constructing SegmentObjectHolder can result in MemorySegmentGrown.
+        // This needs to be handled at the caller as update_data could now be
+        // invalid.  But before propagating the exception, we should release the
+        // data because the caller has the ownership and we shouldn't destroy
+        // it.
+        boost::scoped_ptr<SegmentObjectHolder<ZoneData, RRClass> >
+            holder(new SegmentObjectHolder<ZoneData, RRClass>(mem_sgmt_,
+                                                              rrclass_));
+        try {
+            holder->set(update_data);
+            // If doLoadCommon returns the holder should have released the data.
+            return (doLoadCommon(holder.get(),
+                                 boost::bind(&JournalLoader::applyDiffs, this,
+                                             _1, _2), 0).first);
+        } catch (...) {
+            holder->release();
+            throw;
+        }
+    }
 
 private:
-    ZoneData* const old_data_;
+    void saveDiffs() {
+        int count = 0;
+        ConstRRsetPtr rrset;
+        while (count++ < MAX_SAVED_DIFFS_ &&
+               (rrset = jnl_reader_->getNextDiff())) {
+            saved_diffs_.push_back(rrset);
+        }
+        if (!rrset) {
+            jnl_reader_.reset();
+            if (saved_diffs_.empty()) {
+                // In our expected form of diff sequence, it shouldn't be empty,
+                // since there should be at least begin and end SOAs.
+                // Eliminating this case at this point makes the later
+                // processing easier.
+                bundy_throw(ZoneValidationError,
+                            "empty diff sequence is provided for load");
+            }
+        }
+    }
+
+    // The installer called for ZoneDataLoader using a zone journal reader.
+    // It performs some minimal sanity checks on the sequence of data, but
+    // the basic assumption is that any invalid data mean implementation defect
+    // (not bad user input) and shouldn't happen anyway.
+    bool
+    applyDiffs(ZoneDataLoaderHelper::LoadCallback callback, size_t) {
+        enum DIFF_MODE {INIT, ADD, DELETE} mode = INIT;
+        ConstRRsetPtr rrset;
+        std::vector<ConstRRsetPtr>::const_iterator it = saved_diffs_.begin();
+        const std::vector<ConstRRsetPtr>::const_iterator it_end =
+            saved_diffs_.end();
+        while ((rrset = nextDiff(it, it_end))) {
+            if (rrset->getType() == RRType::SOA()) {
+                mode = (mode == INIT || mode == ADD) ? DELETE : ADD;
+            } else if (mode == INIT) {
+                // diff sequence doesn't begin with SOA. It means broken journal
+                // reader implementation.
+                bundy_throw(bundy::Unexpected,
+                            "broken journal reader: diff not begin with SOA");
+            }
+            callback(rrset,
+                     (mode == ADD) ?
+                     ZoneDataLoaderHelper::ADD : ZoneDataLoaderHelper::DELETE);
+        }
+        if (mode != ADD) {
+            // Diff must end in the add mode (there should at least be one
+            // add for the final SOA)
+            bundy_throw(bundy::Unexpected, "broken journal reader: incomplete");
+        }
+
+        return (true);
+    }
+
+    ConstRRsetPtr
+    nextDiff(std::vector<ConstRRsetPtr>::const_iterator& it,
+             const std::vector<ConstRRsetPtr>::const_iterator& it_end)
+    {
+        ConstRRsetPtr next_diff;    // null by default
+        if (it != it_end) {
+            next_diff = *it;
+            ++it;
+        } else if (jnl_reader_) {
+            next_diff = jnl_reader_->getNextDiff();
+        }
+        return (next_diff);
+    }
+
+    ZoneJournalReaderPtr jnl_reader_;
+
+    // To minimize the risk of hitting an exception from the journal reader
+    // in commitDiffs(), we save up to MAX_SAVED_DIFFS_ diff RRs in the
+    // load() phase.  While it doesn't guarantee a success in commitDiffs()
+    // (if it fails we fall back to invalidate the zone and reload the entire
+    // zone), this should work for many cases with small updates (like in
+    // dynamic updates).
+    static const unsigned int MAX_SAVED_DIFFS_ = 100;
+    std::vector<ConstRRsetPtr> saved_diffs_;
 };
 }
 
@@ -693,6 +689,27 @@ ZoneDataLoader::ZoneDataLoader(util::MemorySegment& mem_sgmt,
             arg(datasrc_client.getDataSourceName());
         impl_ = new ReuseLoader(mem_sgmt, rrclass, zone_name, old_data);
         return;
+    } else if (old_serial && (*old_serial < *new_serial)) {
+        try {
+            const std::pair<ZoneJournalReader::Result, ZoneJournalReaderPtr>
+                result = datasrc_client.getJournalReader(
+                    zone_name, old_serial->getValue(), new_serial->getValue());
+            ZoneJournalReaderPtr jnl_reader = result.second;
+            if (jnl_reader) {
+                LOG_DEBUG(logger, DBG_TRACE_BASIC,
+                          DATASRC_MEMORY_LOAD_USE_JOURNAL).
+                    arg(zone_name).arg(rrclass).arg(old_serial->getValue()).
+                    arg(new_serial->getValue()).
+                    arg(datasrc_client.getDataSourceName());
+                iterator.reset(); // we don't need the iterator any more.
+            }
+            impl_ = new JournalLoader(mem_sgmt, rrclass, zone_name, jnl_reader,
+                                      old_data);
+            return;
+        } catch (const bundy::NotImplemented&) {
+            // handle this case just like no journal is available for the
+            //serials.
+        }
     }
     impl_ = new ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name,
                                    datasrc_client, old_data);
