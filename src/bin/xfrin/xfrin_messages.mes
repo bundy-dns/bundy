@@ -15,10 +15,6 @@
 # No namespace declaration - these constants go in the global namespace
 # of the xfrin messages python module.
 
-% XFRIN_NOTIFY_ZONEUPDATE sending notification of updated on zone %1/%2
-There was a successful zone transfer, and bundy-xfrin sent out a notification
-message about the update of the zone to interested modules.
-
 % XFRIN_AXFR_INCONSISTENT_SOA AXFR SOAs are inconsistent for %1: %2 expected, %3 received
 The serial fields of the first and last SOAs of AXFR (including AXFR-style
 IXFR) are not the same.  According to RFC 5936 these two SOAs must be the
@@ -69,6 +65,10 @@ rejects the new configuration then the entire BUNDY system will have
 inconsistent state among different modules.  If other modules accept
 the update but xfrin produces this error, the xfrin module should
 probably be restarted.
+
+% XFRIN_DATASRC_RECONFIGURED data source configuration has been updated, generation ID %1
+bundy-xfrin received a new version of data source configuration,
+and has successfully applied it to the local state.
 
 % XFRIN_DATASRC_UNKNOWN data source to transfer %1 to is unknown
 The xfrin daemon received a command that would trigger a transfer,
@@ -173,6 +173,10 @@ The system received a notify for the given zone, but the address it came
 from does not match the master address in the Xfrin configuration. The notify
 is ignored. This may indicate that the configuration for the master is wrong,
 that a wrong machine is sending notifies, or that fake notifies are being sent.
+
+% XFRIN_NOTIFY_ZONEUPDATE sending notification of updated on zone %1/%2
+There was a successful zone transfer, and bundy-xfrin sent out a notification
+message about the update of the zone to interested modules.
 
 % XFRIN_RECEIVED_COMMAND received command: %1
 The xfrin daemon received a command on the command channel.

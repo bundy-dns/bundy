@@ -92,6 +92,28 @@ tried).
 Debug information.  A specific type RRset is requested at a zone origin
 of an in-memory zone and it is found.
 
+% DATASRC_MEMORY_LOADED zone %1/%2 loaded serial %3%4.
+Informational message.  A new version of zone data with shown SOA
+serial has been loaded into memory.
+
+% DATASRC_MEMORY_LOADED_SERIAL_NOT_INCREASED zone serial for %1/%2 hasn't increased or has gone backwards (from %3 to %4).
+A new version of zone data was loaded into memory, but its SOA serial
+is not larger than the older version of in-memory data.  The new
+version will be used anyway, but it may fail to transfer to secondary
+servers.
+
+% DATASRC_MEMORY_LOAD_SAME_SERIAL in-memory data for %1/%2 has the same serial %3 as that in data source '%4', skipping load.
+An attempt of loading zone data into memory from a data source was
+requested, but in-memory data already had SOA of the same serial as
+that in the data source.  As an optimization actual load was skipped,
+and old data will continue to be used.
+
+% DATASRC_MEMORY_LOAD_USE_JOURNAL applying diff for %1/%2 (serial %3=>%4) from data source '%5'
+When loading zone data into memory from a data source, journal data
+were found between the current in-memory version and the latest data
+source version of the zone.  Instead of loading the full zone data,
+the differences were going to be applied to the current zone data.
+
 % DATASRC_MEMORY_MEM_ADD_EMPTY_ZONE adding an empty zone '%1/%2'
 Debug information. An "empty" zone is being added into the in-memory
 data source.  This is conceptual data indicating the state where the
@@ -132,12 +154,23 @@ RRset is split into multiple locations is not supported yet.
 Debug information. A zone object for this zone is being searched for in the
 in-memory data source.
 
-% DATASRC_MEMORY_MEM_LOAD_FROM_DATASRC loading zone '%1/%2' from other data source
-Debug information. The content of another  data source is being loaded
+% DATASRC_MEMORY_MEM_LOAD_FROM_DATASRC loading zone '%1/%2' from data source '%3'
+Debug information. The content of another data source is being loaded
 into the memory.
 
 % DATASRC_MEMORY_MEM_LOAD_FROM_FILE loading zone '%1/%2' from file '%3'
 Debug information. The content of master file is being loaded into the memory.
+
+% DATASRC_MEMORY_MEM_LOAD_UNEXPECTED_ERROR committing load result for zone %1/%2 failed unexpectedly, zone invalidated: %3
+Loading new zone data into memory failed at the very last stage.
+This is generally unexpected, and should be most likely to mean some
+software bug or corruptted memory-mapped file.  In some case, the process
+performing the load will still run, but it's advisable to check the
+entire system.  If memory-mapped files are used, they may have to be
+removed and rebuilt from the scratch.  Also, difference information of
+zones stored in non-volatile data sources may also have to be cleared.
+The in-memory zone data will be invalidated and will effectively be unusable
+(in the case of authoritative DNS server, it will result in SERVFAIL).
 
 % DATASRC_MEMORY_MEM_NO_NSEC3PARAM NSEC3PARAM is missing for NSEC3-signed zone %1/%2
 The in-memory data source has loaded a zone signed with NSEC3 RRs,
@@ -147,14 +180,34 @@ handling lookups with NSEC3 in this data source, so it accepts the given
 content of the zone.  Nevertheless the administrator should look into
 the integrity of the zone data.
 
+% DATASRC_MEMORY_MEM_NSEC3_UNSIGNED Zone %1/%2 is becoming NSEC3-signed to unsigned.
+In-memory zone data have been updated, and it was found that a previously
+NSEC3-signed zone is now no-NSEC3 zone, i.e., there is no NSEC3 or
+NSEC3PARAM RRs.
+
 % DATASRC_MEMORY_MEM_OUT_OF_ZONE domain '%1' doesn't belong to zone '%2'
 It was attempted to add the domain into a zone that shouldn't have it
 (eg. the domain is not subdomain of the zone origin). This indicates a
 problem with provided data.
 
+% DATASRC_MEMORY_MEM_REMOVE_RRS removing RRs of '%1/%2' from zone '%3'
+Debug information. A set of RRs are being removed from the in-memory data
+source.
+
+% DATASRC_MEMORY_MEM_RESET_MAPPED_SEGMENT resetting mapped memory segment on %1 in %2 mode
+Debug information.  The process is trying to reset a mapped memory segment
+for DNS zone data on the shown file in the shown mode.
+
 % DATASRC_MEMORY_MEM_SINGLETON trying to add multiple RRs for domain '%1' and type '%2'
 Some resource types are singletons -- only one is allowed in a domain
 (for example CNAME or SOA). This indicates a problem with provided data.
+
+% DATASRC_MEMORY_MEM_UNMAP_SEGMENT unmapping zone tabale memory segment on file %1
+Debug information.  The application is unmapping a file that may have been
+mapped for a zone table.  After that, any attempt to access to the zone
+table will result in a failure.  For a higher level application such as
+authoritative name server, this means that queries to any zones served from
+the data source will result in server failure.
 
 % DATASRC_MEMORY_MEM_WILDCARD_DNAME DNAME record in wildcard domain '%1'
 The software refuses to load DNAME records into a wildcard domain.  It isn't

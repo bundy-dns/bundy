@@ -220,6 +220,7 @@ class MyCCSession(bundy.config.ModuleCCSession):
                                # on add_remote.  settable by tests.
         self._auth_config = {}  # faked auth cfg, settable by tests
         self._zonemgr_config = {} # faked zonemgr cfg, settable by tests
+        self._closed = True # to silence test; this can be used in teardown
 
     def start(self):
         '''Called by DDNSServer initialization, but not used in tests'''
@@ -883,6 +884,10 @@ class TestDDNSSession(unittest.TestCase):
         self.orig_tsig_keyring = bundy.server_common.tsig_keyring
         bundy.server_common.tsig_keyring = FakeKeyringModule()
         self.server = ddns.DDNSServer(self.__cc_session)
+        # manually set generation ID for check message (clients can be None
+        # for this test)
+        self.server._datasrc_clients = (1, None)
+
         # Check that start_ddns_forwarder has been called upon
         # initialization (before we do anything else that might
         # cause messages to be sent)
@@ -1108,6 +1113,7 @@ class TestDDNSSession(unittest.TestCase):
         # be conslidated into a single notify to the group 'ZoneUpdateListener'
         # whose parameter should be:
         # {'zone_updated': {'datasource': <data_source_name>,
+        #                   'generation-id': <gen ID of the data source>,
         #                   'origin': <updated_zone_name>,
         #                   'class': <updated_zone_class>}}
         # Until it's completed, we'll also notify specific modules, which is
@@ -1129,10 +1135,11 @@ class TestDDNSSession(unittest.TestCase):
             sent_cmd = sent_msg['notification']
             self.assertEqual('notifications/ZoneUpdateListener', sent_group)
             self.assertEqual('zone_updated', sent_cmd[0])
-            self.assertEqual(3, len(sent_cmd[1]))
+            self.assertEqual(4, len(sent_cmd[1]))
             self.assertEqual(TEST_ZONE_NAME.to_text(), sent_cmd[1]['origin'])
             self.assertEqual(TEST_RRCLASS.to_text(), sent_cmd[1]['class'])
             self.assertEqual('testsrc', sent_cmd[1]['datasource'])
+            self.assertEqual(1, sent_cmd[1]['generation-id'])
             msg_cnt += 1
             sent_msg, sent_group = self.__cc_session._sent_msg[msg_cnt]
             sent_cmd = sent_msg['command']
@@ -1224,11 +1231,6 @@ class TestDDNSSession(unittest.TestCase):
     def test_session_msg_for_auth(self):
         '''Test post update communication with other modules including Auth.'''
 
-        # Let the CC session return in-memory config with sqlite3 backend.
-        # (The default case was covered by other tests.)
-        self.__cc_session.auth_datasources = \
-            [{'type': 'memory', 'class': 'IN', 'zones': [
-                    {'origin': TEST_ZONE_NAME_STR, 'filetype': 'sqlite3'}]}]
         self.check_session()
         self.check_session_msg(UPDATE_SUCCESS)
 
@@ -1265,8 +1267,8 @@ class TestDDNSSession(unittest.TestCase):
         class FakeDataSourceClientList:
             def find(self, zname, want_exact_match, want_finder):
                 return FakeDataSourceClient(), None, None
-        self.server._datasrc_clients = {TEST_RRCLASS:
-                                        FakeDataSourceClientList()}
+        self.server._datasrc_clients = (1, {TEST_RRCLASS:
+                                            FakeDataSourceClientList()})
 
         # install all-drop ACL
         new_config = { 'zones': [ { 'origin': TEST_ZONE_NAME_STR,

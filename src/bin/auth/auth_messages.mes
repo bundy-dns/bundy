@@ -137,13 +137,25 @@ configuration first. The system is still running with the data sources that
 were previously configured (i.e. as if the configuration has not changed).
 The specific problem is printed in the log message.
 
+% AUTH_DATASRC_CLIENTS_BUILDER_RECONFIGURE_PENDING data source reconfiguration pending for some memory segments (generation %1)
+The thread for maintaining data source clients has received a new generation
+of data source configuration, but the new configuration is not fully activated
+because some memory segments for in-memory cache are to be reset.  This is
+common if a mapped memory segment is used.
+
 % AUTH_DATASRC_CLIENTS_BUILDER_RECONFIGURE_STARTED data source reconfiguration started
 The thread for maintaining data source clients has received a command to
 reconfigure, and has now started this process.
 
-% AUTH_DATASRC_CLIENTS_BUILDER_RECONFIGURE_SUCCESS data source reconfiguration completed successfully
+% AUTH_DATASRC_CLIENTS_BUILDER_RECONFIGURE_SUCCESS data source reconfiguration completed successfully (generation %1)
 The thread for maintaining data source clients has finished reconfiguring
 the data source clients, and is now running with the new configuration.
+
+% AUTH_DATASRC_CLIENTS_BUILDER_RELEASE_SEGMENTS_UNKNOWNGEN received a command for releasing memory segments on unknown generation (%1, current=%2), ignored.
+The data source builder thread received a command to release memory
+segments for data sources whose generation ID does not match the
+currently used generation.  Similar to AUTH_DATASRC_CLIENTS_BUILDER_SEGMENT_UNKNOWNGEN,
+this should be quite rare but still possible to happen.
 
 % AUTH_DATASRC_CLIENTS_BUILDER_SEGMENT_BAD_CLASS invalid RRclass %1 at segment update
 A memory segment update message was sent to the authoritative
@@ -161,6 +173,16 @@ The authoritative server was asked to update the memory segment of the
 given data source, but no data source by that name was found. The
 authoritative server aborts because this indicates that the system is in
 an inconsistent state. This is likely caused by a bug in the code.
+
+% AUTH_DATASRC_CLIENTS_BUILDER_SEGMENT_UNKNOWNGEN received memory segment update on an unknown generation (%1, current=%2), ignored
+The data source builder thread received a command to reset a shared
+memory segment for zone data provided that the segment is currently
+used by the authoritative server, but its generation ID does not match
+the currently used generation or (if it's in the middle of reconfiguration)
+a pending next generation.  This is generally considered an impossible
+situation, but could still happen in some rare cases such as when rapidly
+updating multiple generations of data source configuration.  In any case,
+such unknown updates should be able to be safely ignored.
 
 % AUTH_DATASRC_CLIENTS_BUILDER_SEGMENT_UNKNOWN_CLASS unknown class %1 at segment update
 A memory segment update message was sent to the authoritative
@@ -194,6 +216,17 @@ happen in normal conditions; it should be either fatal system level
 errors such as severe memory shortage or some internal bug.  If that
 happens, and if it's not in the middle of terminating bundy-auth, it's
 probably better to stop and restart it.
+
+% AUTH_DATASRC_CLIENTS_SKIP_SEGMENT_RESET skipped resetting memory segment for %1/%2 that is not in use.
+The data source builder thread received a command to reset a shared
+memory segment for zone data provided that the segment is currently
+used by the authoritative server, but the segment was acutally not
+in use, and the command was ignored.  This can happen in normal
+initialization, i.e., both the authoritative server and the memory
+manager just starts.  This initial reset command is just for segment
+reader modules to be synchronized with the memory manager, and the
+actual reset will be delayed until the memory manager completes
+building the segment data with any un-applied updates.
 
 % AUTH_DATA_SOURCE data source database file: %1
 This is a debug message produced by the authoritative server when it accesses a

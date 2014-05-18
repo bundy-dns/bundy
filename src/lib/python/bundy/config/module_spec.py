@@ -77,7 +77,7 @@ class ModuleSpec:
             _check(module_spec)
         self._module_spec = module_spec
 
-    def validate_config(self, full, data, errors = None):
+    def validate_config(self, full, data, errors=None):
         """Check whether the given piece of data conforms to this
            data definition. If so, it returns True. If not, it will
            return false. If errors is given, and is an array, a string
@@ -440,10 +440,16 @@ def _validate_spec_list(module_spec, full, data, errors):
         if not _validate_spec(spec_item, full, data, errors):
             validated = False
 
+    # System reserved items are hardcoded for now
+    reserved_item_names = ['_generation_id']
+
     # check if there are items in our data that are not in the
     # specification
     if data is not None:
         for item_name in data:
+            if item_name in reserved_item_names:
+                continue                         # validated, check next item
+
             found = False
             for spec_item in module_spec:
                 if spec_item["item_name"] == item_name:

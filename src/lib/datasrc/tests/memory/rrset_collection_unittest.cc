@@ -33,6 +33,8 @@ using namespace bundy::datasrc;
 using namespace bundy::datasrc::memory;
 using namespace bundy::datasrc::memory::detail;
 
+typedef bundy::datasrc::memory::RRsetCollection MemRRsetCollection;
+
 namespace {
 
 // Note: This class uses loadZoneData() to construct a ZoneData object,
@@ -47,10 +49,10 @@ public:
         zone_file(TEST_DATA_DIR "/rrset-collection.zone"),
         zone_data_holder(mem_sgmt, rrclass)
     {
-        zone_data_holder.set(loadZoneData(mem_sgmt, rrclass, origin,
-                                          zone_file));
-        collection.reset(new RRsetCollection(*zone_data_holder.get(),
-                                             rrclass));
+        zone_data_holder.set(ZoneDataLoader(mem_sgmt, rrclass, origin,
+                                            zone_file).load().first);
+        collection.reset(new MemRRsetCollection(*zone_data_holder.get(),
+                                                rrclass));
     }
 
     const RRClass rrclass;
@@ -58,11 +60,11 @@ public:
     std::string zone_file;
     test::MemorySegmentMock mem_sgmt;
     SegmentObjectHolder<ZoneData, RRClass> zone_data_holder;
-    boost::scoped_ptr<RRsetCollection> collection;
+    boost::scoped_ptr<MemRRsetCollection> collection;
 };
 
 TEST_F(RRsetCollectionTest, find) {
-    const RRsetCollection& ccln = *collection;
+    const MemRRsetCollection& ccln = *collection;
     ConstRRsetPtr rrset = ccln.find(Name("www.example.org"), rrclass,
                                     RRType::A());
     EXPECT_TRUE(rrset);

@@ -121,7 +121,7 @@ TestDataSrcClientsBuilder;
 // We specialize this command handler for the convenience of tests.
 // It abuses our specialized Mutex to count the number of calls of this method.
 template<>
-void
+data::ConstElementPtr
 TestDataSrcClientsBuilder::doNoop();
 
 // A specialization of DataSrcClientsBuilder that allows tests to inspect
@@ -137,14 +137,14 @@ public:
     // xxx_copy will be set in the manager's destructor to record the
     // final state of the manager.
     static std::list<Command>* command_queue;
-    static std::list<FinishedCallback>* callback_queue;
+    static std::list<FinishedCallbackPair>* callback_queue;
     static TestCondVar* cond;
     static TestMutex* queue_mutex;
     static int wakeup_fd;
     static bundy::datasrc::ClientListMapPtr* clients_map;
     static TestMutex* map_mutex;
     static std::list<Command> command_queue_copy;
-    static std::list<FinishedCallback> callback_queue_copy;
+    static std::list<FinishedCallbackPair> callback_queue_copy;
     static TestCondVar cond_copy;
     static TestMutex queue_mutex_copy;
 
@@ -158,7 +158,7 @@ public:
 
     FakeDataSrcClientsBuilder(
         std::list<Command>* command_queue,
-        std::list<FinishedCallback>* callback_queue,
+        std::list<FinishedCallbackPair>* callback_queue,
         TestCondVar* cond,
         TestMutex* queue_mutex,
         bundy::datasrc::ClientListMapPtr* clients_map,

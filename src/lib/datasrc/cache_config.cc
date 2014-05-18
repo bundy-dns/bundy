@@ -14,7 +14,8 @@
 
 #include <datasrc/cache_config.h>
 #include <datasrc/client.h>
-#include <datasrc/memory/load_action.h>
+#include <datasrc/result.h>
+#include <datasrc/memory/loader_creator.h>
 #include <datasrc/memory/zone_data_loader.h>
 
 #include <util/memory_segment.h>
@@ -120,79 +121,61 @@ CacheConfig::CacheConfig(const std::string& datasrc_type,
 }
 
 namespace {
-
-// We would like to use boost::bind for this. However, the loadZoneData takes
-// a reference, while we have a shared pointer to the iterator -- and we need
-// to keep it alive as long as the ZoneWriter is alive. Therefore we can't
-// really just dereference it and pass it, since it would get destroyed once
-// the getCachedZoneWriter would end. This class holds the shared pointer
-// alive, otherwise is mostly simple.
-//
-// It might be doable with nested boost::bind, but it would probably look
-// more awkward and complicated than this.
-class IteratorLoader {
-public:
-    IteratorLoader(const dns::RRClass& rrclass, const dns::Name& name,
-                   const ZoneIteratorPtr& iterator) :
-        rrclass_(rrclass),
-        name_(name),
-        iterator_(iterator)
-    {}
-    memory::ZoneData* operator()(util::MemorySegment& segment) {
-        return (memory::loadZoneData(segment, rrclass_, name_, *iterator_));
-    }
-private:
-    const dns::RRClass rrclass_;
-    const dns::Name name_;
-    ZoneIteratorPtr iterator_;
-};
-
 // We can't use the loadZoneData function directly in boost::bind, since
 // it is overloaded and the compiler can't choose the correct version
 // reliably and fails. So we simply wrap it into an unique name.
-memory::ZoneData*
-loadZoneDataFromFile(util::MemorySegment& segment, const dns::RRClass& rrclass,
-                     const dns::Name& name, const std::string& filename)
+memory::ZoneDataLoader*
+createLoaderFromFile(util::MemorySegment& segment, const dns::RRClass& rrclass,
+                     const dns::Name& name, const std::string& filename,
+                     memory::ZoneData* old_data)
 {
-    return (memory::loadZoneData(segment, rrclass, name, filename));
+    return (new memory::ZoneDataLoader(segment, rrclass, name, filename,
+                                       old_data));
+}
+
+memory::ZoneDataLoader*
+createLoaderFromDataSource(util::MemorySegment& segment,
+                           const dns::RRClass& rrclass,
+                           const dns::Name& name,
+                           const DataSourceClient* datasrc_client,
+                           memory::ZoneData* old_data)
+{
+    return (new memory::ZoneDataLoader(segment, rrclass, name,
+                                       *datasrc_client, old_data));
 }
 
 } // unnamed namespace
 
-memory::LoadAction
-CacheConfig::getLoadAction(const dns::RRClass& rrclass,
-                           const dns::Name& zone_name) const
+memory::ZoneDataLoaderCreator
+CacheConfig::getLoaderCreator(const dns::RRClass& rrclass,
+                              const dns::Name& zone_name) const
 {
     // First, check if the specified zone is configured to be cached.
     Zones::const_iterator found = zone_config_.find(zone_name);
     if (found == zone_config_.end()) {
-        return (memory::LoadAction());
+        return (memory::ZoneDataLoaderCreator());
     }
 
     if (!found->second.empty()) {
         // This is "MasterFiles" data source.
-        return (boost::bind(loadZoneDataFromFile, _1, rrclass, zone_name,
-                            found->second));
+        return (boost::bind(createLoaderFromFile, _1, rrclass, zone_name,
+                            found->second, _2));
     }
 
     // Otherwise there must be a "source" data source (ensured by constructor)
     assert(datasrc_client_);
 
     // If the specified zone name does not exist in our client of the source,
-    // NoSuchZone is thrown, which is exactly the result what we
-    // want, so no need to handle it.
-    ZoneIteratorPtr iterator(datasrc_client_->getIterator(zone_name));
-    if (!iterator) {
-        // This shouldn't happen for a compliant implementation of
-        // DataSourceClient, but we'll protect ourselves from buggy
-        // implementations.
-        bundy_throw(Unexpected, "getting LoadAction for " << zone_name
-                  << "/" << rrclass << " resulted in Null zone iterator");
+    // it will be detected in the actual load phase.  But we'll detect it
+    // at this point as the caller expects the early detection.
+    if (datasrc_client_->findZone(zone_name).code != result::SUCCESS) {
+        bundy_throw(NoSuchZone, "getLoaderCreator failed to find a zone");
     }
 
     // Wrap the iterator into the correct functor (which keeps it alive as
     // long as it is needed).
-    return (IteratorLoader(rrclass, zone_name, iterator));
+    return (boost::bind(createLoaderFromDataSource, _1, rrclass, zone_name,
+                        datasrc_client_, _2));
 }
 
 } // namespace internal

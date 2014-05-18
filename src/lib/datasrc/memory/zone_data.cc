@@ -18,6 +18,8 @@
 #include <dns/rrclass.h>
 #include <dns/rdataclass.h>
 
+#include <exceptions/exceptions.h>
+
 #include "rdataset.h"
 #include "rdata_serialization.h"
 #include "zone_data.h"
@@ -138,6 +140,33 @@ NSEC3Data::insertName(util::MemorySegment& mem_sgmt, const Name& name,
             result == ZoneTree::ALREADYEXISTS) && node != NULL);
 }
 
+ZoneNode*
+NSEC3Data::findName(const Name& name) {
+    ZoneNode* node = NULL;
+    const ZoneTree::Result result = nsec3_tree_->find(name, &node);
+
+    if (result == ZoneTree::EXACTMATCH) {
+        return (node);
+    }
+    return (NULL);
+}
+
+void
+NSEC3Data::removeNode(util::MemorySegment& mem_sgmt, ZoneNode* node) {
+    if (!node->isEmpty()) {
+        bundy_throw(bundy::InvalidParameter,
+                    "NSEC3Data::remove is called for a non-empty node");
+    }
+    // In practice, it's less likely to be called in this condition for
+    // NSEC3Data, but we'll check it to be sure.  NSEC3Data doesn't expose
+    // the origin node, but the following condition should be a cheap
+    // alternative.
+    if (!node->getUpperNode()) {
+        return;
+    }
+    nsec3_tree_->remove(mem_sgmt, node, nullDeleter);
+}
+
 namespace {
 // A helper to convert a TTL value in network byte order and set it in
 // ZoneData::min_ttl_.  We can use util::OutputBuffer, but copy the logic
@@ -212,6 +241,31 @@ ZoneData::insertName(util::MemorySegment& mem_sgmt, const Name& name,
     // This should be ensured by the API:
     assert((result == ZoneTree::SUCCESS ||
             result == ZoneTree::ALREADYEXISTS) && node != NULL);
+}
+
+ZoneNode*
+ZoneData::findName(const Name& name) {
+    ZoneNode* node = NULL;
+    const ZoneTree::Result result = zone_tree_->find(name, &node);
+
+    if (result == ZoneTree::EXACTMATCH) {
+        return (node);
+    }
+    return (NULL);
+}
+
+void
+ZoneData::removeNode(util::MemorySegment& mem_sgmt, ZoneNode* node) {
+    if (!node->isEmpty()) {
+        bundy_throw(bundy::InvalidParameter,
+                    "ZoneData::remove is called for a non-empty node");
+    }
+    // We shouldn't remove the origin node.  Since DomainTree::remove() doesn't
+    // take care of the case, we need to do the check here.
+    if (node == origin_node_) {
+        return;
+    }
+    zone_tree_->remove(mem_sgmt, node, nullDeleter);
 }
 
 void

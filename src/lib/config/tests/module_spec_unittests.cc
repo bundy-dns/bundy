@@ -25,7 +25,9 @@
 using namespace bundy::data;
 using namespace bundy::config;
 
-std::string specfile(const std::string& name) {
+namespace {
+std::string
+specfile(const std::string& name) {
     return (std::string(TEST_DATA_PATH) + "/" + name);
 }
 
@@ -42,6 +44,7 @@ moduleSpecError(const std::string& file,
         std::string ddew = dde.what();
         EXPECT_EQ(error1 + error2 + error3, ddew);
     }
+}
 }
 
 TEST(ModuleSpec, ReadingSpecfiles) {
@@ -141,15 +144,20 @@ TEST(ModuleSpec, SpecfileCommands) {
                    "somethingbad is not a valid type name");
 }
 
-bool
-dataTest(const ModuleSpec& dd, const std::string& data_file_name) {
+namespace {
+void
+dataTest(const ModuleSpec& dd, const std::string& data_file_name, bool expected)
+{
     std::ifstream data_file;
 
     data_file.open(specfile(data_file_name).c_str());
-    ConstElementPtr data = Element::fromJSON(data_file, data_file_name);
+    ElementPtr data = Element::fromJSON(data_file, data_file_name);
     data_file.close();
 
-    return (dd.validateConfig(data));
+    EXPECT_EQ(expected, dd.validateConfig(data));
+
+    data->set("_generation_id", Element::create(42));
+    EXPECT_EQ(expected, dd.validateConfig(data));
 }
 
 bool
@@ -188,23 +196,24 @@ statisticsTestWithErrors(const ModuleSpec& dd, const std::string& data_file_name
 
     return (dd.validateStatistics(data, true, errors));
 }
+}
 
 TEST(ModuleSpec, DataValidation) {
-    ModuleSpec dd = moduleSpecFromFile(specfile("spec22.spec"));
+    const ModuleSpec dd = moduleSpecFromFile(specfile("spec22.spec"));
 
-    EXPECT_TRUE(dataTest(dd, "data22_1.data"));
-    EXPECT_FALSE(dataTest(dd, "data22_2.data"));
-    EXPECT_FALSE(dataTest(dd, "data22_3.data"));
-    EXPECT_FALSE(dataTest(dd, "data22_4.data"));
-    EXPECT_FALSE(dataTest(dd, "data22_5.data"));
-    EXPECT_TRUE(dataTest(dd, "data22_6.data"));
-    EXPECT_TRUE(dataTest(dd, "data22_7.data"));
-    EXPECT_FALSE(dataTest(dd, "data22_8.data"));
-    EXPECT_FALSE(dataTest(dd, "data22_9.data"));
+    dataTest(dd, "data22_1.data", true);
+    dataTest(dd, "data22_2.data", false);
+    dataTest(dd, "data22_3.data", false);
+    dataTest(dd, "data22_4.data", false);
+    dataTest(dd, "data22_5.data", false);
+    dataTest(dd, "data22_6.data", true);
+    dataTest(dd, "data22_7.data", true);
+    dataTest(dd, "data22_8.data", false);
+    dataTest(dd, "data22_9.data", false);
 
     // Test if "version" is allowed in config data
     // (same data as 22_7, but added "version")
-    EXPECT_TRUE(dataTest(dd, "data22_10.data"));
+    dataTest(dd, "data22_10.data", true);
 
     ElementPtr errors = Element::createList();
     EXPECT_FALSE(dataTestWithErrors(dd, "data22_8.data", errors));
@@ -273,12 +282,12 @@ TEST(ModuleSpec, CommandValidation) {
 }
 
 TEST(ModuleSpec, NamedSetValidation) {
-    ModuleSpec dd = moduleSpecFromFile(specfile("spec32.spec"));
+    const ModuleSpec dd = moduleSpecFromFile(specfile("spec32.spec"));
 
     ElementPtr errors = Element::createList();
     EXPECT_TRUE(dataTestWithErrors(dd, "data32_1.data", errors));
-    EXPECT_FALSE(dataTest(dd, "data32_2.data"));
-    EXPECT_FALSE(dataTest(dd, "data32_3.data"));
+    dataTest(dd, "data32_2.data", false);
+    dataTest(dd, "data32_3.data", false);
 }
 
 TEST(ModuleSpec, CheckFormat) {

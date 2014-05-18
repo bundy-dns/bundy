@@ -278,7 +278,7 @@ public:
     /// This is to be called when the work thread finishes reconfiguration
     /// of the data sources. It involeves some book keeping and asking the
     /// memory manager for segments, if some are remotely mapped.
-    void listsReconfigured();
+    void listsReconfigured(const bundy::data::ConstElementPtr& arg);
 
     /// \brief Notification callback for zone updates.
     ///
@@ -289,7 +289,8 @@ public:
                      const bundy::data::ConstElementPtr& params);
 
 private:
-    void reconfigureDone(bundy::data::ConstElementPtr request);
+    void sendCommandAck(const std::string& cmd,
+                        bundy::data::ConstElementPtr request);
     void foreignCommand(const std::string& command, const std::string&,
                         const bundy::data::ConstElementPtr& params);
     AuthSrvImpl* impl_;

@@ -119,6 +119,22 @@ class ConfigManagerData:
                     # any config in this case, so warn about it
                     logger.warn(CFGMGR_CONFIG_UPDATE_BOSS_AND_INIT_FOUND)
             new_data_version = 3
+        if new_data_version == 3:
+            # items beginning with '_' are now reserved for internal system
+            # use.  any possible conflict (none known) is rejected here.
+            for mod, mod_conf in config.items():
+                if mod == 'version':
+                    continue
+                reserved = [x for x in mod_conf.keys() if x and x[0] == '_']
+                if reserved:
+                    raise ConfigManagerDataReadError('system reserved items '
+                                                     'should not exist until '
+                                                     'version 4: ' +
+                                                     ', '.join(reserved))
+                # _generation_id is currently the only defined system reserved
+                # item.
+                mod_conf['_generation_id'] = 1
+            new_data_version = 4
 
         config['version'] = new_data_version
         logger.info(CFGMGR_AUTOMATIC_CONFIG_DATABASE_UPDATE, data_version,
@@ -141,8 +157,8 @@ class ConfigManagerData:
         logger.info(CFGMGR_CONFIG_FILE, config.db_filename)
         file = None
         try:
-            file = open(config.db_filename, 'r')
-            file_config = json.loads(file.read())
+            with open(config.db_filename, 'r') as file:
+                file_config = json.loads(file.read())
             # handle different versions here
             # If possible, we automatically convert to the new
             # scheme and update the configuration
@@ -417,7 +433,15 @@ class ConfigManager:
         else:
             return ccsession.create_answer(0, self.config.data)
 
-    def __handle_set_config_module(self, module_name, cmd):
+    def __handle_set_config_module(self, module_name, new_conf):
+        # Reject attempts of overridding system reserved items.
+        reserved_items = [item for item in new_conf.keys()
+                          if item and item[0] == '_']
+        if reserved_items:
+            return ccsession.create_answer(
+                1, 'system reserved items cannot be set manually: ' +
+                ' '.join(reserved_items))
+
         # the answer comes (or does not come) from the relevant module
         # so we need a variable to see if we got it
         answer = None
@@ -427,12 +451,16 @@ class ConfigManager:
         update_cmd = None
         use_part = None
         if conf_part:
-            data.merge(conf_part, cmd)
+            data.merge(conf_part, new_conf)
             use_part = conf_part
         else:
             conf_part = data.set(self.config.data, module_name, {})
-            data.merge(conf_part[module_name], cmd)
+            data.merge(conf_part[module_name], new_conf)
             use_part = conf_part[module_name]
+
+        # set/increment the generation ID of the module config
+        old_genid = use_part.get('_generation_id')
+        use_part['_generation_id'] = 1 if old_genid is None else old_genid + 1
 
         # The command to send
         update_cmd = ccsession.create_command(ccsession.COMMAND_CONFIG_UPDATE,

@@ -25,21 +25,21 @@ class MemorySegment;
 namespace datasrc {
 namespace memory {
 class ZoneData;
+class ZoneDataLoader;
 
-/// \brief Callback to load data into the memory
+/// \brief A factory of ZoneDataLoader
 ///
-/// This is called from the ZoneWriter whenever there's need to load the
-/// zone data. The callback should allocate new ZoneData and fill it with
-/// the zone content. It is up to the callback to know where or how to
-/// load the data, or even the origin and class of the zone (it is assumed
-/// the callback will be some kind of functor).
+/// This is called from the \c ZoneWriter whenever there's need to load the
+/// zone data.  It creates a new \c ZoneDataLoader object, with which the
+/// \c ZoneWriter can perform loading.  This factory object encapsulates
+/// other detailed information for loading, such as the zone name and RR class,
+/// and the source of the zone data.
 ///
 /// All data should be allocated from the passed MemorySegment. The ownership
 /// is passed onto the caller.
-///
-/// It must not return NULL.
-typedef boost::function<ZoneData*(util::MemorySegment&)> LoadAction;
-
+typedef boost::function<ZoneDataLoader*(util::MemorySegment& mem_sgmt,
+                                        ZoneData* zone_data)>
+ZoneDataLoaderCreator;
 }
 }
 }
