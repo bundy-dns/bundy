@@ -408,10 +408,7 @@ ZoneDataLoader::ZoneDataLoaderImpl::doLoad(size_t count_limit) {
         boost::scoped_ptr<const dns::Serial> new_serial(
             getSerialFromRRset(*new_soarrset));
         if (old_serial_ && (*old_serial_ == *new_serial)) {
-            LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_LOAD_SAME_SERIAL).
-                arg(zone_name_).arg(rrclass_).arg(old_serial_->getValue()).
-                arg(datasrc_client_->getDataSourceName());
-            return (LoadResult(old_data_, false));
+            assert(false);      // covered in ReuseLoader
         } else if (old_serial_ && (*old_serial_ < *new_serial)) {
             jnl_reader_ = getJournalReader(old_serial_->getValue(),
                                            new_serial->getValue());
@@ -426,7 +423,6 @@ ZoneDataLoader::ZoneDataLoaderImpl::doLoad(size_t count_limit) {
                 return (LoadResult(old_data_, false));
             }
         }
-
         return (doLoadCommon(NULL, boost::bind(generateRRsetFromIterator,
                                                iterator.get(), _1, _2),
                              count_limit));
@@ -580,7 +576,7 @@ ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon(
 
 namespace {
 class MasterFileLoader : public ZoneDataLoader::ZoneDataLoaderImpl {
-  public:
+public:
     MasterFileLoader(util::MemorySegment& mem_sgmt, const dns::RRClass& rrclass,
                      const dns::Name& zone_name, const std::string& zone_file,
                      ZoneData* old_data) :
@@ -620,11 +616,29 @@ class MasterFileLoader : public ZoneDataLoader::ZoneDataLoaderImpl {
         return (true);
     }
 
-  private:
+private:
     bool load_ok_; // we actually don't use it; only need a placeholder
     const std::string zone_file_;
     boost::scoped_ptr<dns::RRCollator> rrcollator_;
     boost::scoped_ptr<dns::MasterLoader> master_loader_;
+};
+
+class ReuseLoader : public ZoneDataLoader::ZoneDataLoaderImpl {
+public:
+    ReuseLoader(util::MemorySegment& mem_sgmt,
+                const dns::RRClass& rrclass, const dns::Name& zone_name,
+                ZoneData* old_data) :
+        ZoneDataLoader::ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name,
+                                           old_data),
+        old_data_(old_data)
+    {}
+    virtual ~ReuseLoader() {}
+    virtual ZoneDataLoader::LoadResult doLoad(size_t) {
+        return (ZoneDataLoader::LoadResult(old_data_, false));
+    }
+
+private:
+    ZoneData* const old_data_;
 };
 }
 
@@ -652,6 +666,34 @@ ZoneDataLoader::ZoneDataLoader(util::MemorySegment& mem_sgmt,
     LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_MEM_LOAD_FROM_DATASRC).
         arg(zone_name).arg(rrclass).arg(datasrc_client.getDataSourceName());
 
+    ZoneIteratorPtr iterator = datasrc_client.getIterator(zone_name);
+    if (!iterator) {
+        // This shouldn't happen for a compliant implementation of
+        // DataSourceClient, but we'll protect ourselves from buggy
+        // implementations.
+        bundy_throw(Unexpected, "getting loader creator for " << zone_name
+                    << "/" << rrclass << " resulted in Null zone iterator");
+    }
+
+    const dns::ConstRRsetPtr new_soarrset = iterator->getSOA();
+    if (!new_soarrset) {
+        // If the source data source doesn't contain SOA, post-load check
+        // will fail anyway, so rejecting loading at this point makes sense.
+        bundy_throw(ZoneValidationError, "No SOA found for "
+                    << zone_name << "/" << rrclass << "in " <<
+                    datasrc_client.getDataSourceName());
+    }
+    const boost::optional<dns::Serial> old_serial =
+        getSerialFromZoneData(rrclass, old_data);
+    const boost::optional<dns::Serial> new_serial =
+        getSerialFromRRset(*new_soarrset);
+    if (old_serial && (*old_serial == *new_serial)) {
+        LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_LOAD_SAME_SERIAL).
+            arg(zone_name).arg(rrclass).arg(old_serial->getValue()).
+            arg(datasrc_client.getDataSourceName());
+        impl_ = new ReuseLoader(mem_sgmt, rrclass, zone_name, old_data);
+        return;
+    }
     impl_ = new ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name,
                                    datasrc_client, old_data);
 }
