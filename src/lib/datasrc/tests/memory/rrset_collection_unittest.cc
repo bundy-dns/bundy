@@ -50,7 +50,7 @@ public:
         zone_data_holder(mem_sgmt, rrclass)
     {
         zone_data_holder.set(ZoneDataLoader(mem_sgmt, rrclass, origin,
-                                            zone_file).load().first);
+                                            zone_file).load());
         collection.reset(new MemRRsetCollection(*zone_data_holder.get(),
                                                 rrclass));
     }

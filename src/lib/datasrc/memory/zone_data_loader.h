@@ -84,6 +84,17 @@ public:
 
     typedef std::pair<ZoneData*, bool> LoadResult;
 
+    /// \brief Return whether the passed ZoneData on construction will be reused
+    ///
+    /// This is determined at the time of construction, so once constructed
+    /// this method always returns the same value.
+    ///
+    /// \throw None
+    ///
+    /// \return true if the zone data passed to constructor is used for load;
+    /// otherwise false.
+    virtual bool isDataReused() const;
+
     /// \brief Create and return a ZoneData instance populated from the
     /// source passed on construction.
     ///
@@ -94,7 +105,7 @@ public:
     ///         implementation).
     ///
     /// \return A \c ZoneData containing zone data loaded from the source.
-    virtual LoadResult load();
+    virtual ZoneData* load();
 
     /// \brief Complete any remaining loading task that deferred in load().
     ///
