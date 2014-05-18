@@ -207,10 +207,11 @@ logError(const dns::Name* zone_name, const dns::RRClass* rrclass,
 // boost::bind.  It converts function<void(ConstRRsetPtr)> to
 // function<void(RRsetPtr)> (MasterLoader expects the latter).  SunStudio
 // doesn't seem to do this conversion if we just pass 'callback'.
-void
+bool
 masterLoaderWrapper(const char* const filename, const Name& origin,
                     const RRClass& zone_class,
-                    ZoneDataLoaderHelper::LoadCallback callback)
+                    ZoneDataLoaderHelper::LoadCallback callback,
+                    size_t)
 {
     bool load_ok = false;       // (we don't use it)
     dns::RRCollator collator(boost::bind(callback, _1,
@@ -225,17 +226,23 @@ masterLoaderWrapper(const char* const filename, const Name& origin,
     } catch (const dns::MasterLoaderError& e) {
         bundy_throw(ZoneLoaderException, e.what());
     }
+
+    return (true);
 }
 
 // The installer called for ZoneDataLoader using a zone iterator
-void
+bool
 generateRRsetFromIterator(ZoneIterator* iterator,
-                          ZoneDataLoaderHelper::LoadCallback callback)
+                          ZoneDataLoaderHelper::LoadCallback callback,
+                          size_t count_limit)
 {
+    size_t count = 0;
     ConstRRsetPtr rrset;
-    while ((rrset = iterator->getNextRRset()) != NULL) {
+    while (count < count_limit && (rrset = iterator->getNextRRset()) != NULL) {
         callback(rrset, ZoneDataLoaderHelper::ADD);
+        count++;
     }
+    return (!rrset);   // we are done iff we reach end of the iterator
 }
 
 ConstRRsetPtr
@@ -257,10 +264,10 @@ nextDiff(std::vector<ConstRRsetPtr>::const_iterator& it,
 // It performs some minimal sanity checks on the sequence of data, but
 // the basic assumption is that any invalid data mean implementation defect
 // (not bad user input) and shouldn't happen anyway.
-void
+bool
 applyDiffs(const std::vector<ConstRRsetPtr>* saved_diffs,
            ZoneJournalReaderPtr jnl_reader,
-           ZoneDataLoaderHelper::LoadCallback callback)
+           ZoneDataLoaderHelper::LoadCallback callback, size_t)
 {
     enum DIFF_MODE {INIT, ADD, DELETE} mode = INIT;
     ConstRRsetPtr rrset;
@@ -285,6 +292,8 @@ applyDiffs(const std::vector<ConstRRsetPtr>* saved_diffs,
         // add for the final SOA)
         bundy_throw(bundy::Unexpected, "broken journal reader: incomplete");
     }
+
+    return (true);
 }
 
 boost::optional<dns::Serial>
@@ -359,16 +368,16 @@ public:
         validateOldData(zone_name, old_data);
     }
 
-    LoadResult doLoad();
+    LoadResult doLoad(size_t count_limit);
 
     ZoneData* commitDiffs(ZoneData* update_data);
 
 private:
-    typedef boost::function<void(ZoneDataLoaderHelper::LoadCallback)>
-    RRsetInstaller;
+    typedef boost::function<bool(ZoneDataLoaderHelper::LoadCallback,
+                                 size_t count_limit)> RRsetInstaller;
     LoadResult doLoadCommon(
         SegmentObjectHolder<ZoneData, RRClass>* data_holder,
-        RRsetInstaller installer);
+        RRsetInstaller installer, size_t count_limit);
     ZoneJournalReaderPtr getJournalReader(uint32_t begin, uint32_t end) const;
     void saveDiffs();
 
@@ -392,7 +401,7 @@ private:
 };
 
 ZoneDataLoader::LoadResult
-ZoneDataLoader::ZoneDataLoaderImpl::doLoad() {
+ZoneDataLoader::ZoneDataLoaderImpl::doLoad(size_t count_limit) {
     if (datasrc_client_) {
         ZoneIteratorPtr iterator = datasrc_client_->getIterator(zone_name_);
         if (!iterator) {
@@ -435,11 +444,13 @@ ZoneDataLoader::ZoneDataLoaderImpl::doLoad() {
         }
 
         return (doLoadCommon(NULL, boost::bind(generateRRsetFromIterator,
-                                               iterator.get(), _1)));
+                                               iterator.get(), _1, _2),
+                             count_limit));
     } else {
         return (doLoadCommon(NULL, boost::bind(masterLoaderWrapper,
                                                zone_file_.c_str(),
-                                               zone_name_, rrclass_, _1)));
+                                               zone_name_, rrclass_,
+                                               _1, _2), count_limit));
     }
 }
 
@@ -492,9 +503,9 @@ ZoneDataLoader::ZoneDataLoaderImpl::commitDiffs(ZoneData* update_data) {
     try {
         holder->set(update_data);
         // If doLoadCommon returns the holder should have released the data.
-        return (doLoadCommon(holder.get(), boost::bind(applyDiffs,
-                                                       &saved_diffs_,
-                                                       jnl_reader_, _1)).first);
+        return (doLoadCommon(holder.get(),
+                             boost::bind(applyDiffs, &saved_diffs_,
+                                         jnl_reader_, _1, _2), 0).first);
     } catch (...) {
         holder->release();
         throw;
@@ -504,7 +515,7 @@ ZoneDataLoader::ZoneDataLoaderImpl::commitDiffs(ZoneData* update_data) {
 ZoneDataLoader::LoadResult
 ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon(
     SegmentObjectHolder<ZoneData, RRClass>* data_holder,
-    RRsetInstaller installer)
+    RRsetInstaller installer, size_t count_limit)
 {
     while (true) { // Try as long as it takes to load and grow the segment
         bool created = false;
@@ -524,8 +535,15 @@ ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon(
 
             ZoneDataLoaderHelper loader(mem_sgmt_, rrclass_, zone_name_,
                                         *data_holder->get());
-            installer(boost::bind(&ZoneDataLoaderHelper::updateFromLoad,
-                                  &loader, _1, _2));
+            const size_t local_count_limit = 10000;
+            bool completed = false;
+            do {
+                completed =
+                    installer(boost::bind(&ZoneDataLoaderHelper::updateFromLoad,
+                                          &loader, _1, _2),
+                              count_limit == 0 ? local_count_limit :
+                              std::min(count_limit, local_count_limit));
+            } while (!completed && count_limit == 0);
             // Add any last RRsets that were left
             loader.flushNodeRRsets();
 
@@ -614,7 +632,7 @@ ZoneDataLoader::~ZoneDataLoader() {
 
 ZoneDataLoader::LoadResult
 ZoneDataLoader::load() {
-    return (impl_->doLoad());
+    return (impl_->doLoad(0));
 }
 
 ZoneData*
