@@ -204,6 +204,39 @@ protected:
         }
         EXPECT_TRUE(mem_sgmt_.allMemoryDeallocated()); // catch any leak here.
     }
+    ZoneData* checkLoad(ZoneDataLoader& loader, bool incremental,
+                        bool expect_immediate = false)
+    {
+        // Initially, loaded data should be NULL.
+        EXPECT_FALSE(loader.getLoadedData());
+
+        ZoneData* zone_data;
+        if (incremental) {
+            if (expect_immediate) {
+                // If load is expected to complete immediately, the minimal
+                // incremental load should return true.
+                EXPECT_TRUE(loader.loadIncremental(1));
+            } else {
+                // Otherwise, there'll be at least two different RRsets to be
+                // installed, so loadIncremental with count_limit=1 should
+                // always return false.
+                EXPECT_FALSE(loader.loadIncremental(1));
+                EXPECT_FALSE(loader.getLoadedData()); // should still be NULL
+                // And then it should eventually succeed.
+                while (!loader.loadIncremental(2)) {
+                    // and, as long as load is continued, this should be NULL.
+                    EXPECT_FALSE(loader.getLoadedData());
+                }
+            }
+            zone_data = loader.getLoadedData();
+        } else {
+            zone_data = loader.load();
+            EXPECT_EQ(zone_data, loader.getLoadedData());
+        }
+        return (zone_data);
+    }
+    void loadFromDataSourceCommon(bool incremental);
+    void relocateCommon(bool incremental);
     const RRClass zclass_;
     test::MemorySegmentMock mem_sgmt_;
     ZoneData* zone_data_;
@@ -238,20 +271,21 @@ TEST_F(ZoneDataLoaderTest, zoneMinTTL) {
     EXPECT_EQ(RRTTL(1200), RRTTL(b));
 }
 
-TEST_F(ZoneDataLoaderTest, loadFromDataSource) {
+void
+ZoneDataLoaderTest::loadFromDataSourceCommon(bool incremental) {
     const Name origin("example.com");
     MockDataSourceClient dsc;
 
     // First load: Load should succeed, and the ZoneData should be newly created
     ZoneDataLoader loader1(mem_sgmt_, zclass_, origin, dsc);
-    zone_data_ = loader1.load();
+    zone_data_ = checkLoad(loader1, incremental);
     EXPECT_TRUE(zone_data_);
     EXPECT_FALSE(loader1.isDataReused());
 
     // Next, the serial doesn't change, so the actual load is skipped,
     // same ZoneData will be returned.
     ZoneDataLoader loader2(mem_sgmt_, zclass_, origin, dsc, zone_data_);
-    ZoneData* zone_data2 = loader2.load();
+    ZoneData* zone_data2 = zone_data_ = checkLoad(loader2, incremental, true);
     EXPECT_TRUE(zone_data2);
     EXPECT_TRUE(loader2.isDataReused());
     EXPECT_EQ(zone_data_, zone_data2);
@@ -260,7 +294,7 @@ TEST_F(ZoneDataLoaderTest, loadFromDataSource) {
     // It'll be loaded just like the initial case.
     dsc.serial_ = 10;
     ZoneDataLoader loader3(mem_sgmt_, zclass_, origin, dsc, zone_data_);
-    ZoneData* zone_data3 = loader3.load();
+    ZoneData* zone_data3 = checkLoad(loader3, incremental);
     EXPECT_TRUE(zone_data3);
     EXPECT_FALSE(loader3.isDataReused());
     EXPECT_NE(zone_data2, zone_data3);
@@ -270,7 +304,7 @@ TEST_F(ZoneDataLoaderTest, loadFromDataSource) {
     // (but it'll internally trigger a warning log message).
     dsc.serial_ = 9;
     ZoneDataLoader loader4(mem_sgmt_, zclass_, origin, dsc, zone_data3);
-    zone_data_ = loader4.load();
+    zone_data_ = checkLoad(loader4, incremental);
     EXPECT_TRUE(zone_data_);
     EXPECT_FALSE(loader4.isDataReused());
     EXPECT_NE(zone_data3, zone_data_);
@@ -281,7 +315,7 @@ TEST_F(ZoneDataLoaderTest, loadFromDataSource) {
     // but for ZoneDataLoader this is no different from loading new data.
     ZoneData* old_data = ZoneData::create(mem_sgmt_, origin); // empty zone
     ZoneDataLoader loader5(mem_sgmt_, zclass_, origin, dsc, old_data);
-    zone_data_ = loader5.load();
+    zone_data_ = checkLoad(loader5, incremental);
     EXPECT_TRUE(zone_data_);
     EXPECT_FALSE(loader5.isDataReused());
     EXPECT_NE(old_data, zone_data_);
@@ -291,7 +325,7 @@ TEST_F(ZoneDataLoaderTest, loadFromDataSource) {
     dsc.serial_ = 12;
     dsc.use_journal_ = true;
     ZoneDataLoader loader6(mem_sgmt_, zclass_, origin, dsc, zone_data_);
-    ZoneData* zone_data6 = loader6.load();
+    ZoneData* zone_data6 = checkLoad(loader6, incremental, true);
     EXPECT_EQ(zone_data_, zone_data6);
     EXPECT_TRUE(loader6.isDataReused());
     EXPECT_EQ(zone_data_, loader6.commit(zone_data_));
@@ -300,7 +334,7 @@ TEST_F(ZoneDataLoaderTest, loadFromDataSource) {
     // will be full and JournalReader still has some data.
     dsc.serial_ = 120;
     ZoneDataLoader loader7(mem_sgmt_, zclass_, origin, dsc, zone_data_);
-    ZoneData* zone_data7 = loader7.load();
+    ZoneData* zone_data7 = checkLoad(loader7, incremental, true);
     EXPECT_EQ(zone_data_, zone_data7);
     EXPECT_TRUE(loader7.isDataReused());
     EXPECT_EQ(zone_data_, loader7.commit(zone_data_));
@@ -309,10 +343,18 @@ TEST_F(ZoneDataLoaderTest, loadFromDataSource) {
     dsc.serial_ = 125;
     dsc.use_broken_journal_ = true;
     ZoneDataLoader loader8(mem_sgmt_, zclass_, origin, dsc, zone_data_);
-    ZoneData* zone_data8 = loader8.load();
+    ZoneData* zone_data8 = checkLoad(loader8, incremental, true);
     EXPECT_EQ(zone_data_, zone_data8);
     EXPECT_TRUE(loader8.isDataReused());
     EXPECT_THROW(loader8.commit(zone_data_), ZoneDataUpdater::RemoveError);
+}
+
+TEST_F(ZoneDataLoaderTest, loadFromDataSource) {
+    loadFromDataSourceCommon(false);
+}
+
+TEST_F(ZoneDataLoaderTest, loadFromDataSourceIncremental) {
+    loadFromDataSourceCommon(true);
 }
 
 TEST_F(ZoneDataLoaderTest, loadFromBadDataSource) {
@@ -367,8 +409,8 @@ TEST_F(ZoneDataLoaderTest, loadToBeNSEC3Unsigned) {
 // Load bunch of small zones, hoping some of the relocation will happen
 // during the memory creation, not only Rdata creation.
 // Note: this doesn't even compile unless USE_SHARED_MEMORY is defined.
-#ifdef USE_SHARED_MEMORY
-TEST(ZoneDataLoaterTest, relocate) {
+void
+ZoneDataLoaderTest::relocateCommon(bool incremental) {
     const char* const mapped_file = TEST_DATA_BUILDDIR "/test.mapped";
     MemorySegmentMapped segment(mapped_file,
                                 bundy::util::MemorySegmentMapped::CREATE_ONLY,
@@ -379,11 +421,9 @@ TEST(ZoneDataLoaterTest, relocate) {
     std::vector<HolderPtr> zones;
     for (size_t i = 0; i < zone_count; ++i) {
         // Load some zone
-        ZoneData* data = ZoneDataLoader(segment, RRClass::IN(),
-                                        Name("example.org"),
-                                        TEST_DATA_DIR
-                                        "/example.org-nsec3-signed.zone").
-            load();
+        ZoneDataLoader loader(segment, RRClass::IN(), Name("example.org"),
+                              TEST_DATA_DIR "/example.org-nsec3-signed.zone");
+        ZoneData* data = checkLoad(loader, incremental);
         // Store it, so it is cleaned up later
         zones.push_back(HolderPtr(new Holder(segment, RRClass::IN())));
         zones.back()->set(data);
@@ -394,6 +434,26 @@ TEST(ZoneDataLoaterTest, relocate) {
     EXPECT_TRUE(segment.allMemoryDeallocated());
     EXPECT_EQ(0, unlink(mapped_file));
 }
-#endif
 
+TEST_F(ZoneDataLoaderTest,
+#ifdef USE_SHARED_MEMORY
+       relocate
+#else
+       DISABLED_relocate
+#endif
+)
+{
+    relocateCommon(false);
+}
+
+TEST_F(ZoneDataLoaderTest,
+#ifdef USE_SHARED_MEMORY
+       relocateIncremental
+#else
+       DISABLED_relocateIncremental
+#endif
+)
+{
+    relocateCommon(true);             
+}
 }

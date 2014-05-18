@@ -75,6 +75,9 @@ public:
         }
         return (false);
     }
+    virtual ZoneData* getLoadedData() const {
+        return (NULL);
+    }
     virtual ZoneData* load() {
         // We got called
         *load_called_ = true;
@@ -101,6 +104,9 @@ public:
             EXPECT_NE(static_cast<ZoneNode*>(NULL), node);
         }
         return (data);
+    }
+    virtual bool loadIncremental(size_t) {
+        return (true);
     }
     virtual ZoneData* commit(ZoneData* update_data) {
         // If so specified, throw MemorySegmentGrown once.

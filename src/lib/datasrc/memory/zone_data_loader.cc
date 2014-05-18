@@ -269,16 +269,18 @@ public:
                        ZoneData* old_data,
                        const boost::optional<dns::Serial>& old_serial) :
         mem_sgmt_(mem_sgmt), rrclass_(rrclass), zone_name_(zone_name),
-        old_data_(old_data), old_serial_(old_serial)
+        old_data_(old_data), old_serial_(old_serial), loaded_data_(NULL)
     {
         validateOldData(zone_name, old_data);
     }
 
-    virtual ZoneData* doLoad(size_t count_limit) {
+    virtual bool doLoad(size_t count_limit) {
         initUpdate(NULL);
         const bool completed = doLoadCommon(count_limit);
-        assert(completed);
-        return (finishUpdate());
+        if (completed) {
+            finishUpdate();
+        }
+        return (completed);
     }
 
     virtual ZoneData* commitDiffs(ZoneData* update_data) {
@@ -287,10 +289,17 @@ public:
 
     virtual bool isDataReused() const = 0;
 
+    ZoneData* getLoadedData() const {
+        return (loaded_data_);
+    }
+
 protected:
     bool doLoadCommon(size_t count_limit);
 
     virtual void initUpdate(ZoneData* const zone_data) {
+        if (data_holder_) {
+            return;             // nothing to do, already initialized
+        }
         while (true) {
             try {
                 boost::scoped_ptr<SegmentObjectHolder<ZoneData, RRClass> >
@@ -318,7 +327,7 @@ protected:
                                                        *data_holder_->get()));
     }
 
-    ZoneData* finishUpdate();
+    void finishUpdate();
 
     virtual bool updateRRsets(size_t count_limit) = 0;
 
@@ -330,9 +339,10 @@ protected:
     const boost::optional<dns::Serial> old_serial_;
     boost::scoped_ptr<SegmentObjectHolder<ZoneData, RRClass> > data_holder_;
     boost::scoped_ptr<ZoneDataUpdaterHelper> update_helper_;
+    ZoneData* loaded_data_;
 };
 
-ZoneData*
+void
 ZoneDataLoader::ZoneDataLoaderImpl::finishUpdate() {
     const ZoneNode* origin_node = data_holder_->get()->getOriginNode();
     const RdataSet* rdataset = origin_node->getData();
@@ -377,19 +387,18 @@ ZoneDataLoader::ZoneDataLoaderImpl::finishUpdate() {
         arg(zone_name_).arg(rrclass_).arg(new_serial->getValue()).
         arg(loaded_data->isSigned() ? " (DNSSEC signed)" : "");
 
-    return (data_holder_->release());
+    loaded_data_ = data_holder_->release();
 }
 
 bool
 ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon(const size_t count_limit) {
-    const size_t local_count_limit = 10000;
-    const size_t actual_count_limit =
-        count_limit == 0 ? local_count_limit :
-        std::min(count_limit, local_count_limit);
+    // if the count is unlimited (0), use an arbitrarily large number for
+    // the temporary limit.
+    const size_t update_count_limit = count_limit == 0 ? 100000 : count_limit;
     try {
         bool completed = false;
         do {
-            completed = updateRRsets(actual_count_limit);
+            completed = updateRRsets(update_count_limit);
         } while (!completed && count_limit == 0);
         // Add any last RRsets that were left
         update_helper_->flushNodeRRsets();
@@ -421,6 +430,10 @@ public:
 
 protected:
     virtual void initUpdate(ZoneData* const zone_data) {
+        if (master_loader_) {
+            return;             // already initialized
+        }
+
         // perform common initialization, and create MasterLoader (we need to
         // hold off creating it until this point since we need update_helper_).
         ZoneDataLoader::ZoneDataLoaderImpl::initUpdate(zone_data);
@@ -507,8 +520,9 @@ public:
             arg(dsrc_name);
     }
     virtual ~ReuseLoader() {}
-    virtual ZoneData* doLoad(size_t) {
-        return (old_data_);
+    virtual bool doLoad(size_t) {
+        loaded_data_ = old_data_;
+        return (true);
     }
     virtual bool isDataReused() const { return (true); }
 protected:
@@ -541,9 +555,10 @@ public:
     }
     virtual ~JournalLoader() {}
     virtual bool isDataReused() const { return (true); }
-    virtual ZoneData* doLoad(size_t) {
+    virtual bool doLoad(size_t) {
         saveDiffs();
-        return (old_data_);
+        loaded_data_ = old_data_;
+        return (true);
     }
     virtual ZoneData* commitDiffs(ZoneData* update_data) {
         // Constructing SegmentObjectHolder can result in MemorySegmentGrown.
@@ -555,7 +570,8 @@ public:
         try {
             // On success, finishUpdate release the zone data in the holder.
             doLoadCommon(0);    // must return true
-            return (finishUpdate());
+            finishUpdate();
+            return (getLoadedData());
         } catch (...) {
             data_holder_->release();
             throw;
@@ -716,9 +732,21 @@ ZoneDataLoader::isDataReused() const {
     return (impl_->isDataReused());
 }
 
+bool
+ZoneDataLoader::loadIncremental(size_t count_limit) {
+    return (impl_->doLoad(count_limit));
+}
+
 ZoneData*
 ZoneDataLoader::load() {
-    return (impl_->doLoad(0));
+    const bool completed = loadIncremental(0);
+    assert(completed);
+    return (getLoadedData());
+}
+
+ZoneData*
+ZoneDataLoader::getLoadedData() const {
+    return (impl_->getLoadedData());
 }
 
 ZoneData*
