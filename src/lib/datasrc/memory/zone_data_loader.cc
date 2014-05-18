@@ -380,23 +380,22 @@ ZoneDataLoader::ZoneDataLoaderImpl::finishUpdate() {
 
 bool
 ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon(const size_t count_limit) {
+    const size_t local_count_limit = 10000;
+    const size_t actual_count_limit =
+        count_limit == 0 ? local_count_limit :
+        std::min(count_limit, local_count_limit);
     try {
-        const size_t local_count_limit = 10000;
-        const size_t actual_count_limit =
-            count_limit == 0 ? local_count_limit :
-            std::min(count_limit, local_count_limit);
         bool completed = false;
         do {
             completed = updateRRsets(actual_count_limit);
         } while (!completed && count_limit == 0);
         // Add any last RRsets that were left
         update_helper_->flushNodeRRsets();
-        if (!completed) {
-            return (false);
+        if (completed) {
+            // we're done with the updater.  Release internal resources sooner.
+            update_helper_.reset();
         }
-        // we're done with the updater.  Release internal resources sooner.
-        update_helper_.reset();
-        return (true);
+        return (completed);
     } catch (const util::MemorySegmentGrown&) {
         // Nothing after creating the data holder should throw
         // MemorySegmentGrown.  We make it sure here.
