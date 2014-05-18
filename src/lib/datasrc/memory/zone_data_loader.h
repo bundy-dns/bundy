@@ -98,14 +98,47 @@ public:
     /// \brief Create and return a ZoneData instance populated from the
     /// source passed on construction.
     ///
+    /// This is actually a shortcut of call to \c loadIncremental(0) and
+    /// returning the result of \c getLoadedData().
+    ///
+    /// \return A \c ZoneData containing zone data loaded from the source.
+    virtual ZoneData* load();
+
+    /// \brief Incrementally load zone data into memory from the source passed
+    /// on construction.
+    ///
+    /// It loads the specified up to the number of "items" and returns whether
+    /// the load is completed or not.  The meaning of "items" vary depending on
+    /// how the loader was constructed: If it's constructed with a master zone
+    /// file, it's roughly equals to the number of RRs in the file; if it's
+    /// constructed with a data source client, it's the number of RRsets
+    /// provided via underlying zone iterator or journal reader (the constructor
+    /// chooses an appropriate one).
+    ///
+    /// If the specified limit is 0, this method continues the load until
+    /// it's completed.
+    ///
     /// \throw ZoneDataUpdater::AddError Invalid or inconsistent data found.
     /// \throw EmptyZone If an empty zone would be created
     /// \throw bundy::Unexpected An empty RRset is given from the source
     ///        (shouldn't happen, but possible for a buggy data source
     ///         implementation).
     ///
-    /// \return A \c ZoneData containing zone data loaded from the source.
-    virtual ZoneData* load();
+    /// \param count_limit the number of items to be loaded in this call.
+    /// If 0, it means unlimited.
+    /// \return true if the load is completed with this call; false otherwise.
+    virtual bool loadIncremental(size_t count_limit);
+
+    /// \brief Returns the ZoneData as a result of load.
+    ///
+    /// It returns a pointer to ZoneData built in \c load() or
+    /// \c loadIncremental() method.  If it's called before or in the middle
+    /// of the load, it returns NULL.  If it's called after successful
+    /// completion of the load, the return value must be non-NULL.
+    ///
+    /// \throw None.
+    /// \return A pointer to the loaded ZoneData.
+    virtual ZoneData* getLoadedData() const;
 
     /// \brief Complete any remaining loading task that deferred in load().
     ///
