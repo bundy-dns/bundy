@@ -202,21 +202,6 @@ logError(const dns::Name* zone_name, const dns::RRClass* rrclass,
         arg(reason);
 }
 
-// The installer called for ZoneDataLoader using a zone iterator
-bool
-generateRRsetFromIterator(ZoneIterator* iterator,
-                          ZoneDataLoaderHelper::LoadCallback callback,
-                          size_t count_limit)
-{
-    size_t count = 0;
-    ConstRRsetPtr rrset;
-    while (count < count_limit && (rrset = iterator->getNextRRset()) != NULL) {
-        callback(rrset, ZoneDataLoaderHelper::ADD);
-        count++;
-    }
-    return (!rrset);   // we are done iff we reach end of the iterator
-}
-
 boost::optional<dns::Serial>
 getSerialFromRRset(const dns::AbstractRRset& rrset) {
     if (rrset.getRdataCount() != 1) {
@@ -288,7 +273,7 @@ public:
         validateOldData(zone_name, old_data);
     }
 
-    virtual LoadResult doLoad(size_t count_limit);
+    virtual LoadResult doLoad(size_t count_limit) = 0;
 
     virtual ZoneData* commitDiffs(ZoneData* update_data) {
         return (update_data);
@@ -312,41 +297,6 @@ protected:
     ZoneData* const old_data_;
     const boost::optional<dns::Serial> old_serial_;
 };
-
-ZoneDataLoader::LoadResult
-ZoneDataLoader::ZoneDataLoaderImpl::doLoad(size_t count_limit) {
-    if (datasrc_client_) {
-        ZoneIteratorPtr iterator = datasrc_client_->getIterator(zone_name_);
-        if (!iterator) {
-            // This shouldn't happen for a compliant implementation of
-            // DataSourceClient, but we'll protect ourselves from buggy
-            // implementations.
-            bundy_throw(Unexpected, "getting loader creator for " << zone_name_
-                        << "/" << rrclass_ <<
-                        " resulted in Null zone iterator");
-        }
-
-        const dns::ConstRRsetPtr new_soarrset = iterator->getSOA();
-        if (!new_soarrset) {
-            // If the source data source doesn't contain SOA, post-load check
-            // will fail anyway, so rejecting loading at this point makes sense.
-            bundy_throw(ZoneValidationError, "No SOA found for "
-                        << zone_name_ << "/" << rrclass_ << "in " <<
-                        datasrc_client_->getDataSourceName());
-        }
-        const boost::optional<dns::Serial> new_serial =
-            getSerialFromRRset(*new_soarrset);
-        if (old_serial_ && (*old_serial_ == *new_serial)) {
-            assert(false);      // covered in ReuseLoader
-        } else if (old_serial_ && (*old_serial_ < *new_serial)) {
-            ;                   // non journal case covered in JournalLoader
-        }
-        return (doLoadCommon(NULL, boost::bind(generateRRsetFromIterator,
-                                               iterator.get(), _1, _2),
-                             count_limit));
-    }
-    assert(false);
-}
 
 ZoneJournalReaderPtr
 ZoneDataLoader::ZoneDataLoaderImpl::getJournalReader(uint32_t begin,
@@ -495,6 +445,39 @@ private:
     const std::string zone_file_;
     boost::scoped_ptr<dns::RRCollator> rrcollator_;
     boost::scoped_ptr<dns::MasterLoader> master_loader_;
+};
+
+class IteratorLoader : public ZoneDataLoader::ZoneDataLoaderImpl {
+public:
+    IteratorLoader(util::MemorySegment& mem_sgmt, const dns::RRClass& rrclass,
+                   const dns::Name& zone_name, ZoneIteratorPtr iterator,
+                   ZoneData* old_data) :
+        ZoneDataLoader::ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name,
+                                           old_data),
+        iterator_(iterator)
+    {}
+    virtual ~IteratorLoader() {}
+    virtual ZoneDataLoader::LoadResult doLoad(size_t count_limit) {
+        return (doLoadCommon(NULL, boost::bind(&IteratorLoader::installer,
+                                               this, _1, _2),
+                             count_limit));
+    }
+
+    // The installer called for ZoneDataLoader using a zone iterator
+    bool installer(ZoneDataLoaderHelper::LoadCallback callback,
+                   size_t count_limit)
+    {
+        size_t count = 0;
+        ConstRRsetPtr rrset;
+        while (count < count_limit &&
+               (rrset = iterator_->getNextRRset()) != NULL) {
+            callback(rrset, ZoneDataLoaderHelper::ADD);
+            count++;
+        }
+        return (!rrset);   // we are done iff we reach end of the iterator
+    }
+private:
+    ZoneIteratorPtr iterator_;
 };
 
 class ReuseLoader : public ZoneDataLoader::ZoneDataLoaderImpl {
@@ -700,8 +683,8 @@ ZoneDataLoader::ZoneDataLoader(util::MemorySegment& mem_sgmt,
             //serials.
         }
     }
-    impl_ = new ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name,
-                                   datasrc_client, old_data);
+    impl_ = new IteratorLoader(mem_sgmt, rrclass, zone_name, iterator,
+                               old_data);
 }
 
 ZoneDataLoader::~ZoneDataLoader() {
