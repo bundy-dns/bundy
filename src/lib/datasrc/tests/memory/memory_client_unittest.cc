@@ -304,7 +304,7 @@ TEST_F(MemoryClientTest, load) {
     ZoneData* zone_data = ZoneDataLoader(mem_sgmt_, zclass_,
                                          Name("example.org"),
                                          TEST_DATA_DIR
-                                         "/example.org.zone").load().first;
+                                         "/example.org.zone").load();
     ASSERT_NE(static_cast<const ZoneData*>(NULL), zone_data);
     EXPECT_FALSE(zone_data->isSigned());
     EXPECT_FALSE(zone_data->isNSEC3Signed());

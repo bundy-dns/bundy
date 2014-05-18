@@ -132,9 +132,8 @@ ZoneWriter::load(std::string* error_msg) {
     try {
         impl_->loader_.reset(impl_->loader_creator_(
                                  impl_->segment_.getMemorySegment(), old_data));
-        const ZoneDataLoader::LoadResult result = impl_->loader_->load();
-        ZoneData* const zone_data = result.first;
-        impl_->destroy_old_data_ = result.second;
+        impl_->destroy_old_data_ = !impl_->loader_->isDataReused();
+        ZoneData* const zone_data = impl_->loader_->load();
 
         if (!zone_data) {
             // Bug inside ZoneDataLoader.

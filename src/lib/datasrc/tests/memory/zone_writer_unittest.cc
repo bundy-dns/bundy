@@ -66,7 +66,16 @@ public:
         num_committed_(0), segment_(segment), old_data_(old_data)
     {}
     virtual ~MockLoader() {}
-    virtual LoadResult load() {
+    virtual bool isDataReused() const {
+        if (*load_null_) {
+            return (false);
+        }
+        if (old_data_) { // if non-NULL, it means we'll reuse it for test
+            return (true);
+        }
+        return (false);
+    }
+    virtual ZoneData* load() {
         // We got called
         *load_called_ = true;
         if (*load_throw_) {
@@ -78,10 +87,10 @@ public:
 
         if (*load_null_) {
             // Be nasty to the caller and return NULL, which is forbidden
-            return (LoadResult(NULL, true));
+            return (NULL);
         }
-        if (old_data_) { // if non-NULL, it means we'll reuse it for test
-            return (LoadResult(old_data_, false));
+        if (old_data_) {
+            return (old_data_);
         }
         ZoneData* data = ZoneData::create(segment_, Name("example.org"));
         if (*load_data_) {
@@ -91,7 +100,7 @@ public:
             data->insertName(segment_, Name("subdomain.example.org"), &node);
             EXPECT_NE(static_cast<ZoneNode*>(NULL), node);
         }
-        return (LoadResult(data, true));
+        return (data);
     }
     virtual ZoneData* commit(ZoneData* update_data) {
         // If so specified, throw MemorySegmentGrown once.

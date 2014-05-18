@@ -274,7 +274,7 @@ public:
         validateOldData(zone_name, old_data);
     }
 
-    virtual LoadResult doLoad(size_t count_limit) {
+    virtual ZoneData* doLoad(size_t count_limit) {
         initUpdate(NULL);
         const bool completed = doLoadCommon(count_limit);
         assert(completed);
@@ -284,6 +284,8 @@ public:
     virtual ZoneData* commitDiffs(ZoneData* update_data) {
         return (update_data);
     }
+
+    virtual bool isDataReused() const = 0;
 
 protected:
     bool doLoadCommon(size_t count_limit);
@@ -316,7 +318,7 @@ protected:
                                                        *data_holder_->get()));
     }
 
-    ZoneDataLoader::LoadResult finishUpdate();
+    ZoneData* finishUpdate();
 
     virtual bool updateRRsets(size_t count_limit) = 0;
 
@@ -330,7 +332,7 @@ protected:
     boost::scoped_ptr<ZoneDataUpdaterHelper> update_helper_;
 };
 
-ZoneDataLoader::LoadResult
+ZoneData*
 ZoneDataLoader::ZoneDataLoaderImpl::finishUpdate() {
     const ZoneNode* origin_node = data_holder_->get()->getOriginNode();
     const RdataSet* rdataset = origin_node->getData();
@@ -375,7 +377,7 @@ ZoneDataLoader::ZoneDataLoaderImpl::finishUpdate() {
         arg(zone_name_).arg(rrclass_).arg(new_serial->getValue()).
         arg(loaded_data->isSigned() ? " (DNSSEC signed)" : "");
 
-    return (LoadResult(data_holder_->release(), true));
+    return (data_holder_->release());
 }
 
 bool
@@ -415,6 +417,7 @@ public:
         zone_file_(zone_file)
     {}
     virtual ~MasterFileLoader() {}
+    virtual bool isDataReused() const { return (false); }
 
 protected:
     virtual void initUpdate(ZoneData* const zone_data) {
@@ -471,6 +474,7 @@ public:
         iterator_(iterator)
     {}
     virtual ~IteratorLoader() {}
+    virtual bool isDataReused() const { return (false); }
 
 protected:
     // The installer called for ZoneDataLoader using a zone iterator
@@ -503,9 +507,10 @@ public:
             arg(dsrc_name);
     }
     virtual ~ReuseLoader() {}
-    virtual ZoneDataLoader::LoadResult doLoad(size_t) {
-        return (ZoneDataLoader::LoadResult(old_data_, false));
+    virtual ZoneData* doLoad(size_t) {
+        return (old_data_);
     }
+    virtual bool isDataReused() const { return (true); }
 protected:
     virtual bool updateRRsets(size_t) {
         assert(false);          // this version shouldn't be called
@@ -535,9 +540,10 @@ public:
         }
     }
     virtual ~JournalLoader() {}
-    virtual ZoneDataLoader::LoadResult doLoad(size_t) {
+    virtual bool isDataReused() const { return (true); }
+    virtual ZoneData* doLoad(size_t) {
         saveDiffs();
-        return (ZoneDataLoader::LoadResult(old_data_, false));
+        return (old_data_);
     }
     virtual ZoneData* commitDiffs(ZoneData* update_data) {
         // Constructing SegmentObjectHolder can result in MemorySegmentGrown.
@@ -549,7 +555,7 @@ public:
         try {
             // On success, finishUpdate release the zone data in the holder.
             doLoadCommon(0);    // must return true
-            return (finishUpdate().first);
+            return (finishUpdate());
         } catch (...) {
             data_holder_->release();
             throw;
@@ -705,7 +711,12 @@ ZoneDataLoader::~ZoneDataLoader() {
     delete impl_;
 }
 
-ZoneDataLoader::LoadResult
+bool
+ZoneDataLoader::isDataReused() const {
+    return (impl_->isDataReused());
+}
+
+ZoneData*
 ZoneDataLoader::load() {
     return (impl_->doLoad(0));
 }
