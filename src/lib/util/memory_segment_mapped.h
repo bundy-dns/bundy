@@ -56,6 +56,14 @@ namespace util {
 /// segments in read-only mode for the same file, but that shouldn't be
 /// necessary in practice; since it's read-only there wouldn't be a reason
 /// to have a redundant copy.
+///
+/// This implementation does not flush dirty memory pages to the disk on
+/// destruction for performance reasons.  This means if the mapped file image
+/// may be corrupted after an unexpected system crash and reboot.  In our
+/// expected usage this shouldn't be a problem, since the mapped image is only
+/// used as a cache, and corrupted image will be detected and discarded with
+/// checksums.  If a future extension requires more robustness, we can then
+/// consider adding a "synchronous" mode.
 class MemorySegmentMapped : boost::noncopyable, public MemorySegment {
 public:
     /// \brief The default value of the mapped file size when newly created.
