@@ -538,20 +538,15 @@ public:
                   ZoneData* old_data,
                   const boost::optional<dns::Serial>& old_serial,
                   const dns::Serial& new_serial,
-                  const DataSourceClient& datasrc_client) :
+                  ZoneJournalReaderPtr jnl_reader,
+                  const std::string& dsrc_name) :
         ZoneDataLoader::ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name,
-                                           old_data, old_serial)
+                                           old_data, old_serial),
+        jnl_reader_(jnl_reader)
     {
-        const std::pair<ZoneJournalReader::Result, ZoneJournalReaderPtr>
-            result = datasrc_client.getJournalReader(
-                zone_name, old_serial->getValue(), new_serial.getValue());
-        jnl_reader_ = result.second;
-        if (jnl_reader_) {
-            LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_LOAD_USE_JOURNAL).
-                arg(zone_name_).arg(rrclass_).arg(old_serial->getValue()).
-                arg(new_serial.getValue()).
-                arg(datasrc_client.getDataSourceName());
-        }
+        LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_LOAD_USE_JOURNAL).
+            arg(zone_name_).arg(rrclass_).arg(old_serial->getValue()).
+            arg(new_serial.getValue()).arg(dsrc_name);
     }
     virtual ~JournalLoader() {}
     virtual bool isDataReused() const { return (true); }
@@ -711,9 +706,15 @@ ZoneDataLoader::ZoneDataLoader(util::MemorySegment& mem_sgmt,
         return;
     } else if (old_serial && (*old_serial < *new_serial)) {
         try {
-            impl_ = new JournalLoader(mem_sgmt, rrclass, zone_name, old_data,
-                                      old_serial, *new_serial, datasrc_client);
-            return;
+            const std::pair<ZoneJournalReader::Result, ZoneJournalReaderPtr>
+                result = datasrc_client.getJournalReader(
+                    zone_name, old_serial->getValue(), new_serial->getValue());
+            if (result.second) {
+                impl_ = new JournalLoader(mem_sgmt, rrclass, zone_name,
+                                          old_data, old_serial, *new_serial,
+                                          result.second, dsrc_name);
+                return;
+            }
         } catch (const bundy::NotImplemented&) {
             // handle this case just like no journal is available for the
             // serials.
