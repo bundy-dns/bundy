@@ -35,7 +35,7 @@ obtained by using get_cached_zone_writer() on a ConfigurableClientList.\n\
 ";
 
 const char* const ZoneWriter_load_doc = "\
-load() -> err_msg\n\
+load(int) -> bool\n\
 \n\
 Get the zone data into memory.\n\
 \n\
@@ -46,18 +46,30 @@ the data actually served, it only prepares them for future use.\n\
 This is the first method you should call on the object. Never call it\n\
 multiple times.\n\
 \n\
-If the zone loads successfully, this method returns None. In the case of\n\
-a load error, if the ZoneWriter was constructed with the\n\
-catch_load_error option (see\n\
-ConfigurableClientList.get_cached_zone_writer()), this method will\n\
-return an error message string; if it was created without the\n\
-catch_load_error option, this method will raise a DataSourceError\n\
-exception.\n\
+The optional parameter 'count_limit' specifies the amount of items\n\
+to be loaded in this call to this method.  The precise definition of\n\
+'item' varies depending on internal details of the load implementation,\n\
+but it's more or less compatible to the number of RRs to be loaded.\n\
+If it's 0 (default), it means unlimited, i.e., this method continues\n\
+until all the zone data are loaded.  Specifying a non-0 value allows\n\
+the caller to perform incremental loading.\n\
+\n\
+This method returns True if the load is completed in the call.\n\
+Otherwise it returns False to indicate the caller needs to call it\n\
+again.\n\
+\n\
+Non-fatal load errors, such as a syntax error in zone file will result\n\
+in the bundy.datasrc.Error exception.  Other unexpected errors, which\n\
+are generally fatal, will result in SystemError.\n\
 \n\
 Exceptions:\n\
-  bundy.InvalidOperation if called second time.\n\
-  DataSourceError load related error (not thrown if constructed not to).\n\
+  bundy.datasrc.Error load related error.\n\
 \n\
+Parameter:\n\
+  count_limit (int): number of items to be loaded in this call.\n\
+                     0 means no limitation.\n\
+Return:\n\
+  True if the load is completed; otherwise False.\n\
 ";
 
 const char* const ZoneWriter_install_doc = "\
