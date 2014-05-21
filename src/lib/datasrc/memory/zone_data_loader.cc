@@ -260,6 +260,16 @@ validateOldData(const Name& origin, ZoneData* old_data) {
 }
 } // end of unnamed namespace
 
+// The base implementation class of ZoneDataLoader.  Specific derived classes
+// are defined to implement details depending on the source of the data
+// (file or another data source) or how the data should be loaded (full load
+// or journal based, etc).  This base class manages common parameters and
+// resources for all loader derived classes and define some common methods.
+// Some member variables are defined as protected for the convenience of derived
+// classes.  In general this is not a good practice in terms of data
+// encapsulation, but all of these classes are hidden inside this class and
+// never intended to be used outside of it, let alone publicly, so we prefer
+// the brevity of the direct access.
 class ZoneDataLoader::ZoneDataLoaderImpl {
 public:
     virtual ~ZoneDataLoaderImpl() {}
@@ -415,6 +425,7 @@ ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon(const size_t count_limit) {
 }
 
 namespace {
+// Master-file based loader implementation.
 class MasterFileLoader : public ZoneDataLoader::ZoneDataLoaderImpl {
 public:
     MasterFileLoader(util::MemorySegment& mem_sgmt, const dns::RRClass& rrclass,
@@ -476,6 +487,7 @@ private:
     boost::scoped_ptr<dns::MasterLoader> master_loader_;
 };
 
+// Zone iterator (of a data source) based loader implementation.
 class IteratorLoader : public ZoneDataLoader::ZoneDataLoaderImpl {
 public:
     IteratorLoader(util::MemorySegment& mem_sgmt, const dns::RRClass& rrclass,
@@ -505,6 +517,8 @@ private:
     ZoneIteratorPtr iterator_;
 };
 
+// A simple thin wrapper in case the load can be skipped because there's no
+// change in the SOA serial.
 class ReuseLoader : public ZoneDataLoader::ZoneDataLoaderImpl {
 public:
     ReuseLoader(util::MemorySegment& mem_sgmt,
@@ -531,6 +545,13 @@ protected:
     }
 };
 
+// Zone journal based loader implementation.  This one only applies diffs
+// between two serial versions of the zone and can be generally expected to
+// be faster.  Obviously this only works if previous zone data are given, and
+// corresponding diff can be found via the zone journal.  Also, it directly
+// modifies the existing zone data, rather than creating a new one and replace
+// it with the old on completion.  So any intermediate failure will invalidate
+// the zone data.
 class JournalLoader : public ZoneDataLoader::ZoneDataLoaderImpl {
 public:
     JournalLoader(util::MemorySegment& mem_sgmt,
