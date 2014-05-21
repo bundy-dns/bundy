@@ -155,7 +155,6 @@ class ConfigManagerData:
            """
         config = ConfigManagerData(data_path, file_name)
         logger.info(CFGMGR_CONFIG_FILE, config.db_filename)
-        file = None
         try:
             with open(config.db_filename, 'r') as file:
                 file_config = json.loads(file.read())
@@ -173,9 +172,6 @@ class ConfigManagerData:
                 raise ConfigManagerDataReadError("Can't read configuration file: " + str(ioe))
         except ValueError:
             raise ConfigManagerDataReadError("Configuration file out of date or corrupt, please update or remove " + config.db_filename)
-        finally:
-            if file:
-                file.close();
         return config
 
     def write_to_file(self, output_file_name = None):
