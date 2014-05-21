@@ -65,6 +65,14 @@ memory segment, and is now going to all zones.  This should normally
 not happen, but can be possible in a recover process from data
 corruption.  See also LIBMEMMGR_BUILDER_SEGMENT_CREATED.
 
+% LIBMEMMGR_BUILDER_SEGMENT_LOAD_CANCELED loading zone %1/%2 in data source %3 (generation %4) canceled
+A load operation in the memory segment builder thread is interrupted
+and canceled due to either a 'cancel' or 'shutdown' command.  The
+former can happen in case of reconfiguring data sources, and the
+latter can happen on system or Memmgr shutdown.  The intermediate load
+result will be discarded, and (in case it's shutdown) will have to be
+loaded on startup.
+
 % LIBMEMMGR_BUILDER_SEGMENT_RESET reset memory segment for update with data source '%1/%2'
 Informational message.  The MemorySegmentBuilder thread reset a
 memory segment used with the shown data source to the read-write mode
