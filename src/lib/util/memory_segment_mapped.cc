@@ -174,7 +174,6 @@ struct MemorySegmentMapped::Impl {
     void growSegment() {
         // We first need to unmap it before calling grow().
         const size_t prev_size = base_sgmt_->get_size();
-        base_sgmt_->flush();
         base_sgmt_.reset();
 
         // Double the segment size.  In theory, this process could repeat
@@ -279,7 +278,6 @@ MemorySegmentMapped::MemorySegmentMapped(const std::string& filename,
 MemorySegmentMapped::~MemorySegmentMapped() {
     if (impl_->base_sgmt_ && !impl_->read_only_) {
         impl_->freeReservedMemory();
-        impl_->base_sgmt_->flush(); // note: this is exception free
     }
     delete impl_;
 }
@@ -420,7 +418,6 @@ MemorySegmentMapped::shrinkToFit() {
     }
 
     // First, unmap the underlying file.
-    impl_->base_sgmt_->flush();
     impl_->base_sgmt_.reset();
 
     BaseSegment::shrink_to_fit(impl_->filename_.c_str());
