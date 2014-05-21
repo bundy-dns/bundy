@@ -62,6 +62,7 @@ class MemorySegmentBuilder:
         self._command_queue = command_queue
         self._response_queue = response_queue
         self._shutdown = False
+        self.__local_command_queue = []
 
     def __send_response(self, response_msg):
         with self._cv:
@@ -136,6 +137,51 @@ class MemorySegmentBuilder:
                          rrclass, ex)
         return self.__RESET_SEGMENT_FAILED
 
+    def __cmd_canceled(self, dsrc_info):
+        """Check if a subsequent event could cancel a command for dsrc_info.
+
+        This is intended to be called in the middle of time-consuming command
+        handling so we can react to 'shutdown' or 'cancel' more rapidly.
+        This will also help prevent the builder thread from 'holding' the
+        context too long (C Python's threads use a global lock, so the builder
+        thread could keep loading a very large zone without yielding).
+
+        """
+        # Peek into the command queue, appending new commands to the local
+        # queue at this opportunity
+        new_commands = []
+        with self._cv:
+            if self._command_queue:
+                new_commands = self._command_queue[:]
+                del self._command_queue[:]
+        canceled = False
+        for cmd in new_commands:
+            if cmd[0] == 'shutdown':
+                canceled = True
+                break
+            if cmd[0] == 'cancel' and cmd[1] == dsrc_info:
+                canceled = True
+                break
+        self.__local_command_queue.extend(new_commands)
+        return canceled
+
+    def __do_load_zone(self, writer, zname, rrclass, dsrc_name, dsrc_info):
+        """A short helper for handle_load().
+
+        Try incremental load until the load is completed or any cancel event
+        happens.  The number of load items per iteration is arbitrarily chosen,
+        and may have to be adjusted or customizable in future.  It returns
+        True if the load is completed and False if it's canceled.
+
+        """
+        while not writer.load(1000):
+            if self.__cmd_canceled(dsrc_info):
+                logger.info(LIBMEMMGR_BUILDER_SEGMENT_LOAD_CANCELED,
+                            zname, rrclass, dsrc_name, dsrc_info.gen_id)
+                writer.cleanup()
+                return False
+        return True
+
     def _handle_load(self, zone_name, dsrc_info, rrclass, dsrc_name):
         # This method is called when handling the 'load' command. The
         # following tuple is passed:
@@ -180,9 +226,10 @@ class MemorySegmentBuilder:
             zones = clist.get_zone_table_accessor(dsrc_name, True)
 
         errors = 0
+        canceled = False
         for _, zname in zones:  # note: don't override zone_name here
             # install empty zone initially
-            catch_load_error = (zname is None)
+            catch_load_error = (zone_name is None)
             try:
                 result, writer = clist.get_cached_zone_writer(zname,
                                                               catch_load_error,
@@ -198,7 +245,10 @@ class MemorySegmentBuilder:
 
             try:
                 try:
-                    writer.load()
+                    if not self.__do_load_zone(writer, zname, rrclass,
+                                               dsrc_name, dsrc_info):
+                        canceled = True
+                        break
                 except bundy.datasrc.Error as error:
                     logger.error(LIBMEMMGR_BUILDER_ZONE_WRITER_LOAD_1_ERROR,
                                  zname, dsrc_name, error)
@@ -216,6 +266,11 @@ class MemorySegmentBuilder:
                 # fall through to cleanup
             writer.cleanup()
 
+        # Make sure the writer is destroyed no matter how we reach here
+        # befoe resetting the segment; otherwise the temporary resource
+        # maintained in the writer could cause a disruption.
+        writer = None
+
         # need to reset the segment so readers can read it (note: memmgr
         # itself doesn't have to keep it open, but there's currently no
         # public API to just clear the segment).  This 'reset' should succeed,
@@ -223,12 +278,21 @@ class MemorySegmentBuilder:
         clist.reset_memory_segment(dsrc_name,
                                    ConfigurableClientList.READ_ONLY, params)
 
+        # If the load has been canceled, we are not expected to return a
+        # response.  We should return after all cleanups are completed.
+        if canceled:
+            return
+
         # At this point, we consider the load a failure only if loading a
         # specific zone has failed.
-        succeeded = True if (zone_name is None or errors == 0) else False
+        succeeded = (zone_name is None or errors == 0)
         self.__send_response(('load-completed', dsrc_info, rrclass, dsrc_name,
                               succeeded))
 
+    # Helper of main loop: discard any commands that involve data source info
+    # that is to be canceled.  Or if 'shutdown' has been sent, simply ignore
+    # all others.  This is essentially a private method, but defined as
+    # 'protected' so tests can call it directly.
     def _handle_cancels(self, commands):
         # Make a set of data source info objects that are to be canceled
         canceled_info = set()
@@ -237,6 +301,8 @@ class MemorySegmentBuilder:
         # filter out commands involving canceled data source info
         active_commands = []
         for cmd in commands:
+            if cmd[0] == 'shutdown':
+                return [cmd]
             if cmd[0] == 'validate' and cmd[1] in canceled_info:
                 continue
             if cmd[0] == 'load' and cmd[2] in canceled_info:
@@ -257,16 +323,20 @@ class MemorySegmentBuilder:
         """
         while not self._shutdown:
             with self._cv:
-                while not self._command_queue:
-                    self._cv.wait()
+                # Unless we've peeked and moved new commands in
+                # __cmd_canceled(), wait for new one from the parent thread.
+                if not self.__local_command_queue:
+                    while not self._command_queue:
+                        self._cv.wait()
                 # Move the queue content to a local queue. Be careful of
                 # not making assignments to reference variables.
-                local_command_queue = self._command_queue[:]
+                self.__local_command_queue.extend(self._command_queue[:])
                 del self._command_queue[:]
 
-            # discard any commands that involve data source info that is to
-            # be canceled
-            local_command_queue = self._handle_cancels(local_command_queue)
+            # Filter out commands that don't have to be executed.
+            local_command_queue = \
+                    self._handle_cancels(self.__local_command_queue)
+            self.__local_command_queue.clear()
 
             # Run commands passed in the command queue sequentially
             # in the given order.  For now, it only supports the
