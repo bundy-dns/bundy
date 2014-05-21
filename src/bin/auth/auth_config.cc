@@ -147,7 +147,7 @@ createAuthConfigParser(AuthSrv& server, const std::string& config_id) {
     // that it can be dynamically customized.
     if (config_id == "listen_on") {
         return (new ListenAddressConfig(server));
-    } else if (config_id == "_commit_throw") {
+    } else if (config_id == "-commit_throw") {
         // This is for testing purpose only and should not appear in the
         // actual configuration syntax.  While this could crash the caller
         // as a result, the server implementation is expected to perform
@@ -172,7 +172,7 @@ createAuthConfigParser(AuthSrv& server, const std::string& config_id) {
         return (new TCPRecvTimeoutConfig(server));
     } else {
         bundy_throw(AuthConfigError, "Unknown configuration identifier: " <<
-                  config_id);
+                    config_id);
     }
 }
 
@@ -192,6 +192,11 @@ configureAuthServer(AuthSrv& server, ConstElementPtr config_set) {
             // this framework, but to minimize diff we begin with skipping that
             // part.
             if (config_pair.first == "database_file") {
+                continue;
+            }
+
+            // Any system reserved items are ignored for now
+            if (!config_pair.first.empty() && config_pair.first[0] == '_') {
                 continue;
             }
 
