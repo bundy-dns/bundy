@@ -244,8 +244,10 @@ class MockDataSourceClient():
         pass
 
 class MockDataSrcClientsMgr():
+    TEST_DATASRC_GENID = 42
+
     def __init__(self):
-        # Default faked result of get_client_list, customizable by tests
+        # Used in faked result of get_clients_map, customizable by tests
         self.found_datasrc_client_list = self
 
         # Default faked result of find(), customizable by tests
@@ -253,16 +255,20 @@ class MockDataSrcClientsMgr():
 
         self.reconfigure_param = [] # for inspection
 
-    def get_client_list(self, rrclass):
-        return self.found_datasrc_client_list
+        self.throw_on_reconfigure = False # allow tests to override
+
+    def get_clients_map(self):
+        return (self.TEST_DATASRC_GENID,
+                {RRClass.IN: self.found_datasrc_client_list})
 
     def reconfigure(self, arg1, arg2):
-        # the only current test simply needs to know this is called with
+        # the current test simply needs to know this is called with
         # the expected arguments and exceptions are handled.  if we need more
         # variations in tests, this mock method should be extended.
         self.reconfigure_param.append((arg1, arg2))
-        raise bundy.server_common.datasrc_clients_mgr.ConfigError(
-            'reconfigure failure')
+        if self.throw_on_reconfigure:
+            raise bundy.server_common.datasrc_clients_mgr.ConfigError(
+                'reconfigure failure')
 
     def find(self, zone_name, want_exact_match, want_finder):
         """Pretending find method on the object returned by get_clinet_list"""
@@ -2419,7 +2425,7 @@ class TestXfrinRecorder(unittest.TestCase):
         self.recorder.decrement(TEST_ZONE_NAME)
         self.assertEqual(self.recorder.xfrin_in_progress(TEST_ZONE_NAME), False)
 
-class TestXfrinProcess(unittest.TestCase):
+class TestXfrinProcessCloseCheck(unittest.TestCase):
     def setUp(self):
         self.unlocked = False
         self.conn_closed = False
@@ -2428,6 +2434,7 @@ class TestXfrinProcess(unittest.TestCase):
         self.do_raise_on_publish = False
         self.master = (socket.AF_INET, socket.SOCK_STREAM,
                        (TEST_MASTER_IPV4_ADDRESS, TEST_MASTER_PORT))
+        self.__publish_called = False
 
     def tearDown(self):
         # whatever happens the lock acquired in xfrin_recorder.increment
@@ -2450,10 +2457,11 @@ class TestXfrinProcess(unittest.TestCase):
         '''
         self.unlocked = True
 
-    def publish_xfrin_news(self, zone_name, rrclass, ret):
+    def publish_xfrin_news(self, genid, dsrc_name, zone_name, rrclass, ret):
         '''Fake method of serve.publish_xfrin_news
 
         '''
+        self.__publish_called = True
         if self.do_raise_on_publish:
             raise XfrinTestException('Emulated exception in publish')
 
@@ -2470,7 +2478,8 @@ class TestXfrinProcess(unittest.TestCase):
             raise XfrinTestException('Emulated exception in connect')
 
     def create_xfrinconn(self, sock_map, zone_name, rrclass, datasrc_client,
-                         shutdown_event, master_addrinfo, tsig_key):
+                         shutdown_event, master_addrinfo, soa, counters,
+                         tsig_key):
         conn = MockXfrinConnection(sock_map, zone_name, rrclass,
                                    datasrc_client, shutdown_event,
                                    master_addrinfo, tsig_key)
@@ -2490,20 +2499,26 @@ class TestXfrinProcess(unittest.TestCase):
 
         return conn
 
+    # pretend to be DataSourceClient.get_datasource_name()
+    def get_datasource_name(self):
+        return 'testsrc'
+
     def test_process_xfrin_normal(self):
         # Normal, successful case.  We only check that things are cleaned up
         # at the tearDown time.
-        process_xfrin(self, self, TEST_ZONE_NAME, TEST_RRCLASS, None, None,
+        process_xfrin(self, self, TEST_ZONE_NAME, TEST_RRCLASS, 1, self, None,
                       None, self.master,  False, None,
-                      ZoneInfo.REQUEST_IXFR_DISABLED, self.create_xfrinconn)
+                      ZoneInfo.REQUEST_IXFR_DISABLED, None,
+                      self.create_xfrinconn)
 
     def test_process_xfrin_exception_on_connect(self):
         # connect_to_master() will raise an exception.  Things must still be
         # cleaned up.
         self.do_raise_on_connect = True
-        process_xfrin(self, self, TEST_ZONE_NAME, TEST_RRCLASS, None, None,
+        process_xfrin(self, self, TEST_ZONE_NAME, TEST_RRCLASS, 1, self, None,
                       None, self.master,  False, None,
-                      ZoneInfo.REQUEST_IXFR_DISABLED, self.create_xfrinconn)
+                      ZoneInfo.REQUEST_IXFR_DISABLED, None,
+                      self.create_xfrinconn)
 
     def test_process_xfrin_exception_on_close(self):
         # connect() will result in exception, and even the cleanup close()
@@ -2511,17 +2526,20 @@ class TestXfrinProcess(unittest.TestCase):
         # but we deal with that case.
         self.do_raise_on_connect = True
         self.do_raise_on_close = True
-        process_xfrin(self, self, TEST_ZONE_NAME, TEST_RRCLASS, None, None,
+        process_xfrin(self, self, TEST_ZONE_NAME, TEST_RRCLASS, 1, self, None,
                       None, self.master,  False, None,
-                      ZoneInfo.REQUEST_IXFR_DISABLED, self.create_xfrinconn)
+                      ZoneInfo.REQUEST_IXFR_DISABLED, None,
+                      self.create_xfrinconn)
 
     def test_process_xfrin_exception_on_publish(self):
         # xfr succeeds but notifying the zonemgr fails with exception.
         # everything must still be cleaned up.
         self.do_raise_on_publish = True
-        process_xfrin(self, self, TEST_ZONE_NAME, TEST_RRCLASS, None, None,
+        process_xfrin(self, self, TEST_ZONE_NAME, TEST_RRCLASS, 1, self, None,
                       None, self.master,  False, None,
-                      ZoneInfo.REQUEST_IXFR_DISABLED, self.create_xfrinconn)
+                      ZoneInfo.REQUEST_IXFR_DISABLED, None,
+                      self.create_xfrinconn)
+        self.assertTrue(self.__publish_called)
 
 class TestXfrin(unittest.TestCase):
     def setUp(self):
@@ -3123,6 +3141,13 @@ class TestXfrin(unittest.TestCase):
         self.assertEqual([(True, False)],
                          self.xfr._datasrc_clients_mgr.reconfigure_param)
 
+        # A similar test, but exercise the case where reconfigure() results in
+        # an exception (checking no propagation of the exception).
+        self.xfr._datasrc_clients_mgr.throw_on_reconfigure = True
+        self.xfr._datasrc_config_handler(1, 2)
+        self.assertEqual([(True, False), (1, 2)],
+                         self.xfr._datasrc_clients_mgr.reconfigure_param)
+
 def raise_interrupt():
     raise KeyboardInterrupt()
 
@@ -3172,7 +3197,9 @@ class TestXfrinProcessMockCCSession:
             if (notification[0] == 'zone_updated' and
                 Name(notification[1]['origin']) == Name('example.org') and
                 notification[1]['class'] == 'IN' and
-                notification[1]['datasource'] == 'test-datasrc'):
+                notification[1]['datasource'] == 'test-datasrc' and
+                notification[1]['generation_id'] ==
+                MockDataSrcClientsMgr.TEST_DATASRC_GENID):
                 self.notify_sent_correctly = True
                 return "random-e068c2de26d760f20cf10afc4b87ef0f"
         else:
@@ -3248,13 +3275,15 @@ class TestXfrinProcess(unittest.TestCase):
         """
         return "example.org/IN"
 
-    def publish_xfrin_news(self, datasrc_name, zone_name, rrclass, ret):
+    def publish_xfrin_news(self, datasrc_genid, datasrc_name, zone_name,
+                           rrclass, ret):
         """
         Part of pretending to be the server as well. This just logs the
         success/failure of the previous operation.
         """
         if ret == XFRIN_OK:
-            xfrin._notify_zoneupdate(self, datasrc_name, zone_name, rrclass)
+            xfrin._notify_zoneupdate(self, datasrc_genid, datasrc_name,
+                                     zone_name, rrclass)
 
         self.__published.append(ret)
 
@@ -3285,9 +3314,10 @@ class TestXfrinProcess(unittest.TestCase):
         self.__rets = rets
         published = rets[-1]
         xfrin.process_xfrin(self, XfrinRecorder(), Name("example.org."),
-                            RRClass.IN, MyDataSourceClient(), zone_soa, None,
-                            TEST_MASTER_IPV4_ADDRINFO, True, None,
-                            request_ixfr,
+                            RRClass.IN,
+                            MockDataSrcClientsMgr.TEST_DATASRC_GENID,
+                            MyDataSourceClient(), zone_soa, None,
+                            TEST_MASTER_IPV4_ADDRINFO, True, None, request_ixfr,
                             xfrin.Counters(xfrin.SPECFILE_LOCATION),
                             self.__get_connection)
         self.assertEqual([], self.__rets)

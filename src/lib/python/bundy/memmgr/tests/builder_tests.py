@@ -148,9 +148,11 @@ class TestMemorySegmentBuilder(unittest.TestCase):
         mgr_config = {'mapped_file_dir': mapped_file_dir}
 
         cfg_data = MockConfigData(
-            {"classes":
+            {"_generation_id": 1,
+             "classes":
                  {"IN": [{"type": "MasterFiles",
-                          "params": { "example.com": TESTDATA_PATH + "example.com.zone" },
+                          "params": { "example.com":
+                                      TESTDATA_PATH + "example.com.zone" },
                           "cache-enable": True,
                           "cache-type": "mapped"}]
                   }
