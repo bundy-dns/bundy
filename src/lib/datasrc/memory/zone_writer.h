@@ -15,7 +15,7 @@
 #ifndef MEM_ZONE_WRITER_H
 #define MEM_ZONE_WRITER_H
 
-#include <datasrc/memory/load_action.h>
+#include <datasrc/memory/loader_creator.h>
 
 #include <boost/noncopyable.hpp>
 
@@ -56,14 +56,16 @@ public:
     /// \throw bundy::InvalidOperation if \c segment is read-only.
     ///
     /// \param segment The zone table segment to store the zone into.
-    /// \param load_action The callback used to load data.
+    /// \param loader_creator Functor to create ZoneDataLoader for the actual
+    ///  load.
     /// \param name The name of the zone.
     /// \param rrclass The class of the zone.
     /// \param catch_load_error true if loading errors are to be caught
     /// internally; false otherwise.
     ZoneWriter(ZoneTableSegment& segment,
-               const LoadAction& load_action, const dns::Name& name,
-               const dns::RRClass& rrclass, bool catch_load_error);
+               const ZoneDataLoaderCreator& loader_creator,
+               const dns::Name& name, const dns::RRClass& rrclass,
+               bool catch_load_error);
 
     /// \brief Destructor.
     ~ZoneWriter();
@@ -74,8 +76,16 @@ public:
     /// This can be run in a separate thread, for example. It has no effect on
     /// the data actually served, it only prepares them for future use.
     ///
-    /// This is the first method you should call on the object. Never call it
-    /// multiple times.
+    /// This is the first method you should call on the object, and must be
+    /// called repeatedly until it returns \c true.  Never call it after that.
+    ///
+    /// The optional parameter \c count_limit specifies the amount of items
+    /// to be loaded in this call to this method.  The precise definition of
+    /// "item" varies depending on internal details of the load implementation,
+    /// but it's more or less compatible to the number of RRs to be loaded.
+    /// If it's 0 (default), it means unlimited, i.e., this method continues
+    /// until all the zone data are loaded.  Specifying a non-0 value allows
+    /// the caller to perform incremental loading.
     ///
     /// If the optional parameter \c error_msg is given and non NULL, and
     /// if the writer object was constructed with \c catch_load_error being
@@ -93,9 +103,14 @@ public:
     /// \throw DataSourceError load related error (not thrown if constructed
     /// with catch_load_error being \c true).
     ///
+    /// \param count_limit The number of items to be loaded in this call.  0
+    /// means no limitation.
     /// \param error_msg If non NULL, used as a placeholder to store load error
     /// messages.
-    void load(std::string* error_msg = NULL);
+    ///
+    /// \return true if the load is completed (always the case if count_limit
+    /// is 0); otherwise false.
+    bool load(size_t count_limit = 0, std::string* error_msg = NULL);
 
     /// \brief Put the changes to effect.
     ///

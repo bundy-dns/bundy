@@ -462,21 +462,12 @@ TEST_F(MemorySegmentMappedTest, nullDeallocate) {
 }
 
 TEST_F(MemorySegmentMappedTest, shrink) {
+    // This initial shrink shouldn't cause disruption; in fact, since the
+    // remaining available memory is not large enough, this shrinkToFit()
+    // should be no-op, and the size should be still the initial size.
     segment_->shrinkToFit();
-    // Normally we should be able to expect that the resulting size is
-    // smaller than the initial default size. But it's not really
-    // guaranteed by the API, so we may have to disable this check (or
-    // use EXPECT_GE).
     const size_t shrinked_size = segment_->getSize();
-    EXPECT_GT(DEFAULT_INITIAL_SIZE, shrinked_size);
-
-    // Another shrink shouldn't cause disruption.  We expect the size is
-    // the same so we confirm it.  The underlying library doesn't guarantee
-    // that, so we may have to change it to EXPECT_GE if the test fails
-    // on that (MemorySegmentMapped class doesn't rely on this expectation,
-    // so it's okay even if it does not always hold).
-    segment_->shrinkToFit();
-    EXPECT_EQ(shrinked_size, segment_->getSize());
+    EXPECT_EQ(DEFAULT_INITIAL_SIZE, shrinked_size);
 
     // Check that the segment is still usable after shrink.
     void *p = NULL;
@@ -487,7 +478,29 @@ TEST_F(MemorySegmentMappedTest, shrink) {
             // Do nothing. Just try again.
         }
     }
+
+    // Another shrink shouldn't cause disruption; it should actually be still
+    // no-op because the size shouldn't be increased.
+    segment_->shrinkToFit();
+    EXPECT_EQ(shrinked_size, segment_->getSize());
     segment_->deallocate(p, sizeof(uint32_t));
+
+    // Allocate even more size and then deallocate it.
+    p = NULL;
+    while (!p) {
+        try {
+            p = segment_->allocate(DEFAULT_INITIAL_SIZE * 2);
+            segment_->deallocate(p, DEFAULT_INITIAL_SIZE * 2);
+        } catch (const MemorySegmentGrown&) {}
+    }
+
+    // Normally we should be able to expect that the resulting size is
+    // smaller than the original size if there's enough free space.
+    // But it's not really guaranteed by the API, so we may have to disable
+    // this check (or use EXPECT_GE).
+    const size_t orig_size = segment_->getSize();
+    segment_->shrinkToFit();
+    EXPECT_GT(orig_size, segment_->getSize());
 }
 
 TEST_F(MemorySegmentMappedTest, violateReadOnly) {

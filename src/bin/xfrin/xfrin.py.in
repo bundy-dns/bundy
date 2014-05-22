@@ -1473,7 +1473,7 @@ def _notify_zoneupdate(server, dsrc_genid, dsrc_name, zone_name, zone_class):
         'origin': str(zone_name),
         'class': str(zone_class),
         'datasource': dsrc_name,
-        'generation_id': dsrc_genid
+        'generation-id': dsrc_genid
     }
 
     # Unfortunately we cannot use ModuleCCSession.notify() (see

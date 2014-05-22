@@ -20,10 +20,74 @@ The MemorySegmentBuilder has received a bad command in its input command
 queue. This is likely a programming error. If the builder runs in a
 separate thread, this would cause it to exit the thread.
 
-% LIBMEMMGR_BUILDER_GET_ZONE_WRITER_ERROR Unable to get zone writer for zone '%1', data source '%2'. Skipping.
+% LIBMEMMGR_BUILDER_GET_ZONE_WRITER_ERROR Unable to get zone writer for zone '%1', data source '%2' (%3). Skipping.
 The MemorySegmentBuilder was unable to get a ZoneWriter for the
 specified zone when handling the load command. This zone will be
-skipped.
+skipped.  Sometimes this can happen in a lower layer error in the
+data source (such as database locking issue).  If the zone is frequently
+updated and the issue is temporary, the zone will be eventually be
+synchronized.  Otherwise it may have to be reloaded manually.
+
+% LIBMEMMGR_BUILDER_RECEIVED_COMMAND received command '%1'
+Informational message.  The MemorySegmentBuilder thread received a
+command from the main memmgr thread.
+
+% LIBMEMMGR_BUILDER_RESET_SEGMENT_ERROR Error resetting memory segment for '%1/%2': %3
+The MemorySegmentBuilder thread for memmgr failed to to reset a memory
+segment in the read-write mode for updates.  This is an unexpected
+event, but can still happen if a file-based segment has been corrupted
+and it's not detected in the initial validation.  It's not necessarily
+fatal; the builder thread will try to re-create a new segment and load
+all data from the scratch.  It may take time, but if it's completed
+successfully the memmgr can start working correctly again.
+
+% LIBMEMMGR_BUILDER_SEGMENT_CREATED Re-created memory segment for '%1/%2'
+The MemorySegmentBuilder thread created a new memory segment.  This is
+not an expected event under normal condition, even if reusable segment
+data doesn't exist before, since in that case the reset attempt in the
+read-write mode should have automatically created it.  This explicit
+create operation is therefore a recovery process from an unexpected
+failure.  Although unexpected, it can happen, especially after such
+events as an abrupt system reboot, so unless it happens frequently and
+as long as the creation succeeds this is not a problem.
+
+% LIBMEMMGR_BUILDER_SEGMENT_CREATE_ERROR Error creating memory segment for '%1/%2': %3
+The MemorySegmentBuilder thread created a new memory segment after a
+failure of resetting it, but even the create attempt failed.
+Something should be fundamentally broken, e.g, corruption at the file
+system level, and memmgr itself cannot recover from it by itself.
+The administrator needs to take a closer look at the cause and fix it.
+
+% LIBMEMMGR_BUILDER_SEGMENT_LOAD_ALL Loading all zones instead of just '%1/%2' in a new memory segment for data source '%3'
+The MemorySegmentBuilder thread tried to load a specific zone into a
+memory segment, but due to a failure it had to create a fresh new
+memory segment, and is now going to all zones.  This should normally
+not happen, but can be possible in a recover process from data
+corruption.  See also LIBMEMMGR_BUILDER_SEGMENT_CREATED.
+
+% LIBMEMMGR_BUILDER_SEGMENT_LOAD_CANCELED loading zone %1/%2 in data source %3 (generation %4) canceled
+A load operation in the memory segment builder thread is interrupted
+and canceled due to either a 'cancel' or 'shutdown' command.  The
+former can happen in case of reconfiguring data sources, and the
+latter can happen on system or Memmgr shutdown.  The intermediate load
+result will be discarded, and (in case it's shutdown) will have to be
+loaded on startup.
+
+% LIBMEMMGR_BUILDER_SEGMENT_RESET reset memory segment for update with data source '%1/%2'
+Informational message.  The MemorySegmentBuilder thread reset a
+memory segment used with the shown data source to the read-write mode
+for further updates.
+
+% LIBMEMMGR_BUILDER_SEGMENT_VALIDATE Validating memory segment data for data source '%1/%2'
+Informational message.  The memory segment builder thread is
+validating memory segment data in a segment specific way.
+
+% LIBMEMMGR_BUILDER_SEGMENT_VALIDATE_FAIL Failed to validate memory segment data for data source '%1/%2': %3
+An exception occurred when validating a memory segment.  This is
+generally unexpected (errors are expected to be reported without an
+exception), so it's more likely to be a bug of the segment specific
+implementation.  Nevertheless, this is considered a validation failure
+and is reported to the main memmgr thread.
 
 % LIBMEMMGR_BUILDER_ZONE_WRITER_LOAD_1_ERROR Error loading zone '%1', data source '%2': '%3'
 The MemorySegmentBuilder failed to load the specified zone when handling
@@ -33,3 +97,41 @@ the load command. This zone will be skipped.
 An exception occurred when the MemorySegmentBuilder tried to load the
 specified zone when handling the load command. This zone will be
 skipped.
+
+% LIBMEMMGR_MAPPED_SEGMENT_BADVERFILE version file for mapped memory segment '%1' is corrupted: %2
+In the initialization of a mapped-file based memory segment, a corresponding
+version file existed but extracting the versions failed.  This is an
+unexpected error, and the file is probably corrupted.  The version file
+is for optimization, and failure of reading it is not fatal, but it's
+advisable to figure out the cause and fix it.
+
+% LIBMEMMGR_MAPPED_SEGMENT_REMOVED removed files for mapped memory segment, generation %1
+The use of a generation of mapped-file based memory segment has been
+completed (normally because a new generation of data sources is configured),
+and the mapped-file and other management file(s) are removed.
+
+% LIBMEMMGR_MAPPED_SEGMENT_RMFILE_FAIL failed to remove files for mapped memory segment: %1
+The use of a generation of mapped-file based memory segment has been
+completed, but removing the mapped-file or other management file(s) failed.
+This is not an expected event, but not critical, so it's not considered a
+fatal error that terminates a program.  But the administrator will have to
+figure out the reason and should probably clean up the files manually.
+
+% LIBMEMMGR_MAPPED_SEGMENT_VALIDATE Validation on mapped memory segment for file %1 %2
+The validation on a file for mapped-memory based memory segment was
+completed.  It shows either success or failure with the corresponding
+file name (if the file name was not known at the time of validation,
+the validation should fail, and '<unknown>' is shown for the file in
+the log message).  In this context, it's considered a 'failure' if the
+file does not exist, but this is actually an expected result if this
+is the first time to generate a mapped file or an existing file has
+been removed for some reason such as data corruption.  In general,
+if the validation fails, the subsequent load phase will create a new
+segment without any content and load all data into it.
+
+% LIBMEMMGR_MAPPED_SEGMENT_VERFILE_UPDATE_FAIL failed to update version file for mapped memory segment '%1': %2
+There was a change in reader/writer versions of a mapped-file based
+memory segment, but updating the version file failed.  This is
+unexpected although not fatal.  See
+LIBMEMMGR_MAPPED_SEGMENT_BADVERFILE; the same explanation and suggestion
+apply.

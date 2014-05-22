@@ -13,8 +13,11 @@
 # NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
 # WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+import json
 import os
 from collections import deque
+from bundy.log_messages.libmemmgr_messages import *
+from bundy.memmgr.logger import logger
 
 class SegmentInfoError(Exception):
     """An exception raised for general errors in the SegmentInfo class."""
@@ -36,15 +39,37 @@ class SegmentInfo:
 
     A summarized (and simplified) state transition diagram (for __state)
     would be as follows:
-                                                +--sync_reader()/remove_reader()
-                                                |  still have old readers
-                                                |          |
-                UPDATING-----complete_--->SYNCHRONIZING<---+
-                  ^          update()           |
-    start_update()|                             | sync_reader()/remove_reader()
-    events        |                             V no more old reader
-    exist       READY<------complete_----------COPYING
+
+          INIT-----start_------->R_VALIDATING
+                validate()           |
+                             complete_validate()
+                                     |
+   W_VALIDATING<-----------V_SYNCHRONIZING----sync_reader()/remove_reader()
+           |   (no more reader)          ^    still have old readers
+           |                             +--------+
+        complete_
+       validate()                               +--sync_reader()/remove_reader()
+           |                                    |          |
+           |                                    |          |
+           +--> UPDATING-----complete_--->SYNCHRONIZING<---+
+                  ^|          update()           |
+    start_update()||update                       | sync_reader()/remove_reader()
+    events        ||failed                       |
+    exist         |V                             V no more old reader
+                READY<------complete_----------COPYING
                             update()
+
+    A segment always begins with the 'INIT' stage, and completes validating
+    segments for readers and the writer.  This phase is intended to be used
+    to perform some initial validation on the segments before actually
+    using them (e.g., some segment implementation may check data integrity),
+    but details are up to the specific segment implementation and can even be
+    no-op.  This phase is also intended to be used to be synchronized
+    with existing readers that may be using segments in case memmgr has
+    restarted.  At the completion of the V_SYNCHRONIZING state, the memmgr
+    can be sure that no reader is using the writer version of the segment.
+    On the completion of W_VALIDATING, the segment is in use, and will
+    run normal cylce of updating.
 
     """
     # Common constants of user type: reader or writer
@@ -52,22 +77,31 @@ class SegmentInfo:
     WRITER = 1
 
     # Enumerated values for state:
-    UPDATING = 0 # the segment is being updated (by the builder thread,
+    INIT = -1 # Placeholdr for the initial state, immediatelly move to
+              # R_VALIDATING
+    R_VALIDATING = 0 # The segment for readers is being verified.
+    V_SYNCHRONIZING = 1 # similar to SYNCHRONIZING below, but used for
+                        # the transition from R_VALIDATING to W_VALIDATING.
+    W_VALIDATING = 2 # The segment for the writer (memmgr) is being verified.
+                     # Once this is completed, the segments are ready for use.
+    UPDATING = 3 # the segment is being updated (by the builder thread,
                  # although SegmentInfo won't care about this level of
                  # details).
-    SYNCHRONIZING = 1 # one pair of underlying segments has been
+    SYNCHRONIZING = 4 # one pair of underlying segments has been
                       # updated, and readers are now migrating to the
                       # updated version of the segment.
-    COPYING = 2 # all readers that used the old version of segment have
+    COPYING = 5 # all readers that used the old version of segment have
                 # been migrated to the updated version, and the old
                 # segment is now being updated.
-    READY = 3 # both segments of the pair have been updated. it can now
+    READY = 6 # both segments of the pair have been updated. it can now
               # handle further updates (e.g., from xfrin).
 
-    def __init__(self):
+    def __init__(self, genid):
+        # The generation ID of the corresponding data source.
+        self.__genid = genid
         # Holds the state of SegmentInfo. See the class description
         # above for the state transition diagram.
-        self.__state = self.READY
+        self.__state = self.INIT
         # __readers is a set of 'reader_session_id' private to
         # SegmentInfo. It consists of the (ID of) reader modules that
         # are using the "current" reader version of the segment.
@@ -85,10 +119,17 @@ class SegmentInfo:
         # they arrived. SegmentInfo doesn't have to know the details of
         # the stored data; it only matters for the memmgr.
         self.__events = deque()
+        # See loaded():
+        self.__loaded = False
+
+    def get_generation_id(self):
+        "Returns the generation ID of the corresponding data source."
+
+        return self.__genid
 
     def get_state(self):
-        """Returns the state of SegmentInfo (UPDATING, SYNCHRONIZING,
-        COPYING or READY)."""
+        """Returns the state of SegmentInfo (UPDATING, SYNCHRONIZING, etc)"""
+
         return self.__state
 
     def get_readers(self):
@@ -107,11 +148,14 @@ class SegmentInfo:
         """Returns a list of pending events in the order they arrived."""
         return list(self.__events)
 
-    # Helper method used in complete_update(), sync_reader() and
+    # Helper method used in complete_validate/update(), sync_reader() and
     # remove_reader().
     def __sync_reader_helper(self):
         if not self.__old_readers:
-            self.__state = self.COPYING
+            if self.__state is self.SYNCHRONIZING:
+                self.__state = self.COPYING
+            else:
+                self.__state = self.W_VALIDATING
             if self.__events:
                 return self.__events.popleft()
 
@@ -141,10 +185,78 @@ class SegmentInfo:
         the main thread itself (which also handles communications) and
         only have the builder in a different thread."""
         if reader_session_id in self.__readers:
-            raise SegmentInfoError('Reader session ID is already in readers set: ' +
-                                   str(reader_session_id))
+            raise SegmentInfoError('Reader session ID is already in readers ' +
+                                   'set: ' + str(reader_session_id))
 
         self.__readers.add(reader_session_id)
+
+    def start_validate(self):
+        """Start validation of memory segments.
+
+        The use of SegmentInfo always begins with this method.  It initiates
+        the state transition from INIT to R_VALIDATING.
+
+        It returns 2 callable objects in a tuple: 1st is to be used to
+        validate the reader segment; 2nd is to be used to validate the writer
+        segment.  The caller is expected to pass these to the builder thread
+        and evaluate them as the initial two commands for the segment.
+        The specific details of how the callable works depends on the
+        specific subclass of SegmentInfo, and the returned callables
+        are given from the _start_validate() "protected" method (each
+        subclass must implement that method).  In general, it is advisable
+        that the callable does not share any state of this object, since
+        it's evaluated in a separate thread and there can be a race condition
+        if it refers to a shared state.
+
+        """
+        if self.__state != self.INIT:
+            raise SegmentInfoError('start_validate can only be called once, ' +
+                                   'initially')
+        self.__state = self.R_VALIDATING
+        return self._start_validate()
+
+    def complete_validate(self, validated):
+        """Update status of a segment info on completion of a validate command.
+
+        This method is expected to be called when the validation command
+        is comleted by the builder thread and the main thread is notified
+        of the result.  The notification should include the result of
+        validation, and it's passed to this method.
+
+        This method changes the state from R_VALIDATING and V_SYNCHRONIZING,
+        and W_VALIDATING to UPDATING.  In both cases, there should be
+        an outstanding event for the builder thread, and it's returned to
+        the caller.
+
+        A subclass can add its specific handling in the _complete_validate()
+        'protected' method.
+
+        Parameter:
+        - validated (bool): True if validation succeeded; False otherwise.
+
+        """
+        self._complete_validate(validated)
+        if self.__state == self.R_VALIDATING:
+            self.__state = self.V_SYNCHRONIZING
+            self.__old_readers = self.__readers
+            self.__readers = set()
+            return self.__sync_reader_helper()
+        elif self.__state == self.W_VALIDATING:
+            self.__state = self.UPDATING
+            # There should be a command for the initial load.  We shouldn't
+            # pop it yet.
+            return self.__events[0]
+        else:                   # buggy case
+            raise SegmentInfoError('complete_validate() called in ' +
+                                   'incorrect state: ' + str(self.__state))
+
+    def _complete_validate(self, validated):
+        """A subslass specific processing of complete_validate.
+
+        A specific can override this method; by default it does nothing.
+
+        """
+        return
 
     def start_update(self):
         """If the current state is READY and there are pending events,
@@ -162,29 +274,64 @@ class SegmentInfo:
             return self.__events[0]
         return None
 
-    def complete_update(self):
-        """This method should be called when memmgr is notified by the
-        builder of the completion of segment update. It changes the
-        state from UPDATING to SYNCHRONIZING, and COPYING to READY. In
-        the former case, set of reader modules that are using the
-        "current" reader version of the segment are moved to the set
-        that are using an "old" version of segment. If there are no such
-        readers using the "old" version of segment, it pops the head
-        (oldest) event from the pending events queue and returns it. It
-        is an error if this method is called in other states than
-        UPDATING and COPYING."""
+    def complete_update(self, succeeded):
+        """Handle the completion of a zone load/update command.
+
+        This method should be called when memmgr is notified by the
+        builder of the completion of segment update.
+
+        Parameter 'succeeded' indicates whether the load/update succeeded.
+        If it's True, this method changes the state from UPDATING to
+        SYNCHRONIZING, and COPYING to READY. In the former case, set
+        of reader modules that are using the "current" reader version
+        of the segment are moved to the set that are using an "old"
+        version of segment. If there are no such readers using the
+        "old" version of segment, it pops the head (oldest) event from
+        the pending events queue and returns it.
+
+        If 'succeeded' is False, this method changes the state to
+        READY, whether the original state is UPDATING or
+        SYNCHRONIZING.  In this case, it should be better to hold off
+        copying until the next load event happens and succeeds, rather
+        than taking the risk of making both versions broken.
+
+        It is an error if this method is called in other states than
+        UPDATING and COPYING.
+
+        Parameter(s):
+        - succeeded (bool): True if the updated succeeded; False otherwise
+
+        """
+        # If this method is called, it means at least one load attempt is
+        # completed.
+        self.__loaded = True
+
         if self.__state == self.UPDATING:
-            self._switch_versions()
-            self.__state = self.SYNCHRONIZING
-            self.__old_readers = self.__readers
-            self.__readers = set()
-            return self.__sync_reader_helper()
+            if succeeded:
+                self._switch_versions()
+                self.__state = self.SYNCHRONIZING
+                self.__old_readers = self.__readers
+                self.__readers = set()
+                return self.__sync_reader_helper()
+            else:
+                self.__state = self.READY
+                self.__events.popleft() # discard the load command for COPYING
         elif self.__state == self.COPYING:
             self.__state = self.READY
             return None
         else:
             raise SegmentInfoError('complete_update() called in ' +
                                    'incorrect state: ' + str(self.__state))
+
+    def loaded(self):
+        """Return true iff at least one load attempt has been completed.
+
+        This returns True even if the load attempt failed; the main purpose
+        is to tell the caller that the available segment has not just been
+        validated, but also is the latest.
+
+        """
+        return self.__loaded
 
     def sync_reader(self, reader_session_id):
         """Synchronize segment info with a reader.
@@ -207,7 +354,7 @@ class SegmentInfo:
         to care about the differences based on the internal state.
 
         """
-        if self.__state != self.SYNCHRONIZING:
+        if self.__state not in (self.V_SYNCHRONIZING, self.SYNCHRONIZING):
             return None
 
         if reader_session_id not in self.__old_readers:
@@ -238,7 +385,7 @@ class SegmentInfo:
 
         """
         if reader_session_id in self.__old_readers:
-            assert(self.__state == self.SYNCHRONIZING)
+            assert(self.__state in (self.V_SYNCHRONIZING, self.SYNCHRONIZING))
             self.__old_readers.remove(reader_session_id)
             return self.__sync_reader_helper()
         elif reader_session_id in self.__readers:
@@ -303,6 +450,29 @@ class SegmentInfo:
         """
         raise SegmentInfoError('get_reset_param is not implemented')
 
+    def remove(self):
+        """Remove persistent system resource of the segment.
+
+        This method is called for a final cleanup of a single generation of
+        memory segment, which a new generation is active and the segment's
+        generation will never be used, even after a restart.  A specific
+        operation for the remove depends on the type of segment, and is
+        delegated to the '_remove()' protected method.
+
+        The caller must ensure that there is no process that uses the
+        segment, either for reading or writing.  As a check for this condition,
+        this method must not be called until both get_readers() and
+        get_old_readers() return an empty set; otherwise SegmentInfoError
+        exception will be raised.
+
+        """
+        if self.__readers or self.__old_readers:
+            raise SegmentInfoError('cannot remove SegmentInfo with readers')
+        self._remove()
+
+    def _remove(self):
+        "The default implementation of _remove(), which does nothing."
+
     def _switch_versions(self):
         """Switch internal information for the reader segment and writer
         segment.
@@ -321,6 +491,18 @@ class SegmentInfo:
         """
         raise SegmentInfoError('_switch_versions is not implemented')
 
+def _validate_mapped_segment_file(filename):
+    """Callable used by MappedSegmentInfo, validating a mapped segment file.
+
+    In this initial version, we just check the existence of the file.
+
+    """
+    validated = filename is not None and os.path.exists(filename)
+    logger.info(LIBMEMMGR_MAPPED_SEGMENT_VALIDATE,
+                filename if filename is not None else '<unknown>',
+                'ok' if validated else 'failed')
+    return validated
+
 class MappedSegmentInfo(SegmentInfo):
     """SegmentInfo implementation of 'mapped' type memory segments.
 
@@ -333,7 +515,7 @@ class MappedSegmentInfo(SegmentInfo):
 
     """
     def __init__(self, genid, rrclass, datasrc_name, mgr_config):
-        super().__init__()
+        super().__init__(genid)
 
         # Something like "/var/bundy/zone-IN-1-sqlite3-mapped"
         self.__mapped_file_base = mgr_config['mapped_file_dir'] + os.sep + \
@@ -344,28 +526,112 @@ class MappedSegmentInfo(SegmentInfo):
         # writer.  In this initial implementation we assume that all possible
         # readers are waiting for a new version (not using pre-existing one),
         # and the writer is expected to build a new segment as version "0".
-        self.__reader_ver = None # => 0 => 1 => 0 => 1 ...
-        self.__writer_ver = 0    # => 1 => 0 => 1 => 0 ...
+        self.__reader_ver = None
+        self.__writer_ver = None
 
-    def get_reset_param(self, user_type):
-        ver = self.__reader_ver if user_type == self.READER else \
-            self.__writer_ver
-        if ver is None:
-            return None
+        # State of mapped file for readers: becomes true if validated
+        # successfully or switched from successfully updated writer version.
+        # Unless it's true, we won't tell readers the mapped file as it won't
+        # be usable. For writer (which is actually the memmgr itself, in
+        # practice), we'll always try to open/create it for any update attempt.
+        self.__reader_file_validated = False
+
+        self.__map_versions_file = self.__mapped_file_base + '-vers.json'
+        if os.path.exists(self.__map_versions_file):
+            try:
+                with open(self.__map_versions_file) as f:
+                    versions = json.load(f)
+
+                # reset both versions at once; if either of the values is
+                # unavailable, neither variables will be reset.
+                rver, wver = versions['reader'], versions['writer']
+                if not ((rver == 0 and wver == 1) or (rver == 1 and wver == 0)):
+                    raise SegmentInfoError('broken segment version')
+                self.__reader_ver = rver
+                self.__writer_ver = wver
+            except Exception as ex:
+                # This is somewhat unexpected, but not fatal; we could still
+                # rebuild segments from scratch.
+                logger.error(LIBMEMMGR_MAPPED_SEGMENT_BADVERFILE,
+                             self.__map_versions_file, ex)
+                try:            # ignore any error on unlink
+                    os.unlink(self.__map_versions_file)
+                except: pass
+
+        # Prepare validate callables.  To avoid leaving a reference to
+        # this object (the callables will be run in a separate thread), we
+        # now build the file name as string (or None if unknown) and embed
+        # in the callable closures.
+        reader_file = None if self.__reader_ver is None else \
+                      '%s.%d' % (self.__mapped_file_base, self.__reader_ver)
+        writer_file = None if self.__writer_ver is None else \
+                      '%s.%d' % (self.__mapped_file_base, self.__writer_ver)
+        self.__rvalidate_action = \
+            lambda: _validate_mapped_segment_file(reader_file)
+        self.__wvalidate_action = \
+            lambda: _validate_mapped_segment_file(writer_file)
+
+        # If the versions are not yet known, we'll begin with the defaults.
+        if self.__reader_ver is None and self.__writer_ver is None:
+            self.__reader_ver = 0
+            self.__writer_ver = 1
+
+    def get_reset_param(self, utype):
+        # See the description of __reader_file_validated in constructor; we
+        # don't tell readers a possibly broken or non-existent file.
+        if utype == self.READER and not self.__reader_file_validated:
+            return {'mapped-file': None}
+
+        ver = self.__reader_ver if utype == self.READER else self.__writer_ver
         mapped_file = self.__mapped_file_base + '.' + str(ver)
         return {'mapped-file': mapped_file}
 
+    def _start_validate(self):
+        return self.__rvalidate_action, self.__wvalidate_action
+
+    def _complete_validate(self, validated):
+        if validated and self.get_state() == self.R_VALIDATING:
+            self.__reader_file_validated = True
+
     def _switch_versions(self):
         # Swith the versions as noted in the constructor.
+        self.__reader_ver = 1 - self.__reader_ver
         self.__writer_ver = 1 - self.__writer_ver
-
-        if self.__reader_ver is None:
-            self.__reader_ver = 0
-        else:
-            self.__reader_ver = 1 - self.__reader_ver
 
         # Versions should be different
         assert(self.__reader_ver != self.__writer_ver)
+
+        # Now reader file should be ready
+        self.__reader_file_validated = True
+
+        # write/update versions file
+        versions = {'reader': self.__reader_ver, 'writer': self.__writer_ver}
+        try:
+            with open(self.__map_versions_file, 'w') as f:
+                f.write(json.dumps(versions) + '\n')
+        except Exception as ex:
+            logger.error(LIBMEMMGR_MAPPED_SEGMENT_VERFILE_UPDATE_FAIL,
+                         self.__map_versions_file, ex)
+
+    def _remove(self):
+        def rmfile(path):
+            """Trivial internal helper to remove a specific file.
+
+            Failure of removing these files is not expected but not critical,
+            so we only log any failure and move on.
+
+            """
+            if os.path.exists(path):
+                try:
+                    os.unlink(path)
+                except Exception as ex:
+                    logger.info(LIBMEMMGR_MAPPED_SEGMENT_RMFILE_FAIL, ex)
+
+        rmfile(self.__map_versions_file)
+        for vers in (0, 1):
+            mapped_file = '%s.%d' % (self.__mapped_file_base, vers)
+            rmfile(mapped_file)
+        logger.info(LIBMEMMGR_MAPPED_SEGMENT_REMOVED, self.get_generation_id())
 
 class DataSrcInfo:
     """A container for datasrc.ConfigurableClientLists and associated
@@ -384,7 +650,8 @@ class DataSrcInfo:
     Attributes: these are all constant and read only.  For dict objects,
           mapping shouldn't be modified either.
       gen_id (int): The corresponding configuration generation ID.
-      clients_map (dict, bundy.dns.RRClass=>bundy.datasrc.ConfigurableClientList):
+      clients_map (dict, bundy.dns.RRClass=>
+                         bundy.datasrc.ConfigurableClientList):
           The configured client lists for all RR classes of the generation.
       segment_info_map (dict, (bundy.dns.RRClass, str)=>SegmentInfo):
           SegmentInfo objects managed in the DataSrcInfo objects.  Can be
@@ -427,3 +694,56 @@ class DataSrcInfo:
     @property
     def segment_info_map(self):
         return self.__segment_info_map
+
+    def cancel(self, released_reader):
+        """Cancel using this generation of data sources.
+
+        This method is expected to be called to stop using an old generation
+        of data sources when a new generation has been configured.  It checks
+        if there is any segment reader for any memory segment of the old
+        generation, and if all readers have left, clean up all references
+        to the old generation of data sources.  The cleanp includes removing
+        any persistent system resource for the canceled memory segment, such
+        as mapped files.  Once cleaned up, both 'clients_map' and
+        'segment_info_map' attributes will become an empty dictionary.
+
+        if 'released_reader' is not None, this method first removes the
+        reader from all underlying segments that the reader is using.
+        The caller must ensure that reader has indeed released the segments
+        of this generation.
+
+        It returns a set of remaining segment readers.  The caller can use
+        the set to notify these readers, and to detect if the cancel has been
+        completed by checking if the set is empty.
+
+        Parameter:
+          released_reader (str or None): if not None, the identifier of a
+            reader module that has released memory segments of the canceled
+            generation.
+
+        Return:
+          set of str, consisting of reader module identifiers that are still
+          using the segments of this generation.
+
+        """
+        readers = set()
+        for sgmt in self.__segment_info_map.values():
+            sgmt_readers = sgmt.get_readers().union(sgmt.get_old_readers())
+            if released_reader is not None and released_reader in sgmt_readers:
+                sgmt.remove_reader(released_reader)
+                sgmt_readers.remove(released_reader)
+            readers = readers.union(sgmt_readers)
+
+        if not readers:
+            # All readers (and the memmgr) have released this generation of
+            # segments.  We can now clean up all data source clients and
+            # segment info.  Clients first, because they may contain a
+            # reference to underlying memory segment.
+            self.__clients_map = {}
+
+            # Now we can safely remove memory segments.
+            for sgmt in self.__segment_info_map.values():
+                sgmt.remove()
+            self.__segment_info_map = {}
+
+        return readers

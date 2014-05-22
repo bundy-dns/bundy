@@ -68,10 +68,16 @@ public:
     const std::string type_;
     const data::ConstElementPtr configuration_;
 
+    void incrementSerial() { ++serial_; }
+
 private:
     std::set<dns::Name> zones;
     bool have_a_; // control the iterator behavior whether to include A record
     bool use_baditerator_; // whether to use bogus zone iterators for tests
+
+    // class-wide serial for calling iterator.  should be incremented every time
+    // reloading data from this data source into memory.
+    uint32_t serial_;
 };
 
 } // end of unittest

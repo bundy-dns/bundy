@@ -251,6 +251,32 @@ TEST_F(ZoneTableSegmentMappedTest, resetBadConfig) {
     EXPECT_TRUE(verifyData(ztable_segment_->getMemorySegment()));
 }
 
+TEST_F(ZoneTableSegmentMappedTest, nullReset) {
+    // Open a mapped file in create mode.
+    ztable_segment_->reset(ZoneTableSegment::CREATE, config_params_);
+    EXPECT_TRUE(ztable_segment_->isUsable());
+
+    // If we specify a null mapped file, the segment will be cleared.
+    // this operation can do multiple times without any difference in result.
+    // The mode will be ignored.
+    ztable_segment_->reset(ZoneTableSegment::READ_WRITE,
+                           Element::fromJSON("{\"mapped-file\": null}"));
+    EXPECT_FALSE(ztable_segment_->isUsable());
+    ztable_segment_->reset(ZoneTableSegment::READ_WRITE,
+                           Element::fromJSON("{\"mapped-file\": null}"));
+    EXPECT_FALSE(ztable_segment_->isUsable());
+    ztable_segment_->reset(ZoneTableSegment::READ_ONLY,
+                           Element::fromJSON("{\"mapped-file\": null}"));
+    EXPECT_FALSE(ztable_segment_->isUsable());
+    ztable_segment_->reset(ZoneTableSegment::CREATE,
+                           Element::fromJSON("{\"mapped-file\": null}"));
+    EXPECT_FALSE(ztable_segment_->isUsable());
+    ztable_segment_->reset(static_cast<ZoneTableSegment::MemorySegmentOpenMode>(
+                               1234),
+                           Element::fromJSON("{\"mapped-file\": null}"));
+    EXPECT_FALSE(ztable_segment_->isUsable());
+}
+
 TEST_F(ZoneTableSegmentMappedTest, reset) {
     // By default, the mapped file doesn't exist, so we cannot open it
     // in READ_ONLY mode (which does not create the file).

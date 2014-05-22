@@ -3198,7 +3198,7 @@ class TestXfrinProcessMockCCSession:
                 Name(notification[1]['origin']) == Name('example.org') and
                 notification[1]['class'] == 'IN' and
                 notification[1]['datasource'] == 'test-datasrc' and
-                notification[1]['generation_id'] ==
+                notification[1]['generation-id'] ==
                 MockDataSrcClientsMgr.TEST_DATASRC_GENID):
                 self.notify_sent_correctly = True
                 return "random-e068c2de26d760f20cf10afc4b87ef0f"

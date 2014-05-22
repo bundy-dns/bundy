@@ -18,7 +18,7 @@
 #include <datasrc/memory/zone_table_segment_local.h>
 #include <datasrc/memory/zone_data.h>
 #include <datasrc/memory/zone_data_loader.h>
-#include <datasrc/memory/load_action.h>
+#include <datasrc/memory/loader_creator.h>
 #include <datasrc/memory/zone_table.h>
 #include <datasrc/exceptions.h>
 #include <datasrc/result.h>
@@ -40,10 +40,9 @@
 #include <boost/format.hpp>
 
 #include <string>
+#include <stdexcept>
 #include <unistd.h>
 
-using boost::scoped_ptr;
-using boost::bind;
 using bundy::dns::RRClass;
 using bundy::dns::Name;
 using bundy::datasrc::ZoneLoaderException;
@@ -54,60 +53,153 @@ namespace {
 
 class TestException {};
 
+class MockLoader : public ZoneDataLoader {
+public:
+    MockLoader(bundy::util::MemorySegment& segment,
+               bool* load_called, const bool* load_throw,
+               const bool* load_loader_throw, const bool* load_null,
+               const bool* load_data, const int* throw_on_commit,
+               ZoneData* old_data) :
+        load_called_(load_called), load_throw_(load_throw),
+        load_loader_throw_(load_loader_throw), load_null_(load_null),
+        load_data_(load_data), throw_on_commit_(throw_on_commit),
+        num_committed_(0), segment_(segment), old_data_(old_data),
+        loaded_data_(NULL), incremental_called_(false)
+    {}
+    virtual ~MockLoader() {}
+    virtual bool isDataReused() const {
+        if (*load_null_) {
+            return (false);
+        }
+        if (old_data_) { // if non-NULL, it means we'll reuse it for test
+            return (true);
+        }
+        return (false);
+    }
+    virtual ZoneData* getLoadedData() const {
+        return (loaded_data_);
+    }
+    virtual ZoneData* load() {
+        // We got called
+        *load_called_ = true;
+        if (*load_throw_) {
+            throw TestException();
+        }
+        if (*load_loader_throw_) {
+            bundy_throw(ZoneLoaderException, "faked loader exception");
+        }
+
+        if (*load_null_) {
+            // Be nasty to the caller and return NULL, which is forbidden
+            return (NULL);
+        }
+        if (old_data_) {
+            loaded_data_ = old_data_;
+            return (old_data_);
+        }
+        ZoneData* data = ZoneData::create(segment_, Name("example.org"));
+        if (*load_data_) {
+            // Put something inside. The node itself should be enough for
+            // the tests.
+            ZoneNode* node(NULL);
+            data->insertName(segment_, Name("subdomain.example.org"), &node);
+            EXPECT_NE(static_cast<ZoneNode*>(NULL), node);
+        }
+        loaded_data_ = data;
+        return (data);
+    }
+    virtual bool loadIncremental(size_t count_limit) {
+        // If non-0 count_limit is specified, this mock version always returns
+        // false on first call and return true on the second.
+        if (count_limit == 0 || incremental_called_) {
+            load();
+            return (true);
+        }
+        incremental_called_ = true;
+        return (false);
+    }
+    virtual ZoneData* commit(ZoneData* update_data) {
+        // If so specified, throw MemorySegmentGrown once.
+        if (*throw_on_commit_ == 1 && num_committed_++ < 1) {
+            bundy_throw(bundy::util::MemorySegmentGrown, "test grown");
+        } else if (*throw_on_commit_ == 2) {
+            bundy_throw(bundy::Unexpected, "test unexpected");
+        } else if (*throw_on_commit_ == 3) {
+            throw std::runtime_error("test unexpected");
+        } else if (*throw_on_commit_ == 4) {
+            throw 42;           // not even type of std::exception
+        }
+        // should be called at most twice, also for preventing infinite loop.
+        EXPECT_GE(2, num_committed_);
+        return (update_data);
+    }
+
+    bool* const load_called_;
+    const bool* const load_throw_;
+    const bool* const load_loader_throw_;
+    const bool* const load_null_;
+    const bool* const load_data_;
+    const int* const throw_on_commit_;
+    unsigned int num_committed_;
+private:
+    bundy::util::MemorySegment& segment_;
+    ZoneData* const old_data_;
+    ZoneData* loaded_data_;
+    bool incremental_called_;
+};
+
 class ZoneWriterTest : public ::testing::Test {
 protected:
     ZoneWriterTest() :
-        segment_(new ZoneTableSegmentMock(RRClass::IN(), mem_sgmt_)),
-        writer_(new
-            ZoneWriter(*segment_,
-                       bind(&ZoneWriterTest::loadAction, this, _1),
-                       Name("example.org"), RRClass::IN(), false)),
         load_called_(false),
         load_throw_(false),
         load_loader_throw_(false),
         load_null_(false),
-        load_data_(false)
+        load_data_(false),
+        throw_on_commit_(0),
+        reuse_old_data_(false),
+        zt_segment_(new ZoneTableSegmentMock(RRClass::IN(), mem_sgmt_)),
+        writer_(new
+            ZoneWriter(*zt_segment_,
+                       boost::bind(&ZoneWriterTest::loaderCreator,
+                                   this, _1, _2),
+                       Name("example.org"), RRClass::IN(), false))
     {}
     virtual void TearDown() {
         // Release the writer
         writer_.reset();
     }
-    MemorySegmentMock mem_sgmt_;
-    scoped_ptr<ZoneTableSegmentMock> segment_;
-    scoped_ptr<ZoneWriter> writer_;
     bool load_called_;
     bool load_throw_;
     bool load_loader_throw_;
     bool load_null_;
     bool load_data_;
+    // whether to throw from ZoneDataLoader::commit(). 0=none,
+    // 1=MemorySegmentGrown, 2=Unexpected, 3=other std exception,
+    // 4=even not std derived exception
+    int throw_on_commit_;
+    bool reuse_old_data_;
+    MemorySegmentMock mem_sgmt_;
+    boost::scoped_ptr<ZoneTableSegmentMock> zt_segment_;
+    boost::scoped_ptr<ZoneWriter> writer_;
 public:
-    ZoneData* loadAction(bundy::util::MemorySegment& segment) {
+    ZoneDataLoader* loaderCreator(bundy::util::MemorySegment& mem_sgmt,
+                                  ZoneData* old_data)
+    {
         // Make sure it is the correct segment passed. We know the
         // exact instance, can compare pointers to them.
-        EXPECT_EQ(&segment_->getMemorySegment(), &segment);
-        // We got called
-        load_called_ = true;
-        if (load_throw_) {
-            throw TestException();
-        }
-        if (load_loader_throw_) {
-            bundy_throw(ZoneLoaderException, "faked loader exception");
-        }
+        EXPECT_EQ(&zt_segment_->getMemorySegment(), &mem_sgmt);
 
-        if (load_null_) {
-            // Be nasty to the caller and return NULL, which is forbidden
-            return (NULL);
+        if (!reuse_old_data_) {
+            old_data = NULL;
         }
-        ZoneData* data = ZoneData::create(segment, Name("example.org"));
-        if (load_data_) {
-            // Put something inside. The node itself should be enough for
-            // the tests.
-            ZoneNode* node(NULL);
-            data->insertName(segment, Name("subdomain.example.org"), &node);
-            EXPECT_NE(static_cast<ZoneNode*>(NULL), node);
-        }
-        return (data);
+        return (new MockLoader(mem_sgmt_, &load_called_, &load_throw_,
+                               &load_loader_throw_, &load_null_,
+                               &load_data_, &throw_on_commit_, old_data));
     }
+protected:
+    void reloadCommon(bool grow_on_commit, size_t count_limit);
+    void commitFailCommon(int exception_type);
 };
 
 class ReadOnlySegment : public ZoneTableSegmentMock {
@@ -135,7 +227,8 @@ TEST_F(ZoneWriterTest, constructForReadOnlySegment) {
     MemorySegmentMock mem_sgmt;
     ReadOnlySegment ztable_segment(RRClass::IN(), mem_sgmt);
     EXPECT_THROW(ZoneWriter(ztable_segment,
-                            bind(&ZoneWriterTest::loadAction, this, _1),
+                            boost::bind(&ZoneWriterTest::loaderCreator,
+                                        this, _1, _2),
                             Name("example.org"), RRClass::IN(), false),
                  bundy::InvalidOperation);
 }
@@ -157,6 +250,116 @@ TEST_F(ZoneWriterTest, correctCall) {
     // We don't check explicitly how this works, but call it to free memory. If
     // everything is freed should be checked inside the TearDown.
     EXPECT_NO_THROW(writer_->cleanup());
+}
+
+void
+ZoneWriterTest::reloadCommon(bool grow_on_commit, size_t count_limit) {
+    const Name zname("example.org");
+    reuse_old_data_ = true;
+
+    // First load.  New data should be created.
+    if (count_limit > 0) {      // mocked zone data loader requires 2 attempts
+        EXPECT_FALSE(writer_->load(count_limit));
+        EXPECT_TRUE(writer_->load(count_limit));
+    } else {
+        writer_->load();
+    }
+    writer_->install();
+    writer_->cleanup();
+    const ZoneData* const zd1 =
+        zt_segment_->getHeader().getTable()->findZone(zname).zone_data;
+    EXPECT_TRUE(zd1);
+
+    // Second load with a new writer.  If so specified, let ZoneData::commit
+    // throw the exception.
+    if (grow_on_commit) {
+        throw_on_commit_ = 1;
+    }
+    writer_.reset(new ZoneWriter(*zt_segment_,
+                                 boost::bind(&ZoneWriterTest::loaderCreator,
+                                             this, _1, _2),
+                                 zname, RRClass::IN(), false));
+    if (count_limit > 0) {
+        EXPECT_FALSE(writer_->load(count_limit));
+        EXPECT_TRUE(writer_->load(count_limit));
+    } else {
+        writer_->load();
+    }
+    writer_->install();
+    writer_->cleanup();
+
+    // The same data should still be used (we didn't modify it, so the
+    // pointers should be same)
+    const ZoneData* const zd2 =
+        zt_segment_->getHeader().getTable()->findZone(zname).zone_data;
+    EXPECT_EQ(zd1, zd2);
+}
+
+TEST_F(ZoneWriterTest, reloadOverridden) {
+    reloadCommon(false, 0);
+}
+
+TEST_F(ZoneWriterTest, growOnCommit) {
+    reloadCommon(true, 0);
+}
+
+TEST_F(ZoneWriterTest, reloadOverriddenIncremental) {
+    reloadCommon(false, 1000);
+}
+
+TEST_F(ZoneWriterTest, growOnCommitIncremental) {
+    reloadCommon(true, 10000);
+}
+
+// Common test logic for the case where ZoneDataLoader::commit() throws
+// unexpected exceptions.  See thrown_on_commit_ above for exception_type.
+void
+ZoneWriterTest::commitFailCommon(int exception_type) {
+
+    const Name zname("example.org");
+    reuse_old_data_ = true;
+    
+    // First load.  New data should be created.
+    writer_->load();
+    writer_->install();
+    writer_->cleanup();
+
+    // Second load with a new writer.  If so specified, let ZoneData::commit
+    // throw the exception.
+    throw_on_commit_ = exception_type;
+    writer_.reset(new ZoneWriter(*zt_segment_,
+                                 boost::bind(&ZoneWriterTest::loaderCreator,
+                                             this, _1, _2),
+                                 zname, RRClass::IN(), false));
+    writer_->load();
+    try {
+        writer_->install();
+        EXPECT_EQ(2, exception_type); // we should reach here only in this case
+    } catch (const std::exception&) {
+        EXPECT_EQ(3, exception_type);
+    } catch (...) {
+        EXPECT_EQ(4, exception_type);
+    }
+    writer_->cleanup();
+
+    // The zone data have become broken, so it's replaced with empty data.
+    const ZoneTable::FindResult result =
+        static_cast<const ZoneTableSegment&>(*zt_segment_).getHeader().
+        getTable()->findZone(zname);
+    EXPECT_EQ(bundy::datasrc::result::SUCCESS, result.code);
+    EXPECT_TRUE((result.flags & bundy::datasrc::result::ZONE_EMPTY) != 0);
+}
+
+TEST_F(ZoneWriterTest, exceptionOnCommit) {
+    commitFailCommon(2);
+}
+
+TEST_F(ZoneWriterTest, stdExceptionOnCommit) {
+    commitFailCommon(3);
+}
+
+TEST_F(ZoneWriterTest, intExceptionOnCommit) {
+    commitFailCommon(4);
 }
 
 TEST_F(ZoneWriterTest, loadTwice) {
@@ -246,18 +449,20 @@ TEST_F(ZoneWriterTest, loadLoaderException) {
     load_loader_throw_ = true;
     EXPECT_THROW(writer_->load(), ZoneLoaderException);
     // In this case, passed error_msg won't be updated.
-    writer_.reset(new ZoneWriter(*segment_,
-                                 bind(&ZoneWriterTest::loadAction, this, _1),
+    writer_.reset(new ZoneWriter(*zt_segment_,
+                                 boost::bind(&ZoneWriterTest::loaderCreator,
+                                             this, _1, _2),
                                  Name("example.org"), RRClass::IN(), false));
-    EXPECT_THROW(writer_->load(&error_msg), ZoneLoaderException);
+    EXPECT_THROW(writer_->load(0, &error_msg), ZoneLoaderException);
     EXPECT_EQ("", error_msg);
 
     // If we specify allowing load error, load() will succeed and install()
     // adds an empty zone.  Note that we implicitly pass NULL to load()
     // as it's the default parameter, so the following also confirms it doesn't
     // cause disruption.
-    writer_.reset(new ZoneWriter(*segment_,
-                                 bind(&ZoneWriterTest::loadAction, this, _1),
+    writer_.reset(new ZoneWriter(*zt_segment_,
+                                 boost::bind(&ZoneWriterTest::loaderCreator,
+                                             this, _1, _2),
                                  Name("example.org"), RRClass::IN(), true));
     writer_->load();
     writer_->install();
@@ -265,7 +470,7 @@ TEST_F(ZoneWriterTest, loadLoaderException) {
 
     // Check an empty zone has been really installed.
     using namespace bundy::datasrc::result;
-    const ZoneTable* ztable = segment_->getHeader().getTable();
+    const ZoneTable* ztable = zt_segment_->getHeader().getTable();
     ASSERT_TRUE(ztable);
     const ZoneTable::FindResult result = ztable->findZone(Name("example.org"));
     EXPECT_EQ(SUCCESS, result.code);
@@ -273,19 +478,21 @@ TEST_F(ZoneWriterTest, loadLoaderException) {
 
     // Allowing an error, and passing a template for the error message.
     // It will be filled with the reason for the error.
-    writer_.reset(new ZoneWriter(*segment_,
-                                 bind(&ZoneWriterTest::loadAction, this, _1),
+    writer_.reset(new ZoneWriter(*zt_segment_,
+                                 boost::bind(&ZoneWriterTest::loaderCreator,
+                                             this, _1, _2),
                                  Name("example.org"), RRClass::IN(), true));
-    writer_->load(&error_msg);
+    writer_->load(0, &error_msg);
     EXPECT_NE("", error_msg);
 
     // In case of no error, the placeholder will be intact.
     load_loader_throw_ = false;
     error_msg.clear();
-    writer_.reset(new ZoneWriter(*segment_,
-                                 bind(&ZoneWriterTest::loadAction, this, _1),
+    writer_.reset(new ZoneWriter(*zt_segment_,
+                                 boost::bind(&ZoneWriterTest::loaderCreator,
+                                             this, _1, _2),
                                  Name("example.org"), RRClass::IN(), true));
-    writer_->load(&error_msg);
+    writer_->load(0, &error_msg);
     EXPECT_EQ("", error_msg);
 }
 
@@ -306,7 +513,7 @@ TEST_F(ZoneWriterTest, retry) {
 
     // The rest still works correctly
     EXPECT_NO_THROW(writer_->install());
-    ZoneTable* const table(segment_->getHeader().getTable());
+    const ZoneTable* const table(zt_segment_->getHeader().getTable());
     const ZoneTable::FindResult found(table->findZone(Name("example.org")));
     ASSERT_EQ(bundy::datasrc::result::SUCCESS, found.code);
     // For some reason it doesn't seem to work by the ZoneNode typedef, using
@@ -337,13 +544,13 @@ TEST_F(ZoneWriterTest, autoCleanUp) {
     EXPECT_NO_THROW(writer_->load());
 }
 
-// Used in the manyWrites test, encapsulating loadZoneData() to avoid
+// Used in the manyWrites test, encapsulating ZoneDataLoader ctor to avoid
 // its signature ambiguity.
-ZoneData*
-loadZoneDataWrapper(bundy::util::MemorySegment& segment, const RRClass& rrclass,
+ZoneDataLoader*
+createLoaderWrapper(bundy::util::MemorySegment& segment, const RRClass& rrclass,
                     const Name& name, const std::string& filename)
 {
-    return (loadZoneData(segment, rrclass, name, filename));
+    return (new ZoneDataLoader(segment, rrclass, name, filename, NULL));
 }
 
 // Check the behavior of creating many small zones.  The main purpose of
@@ -386,18 +593,17 @@ TEST_F(ZoneWriterTest, manyWrites) {
         const Name origin(
             boost::str(boost::format("%063u.%063u.%063u.example.org")
                        % i % i % i));
-        const LoadAction action = boost::bind(loadZoneDataWrapper, _1,
-                                              RRClass::IN(), origin,
-                                              TEST_DATA_DIR
-                                              "/template.zone");
-        ZoneWriter writer(*zt_segment, action, origin, RRClass::IN(), false);
+        const ZoneDataLoaderCreator creator =
+            boost::bind(createLoaderWrapper, _1, RRClass::IN(), origin,
+                        TEST_DATA_DIR "/template.zone");
+        ZoneWriter writer(*zt_segment, creator, origin, RRClass::IN(), false);
         writer.load();
         writer.install();
         writer.cleanup();
 
         // Confirm it's been successfully added and can be actually found.
-        const ZoneTable::FindResult result =
-            zt_segment->getHeader().getTable()->findZone(origin);
+        const ZoneTable* ztable = zt_segment->getHeader().getTable();
+        const ZoneTable::FindResult result = ztable->findZone(origin);
         EXPECT_EQ(bundy::datasrc::result::SUCCESS, result.code);
         EXPECT_NE(static_cast<const ZoneData*>(NULL), result.zone_data) <<
             "unexpected find result: " + origin.toText();

@@ -1115,7 +1115,10 @@ class XfroutServer:
             if not zone_class:
                 zone_class = str(RRClass.IN)
             if zone_name:
-                logger.info(XFROUT_NOTIFY_COMMAND, zone_name, zone_class)
+                # log this at a debug level; this can be too noisy if DDNS
+                # is busy running.
+                logger.debug(DBG_XFROUT_TRACE, XFROUT_NOTIFY_COMMAND, zone_name,
+                             zone_class)
                 if self.send_notify(zone_name, zone_class):
                     answer = create_answer(0)
                 else:

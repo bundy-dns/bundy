@@ -97,6 +97,21 @@ public:
         const ZoneData* const zone_data;
     };
 
+    /// \brief Result data of mutable version of findZone() method.
+    ///
+    /// This is the same as FindResult except \c zone_data points to mutable
+    /// data.
+    struct MutableFindResult {
+        MutableFindResult(result::Result param_code,
+                   ZoneData* param_zone_data,
+                   result::ResultFlags param_flags = result::FLAGS_DEFAULT) :
+            code(param_code), flags(param_flags), zone_data(param_zone_data)
+        {}
+        const result::Result code;
+        const result::ResultFlags flags;
+        ZoneData* const zone_data;
+    };
+
 private:
     /// Constructor.
     ///
@@ -247,6 +262,13 @@ public:
     /// \param name A domain name for which the search is performed.
     /// \return A \c FindResult object enclosing the search result (see above).
     FindResult findZone(const bundy::dns::Name& name) const;
+
+    /// \brief Find mutable zone data.
+    ///
+    /// This is basically the same as the other version of \c findZone()
+    /// except returning mutable data.  This version shouldn't be needed
+    /// in most cases.
+    MutableFindResult findZone(const bundy::dns::Name& name);
 
 private:
     const dns::RRClass rrclass_;

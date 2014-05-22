@@ -77,11 +77,12 @@ protected:
 
     void configureZones();      // used for loadzone related tests
     void checkLoadOrUpdateZone(CommandID cmdid);
+    ConstElementPtr createSegments() const;
 
     ClientListMapPtr clients_map; // configured clients
     std::list<Command> command_queue; // test command queue
     std::list<Command> delayed_command_queue; // commands available after wait
-    std::list<FinishedCallback> callback_queue; // Callbacks from commands
+    std::list<FinishedCallbackPair> callback_queue; // Callbacks from commands
     int write_end, read_end;
     TestDataSrcClientsBuilder builder;
     TestCondVar cond;
@@ -119,7 +120,7 @@ TEST_F(DataSrcClientsBuilderTest, runSingleCommand) {
 }
 
 // Just to have a valid function callback to pass
-void emptyCallsback() {}
+void emptyCallsback(ConstElementPtr) {}
 
 // Check a command finished callback is passed
 TEST_F(DataSrcClientsBuilderTest, commandFinished) {
@@ -133,7 +134,8 @@ TEST_F(DataSrcClientsBuilderTest, commandFinished) {
     // There's one callback in the queue
     ASSERT_EQ(1, callback_queue.size());
     // Not using EXPECT_EQ, as that produces warning in printing out the result
-    EXPECT_TRUE(emptyCallsback == callback_queue.front());
+    EXPECT_TRUE(emptyCallsback == callback_queue.front().first);
+    EXPECT_FALSE(callback_queue.front().second); // NULL arg by default
     // And we are woken up.
     char c;
     int result = recv(read_end, &c, 1, MSG_DONTWAIT);
@@ -152,14 +154,18 @@ TEST_F(DataSrcClientsBuilderTest, finishedCrash) {
 
 TEST_F(DataSrcClientsBuilderTest, runMultiCommands) {
     // Two NOOP commands followed by SHUTDOWN.  We should see two doNoop()
-    // calls.
+    // calls.  One of the noop calls triggers a callback with an argument.
+    const Command noop_cmd_withcb(NOOP, ConstElementPtr(), emptyCallsback);
     command_queue.push_back(noop_cmd);
-    command_queue.push_back(noop_cmd);
+    command_queue.push_back(noop_cmd_withcb);
     command_queue.push_back(shutdown_cmd);
     builder.run();
+    EXPECT_EQ(1, callback_queue.size());
+    EXPECT_TRUE(emptyCallsback == callback_queue.front().first);
+    EXPECT_TRUE(callback_queue.front().second->boolValue());
     EXPECT_TRUE(command_queue.empty());
-    EXPECT_EQ(1, queue_mutex.lock_count);
-    EXPECT_EQ(1, queue_mutex.unlock_count);
+    EXPECT_EQ(2, queue_mutex.lock_count); // 1 lock for command, 1 for callback
+    EXPECT_EQ(2, queue_mutex.unlock_count);
     EXPECT_EQ(2, queue_mutex.noop_count);
 }
 
@@ -204,36 +210,43 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
     // the error handling
 
     // A command structure we'll modify to send different commands
-    Command reconfig_cmd(RECONFIGURE, ConstElementPtr(), FinishedCallback());
+    Command reconfig_cmd(RECONFIGURE, ConstElementPtr(), emptyCallsback);
 
     // Initially, no clients should be there
     EXPECT_TRUE(clients_map->empty());
 
     // A config that doesn't do much except be accepted
-    ConstElementPtr good_config = Element::fromJSON(
-        "{"
-        "\"IN\": [{"
-        "   \"type\": \"MasterFiles\","
-        "   \"params\": {},"
-        "   \"cache-enable\": true"
-        "}]"
-        "}"
+    ElementPtr good_config = Element::fromJSON(
+        "{\"classes\":"
+        "  {"
+        "  \"IN\": [{"
+        "     \"type\": \"MasterFiles\","
+        "     \"params\": {},"
+        "     \"cache-enable\": true"
+        "   }]"
+        "  },"
+        " \"_generation_id\": 1}"
     );
 
     // A configuration that is 'correct' in the top-level, but contains
     // bad data for the type it specifies
     ConstElementPtr bad_config = Element::fromJSON(
-        "{"
-        "\"IN\": [{"
-        "   \"type\": \"MasterFiles\","
-        "   \"params\": { \"foo\": [ 1, 2, 3, 4  ]},"
-        "   \"cache-enable\": true"
-        "}]"
-        "}"
+        "{\"classes\":"
+        "  {"
+        "  \"IN\": [{"
+        "     \"type\": \"MasterFiles\","
+        "     \"params\": { \"foo\": [ 1, 2, 3, 4  ]},"
+        "     \"cache-enable\": true"
+        "   }]"
+        "  },"
+        " \"_generation_id\": 1}"
     );
 
     reconfig_cmd.params = good_config;
     EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
+    // The callback argument of reconfigure is false unless it involves mapped
+    // memory segment.
+    EXPECT_FALSE(builder.getInternalCallbacks().front().second->boolValue());
     EXPECT_EQ(1, clients_map->size());
     EXPECT_EQ(1, map_mutex.lock_count);
 
@@ -243,7 +256,8 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
     // If a 'bad' command argument got here, the config validation should
     // have failed already, but still, the handler should return true,
     // and the clients_map should not be updated.
-    reconfig_cmd.params = Element::create("{ \"foo\": \"bar\" }");
+    reconfig_cmd.params = Element::create(
+        "{\"classes\": { \"foo\": \"bar\" }, \"_generation_id\": 2}");
     EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
     EXPECT_EQ(working_config_clients, clients_map);
     // Building failed, so map mutex should not have been locked again
@@ -265,8 +279,28 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
     EXPECT_EQ(working_config_clients, clients_map);
     EXPECT_EQ(1, map_mutex.lock_count);
 
+    // Missing mandatory config items
+    reconfig_cmd.params = Element::fromJSON("{\"_generation_id\": 2}");
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
+    EXPECT_EQ(working_config_clients, clients_map);
+    EXPECT_EQ(1, map_mutex.lock_count);
+
+    // bad generation IDs (must not be negative, and must increase)
+    reconfig_cmd.params =
+        Element::fromJSON("{\"classes\": {}, \"_generation_id\": -10}");
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
+    EXPECT_EQ(working_config_clients, clients_map);
+    EXPECT_EQ(1, map_mutex.lock_count);
+
+    reconfig_cmd.params =
+        Element::fromJSON("{\"classes\": {}, \"_generation_id\": 1}");
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
+    EXPECT_EQ(working_config_clients, clients_map);
+    EXPECT_EQ(1, map_mutex.lock_count);
+
     // Reconfigure again with the same good clients, the result should
     // be a different map than the original, but not an empty one.
+    good_config->set("_generation_id", Element::create(2));
     reconfig_cmd.params = good_config;
     EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
     EXPECT_NE(working_config_clients, clients_map);
@@ -274,7 +308,8 @@ TEST_F(DataSrcClientsBuilderTest, reconfigure) {
     EXPECT_EQ(2, map_mutex.lock_count);
 
     // And finally, try an empty config to disable all datasource clients
-    reconfig_cmd.params = Element::createMap();
+    reconfig_cmd.params =
+        Element::fromJSON("{\"classes\": {}, \"_generation_id\": 3}");
     EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
     EXPECT_EQ(0, clients_map->size());
     EXPECT_EQ(3, map_mutex.lock_count);
@@ -413,7 +448,8 @@ DataSrcClientsBuilderTest::checkLoadOrUpdateZone(CommandID cmdid) {
               find(Name("www.example.org"), RRType::A())->code);
 
     // Add the record to the underlying sqlite database, by loading/updating
-    // it as a separate datasource, and updating it
+    // it as a separate datasource, and updating it.  Also need to update the
+    // SOA serial; otherwise load will be skipped.
     ConstElementPtr sql_cfg = Element::fromJSON("{ \"type\": \"sqlite3\","
                                                 "\"database_file\": \""
                                                 + test_db + "\"}");
@@ -422,6 +458,12 @@ DataSrcClientsBuilderTest::checkLoadOrUpdateZone(CommandID cmdid) {
         sql_ds.getInstance().getUpdater(Name("example.org"), false);
     sql_updater->addRRset(
         *textToRRset("www.example.org. 60 IN A 192.0.2.1"));
+    sql_updater->deleteRRset(
+        *textToRRset("example.org. 3600 IN SOA . . 0 0 0 0 0",
+                     RRClass::IN(), Name("example.org")));
+    sql_updater->addRRset(
+        *textToRRset("example.org. 3600 IN SOA . . 1 0 0 0 0",
+                     RRClass::IN(), Name("example.org")));
     sql_updater->commit();
 
     EXPECT_EQ(ZoneFinder::NXDOMAIN,
@@ -703,6 +745,41 @@ TEST_F(DataSrcClientsBuilderTest,
                             FinishedCallback())));
 }
 
+// A helper to create a mapped memory segment that can be used for the "reset"
+// operation used in some the tests below.  It returns a config element that
+// can be used as the argument of SEGMENT_INFO_UPDATE command for the builder.
+ConstElementPtr
+DataSrcClientsBuilderTest::createSegments() const {
+    // First, prepare the file image to be mapped
+    ConstElementPtr datasrc_config = Element::fromJSON(
+        "{\"IN\": [{\"type\": \"MasterFiles\","
+        "           \"params\": {\"test1.example\": \""
+        TEST_DATA_BUILDDIR "/test1.zone.copied\"},"
+        "           \"cache-enable\": true, \"cache-type\": \"mapped\"}]}");
+    ConstElementPtr segment_config = Element::fromJSON(
+        "{\"mapped-file\": \"" TEST_DATA_BUILDDIR "/test1.zone.image\"}");
+    // placeholder clients for memory segment:
+    ClientListMapPtr tmp_clients_map = configureDataSource(datasrc_config);
+    {
+        const boost::shared_ptr<ConfigurableClientList> list =
+            (*tmp_clients_map)[RRClass::IN()];
+        list->resetMemorySegment("MasterFiles",
+                                 memory::ZoneTableSegment::CREATE,
+                                 segment_config);
+        const ConfigurableClientList::ZoneWriterPair result =
+            list->getCachedZoneWriter(bundy::dns::Name("test1.example"), false,
+                                      "MasterFiles");
+        EXPECT_EQ(ConfigurableClientList::ZONE_SUCCESS, result.first);
+        result.second->load();
+        result.second->install();
+        // not absolutely necessary, but just in case
+        result.second->cleanup();
+    } // Release this list. That will release the file with the image too,
+      // so we can map it read only from somewhere else.
+
+    return (segment_config);
+}
+
 // Test the SEGMENT_INFO_UPDATE command. This test is little bit
 // indirect. It doesn't seem possible to fake the client list inside
 // easily. So we create a real image to load and load it. Then we check
@@ -715,58 +792,61 @@ TEST_F(DataSrcClientsBuilderTest,
 #endif
       )
 {
-    // First, prepare the file image to be mapped
-    const ConstElementPtr config = Element::fromJSON(
-        "{"
-        "\"IN\": [{"
-        "   \"type\": \"MasterFiles\","
-        "   \"params\": {"
-        "       \"test1.example\": \""
-        TEST_DATA_BUILDDIR "/test1.zone.copied\"},"
-        "   \"cache-enable\": true,"
-        "   \"cache-type\": \"mapped\""
-        "}]}");
-    const ConstElementPtr segment_config = Element::fromJSON(
-        "{"
-        "  \"mapped-file\": \""
-        TEST_DATA_BUILDDIR "/test1.zone.image" "\"}");
-    clients_map = configureDataSource(config);
-    {
-        const boost::shared_ptr<ConfigurableClientList> list =
-            (*clients_map)[RRClass::IN()];
-        list->resetMemorySegment("MasterFiles",
-                                 memory::ZoneTableSegment::CREATE,
-                                 segment_config);
-        const ConfigurableClientList::ZoneWriterPair result =
-            list->getCachedZoneWriter(bundy::dns::Name("test1.example"), false,
-                                      "MasterFiles");
-        ASSERT_EQ(ConfigurableClientList::ZONE_SUCCESS, result.first);
-        result.second->load();
-        result.second->install();
-        // not absolutely necessary, but just in case
-        result.second->cleanup();
-    } // Release this list. That will release the file with the image too,
-      // so we can map it read only from somewhere else.
+    const ConstElementPtr segment_config = createSegments();
+    Command reconfig_cmd(RECONFIGURE, ConstElementPtr(), emptyCallsback);
 
-    // Create a new map, with the same configuration, but without the segments
-    // set
-    clients_map = configureDataSource(config);
-    const boost::shared_ptr<ConfigurableClientList> list =
-        (*clients_map)[RRClass::IN()];
-    EXPECT_EQ(SEGMENT_WAITING, list->getStatus()[0].getSegmentState());
-    // Send the command
-    const ElementPtr command_args = Element::fromJSON(
+    // Configure a new map without resetting the segments set
+    const ConstElementPtr config = Element::fromJSON(
+        "{\"classes\": "
+        " {"
+        "  \"IN\": ["
+        "  {\"type\": \"MasterFiles\","
+        "   \"params\": {\"test1.example\": \""
+        TEST_DATA_BUILDDIR "/test1.zone.copied\"},"
+        "   \"cache-enable\": true, \"cache-type\": \"mapped\"}]},"
+        " \"_generation_id\": 42}");
+    reconfig_cmd.params = config;
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
+    // If this config uses mapped memory segment (or anything that waits for
+    // a separate reset), the call back argument (a bool element) will be true.
+    EXPECT_TRUE(builder.getInternalCallbacks().front().second->boolValue());
+
+    //clients_map = configureDataSource(config);
+    // Send the update command with inuse-only.  Since the status is 'waiting',
+    // this should be ignored.
+    const ElementPtr noop_command_args = Element::fromJSON(
         "{"
         "  \"data-source-name\": \"MasterFiles\","
-        "  \"data-source-class\": \"IN\""
+        "  \"data-source-class\": \"IN\","
+        "  \"inuse-only\": true,"
+        "  \"generation-id\": 42"
+        "}");
+    noop_command_args->set("segment-params", segment_config);
+    builder.handleCommand(Command(SEGMENT_INFO_UPDATE, noop_command_args,
+                                  FinishedCallback()));
+    EXPECT_EQ(0, clients_map->size()); // still empty
+
+    // Send the update command, making the pending map active.
+    ElementPtr command_args = Element::fromJSON(
+        "{"
+        "  \"data-source-name\": \"MasterFiles\","
+        "  \"data-source-class\": \"IN\","
+        "  \"generation-id\": 42"
         "}");
     command_args->set("segment-params", segment_config);
     builder.handleCommand(Command(SEGMENT_INFO_UPDATE, command_args,
                                   FinishedCallback()));
-    // The segment is now used.
-    EXPECT_EQ(SEGMENT_INUSE, list->getStatus()[0].getSegmentState());
+    EXPECT_EQ(1, clients_map->size()); // now the new configuration is active.
+
+    // updates on an older generation will be just ignored.
+    const size_t locks = map_mutex.lock_count;
+    command_args->set("generation-id", Element::create(41));
+    builder.handleCommand(Command(SEGMENT_INFO_UPDATE, command_args,
+                                  FinishedCallback()));
+    EXPECT_EQ(locks, map_mutex.lock_count); // no reset should have happened
 
     // Some invalid inputs (wrong class, different name of data source, etc).
+    command_args->set("generation-id", Element::create(42)); // set correct gid
 
     // Copy the confing and modify
     const ElementPtr bad_name = Element::fromJSON(command_args->toWire());
@@ -805,4 +885,175 @@ TEST_F(DataSrcClientsBuilderTest,
     }, "");
 }
 
+// This relies on the fact that mapped memory segment is initially in the
+// 'WAITING' state, and only works for that type of segment.
+TEST_F(DataSrcClientsBuilderTest,
+#ifdef USE_SHARED_MEMORY
+       reconfigurePending
+#else
+       DISABLED_reconfigurePending
+#endif
+    )
+{
+    Command reconfig_cmd(RECONFIGURE, ConstElementPtr(), FinishedCallback());
+
+    // Two data source clients in the entire configuration require a mapped
+    // segment, making the new config pending until the segment is ready for
+    // reset.
+    const ElementPtr config = Element::fromJSON(
+        "{\"classes\":"
+        "  {"
+        "   \"CH\": ["
+        "    {\"type\": \"MasterFiles\", \"params\": {}, "
+        "     \"cache-enable\": true}],"
+        "   \"IN\": ["
+        // The first data source instance with mapped memory segment
+        "    {\"type\": \"MasterFiles\", \"name\": \"dsrc1\","
+        "     \"params\": {\"test1.example\": \"" +
+        std::string(TEST_DATA_BUILDDIR "/test1.zone.copied") + "\"},"
+        "     \"cache-enable\": true,"
+        "     \"cache-type\": \"mapped\"},"
+        // The 2nd data source instance with mapped memory segment
+        "    {\"type\": \"MasterFiles\", \"name\": \"dsrc2\","
+        "     \"params\": {\"test1.example\": \"" +
+        std::string(TEST_DATA_BUILDDIR "/test1.zone.copied") + "\"},"
+        "     \"cache-enable\": true,"
+        "     \"cache-type\": \"mapped\"}]},"
+        " \"_generation_id\": 42}"
+    );
+    reconfig_cmd.params = config;
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
+
+    // No swap should have happened.
+    EXPECT_EQ(0, clients_map->size());
+    EXPECT_EQ(0, map_mutex.lock_count);
+
+    // reset the memory segment for the first data source client.
+    ConstElementPtr segment_config = createSegments();
+    ElementPtr command_args = Element::fromJSON(
+        "{"
+        "  \"data-source-name\": \"dsrc1\","
+        "  \"data-source-class\": \"IN\","
+        "  \"generation-id\": 42"
+        "}");
+    command_args->set("segment-params", segment_config);
+    builder.handleCommand(Command(SEGMENT_INFO_UPDATE, command_args,
+                                  FinishedCallback()));
+
+    // The entire map is not fully ready, so the map size doesn't change, but
+    // for the reset operation there should have been one lock acquired.
+    EXPECT_EQ(0, clients_map->size());
+    EXPECT_EQ(1, map_mutex.lock_count);
+
+    // reset the memory segment for the second data source client, and then
+    // the new config is now fully effective.  map size will be adjusted, and
+    // there should be two more lock acquisitions (1 for reset, and 1 for swap).
+    command_args->set("data-source-name", Element::create("dsrc2"));
+    builder.handleCommand(Command(SEGMENT_INFO_UPDATE, command_args,
+                                  FinishedCallback()));
+    EXPECT_EQ(2, clients_map->size());
+    EXPECT_EQ(3, map_mutex.lock_count);
+
+    // updates on an older/newer generation will be just ignored.
+    command_args->set("generation-id", Element::create(41));
+    builder.handleCommand(Command(SEGMENT_INFO_UPDATE, command_args,
+                                  FinishedCallback()));
+    EXPECT_EQ(3, map_mutex.lock_count); // no reset should have happened
+
+    command_args->set("generation-id", Element::create(43));
+    builder.handleCommand(Command(SEGMENT_INFO_UPDATE, command_args,
+                                  FinishedCallback()));
+    EXPECT_EQ(3, map_mutex.lock_count); // no change in the lock count
+
+    // Another sets of reconfiguration: two generations come in rapidly,
+    // so the 1st one will be effectively ignored.
+    config->set("_generation_id", Element::create(43));
+    reconfig_cmd.params = config;
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
+    EXPECT_EQ(3, map_mutex.lock_count); // not yet ready
+
+    config->set("_generation_id", Element::create(44));
+    reconfig_cmd.params = config;
+    EXPECT_TRUE(builder.handleCommand(reconfig_cmd));
+    EXPECT_EQ(3, map_mutex.lock_count); // also not yet ready
+
+    // An update for the "intermediate" generation will be ignored.
+    command_args->set("generation-id", Element::create(43));
+    builder.handleCommand(Command(SEGMENT_INFO_UPDATE, command_args,
+                                  FinishedCallback()));
+    EXPECT_EQ(3, map_mutex.lock_count);
+
+    // updates to the latest pending generation will apply, and make the
+    // reconfiguration completed.
+    command_args->set("generation-id", Element::create(44));
+    builder.handleCommand(Command(SEGMENT_INFO_UPDATE, command_args,
+                                  FinishedCallback()));
+    EXPECT_EQ(4, map_mutex.lock_count); // for reset
+
+    command_args->set("data-source-name", Element::create("dsrc1"));
+    command_args->set("generation-id", Element::create(44));
+    builder.handleCommand(Command(SEGMENT_INFO_UPDATE, command_args,
+                                  FinishedCallback()));
+    EXPECT_EQ(6, map_mutex.lock_count); // 1 for reset and 1 for swap
+}
+
+TEST_F(DataSrcClientsBuilderTest, releaseSegments) {
+    // Set up a generation of data sources.
+    ElementPtr dsrc_config = Element::fromJSON(
+        "{\"classes\":{\"IN\": [{\"type\": \"MasterFiles\","
+        "                        \"params\": {}, \"cache-enable\": true}]},"
+        " \"_generation_id\": 42}"
+    );
+    const Command reconfig_cmd(RECONFIGURE, dsrc_config, FinishedCallback());
+    builder.handleCommand(reconfig_cmd);
+
+    // Then send a release segments command for the generation.  The callback
+    // will be pending until the next generation of data sources is ready.
+    builder.handleCommand(Command(RELEASE_SEGMENTS,
+                                  Element::fromJSON("{\"generation-id\": 42}"),
+                                  emptyCallsback));
+    EXPECT_TRUE(builder.getInternalCallbacks().empty());
+
+    // On completion of the next generation of data sources, it also completes
+    // releasing the segments of the previous generation.  The pending callback
+    // is now scheduled.
+    dsrc_config->set("_generation_id", Element::create(43));
+    builder.handleCommand(reconfig_cmd);
+    EXPECT_EQ(1, builder.getInternalCallbacks().size());
+    EXPECT_TRUE(builder.getInternalCallbacks().front().first == emptyCallsback);
+
+    // New or old generation of command is effectively no-op, and the callback
+    // is immediately scheduled.
+    builder.handleCommand(Command(RELEASE_SEGMENTS,
+                                  Element::fromJSON("{\"generation-id\": 41}"),
+                                  emptyCallsback));
+    EXPECT_EQ(2, builder.getInternalCallbacks().size()); // CB is appended
+
+    builder.handleCommand(Command(RELEASE_SEGMENTS,
+                                  Element::fromJSON("{\"generation-id\": 44}"),
+                                  emptyCallsback));
+    EXPECT_EQ(3, builder.getInternalCallbacks().size());
+
+    // Bogus arguments will result in InternalCommandError.  no callback
+    // will be scheduled for these.
+    EXPECT_THROW(builder.handleCommand(Command(RELEASE_SEGMENTS,
+                                               ConstElementPtr(),
+                                               emptyCallsback)),
+                 TestDataSrcClientsBuilder::InternalCommandError);
+    EXPECT_EQ(3, builder.getInternalCallbacks().size());
+
+    EXPECT_THROW(builder.handleCommand(
+                     Command(RELEASE_SEGMENTS,
+                             Element::fromJSON("{\"_generation-id\": 44}"),
+                             emptyCallsback)),
+                 TestDataSrcClientsBuilder::InternalCommandError);
+    EXPECT_EQ(3, builder.getInternalCallbacks().size());
+
+    EXPECT_THROW(builder.handleCommand(
+                     Command(RELEASE_SEGMENTS,
+                             Element::fromJSON("{\"generation-id\":true}"),
+                             emptyCallsback)),
+                 TestDataSrcClientsBuilder::InternalCommandError);
+    EXPECT_EQ(3, builder.getInternalCallbacks().size());
+}
 } // unnamed namespace

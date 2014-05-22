@@ -77,7 +77,8 @@ public:
        zone_data_(&zone_data)
     {
         if (mem_sgmt_.getNamedAddress("updater_zone_data").first) {
-            bundy_throw(bundy::InvalidOperation, "A ZoneDataUpdater already exists"
+            bundy_throw(bundy::InvalidOperation,
+                        "A ZoneDataUpdater already exists"
                       " on this memory segment. Destroy it first.");
         }
         if (mem_sgmt_.setNamedAddress("updater_zone_data", zone_data_)) {
@@ -115,6 +116,17 @@ public:
         {}
     };
 
+    /// \brief General failure exception for \c remove().
+    ///
+    /// This is thrown against general error cases in adding an RRset
+    /// to the zone.
+    class RemoveError : public ZoneLoaderException {
+    public:
+        RemoveError(const char* file, size_t line, const char* what) :
+            ZoneLoaderException(file, line, what)
+        {}
+    };
+
     /// \brief Add an RRset to the zone.
     ///
     /// This is the core method of this class. It is used to add an
@@ -139,12 +151,6 @@ public:
     /// should be very rare in practice, and hopefully wouldn't be a real
     /// issue.
     ///
-    /// \note Due to limitations of the current implementation, if a
-    /// (non RRSIG) RRset and its RRSIG are added separately in different
-    /// calls to this method, the second attempt will be rejected due to
-    /// an \c AddError exception.  This will be loosened in Trac
-    /// ticket #2441.
-    ///
     /// \throw NullRRset Both \c rrset and sig_rrset is NULL
     /// \throw AddError any of a variety of validation checks fail for the
     /// \c rrset and its associated \c sig_rrset.
@@ -156,6 +162,41 @@ public:
     ///                  can be empty if there is no RRSIG for the \c rrset.
     void add(const bundy::dns::ConstRRsetPtr& rrset,
              const bundy::dns::ConstRRsetPtr& sig_rrset);
+
+    /// \brief Remove RRs (possibly with some of RRSIGs) from the zone.
+    ///
+    /// This method removes any of the given RRs and RRSIGs that currently
+    /// exist in the zone from the zone.  At least one RR (can be RRSIG only)
+    /// of the given name and type must exist, but there can be RDATA in the
+    /// given set that don't exist in the zone; such RDATA will be ignored.
+    /// The TTL can also differ; the specified TTL in the given RRset
+    /// is effectively ignored.
+    ///
+    /// Note that this method is NOT exception-free, unlike many other
+    /// 'remove' type of operations, even if the given parameters are valid.
+    /// This is because it internally needs to allocate new resource for the
+    /// result of the remove operation, which can fail.
+    ///
+    /// This method provides strong exception guarantee in the case of
+    /// exception.  However, this wouldn't help much at a higher level; this
+    /// method is most likely to be used as part of a set of updates, and
+    /// it would be very difficult to revert the updates prior to the call
+    /// of this method.  In general, the basic assumption is that the caller
+    /// (or the application using the caller) is responsible for guaranteeing
+    /// the parameters are valid (most notably ensuring the existence of the
+    /// data to be removed), and other exceptions are very rare and fatal case.
+    /// In practice, if this method throws an exception, all zone data in the
+    /// middle of updates will have to be discarded.
+    ///
+    /// \throw NullRRset Both \c rrset and sig_rrset is NULL
+    /// \throw RemoveError any of a variety of validation checks fail for the
+    /// \c rrset and its associated \c sig_rrset.  In particular, this is
+    /// thrown if the specified name or the type of RRset doesn't exist.
+    ///
+    /// \param rrset The RRs to be removed in the form of RRset.
+    /// \param sig_rrset The RRSIGs to be removed in the form of RRset.
+    void remove(const bundy::dns::ConstRRsetPtr& rrset,
+                const bundy::dns::ConstRRsetPtr& sig_rrset);
 
 private:
     // Add the necessary magic for any wildcard contained in 'name'
@@ -178,6 +219,11 @@ private:
                      const bundy::dns::ConstRRsetPtr& rrset,
                      const bundy::dns::ConstRRsetPtr& rrsig);
 
+    void removeInternal(const bundy::dns::Name& name,
+                        const bundy::dns::RRType& rrtype,
+                        const bundy::dns::ConstRRsetPtr& rrset,
+                        const bundy::dns::ConstRRsetPtr& rrsig);
+
     // Does some checks in context of the data that are already in the
     // zone.  Currently checks for forbidden combinations of RRsets in
     // the same domain (CNAME+anything, DNAME+NS).  If such condition is
@@ -196,6 +242,9 @@ private:
     void addNSEC3(const bundy::dns::Name& name,
                   const bundy::dns::ConstRRsetPtr& rrset,
                   const bundy::dns::ConstRRsetPtr& rrsig);
+    void removeNSEC3(const bundy::dns::Name& name,
+                     const bundy::dns::ConstRRsetPtr& rrset,
+                     const bundy::dns::ConstRRsetPtr& rrsig);
     void addRdataSet(const bundy::dns::Name& name,
                      const bundy::dns::RRType& rrtype,
                      const bundy::dns::ConstRRsetPtr& rrset,

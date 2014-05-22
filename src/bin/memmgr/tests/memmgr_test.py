@@ -26,6 +26,9 @@ import memmgr
 from bundy.memmgr.datasrc_info import SegmentInfo
 from bundy.testutils.ccsession_mock import MockModuleCCSession
 
+# Commonly used constant for data source generation ID
+TEST_GENERATION_ID = 42
+
 class MyCCSession(MockModuleCCSession, bundy.config.ConfigData):
     def __init__(self, specfile, config_handler, command_handler):
         super().__init__()
@@ -63,29 +66,28 @@ class MyCCSession(MockModuleCCSession, bundy.config.ConfigData):
 # Test mock of SegmentInfo.  Faking many methods with hooks for easy inspection.
 class MockSegmentInfo(SegmentInfo):
     def __init__(self):
-        super().__init__()
+        super().__init__(TEST_GENERATION_ID)
         self.events = []
-        self.__state = None
         self.added_readers = []
         self.old_readers = set()
         self.ret_sync_reader = None # return value of sync_reader()
         self.raise_on_sync_reader = False
+        self.loaded_result = False # return value of loaded(), tweakable
 
     def add_event(self, cmd):
         self.events.append(cmd)
-        self.__state = SegmentInfo.UPDATING
 
     def start_update(self):
         return self.events[0]
-
-    def get_state(self):
-        return self.__state
 
     def add_reader(self, reader):
         super().add_reader(reader)
         self.added_readers.append(reader)
 
-    def complete_update(self):
+    def complete_validate(self, validated):
+        return 'command'
+
+    def complete_update(self, succeeded):
         return 'command'
 
     def get_reset_param(self, type):
@@ -99,10 +101,17 @@ class MockSegmentInfo(SegmentInfo):
             raise ValueError('exception from sync_reader')
         return self.ret_sync_reader
 
+    def _start_validate(self):
+        return 'action1', 'action2'
+
+    def loaded(self):
+        return self.loaded_result
+
 class MockMemmgr(memmgr.Memmgr):
     def __init__(self):
         super().__init__()
         self.builder_thread_created = False
+        self.sent_commands = []
 
     def _setup_ccsession(self):
         orig_cls = bundy.config.ModuleCCSession
@@ -118,6 +127,13 @@ class MockMemmgr(memmgr.Memmgr):
 class MockDataSrcInfo:
     def __init__(self, sgmt_info):
         self.segment_info_map = {(bundy.dns.RRClass.IN, "name"): sgmt_info}
+        self.gen_id = TEST_GENERATION_ID
+        self.all_readers = set()
+        self.canceled_readers = []
+
+    def cancel(self, reader):
+        self.canceled_readers.append(reader)
+        return self.all_readers
 
 # Defined for easier tests with DataSrcClientsMgr.reconfigure(), which
 # only needs get_value() method
@@ -160,7 +176,8 @@ class TestMemmgr(unittest.TestCase):
         if os.path.isdir(self.__test_mapped_file_dir):
             os.rmdir(self.__test_mapped_file_dir)
 
-    def __check_segment_info_update(self, sgmt_info, expected_reader):
+    def __check_segment_info_update(self, sgmt_info, expected_reader,
+                                    inuse_only=False):
         """Helper method for common set of checks on sent segment_info_update.
 
         This method assumes the caller to setup the test case with
@@ -175,10 +192,14 @@ class TestMemmgr(unittest.TestCase):
         self.assertEqual(expected_reader, cc)
         command, val = bundy.config.parse_command(cmd)
         self.assertEqual('segment_info_update', command)
-        self.assertEqual({'data-source-class': 'IN',
-                          'data-source-name': 'name',
-                          'segment-params': 'test-segment-params',
-                          'reader': expected_reader}, val)
+        expected_params = {'data-source-class': 'IN',
+                           'data-source-name': 'name',
+                           'segment-params': 'test-segment-params',
+                           'reader': expected_reader,
+                           'generation-id': 42} # genID is from MockSegmentInfo
+        if inuse_only:
+            expected_params['inuse-only'] = True
+        self.assertEqual(expected_params, val)
 
         # Confirm the number of outstanding updates is managed.
         self.assertEqual(
@@ -187,7 +208,7 @@ class TestMemmgr(unittest.TestCase):
     def test_init(self):
         """Check some initial conditions"""
         self.assertIsNone(self.__mgr._config_params)
-        self.assertEqual([], self.__mgr._datasrc_info_list)
+        self.assertEqual(None, self.__mgr._datasrc_info)
 
         # Try to configure a data source clients with the manager.  This
         # should confirm the manager object is instantiated enabling in-memory
@@ -231,8 +252,7 @@ class TestMemmgr(unittest.TestCase):
         self.assertEqual(1, answer[0])
         self.assertIsNotNone(re.search('not a directory', answer[1]))
 
-    @unittest.skipIf(os.getuid() == 0,
-                     'test cannot be run as root user')
+    @unittest.skipIf(os.getuid() == 0, 'test cannot be run as root user')
     def test_configure_bad_permissions(self):
         self.__mgr._setup_ccsession()
 
@@ -264,6 +284,10 @@ class TestMemmgr(unittest.TestCase):
         # Set _config_params to empty config; enough for the test
         self.__mgr._config_params = {}
 
+        # Pretend data source will have been configured correctly.  In most
+        # cases below, this is okay.
+        self.__mgr._datasrc_info = True
+
         # check what _setup_module should do:
         # 1. start the builder thread
         # 2. add data_sources remote module with expected parameters
@@ -294,6 +318,12 @@ class TestMemmgr(unittest.TestCase):
         self.assertEqual([('members', 'Msgq', {'group': 'SegmentReader'})],
                          self.__mgr.mod_ccsession.rpc_call_params)
 
+        # Failure of initial data source configuration is considered fatal.
+        self.__mgr._datasrc_info = None
+        self.assertRaises(bundy.server_common.bundy_server.BUNDYServerFatal,
+                          self.__mgr._setup_module)
+        self.__mgr._datasrc_info = True # fake again for the rest of the tests
+
         # If data source isn't configured it's considered fatal (checking the
         # same scenario with two possible exception types)
         self.__mgr.mod_ccsession.add_remote_exception = \
@@ -313,6 +343,9 @@ class TestMemmgr(unittest.TestCase):
                           self.__mgr._setup_module)
 
     def test_datasrc_config_handler(self):
+        # Pretend to have the builder thread
+        self.__mgr._builder_cv = threading.Condition()
+
         self.__mgr._config_params = {'mapped_file_dir': '/some/path'}
 
         # A simple (boring) case with real class implementations.  This
@@ -326,9 +359,10 @@ class TestMemmgr(unittest.TestCase):
             self.__init_called = param
         self.__mgr._init_segments = mock_init_segments
         self.__mgr._datasrc_config_handler({}, cfg_data)
-        self.assertEqual(1, len(self.__mgr._datasrc_info_list))
-        self.assertEqual(1, self.__mgr._datasrc_info_list[0].gen_id)
-        self.assertEqual(self.__init_called, self.__mgr._datasrc_info_list[0])
+        self.assertIsNotNone(self.__mgr._datasrc_info)
+        self.assertEqual(1, self.__mgr._datasrc_info.gen_id)
+        self.assertEqual(self.__init_called, self.__mgr._datasrc_info)
+        self.assertEqual([], self.__mgr._builder_command_queue)
 
         # Below we're using a mock DataSrcClientMgr for easier tests
         class MockDataSrcClientMgr:
@@ -352,20 +386,29 @@ class TestMemmgr(unittest.TestCase):
         # From memmgr's point of view it should be enough we have an object
         # in segment_info_map.  Note also that the new DataSrcInfo is appended
         # to the list
+        old_datasrc_info = self.__mgr._datasrc_info
         self.__mgr._datasrc_clients_mgr = \
             MockDataSrcClientMgr([('sqlite3', 'mapped', None)])
         self.__mgr._datasrc_config_handler(None, None) # params don't matter
-        self.assertEqual(2, len(self.__mgr._datasrc_info_list))
-        self.assertEqual(self.__init_called, self.__mgr._datasrc_info_list[1])
+        self.assertIsNotNone(self.__mgr._datasrc_info)
+        self.assertEqual(1, len(self.__mgr._old_datasrc_info))
+        self.assertEqual(self.__init_called, self.__mgr._datasrc_info)
         self.assertIsNotNone(
-            self.__mgr._datasrc_info_list[1].segment_info_map[
-                (RRClass.IN, 'sqlite3')])
+            self.__mgr._datasrc_info.segment_info_map[(RRClass.IN, 'sqlite3')])
+        # The old info should be moved to the 'old' set, and a cancel command
+        # should have been sent to the builder.
+        self.assertSetEqual({old_datasrc_info},
+                            set(self.__mgr._old_datasrc_info.values()))
+        self.assertEqual([('cancel', old_datasrc_info)],
+                         self.__mgr._builder_command_queue)
+        del self.__mgr._builder_command_queue[:] # for tearDown
 
         # Emulate the case reconfigure() fails.  Exception isn't propagated,
-        # but the list doesn't change.
+        # but the status doesn't change.
         self.__mgr._datasrc_clients_mgr = MockDataSrcClientMgr(None, True)
         self.__mgr._datasrc_config_handler(None, None)
-        self.assertEqual(2, len(self.__mgr._datasrc_info_list))
+        self.assertIsNotNone(self.__mgr._datasrc_info)
+        self.assertEqual(1, len(self.__mgr._old_datasrc_info))
 
     def test_init_segments(self):
         """Test the initialization of segments.
@@ -390,11 +433,88 @@ class TestMemmgr(unittest.TestCase):
         added_readers.sort()
         self.assertEqual(['reader1', 'reader2'], added_readers)
 
-        # The event was pushed into the segment info
-        command = ('load', None, dsrc_info, bundy.dns.RRClass.IN, 'name')
-        self.assertEqual([command], sgmt_info.events)
-        self.assertEqual([command], self.__mgr._builder_command_queue)
+        # Check the first command sent to the builder thread.
+        self.assertEqual(self.__mgr._builder_command_queue,
+                         [('validate', dsrc_info, bundy.dns.RRClass.IN, 'name',
+                          'action1')])
+
+        # Check pending events pushed into the segment info
+        self.assertEqual(len(sgmt_info.events), 2)
+        self.assertEqual(sgmt_info.events[0],
+                         ('validate', dsrc_info, bundy.dns.RRClass.IN, 'name',
+                          'action2'))
+        self.assertEqual(sgmt_info.events[1],
+                         ('load', None, dsrc_info, bundy.dns.RRClass.IN,
+                          'name'))
         del self.__mgr._builder_command_queue[:]
+
+    # Check the handling of 'update/validate-completed' notification from
+    # the builder.
+    def __check_notify_from_builder(self, notif_name, notif_ref, dsrc_info,
+                                    sgmt_info, commands):
+        sgmt_info.complete_update = lambda x: 'command'
+        sgmt_info.complete_validate = lambda x: 'command'
+        del commands[:]
+        del self.__mgr.mod_ccsession.sendmsg_params[:]
+        sgmt_info.old_readers.clear()
+
+        notif_ref.append((notif_name, dsrc_info, bundy.dns.RRClass.IN,
+                          'name', True))
+        # Wake up the main thread and let it process the notifications
+        self.__mgr._notify_from_builder()
+        # All notifications are now eaten
+        self.assertEqual([], notif_ref)
+        self.assertEqual(['command'], commands)
+        del commands[:]
+        # no message to readers
+        self.assertEqual(0, len(self.__mgr.mod_ccsession.sendmsg_params))
+
+        # The new command is sent
+        # Once again the same, but with the last command - nothing new pushed,
+        # but a notification should be sent to readers
+        sgmt_info.old_readers.add('reader1')
+        self.__mgr._segment_readers['reader1'] = {}
+        sgmt_info.complete_update = lambda x: None
+        sgmt_info.complete_validate = lambda x: None
+        notif_ref.append((notif_name, dsrc_info, bundy.dns.RRClass.IN,
+                          'name', True))
+        self.__mgr._notify_from_builder()
+        self.assertEqual([], notif_ref)
+        self.assertEqual([], commands)
+        self.assertEqual(1, len(self.__mgr.mod_ccsession.sendmsg_params))
+        (cmd, group, cc) = self.__mgr.mod_ccsession.sendmsg_params[0]
+        self.__check_segment_info_update(sgmt_info, 'reader1',
+                                         notif_name == 'validate-completed')
+
+    # Check the handling of cancel-command notification from builder.
+    def __check_cancel_completed_from_builder(self, notif_ref, dsrc_info):
+        # If there's no reader, the data source info is immediately cleaned up.
+        notif_ref.append(('cancel-completed', dsrc_info))
+        self.__mgr._old_datasrc_info[TEST_GENERATION_ID] = dsrc_info
+        self.__mgr._notify_from_builder()
+        self.assertFalse(TEST_GENERATION_ID in self.__mgr._old_datasrc_info)
+
+        # Otherwise, 'release_segments' command will be sent to the reader.
+        self.__mgr.mod_ccsession.sendmsg_params.clear()
+        self.__mgr._old_datasrc_info[TEST_GENERATION_ID] = dsrc_info
+        dsrc_info.all_readers = set({'reader1', 'reader2'})
+        notif_ref.append(('cancel-completed', dsrc_info))
+        self.__mgr._notify_from_builder()
+        self.assertEqual(2, len(self.__mgr.mod_ccsession.sendmsg_params))
+        cmds = []
+        groups = set()
+        recipients = set()
+        [(cmds.append(cmd), groups.add(g), recipients.add(cc)) for cmd, g, cc in
+         self.__mgr.mod_ccsession.sendmsg_params]
+        self.assertEqual(set({'reader1', 'reader2'}), recipients)
+        self.assertEqual(set({'SegmentReader'}), groups)
+        command, val = bundy.config.parse_command(cmds[0])
+        self.assertEqual('release_segments', command)
+        self.assertEqual(TEST_GENERATION_ID, val['generation-id'])
+
+        # not yet cleaned up
+        self.assertEqual(dsrc_info,
+                         self.__mgr._old_datasrc_info[TEST_GENERATION_ID])
 
     def test_notify_from_builder(self):
         """
@@ -412,35 +532,19 @@ class TestMemmgr(unittest.TestCase):
         def mock_cmd_to_builder(cmd):
             commands.append(cmd)
         self.__mgr._cmd_to_builder = mock_cmd_to_builder
+        self.__mgr._mod_cc = MyCCSession(None, None, None) # fake mod_ccsession
 
         self.__mgr._builder_lock = threading.Lock()
         # Extract the reference for the queue. We get a copy of the reference
         # to check it is cleared, not a new empty one installed
         notif_ref = self.__mgr._builder_response_queue
-        notif_ref.append(('load-completed', dsrc_info, bundy.dns.RRClass.IN,
-                          'name'))
-        # Wake up the main thread and let it process the notifications
-        self.__mgr._notify_from_builder()
-        # All notifications are now eaten
-        self.assertEqual([], notif_ref)
-        self.assertEqual(['command'], commands)
-        del commands[:]
 
-        # The new command is sent
-        # Once again the same, but with the last command - nothing new pushed,
-        # but a notification should be sent to readers
-        self.__mgr._mod_cc = MyCCSession(None, None, None) # fake mod_ccsession
-        sgmt_info.old_readers.add('reader1')
-        self.__mgr._segment_readers['reader1'] = {}
-        sgmt_info.complete_update = lambda: None
-        notif_ref.append(('load-completed', dsrc_info, bundy.dns.RRClass.IN,
-                          'name'))
-        self.__mgr._notify_from_builder()
-        self.assertEqual([], notif_ref)
-        self.assertEqual([], commands)
-        self.assertEqual(1, len(self.__mgr.mod_ccsession.sendmsg_params))
-        (cmd, group, cc) = self.__mgr.mod_ccsession.sendmsg_params[0]
-        self.__check_segment_info_update(sgmt_info, 'reader1')
+        self.__check_notify_from_builder('load-completed', notif_ref, dsrc_info,
+                                         sgmt_info, commands)
+        self.__check_notify_from_builder('validate-completed', notif_ref,
+                                         dsrc_info, sgmt_info, commands)
+        self.__check_cancel_completed_from_builder(notif_ref, dsrc_info)
+
         # This is invalid (unhandled) notification name
         notif_ref.append(('unhandled',))
         self.assertRaises(ValueError, self.__mgr._notify_from_builder)
@@ -469,7 +573,7 @@ class TestMemmgr(unittest.TestCase):
 
         sgmt_info = MockSegmentInfo()
         dsrc_info = MockDataSrcInfo(sgmt_info)
-        self.__mgr._datasrc_info_list.append(dsrc_info)
+        self.__mgr._datasrc_info = dsrc_info
 
         # If sync_reader() returns None, no command should be sent to
         # the segment builder.  We emulate the situation where there are
@@ -482,6 +586,7 @@ class TestMemmgr(unittest.TestCase):
             self.assertEqual(False, self.__mgr._mod_command_handler(
                 'segment_info_update_ack', {'data-source-class': 'IN',
                                             'data-source-name': 'name',
+                                            'generation-id': TEST_GENERATION_ID,
                                             'reader': 'reader0'}))
             self.assertEqual([], commands)
             if i == 0:
@@ -496,6 +601,7 @@ class TestMemmgr(unittest.TestCase):
             self.assertEqual(False, self.__mgr._mod_command_handler(
                 'segment_info_update_ack', {'data-source-class': 'IN',
                                             'data-source-name': 'name',
+                                            'generation-id': TEST_GENERATION_ID,
                                             'reader': 'reader0'}))
             if i == 0:
                 self.assertEqual(1, sgmt_readers['reader0'][sgmt_info])
@@ -512,20 +618,39 @@ class TestMemmgr(unittest.TestCase):
             'segment_info_update_ack', {}))
         sgmt_info = MockSegmentInfo()
         dsrc_info = MockDataSrcInfo(sgmt_info)
-        self.__mgr._datasrc_info_list.append(dsrc_info)
+        self.__mgr._datasrc_info = dsrc_info
         # missing necesary keys or invalid values
         self.assertIsNone(self.__mgr._mod_command_handler(
             'segment_info_update_ack', {}))
         self.assertIsNone(self.__mgr._mod_command_handler(
-            'segment_info_update_ack', {'data-source-class': 'badclass'}))
-        self.assertIsNone(self.__mgr._mod_command_handler(
-            'segment_info_update_ack', {'data-source-class': 'IN'}))
-        self.assertIsNone(self.__mgr._mod_command_handler(
-            'segment_info_update_ack', {'data-source-class': 'IN',
-                                        'data-source-name': 'noname'}))
+            'segment_info_update_ack', {'data-source-class': 'badclass',
+                                        'generation-id': TEST_GENERATION_ID}))
         self.assertIsNone(self.__mgr._mod_command_handler(
             'segment_info_update_ack', {'data-source-class': 'IN',
-                                        'data-source-name': 'name'}))
+                                        'generation-id': TEST_GENERATION_ID}))
+        self.assertIsNone(self.__mgr._mod_command_handler(
+            'segment_info_update_ack', {'data-source-class': 'IN',
+                                        'data-source-name': 'noname',
+                                        'generation-id': TEST_GENERATION_ID}))
+        self.assertIsNone(self.__mgr._mod_command_handler(
+            'segment_info_update_ack', {'data-source-class': 'IN',
+                                        'data-source-name': 'name',
+                                        'generation-id': TEST_GENERATION_ID}))
+
+        # getting segment_info_update_ack for an older generation is possible,
+        # if the data source is reconfigured while waiting for the response.
+        # Getting it for a newer generation shouldn't happen, but the end result
+        # is the same (ignore the ack), so we don't differentiate them.
+        self.assertFalse(self.__mgr._mod_command_handler(
+            'segment_info_update_ack', {'data-source-class': 'IN',
+                                        'data-source-name': 'name',
+                                        'generation-id': TEST_GENERATION_ID - 1,
+                                        'reader': 'reader0'}))
+        self.assertFalse(self.__mgr._mod_command_handler(
+            'segment_info_update_ack', {'data-source-class': 'IN',
+                                        'data-source-name': 'name',
+                                        'generation-id': TEST_GENERATION_ID + 1,
+                                        'reader': 'reader0'}))
 
         # not necessarily invalid, but less common case: reader has been
         # removed by the time of handling update_ack.
@@ -534,6 +659,7 @@ class TestMemmgr(unittest.TestCase):
                              'segment_info_update_ack',
                              {'data-source-class': 'IN',
                               'data-source-name': 'name',
+                              'generation-id': TEST_GENERATION_ID,
                               'reader': 'reader0'}))
 
         # exception from sync_readers
@@ -542,7 +668,64 @@ class TestMemmgr(unittest.TestCase):
         self.assertIsNone(self.__mgr._mod_command_handler(
             'segment_info_update_ack', {'data-source-class': 'IN',
                                         'data-source-name': 'name',
+                                        'generation-id': TEST_GENERATION_ID,
                                         'reader': 'reader0'}))
+
+    def test_release_segments_ack(self):
+        "Test handling of release_segments_ack command."
+
+        sgmt_info = MockSegmentInfo()
+        dsrc_info = MockDataSrcInfo(sgmt_info)
+        self.__mgr._datasrc_info = dsrc_info
+        self.__mgr._old_datasrc_info[TEST_GENERATION_ID] = dsrc_info
+
+        # A valid release_segments_ack always cause canceling of the sender
+        # reader for the corresponding data source info.  If there's still
+        # a reader, that info should still stay in _old_datasrc_info.
+        dsrc_info.all_readers = set({'more-reader'})
+        self.__mgr._mod_command_handler('release_segments_ack',
+                                        {'generation-id': TEST_GENERATION_ID,
+                                         'reader': 'reader0'})
+        self.assertEqual(['reader0'], dsrc_info.canceled_readers)
+        self.assertEqual(dsrc_info,
+                         self.__mgr._old_datasrc_info[TEST_GENERATION_ID])
+
+        # If there's no more reader, that generation of data source info should
+        # be cleaned up.
+        dsrc_info.canceled_readers.clear()
+        dsrc_info.all_readers.clear()
+        self.__mgr._mod_command_handler('release_segments_ack',
+                                        {'generation-id': TEST_GENERATION_ID,
+                                         'reader': 'reader1'})
+        self.assertEqual(['reader1'], dsrc_info.canceled_readers)
+        self.assertFalse(TEST_GENERATION_ID in self.__mgr._old_datasrc_info)
+
+        # Test invalid cases: these shouldn't cause disruption, and data
+        # source info should be intact.
+        dsrc_info.canceled_readers.clear()
+        dsrc_info.all_readers.clear()
+        self.__mgr._old_datasrc_info[TEST_GENERATION_ID] = dsrc_info
+        # missing generation-id
+        self.__mgr._mod_command_handler('release_segments_ack',
+                                        {'reader': 'reader2'})
+        # missing 'reader'
+        self.__mgr._mod_command_handler('release_segments_ack',
+                                        {'generation-id': TEST_GENERATION_ID})
+        # generation-id mismatch
+        self.__mgr._mod_command_handler('release_segments_ack',
+                                        {'generation-id': 1,
+                                         'reader': 'reader1'})
+        # cancel() raises an exception
+        def raiser(): raise ValueError('test error')
+        dsrc_info.cancel = lambda x: raiser()
+        self.__mgr._mod_command_handler('release_segments_ack',
+                                        {'generation-id': TEST_GENERATION_ID,
+                                         'reader': 'reader1'})
+
+        # no call to cancel() except for the faked one
+        self.assertFalse(dsrc_info.canceled_readers)
+        self.assertEqual(dsrc_info,
+                         self.__mgr._old_datasrc_info[TEST_GENERATION_ID])
 
     def __check_load_or_update_zone(self, cmd, handler):
         "Common checks for load or update zone callbacks."
@@ -552,15 +735,17 @@ class TestMemmgr(unittest.TestCase):
 
         sgmt_info = MockSegmentInfo()
         dsrc_info = MockDataSrcInfo(sgmt_info)
-        self.__mgr._datasrc_info_list.append(dsrc_info)
+        self.__mgr._datasrc_info = dsrc_info
 
         # Expected builder event for the loadzone parameters
         expected_event = ('load', bundy.dns.Name('zone'), dsrc_info,
                           bundy.dns.RRClass('IN'), 'name')
 
         # If start_update() returns an event, it's passed to the builder.
-        ans = handler(cmd, {'datasource': 'name',
-                            'class': 'IN', 'origin': 'zone'})
+        cmd_args = {'datasource': 'name', 'class': 'IN', 'origin': 'zone'}
+        if cmd == 'zone_updated':
+            cmd_args['generation-id'] = TEST_GENERATION_ID
+        ans = handler(cmd, cmd_args)
         if cmd == 'loadzone':
             self.assertEqual(0, parse_answer(ans)[0])
         self.assertEqual([expected_event], sgmt_info.events)
@@ -569,8 +754,7 @@ class TestMemmgr(unittest.TestCase):
         # If start_update() returns None, the event is only stored in the
         # segment info.
         sgmt_info.start_update = lambda: None
-        ans = handler(cmd, {'datasource': 'name',
-                            'class': 'IN', 'origin': 'zone'})
+        ans = handler(cmd, cmd_args)
         if cmd == 'loadzone':
             self.assertEqual(0, parse_answer(ans)[0])
         self.assertEqual([expected_event, expected_event], sgmt_info.events)
@@ -591,7 +775,7 @@ class TestMemmgr(unittest.TestCase):
 
         sgmt_info = MockSegmentInfo()
         dsrc_info = MockDataSrcInfo(sgmt_info)
-        self.__mgr._datasrc_info_list.append(dsrc_info)
+        self.__mgr._datasrc_info = dsrc_info
 
         # missing necesary keys or invalid values
         self.assertEqual(1, parse_answer(self.__mgr._mod_command_handler(
@@ -605,6 +789,31 @@ class TestMemmgr(unittest.TestCase):
         self.assertEqual(1, parse_answer(self.__mgr._mod_command_handler(
             'loadzone', {'class': 'IN', 'datasource': 'noname',
                          'origin': 'zone'}))[0])
+
+    def test_bad_zone_updated(self):
+        """Check various invalid/rare cases of 'zone_updated' command.
+
+        In either case, no new event for the segment should happen.
+
+        """
+        sgmt_info = MockSegmentInfo()
+        dsrc_info = MockDataSrcInfo(sgmt_info)
+        self.__mgr._datasrc_info = dsrc_info
+        sgmt_info.start_update = lambda: None
+
+        # missing generation ID
+        self.__mgr._zone_update_notification('zone_updated',
+                                       {'class': 'IN', 'datasource': 'name',
+                                        'origin': 'zone'})
+        self.assertFalse(sgmt_info.events)
+
+        # generation ID mismatch
+        self.__mgr._zone_update_notification('zone_updated',
+                                       {'class': 'IN', 'datasource': 'name',
+                                        'origin': 'zone',
+                                        'generation-id':
+                                        TEST_GENERATION_ID + 1})
+        self.assertFalse(sgmt_info.events)
 
     def test_reader_notification(self):
         "Test module membership notification callback."
@@ -620,10 +829,11 @@ class TestMemmgr(unittest.TestCase):
         self.__mgr._mod_cc = MyCCSession(None, None, None) # fake mod_ccsession
         sgmt_info = MockSegmentInfo()
         dsrc_info = MockDataSrcInfo(sgmt_info)
-        self.__mgr._datasrc_info_list.append(dsrc_info)
+        self.__mgr._datasrc_info = dsrc_info
 
         # basic case of new subscriber.  the reader should be added to the
         # segment info, and info_update should be sent to the reader.
+        sgmt_info.loaded_result = True
         self.__mgr._reader_notification('subscribed',
                                         {'client': 'foo',
                                          'group': 'SegmentReader'})
@@ -639,7 +849,7 @@ class TestMemmgr(unittest.TestCase):
 
         # if a reader segment isn't yet available, no info_update will be sent.
         self.__mgr.mod_ccsession.sendmsg_params = []
-        sgmt_info.get_reset_param = lambda x: None
+        sgmt_info.loaded_result = False
         self.__mgr._reader_notification('subscribed',
                                         {'client': 'bar',
                                          'group': 'SegmentReader'})
@@ -669,6 +879,29 @@ class TestMemmgr(unittest.TestCase):
         self.__mgr._reader_notification('unsubscribed',
                                         {'client': 'baz',
                                          'group': 'SegmentReader'})
+
+    def test_reader_unsubscribe_and_cancel(self):
+        # Specific tests in the case of unsubscribed reader that causes
+        # canceling deprecated data source info.
+        sgmt_info = MockSegmentInfo()
+        dsrc_info = MockDataSrcInfo(sgmt_info)
+        self.__mgr._datasrc_info = dsrc_info
+        self.__mgr._segment_readers['reader0'] = {}
+
+        # Set up some "old" data source info.  One of them would return a
+        # non-empty set for cancel() and should survive.
+        for i in range(0, 3):
+            info = MockDataSrcInfo(sgmt_info)
+            info.gen_id = i
+            self.__mgr._old_datasrc_info[i] = info
+        self.__mgr._old_datasrc_info[2].all_readers = set({'reader'})
+
+        # Send unsubsribed notification, and check completed info is cleaned up
+        self.__mgr._reader_notification('unsubscribed',
+                                        {'client': 'reader0',
+                                         'group': 'SegmentReader'})
+        self.assertEqual({2: self.__mgr._old_datasrc_info[2]},
+                         self.__mgr._old_datasrc_info)
 
     def test_zone_update_notification(self):
         "Test zone update notification callback."

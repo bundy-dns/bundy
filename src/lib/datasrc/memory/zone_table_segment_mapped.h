@@ -83,10 +83,14 @@ public:
     /// and the various modes in which a \c MemorySegment can be opened.
     ///
     /// \c params should be a map containing a "mapped-file" key that
-    /// points to a string value containing the filename of a mapped
+    /// points to null or a string value containing the filename of a mapped
     /// file. E.g.,
     ///
     ///  {"mapped-file": "/var/bundy/mapped-files/zone-sqlite3.mapped.0"}
+    ///
+    /// If the value for "mapped-file" is null, any existing mapping is cleared,
+    /// and the zone table segment will become unusable.  In this case,
+    /// \c mode will be ignored.
     ///
     /// Please see the \c ZoneTableSegment API documentation for the
     /// behavior in case of exceptions.
@@ -127,8 +131,8 @@ private:
     template<typename T> T* getHeaderHelper(bool initial) const;
 
 private:
-    std::string impl_type_;
-    bundy::dns::RRClass rrclass_;
+    const std::string impl_type_;
+    const bundy::dns::RRClass rrclass_;
     MemorySegmentOpenMode current_mode_;
     std::string current_filename_;
     // Internally holds a MemorySegmentMapped. This is NULL on

@@ -374,9 +374,9 @@ ZoneDataUpdater::addRdataSet(const Name& name, const RRType& rrtype,
 
 void
 ZoneDataUpdater::addInternal(const bundy::dns::Name& name,
-                     const bundy::dns::RRType& rrtype,
-                     const bundy::dns::ConstRRsetPtr& rrset,
-                     const bundy::dns::ConstRRsetPtr& rrsig)
+                             const bundy::dns::RRType& rrtype,
+                             const bundy::dns::ConstRRsetPtr& rrset,
+                             const bundy::dns::ConstRRsetPtr& rrsig)
 {
     // Add wildcards possibly contained in the owner name to the domain
     // tree.  This can only happen for the normal (non-NSEC3) tree.
@@ -431,6 +431,127 @@ ZoneDataUpdater::add(const ConstRRsetPtr& rrset,
         }
         // Retry if it didn't add due to the growth
     } while (!added);
+}
+
+void
+ZoneDataUpdater::removeInternal(const bundy::dns::Name& name,
+                                const bundy::dns::RRType& rrtype,
+                                const bundy::dns::ConstRRsetPtr& rrset,
+                                const bundy::dns::ConstRRsetPtr& sig_rrset)
+{
+    /* Identify the rdataset to be removed */
+    ZoneNode* node = zone_data_->findName(name);
+    if (!node) {
+        bundy_throw(RemoveError, "can't find name for RR to be removed: " <<
+                    name << "/" << rrtype);
+    }
+    RdataSet* cur = node->getData();
+    RdataSet* prev = NULL;
+    for (; cur && cur->type != rrtype; prev = cur, cur = cur->getNext()) {
+        ; // we don't use find() as we need to remember 'cur' and 'prev'
+    }
+    RdataSet* const old_rdataset = cur;
+    if (!old_rdataset) {
+        bundy_throw(RemoveError, "can't find RR to be removed: " <<
+                    name << "/" << rrtype);
+    }
+
+    RdataSet* const new_rdataset = RdataSet::subtract(mem_sgmt_, encoder_,
+                                                      rrset, sig_rrset,
+                                                      *old_rdataset);
+    if (new_rdataset) {
+        new_rdataset->next = cur->getNext();
+    }
+    RdataSet* const new_next_of_prev =
+        new_rdataset ? new_rdataset : cur->getNext();
+    if (!prev) {
+        node->setData(new_next_of_prev);
+    } else {
+        prev->next = new_next_of_prev;
+    }
+    RdataSet::destroy(mem_sgmt_, old_rdataset, rrclass_);
+
+    if (node->isEmpty()) {
+        zone_data_->removeNode(mem_sgmt_, node);
+    }
+}
+
+void
+ZoneDataUpdater::removeNSEC3(const Name& name, const ConstRRsetPtr& rrset,
+                             const ConstRRsetPtr& sig_rrset)
+{
+    NSEC3Data* const nsec3_data = zone_data_->getNSEC3Data();
+    if (!nsec3_data) {
+        bundy_throw(RemoveError, "removing NSEC3 RR for " << name <<
+                    " but there is no NSEC3 data ");
+    }
+
+    ZoneNode* const node = nsec3_data->findName(name);
+    if (!node) {
+        bundy_throw(RemoveError, "removing NSEC3 RR for " << name <<
+                    " but the name doesn't exist in the zone");
+    }
+
+    RdataSet* const old_rdataset = node->getData();
+    if (!old_rdataset || old_rdataset->getNext()) {
+        // This case is impossible since an NSEC node can only have an NSEC3
+        // rdataset, and it has never a child node.  So this means an internal
+        // bug.
+        bundy_throw(Unexpected, "bug: removing NSEC3 RR for " <<
+                    (old_rdataset ? "empty name" : "name with multiple types")
+                    << ": " << name);
+    }
+    RdataSet* const new_rdataset = RdataSet::subtract(mem_sgmt_, encoder_,
+                                                      rrset, sig_rrset,
+                                                      *old_rdataset);
+    node->setData(new_rdataset);
+    RdataSet::destroy(mem_sgmt_, old_rdataset, rrclass_);
+
+    if (node->isEmpty()) {
+        nsec3_data->removeNode(mem_sgmt_, node);
+    }
+}
+
+void
+ZoneDataUpdater::remove(const ConstRRsetPtr& rrset,
+                        const ConstRRsetPtr& sig_rrset)
+{
+    // Validate input.
+    if (!rrset && !sig_rrset) {
+        bundy_throw(NullRRset,
+                  "ZoneDataUpdater::remove is given 2 NULL pointers");
+    }
+
+    // We don't have to be so nervous about validation for remove(), as we
+    // most of the invalid cases for add() would be simply ignored.
+    if ((rrset && rrset->getRdataCount() == 0) ||
+        (sig_rrset && sig_rrset->getRdataCount() == 0)) {
+        ConstRRsetPtr errset = rrset ? rrset : sig_rrset;
+        bundy_throw(RemoveError, "The RRset to be removed is empty: "
+                    << errset->getName() << "/" << errset->getType());
+    }
+
+    const Name& name = rrset ? rrset->getName() : sig_rrset->getName();
+    const RRType& rrtype = rrset ? rrset->getType() :
+        getCoveredType(sig_rrset);
+
+    LOG_DEBUG(logger, DBG_TRACE_DATA, DATASRC_MEMORY_MEM_REMOVE_RRS).arg(name).
+        arg(rrset ? rrtype.toText() : "RRSIG(" + rrtype.toText() + ")").
+        arg(zone_name_);
+
+    while (true) {
+        try {
+            if (rrtype == RRType::NSEC3()) {
+                removeNSEC3(name, rrset, sig_rrset);
+            } else {
+                removeInternal(name, rrtype, rrset, sig_rrset);
+            }
+            break;
+        } catch (const bundy::util::MemorySegmentGrown&) {
+            zone_data_ = static_cast<ZoneData*>(
+                mem_sgmt_.getNamedAddress("updater_zone_data").second);
+        }
+    }
 }
 
 } // namespace memory

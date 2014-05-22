@@ -119,8 +119,9 @@ TEST(DataSrcClientsMgrTest, reconfigure) {
 
     // A valid reconfigure argument
     ConstElementPtr reconfigure_arg = Element::fromJSON(
-        "{""\"IN\": [{\"type\": \"MasterFiles\", \"params\": {},"
-        "             \"cache-enable\": true}]}");
+        "{\"classes\": {""\"IN\": [{\"type\": \"MasterFiles\", \"params\": {},"
+        "             \"cache-enable\": true}]},"
+        " \"_generation_id\": 1}");
 
     // On reconfigure(), it just send the RECONFIGURE command to the builder
     // thread with the given argument intact.
@@ -290,23 +291,44 @@ TEST(DataSrcClientsMgrTest, segmentUpdate) {
     EXPECT_TRUE(FakeDataSrcClientsBuilder::started);
     EXPECT_TRUE(FakeDataSrcClientsBuilder::command_queue->empty());
 
-    bundy::data::ElementPtr args =
+    const bundy::data::ConstElementPtr args =
         bundy::data::Element::fromJSON("{\"data-source-class\": \"IN\","
-                                     " \"data-source-name\": \"sqlite3\","
-                                     " \"segment-params\": {}}");
+                                       " \"data-source-name\": \"sqlite3\","
+                                       " \"segment-params\": {},"
+                                       " \"generation-id\": 1}");
     mgr.segmentInfoUpdate(args);
     EXPECT_EQ(1, FakeDataSrcClientsBuilder::command_queue->size());
     // Some invalid inputs
     EXPECT_THROW(mgr.segmentInfoUpdate(bundy::data::Element::fromJSON(
-        "{\"data-source-class\": \"IN\","
+        "{\"data-source-class\": \"IN\", \"generation-id\": 1,"
         " \"data-source-name\": \"sqlite3\"}")), CommandError);
     EXPECT_THROW(mgr.segmentInfoUpdate(bundy::data::Element::fromJSON(
-        "{\"data-source-name\": \"sqlite3\","
+        "{\"data-source-name\": \"sqlite3\", \"generation-id\": 1,"
         " \"segment-params\": {}}")), CommandError);
     EXPECT_THROW(mgr.segmentInfoUpdate(bundy::data::Element::fromJSON(
-        "{\"data-source-class\": \"IN\","
+        "{\"data-source-class\": \"IN\", \"generation-id\": 1,"
+        " \"segment-params\": {}}")), CommandError);
+    EXPECT_THROW(mgr.segmentInfoUpdate(bundy::data::Element::fromJSON(
+        "{\"data-source-class\": \"IN\", \"data-source-name\": \"sqlite3\","
         " \"segment-params\": {}}")), CommandError);
     EXPECT_EQ(1, FakeDataSrcClientsBuilder::command_queue->size());
+}
+
+TEST(DataSrcClientsMgrTest, releaseSegments) {
+    TestDataSrcClientsMgr mgr;
+    EXPECT_TRUE(FakeDataSrcClientsBuilder::started);
+    EXPECT_TRUE(FakeDataSrcClientsBuilder::command_queue->empty());
+
+    // releaseSegments() is a straightforward wrapper, so it should suffice to
+    // check the right command with the passed args is sent to the queue.
+    const bundy::data::ConstElementPtr args =
+        bundy::data::Element::fromJSON("{\"generation-id\": 1}");
+    mgr.releaseSegments(args);
+    EXPECT_EQ(1, FakeDataSrcClientsBuilder::command_queue->size());
+    EXPECT_EQ(RELEASE_SEGMENTS,
+              FakeDataSrcClientsBuilder::command_queue->front().id);
+    EXPECT_EQ(args,
+              FakeDataSrcClientsBuilder::command_queue->front().params);
 }
 
 void
@@ -326,7 +348,9 @@ TEST(DataSrcClientsMgrTest, wakeup) {
         ASSERT_GT(FakeDataSrcClientsBuilder::wakeup_fd, 0);
         // Push a callback in and wake the manager
         FakeDataSrcClientsBuilder::callback_queue->
-            push_back(boost::bind(callback, &called, &tag, 1));
+            push_back(FinishedCallbackPair(
+                          boost::bind(callback, &called, &tag, 1),
+                          ConstElementPtr()));
         EXPECT_EQ(1, write(FakeDataSrcClientsBuilder::wakeup_fd, "w", 1));
         mgr.run_one();
         EXPECT_TRUE(called);
@@ -343,7 +367,9 @@ TEST(DataSrcClientsMgrTest, wakeup) {
         // of the callbacks. So push and terminate (and don't directly
         // wake).
         FakeDataSrcClientsBuilder::callback_queue->
-            push_back(boost::bind(callback, &called, &tag, 2));
+            push_back(FinishedCallbackPair(
+                          boost::bind(callback, &called, &tag, 2),
+                          ConstElementPtr()));
     }
     EXPECT_TRUE(called);
     EXPECT_EQ(2, tag);

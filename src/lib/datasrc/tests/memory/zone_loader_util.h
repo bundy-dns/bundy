@@ -43,13 +43,14 @@ loadZoneIntoTable(ZoneTableSegment& zt_sgmt, const dns::Name& zname,
                   bool load_error_ok = false);
 
 /// \brief A shortcut utility to load a specified zone into ZoneTableSegment
-/// from a zone iterator.
+/// from a data source client.
 ///
-/// This is similar to the other version, but use a zone iterator as the
+/// This is similar to the other version, but use a data source client as the
 /// source of the zone data.
 void
 loadZoneIntoTable(ZoneTableSegment& zt_sgmt, const dns::Name& zname,
-                  const dns::RRClass& zclass, ZoneIterator& iterator);
+                  const dns::RRClass& zclass,
+                  const DataSourceClient& datasrc_client);
 } // namespace test
 } // namespace memory
 } // namespace datasrc
