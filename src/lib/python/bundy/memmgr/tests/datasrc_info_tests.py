@@ -120,8 +120,8 @@ class TestSegmentInfo(unittest.TestCase):
         self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.R_VALIDATING)
 
     def __si_to_ready_state(self):
-        self.__si_to_copying_state()
-        self.__sgmt_info.complete_update(True)
+        self.__si_to_synchronizing2_state()
+        self.__sgmt_info.sync_reader(3)
         # purge any existing readers so we can begin from a fresh 'ready' state
         for r in list(self.__sgmt_info.get_readers()):
             self.__sgmt_info.remove_reader(r)
@@ -136,26 +136,43 @@ class TestSegmentInfo(unittest.TestCase):
                          SegmentInfo.V_SYNCHRONIZING)
         self.assertSetEqual(self.__sgmt_info.get_old_readers(), {3})
 
-    def __si_to_updating_state(self):
-        self.__si_to_rvalidate_state()
-        self.__sgmt_info.add_event(42)
-        self.__sgmt_info.add_event((42,))
-        self.assertEqual(self.__sgmt_info.complete_validate(True), 42)
-        self.assertTupleEqual(self.__sgmt_info.complete_validate(True), (42, ))
+    def __si_to_updating_state(self, initial_load=False):
+        # If initial_load is True, this method moves the test segment info
+        # to the initial updating state just after validation; otherwise
+        # it emulates a subsequent update after initial loading.  Note that
+        # the __si_xxx methods are recursively called, we need to carefully
+        # specify 'initial_load' to avoid a recursion loop.
+        if initial_load:
+            self.__si_to_rvalidate_state()
+            self.__sgmt_info.add_event(42)
+            self.__sgmt_info.add_event((42,))
+            self.assertEqual(self.__sgmt_info.complete_validate(True), 42)
+            self.assertTupleEqual(self.__sgmt_info.complete_validate(True),
+                                  (42, ))
+        else:
+            self.__si_to_ready_state()
+            self.__sgmt_info.add_event((42,))
+            self.assertEqual(self.__sgmt_info.start_update(), (42,))
         self.__sgmt_info.add_reader(3)
         self.assertSetEqual(self.__sgmt_info.get_readers(), {3})
         self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.UPDATING)
 
-    def __si_to_synchronizing_state(self):
-        self.__si_to_updating_state()
+    def __si_to_synchronizing_state(self, initial_load=False):
+        self.__si_to_updating_state(initial_load)
         self.__sgmt_info.complete_update(True)
         self.assertEqual(self.__sgmt_info.get_state(),
                          SegmentInfo.SYNCHRONIZING)
 
-    def __si_to_copying_state(self):
-        self.__si_to_synchronizing_state()
+    def __si_to_copying_state(self, initial_load=False):
+        self.__si_to_synchronizing_state(initial_load)
         self.__sgmt_info.sync_reader(3)
         self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.COPYING)
+
+    def __si_to_synchronizing2_state(self):
+        self.__si_to_copying_state(True)
+        self.__sgmt_info.complete_update(True)
+        self.assertEqual(self.__sgmt_info.get_state(),
+                         SegmentInfo.SYNCHRONIZING2)
 
     def test_add_event(self):
         self.assertEqual(len(self.__sgmt_info.get_events()), 0)
@@ -242,8 +259,20 @@ class TestSegmentInfo(unittest.TestCase):
                          SegmentInfo.SYNCHRONIZING)
         self.assertEqual(1, self.__ver_switched)
 
-        # a') with no events, update fails
+        # a') with no events, update fails, initial load.  In this case,
+        # we move to the SYNCHRONIZING state anyway.
+        self.__si_to_updating_state(True)
+        self.__sgmt_info._switch_versions = lambda: count_verswitch()
+        e = self.__sgmt_info.complete_update(False)
+        self.assertIsNone(e)
+        self.assertEqual(self.__sgmt_info.get_state(),
+                         SegmentInfo.SYNCHRONIZING)
+        self.assertEqual(2, self.__ver_switched)
+
+        # a'') with no events, update fails, subsequent update.  This load
+        # is ignored, and it moves back to the READY state.
         self.__si_to_updating_state()
+        self.__ver_switched = 1
         self.__sgmt_info._switch_versions = lambda: count_verswitch()
         e = self.__sgmt_info.complete_update(False)
         self.assertIsNone(e)
@@ -264,9 +293,9 @@ class TestSegmentInfo(unittest.TestCase):
         self.__si_to_updating_state()
         self.__sgmt_info._switch_versions = lambda: count_verswitch()
         self.__sgmt_info.add_event((81,))
-        e = self.__sgmt_info.complete_update(False)
+        self.assertEqual((81,), self.__sgmt_info.complete_update(False))
         self.assertIsNone(e)
-        self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.READY)
+        self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.UPDATING)
         self.assertEqual(2, self.__ver_switched) # no switch
 
         # c) with no readers, complete_update() from UPDATING must go
@@ -290,12 +319,31 @@ class TestSegmentInfo(unittest.TestCase):
         self.assertEqual(self.__sgmt_info.get_state(),
                          SegmentInfo.SYNCHRONIZING)
 
-        # in COPYING state.  No version switch in this case.
+        # in COPYING state.  No version switch in this case.  no old readers
         self.__si_to_copying_state()
         e = self.__sgmt_info.complete_update(True)
         self.assertIsNone(e)
         self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.READY)
         self.assertEqual(3, self.__ver_switched)
+        self.assertEqual(set(), self.__sgmt_info.get_old_readers())
+
+        # in COPYING state on initial load.  No version switch, but move to
+        # SYNCHRONIZING2 state, and the current readers are considered 'old'
+        # for synchronization.
+        self.__si_to_copying_state(True)
+        e = self.__sgmt_info.complete_update(True)
+        self.assertIsNone(e)
+        self.assertEqual(self.__sgmt_info.get_state(),
+                         SegmentInfo.SYNCHRONIZING2)
+        self.assertEqual(3, self.__ver_switched)
+        self.assertEqual(set({3}), self.__sgmt_info.get_old_readers())
+
+        # in COPYING state with outstanding event.  It will start next update.
+        self.__si_to_copying_state()
+        self.__sgmt_info.add_event('x')
+        self.assertEqual('x', self.__sgmt_info.complete_update(True))
+        self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.UPDATING)
+        self.assertEqual(3, self.__ver_switched) # no switch
 
     def __check_complete_validate(self, validated, with_reader):
         info = self.__create_sgmtinfo()
@@ -338,12 +386,21 @@ class TestSegmentInfo(unittest.TestCase):
 
     # A helper for test_sync_reader(), it mostly works same for both
     # V_SYNCHRONIZING and SYNCHRONIZING states.
-    def __check_sync_reader_in_sync(self, in_validate_stage):
-        if in_validate_stage:
+    def __check_sync_reader_in_sync(self, stage):
+        in_validate_stage = False
+        if stage == 'validation':
             init_fn = lambda: self.__si_to_vsynchronizing_state()
+            in_validate_stage = True
             cur_state = SegmentInfo.V_SYNCHRONIZING
             next_state = SegmentInfo.W_VALIDATING
-        else:
+        elif stage in ('initial-load', 'initial-load-event'):
+            init_fn = lambda: self.__si_to_synchronizing2_state()
+            cur_state = SegmentInfo.SYNCHRONIZING2
+            if stage == 'initial-load':
+                next_state = SegmentInfo.READY
+            else:
+                next_state = SegmentInfo.UPDATING
+        else:                   # normal update case
             init_fn = lambda: self.__si_to_synchronizing_state()
             cur_state = SegmentInfo.SYNCHRONIZING
             next_state = SegmentInfo.COPYING
@@ -369,9 +426,16 @@ class TestSegmentInfo(unittest.TestCase):
         init_fn()
         self.assertSetEqual(self.__sgmt_info.get_old_readers(), {3})
         self.assertSetEqual(self.__sgmt_info.get_readers(), set())
-        self.assertListEqual(self.__sgmt_info.get_events(), [(42,)])
-        e = self.__sgmt_info.sync_reader(3)
-        self.assertTupleEqual(e, (42,))
+        if stage == 'initial-load-event':
+            self.__sgmt_info.add_event(42)
+            self.__sgmt_info.sync_reader(3)
+            self.assertListEqual(self.__sgmt_info.get_events(), [42])
+        elif stage == 'initial-load':
+            self.assertIsNone(self.__sgmt_info.sync_reader(3))
+        else:
+            self.assertListEqual(self.__sgmt_info.get_events(), [(42,)])
+            e = self.__sgmt_info.sync_reader(3)
+            self.assertTupleEqual(e, (42,))
         # the ID should be moved from old readers to readers set
         self.assertSetEqual(self.__sgmt_info.get_old_readers(), set())
         self.assertSetEqual(self.__sgmt_info.get_readers(), {3})
@@ -379,9 +443,12 @@ class TestSegmentInfo(unittest.TestCase):
 
         # d) ID is in old readers set, but not in readers set, and
         # old_readers doesn't become empty.
-        if in_validate_stage:
+        if stage == 'validation':
             self.__si_to_rvalidate_state()
             self.__sgmt_info.add_reader(3)
+            self.__sgmt_info.add_event((42,))
+        elif stage in ('initial-load', 'initial-load-event'):
+            self.__si_to_copying_state(True)
             self.__sgmt_info.add_event((42,))
         else:
             self.__si_to_updating_state() # this also adds event of '(42,)'
@@ -417,10 +484,16 @@ class TestSegmentInfo(unittest.TestCase):
         self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.COPYING)
 
         # in V_SYNCHRONIZING state:
-        self.__check_sync_reader_in_sync(True)
+        self.__check_sync_reader_in_sync('validation')
 
         # in SYNCHRONIZING state:
-        self.__check_sync_reader_in_sync(False)
+        self.__check_sync_reader_in_sync('update')
+
+        # in SYNCHRONIZING2 state:
+        self.__check_sync_reader_in_sync('initial-load')
+
+        # in SYNCHRONIZING2 state in the case of moving to UPDATING via READY:
+        self.__check_sync_reader_in_sync('initial-load-event')
 
     def __check_remove_reader_in_sync(self, in_validate_stage):
         if in_validate_stage:
@@ -579,12 +652,14 @@ class TestSegmentInfo(unittest.TestCase):
         self.assertFalse(self.__sgmt_info.loaded())
         self.__si_to_vsynchronizing_state()
         self.assertFalse(self.__sgmt_info.loaded())
-        self.__si_to_updating_state()
+        self.__si_to_updating_state(True)
         self.assertFalse(self.__sgmt_info.loaded())
 
-        # It's considered 'loaded' on the first transition to SYNCHRONIZING,
+        # It's considered 'loaded' on the first transition to SYNCHRONIZING2,
         # and after that it's always so.
-        self.__si_to_synchronizing_state()
+        self.__si_to_synchronizing_state(True)
+        self.assertFalse(self.__sgmt_info.loaded())
+        self.__si_to_synchronizing2_state()
         self.assertTrue(self.__sgmt_info.loaded())
         self.__si_to_copying_state()
         self.assertTrue(self.__sgmt_info.loaded())
