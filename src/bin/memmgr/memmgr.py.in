@@ -336,7 +336,7 @@ class Memmgr(BUNDYServer):
                 # version of the segment; otherwise we'd rather tell them to
                 # switch when the latest data are loaded.
                 old_readers = sgmt_info.get_old_readers()
-                inuse_only = (notif_name == 'validate-completed')
+                inuse_only = not sgmt_info.loaded()
                 if old_readers:
                     self.__notify_readers(rrclass, dsrc_name, sgmt_info,
                                           old_readers, inuse_only=inuse_only)

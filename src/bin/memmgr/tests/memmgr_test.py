@@ -451,9 +451,10 @@ class TestMemmgr(unittest.TestCase):
     # Check the handling of 'update/validate-completed' notification from
     # the builder.
     def __check_notify_from_builder(self, notif_name, notif_ref, dsrc_info,
-                                    sgmt_info, commands):
+                                    sgmt_info, commands, expect_inuse_only):
         sgmt_info.complete_update = lambda x: 'command'
         sgmt_info.complete_validate = lambda x: 'command'
+        sgmt_info.loaded_result = not expect_inuse_only
         del commands[:]
         del self.__mgr.mod_ccsession.sendmsg_params[:]
         sgmt_info.old_readers.clear()
@@ -484,7 +485,7 @@ class TestMemmgr(unittest.TestCase):
         self.assertEqual(1, len(self.__mgr.mod_ccsession.sendmsg_params))
         (cmd, group, cc) = self.__mgr.mod_ccsession.sendmsg_params[0]
         self.__check_segment_info_update(sgmt_info, 'reader1',
-                                         notif_name == 'validate-completed')
+                                         expect_inuse_only)
 
     # Check the handling of cancel-command notification from builder.
     def __check_cancel_completed_from_builder(self, notif_ref, dsrc_info):
@@ -539,10 +540,14 @@ class TestMemmgr(unittest.TestCase):
         # to check it is cleared, not a new empty one installed
         notif_ref = self.__mgr._builder_response_queue
 
-        self.__check_notify_from_builder('load-completed', notif_ref, dsrc_info,
-                                         sgmt_info, commands)
         self.__check_notify_from_builder('validate-completed', notif_ref,
-                                         dsrc_info, sgmt_info, commands)
+                                         dsrc_info, sgmt_info, commands, True)
+        self.__check_notify_from_builder('load-completed', notif_ref, dsrc_info,
+                                         sgmt_info, commands, True)
+        # Similar to the above, but we'll prent the segmnt has been loaded
+        # and 'inuse-only' won't be set.
+        self.__check_notify_from_builder('load-completed', notif_ref, dsrc_info,
+                                         sgmt_info, commands, False)
         self.__check_cancel_completed_from_builder(notif_ref, dsrc_info)
 
         # This is invalid (unhandled) notification name
