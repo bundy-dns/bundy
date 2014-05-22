@@ -74,7 +74,7 @@ data into memory will possibly take place.
 An informational message.  The memmgr received an ack command in response
 to a release segments message it has sent.
 
-% MEMMGR_DATASRC_RELEASESGMT_ACK_FAIL failed to handle release_segments_ack command (generation %1): %3
+% MEMMGR_DATASRC_RELEASESGMT_ACK_FAIL failed to handle release_segments_ack command (generation %1): %2
 Error happend in handling the release_segments_ack command.
 This is an unexpected situation, most likely to be a bug of the
 sender implementation.
