@@ -839,7 +839,7 @@ class TestDataSrcInfo(unittest.TestCase):
         # with a reader, a set of the remaining readers will be returned (and
         # cancel isn't completed), and when all readers are removed the cancel
         # will be completed.
-        removed_segments.clear()
+        del removed_segments[:]
         dsrc_info = DataSrcInfo(42, self.__clients_map, self.__mgr_config)
         dsrc_info.segment_info_map[(RRClass.IN, 'datasrc2')].readers.update(
             {'a', 'b'})

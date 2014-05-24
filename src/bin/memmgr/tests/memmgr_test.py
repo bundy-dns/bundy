@@ -496,7 +496,7 @@ class TestMemmgr(unittest.TestCase):
         self.assertFalse(TEST_GENERATION_ID in self.__mgr._old_datasrc_info)
 
         # Otherwise, 'release_segments' command will be sent to the reader.
-        self.__mgr.mod_ccsession.sendmsg_params.clear()
+        del self.__mgr.mod_ccsession.sendmsg_params[:]
         self.__mgr._old_datasrc_info[TEST_GENERATION_ID] = dsrc_info
         dsrc_info.all_readers = set({'reader1', 'reader2'})
         notif_ref.append(('cancel-completed', dsrc_info))
@@ -697,7 +697,7 @@ class TestMemmgr(unittest.TestCase):
 
         # If there's no more reader, that generation of data source info should
         # be cleaned up.
-        dsrc_info.canceled_readers.clear()
+        del dsrc_info.canceled_readers[:]
         dsrc_info.all_readers.clear()
         self.__mgr._mod_command_handler('release_segments_ack',
                                         {'generation-id': TEST_GENERATION_ID,
@@ -707,7 +707,7 @@ class TestMemmgr(unittest.TestCase):
 
         # Test invalid cases: these shouldn't cause disruption, and data
         # source info should be intact.
-        dsrc_info.canceled_readers.clear()
+        del dsrc_info.canceled_readers[:]
         dsrc_info.all_readers.clear()
         self.__mgr._old_datasrc_info[TEST_GENERATION_ID] = dsrc_info
         # missing generation-id
