@@ -166,7 +166,18 @@ class Session:
            Raises any error from recv().
            Returns whatever data was available (if >0 bytes).
            """
-        data = self._socket.recv(size)
+        # socket.recv() could be interrupted by a signal, and that can happen
+        # in practice during the shutdown phase, where a module can get SIGTERM
+        # while waiting for some data from other module.  It shouldn't cause
+        # a disruption, and the recv() should be continued until the expected
+        # data are read or other error happens.
+        data = None
+        while data is None:
+            try:
+                data = self._socket.recv(size)
+            except socket.error as se:
+                if se.errno != errno.EINTR:
+                    raise
         if len(data) == 0: # server closed connection
             raise ProtocolError("Read of 0 bytes: connection closed")
         return data
