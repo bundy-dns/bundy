@@ -803,18 +803,20 @@ class Init:
         else:
             self.runnable = False
 
-    def shutdown(self):
-        """Stop the Init instance."""
-        logger.info(BUNDY_SHUTDOWN)
-        # If ccsession is still there, inform rest of the system this module
-        # is stopping. Since everything will be stopped shortly, this is not
-        # really necessary, but this is done to reflect that bundy-init is also
-        # 'just' a module.
-        self.ccs.send_stopping()
+    # Helper for shutdown.  It stops running modules from graceful (via the
+    # 'shutdown' command) to forceful (by sending signals) ways.  By default
+    # it stops all modules.  If the optional 'excludes' parameter (which is
+    # of the form of configuration dictionary passed to the Component class)
+    # is specified, it stops all modules, keeping the specified module alive.
+    def __shutdown_modules(self, excludes={}):
+        exclude_names = list(excludes.keys())
 
         # try using the BUNDY request to stop
         try:
-            self._component_configurator.shutdown()
+            if excludes:
+                self._component_configurator.reconfigure(excludes)
+            else:
+                self._component_configurator.shutdown()
         except:
             pass
         # XXX: some delay probably useful... how much is uncertain
@@ -827,17 +829,40 @@ class Init:
         # from doing so
         if not self.nokill:
             # next try sending a SIGTERM
-            self.__kill_children(False)
+            self.__kill_children(False, exclude_names)
             # finally, send SIGKILL (unmaskable termination) until everybody
             # dies
-            while self.components:
+            while True:
                 # XXX: some delay probably useful... how much is uncertain
                 time.sleep(0.1)
                 self.reap_children()
-                self.__kill_children(True)
-            logger.info(BUNDY_SHUTDOWN_COMPLETE)
+                self.__kill_children(True, exclude_names)
+                if not [c for c in self.components.values()
+                        if not c.name() in exclude_names]:
+                    break
 
-    def __kill_children(self, forceful):
+    def shutdown(self):
+        """Stop the Init instance."""
+        logger.info(BUNDY_SHUTDOWN)
+        # If ccsession is still there, inform rest of the system this module
+        # is stopping. Since everything will be stopped shortly, this is not
+        # really necessary, but this is done to reflect that bundy-init is also
+        # 'just' a module.
+        self.ccs.send_stopping()
+
+        # We'll first shutdown modules other than msgq.  They may exchange final
+        # messages via or with msgq (e.g., the automatic unsubscription
+        # notifications), so msgq should be working until all others stop.
+        try:
+            self.__shutdown_modules(
+                excludes={'msgq': self.__core_components['msgq']})
+        except: pass
+        try:
+            self.__shutdown_modules()
+        except: pass
+        logger.info(BUNDY_SHUTDOWN_COMPLETE)
+
+    def __kill_children(self, forceful, excludes=[]):
         '''Terminate remaining subprocesses by sending a signal.
 
         The forceful paramter will be passed Component.kill().
@@ -849,6 +874,8 @@ class Init:
         # We need to make a copy of values as the components may be modified
         # in the loop.
         for component in list(self.components.values()):
+            if component.name() in excludes:
+                continue
             logger.info(logmsg, component.name(), component.pid())
             try:
                 component.kill(forceful)
