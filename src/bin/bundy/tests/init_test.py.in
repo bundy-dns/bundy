@@ -1425,8 +1425,12 @@ class TestInitComponents(unittest.TestCase):
         init.components = {}
         init.register_process(1, ImmortalComponent())
 
-        # While at it, we check the configurator shutdown is actually called
-        orig = init._component_configurator.shutdown
+        # While at it, we check the configurator reconfigure/shutdown are
+        # actually called
+        orig_reconfigure = init._component_configurator.reconfigure
+        init._component_configurator.reconfigure = self.__unary_hook
+        self.__param = None
+        orig_shutdown = init._component_configurator.shutdown
         init._component_configurator.shutdown = self.__nullary_hook
         self.__called = False
 
@@ -1448,9 +1452,13 @@ class TestInitComponents(unittest.TestCase):
             else:
                 self.assertEqual([False, True], killed)
 
+        # reconfigure() should have been called to shutdown all modules
+        # except msgq.
+        self.assertEqual(['msgq'], list(self.__param.keys()))
         self.assertTrue(self.__called)
 
-        init._component_configurator.shutdown = orig
+        init._component_configurator.shutdown = orig_shutdown
+        init._component_configurator.reconfigure = orig_reconfigure
 
     def test_kills(self):
         """
