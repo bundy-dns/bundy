@@ -172,16 +172,32 @@ struct MemorySegmentMapped::Impl {
 
     // Internal helper to grow the underlying mapped segment.
     void growSegment() {
-        // We first need to unmap it before calling grow().
+        // We first need to unmap it before calling grow().  We also flush
+        // the segment to the disk here, so we can incrementally synchronize
+        // dirty pages as the segment grows.  In typical cases, if the segment
+        // is growing it's more likely we are building large data (such as
+        // loading a large DNS zone), so it's less likely that we'll make
+        // existing pages dirty again.  By incrementally flushing the pages
+        // we can avoid a big pause (some operating system seems to sync
+        // dirty pages before reading them).
         const size_t prev_size = base_sgmt_->get_size();
+        base_sgmt_->flush();
         base_sgmt_.reset();
 
-        // Double the segment size.  In theory, this process could repeat
+        // We'll gradually increase the segment size.  Up to some point
+        // we double it, and after that increase it by a constant amount.
+        // This is another attempt of incrementally synchronizing dirty pages;
+        // if we keep doubling it, for example, the size of synchronized pages
+        // will get bigger, and we might see a bigger pause.   By capping the
+        // amount of increase, we can limit the duration of the pause.
+        // In theory, this process of growing segments could repeat
         // so many times, counting to "infinity", and new_size eventually
         // overflows.  That would cause a harsh disruption or unexpected
         // behavior.  But we basically assume grow() would fail before this
         // happens, so we assert it shouldn't happen.
-        const size_t new_size = prev_size * 2;
+        const size_t max_increase = 1024 * 1024 * 64; // 64MB, arbitrary choice
+        const size_t new_size = (prev_size < max_increase) ?
+            (prev_size * 2) : (prev_size + max_increase);
         assert(new_size > prev_size);
 
         const bool grown = BaseSegment::grow(filename_.c_str(),
@@ -436,6 +452,11 @@ MemorySegmentMapped::shrinkToFit() {
         bundy_throw(MemorySegmentError,
                   "remap after shrink failed; segment is now unusable");
     }
+
+    // Flush possible dirty pages after shrinking the segment.  As documented
+    // in growSegment(), we don't expect too much memory to be flushed here,
+    // and this would be a good point to flush remaining dirty pages.
+    impl_->base_sgmt_->flush();
 }
 
 size_t
