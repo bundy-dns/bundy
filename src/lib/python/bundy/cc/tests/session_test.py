@@ -460,6 +460,27 @@ class testSession(unittest.TestCase):
         finally:
             os.remove(TEST_SOCKET_FILE)
 
+    def test_receive_bytes_interrupted(self):
+        # test a specific case of receiving data interrupted by a signal.
+        # the signal shouldn't cause a disruption, and the expected data
+        # should be read as if there were no such signal.
+        class _Socket:
+            def __init__(self):
+                self.to_interrupt = False
+                self.recv_called = 0
+
+            def recv(self, size):
+                self.recv_called += 1
+                if self.to_interrupt:
+                    self.to_interrupt = False # reset every time
+                    raise socket.error(errno.EINTR, 'faked intr')
+                return b'x' * size
+        s = _Socket()
+        s.to_interrupt = True
+        sess = MySession(s=s)
+        self.assertEqual(b'xxx', sess._receive_bytes(3))
+        self.assertEqual(2, s.recv_called)
+
 if __name__ == "__main__":
     unittest.main()
 
