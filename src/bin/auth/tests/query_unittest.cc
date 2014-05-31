@@ -890,8 +890,7 @@ public:
             return (FindResult(result::PARTIALMATCH, it->second,
                                it->first.getLabelCount(), flags));
         default:
-            return (FindResult(result::NOTFOUND, ZoneFinderPtr(),
-                               it->first.getLabelCount()));
+            return (FindResult(result::NOTFOUND, ZoneFinderPtr(), 0));
         }
     }
 

@@ -300,10 +300,6 @@ ConfigurableClientList::findInternal(MutableResult& candidate,
                 if (!want_exact_match) {
                     // In case we have a partial match, check if it is better
                     // than what we have. If so, replace it.
-                    //
-                    // We don't need the labels at the first partial match,
-                    // we have nothing to compare with. So we don't get it
-                    // (as a performance) and hope we will not need it at all.
                     const uint8_t labels = result.label_count;
                     if (labels > candidate.matched_labels ||
                         !candidate.matched) {
