@@ -25,7 +25,6 @@
 #include <dns/rrclass.h>
 
 #include <log/logger_support.h>
-#include <xfr/xfrout_client.h>
 
 #include <util/unittests/mock_socketsession.h>
 
@@ -59,9 +58,6 @@ using namespace bundy::asiodns;
 using namespace bundy::asiolink;
 
 namespace {
-// Commonly used constant:
-XfroutClient xfrout_client("dummy_path"); // path doesn't matter
-
 // Just something to pass as the server to resume
 class DummyServer : public DNSServer {
     public:
@@ -82,7 +78,7 @@ private:
 protected:
     QueryBenchMark(const BenchQueries& queries, Message& query_message,
                    OutputBuffer& buffer) :
-        server_(new AuthSrv(xfrout_client, ddns_forwarder)),
+        server_(new AuthSrv(xfrout_forwarder, ddns_forwarder)),
         queries_(queries),
         query_message_(query_message),
         buffer_(buffer),
@@ -108,6 +104,7 @@ public:
         return (queries_.size());
     }
 private:
+    MockSocketSessionForwarder xfrout_forwarder;
     MockSocketSessionForwarder ddns_forwarder;
 protected:
     AuthSrvPtr server_;

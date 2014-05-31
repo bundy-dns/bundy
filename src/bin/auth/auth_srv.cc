@@ -45,8 +45,6 @@
 #include <datasrc/exceptions.h>
 #include <datasrc/client_list.h>
 
-#include <xfr/xfrout_client.h>
-
 #include <auth/common.h>
 #include <auth/auth_config.h>
 #include <auth/auth_srv.h>
@@ -239,9 +237,8 @@ private:
     AuthSrvImpl(const AuthSrvImpl& source);
     AuthSrvImpl& operator=(const AuthSrvImpl& source);
 public:
-    AuthSrvImpl(AbstractXfroutClient& xfrout_client,
+    AuthSrvImpl(BaseSocketSessionForwarder& xfrout_forwarder,
                 BaseSocketSessionForwarder& ddns_forwarder);
-    ~AuthSrvImpl();
 
     bool processNormalQuery(const IOMessage& io_message,
                             ConstEDNSPtr remote_edns, Message& message,
@@ -280,6 +277,8 @@ public:
     /// The data source client list manager
     auth::DataSrcClientsMgr datasrc_clients_mgr_;
 
+    boost::scoped_ptr<SocketSessionForwarderHolder> xfrout_forwarder_;
+
     /// Socket session forwarder for dynamic update requests
     BaseSocketSessionForwarder& ddns_base_forwarder_;
 
@@ -309,32 +308,22 @@ public:
     /// Are we currently subscribed to the SegmentReader group?
     bool readers_group_subscribed_;
 private:
-    bool xfrout_connected_;
-    AbstractXfroutClient& xfrout_client_;
-
     auth::Query query_;
 };
 
-AuthSrvImpl::AuthSrvImpl(AbstractXfroutClient& xfrout_client,
+AuthSrvImpl::AuthSrvImpl(BaseSocketSessionForwarder& xfrout_forwarder,
                          BaseSocketSessionForwarder& ddns_forwarder) :
     config_session_(NULL),
     xfrin_session_(NULL),
     counters_(),
     keyring_(NULL),
     datasrc_clients_mgr_(io_service_),
+    xfrout_forwarder_(new SocketSessionForwarderHolder("xfrout",
+                                                       xfrout_forwarder)),
     ddns_base_forwarder_(ddns_forwarder),
     ddns_forwarder_(NULL),
-    readers_group_subscribed_(false),
-    xfrout_connected_(false),
-    xfrout_client_(xfrout_client)
+    readers_group_subscribed_(false)
 {}
-
-AuthSrvImpl::~AuthSrvImpl() {
-    if (xfrout_connected_) {
-        xfrout_client_.disconnect();
-        xfrout_connected_ = false;
-    }
-}
 
 // This is a derived class of \c DNSLookup, to serve as a
 // callback in the asiolink module.  It calls
@@ -375,11 +364,11 @@ public:
     {}
 };
 
-AuthSrv::AuthSrv(bundy::xfr::AbstractXfroutClient& xfrout_client,
+AuthSrv::AuthSrv(bundy::util::io::BaseSocketSessionForwarder& xfrout_forwarder,
                  bundy::util::io::BaseSocketSessionForwarder& ddns_forwarder) :
     dnss_(NULL)
 {
-    impl_ = new AuthSrvImpl(xfrout_client, ddns_forwarder);
+    impl_ = new AuthSrvImpl(xfrout_forwarder, ddns_forwarder);
     dns_lookup_ = new MessageLookup(this);
     dns_answer_ = new MessageAnswer(this);
 }
@@ -697,32 +686,7 @@ AuthSrvImpl::processXfrQuery(const IOMessage& io_message, Message& message,
         return (true);
     }
 
-    try {
-        if (!xfrout_connected_) {
-            xfrout_client_.connect();
-            xfrout_connected_ = true;
-        }
-        xfrout_client_.sendXfroutRequestInfo(
-            io_message.getSocket().getNative(),
-            io_message.getData(),
-            io_message.getDataSize());
-    } catch (const XfroutError& err) {
-        if (xfrout_connected_) {
-            // disconnect() may trigger an exception, but since we try it
-            // only if we've successfully opened it, it shouldn't happen in
-            // normal condition.  Should this occur, we'll propagate it to the
-            // upper layer.
-            xfrout_client_.disconnect();
-            xfrout_connected_ = false;
-        }
-
-        LOG_DEBUG(auth_logger, DBG_AUTH_DETAIL, AUTH_AXFR_PROBLEM)
-                  .arg(err.what());
-        makeErrorMessage(renderer_, message, buffer, Rcode::SERVFAIL(),
-                         stats_attrs, tsig_context);
-        return (true);
-    }
-
+    xfrout_forwarder_->push(io_message);
     return (false);
 }
 
