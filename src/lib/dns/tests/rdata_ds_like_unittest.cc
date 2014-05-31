@@ -44,6 +44,7 @@ public:
 };
 
 template<> RRTYPE<generic::DS>::RRTYPE() : RRType(RRType::DS()) {}
+template<> RRTYPE<generic::CDS>::RRTYPE() : RRType(RRType::CDS()) {}
 template<> RRTYPE<generic::DLV>::RRTYPE() : RRType(RRType::DLV()) {}
 
 template <class DS_LIKE>
@@ -59,7 +60,7 @@ protected:
 };
 
 // The list of types we want to test.
-typedef testing::Types<generic::DS, generic::DLV> Implementations;
+typedef testing::Types<generic::DS, generic::CDS, generic::DLV> Implementations;
 
 TYPED_TEST_CASE(Rdata_DS_LIKE_Test, Implementations);
 
