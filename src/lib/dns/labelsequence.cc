@@ -296,7 +296,7 @@ LabelSequence::getFullHash(bool case_sensitive, unsigned int seed) const {
     while (length > 0) {
         const uint8_t c = *s++;
         boost::hash_combine(hash_val, case_sensitive ? c :
-                            isc::dns::name::internal::maptolower[c]);
+                            bundy::dns::name::internal::maptolower[c]);
         --length;
     }
     return (hash_val);
