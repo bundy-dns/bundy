@@ -189,8 +189,8 @@ class BUNDYServer:
         """The default implementation of the module specific finalization"""
         pass
 
-    def watch_fileno(self, fileno, rcallback=None, wcallback=None, \
-                         xcallback=None):
+    def watch_fileno(self, fileno, rcallback=None, wcallback=None,
+                     xcallback=None):
         """Register the fileno for the internal select() call.
 
         *callback's are callable objects which would be called when
@@ -213,6 +213,37 @@ class BUNDYServer:
                 self._error_callbacks[fileno].append(xcallback)
             else:
                 self._error_callbacks[fileno] = [xcallback]
+
+    def unwatch_fileno(self, fileno, on_read, on_write, on_error):
+        """Unregister a fileno for the internal select() call.
+
+        This is a cancel operation for callbacks registered in watch_fileno().
+        Currently, on_xxx parameters are expected to be bool, and if True
+        all callbacks for 'fileno' will be removed.  If we see the need in
+        future, this can be extended so we can specify a particular callback
+        to cancel.
+
+        At least one callback must be specified for 'fileno' corresponding to
+        on_xxx that is True.  Otherwise ValueError will be called.  This
+        also means this method cannot be called multiple times for the
+        same 'fileno' and same operation (read/write/error).
+
+        This method can be safely called from a callback function for the
+        corresponding operation.
+
+        """
+        if on_read:
+            if not fileno in self._read_callbacks.keys():
+                raise ValueError('fileno not watched for read: ' + str(fileno))
+            del self._read_callbacks[fileno]
+        if on_write:
+            if not fileno in self._write_callbacks.keys():
+                raise ValueError('fileno not watched for write: ' + str(fileno))
+            del self._write_callbacks[fileno]
+        if on_error:
+            if not fileno in self._error_callbacks.keys():
+                raise ValueError('fileno not watched for error: ' + str(fileno))
+            del self._error_callbacks[fileno]
 
     def run(self, module_name):
         """Start the server and let it run until it's told to stop.
