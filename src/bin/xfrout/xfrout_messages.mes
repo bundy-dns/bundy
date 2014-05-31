@@ -15,6 +15,12 @@
 # No namespace declaration - these constants go in the global namespace
 # of the xfrout messages python module.
 
+% XFROUT_ACCEPT_FAILURE error accepting a forwarder connection: %1
+There was a low-level error when Xfrout tried to accept an incoming connection
+(probably coming from bundy-auth). It continues serving on whatever other
+connections it already has, but this connection is dropped. The reason
+is logged.
+
 % XFROUT_BAD_TSIG_KEY_STRING bad TSIG key string: %1
 The TSIG key string as read from the configuration does not represent
 a valid TSIG key.
@@ -31,6 +37,13 @@ configuration manager bundy-cfgmgr is not running.
 % XFROUT_CONFIG_ERROR error found in configuration data: %1
 The xfrout process encountered an error when installing the configuration at
 startup time.  Details of the error are included in the log message.
+
+% XFROUT_DROP_FORWARDER dropping forwarder connection on file descriptor %1: %2
+There was an error on a connection with the bundy-auth server (or whatever
+connects to the Xfrout daemon). This might be OK, for example when the
+authoritative server shuts down, the connection would get closed. It also
+can mean the system is busy and can't keep up or that the other side got
+confused and sent bad data.
 
 % XFROUT_EXITING exiting
 The xfrout daemon is exiting.
@@ -102,6 +115,12 @@ manager. The xfrout daemon will now apply them.
 % XFROUT_NEW_CONFIG_DONE Update xfrout configuration done
 The xfrout daemon is now done reading the new configuration settings
 received from the configuration manager.
+
+% XFROUT_NEW_FORWARDER new xfr forwarder on file descriptor %1 from %2
+Debug message. Xfrout received a connection and it's going to start handling
+requests from it. The file descriptor number and the address where the request
+comes from is logged. The connection is over a unix domain socket and is likely
+coming from a bundy-auth process.
 
 % XFROUT_NOTIFY_COMMAND received command to send notifies for %1/%2
 The xfrout daemon received a command on the command channel that
@@ -179,6 +198,17 @@ daemon will shut down.
 When shutting down, the xfrout daemon tried to clear the unix socket
 file used for communication with the auth daemon. It failed to remove
 the file. The reason for the failure is given in the error message.
+
+% XFROUT_REQUEST xfr request session arrived on file descriptor %1
+A debug message, informing there's some activity on the given file descriptor.
+It will be either a request or the file descriptor will be closed. See
+following log messages to see what of it.
+
+% XFROUT_REQUEST_FAIL failed to handle forwarded xfr query: %1
+The Xfrout daemon has received a new xfr query and tried to start an
+internal session for it, but it failed in an unexpected way.  The Xfrout
+daemon still keeps running and handling subsequent queries, but it's
+advisable to check the cause of the failure.
 
 % XFROUT_SOCKET_SELECT_ERROR error while calling select() on request socket: %1
 There was an error while calling select() on the socket that informs
