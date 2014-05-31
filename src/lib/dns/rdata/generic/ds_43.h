@@ -72,6 +72,6 @@ private:
 // END_BUNDY_NAMESPACE
 // END_HEADER_GUARD
 
-// Local Variables: 
+// Local Variables:
 // mode: c++
-// End: 
+// End:
