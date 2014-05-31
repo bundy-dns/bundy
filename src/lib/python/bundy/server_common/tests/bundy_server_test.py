@@ -197,7 +197,7 @@ class TestBUNDYServer(unittest.TestCase):
         self.assertEqual(([TEST_FILENO], [], []), self.__server.select_params)
 
     def select_wrapper(self, r, w, e, ex=None, ret=None):
-        """Mock select() function used some of the tests below.
+        """Mock select() function used in some of the tests below.
 
         If ex is not None and it's first call to this method, it raises ex
         assuming it's an exception.
@@ -274,7 +274,8 @@ class TestBUNDYServer(unittest.TestCase):
         self.select_params = []
         self.__server._select_fn = \
             lambda r, w, e: self.select_wrapper(r, w, e,
-                                                ret=([10, 20, 42, TEST_FILENO], [], [30]))
+                                                ret=([10, 20, 42, TEST_FILENO],
+                                                     [], [30]))
         self.__server._setup_ccsession()
 
         self.__server.watch_fileno(10, rcallback=self.my_read_callback)
@@ -283,10 +284,72 @@ class TestBUNDYServer(unittest.TestCase):
         self.__server.watch_fileno(30, xcallback=self.my_error_callback)
 
         self.__server._run_internal()
-        self.assertEqual([([10, 20, TEST_FILENO], [20], [30])], self.select_params)
+        self.assertEqual([([10, 20, TEST_FILENO], [20], [30])],
+                         self.select_params)
         self.assertEqual(2, self.__reads)
         self.assertEqual(0, self.__writes)
         self.assertEqual(1, self.__errors)
+
+    # Unified helper for test_unwatch_fileno.  mode is either 'r', 'w', or 'x',
+    # meaning checking for read/write/error callbacks, respectively.
+    def __check_unwatch(self, mode):
+        self.__server = MockServer() # re-initialize so we can reuse it
+        self.__unwatch_called = 0
+        orig_trigger_shutdown = self.__server._trigger_shutdown
+
+        # We call unwatch_fileno() in a callback.
+        def unwatch_wrapper(fileno):
+            self.__unwatch_called += 1
+            self.__server.unwatch_fileno(fileno, mode == 'r', mode == 'w',
+                                         mode == 'x')
+        # This will be called from the faked select_wrapper, making sure
+        # we'll have two iterations of the select loop.
+        def trigger_shutdown():
+            self.__server._trigger_shutdown = orig_trigger_shutdown
+        self.__server._trigger_shutdown = trigger_shutdown
+
+        # Usual setup with a faked select function
+        self.select_params = []
+        self.__server._select_fn = \
+            lambda r, w, e: self.select_wrapper(r, w, e, ret=([10, 20],
+                                                              [10, 20],
+                                                              [10, 20]))
+        self.__server._setup_ccsession()
+
+        # Specify callbacks, depending on the mode.  One is to call
+        # unwatch_fileno().  The other is to confirm calling unwatch_fileno
+        # doesn't cause disruption for other callbacks (if any) for that fileno.
+        rcb = lambda: unwatch_wrapper(10) if mode == 'r' else None
+        wcb = lambda: unwatch_wrapper(10) if mode == 'w' else None
+        xcb = lambda: unwatch_wrapper(10) if mode == 'x' else None
+        self.__server.watch_fileno(10, rcallback=rcb, wcallback=wcb,
+                                   xcallback=xcb)
+        self.__server.watch_fileno(10, rcallback=self.my_read_callback,
+                                   wcallback=self.my_write_callback,
+                                   xcallback=self.my_error_callback)
+
+        # Run the loop, and check unwatch is really called exactly once.
+        # Since there should be two iterations, this means unwatch works
+        # as expected.
+        self.__server._run_internal()
+        self.assertEqual(1, self.__unwatch_called)
+
+    def test_unwatch_fileno(self):
+        self.__check_unwatch('r')
+        self.__check_unwatch('w')
+        self.__check_unwatch('x')
+
+    def test_bad_unwatch_fileno(self):
+        """Check if unwatch_fileno raises for bad fileno."""
+        self.__server.watch_fileno(10, rcallback=self.my_read_callback)
+        self.assertRaises(ValueError, self.__server.unwatch_fileno, 20, True,
+                          False, False)
+        self.__server.watch_fileno(10, wcallback=self.my_write_callback)
+        self.assertRaises(ValueError, self.__server.unwatch_fileno, 20, False,
+                          True, False)
+        self.__server.watch_fileno(10, xcallback=self.my_error_callback)
+        self.assertRaises(ValueError, self.__server.unwatch_fileno, 20, False,
+                          False, True)
 
 if __name__== "__main__":
     bundy.log.init("bundy_server_test")
