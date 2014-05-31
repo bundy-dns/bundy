@@ -997,6 +997,11 @@ public:
         /// \brief Just shortcut for set of types
         typedef std::set<dns::RRType> WantedTypes;
 
+        /// \brief Intermediate result structure for find() variants.
+        ///
+        /// This stores the search result specific to the DB-based data source
+        /// client implementations and is used to construct
+        /// \c ZoneFinder::GenericContext to match the public interface.
         struct DBResultContext {
             DBResultContext(uint8_t match_label_count,
                             Result code_param,
