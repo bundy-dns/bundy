@@ -382,7 +382,7 @@ public:
     ///
     /// \exception None
     ///
-    /// \param case_sensitive
+    /// \param case_sensitive See above
     /// \return A hash value for this label sequence.
     size_t getHash(bool case_sensitive) const;
 
@@ -393,6 +393,17 @@ public:
     /// the enter data of the label sequence with a (usually externally
     /// unpredictable) separate seed value.  The resulting hash value is
     /// therefore considered reasonably unpredictable.
+    ///
+    /// In general, the user of this function is expected to use the same
+    /// \c seed value for any call to this method to get consistent results.
+    ///
+    /// \throw None.
+    ///
+    /// \param case_sensitive Same as getHash().
+    /// \param seed an arbitrary value to be used as the seed for hash
+    /// calculation.
+    ///
+    /// \return A hash value for this label sequence.
     size_t getFullHash(bool case_sensitive, unsigned int seed) const;
 
     /// \brief Checks whether the label sequence is absolute
