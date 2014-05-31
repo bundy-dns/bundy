@@ -266,6 +266,13 @@ main(int argc, char* argv[]) {
         config_session->removeRemoteConfig("data_sources");
     }
 
+    // This is not really clean, but we first need to clean up AuthSrv;
+    // otherwise closing socket session forwarders in its destructor could
+    // cause disruption, depending on the ordering of how the other local
+    // objects are destroyed.  We should later make it cleaner to eliminate
+    // such tricky dependencies.
+    auth_server_.reset();
+
     LOG_INFO(auth_logger, AUTH_SERVER_EXITING);
 
     return (ret);
