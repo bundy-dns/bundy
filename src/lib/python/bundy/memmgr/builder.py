@@ -15,6 +15,7 @@
 
 import json
 from bundy.datasrc import ConfigurableClientList
+import bundy.datasrc
 from bundy.memmgr.datasrc_info import SegmentInfo
 
 from bundy.log_messages.libmemmgr_messages import *
@@ -158,7 +159,7 @@ class MemorySegmentBuilder:
             return
 
         # If we were told to load a single zone but had to create a new
-        # segment, we'll need to all zones, not this one.
+        # segment, we'll need to load all zones, not just this one.
         if result == self.__RESET_SEGMENT_CREATED and zone_name is not None:
             logger.info(LIBMEMMGR_BUILDER_SEGMENT_LOAD_ALL, zone_name, rrclass,
                         dsrc_name)
@@ -171,12 +172,16 @@ class MemorySegmentBuilder:
         for _, zone_name in zones:
             # install empty zone initially
             catch_load_error = (zone_name is None)
-            result, writer = clist.get_cached_zone_writer(zone_name,
-                                                          catch_load_error,
-                                                          dsrc_name)
-            if result != ConfigurableClientList.CACHE_STATUS_ZONE_SUCCESS:
+            try:
+                result, writer = clist.get_cached_zone_writer(zone_name,
+                                                              catch_load_error,
+                                                              dsrc_name)
+                if result != ConfigurableClientList.CACHE_STATUS_ZONE_SUCCESS:
+                    # handle this with other genuine exception below
+                    raise bundy.datasrc.Error('result=%d' % result)
+            except bundy.datasrc.Error as ex:
                 logger.error(LIBMEMMGR_BUILDER_GET_ZONE_WRITER_ERROR,
-                             zone_name, dsrc_name)
+                             zone_name, dsrc_name, ex)
                 continue
 
             try:
@@ -185,11 +190,11 @@ class MemorySegmentBuilder:
                     logger.error(LIBMEMMGR_BUILDER_ZONE_WRITER_LOAD_1_ERROR,
                                  zone_name, dsrc_name, error)
                     continue
+                writer.install()
             except Exception as e:
                 logger.error(LIBMEMMGR_BUILDER_ZONE_WRITER_LOAD_2_ERROR,
-                             zone_name, dsrc_name, str(e))
-                continue
-            writer.install()
+                             zone_name, dsrc_name, e)
+                # fall through to cleanup
             writer.cleanup()
 
         # need to reset the segment so readers can read it (note: memmgr
