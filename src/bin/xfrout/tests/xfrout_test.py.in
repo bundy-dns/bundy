@@ -1773,7 +1773,7 @@ class MyXfroutServer(XfroutServer):
             bundy.config.module_spec_from_file(xfrout.SPECFILE_LOCATION)
         self._counters = xfrout.Counters(xfrout.SPECFILE_LOCATION)
 
-class TestXfroutServer(unittest.TestCase):
+class TestOldXfroutServer(unittest.TestCase):
     def setUp(self):
         self.xfrout_server = MyXfroutServer()
 
@@ -1786,6 +1786,506 @@ class TestXfroutServer(unittest.TestCase):
         self.assertEqual(
             self.xfrout_server.command_handler('getstats', None), \
                 create_answer(0,  {}))
+
+# Used in TestXfroutServer below
+class MockCC(MockModuleCCSession, ConfigData):
+    def __init__(self, specfile, config_handler, command_handler):
+        super().__init__()
+        module_spec = bundy.config.module_spec_from_file(
+            xfrout.SPECFILE_LOCATION)
+        ConfigData.__init__(self, module_spec)
+
+        self.add_remote_params = [] # params placeholder for inspection
+        self.add_remote_exception = None # to raise exception from the method
+        self.__config_handler = config_handler
+
+    def start(self):
+        pass
+
+    def get_remote_config_value(self, module_name, identifier):
+        if module_name == "Auth" and identifier == "database_file":
+            return "initdb.file", False
+
+    def add_remote_config(self, specfile, handler=None):
+        if self.add_remote_exception is not None:
+            raise self.add_remote_exception
+        self.add_remote_params.append((specfile, handler))
+
+class MockXfroutServer(xfrout.NewXfroutServer):
+    def __init__(self):
+        self.rcallbacks = {}
+        super().__init__()
+
+    def _setup_ccsession(self):
+        orig_cls = bundy.config.ModuleCCSession
+        bundy.config.ModuleCCSession = MockCC
+        try:
+            super()._setup_ccsession()
+        finally:
+            bundy.config.ModuleCCSession = orig_cls
+
+    # In the following two, we simply assume it's an for reading
+    def watch_fileno(self, fileno, rcallback):
+        self.rcallbacks[fileno] = rcallback
+
+    def unwatch_fileno(self, fileno, r, w, x):
+        del self.rcallbacks[fileno]
+
+class MockNotifyOut(notify_out.NotifyOut):
+    def __init__(self, sqlite3_dbfile=None, counters=None):
+        # The attributes are to be used for inspection by tests
+        self.init_params = (sqlite3_dbfile, counters)
+        self.add_slave_params = []
+        self.dispatcher_params = []
+
+    def add_slave(self, address, port):
+        self.add_slave_params.append((address, port))
+
+    def dispatcher(self, daemon):
+        self.dispatcher_params.append(daemon)
+
+    def shutdown(self):
+        self.shutdown_called = True # allow inspection
+
+    def send_notify(self, address, port):
+        self.send_notify_params = (address, port)
+
+class FakeSocket:
+    """A fake socket: pretending to be Python socket API with hardcoded params.
+
+    """
+    def __init__(self, fileno, proto=socket.IPPROTO_TCP):
+        self.proto = proto
+        self.family = socket.AF_INET6 # arbitrary choice
+        self.type = socket.SOCK_STREAM
+        self.__fileno = fileno
+    def fileno(self):
+        return self.__fileno
+    def accept(self):
+        return FakeSocket(self.__fileno + 1), '/dummy/path'
+    def close(self):
+        self.closed = True
+
+# borrowed from ddns tests.  for a longer term we should unify these.
+class FakeSessionReceiver:
+    """A fake socket session receiver, for our tests."""
+    def __init__(self, socket):
+        self._socket = socket
+
+    def socket(self):
+        """
+        This method is not present in the real receiver, but we use it to
+        inspect the socket passed to the constructor.
+        """
+        return self._socket
+
+# A simple lightweight fake of the Python Thread class.  It actually doesn't
+# spawn a thread; the start() method simply calls the target passed to the
+# constructor from the main thread.
+class FakeThread:
+    def __init__(self, target, args):
+        self.__target = target
+        self.__args = args
+        self.daemon = False
+
+    def start(self):
+        assert(self.daemon)     # in our usage threads have to be daemonized
+        self.__target(*self.__args)
+
+class TestXfroutServer(unittest.TestCase):
+    def setUp(self):
+        self.__server = MockXfroutServer()
+
+        # Mock tsig_keyring module
+        self.__tsig_keyring_orig = bundy.server_common.tsig_keyring
+        bundy.server_common.tsig_keyring = self
+        self.__keyring_init_params = []
+
+        # Mock NotifyOut
+        self.__notify_out_orig = notify_out.NotifyOut
+        notify_out.NotifyOut = MockNotifyOut
+
+        self.__old_stdout = sys.stdout # maybe replaced in some tests
+        self.__temp_sock_file = 'temp.sock.file' # constant for some tests
+
+    def tearDown(self):
+        bundy.server_common.tsig_keyring = self.__tsig_keyring_orig
+        notify_out.NotifyOut = self.__notify_out_orig
+        sys.stdout = self.__old_stdout
+
+        # Creating (Mock)XfroutServer will create the well-known socket file,
+        # which would make some tests fail.
+        if os.path.exists(xfrout.UNIX_SOCKET_FILE):
+            os.unlink(xfrout.UNIX_SOCKET_FILE)
+
+        # Cleanup used temporary file so it won't confuse subsequent tests.
+        if os.path.exists(self.__temp_sock_file):
+            os.unlink(self.__temp_sock_file)
+
+    def init_keyring(self, ccs): # pretend to be tsig_keyring.init_keyring()
+        self.__keyring_init_params.append(ccs)
+
+    def get_keyring(self):
+        return 'test-ring'
+
+    def test_setup_module(self):
+        # minimal initialization with a faked initial config for 'also_notify'
+        self.__server._setup_ccsession()
+        self.__server._config_data = {
+            'also_notify': [{'address': '::1'}, {'port': 5300}]}
+
+        # Confirm the initial values of attributes that are to be set in
+        # _setup_module()
+        self.assertIsNone(self.__server._notifier)
+        self.assertEqual([], self.__keyring_init_params)
+        self.assertEqual([], self.__server.mod_ccsession.add_remote_params)
+
+        # Call the method
+        self.__server._setup_module()
+
+        # Confirm the setup results
+        self.assertEqual([self.__server.mod_ccsession],
+                         self.__keyring_init_params)
+        self.assertEqual([(xfrout.AUTH_SPECFILE_LOCATION, None)],
+                         self.__server.mod_ccsession.add_remote_params)
+        self.assertEqual((self.__server.get_db_file(), self.__server._counters),
+                         self.__server._notifier.init_params)
+        self.assertEqual([('::1', 53), ('', 5300)],
+                         self.__server._notifier.add_slave_params)
+        self.assertEqual([True], self.__server._notifier.dispatcher_params)
+
+    def test_shutdown_module(self):
+        # test case setup, mocking some methods that will be called in shutdown
+        def wait_for_threads():
+            self.__thread_joined = True
+        self.__server._notifier = MockNotifyOut()
+        self.__server._wait_for_threads = wait_for_threads
+
+        # call the method, then confirm its effect.
+        self.__server._shutdown_module()
+
+        # The listen socket should have been closed, so any socket operation
+        # should fail.
+        self.assertRaises(OSError, self.__server._listen_socket.getsockname)
+        self.assertFalse(os.path.exists(xfrout.UNIX_SOCKET_FILE))
+        self.assertTrue(self.__server._shutdown_event.is_set())
+        self.assertTrue(self.__server._notifier.shutdown_called)
+        self.assertTrue(self.__thread_joined)
+
+    def test_notify_command(self):
+        from bundy.config import parse_answer
+        self.__server._notifier = MockNotifyOut()
+
+        # A normal case.  Positive answer will be returned, and send_notify()
+        # will be called with given parameters
+        ans = self.__server._mod_command_handler('notify',
+                                                 {'zone_name': 'example.com',
+                                                  'zone_class': 'CH'})
+        self.assertEqual(1, parse_answer(ans)[0])
+        self.assertEqual(('example.com', 'CH'),
+                         self.__server._notifier.send_notify_params)
+
+        # zone class can be omitted
+        ans = self.__server._mod_command_handler('notify',
+                                                 {'zone_name': 'example.com'})
+        self.assertEqual(('example.com', 'IN'),
+                         self.__server._notifier.send_notify_params)
+
+        # address must be specified
+        ans = self.__server._mod_command_handler('notify',
+                                                 {'zone_class': 'IN'})
+        self.assertEqual(1, parse_answer(ans)[0])
+
+        # send_notify() returns a negative result, which considered an error
+        self.__server._notifier.send_notify = lambda n,c: False
+        ans = self.__server._mod_command_handler('notify',
+                                                 {'zone_name': 'example.com'})
+        self.assertEqual(1, parse_answer(ans)[0])
+
+    def test_getstats_command(self):
+        from bundy.config import parse_answer
+        ans = self.__server._mod_command_handler('getstats', None)
+        self.assertEqual(0, parse_answer(ans)[0])
+
+    def test_unkown_command(self):
+        from bundy.config import parse_answer
+        ans = self.__server._mod_command_handler('invalid', None)
+        self.assertEqual(1, parse_answer(ans)[0])
+
+    def __check_default_ACL(self):
+        context = bundy.acl.dns.RequestContext(socket.getaddrinfo(
+            "127.0.0.1", 1234, 0, socket.SOCK_DGRAM,socket.IPPROTO_UDP,
+            socket.AI_NUMERICHOST)[0][4])
+        self.assertEqual(bundy.acl.acl.ACCEPT,
+                         self.__server._acl.execute(context))
+
+    def __check_loaded_ACL(self, acl):
+        context = bundy.acl.dns.RequestContext(socket.getaddrinfo(
+            "127.0.0.1", 1234, 0, socket.SOCK_DGRAM, socket.IPPROTO_UDP,
+            socket.AI_NUMERICHOST)[0][4])
+        self.assertEqual(bundy.acl.acl.ACCEPT, acl.execute(context))
+        context = bundy.acl.dns.RequestContext(socket.getaddrinfo(
+            "192.0.2.1", 1234, 0, socket.SOCK_DGRAM, socket.IPPROTO_UDP,
+            socket.AI_NUMERICHOST)[0][4])
+        self.assertEqual(bundy.acl.acl.REJECT, acl.execute(context))
+
+    def test_update_config_data(self):
+        self.__server._setup_ccsession()
+        self.__server._config_handler({}) # initial config load
+        self.__check_default_ACL()
+        self.__server._config_handler({'transfers_out': 10})
+        self.assertEqual(self.__server._max_transfers_out, 10)
+        self.__check_default_ACL()
+
+        self.__server._config_handler({'transfers_out': 9})
+        self.assertEqual(self.__server._max_transfers_out, 9)
+
+        # Load the ACL
+        self.__server._config_handler({'transfer_acl': [{'from': '127.0.0.1',
+                                                         'action': 'ACCEPT'}]})
+        self.__check_loaded_ACL(self.__server._acl)
+        # Pass a wrong data there and check it does not replace the old one
+        ans = bundy.config.parse_answer(
+            self.__server._config_handler({'transfer_acl': ['Something bad']}))
+        self.assertEqual(1, ans[0])
+        self.__check_loaded_ACL(self.__server._acl)
+
+    def test_zone_config_data(self):
+        # By default, there's no specific zone config
+        self.__server._setup_ccsession()
+        self.__server._config_handler({}) # initial config load
+        self.assertEqual({}, self.__server._zone_config)
+
+        # Adding config for a specific zone.  The config is empty unless
+        # explicitly specified.
+        self.__server._config_handler({'zone_config':
+                                       [{'origin': 'example.com',
+                                         'class': 'IN'}]})
+        self.assertEqual({}, self.__server._zone_config[('IN', 'example.com.')])
+
+        # zone class can be omitted
+        self.__server._config_handler({'zone_config':
+                                       [{'origin': 'example.com'}]})
+        self.assertEqual({}, self.__server._zone_config[('IN', 'example.com.')])
+
+        # zone class, name are stored in the "normalized" form.  class
+        # strings are upper cased, names are down cased.
+        self.__server._config_handler({'zone_config':
+                                    [{'origin': 'EXAMPLE.com'}]})
+        self.assertEqual({}, self.__server._zone_config[('IN', 'example.com.')])
+
+        # invalid zone class, name will result in an error
+        ans = bundy.config.parse_answer(self.__server._config_handler(
+            {'zone_config': [{'origin': 'bad..example'}]}))
+        self.assertEqual(1, ans[0])
+        ans = bundy.config.parse_answer(self.__server._config_handler(
+            {'zone_config': [{'origin': 'example.com', 'class': 'badclass'}]}))
+        self.assertEqual(1, ans[0])
+
+        # Configuring a couple of more zones
+        self.__server._config_handler({'zone_config':
+                                       [{'origin': 'example.com'},
+                                        {'origin': 'example.com',
+                                         'class': 'CH'},
+                                        {'origin': 'example.org'}]})
+        self.assertEqual({}, self.__server._zone_config[('IN', 'example.com.')])
+        self.assertEqual({}, self.__server._zone_config[('CH', 'example.com.')])
+        self.assertEqual({}, self.__server._zone_config[('IN', 'example.org.')])
+
+        # Duplicate data: should be rejected with an error
+        ans = bundy.config.parse_answer(self.__server._config_handler(
+            {'zone_config': [{'origin': 'example.com'},
+                             {'origin': 'example.org'},
+                             {'origin': 'example.com'}]}))
+        self.assertEqual(1, ans[0])
+
+    def test_zone_config_data_with_acl(self):
+        self.__server._setup_ccsession()
+        self.__server._config_handler({}) # initial config load
+
+        # Similar to the previous test, but with transfer_acl config
+        self.__server._config_handler({'zone_config':
+                                       [{'origin': 'example.com',
+                                         'transfer_acl':
+                                         [{'from': '127.0.0.1',
+                                           'action': 'ACCEPT'}]}]})
+        acl = self.__server._zone_config[('IN', 'example.com.')]['transfer_acl']
+        self.__check_loaded_ACL(acl)
+
+        # invalid ACL syntax will be rejected with an error
+        ans = bundy.config.parse_answer(self.__server._config_handler(
+            {'zone_config': [{'origin': 'example.com',
+                              'transfer_acl': [{'action': 'BADACTION'}]}]}))
+        self.assertEqual(1, ans[0])
+
+    def test_get_db_file(self):
+        self.__server._setup_ccsession()
+        self.assertEqual(self.__server.get_db_file(), "initdb.file")
+
+    def test_increase_transfers_counter(self):
+        self.__server._max_transfers_out = 10
+        count = self.__server._transfers_counter
+        self.assertEqual(self.__server.increase_transfers_counter(), True)
+        self.assertEqual(count + 1, self.__server._transfers_counter)
+
+        self.__server._max_transfers_out = 0
+        count = self.__server._transfers_counter
+        self.assertEqual(self.__server.increase_transfers_counter(), False)
+        self.assertEqual(count, self.__server._transfers_counter)
+
+    def test_decrease_transfers_counter(self):
+        count = self.__server._transfers_counter
+        self.__server.decrease_transfers_counter()
+        self.assertEqual(count - 1, self.__server._transfers_counter)
+
+    def __remove_file(self, sock_file):
+        try:
+            os.remove(sock_file)
+        except OSError:
+            pass
+
+    def test_sock_file_in_use_file_exist(self):
+        self.__remove_file(self.__temp_sock_file)
+        self.assertFalse(self.__server._sock_file_in_use(self.__temp_sock_file))
+        self.assertFalse(os.path.exists(self.__temp_sock_file))
+
+    def test_sock_file_in_use_file_not_exist(self):
+        self.assertFalse(self.__server._sock_file_in_use(self.__temp_sock_file))
+
+    def test_sock_file_in_use(self):
+        self.__remove_file(self.__temp_sock_file)
+        self.assertFalse(self.__server._sock_file_in_use(self.__temp_sock_file))
+        self.__server._setup_listen_socket(self.__temp_sock_file)
+        self.assertTrue(self.__server._sock_file_in_use(self.__temp_sock_file))
+
+    def test_remove_unused_sock_file_in_use(self):
+        self.__remove_file(self.__temp_sock_file)
+        self.assertFalse(self.__server._sock_file_in_use(self.__temp_sock_file))
+        self.__server._setup_listen_socket(self.__temp_sock_file)
+        self.assertRaises(SystemExit, self.__server._remove_unused_sock_file,
+                          self.__temp_sock_file)
+
+    def test_remove_unused_sock_file_dir(self):
+        import tempfile
+        dir_name = tempfile.mkdtemp()
+        with open(os.devnull, 'w') as f:
+            sys.stdout = f
+            try:
+                self.__server._remove_unused_sock_file(dir_name)
+            except SystemExit:
+                pass
+            else:
+                # This should never happen
+                self.assertTrue(False)
+        os.rmdir(dir_name)
+
+    def test_accept_forwarder(self):
+        """ Test that we can accept a new connection.
+
+        (Largely copied from a similar test for ddns)
+
+        """
+        # There's nothing before the accept
+        xfrout.bundy.util.cio.socketsession.SocketSessionReceiver = \
+            FakeSessionReceiver
+        self.assertEqual({}, self.__server._socksession_receivers)
+        self.__server._listen_socket = FakeSocket(2)
+        self.__server._accept_forwarder()
+        # Now the new socket session receiver is stored in the dict
+        # The 3 comes from _listen_socket.accept() - _listen_socket has
+        # fileno 2 and accept returns socket with fileno increased by one.
+        self.assertEqual([3],
+                         list(self.__server._socksession_receivers.keys()))
+        (socket, receiver) = self.__server._socksession_receivers[3]
+        self.assertTrue(isinstance(socket, FakeSocket))
+        self.assertEqual(3, socket.fileno())
+        self.assertTrue(isinstance(receiver, FakeSessionReceiver))
+        self.assertEqual(socket, receiver.socket())
+
+        # check callback.  confirm it's registered and is a call to
+        # _handle_request.
+        cb = self.__server.rcallbacks[3]
+        self.__server._handle_request = lambda s: 42
+        self.assertEqual(42, cb())
+
+    def test_accept_forward_fail(self):
+        """
+        Test we don't crash if an accept fails and that we don't modify the
+        internals.  (Largely copied from a similar test for ddns)
+        """
+        # Make the accept fail
+        def accept_failure():
+            raise socket.error(errno.ECONNABORTED)
+        self.__server._listen_socket = FakeSocket(2)
+        orig = self.__server._listen_socket.accept
+        self.__server._listen_socket.accept = accept_failure
+        self.assertEqual({}, self.__server._socksession_receivers)
+        # Doesn't raise the exception
+        self.__server._accept_forwarder()
+        # And nothing is stored
+        self.assertEqual({}, self.__server._socksession_receivers)
+        # Now make the socket receiver fail
+        self.__server._listen_socket.accept = orig
+        def receiver_failure(sock):
+            raise bundy.util.cio.socketsession.SocketSessionError('Test error')
+        xfrout.bundy.util.cio.socketsession.SocketSessionReceiver = \
+            receiver_failure
+        # Doesn't raise the exception
+        self.__server._accept_forwarder()
+        # And nothing is stored
+        self.assertEqual({}, self.__server._socksession_receivers)
+        # Check we don't catch everything, so raise just an exception
+        def unexpected_failure(sock):
+            raise Exception('Test error')
+        xfrout.bundy.util.cio.socketsession.SocketSessionReceiver = \
+            unexpected_failure
+        # This one gets through
+        self.assertRaises(Exception, self.__server._accept_forwarder)
+        # Nothing is stored as well
+        self.assertEqual({}, self.__server._socksession_receivers)
+
+    def test_handle_request(self):
+        # Setup: mock some stuff used in _handle_request() so we can inspect
+        # and/or bypass the actual one for testing purposes.
+        sock = FakeSocket(3)
+        receiver = FakeSessionReceiver(sock)
+        popped_sock = FakeSocket(4)
+        param = (popped_sock, ('::1', 1234), ('::1', 1235),
+                 'Some data')
+        receiver.pop = lambda: param
+        self.__server._socksession_receivers = {3: (sock, receiver)}
+        xfrout.threading.Thread = FakeThread
+        def xfrout_session(*args):
+            self.__xfrout_session_args = args
+        xfrout.XfroutSession = xfrout_session
+
+        # Normal case: an XfroutSession instance is created with expected
+        # parameters.
+        self.__server._handle_request(3)
+        self.assertEqual((4, 'Some data', self.__server, 'test-ring',
+                          (socket.AF_INET6, socket.SOCK_STREAM, ('::1', 1235)),
+                          self.__server._acl, self.__server._zone_config,
+                          self.__server._counters),
+                         self.__xfrout_session_args)
+
+        # An unexpected case: a UDP session is forwarded.  It's just ignored.
+        # The forwarded socket should be closed.
+        popped_sock.proto = socket.IPPROTO_UDP
+        popped_sock.closed = False
+        self.__server._handle_request(3)
+        self.assertTrue(popped_sock.closed)
+        popped_sock.proto = socket.IPPROTO_TCP # reset the tweaked proto
+
+        # failure in the sock session receiver.  this receiver is terminated
+        # and removed from the watch list.
+        self.__xfrout_session_args = None
+        self.__server.rcallbacks[3] = None # None is fine, as callback is unused
+        def ex_raiser():
+            raise bundy.util.cio.socketsession.SocketSessionError('an error')
+        receiver.pop = ex_raiser
+        self.__server._handle_request(3)
+        self.assertFalse(3 in self.__server._socksession_receivers)
+        self.assertFalse(3 in self.__server.rcallbacks)
 
 if __name__== "__main__":
     bundy.log.resetUnitTestRootLogger()

@@ -23,6 +23,8 @@ import threading
 import struct
 import signal
 from bundy.datasrc import DataSourceClient, ZoneFinder, ZoneJournalReader
+from bundy.server_common.bundy_server import BUNDYServer, BUNDYServerFatal
+import bundy.util.cio.socketsession
 from socketserver import *
 import os
 from bundy.config.ccsession import *
@@ -63,6 +65,11 @@ from bundy.acl.acl import ACCEPT, REJECT, DROP, LoaderError
 from bundy.acl.dns import REQUEST_LOADER
 
 bundy.util.process.rename()
+
+def _clear_socket():
+    """Common initialization/cleanup: remove the socket file, if it exists."""
+    if os.path.exists(UNIX_SOCKET_FILE):
+        os.remove(UNIX_SOCKET_FILE)
 
 class XfroutConfigError(Exception):
     """An exception indicating an error in updating xfrout configuration.
@@ -1020,8 +1027,14 @@ class XfroutServer:
         self._default_notify_port = 53
         self._unix_socket_server = None
         self._listen_sock_file = UNIX_SOCKET_FILE
+        _clear_socket()
+        self._listen_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self._listen_socket.bind(UNIX_SOCKET_FILE)
+        self._listen_socket.listen(16)
         self._shutdown_event = threading.Event()
-        self._cc = bundy.config.ModuleCCSession(SPECFILE_LOCATION, self.config_handler, self.command_handler)
+        self._cc = bundy.config.ModuleCCSession(SPECFILE_LOCATION,
+                                                self.config_handler,
+                                                self.command_handler)
         self._config_data = self._cc.get_full_config()
         self._counters = Counters(SPECFILE_LOCATION)
         self._cc.start()
@@ -1146,6 +1159,353 @@ class XfroutServer:
         while not self._shutdown_event.is_set():
             self._cc.check_command(False)
 
+class NewXfroutServer(BUNDYServer):
+    """The top-level server class for Xfrout.
+
+    This class handles xfrout command and configuration updates, accepts
+    xfr queries through UNIX domain sockets, and manages sub threads that
+    actually handle the queries.
+
+    """
+    def __init__(self):
+        BUNDYServer.__init__(self)
+
+        self._default_notify_address = ''
+        self._default_notify_port = 53
+
+        self.__lock = threading.Lock() # private
+
+        # shared with child threads
+        self._shutdown_event = threading.Event()
+
+        # Rest of the "protected" attributes are essentially private, but
+        # we allow tests to inspect/tweat them.
+        self._transfers_counter = 0
+        self._config_data = None
+        self._zone_config = {}
+        self._acl = None # this will be initialized in update_config_data()
+        self._counters = Counters(SPECFILE_LOCATION)
+        self._notifier = None
+
+        # List of the session receivers where we get the requests
+        self._socksession_receivers = {}
+
+        self._setup_listen_socket(UNIX_SOCKET_FILE)
+
+    def _setup_listen_socket(self, sock_file):
+        """Set up a UNIX domain socket to receive forwarded xfr queries."""
+        self._remove_unused_sock_file(sock_file)
+        self._listen_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self._listen_socket.bind(sock_file)
+        self._listen_socket.listen(16)
+        self._counters.inc('socket', 'unixdomain', 'open')
+        self.watch_fileno(self._listen_socket, self._accept_forwarder)
+
+    def _remove_unused_sock_file(self, sock_file):
+        """Try to remove the given socket file.
+
+        If the file is being used by one running xfrout process, exit from
+        python. If it's not a socket file or nobody is listening,
+        it will be removed. If it can't be removed, exit from python.
+
+        """
+        if self._sock_file_in_use(sock_file):
+            logger.error(XFROUT_UNIX_SOCKET_FILE_IN_USE, sock_file)
+            sys.exit(0)
+        else:
+            if not os.path.exists(sock_file):
+                return
+            try:
+                os.unlink(sock_file)
+            except OSError as err:
+                logger.error(XFROUT_REMOVE_OLD_UNIX_SOCKET_FILE_ERROR,
+                             sock_file, str(err))
+                sys.exit(0)
+
+    def _sock_file_in_use(self, sock_file):
+        """Check whether the socket file 'sock_file' exists and
+        is being used by one running xfrout process. If it is,
+        return True, or else return False.
+
+        """
+        sock = socket.socket(socket.AF_UNIX)
+        try:
+            sock.connect(sock_file)
+        except socket.error:
+            return False
+        else:
+            return True
+        finally:
+            sock.close()
+
+    def _setup_module(self):
+        """Override the BUNDYServer default.
+
+        Some of the setups in this method can fail, but we generally consider
+        it a fatal system error and let the process die.
+
+        """
+        self.mod_ccsession.add_remote_config(AUTH_SPECFILE_LOCATION)
+        bundy.server_common.tsig_keyring.init_keyring(self.mod_ccsession)
+        self.__start_notifier()
+        logger.debug(DBG_PROCESS, XFROUT_STARTED)
+
+    def __start_notifier(self):
+        """Subroutine of _setup_module, init and start NotifyOut thread."""
+        datasrc = self.get_db_file()
+        self._notifier = notify_out.NotifyOut(datasrc, counters=self._counters)
+        if 'also_notify' in self._config_data:
+            for slave in self._config_data['also_notify']:
+                address = self._default_notify_address
+                if 'address' in slave:
+                    address = slave['address']
+                port = self._default_notify_port
+                if 'port' in slave:
+                    port = slave['port']
+                self._notifier.add_slave(address, port)
+
+        # We'll make the notifier thread a daemon in case the main thread
+        # dies without a proper shutdown, in which case we'd rather like
+        # the notifier to die, too.
+        self._notifier.dispatcher(True)
+
+    def _shutdown_module(self):
+        """Override the BUNDYServer default.
+
+        We don't expect this method to raise an exception.  If it does,
+        that's basically a program error and make the process terminate
+        in a non-graceful manner.
+
+        """
+        self._listen_socket.close()
+        self._counters.inc('socket', 'unixdomain', 'close')
+        try:
+            os.unlink(UNIX_SOCKET_FILE)
+        except Exception as e:
+            logger.error(XFROUT_REMOVE_UNIX_SOCKET_FILE_ERROR, UNIX_SOCKET_FILE,
+                         e)
+        self._shutdown_event.set()
+        self._notifier.shutdown()
+        self._wait_for_threads()
+
+    def _wait_for_threads(self):
+        # Wait for all threads to terminate. this is a call that is only used
+        # in _shutdown_module(), but it has its own method, so we can test
+        # _shutdown_module() without involving thread operations (the test
+        # would override this method)
+        main_thread = threading.currentThread()
+        for th in threading.enumerate():
+            if th is main_thread:
+                continue
+            th.join()
+
+    def _mod_command_handler(self, cmd, args):
+        """Command handler: overriding the BUNDYServer default."""
+        if cmd == "notify":
+            zone_name = args.get('zone_name')
+            zone_class = args.get('zone_class')
+            if not zone_class:
+                zone_class = str(RRClass.IN)
+            if zone_name:
+                logger.info(XFROUT_NOTIFY_COMMAND, zone_name, zone_class)
+                if self._notifier.send_notify(zone_name, zone_class):
+                    answer = create_answer(0)
+                else:
+                    zonestr = notify_out.format_zone_str(Name(zone_name),
+                                                         zone_class)
+                    answer = create_answer(1, "Unknown zone: " + zonestr)
+            else:
+                answer = create_answer(1, "Bad command parameter: " + str(args))
+
+        # return statistics data to the stats daemon
+        elif cmd == "getstats":
+            # The log level is here set to debug in order to avoid
+            # that a log becomes too verbose. Because the bundy-stats
+            # daemon is periodically asking to the bundy-xfrout daemon.
+            answer = create_answer(0, self._counters.get_statistics())
+            logger.debug(DBG_XFROUT_TRACE, XFROUT_RECEIVED_GETSTATS_COMMAND,
+                         str(answer))
+        else:
+            answer = create_answer(1, "Unknown command:" + str(cmd))
+
+        return answer
+
+    def _config_handler(self, new_config):
+        """Config handler: a mandatory method to implement for BUNDYServer.
+
+        TODO. Do error check
+
+        """
+        answer = create_answer(0)
+        if self._config_data is None:
+            new_config = self.mod_ccsession.get_full_config()
+            self._config_data = new_config
+        else:
+            for key in new_config:
+                if key not in self._config_data:
+                    answer = create_answer(1, "Unknown config data: " +
+                                           str(key))
+                    continue
+                self._config_data[key] = new_config[key]
+        try:
+            self.__update_config_data(self._config_data)
+        except Exception as e:
+            answer = create_answer(1, "Failed to handle new configuration: " +
+                                   str(e))
+        return answer
+
+    def __update_config_data(self, new_config):
+        """Apply the new config setting of xfrout module."""
+        with self.__lock:
+            logger.info(XFROUT_NEW_CONFIG)
+            new_acl = self._acl
+            if 'transfer_acl' in new_config:
+                try:
+                    new_acl = REQUEST_LOADER.load(new_config['transfer_acl'])
+                except LoaderError as e:
+                    raise XfroutConfigError('Failed to parse transfer_acl: ' +
+                                            str(e))
+
+            new_zone_config = self._zone_config
+            zconfig_data = new_config.get('zone_config')
+            if zconfig_data is not None:
+                new_zone_config = self.__create_zone_config(zconfig_data)
+
+            self._acl = new_acl
+            self._zone_config = new_zone_config
+            self._max_transfers_out = new_config.get('transfers_out')
+        logger.info(XFROUT_NEW_CONFIG_DONE)
+
+    def __create_zone_config(self, zone_config_list):
+        new_config = {}
+        for zconf in zone_config_list:
+            # convert the class, origin (name) pair.  First build pydnspp
+            # object to reject invalid input.
+            zclass_str = zconf.get('class')
+            if zclass_str is None:
+                zclass_str = self.mod_ccsession.get_default_value(
+                    'zone_config/class')
+            zclass = RRClass(zclass_str)
+            zorigin = Name(zconf['origin'], True)
+            config_key = (zclass.to_text(), zorigin.to_text())
+
+            # reject duplicate config
+            if config_key in new_config:
+                raise XfroutConfigError('Duplicate zone_config for ' +
+                                        str(zorigin) + '/' + str(zclass))
+
+            # create a new config entry, build any given (and known) config
+            new_config[config_key] = {}
+            if 'transfer_acl' in zconf:
+                try:
+                    new_config[config_key]['transfer_acl'] = \
+                        REQUEST_LOADER.load(zconf['transfer_acl'])
+                except LoaderError as e:
+                    raise XfroutConfigError('Failed to parse transfer_acl ' +
+                                            'for ' + zorigin.to_text() + '/' +
+                                            zclass_str + ': ' + str(e))
+        return new_config
+
+    def get_db_file(self):
+        file, is_default = self.mod_ccsession.get_remote_config_value(
+            "Auth", "database_file")
+        # this too should be unnecessary, but currently the
+        # 'from build' override isn't stored in the config
+        # (and we don't have indirect python access to datasources yet)
+        if is_default and "BUNDY_FROM_BUILD" in os.environ:
+            file = os.environ["BUNDY_FROM_BUILD"] + os.sep + \
+                   "bundy_zones.sqlite3"
+        return file
+
+    def increase_transfers_counter(self):
+        """Return if an incoming xfr query can be handled in terms of quota."""
+        ret = False
+        with self.__lock:
+            if self._transfers_counter < self._max_transfers_out:
+                self._transfers_counter += 1
+                ret = True
+        return ret
+
+    def decrease_transfers_counter(self):
+        """Called on completion of xfr query, release corresponding quota."""
+        with self.__lock:
+            self._transfers_counter -= 1
+
+    def _accept_forwarder(self):
+        """Accept a new socket session forwarder on the UNIX domain socket."""
+        try:
+            (sock, remote_addr) = self._listen_socket.accept()
+            fileno = sock.fileno()
+            logger.debug(DBG_XFROUT_TRACE, XFROUT_NEW_FORWARDER, fileno,
+                         remote_addr if remote_addr else '<anonymous address>')
+            receiver = bundy.util.cio.socketsession.SocketSessionReceiver(sock)
+            self._socksession_receivers[fileno] = (sock, receiver)
+            self.watch_fileno(fileno, lambda: self._handle_request(fileno))
+            self._counters.inc('socket', 'unixdomain', 'accept')
+        except (socket.error, bundy.util.cio.socketsession.SocketSessionError) \
+            as e:
+            # These exceptions mean the connection didn't work, but we can
+            # continue with the rest
+            logger.error(XFROUT_ACCEPT_FAILURE, e)
+            self._counters.inc('socket', 'unixdomain', 'acceptfail')
+
+    def _handle_request(self, fileno):
+        """Callback on a sock session receiver for a new xfr query."""
+        logger.debug(DBG_XFROUT_TRACE, XFROUT_REQUEST, fileno)
+
+        # In the context, if we are here we should have a receiver for
+        # 'fileno', so this code shouldn't fail:
+        (session_socket, receiver) = self._socksession_receivers[fileno]
+
+        try:
+            req_session = receiver.pop()
+        except bundy.util.cio.socketsession.SocketSessionError as se:
+            # No matter why this failed, the connection is in unknown, possibly
+            # broken state. So, we close the socket and remove the receiver.
+            del self._socksession_receivers[fileno]
+            session_socket.close()
+            self.unwatch_fileno(fileno, True, False, False)
+            logger.warn(XFROUT_DROP_FORWARDER, fileno, se)
+            self._counters.inc('socket', 'unixdomain', 'recverr')
+            return
+
+        try:
+            # The forwarder side should have filtered out non-TCP session,
+            # so this should be basically impossible.
+            if req_session[0].proto != socket.IPPROTO_TCP:
+                raise XfroutSessionError('unexpected session protocol: %d' %
+                                         req_session[0].proto)
+            (sock, local_addr, remote_addr, req_data) = req_session
+
+            # We basically don't expect an exception in the following, but
+            # since we perform some low-level system operation we catch any
+            # unexpected failures.
+
+            # Start a thread that handles the xfr query.  We'll make it as
+            # a daemon thread so if the main thread dies unexpectedly the
+            # child thread will be automatically killed.
+            th = threading.Thread(target=self.__start_session,
+                                  args=(sock, req_data, remote_addr))
+            th.daemon = True
+            th.start()
+        except Exception as ex:
+            req_session[0].close()
+            logger.error(XFROUT_REQUEST_FAIL, ex)
+
+    def __start_session(self, sock, req_data, remote_addr):
+        """Entry point of xfrout session threads."""
+        with self.__lock:
+            acl = self._acl
+            zone_config = self._zone_config
+        remote = (sock.family, sock.type, remote_addr)
+
+        # XfroutSession is basically exception free, and takes care of any
+        # cleanup on failure, so we just construct it.  The constructor will
+        # complete the request.
+        XfroutSession(sock.fileno(), req_data, self,
+                      bundy.server_common.tsig_keyring.get_keyring(),
+                      remote, acl, zone_config, self._counters)
+
 xfrout_server = None
 
 def signal_handler(signal, frame):
@@ -1189,5 +1549,11 @@ def main():
 
     logger.info(XFROUT_EXITING)
 
+def new_main():
+    xfrout = NewXfroutServer()
+    sys.exit(xfrout.run('xfrout'))
+
 if '__main__' == __name__:
+    #notyet:
+    #bundy.util.traceback_handler.traceback_handler(new_main)
     bundy.util.traceback_handler.traceback_handler(main)
