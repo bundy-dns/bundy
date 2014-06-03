@@ -167,7 +167,7 @@ class TestMemorySegmentBuilder(unittest.TestCase):
         self.assertEqual(clients_map, datasrc_info.clients_map)
         self.assertEqual(1, len(datasrc_info.segment_info_map))
         sgmt_info = datasrc_info.segment_info_map[(RRClass.IN, 'MasterFiles')]
-        self.assertIsNone(sgmt_info.get_reset_param(SegmentInfo.READER))
+        self.assertIsNotNone(sgmt_info.get_reset_param(SegmentInfo.READER))
         self.assertIsNotNone(sgmt_info.get_reset_param(SegmentInfo.WRITER))
 
         param = sgmt_info.get_reset_param(SegmentInfo.WRITER)
@@ -207,7 +207,7 @@ class TestMemorySegmentBuilder(unittest.TestCase):
             response = self._builder_response_queue[0]
             self.assertTrue(isinstance(response, tuple))
             self.assertTupleEqual(response, ('load-completed', datasrc_info,
-                                             RRClass.IN, 'MasterFiles'))
+                                             RRClass.IN, 'MasterFiles', True))
             del self._builder_response_queue[:]
 
         # Now try looking for some loaded data
@@ -235,6 +235,98 @@ class TestMemorySegmentBuilder(unittest.TestCase):
         # longer running, so we can use the queues without a lock.
         self.assertEqual(len(self._builder_command_queue), 0)
         self.assertEqual(len(self._builder_response_queue), 0)
+
+    def test_validate(self):
+        def raise_ex():
+            raise ValueError('test error')
+        action_true = lambda: True
+        action_false = lambda: False
+        action_raise = lambda: raise_ex()
+
+        self._builder_thread.start()
+
+        # issue two validate commands and then stop the thread
+        with self._builder_cv:
+            self._builder_command_queue.append(('validate', 'd', 'c', 'n',
+                                                action_true))
+            self._builder_command_queue.append(('validate', 'd', 'c', 'n',
+                                                action_false))
+            # if the action raises an exception, it'll be caught and responded
+            # as a validation failure
+            self._builder_command_queue.append(('validate', 'd', 'c', 'n',
+                                                action_raise))
+            self._builder_command_queue.append(('shutdown',))
+            self._builder_cv.notify_all()
+        self._builder_thread.join(5)
+        self.assertFalse(self._builder_thread.isAlive())
+
+        # Confirm the responses
+        self.assertEqual(len(self._builder_response_queue), 3)
+        self.assertEqual(('validate-completed', 'd', 'c', 'n', True),
+                         self._builder_response_queue[0])
+        self.assertEqual(('validate-completed', 'd', 'c', 'n', False),
+                         self._builder_response_queue[1])
+        self.assertEqual(('validate-completed', 'd', 'c', 'n', False),
+                         self._builder_response_queue[2])
+
+# Exercise some detailed cases without bothering to handle threads
+class TestMemorySegmentBuilderWithoutThread(unittest.TestCase):
+    def setUp(self):
+        self.__create_ok = False
+        self.__response_queue = []
+        self.__builder = MemorySegmentBuilder(None, None, [],
+                                              self.__response_queue)
+        self.clients_map = {RRClass.IN: self} # pretend to be client list
+        self.dsrc_info = self
+        self.segment_info_map = \
+            {(RRClass.IN, 'testsrc'): self} # pretend to be segment info
+
+    # Mock SegmentInfo.get_reset_param().
+    def get_reset_param(self, unused):
+        return {}
+
+    # Mock ConfigurableClientList.reset_memory_segment()
+    def reset_memory_segment(self, dsrc_name, reset_type, param):
+        self.__reset_called += 1 # for inspection
+
+        # for now, we always make read-only reset succeed
+        if reset_type == ConfigurableClientList.READ_ONLY:
+            return
+
+        # if it's a create attempt and is configured so, make it succeed.
+        if self.__create_ok and reset_type == ConfigurableClientList.CREATE:
+            return
+
+        # Otherwise, we'll make it fail with an exceptin (type doesn't matter)
+        raise ValueError('test')
+
+    # Mock ConfigurableClientList.get_zone_table_accessor()
+    def get_zone_table_accessor(self, arg1, arg2):
+        return []
+
+    def __check_load_fail(self, name, create_ok):
+        self.__reset_called = 0
+        del self.__response_queue[:]
+        self.__create_ok = create_ok
+
+        # reset in the rw mode will fai, falling back to creating a new one.
+        # if 'create_ok', it succeeds, and reset_segment() will be called 3
+        # times in tatal, including the last one for read-only.  response
+        # queue should have a success result.
+        # if not 'create_ok', even the create attempt will fail, so the failure
+        # will be reported in the response queue, the last reset attempt won't
+        # happen.
+        self.__builder._handle_load(name, self, RRClass.IN, 'testsrc')
+        self.assertEqual(self.__response_queue[0],
+                         ('load-completed', self, RRClass.IN, 'testsrc',
+                          create_ok))
+        self.assertEqual(self.__reset_called, 3 if create_ok else 2)
+
+    def test_load_fail(self):
+        self.__check_load_fail(Name('test.example'), True)
+        self.__check_load_fail(Name('test.example'), False)
+        self.__check_load_fail(None, True)
+        self.__check_load_fail(None, False)
 
 if __name__ == "__main__":
     bundy.log.init("bundy-test")
