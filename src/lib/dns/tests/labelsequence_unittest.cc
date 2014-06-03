@@ -637,6 +637,7 @@ TEST_F(LabelSequenceTest, toText) {
     EXPECT_EQ("0.1", ls_long2.toText());
 }
 
+namespace {
 // The following are test data used in the getHash test below.  Normally
 // we use example/documentation domain names for testing, but in this case
 // we'd specifically like to use more realistic data, and are intentionally
@@ -664,8 +665,9 @@ const char* const ca_servers[] = {
 };
 
 // A helper function used in the getHash test below.
+// If 'seed' is non-0, use getFullHash with the given seed value.
 void
-hashDistributionCheck(const char* const* servers) {
+hashDistributionCheck(const char* const* servers, unsigned int seed) {
     const size_t BUCKETS = 64;  // constant used in the MessageRenderer
     set<Name> names;
     vector<size_t> hash_counts(BUCKETS);
@@ -679,8 +681,14 @@ hashDistributionCheck(const char* const* servers) {
             pair<set<Name>::const_iterator, bool> ret =
                 names.insert(name.split(l));
             if (ret.second) {
-                hash_counts[LabelSequence((*ret.first)).getHash(false) %
-                            BUCKETS]++;
+                if (seed == 0) {
+                    hash_counts[LabelSequence((*ret.first)).getHash(false) %
+                                BUCKETS]++;
+                } else {
+                    hash_counts[LabelSequence((*ret.first)).getFullHash(false,
+                                                                        seed) %
+                                BUCKETS]++;
+                }
             }
         }
     }
@@ -694,21 +702,28 @@ hashDistributionCheck(const char* const* servers) {
         EXPECT_GE(3, hash_counts[i]);
     }
 }
+}
 
 TEST_F(LabelSequenceTest, getHash) {
     // Trivial case.  The same sequence should have the same hash.
     EXPECT_EQ(ls1.getHash(true), ls1.getHash(true));
+    EXPECT_EQ(ls1.getFullHash(true, 42), ls1.getFullHash(true, 42));
 
     // Check the case-insensitive mode behavior.
     EXPECT_EQ(ls1.getHash(false), ls5.getHash(false));
+    EXPECT_EQ(ls1.getFullHash(false, 42), ls5.getFullHash(false, 42));
 
     // Check that the distribution of hash values is "not too bad" (such as
     // everything has the same hash value due to a stupid bug).  It's
     // difficult to check such things reliably.  We do some ad hoc tests here.
-    hashDistributionCheck(root_servers);
-    hashDistributionCheck(jp_servers);
-    hashDistributionCheck(cn_servers);
-    hashDistributionCheck(ca_servers);
+    // In the following loop, the first iteration will use getHash, and the
+    // second will use getFullHash.
+    for (unsigned int i = 0; i < 2; ++i) {
+        hashDistributionCheck(root_servers, i);
+        hashDistributionCheck(jp_servers, i);
+        hashDistributionCheck(cn_servers, i);
+        hashDistributionCheck(ca_servers, i);
+    }
 }
 
 // test operator<<.  We simply confirm it appends the result of toText().
