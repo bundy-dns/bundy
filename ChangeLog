@@ -1,3 +1,7 @@
+780.	[func]		jinmei
+	libdns++: supported the CDS RDATA.
+	(git a39c030f9b2b0b2a1a359367d23173443432490b)
+
 779.	[build]		jinmei
 	Fixed multiple build issues for MacOS X:
 	- Fixed incorrect detection for the availability of the -R linker option
