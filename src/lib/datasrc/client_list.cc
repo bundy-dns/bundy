@@ -341,10 +341,10 @@ ConfigurableClientList::resetMemorySegment
         if (info.name_ == datasrc_name) {
             ZoneTableSegment& segment = *info.ztable_segment_;
             segment.reset(mode, config_params);
-            return true;
+            return (true);
         }
     }
-    return false;
+    return (false);
 }
 
 ConfigurableClientList::ZoneWriterPair
