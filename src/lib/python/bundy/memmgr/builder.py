@@ -99,6 +99,8 @@ class MemorySegmentBuilder:
         clist.reset_memory_segment(dsrc_name,
                                    ConfigurableClientList.READ_WRITE,
                                    params)
+        logger.debug(logger.DBGLVL_TRACE_BASIC, LIBMEMMGR_BUILDER_SEGMENT_OPEND,
+                     dsrc_name, rrclass)
 
         if zone_name is not None:
             zones = [(None, zone_name)]
@@ -160,6 +162,8 @@ class MemorySegmentBuilder:
                 # "shutdown" command, which just exits the thread.
                 for command_tuple in local_command_queue:
                     command = command_tuple[0]
+                    logger.debug(logger.DBGLVL_TRACE_BASIC,
+                                 LIBMEMMGR_BUILDER_RECEIVED_COMMAND, command)
                     if command == 'load':
                         # See the comments for __handle_load() for
                         # details of the tuple passed to the "load"

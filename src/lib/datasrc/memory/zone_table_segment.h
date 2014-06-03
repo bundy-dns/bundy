@@ -20,7 +20,7 @@
 #include <dns/rrclass.h>
 
 #include <datasrc/memory/zone_table.h>
-#include <datasrc/memory/load_action.h>
+#include <datasrc/memory/loader_creator.h>
 
 #include <cc/data.h>
 #include <util/memory_segment.h>

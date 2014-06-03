@@ -227,6 +227,9 @@ public:
         // data source.
         mock_client->enableA();
         mock_client->enableBadIterator();
+
+        // update serial
+        mock_client->incrementSerial();
     }
     // Check the positive result is as we expect it.
     void positiveResult(const ClientList::FindResult& result,
@@ -855,16 +858,6 @@ TEST_P(ListTest, badCache) {
         "}]"));
     EXPECT_THROW(list_->configure(elem2, true), bundy::NotImplemented);
     checkDS(0, "test_type", "[\"example.org\"]", true);
-    // Now, the zone returns NULL iterator
-    const ConstElementPtr elem3(Element::fromJSON("["
-        "{"
-        "   \"type\": \"type1\","
-        "   \"cache-enable\": true,"
-        "   \"cache-zones\": [\"null.org\"],"
-        "   \"params\": [\"null.org\"]"
-        "}]"));
-    EXPECT_THROW(list_->configure(elem3, true), bundy::Unexpected);
-    checkDS(0, "test_type", "[\"example.org\"]", true);
     // The autodetection of zones is not enabled
     const ConstElementPtr elem4(Element::fromJSON("["
         "{"
@@ -1013,6 +1006,7 @@ TEST_P(ListTest, BadMasterFile) {
         // errors.
         list_->configure(elem, true);
     });
+    list_->configure(elem, true);
 
     positiveResult(list_->find(Name("example.com."), true), ds_[0],
                    Name("example.com."), true, "example.com", true);
@@ -1261,20 +1255,6 @@ TEST_P(ListTest, reloadZoneThrow) {
               list_->find(name).finder_->find(name, RRType::SOA())->code);
     // The iterator throws, so abort the reload.
     EXPECT_THROW(doReload(name), bundy::NotImplemented);
-    // The zone is not hurt.
-    EXPECT_EQ(ZoneFinder::SUCCESS,
-              list_->find(name).finder_->find(name, RRType::SOA())->code);
-}
-
-TEST_P(ListTest, reloadNullIterator) {
-    list_->configure(config_elem_zones_, true);
-    const Name name("null.org");
-    prepareCache(0, name);
-    // The zone contains stuff now
-    EXPECT_EQ(ZoneFinder::SUCCESS,
-              list_->find(name).finder_->find(name, RRType::SOA())->code);
-    // The iterator throws, so abort the reload.
-    EXPECT_THROW(doReload(name), bundy::Unexpected);
     // The zone is not hurt.
     EXPECT_EQ(ZoneFinder::SUCCESS,
               list_->find(name).finder_->find(name, RRType::SOA())->code);

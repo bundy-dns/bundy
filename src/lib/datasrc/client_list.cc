@@ -165,13 +165,13 @@ ConfigurableClientList::configure(const ConstElementPtr& config,
             {
                 const Name& zname = zone_it->first;
                 try {
-                    const memory::LoadAction load_action =
-                        cache_conf->getLoadAction(rrclass_, zname);
+                    const memory::ZoneDataLoaderCreator loader_creator =
+                        cache_conf->getLoaderCreator(rrclass_, zname);
                     // in this loop this should be always true
-                    assert(load_action);
+                    assert(loader_creator);
                     // For the initial load, we'll let the writer handle
                     // loading error and install an empty zone in the table.
-                    memory::ZoneWriter writer(zt_segment, load_action, zname,
+                    memory::ZoneWriter writer(zt_segment, loader_creator, zname,
                                               rrclass_, true);
 
                     std::string error_msg;
@@ -379,16 +379,16 @@ ConfigurableClientList::getCachedZoneWriter(const Name& name,
         }
         // Note that getCacheConfig() must return non NULL in this module
         // (only tests could set it to a bogus value).
-        const memory::LoadAction load_action =
-            info.getCacheConfig()->getLoadAction(rrclass_, name);
-        if (!load_action) {
+        const memory::ZoneDataLoaderCreator loader_creator =
+            info.getCacheConfig()->getLoaderCreator(rrclass_, name);
+        if (!loader_creator) {
             return (ZoneWriterPair(ZONE_NOT_CACHED, ZoneWriterPtr()));
         }
         return (ZoneWriterPair(ZONE_SUCCESS,
                                ZoneWriterPtr(
                                    new memory::ZoneWriter(
                                        *info.ztable_segment_,
-                                       load_action, name, rrclass_,
+                                       loader_creator, name, rrclass_,
                                        catch_load_error))));
     }
 

@@ -159,10 +159,10 @@ TEST_F(ZoneTableTest, addEmptyZone) {
 
     // The empty zone can be "found", with the ZONE_EMPTY flag on, and the
     // returned ZoneData being NULL.
-    const ZoneTable::FindResult fresult1 = zone_table->findZone(zname1);
+    const ZoneTable::MutableFindResult fresult1 = zone_table->findZone(zname1);
     EXPECT_EQ(result::SUCCESS, fresult1.code);
     EXPECT_EQ(result::ZONE_EMPTY, fresult1.flags);
-    EXPECT_EQ(static_cast<const ZoneData*>(NULL), fresult1.zone_data);
+    EXPECT_EQ(static_cast<ZoneData*>(NULL), fresult1.zone_data);
 
     // Replacing an empty zone with non-empty one.  Should be no problem, but
     // the empty zone data are not returned in the result structure; it's
@@ -203,22 +203,38 @@ TEST_F(ZoneTableTest, findZone) {
     EXPECT_EQ(result::SUCCESS,
               zone_table->addZone(mem_sgmt_, zname3, holder3.release()).code);
 
-    const ZoneTable::FindResult find_result1 =
+    const ZoneTable::MutableFindResult find_result1 =
         zone_table->findZone(Name("example.com"));
     EXPECT_EQ(result::SUCCESS, find_result1.code);
     EXPECT_EQ(zone_data, find_result1.zone_data);
 
+    // Check the same case for const version of findZone().
+    const ZoneTable* const_zone_table =
+        static_cast<const ZoneTable*>(zone_table);
+    const ZoneTable::FindResult find_result1c =
+        const_zone_table->findZone(Name("example.com"));
+    EXPECT_EQ(result::SUCCESS, find_result1c.code);
+    EXPECT_EQ(zone_data, find_result1c.zone_data);
+
     EXPECT_EQ(result::NOTFOUND,
               zone_table->findZone(Name("example.org")).code);
+    EXPECT_EQ(result::NOTFOUND,
+              const_zone_table->findZone(Name("example.org")).code);
     EXPECT_EQ(static_cast<ZoneData*>(NULL),
               zone_table->findZone(Name("example.org")).zone_data);
+    EXPECT_EQ(static_cast<ZoneData*>(NULL),
+              const_zone_table->findZone(Name("example.org")).zone_data);
 
     // there's no exact match.  the result should be the longest match,
     // and the code should be PARTIALMATCH.
     EXPECT_EQ(result::PARTIALMATCH,
               zone_table->findZone(Name("www.example.com")).code);
+    EXPECT_EQ(result::PARTIALMATCH,
+              const_zone_table->findZone(Name("www.example.com")).code);
     EXPECT_EQ(zone_data,
               zone_table->findZone(Name("www.example.com")).zone_data);
+    EXPECT_EQ(zone_data,
+              const_zone_table->findZone(Name("www.example.com")).zone_data);
 
     // make sure the partial match is indeed the longest match by adding
     // a zone with a shorter origin and query again.
@@ -229,5 +245,7 @@ TEST_F(ZoneTableTest, findZone) {
                                                    holder4.release()).code);
     EXPECT_EQ(zone_data,
               zone_table->findZone(Name("www.example.com")).zone_data);
+    EXPECT_EQ(zone_data,
+              const_zone_table->findZone(Name("www.example.com")).zone_data);
 }
 }
