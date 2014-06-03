@@ -78,7 +78,6 @@ run_unittests_LDADD += $(top_builddir)/src/lib/asiolink/libbundy-asiolink.la
 run_unittests_LDADD += $(top_builddir)/src/lib/config/libbundy-cfgclient.la
 run_unittests_LDADD += $(top_builddir)/src/lib/cc/libbundy-cc.la
 run_unittests_LDADD += $(top_builddir)/src/lib/exceptions/libbundy-exceptions.la
-run_unittests_LDADD += $(top_builddir)/src/lib/xfr/libbundy-xfr.la
 run_unittests_LDADD += $(top_builddir)/src/lib/log/libbundy-log.la
 run_unittests_LDADD += $(top_builddir)/src/lib/server_common/libbundy-server-common.la
 run_unittests_LDADD += $(top_builddir)/src/lib/nsas/libbundy-nsas.la

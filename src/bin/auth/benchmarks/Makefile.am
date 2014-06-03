@@ -28,7 +28,6 @@ query_bench_LDADD += $(top_builddir)/src/lib/bench/libbundy-bench.la
 query_bench_LDADD += $(top_builddir)/src/lib/datasrc/libbundy-datasrc.la
 query_bench_LDADD += $(top_builddir)/src/lib/config/libbundy-cfgclient.la
 query_bench_LDADD += $(top_builddir)/src/lib/cc/libbundy-cc.la
-query_bench_LDADD += $(top_builddir)/src/lib/xfr/libbundy-xfr.la
 query_bench_LDADD += $(top_builddir)/src/lib/log/libbundy-log.la
 query_bench_LDADD += $(top_builddir)/src/lib/nsas/libbundy-nsas.la
 query_bench_LDADD += $(top_builddir)/src/lib/asiolink/libbundy-asiolink.la

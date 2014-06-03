@@ -98,7 +98,6 @@ bundy_auth_LDADD += $(top_builddir)/src/lib/exceptions/libbundy-exceptions.la
 bundy_auth_LDADD += $(top_builddir)/src/lib/asiodns/libbundy-asiodns.la
 bundy_auth_LDADD += $(top_builddir)/src/lib/asiolink/libbundy-asiolink.la
 bundy_auth_LDADD += $(top_builddir)/src/lib/log/libbundy-log.la
-bundy_auth_LDADD += $(top_builddir)/src/lib/xfr/libbundy-xfr.la
 bundy_auth_LDADD += $(top_builddir)/src/lib/server_common/libbundy-server-common.la
 bundy_auth_LDADD += $(top_builddir)/src/lib/util/threads/libbundy-threads.la
 bundy_auth_LDADD += $(SQLITE_LIBS)
