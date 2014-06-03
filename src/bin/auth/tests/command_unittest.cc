@@ -61,7 +61,7 @@ namespace {
 class AuthCommandTest : public ::testing::Test {
 protected:
     AuthCommandTest() :
-        server_(xfrout_, ddns_forwarder_),
+        server_(xfrout_forwarder_, ddns_forwarder_),
         rcode_(-1),
         expect_rcode_(0),
         itimer_(server_.getIOService())
@@ -72,7 +72,7 @@ protected:
         parseAnswer(rcode_, result_);
         EXPECT_EQ(expected_code, rcode_) << result_->str();
     }
-    MockXfroutClient xfrout_;
+    MockSocketSessionForwarder xfrout_forwarder_;
     MockSocketSessionForwarder ddns_forwarder_;
     AuthSrv server_;
     ConstElementPtr result_;

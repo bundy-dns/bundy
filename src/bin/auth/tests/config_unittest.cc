@@ -23,8 +23,6 @@
 
 #include <datasrc/exceptions.h>
 
-#include <xfr/xfrout_client.h>
-
 #include <auth/auth_srv.h>
 #include <auth/auth_config.h>
 #include <auth/common.h>
@@ -53,7 +51,7 @@ protected:
     AuthConfigTest() :
         dnss_(),
         rrclass(RRClass::IN()),
-        server(xfrout, ddns_forwarder),
+        server(xfrout_forwarder, ddns_forwarder),
         // The empty string is expected value of the parameter of
         // requestSocket, not the app_name (there's no fallback, it checks
         // the empty string is passed).
@@ -63,7 +61,7 @@ protected:
     }
     MockDNSService dnss_;
     const RRClass rrclass;
-    MockXfroutClient xfrout;
+    MockSocketSessionForwarder xfrout_forwarder;
     MockSocketSessionForwarder ddns_forwarder;
     AuthSrv server;
     bundy::server_common::portconfig::AddressList address_store_;

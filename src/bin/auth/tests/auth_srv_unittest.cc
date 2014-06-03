@@ -109,7 +109,7 @@ class AuthSrvTest : public SrvTestBase {
 protected:
     AuthSrvTest() :
         dnss_(),
-        server(xfrout, ddns_forwarder),
+        server(xfrout_forwarder, ddns_forwarder),
         // The empty string is expected value of the parameter of
         // requestSocket, not the app_name (there's no fallback, it checks
         // the empty string is passed).
@@ -209,7 +209,7 @@ protected:
     }
 
     MockDNSService dnss_;
-    MockXfroutClient xfrout;
+    MockSocketSessionForwarder xfrout_forwarder;
     MockSocketSessionForwarder ddns_forwarder;
     AuthSrv server;
     vector<uint8_t> response_data;
@@ -423,7 +423,7 @@ TEST_F(AuthSrvTest, AXFROverUDP) {
 }
 
 TEST_F(AuthSrvTest, AXFRSuccess) {
-    EXPECT_FALSE(xfrout.isConnected());
+    EXPECT_FALSE(xfrout_forwarder.isConnected());
     UnitTestUtil::createRequestMessage(request_message, opcode, default_qid,
                                        Name("example.com"), RRClass::IN(),
                                        RRType::AXFR());
@@ -433,7 +433,7 @@ TEST_F(AuthSrvTest, AXFRSuccess) {
     server.processMessage(*io_message, *parse_message, *response_obuffer,
                           &dnsserv);
     EXPECT_FALSE(dnsserv.hasAnswer());
-    EXPECT_TRUE(xfrout.isConnected());
+    EXPECT_TRUE(xfrout_forwarder.isConnected());
 
     ConstElementPtr stats_after = server.getStatistics()->get("zones")->
         get("_SERVER_");
@@ -587,8 +587,8 @@ TEST_F(AuthSrvTest, TSIGCheckFirst) {
 }
 
 TEST_F(AuthSrvTest, AXFRConnectFail) {
-    EXPECT_FALSE(xfrout.isConnected()); // check prerequisite
-    xfrout.disableConnect();
+    EXPECT_FALSE(xfrout_forwarder.isConnected()); // check prerequisite
+    xfrout_forwarder.disableConnect();
     UnitTestUtil::createRequestMessage(request_message, opcode, default_qid,
                                        Name("example.com"), RRClass::IN(),
                                        RRType::AXFR());
@@ -598,10 +598,10 @@ TEST_F(AuthSrvTest, AXFRConnectFail) {
     EXPECT_TRUE(dnsserv.hasAnswer());
     headerCheck(*parse_message, default_qid, Rcode::SERVFAIL(),
                 opcode.getCode(), QR_FLAG, 1, 0, 0, 0);
-    EXPECT_FALSE(xfrout.isConnected());
+    EXPECT_FALSE(xfrout_forwarder.isConnected());
 }
 
-TEST_F(AuthSrvTest, AXFRSendFail) {
+TEST_F(AuthSrvTest, AXFRPushFail) {
     // first send a valid query, making the connection with the xfr process
     // open.
     UnitTestUtil::createRequestMessage(request_message, opcode, default_qid,
@@ -610,9 +610,9 @@ TEST_F(AuthSrvTest, AXFRSendFail) {
     createRequestPacket(request_message, IPPROTO_TCP);
     server.processMessage(*io_message, *parse_message, *response_obuffer,
                           &dnsserv);
-    EXPECT_TRUE(xfrout.isConnected());
+    EXPECT_TRUE(xfrout_forwarder.isConnected());
 
-    xfrout.disableSend();
+    xfrout_forwarder.disablePush();
     parse_message->clear(Message::PARSE);
     response_obuffer->clear();
     UnitTestUtil::createRequestMessage(request_message, opcode, default_qid,
@@ -626,14 +626,14 @@ TEST_F(AuthSrvTest, AXFRSendFail) {
                 opcode.getCode(), QR_FLAG, 1, 0, 0, 0);
 
     // The connection should have been closed due to the send failure.
-    EXPECT_FALSE(xfrout.isConnected());
+    EXPECT_FALSE(xfrout_forwarder.isConnected());
 }
 
 TEST_F(AuthSrvTest, AXFRDisconnectFail) {
-    // In our usage disconnect() shouldn't fail. But even if it does,
+    // In our usage close() shouldn't fail. But even if it does,
     // it should not disrupt service (so processMessage should have caught it)
-    xfrout.disableSend();
-    xfrout.disableDisconnect();
+    xfrout_forwarder.disablePush();
+    xfrout_forwarder.disableClose();
     UnitTestUtil::createRequestMessage(request_message, opcode, default_qid,
                                        Name("example.com"), RRClass::IN(),
                                        RRType::AXFR());
@@ -641,15 +641,15 @@ TEST_F(AuthSrvTest, AXFRDisconnectFail) {
     EXPECT_NO_THROW(server.processMessage(*io_message, *parse_message,
                                           *response_obuffer, &dnsserv));
     // Since the disconnect failed, we should still be 'connected'
-    EXPECT_TRUE(xfrout.isConnected());
-    // XXX: we need to re-enable disconnect.  otherwise an exception would be
+    EXPECT_TRUE(xfrout_forwarder.isConnected());
+    // XXX: we need to re-enable close.  otherwise an exception would be
     // thrown via the destructor of the server.
-    xfrout.enableDisconnect();
+    xfrout_forwarder.enableClose();
 }
 
 TEST_F(AuthSrvTest, IXFRConnectFail) {
-    EXPECT_FALSE(xfrout.isConnected()); // check prerequisite
-    xfrout.disableConnect();
+    EXPECT_FALSE(xfrout_forwarder.isConnected()); // check prerequisite
+    xfrout_forwarder.disableConnect();
     UnitTestUtil::createRequestMessage(request_message, opcode, default_qid,
                                        Name("example.com"), RRClass::IN(),
                                        RRType::IXFR());
@@ -659,10 +659,10 @@ TEST_F(AuthSrvTest, IXFRConnectFail) {
     EXPECT_TRUE(dnsserv.hasAnswer());
     headerCheck(*parse_message, default_qid, Rcode::SERVFAIL(),
                 opcode.getCode(), QR_FLAG, 1, 0, 0, 0);
-    EXPECT_FALSE(xfrout.isConnected());
+    EXPECT_FALSE(xfrout_forwarder.isConnected());
 }
 
-TEST_F(AuthSrvTest, IXFRSendFail) {
+TEST_F(AuthSrvTest, IXFRPushFail) {
     // first send a valid query, making the connection with the xfr process
     // open.
     UnitTestUtil::createRequestMessage(request_message, opcode, default_qid,
@@ -671,9 +671,9 @@ TEST_F(AuthSrvTest, IXFRSendFail) {
     createRequestPacket(request_message, IPPROTO_TCP);
     server.processMessage(*io_message, *parse_message, *response_obuffer,
                           &dnsserv);
-    EXPECT_TRUE(xfrout.isConnected());
+    EXPECT_TRUE(xfrout_forwarder.isConnected());
 
-    xfrout.disableSend();
+    xfrout_forwarder.disablePush();
     parse_message->clear(Message::PARSE);
     response_obuffer->clear();
     UnitTestUtil::createRequestMessage(request_message, opcode, default_qid,
@@ -687,24 +687,24 @@ TEST_F(AuthSrvTest, IXFRSendFail) {
                 opcode.getCode(), QR_FLAG, 1, 0, 0, 0);
 
     // The connection should have been closed due to the send failure.
-    EXPECT_FALSE(xfrout.isConnected());
+    EXPECT_FALSE(xfrout_forwarder.isConnected());
 }
 
 TEST_F(AuthSrvTest, IXFRDisconnectFail) {
-    // In our usage disconnect() shouldn't fail, but even if it does,
+    // In our usage close() shouldn't fail, but even if it does,
     // procesMessage() should catch it.
-    xfrout.disableSend();
-    xfrout.disableDisconnect();
+    xfrout_forwarder.disablePush();
+    xfrout_forwarder.disableClose();
     UnitTestUtil::createRequestMessage(request_message, opcode, default_qid,
                                        Name("example.com"), RRClass::IN(),
                                        RRType::IXFR());
     createRequestPacket(request_message, IPPROTO_TCP);
     EXPECT_NO_THROW(server.processMessage(*io_message, *parse_message,
                                           *response_obuffer, &dnsserv));
-    EXPECT_TRUE(xfrout.isConnected());
-    // XXX: we need to re-enable disconnect.  otherwise an exception would be
+    EXPECT_TRUE(xfrout_forwarder.isConnected());
+    // XXX: we need to re-enable close.  otherwise an exception would be
     // thrown via the destructor of the server.
-    xfrout.enableDisconnect();
+    xfrout_forwarder.enableClose();
 }
 
 TEST_F(AuthSrvTest, notify) {
@@ -2022,7 +2022,8 @@ TEST_F(AuthSrvTest, DDNSForwardPushFail) {
 }
 
 TEST_F(AuthSrvTest, DDNSForwardClose) {
-    scoped_ptr<AuthSrv> tmp_server(new AuthSrv(xfrout, ddns_forwarder));
+    scoped_ptr<AuthSrv> tmp_server(new AuthSrv(xfrout_forwarder,
+                                               ddns_forwarder));
     tmp_server->createDDNSForwarder();
     UnitTestUtil::createRequestMessage(request_message, Opcode::UPDATE(),
                                        default_qid, Name("example.com"),
@@ -2064,7 +2065,8 @@ TEST_F(AuthSrvTest, DDNSForwardCreateDestroy) {
     // that the ddns_forwarder is connected when the 'start_ddns_forwarder'
     // command has been sent, and that it is no longer connected and auth
     // returns NOTIMP after the stop_ddns_forwarding command is sent.
-    scoped_ptr<AuthSrv> tmp_server(new AuthSrv(xfrout, ddns_forwarder));
+    scoped_ptr<AuthSrv> tmp_server(new AuthSrv(xfrout_forwarder,
+                                               ddns_forwarder));
 
     // Prepare update message to send
     UnitTestUtil::createRequestMessage(request_message, Opcode::UPDATE(),

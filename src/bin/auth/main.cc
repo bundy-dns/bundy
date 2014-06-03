@@ -26,8 +26,6 @@
 #include <cc/data.h>
 #include <config/ccsession.h>
 
-#include <xfr/xfrout_client.h>
-
 #include <auth/spec_config.h>
 #include <auth/common.h>
 #include <auth/auth_config.h>
@@ -160,8 +158,8 @@ main(int argc, char* argv[]) {
     boost::scoped_ptr<Session> xfrin_session;
     bool xfrin_session_established = false; // XXX (see Trac #287)
     boost::scoped_ptr<ModuleCCSession> config_session;
-    XfroutClient xfrout_client(getXfroutSocketPath());
     SocketSessionForwarder ddns_forwarder(getDDNSSocketPath());
+    SocketSessionForwarder xfrout_forwarder(getXfroutSocketPath());
     try {
         string specfile;
         if (getenv("BUNDY_FROM_BUILD")) {
@@ -171,7 +169,7 @@ main(int argc, char* argv[]) {
             specfile = string(AUTH_SPECFILE_LOCATION);
         }
 
-        auth_server_.reset(new AuthSrv(xfrout_client, ddns_forwarder));
+        auth_server_.reset(new AuthSrv(xfrout_forwarder, ddns_forwarder));
         auth_server = auth_server_.get();
         LOG_INFO(auth_logger, AUTH_SERVER_CREATED);
 
@@ -267,6 +265,13 @@ main(int argc, char* argv[]) {
     if (config_session != NULL) {
         config_session->removeRemoteConfig("data_sources");
     }
+
+    // This is not really clean, but we first need to clean up AuthSrv;
+    // otherwise closing socket session forwarders in its destructor could
+    // cause disruption, depending on the ordering of how the other local
+    // objects are destroyed.  We should later make it cleaner to eliminate
+    // such tricky dependencies.
+    auth_server_.reset();
 
     LOG_INFO(auth_logger, AUTH_SERVER_EXITING);
 

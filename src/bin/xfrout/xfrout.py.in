@@ -1554,6 +1554,4 @@ def new_main():
     sys.exit(xfrout.run('xfrout'))
 
 if '__main__' == __name__:
-    #notyet:
-    #bundy.util.traceback_handler.traceback_handler(new_main)
-    bundy.util.traceback_handler.traceback_handler(main)
+    bundy.util.traceback_handler.traceback_handler(new_main)

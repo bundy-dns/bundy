@@ -64,6 +64,9 @@ public:
         if (!is_connected_) {
             bundy_throw(bundy::util::io::SocketSessionError, "duplicate close");
         }
+        if (!close_ok_) {
+            bundy_throw(bundy::util::io::SocketSessionError, "close disabled");
+        }
         is_connected_ = false;
     }
 
@@ -110,6 +113,7 @@ public:
     void disableConnect() { connect_ok_ = false; }
     void enableConnect() { connect_ok_ = true; }
     void disableClose() { close_ok_ = false; }
+    void enableClose() { close_ok_ = true; }
     void disablePush() { push_ok_ = false; }
     void enablePush() { push_ok_ = true; }
 

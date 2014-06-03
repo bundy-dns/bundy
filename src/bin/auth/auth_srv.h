@@ -104,9 +104,11 @@ public:
     /// process.  It's normally a reference to an xfr::XfroutClient object,
     /// but can refer to a local mock object for testing (or other
     /// experimental) purposes.
+    /// \param xfrout_forwarder Forwarder to which AXFR/IXFR queries
+    ///                       are passed to
     /// \param ddns_forwarder Forwarder to which DDNS UPDATE requests
     ///                       are passed to
-    AuthSrv(bundy::xfr::AbstractXfroutClient& xfrout_client,
+    AuthSrv(bundy::util::io::BaseSocketSessionForwarder& xfrout_forwarder,
             bundy::util::io::BaseSocketSessionForwarder& ddns_forwarder);
     ~AuthSrv();
     //@}
