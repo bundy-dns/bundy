@@ -167,17 +167,21 @@ DEFAULT_CONFIG = MyCCSession().get_full_config()
 # We subclass the Session class we're testing here, only overriding a few
 # methods
 class MyXfroutSession(XfroutSession):
+    def __init__(self, sock, *args):
+        super().__init__(sock, *args)
+        self._sock = sock
+
     def _handle(self):
         pass
 
     def _close_socket(self):
         pass
 
-    def _send_data(self, sock, data):
+    def _send_data(self, data):
         size = len(data)
         total_count = 0
         while total_count < size:
-            count = sock.send(data[total_count:])
+            count = self._sock.send(data[total_count:])
             total_count += count
 
 class Dbserver:
@@ -361,7 +365,8 @@ class TestXfroutSession(TestXfroutSessionBase):
         # make_blocking should have been called in _handle().  Note that
         # in the test fixture we handle fileno as a faked socket object, not
         # as integer.
-        self.assertEqual([(self.sock, True)], self._make_blocking_history)
+        self.assertEqual([(self.sock.fileno(), True)],
+                         self._make_blocking_history)
 
     def test_make_blocking_fail(self):
         """Check what if make_blocking() raises an exception."""
@@ -606,20 +611,20 @@ class TestXfroutSession(TestXfroutSessionBase):
                                                         RRClass.IN))
 
     def test_send_data(self):
-        self.xfrsess._send_data(self.sock, self.mdata)
+        self.xfrsess._send_data(self.mdata)
         senddata = self.sock.readsent()
         self.assertEqual(senddata, self.mdata)
 
     def test_reply_xfrout_query_with_error_rcode(self):
         msg = self.getmsg()
-        self.xfrsess._reply_query_with_error_rcode(msg, self.sock, Rcode(3))
+        self.xfrsess._reply_query_with_error_rcode(msg, Rcode(3))
         get_msg = self.sock.read_msg()
         self.assertEqual(get_msg.get_rcode().to_text(), "NXDOMAIN")
 
         # tsig signed message
         msg = self.getmsg()
         self.xfrsess._tsig_ctx = self.create_mock_tsig_ctx(TSIGError.NOERROR)
-        self.xfrsess._reply_query_with_error_rcode(msg, self.sock, Rcode(3))
+        self.xfrsess._reply_query_with_error_rcode(msg, Rcode(3))
         get_msg = self.sock.read_msg()
         self.assertEqual(get_msg.get_rcode().to_text(), "NXDOMAIN")
         self.assertTrue(self.message_has_tsig(get_msg))
@@ -634,7 +639,7 @@ class TestXfroutSession(TestXfroutSessionBase):
                                   'master.Example.com. admin.exAmple.com. ' +
                                   '2011112001 3600 1800 2419200 7200'))
         msg.add_rrset(Message.SECTION_ANSWER, soa_rrset)
-        self.xfrsess._send_message(self.sock, msg)
+        self.xfrsess._send_message(msg)
         send_out_data = self.sock.readsent()[2:]
 
         # CASE_INSENSITIVE compression mode
@@ -666,8 +671,7 @@ class TestXfroutSession(TestXfroutSessionBase):
         msg = self.getmsg()
         msg.make_response()
 
-        self.xfrsess._send_message_with_last_soa(msg, self.sock,
-                                                 self.soa_rrset, 0)
+        self.xfrsess._send_message_with_last_soa(msg, self.soa_rrset, 0)
         get_msg = self.sock.read_msg()
         # tsig context does not exist
         self.assertFalse(self.message_has_tsig(get_msg))
@@ -684,8 +688,7 @@ class TestXfroutSession(TestXfroutSessionBase):
         self.assertEqual(rdata[0], self.soa_rrset.get_rdata()[0])
 
         # Sending the message with last soa together
-        self.xfrsess._send_message_with_last_soa(msg, self.sock,
-                                                 self.soa_rrset, 0)
+        self.xfrsess._send_message_with_last_soa(msg, self.soa_rrset, 0)
         get_msg = self.sock.read_msg()
         # tsig context does not exist
         self.assertFalse(self.message_has_tsig(get_msg))
@@ -698,8 +701,7 @@ class TestXfroutSession(TestXfroutSessionBase):
         msg.make_response()
 
         # Sending the message with last soa together
-        self.xfrsess._send_message_with_last_soa(msg, self.sock,
-                                                 self.soa_rrset, 0)
+        self.xfrsess._send_message_with_last_soa(msg, self.soa_rrset, 0)
         get_msg = self.sock.read_msg()
         self.assertTrue(self.message_has_tsig(get_msg))
 
@@ -723,8 +725,7 @@ class TestXfroutSession(TestXfroutSessionBase):
         # this should have triggered the sending of two messages
         # (1 with the rrset we added manually, and 1 that triggered
         # the sending in _with_last_soa)
-        self.xfrsess._send_message_with_last_soa(msg, self.sock,
-                                                 self.soa_rrset,
+        self.xfrsess._send_message_with_last_soa(msg, self.soa_rrset,
                                                  length_need_split)
         get_msg = self.sock.read_msg()
         self.assertFalse(self.message_has_tsig(get_msg))
@@ -769,8 +770,7 @@ class TestXfroutSession(TestXfroutSessionBase):
         # this should have triggered the sending of two messages
         # (1 with the rrset we added manually, and 1 that triggered
         # the sending in _with_last_soa)
-        self.xfrsess._send_message_with_last_soa(msg, self.sock,
-                                                 self.soa_rrset,
+        self.xfrsess._send_message_with_last_soa(msg, self.soa_rrset,
                                                  length_need_split)
         # Both messages should have TSIG RRs
         get_msg = self.sock.read_msg()
@@ -906,7 +906,7 @@ class TestXfroutSession(TestXfroutSessionBase):
         def notauth(msg, name, rrclass):
             return Rcode.NOTAUTH
         self.xfrsess._xfrout_setup = notauth
-        self.xfrsess.dns_xfrout_start(self.sock, self.mdata)
+        self.xfrsess.dns_xfrout_start(self.mdata)
         get_msg = self.sock.read_msg()
         self.assertEqual(get_msg.get_rcode().to_text(), "NOTAUTH")
 
@@ -914,7 +914,7 @@ class TestXfroutSession(TestXfroutSessionBase):
         def internal_raise(x, y):
             raise bundy.datasrc.Error('exception for the sake of test')
         self.xfrsess.ClientClass = internal_raise
-        self.xfrsess.dns_xfrout_start(self.sock, self.mdata)
+        self.xfrsess.dns_xfrout_start(self.mdata)
         self.assertEqual(self.sock.read_msg().get_rcode(), Rcode.SERVFAIL)
 
     def test_dns_xfrout_start_unixsocketsenderr(self):
@@ -931,7 +931,7 @@ class TestXfroutSession(TestXfroutSessionBase):
         self.assertRaises(bundy.cc.data.DataNotFoundError,
                           self.xfrsess._counters.get,
                           'socket', 'unixdomain', 'senderr')
-        self.xfrsess.dns_xfrout_start(self.sock, self.mdata)
+        self.xfrsess.dns_xfrout_start(self.mdata)
         self.assertEqual(self.xfrsess._counters.get(
                 'socket', 'unixdomain', 'senderr'), 1)
 
@@ -940,15 +940,15 @@ class TestXfroutSession(TestXfroutSessionBase):
             return Rcode.NOERROR
         self.xfrsess._xfrout_setup = noerror
 
-        def myreply(msg, sock):
-            self.sock.send(b"success")
+        def myreply(msg):
+            self.xfrsess._sock.send(b"success")
 
         self.assertRaises(bundy.cc.data.DataNotFoundError,
                           self.xfrsess._counters.get,
                           'zones', TEST_RRCLASS_STR,
                           TEST_ZONE_NAME_STR, 'xfrreqdone')
         self.xfrsess._reply_xfrout_query = myreply
-        self.xfrsess.dns_xfrout_start(self.sock, self.mdata)
+        self.xfrsess.dns_xfrout_start(self.mdata)
         self.assertEqual(self.sock.readsent(), b"success")
         self.assertGreater(self.xfrsess._counters.get(
             'zones', TEST_RRCLASS_STR, TEST_ZONE_NAME_STR,
@@ -957,7 +957,7 @@ class TestXfroutSession(TestXfroutSessionBase):
     def test_reply_xfrout_query_axfr(self):
         self.xfrsess._soa = self.soa_rrset
         self.xfrsess._iterator = [self.soa_rrset]
-        self.xfrsess._reply_xfrout_query(self.getmsg(), self.sock)
+        self.xfrsess._reply_xfrout_query(self.getmsg())
         reply_msg = self.sock.read_msg()
         self.assertEqual(reply_msg.get_rr_count(Message.SECTION_ANSWER), 2)
 
@@ -975,7 +975,7 @@ class TestXfroutSession(TestXfroutSessionBase):
         xfrout.get_rrset_len = get_rrset_len
 
         self.xfrsess._tsig_ctx = self.create_mock_tsig_ctx(TSIGError.NOERROR)
-        self.xfrsess._reply_xfrout_query(self.getmsg(), self.sock)
+        self.xfrsess._reply_xfrout_query(self.getmsg())
 
         # All messages must have TSIG as we don't support the feature of
         # skipping intermediate TSIG records (with bulk signing).
@@ -999,7 +999,7 @@ class TestXfroutSession(TestXfroutSessionBase):
                                   create_aaaa(Name('a.example.com'),
                                               '2001:db8::1')]
         self.xfrsess._jnl_reader = self.xfrsess._iterator
-        self.xfrsess._reply_xfrout_query(self.getmsg(), self.sock)
+        self.xfrsess._reply_xfrout_query(self.getmsg())
         reply_msg = self.sock.read_msg(Message.PRESERVE_ORDER)
         actual_records = reply_msg.get_section(Message.SECTION_ANSWER)
 
@@ -1018,7 +1018,7 @@ class TestXfroutSession(TestXfroutSessionBase):
         self.xfrsess._soa = self.soa_rrset
         test_rr = create_generic(Name('.'), 65512)
         self.xfrsess._iterator = [self.soa_rrset, test_rr]
-        self.xfrsess._reply_xfrout_query(self.getmsg(), self.sock)
+        self.xfrsess._reply_xfrout_query(self.getmsg())
         # The first message should contain the beginning SOA, and only that RR
         r = self.sock.read_msg()
         self.assertEqual(1, r.get_rr_count(Message.SECTION_ANSWER))
@@ -1106,7 +1106,7 @@ class TestXfroutSession(TestXfroutSessionBase):
         # test RDATA should allow a room for that.
         test_rr = create_generic(Name('.'), 65512 - 5 - get_rrset_len(soa))
         self.xfrsess._iterator = [soa, test_rr]
-        self.xfrsess._reply_xfrout_query(self.getmsg(), self.sock)
+        self.xfrsess._reply_xfrout_query(self.getmsg())
         self.maxlen_test_common_checks(soa, test_rr, [2, 1])
 
     def test_reply_xfrout_query_axfr_maxlen_with_soa_with_tsig(self):
@@ -1115,7 +1115,7 @@ class TestXfroutSession(TestXfroutSessionBase):
         test_rr = create_generic(Name('.'), 65512 - 5 - 81 -
                                  get_rrset_len(soa))
         self.xfrsess._iterator = [soa, test_rr]
-        self.xfrsess._reply_xfrout_query(self.getmsg(), self.sock)
+        self.xfrsess._reply_xfrout_query(self.getmsg())
         self.maxlen_test_common_checks(soa, test_rr, [2, 1])
 
     def test_reply_xfrout_query_axfr_maxlen_with_endsoa(self):
@@ -1125,7 +1125,7 @@ class TestXfroutSession(TestXfroutSessionBase):
         soa = self.maxlen_test_common_setup()
         test_rr = create_generic(Name('.'), 65512 - get_rrset_len(soa))
         self.xfrsess._iterator = [soa, test_rr]
-        self.xfrsess._reply_xfrout_query(self.getmsg(), self.sock)
+        self.xfrsess._reply_xfrout_query(self.getmsg())
         self.maxlen_test_common_checks(soa, test_rr, [1, 2])
 
     def test_reply_xfrout_query_axfr_maxlen_with_endsoa_with_tsig(self):
@@ -1133,7 +1133,7 @@ class TestXfroutSession(TestXfroutSessionBase):
         soa = self.maxlen_test_common_setup(True)
         test_rr = create_generic(Name('.'), 65512 - 81 - get_rrset_len(soa))
         self.xfrsess._iterator = [soa, test_rr]
-        self.xfrsess._reply_xfrout_query(self.getmsg(), self.sock)
+        self.xfrsess._reply_xfrout_query(self.getmsg())
         self.maxlen_test_common_checks(soa, test_rr, [1, 2])
 
     def test_reply_xfrout_query_axfr_toobigdata(self):
@@ -1144,7 +1144,7 @@ class TestXfroutSession(TestXfroutSessionBase):
         self.xfrsess._iterator = [self.soa_rrset, test_rr]
         # the reply method should fail with exception
         self.assertRaises(XfroutSessionError, self.xfrsess._reply_xfrout_query,
-                          self.getmsg(), self.sock)
+                          self.getmsg())
         # The first message should still have been sent and contain the
         # beginning SOA, and only that RR
         r = self.sock.read_msg()
@@ -1160,7 +1160,7 @@ class TestXfroutSession(TestXfroutSessionBase):
         self.xfrsess._soa = create_soa(SOA_CURRENT_VERSION)
         self.xfrsess._iterator = None
         self.xfrsess._jnl_reader = None
-        self.xfrsess._reply_xfrout_query(self.getmsg(), self.sock)
+        self.xfrsess._reply_xfrout_query(self.getmsg())
         reply_msg = self.sock.read_msg(Message.PRESERVE_ORDER)
         answer = reply_msg.get_section(Message.SECTION_ANSWER)
         self.assertEqual(1, len(answer))
@@ -1823,7 +1823,7 @@ class TestXfroutServer(unittest.TestCase):
         # Normal case: an XfroutSession instance is created with expected
         # parameters.
         self.__server._handle_request(3)
-        self.assertEqual((4, 'Some data', self.__server, 'test-ring',
+        self.assertEqual((popped_sock, 'Some data', self.__server, 'test-ring',
                           (socket.AF_INET6, socket.SOCK_STREAM, ('::1', 1235)),
                           self.__server._acl, self.__server._zone_config,
                           self.__server._counters),

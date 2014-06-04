@@ -178,10 +178,10 @@ def make_blocking(filenum, on):
     fcntl.fcntl(filenum, fcntl.F_SETFL, flags)
 
 class XfroutSession():
-    def __init__(self, sock_fd, request_data, server, tsig_key_ring, remote,
+    def __init__(self, sock, request_data, server, tsig_key_ring, remote,
                  default_acl, zone_config, counters,
                  client_class=DataSourceClient):
-        self._sock_fd = sock_fd
+        self._sock = sock
         self._request_data = request_data
         self._server = server
         self._tsig_key_ring = tsig_key_ring
@@ -201,7 +201,8 @@ class XfroutSession():
         self._handle()
 
     def create_tsig_ctx(self, tsig_record, tsig_key_ring):
-        return TSIGContext(tsig_record.get_name(), tsig_record.get_rdata().get_algorithm(),
+        return TSIGContext(tsig_record.get_name(),
+                           tsig_record.get_rdata().get_algorithm(),
                            tsig_key_ring)
 
     def _handle(self):
@@ -219,8 +220,8 @@ class XfroutSession():
             # Before start, make sure the socket uses blocking I/O because
             # responses will be sent in the blocking mode; otherwise it could
             # result in EWOULDBLOCK and disrupt the session.
-            make_blocking(self._sock_fd, True)
-            self.dns_xfrout_start(self._sock_fd, self._request_data, quota_ok)
+            make_blocking(self._sock.fileno(), True)
+            self.dns_xfrout_start(self._request_data, quota_ok)
         except Exception as e:
             # To avoid resource leak we need catch all possible exceptions
             # We log it later to exclude the case where even logger raises
@@ -242,7 +243,7 @@ class XfroutSession():
         for the convenience of tests.
 
         '''
-        os.close(self._sock_fd)
+        self._sock.close()
 
     def _check_request_tsig(self, msg, request_data):
         ''' If request has a tsig record, perform tsig related checks '''
@@ -332,15 +333,14 @@ class XfroutSession():
             return self._zone_config[config_key]['transfer_acl']
         return self._acl
 
-    def _send_data(self, sock_fd, data):
+    def _send_data(self, data):
         size = len(data)
         total_count = 0
         while total_count < size:
-            count = os.write(sock_fd, data[total_count:])
+            count = self._sock.send(data[total_count:])
             total_count += count
 
-
-    def _send_message(self, sock_fd, msg, tsig_ctx=None):
+    def _send_message(self, msg, tsig_ctx=None):
         render = MessageRenderer()
         # As defined in RFC5936 section3.4, perform case-preserving name
         # compression for AXFR message.
@@ -350,17 +350,17 @@ class XfroutSession():
         msg.to_wire(render, tsig_ctx)
 
         header_len = struct.pack('H', socket.htons(render.get_length()))
-        self._send_data(sock_fd, header_len)
-        self._send_data(sock_fd, render.get_data())
+        self._send_data(header_len)
+        self._send_data(render.get_data())
 
 
-    def _reply_query_with_error_rcode(self, msg, sock_fd, rcode_):
+    def _reply_query_with_error_rcode(self, msg, rcode_):
         if not msg:
             return # query message is invalid. send nothing back.
 
         msg.make_response()
         msg.set_rcode(rcode_)
-        self._send_message(sock_fd, msg, self._tsig_ctx)
+        self._send_message(msg, self._tsig_ctx)
 
     def _get_zone_soa(self, zone_name):
         '''Retrieve the SOA RR of the given zone.
@@ -517,22 +517,20 @@ class XfroutSession():
         else:
             return self.__ixfr_setup(request_msg, zone_name, zone_class)
 
-    def dns_xfrout_start(self, sock_fd, msg_query, quota_ok=True):
+    def dns_xfrout_start(self, msg_query, quota_ok=True):
         rcode_, msg = self._parse_query_message(msg_query)
         #TODO. create query message and parse header
         if rcode_ is None: # Dropped by ACL
             return
         elif rcode_ == Rcode.NOTAUTH or rcode_ == Rcode.REFUSED:
-            return self._reply_query_with_error_rcode(msg, sock_fd, rcode_)
+            return self._reply_query_with_error_rcode(msg, rcode_)
         elif rcode_ != Rcode.NOERROR:
-            return self._reply_query_with_error_rcode(msg, sock_fd,
-                                                      Rcode.FORMERR)
+            return self._reply_query_with_error_rcode(msg, Rcode.FORMERR)
         elif not quota_ok:
             logger.warn(XFROUT_QUERY_QUOTA_EXCEEDED, self._request_typestr,
                         format_addrinfo(self._remote),
                         self._server._max_transfers_out)
-            return self._reply_query_with_error_rcode(msg, sock_fd,
-                                                      Rcode.REFUSED)
+            return self._reply_query_with_error_rcode(msg, Rcode.REFUSED)
 
         question = msg.get_question()[0]
         zone_name = question.get_name()
@@ -548,7 +546,7 @@ class XfroutSession():
         if rcode_ != Rcode.NOERROR:
             logger.info(XFROUT_XFR_TRANSFER_FAILED, self._request_typestr,
                         format_addrinfo(self._remote), zone_str, rcode_)
-            return self._reply_query_with_error_rcode(msg, sock_fd, rcode_)
+            return self._reply_query_with_error_rcode(msg, rcode_)
 
         try:
             # increment Xfr starts by RRType
@@ -558,7 +556,7 @@ class XfroutSession():
                 self._counters.inc('ixfr_running')
             logger.info(XFROUT_XFR_TRANSFER_STARTED, self._request_typestr,
                         format_addrinfo(self._remote), zone_str)
-            self._reply_xfrout_query(msg, sock_fd)
+            self._reply_xfrout_query(msg)
         except Exception as err:
             # count unixsockets send errors
             self._counters.inc('socket', 'unixdomain', 'senderr')
@@ -589,8 +587,7 @@ class XfroutSession():
         msg.set_header_flag(Message.HEADERFLAG_QR)
         return msg
 
-    def _send_message_with_last_soa(self, msg, sock_fd, rrset_soa,
-                                    message_upper_len):
+    def _send_message_with_last_soa(self, msg, rrset_soa, message_upper_len):
         '''Add the SOA record to the end of message.
 
         If it would exceed the maximum allowable size of a message, a new
@@ -602,13 +599,13 @@ class XfroutSession():
         '''
         if message_upper_len + get_rrset_len(rrset_soa) > \
                 XFROUT_MAX_MESSAGE_SIZE:
-            self._send_message(sock_fd, msg, self._tsig_ctx)
+            self._send_message(msg, self._tsig_ctx)
             msg = self._clear_message(msg)
 
         msg.add_rrset(Message.SECTION_ANSWER, rrset_soa)
-        self._send_message(sock_fd, msg, self._tsig_ctx)
+        self._send_message(msg, self._tsig_ctx)
 
-    def _reply_xfrout_query(self, msg, sock_fd):
+    def _reply_xfrout_query(self, msg):
         msg.make_response()
         msg.set_header_flag(Message.HEADERFLAG_AA)
         # Reserved space for the fixed header size, the size of the question
@@ -622,8 +619,7 @@ class XfroutSession():
         # If the iterator is None, we are responding to IXFR with a single
         # SOA RR.
         if self._iterator is None:
-            self._send_message_with_last_soa(msg, sock_fd, self._soa,
-                                             message_upper_len)
+            self._send_message_with_last_soa(msg, self._soa, message_upper_len)
             return
 
         # Add the beginning SOA
@@ -654,7 +650,7 @@ class XfroutSession():
 
             # RR would not fit.  If there are other RRs in the buffer, send
             # them now and leave this RR to the next message.
-            self._send_message(sock_fd, msg, self._tsig_ctx)
+            self._send_message(msg, self._tsig_ctx)
 
             # Create a new message and reserve space for the carried-over
             # RR (and TSIG space in case it's to be TSIG signed)
@@ -674,8 +670,7 @@ class XfroutSession():
             msg.add_rrset(Message.SECTION_ANSWER, rrset)
 
         # Add and send the trailing SOA
-        self._send_message_with_last_soa(msg, sock_fd, self._soa,
-                                         message_upper_len)
+        self._send_message_with_last_soa(msg, self._soa, message_upper_len)
 
 class XfroutServer(BUNDYServer):
     """The top-level server class for Xfrout.
@@ -1021,10 +1016,10 @@ class XfroutServer(BUNDYServer):
             zone_config = self._zone_config
         remote = (sock.family, sock.type, remote_addr)
 
-        # XfroutSession is basically exception free, and takes care of any
+        # XfroutSession ctor is basically exception free, and takes care of any
         # cleanup on failure, so we just construct it.  The constructor will
         # complete the request.
-        XfroutSession(sock.fileno(), req_data, self,
+        XfroutSession(sock, req_data, self,
                       bundy.server_common.tsig_keyring.get_keyring(),
                       remote, acl, zone_config, self._counters)
 
