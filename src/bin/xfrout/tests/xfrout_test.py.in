@@ -1913,6 +1913,10 @@ class TestXfroutServer(unittest.TestCase):
         notify_out.NotifyOut = self.__notify_out_orig
         sys.stdout = self.__old_stdout
 
+        # Counter is maintained globally (bad design), so we need to clear
+        # every time.
+        self.__server._counters.clear_all()
+
         # Creating (Mock)XfroutServer will create the well-known socket file,
         # which would make some tests fail.
         if os.path.exists(xfrout.UNIX_SOCKET_FILE):
@@ -1927,6 +1931,11 @@ class TestXfroutServer(unittest.TestCase):
 
     def get_keyring(self):
         return 'test-ring'
+
+    def test_unixsocket_open(self):
+        # check statistics counter
+        self.assertEqual(
+            self.__server._counters.get('socket', 'unixdomain', 'open'), 1)
 
     def test_setup_module(self):
         # minimal initialization with a faked initial config for 'also_notify'
@@ -1971,6 +1980,10 @@ class TestXfroutServer(unittest.TestCase):
         self.assertTrue(self.__server._shutdown_event.is_set())
         self.assertTrue(self.__server._notifier.shutdown_called)
         self.assertTrue(self.__thread_joined)
+
+        # Check statistics counter
+        self.assertEqual(
+            self.__server._counters.get('socket', 'unixdomain', 'close'), 1)
 
     def test_notify_command(self):
         from bundy.config import parse_answer
@@ -2165,6 +2178,20 @@ class TestXfroutServer(unittest.TestCase):
         self.assertRaises(SystemExit, self.__server._remove_unused_sock_file,
                           self.__temp_sock_file)
 
+    def test_sock_file_bind_fail(self):
+        # cancel _remove_unused_sock_file with a dummy method, and cause
+        # duplicate bind().  confirm it results in an exception and statistics
+        # counter is incremented.
+        self.__remove_file(self.__temp_sock_file)
+        self.__server._remove_unused_sock_file = lambda x: None
+        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        sock.bind(self.__temp_sock_file)
+        self.assertRaises(OSError, self.__server._setup_listen_socket,
+                          self.__temp_sock_file)
+        self.assertEqual(self.__server._counters.get(
+            'socket', 'unixdomain', 'bindfail'), 1)
+        sock.close()
+
     def test_remove_unused_sock_file_dir(self):
         import tempfile
         dir_name = tempfile.mkdtemp()
@@ -2208,6 +2235,10 @@ class TestXfroutServer(unittest.TestCase):
         self.__server._handle_request = lambda s: 42
         self.assertEqual(42, cb())
 
+        # Check statistics counter
+        self.assertEqual(
+            self.__server._counters.get('socket', 'unixdomain', 'accept'), 1)
+
     def test_accept_forward_fail(self):
         """
         Test we don't crash if an accept fails and that we don't modify the
@@ -2224,6 +2255,10 @@ class TestXfroutServer(unittest.TestCase):
         self.__server._accept_forwarder()
         # And nothing is stored
         self.assertEqual({}, self.__server._socksession_receivers)
+        # check the acceptfail statistics counter
+        self.assertEqual(
+            self.__server._counters.get('socket', 'unixdomain', 'acceptfail'),
+            1)
         # Now make the socket receiver fail
         self.__server._listen_socket.accept = orig
         def receiver_failure(sock):
@@ -2286,6 +2321,25 @@ class TestXfroutServer(unittest.TestCase):
         self.__server._handle_request(3)
         self.assertFalse(3 in self.__server._socksession_receivers)
         self.assertFalse(3 in self.__server.rcallbacks)
+
+        # Check statistics
+        self.assertEqual(self.__server._counters.get(
+            'socket', 'unixdomain', 'recverr'), 1)
+
+    def statistics_defaults(self):
+        # by default, getting access to statistics counters causes exception.
+        self.assertRaises(bundy.cc.data.DataNotFoundError,
+                          self.__server._counters.get,
+                          'socket','unixdomain', 'close')
+        self.assertRaises(bundy.cc.data.DataNotFoundError,
+                          self.__server._counters.get,
+                          'socket', 'unixdomain', 'accept')
+        self.assertRaises(bundy.cc.data.DataNotFoundError,
+                          self.__server._counters.get,
+                          'socket', 'unixdomain', 'acceptfail')
+        self.assertRaises(bundy.cc.data.DataNotFoundError,
+                          self.__server._counters.get,
+                          'socket', 'unixdomain', 'recverr')
 
 if __name__== "__main__":
     bundy.log.resetUnitTestRootLogger()

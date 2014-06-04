@@ -1196,7 +1196,11 @@ class NewXfroutServer(BUNDYServer):
         """Set up a UNIX domain socket to receive forwarded xfr queries."""
         self._remove_unused_sock_file(sock_file)
         self._listen_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        self._listen_socket.bind(sock_file)
+        try:
+            self._listen_socket.bind(sock_file)
+        except:                 # catch it just for statistics
+            self._counters.inc('socket', 'unixdomain', 'bindfail')
+            raise
         self._listen_socket.listen(16)
         self._counters.inc('socket', 'unixdomain', 'open')
         self.watch_fileno(self._listen_socket, self._accept_forwarder)
