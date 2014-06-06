@@ -270,14 +270,16 @@ LabelSequence::isAbsolute() const {
 }
 
 size_t
-LabelSequence::getHash(bool case_sensitive) const {
+LabelSequence::getHashHelper(bool case_sensitive,
+                             unsigned int seed,
+                             size_t max_length) const {
     size_t length;
     const uint8_t* s = getData(&length);
-    if (length > 16) {
-        length = 16;
+    if ((max_length != 0) && (length > max_length)) {
+        length = max_length;
     }
 
-    size_t hash_val = 0;
+    size_t hash_val = seed;
     while (length > 0) {
         const uint8_t c = *s++;
         boost::hash_combine(hash_val, case_sensitive ? c :

@@ -360,6 +360,23 @@ private:
     /// \return a string representation of the <code>LabelSequence</code>.
     std::string toText(bool omit_final_dot) const;
 
+    /// \brief Support for public hash routines.
+    ///
+    /// This method combines the hash value generation code that is
+    /// identical for both the <code>LabelSequence::getHash()</code> and
+    /// <code>LabelSequence::getFullHash()</code> methods.
+    ///
+    /// \exception None
+    ///
+    /// \param case_sensitive See getHash() for details.
+    /// \param seed an arbitrary value to be used as the seed for hash
+    /// calculation. This is 0 for getHash().
+    /// \param max_length Maximum length of the label to use for the hash.
+    /// This is 16 for getHash() and 0 (no maximum) for getFullHash.
+    /// \return A hash value for this label sequence.
+    size_t getHashHelper(bool case_sensitive, unsigned int seed,
+                         size_t max_length) const;
+
 public:
     /// \brief Calculate a simple hash for the label sequence.
     ///
@@ -382,9 +399,33 @@ public:
     ///
     /// \exception None
     ///
-    /// \param case_sensitive
+    /// \param case_sensitive See above
     /// \return A hash value for this label sequence.
-    size_t getHash(bool case_sensitive) const;
+    size_t getHash(bool case_sensitive) const {
+        return getHashHelper(case_sensitive, 0, 16);
+    }
+
+    /// \brief Calculate a hash value for the label sequence with a separate
+    /// seed.
+    ///
+    /// This method is similar to getHash(), but calculates the hash over
+    /// the entire data of the label sequence with a (usually externally
+    /// unpredictable) separate seed value.  The resulting hash value is
+    /// therefore considered reasonably unpredictable.
+    ///
+    /// In general, the user of this function is expected to use the same
+    /// \c seed value for any call to this method to get consistent results.
+    ///
+    /// \throw None.
+    ///
+    /// \param case_sensitive Same as getHash().
+    /// \param seed an arbitrary value to be used as the seed for hash
+    /// calculation.
+    ///
+    /// \return A hash value for this label sequence.
+    size_t getFullHash(bool case_sensitive, unsigned int seed) const {
+        return getHashHelper(case_sensitive, seed, 0);
+    }
 
     /// \brief Checks whether the label sequence is absolute
     ///
