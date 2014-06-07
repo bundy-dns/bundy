@@ -187,6 +187,19 @@ class Dbserver:
     def decrease_transfers_counter(self):
         self.transfer_counter -= 1
 
+# A simple lightweight fake of the Python Thread class.  It actually doesn't
+# spawn a thread; the start() method simply calls the target passed to the
+# constructor from the main thread.
+class FakeThread:
+    def __init__(self, target, args):
+        self.__target = target
+        self.__args = args
+        self.daemon = False
+
+    def start(self):
+        assert(self.daemon)     # in our usage threads have to be daemonized
+        self.__target(*self.__args)
+
 class TestUtility(unittest.TestCase):
     """Test some utility functions."""
 
@@ -328,6 +341,15 @@ class TestXfroutSessionBase(unittest.TestCase):
         self.xfrsess._counters.clear_all()
 
 class TestXfroutSession(TestXfroutSessionBase):
+    def setUp(self):
+        super().setUp()
+        self.__orig_thread_class = xfrout.threading.Thread
+        xfrout.threading.Thread = FakeThread
+
+    def tearDown(self):
+        xfrout.threading.Thread = self.__orig_thread_class
+        super().tearDown()
+
     def test_quota_error(self):
         '''Emulating the server being too busy.
 
@@ -615,12 +637,12 @@ class TestXfroutSession(TestXfroutSessionBase):
         xfrout.XfroutResponder = MyResponder
 
         # if the passed message is None, the call is no-op
-        self.xfrsess._reply_query_with_error_rcode(None, Rcode.NXDOMAIN)
+        self.xfrsess._reply_with_error_rcode(None, Rcode.NXDOMAIN)
         self.assertFalse(respond_with_rcode_params)
 
         # just check the expected responder method is called (msg content
         # doesn't matter)
-        self.xfrsess._reply_query_with_error_rcode(True, Rcode.NXDOMAIN)
+        self.xfrsess._reply_with_error_rcode(True, Rcode.NXDOMAIN)
         self.assertEqual([(True, Rcode.NXDOMAIN)], respond_with_rcode_params)
 
     def test_get_rrset_len(self):
@@ -1436,19 +1458,6 @@ class FakeSessionReceiver:
         inspect the socket passed to the constructor.
         """
         return self._socket
-
-# A simple lightweight fake of the Python Thread class.  It actually doesn't
-# spawn a thread; the start() method simply calls the target passed to the
-# constructor from the main thread.
-class FakeThread:
-    def __init__(self, target, args):
-        self.__target = target
-        self.__args = args
-        self.daemon = False
-
-    def start(self):
-        assert(self.daemon)     # in our usage threads have to be daemonized
-        self.__target(*self.__args)
 
 class TestXfroutServer(unittest.TestCase):
     def setUp(self):

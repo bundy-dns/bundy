@@ -347,14 +347,17 @@ class XfroutSession():
             return self._zone_config[config_key]['transfer_acl']
         return self._acl
 
-    def _reply_query_with_error_rcode(self, msg, rcode):
+    def _reply_with_error_rcode(self, msg, rcode):
         if not msg:
             return # query message is invalid. send nothing back.
 
         responder = XfroutResponder(self._sock, self._server, self._soa,
                                     self._iterator, self._jnl_reader,
                                     self._tsig_ctx, self._tsig_len)
-        responder.respond_with_rcode(msg, rcode)
+        th = threading.Thread(target=responder.respond_with_rcode,
+                              args=(msg, rcode))
+        th.daemon = True
+        th.start()
 
     def _get_zone_soa(self, zone_name):
         '''Retrieve the SOA RR of the given zone.
@@ -517,14 +520,14 @@ class XfroutSession():
         if rcode_ is None: # Dropped by ACL
             return
         elif rcode_ == Rcode.NOTAUTH or rcode_ == Rcode.REFUSED:
-            return self._reply_query_with_error_rcode(msg, rcode_)
+            return self._reply_with_error_rcode(msg, rcode_)
         elif rcode_ != Rcode.NOERROR:
-            return self._reply_query_with_error_rcode(msg, Rcode.FORMERR)
+            return self._reply_with_error_rcode(msg, Rcode.FORMERR)
         elif not quota_ok:
             logger.warn(XFROUT_QUERY_QUOTA_EXCEEDED, self._request_typestr,
                         format_addrinfo(self._remote),
                         self._server._max_transfers_out)
-            return self._reply_query_with_error_rcode(msg, Rcode.REFUSED)
+            return self._reply_with_error_rcode(msg, Rcode.REFUSED)
 
         question = msg.get_question()[0]
         zone_name = question.get_name()
@@ -540,7 +543,7 @@ class XfroutSession():
         if rcode_ != Rcode.NOERROR:
             logger.info(XFROUT_XFR_TRANSFER_FAILED, self._request_typestr,
                         format_addrinfo(self._remote), zone_str, rcode_)
-            return self._reply_query_with_error_rcode(msg, rcode_)
+            return self._reply_with_error_rcode(msg, rcode_)
 
         try:
             # increment Xfr starts by RRType
