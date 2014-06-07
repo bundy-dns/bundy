@@ -610,11 +610,6 @@ class TestXfroutSession(TestXfroutSessionBase):
                          self.xfrsess._get_transfer_acl(Name('EXAMPLE.COM'),
                                                         RRClass.IN))
 
-    def test_send_data(self):
-        self.xfrsess._send_data(self.mdata)
-        senddata = self.sock.readsent()
-        self.assertEqual(senddata, self.mdata)
-
     def test_reply_xfrout_query_with_error_rcode(self):
         msg = self.getmsg()
         self.xfrsess._reply_query_with_error_rcode(msg, Rcode(3))
@@ -628,157 +623,6 @@ class TestXfroutSession(TestXfroutSessionBase):
         get_msg = self.sock.read_msg()
         self.assertEqual(get_msg.get_rcode().to_text(), "NXDOMAIN")
         self.assertTrue(self.message_has_tsig(get_msg))
-
-    def test_send_message(self):
-        msg = self.getmsg()
-        msg.make_response()
-        # SOA record data with different cases
-        soa_rrset = RRset(Name('Example.com.'), RRClass.IN, RRType.SOA,
-                               RRTTL(3600))
-        soa_rrset.add_rdata(Rdata(RRType.SOA, RRClass.IN,
-                                  'master.Example.com. admin.exAmple.com. ' +
-                                  '2011112001 3600 1800 2419200 7200'))
-        msg.add_rrset(Message.SECTION_ANSWER, soa_rrset)
-        self.xfrsess._send_message(msg)
-        send_out_data = self.sock.readsent()[2:]
-
-        # CASE_INSENSITIVE compression mode
-        render = MessageRenderer();
-        render.set_length_limit(XFROUT_MAX_MESSAGE_SIZE)
-        msg.to_wire(render)
-        self.assertNotEqual(render.get_data(), send_out_data)
-
-        # CASE_SENSITIVE compression mode
-        render.clear()
-        render.set_compress_mode(MessageRenderer.CASE_SENSITIVE)
-        render.set_length_limit(XFROUT_MAX_MESSAGE_SIZE)
-        msg.to_wire(render)
-        self.assertEqual(render.get_data(), send_out_data)
-
-    def test_clear_message(self):
-        msg = self.getmsg()
-        qid = msg.get_qid()
-        opcode = msg.get_opcode()
-        rcode = msg.get_rcode()
-
-        self.xfrsess._clear_message(msg)
-        self.assertEqual(msg.get_qid(), qid)
-        self.assertEqual(msg.get_opcode(), opcode)
-        self.assertEqual(msg.get_rcode(), rcode)
-        self.assertTrue(msg.get_header_flag(Message.HEADERFLAG_AA))
-
-    def test_send_message_with_last_soa(self):
-        msg = self.getmsg()
-        msg.make_response()
-
-        self.xfrsess._send_message_with_last_soa(msg, self.soa_rrset, 0)
-        get_msg = self.sock.read_msg()
-        # tsig context does not exist
-        self.assertFalse(self.message_has_tsig(get_msg))
-
-        self.assertEqual(get_msg.get_rr_count(Message.SECTION_QUESTION), 1)
-        self.assertEqual(get_msg.get_rr_count(Message.SECTION_ANSWER), 1)
-        self.assertEqual(get_msg.get_rr_count(Message.SECTION_AUTHORITY), 0)
-
-        answer = get_msg.get_section(Message.SECTION_ANSWER)[0]
-        self.assertEqual(answer.get_name().to_text(), "example.com.")
-        self.assertEqual(answer.get_class(), RRClass("IN"))
-        self.assertEqual(answer.get_type().to_text(), "SOA")
-        rdata = answer.get_rdata()
-        self.assertEqual(rdata[0], self.soa_rrset.get_rdata()[0])
-
-        # Sending the message with last soa together
-        self.xfrsess._send_message_with_last_soa(msg, self.soa_rrset, 0)
-        get_msg = self.sock.read_msg()
-        # tsig context does not exist
-        self.assertFalse(self.message_has_tsig(get_msg))
-
-    def test_send_message_with_last_soa_with_tsig(self):
-        # create tsig context
-        self.xfrsess._tsig_ctx = self.create_mock_tsig_ctx(TSIGError.NOERROR)
-
-        msg = self.getmsg()
-        msg.make_response()
-
-        # Sending the message with last soa together
-        self.xfrsess._send_message_with_last_soa(msg, self.soa_rrset, 0)
-        get_msg = self.sock.read_msg()
-        self.assertTrue(self.message_has_tsig(get_msg))
-
-        self.assertEqual(get_msg.get_rr_count(Message.SECTION_QUESTION), 1)
-        self.assertEqual(get_msg.get_rr_count(Message.SECTION_ANSWER), 1)
-        self.assertEqual(get_msg.get_rr_count(Message.SECTION_AUTHORITY), 0)
-
-    def test_trigger_send_message_with_last_soa(self):
-        rrset_a = RRset(Name("example.com"), RRClass.IN, RRType.A, RRTTL(3600))
-        rrset_a.add_rdata(Rdata(RRType.A, RRClass.IN, "192.0.2.1"))
-
-        msg = self.getmsg()
-        msg.make_response()
-        msg.add_rrset(Message.SECTION_ANSWER, rrset_a)
-
-        # length larger than MAX-len(rrset)
-        length_need_split = xfrout.XFROUT_MAX_MESSAGE_SIZE - \
-            get_rrset_len(self.soa_rrset) + 1
-
-        # give the function a value that is larger than MAX-len(rrset)
-        # this should have triggered the sending of two messages
-        # (1 with the rrset we added manually, and 1 that triggered
-        # the sending in _with_last_soa)
-        self.xfrsess._send_message_with_last_soa(msg, self.soa_rrset,
-                                                 length_need_split)
-        get_msg = self.sock.read_msg()
-        self.assertFalse(self.message_has_tsig(get_msg))
-        self.assertEqual(get_msg.get_rr_count(Message.SECTION_QUESTION), 1)
-        self.assertEqual(get_msg.get_rr_count(Message.SECTION_ANSWER), 1)
-        self.assertEqual(get_msg.get_rr_count(Message.SECTION_AUTHORITY), 0)
-
-        answer = get_msg.get_section(Message.SECTION_ANSWER)[0]
-        self.assertEqual(answer.get_name().to_text(), "example.com.")
-        self.assertEqual(answer.get_class(), RRClass("IN"))
-        self.assertEqual(answer.get_type().to_text(), "A")
-        rdata = answer.get_rdata()
-        self.assertEqual(rdata[0].to_text(), "192.0.2.1")
-
-        get_msg = self.sock.read_msg()
-        self.assertFalse(self.message_has_tsig(get_msg))
-        self.assertEqual(get_msg.get_rr_count(Message.SECTION_QUESTION), 0)
-        self.assertEqual(get_msg.get_rr_count(Message.SECTION_ANSWER), 1)
-        self.assertEqual(get_msg.get_rr_count(Message.SECTION_AUTHORITY), 0)
-
-        answer = get_msg.get_section(Message.SECTION_ANSWER)[0]
-        self.assertEqual(answer.get_name().to_text(), "example.com.")
-        self.assertEqual(answer.get_class(), RRClass("IN"))
-        self.assertEqual(answer.get_type().to_text(), "SOA")
-        rdata = answer.get_rdata()
-        self.assertEqual(rdata[0], self.soa_rrset.get_rdata()[0])
-
-        # and it should not have sent anything else
-        self.assertEqual(0, len(self.sock.sendqueue))
-
-    def test_trigger_send_message_with_last_soa_with_tsig(self):
-        self.xfrsess._tsig_ctx = self.create_mock_tsig_ctx(TSIGError.NOERROR)
-        msg = self.getmsg()
-        msg.make_response()
-        msg.add_rrset(Message.SECTION_ANSWER, self.soa_rrset)
-
-        # length larger than MAX-len(rrset)
-        length_need_split = xfrout.XFROUT_MAX_MESSAGE_SIZE - \
-            get_rrset_len(self.soa_rrset) + 1
-
-        # give the function a value that is larger than MAX-len(rrset)
-        # this should have triggered the sending of two messages
-        # (1 with the rrset we added manually, and 1 that triggered
-        # the sending in _with_last_soa)
-        self.xfrsess._send_message_with_last_soa(msg, self.soa_rrset,
-                                                 length_need_split)
-        # Both messages should have TSIG RRs
-        get_msg = self.sock.read_msg()
-        self.assertTrue(self.message_has_tsig(get_msg))
-        get_msg = self.sock.read_msg()
-        self.assertTrue(self.message_has_tsig(get_msg))
-        # and it should not have sent anything else
-        self.assertEqual(0, len(self.sock.sendqueue))
 
     def test_get_rrset_len(self):
         self.assertEqual(82, get_rrset_len(self.soa_rrset))
@@ -940,28 +784,200 @@ class TestXfroutSession(TestXfroutSessionBase):
             return Rcode.NOERROR
         self.xfrsess._xfrout_setup = noerror
 
-        def myreply(msg):
-            self.xfrsess._sock.send(b"success")
+        class MyResponder:
+            def __init__(self, sock, *args):
+                self.__sock = sock
+
+            def respond(self, msg):
+                self.__sock.send(b"success")
 
         self.assertRaises(bundy.cc.data.DataNotFoundError,
                           self.xfrsess._counters.get,
                           'zones', TEST_RRCLASS_STR,
                           TEST_ZONE_NAME_STR, 'xfrreqdone')
-        self.xfrsess._reply_xfrout_query = myreply
+        self.xfrsess._responder_class = MyResponder
         self.xfrsess.dns_xfrout_start(self.mdata)
         self.assertEqual(self.sock.readsent(), b"success")
         self.assertGreater(self.xfrsess._counters.get(
             'zones', TEST_RRCLASS_STR, TEST_ZONE_NAME_STR,
             'xfrreqdone'), 0)
 
-    def test_reply_xfrout_query_axfr(self):
-        self.xfrsess._soa = self.soa_rrset
-        self.xfrsess._iterator = [self.soa_rrset]
-        self.xfrsess._reply_xfrout_query(self.getmsg())
+class TestXfroutResponder(TestXfroutSessionBase):
+    def setUp(self):
+        super().setUp()
+        xfrsess = self.xfrsess
+        iterator = None
+        self.__responder = XfroutResponder(xfrsess._sock, xfrsess._server,
+                                           xfrsess._soa, iterator,
+                                           xfrsess._jnl_reader,
+                                           xfrsess._tsig_ctx, xfrsess._tsig_len)
+
+    def test_send_data(self):
+        self.__responder._send_data(self.mdata)
+        senddata = self.sock.readsent()
+        self.assertEqual(senddata, self.mdata)
+
+    def test_send_message(self):
+        msg = self.getmsg()
+        msg.make_response()
+        # SOA record data with different cases
+        soa_rrset = RRset(Name('Example.com.'), RRClass.IN, RRType.SOA,
+                               RRTTL(3600))
+        soa_rrset.add_rdata(Rdata(RRType.SOA, RRClass.IN,
+                                  'master.Example.com. admin.exAmple.com. ' +
+                                  '2011112001 3600 1800 2419200 7200'))
+        msg.add_rrset(Message.SECTION_ANSWER, soa_rrset)
+        self.__responder._send_message(msg)
+        send_out_data = self.sock.readsent()[2:]
+
+        # CASE_INSENSITIVE compression mode
+        render = MessageRenderer();
+        render.set_length_limit(XFROUT_MAX_MESSAGE_SIZE)
+        msg.to_wire(render)
+        self.assertNotEqual(render.get_data(), send_out_data)
+
+        # CASE_SENSITIVE compression mode
+        render.clear()
+        render.set_compress_mode(MessageRenderer.CASE_SENSITIVE)
+        render.set_length_limit(XFROUT_MAX_MESSAGE_SIZE)
+        msg.to_wire(render)
+        self.assertEqual(render.get_data(), send_out_data)
+
+    def test_clear_message(self):
+        msg = self.getmsg()
+        qid = msg.get_qid()
+        opcode = msg.get_opcode()
+        rcode = msg.get_rcode()
+
+        self.__responder._clear_message(msg)
+        self.assertEqual(msg.get_qid(), qid)
+        self.assertEqual(msg.get_opcode(), opcode)
+        self.assertEqual(msg.get_rcode(), rcode)
+        self.assertTrue(msg.get_header_flag(Message.HEADERFLAG_AA))
+
+    def test_send_message_with_last_soa(self):
+        msg = self.getmsg()
+        msg.make_response()
+
+        self.__responder._send_message_with_last_soa(msg, self.soa_rrset, 0)
+        get_msg = self.sock.read_msg()
+        # tsig context does not exist
+        self.assertFalse(self.message_has_tsig(get_msg))
+
+        self.assertEqual(get_msg.get_rr_count(Message.SECTION_QUESTION), 1)
+        self.assertEqual(get_msg.get_rr_count(Message.SECTION_ANSWER), 1)
+        self.assertEqual(get_msg.get_rr_count(Message.SECTION_AUTHORITY), 0)
+
+        answer = get_msg.get_section(Message.SECTION_ANSWER)[0]
+        self.assertEqual(answer.get_name().to_text(), "example.com.")
+        self.assertEqual(answer.get_class(), RRClass("IN"))
+        self.assertEqual(answer.get_type().to_text(), "SOA")
+        rdata = answer.get_rdata()
+        self.assertEqual(rdata[0], self.soa_rrset.get_rdata()[0])
+
+        # Sending the message with last soa together
+        self.__responder._send_message_with_last_soa(msg, self.soa_rrset, 0)
+        get_msg = self.sock.read_msg()
+        # tsig context does not exist
+        self.assertFalse(self.message_has_tsig(get_msg))
+
+    def test_send_message_with_last_soa_with_tsig(self):
+        # create tsig context
+        self.__responder._tsig_ctx = \
+            self.create_mock_tsig_ctx(TSIGError.NOERROR)
+
+        msg = self.getmsg()
+        msg.make_response()
+
+        # Sending the message with last soa together
+        self.__responder._send_message_with_last_soa(msg, self.soa_rrset, 0)
+        get_msg = self.sock.read_msg()
+        self.assertTrue(self.message_has_tsig(get_msg))
+
+        self.assertEqual(get_msg.get_rr_count(Message.SECTION_QUESTION), 1)
+        self.assertEqual(get_msg.get_rr_count(Message.SECTION_ANSWER), 1)
+        self.assertEqual(get_msg.get_rr_count(Message.SECTION_AUTHORITY), 0)
+
+    def test_trigger_send_message_with_last_soa(self):
+        rrset_a = RRset(Name("example.com"), RRClass.IN, RRType.A, RRTTL(3600))
+        rrset_a.add_rdata(Rdata(RRType.A, RRClass.IN, "192.0.2.1"))
+
+        msg = self.getmsg()
+        msg.make_response()
+        msg.add_rrset(Message.SECTION_ANSWER, rrset_a)
+
+        # length larger than MAX-len(rrset)
+        length_need_split = xfrout.XFROUT_MAX_MESSAGE_SIZE - \
+            get_rrset_len(self.soa_rrset) + 1
+
+        # give the function a value that is larger than MAX-len(rrset)
+        # this should have triggered the sending of two messages
+        # (1 with the rrset we added manually, and 1 that triggered
+        # the sending in _with_last_soa)
+        self.__responder._send_message_with_last_soa(msg, self.soa_rrset,
+                                                     length_need_split)
+        get_msg = self.sock.read_msg()
+        self.assertFalse(self.message_has_tsig(get_msg))
+        self.assertEqual(get_msg.get_rr_count(Message.SECTION_QUESTION), 1)
+        self.assertEqual(get_msg.get_rr_count(Message.SECTION_ANSWER), 1)
+        self.assertEqual(get_msg.get_rr_count(Message.SECTION_AUTHORITY), 0)
+
+        answer = get_msg.get_section(Message.SECTION_ANSWER)[0]
+        self.assertEqual(answer.get_name().to_text(), "example.com.")
+        self.assertEqual(answer.get_class(), RRClass("IN"))
+        self.assertEqual(answer.get_type().to_text(), "A")
+        rdata = answer.get_rdata()
+        self.assertEqual(rdata[0].to_text(), "192.0.2.1")
+
+        get_msg = self.sock.read_msg()
+        self.assertFalse(self.message_has_tsig(get_msg))
+        self.assertEqual(get_msg.get_rr_count(Message.SECTION_QUESTION), 0)
+        self.assertEqual(get_msg.get_rr_count(Message.SECTION_ANSWER), 1)
+        self.assertEqual(get_msg.get_rr_count(Message.SECTION_AUTHORITY), 0)
+
+        answer = get_msg.get_section(Message.SECTION_ANSWER)[0]
+        self.assertEqual(answer.get_name().to_text(), "example.com.")
+        self.assertEqual(answer.get_class(), RRClass("IN"))
+        self.assertEqual(answer.get_type().to_text(), "SOA")
+        rdata = answer.get_rdata()
+        self.assertEqual(rdata[0], self.soa_rrset.get_rdata()[0])
+
+        # and it should not have sent anything else
+        self.assertEqual(0, len(self.sock.sendqueue))
+
+    def test_trigger_send_message_with_last_soa_with_tsig(self):
+        self.__responder._tsig_ctx = \
+            self.create_mock_tsig_ctx(TSIGError.NOERROR)
+        msg = self.getmsg()
+        msg.make_response()
+        msg.add_rrset(Message.SECTION_ANSWER, self.soa_rrset)
+
+        # length larger than MAX-len(rrset)
+        length_need_split = xfrout.XFROUT_MAX_MESSAGE_SIZE - \
+            get_rrset_len(self.soa_rrset) + 1
+
+        # give the function a value that is larger than MAX-len(rrset)
+        # this should have triggered the sending of two messages
+        # (1 with the rrset we added manually, and 1 that triggered
+        # the sending in _with_last_soa)
+        self.__responder._send_message_with_last_soa(msg, self.soa_rrset,
+                                                     length_need_split)
+        # Both messages should have TSIG RRs
+        get_msg = self.sock.read_msg()
+        self.assertTrue(self.message_has_tsig(get_msg))
+        get_msg = self.sock.read_msg()
+        self.assertTrue(self.message_has_tsig(get_msg))
+        # and it should not have sent anything else
+        self.assertEqual(0, len(self.sock.sendqueue))
+
+    def test_respond_axfr(self):
+        self.__responder._soa = self.soa_rrset
+        self.__responder._iterator = [self.soa_rrset]
+        self.__responder.respond(self.getmsg())
         reply_msg = self.sock.read_msg()
         self.assertEqual(reply_msg.get_rr_count(Message.SECTION_ANSWER), 2)
 
-    def test_reply_xfrout_query_axfr_with_tsig(self):
+    def test_respond_axfr_with_tsig(self):
         rrset = RRset(Name('a.example.com'), RRClass.IN, RRType.A,
                       RRTTL(3600))
         rrset.add_rdata(Rdata(RRType.A, RRClass.IN, '192.0.2.1'))
@@ -970,12 +986,13 @@ class TestXfroutSession(TestXfroutSessionBase):
         def get_rrset_len(rrset):
             return 65520
 
-        self.xfrsess._soa = self.soa_rrset
-        self.xfrsess._iterator = [rrset for i in range(0, 100)]
+        self.__responder._soa = self.soa_rrset
+        self.__responder._iterator = [rrset for i in range(0, 100)]
         xfrout.get_rrset_len = get_rrset_len
 
-        self.xfrsess._tsig_ctx = self.create_mock_tsig_ctx(TSIGError.NOERROR)
-        self.xfrsess._reply_xfrout_query(self.getmsg())
+        self.__responder._tsig_ctx = \
+            self.create_mock_tsig_ctx(TSIGError.NOERROR)
+        self.__responder.respond(self.getmsg())
 
         # All messages must have TSIG as we don't support the feature of
         # skipping intermediate TSIG records (with bulk signing).
@@ -989,21 +1006,22 @@ class TestXfroutSession(TestXfroutSessionBase):
         # and it should not have sent anything else
         self.assertEqual(0, len(self.sock.sendqueue))
 
-    def test_reply_xfrout_query_ixfr(self):
+    def test_respond_ixfr(self):
         # Creating a pure (incremental) IXFR response.  Intermediate SOA
         # RRs won't be skipped.
-        self.xfrsess._soa = create_soa(SOA_CURRENT_VERSION)
-        self.xfrsess._iterator = [create_soa(IXFR_OK_VERSION),
-                                  create_a(Name('a.example.com'), '192.0.2.2'),
-                                  create_soa(SOA_CURRENT_VERSION),
-                                  create_aaaa(Name('a.example.com'),
-                                              '2001:db8::1')]
-        self.xfrsess._jnl_reader = self.xfrsess._iterator
-        self.xfrsess._reply_xfrout_query(self.getmsg())
+        self.__responder._soa = create_soa(SOA_CURRENT_VERSION)
+        self.__responder._iterator = [create_soa(IXFR_OK_VERSION),
+                                      create_a(Name('a.example.com'),
+                                               '192.0.2.2'),
+                                      create_soa(SOA_CURRENT_VERSION),
+                                      create_aaaa(Name('a.example.com'),
+                                                  '2001:db8::1')]
+        self.__responder._jnl_reader = self.__responder._iterator
+        self.__responder.respond(self.getmsg())
         reply_msg = self.sock.read_msg(Message.PRESERVE_ORDER)
         actual_records = reply_msg.get_section(Message.SECTION_ANSWER)
 
-        expected_records = self.xfrsess._iterator[:]
+        expected_records = self.__responder._iterator[:]
         expected_records.insert(0, create_soa(SOA_CURRENT_VERSION))
         expected_records.append(create_soa(SOA_CURRENT_VERSION))
 
@@ -1011,14 +1029,14 @@ class TestXfroutSession(TestXfroutSessionBase):
         for (expected_rr, actual_rr) in zip(expected_records, actual_records):
             self.assertTrue(rrsets_equal(expected_rr, actual_rr))
 
-    def test_reply_xfrout_query_axfr_maxlen(self):
+    def test_respond_axfr_maxlen(self):
         # The test RR(set) has the length of 65535 - 12 (size of hdr) bytes:
         # owner name = 1 (root), fixed fields (type,class,TTL,RDLEN) = 10
         # RDATA = 65512 (= 65535 - 12 - 1 - 10)
-        self.xfrsess._soa = self.soa_rrset
+        self.__responder._soa = self.soa_rrset
         test_rr = create_generic(Name('.'), 65512)
-        self.xfrsess._iterator = [self.soa_rrset, test_rr]
-        self.xfrsess._reply_xfrout_query(self.getmsg())
+        self.__responder._iterator = [self.soa_rrset, test_rr]
+        self.__responder.respond(self.getmsg())
         # The first message should contain the beginning SOA, and only that RR
         r = self.sock.read_msg()
         self.assertEqual(1, r.get_rr_count(Message.SECTION_ANSWER))
@@ -1055,11 +1073,11 @@ class TestXfroutSession(TestXfroutSessionBase):
         soa = RRset(Name('.'), RRClass.IN, RRType.SOA, RRTTL(3600))
         soa.add_rdata(Rdata(RRType.SOA, RRClass.IN, '. . 0 0 0 0 0'))
         self.mdata = self.create_request_data(zone_name=Name('.'))
-        self.xfrsess._soa = soa
+        self.__responder._soa = soa
         if tsig:
-            self.xfrsess._tsig_ctx = \
+            self.__responder._tsig_ctx = \
                 self.create_mock_tsig_ctx(TSIGError.NOERROR)
-            self.xfrsess._tsig_len = 81
+            self.__responder._tsig_len = 81
         return soa
 
     def maxlen_test_common_checks(self, soa_rr, test_rr, expected_n_rr):
@@ -1097,7 +1115,7 @@ class TestXfroutSession(TestXfroutSessionBase):
         # there should be no more message
         self.assertEqual(0, len(self.sock.sendqueue))
 
-    def test_reply_xfrout_query_axfr_maxlen_with_soa(self):
+    def test_respond_axfr_maxlen_with_soa(self):
         # Similar to the 'maxlen' test, but the first message should be
         # able to contain both SOA and the large RR.
         soa = self.maxlen_test_common_setup()
@@ -1105,45 +1123,45 @@ class TestXfroutSession(TestXfroutSessionBase):
         # The first message will contain the question (5 bytes), so the
         # test RDATA should allow a room for that.
         test_rr = create_generic(Name('.'), 65512 - 5 - get_rrset_len(soa))
-        self.xfrsess._iterator = [soa, test_rr]
-        self.xfrsess._reply_xfrout_query(self.getmsg())
+        self.__responder._iterator = [soa, test_rr]
+        self.__responder.respond(self.getmsg())
         self.maxlen_test_common_checks(soa, test_rr, [2, 1])
 
-    def test_reply_xfrout_query_axfr_maxlen_with_soa_with_tsig(self):
+    def test_respond_axfr_maxlen_with_soa_with_tsig(self):
         # Similar to the previous case, but with TSIG (whose size is 81 bytes).
         soa = self.maxlen_test_common_setup(True)
         test_rr = create_generic(Name('.'), 65512 - 5 - 81 -
                                  get_rrset_len(soa))
-        self.xfrsess._iterator = [soa, test_rr]
-        self.xfrsess._reply_xfrout_query(self.getmsg())
+        self.__responder._iterator = [soa, test_rr]
+        self.__responder.respond(self.getmsg())
         self.maxlen_test_common_checks(soa, test_rr, [2, 1])
 
-    def test_reply_xfrout_query_axfr_maxlen_with_endsoa(self):
+    def test_respond_axfr_maxlen_with_endsoa(self):
         # Similar to the max w/ soa test, but the first message cannot contain
         # both SOA and the long RR due to the question section.  The second
         # message should be able to contain both.
         soa = self.maxlen_test_common_setup()
         test_rr = create_generic(Name('.'), 65512 - get_rrset_len(soa))
-        self.xfrsess._iterator = [soa, test_rr]
-        self.xfrsess._reply_xfrout_query(self.getmsg())
+        self.__responder._iterator = [soa, test_rr]
+        self.__responder.respond(self.getmsg())
         self.maxlen_test_common_checks(soa, test_rr, [1, 2])
 
-    def test_reply_xfrout_query_axfr_maxlen_with_endsoa_with_tsig(self):
+    def test_respond_axfr_maxlen_with_endsoa_with_tsig(self):
         # Similar to the previous case, but with TSIG.
         soa = self.maxlen_test_common_setup(True)
         test_rr = create_generic(Name('.'), 65512 - 81 - get_rrset_len(soa))
-        self.xfrsess._iterator = [soa, test_rr]
-        self.xfrsess._reply_xfrout_query(self.getmsg())
+        self.__responder._iterator = [soa, test_rr]
+        self.__responder.respond(self.getmsg())
         self.maxlen_test_common_checks(soa, test_rr, [1, 2])
 
-    def test_reply_xfrout_query_axfr_toobigdata(self):
+    def test_respond_axfr_toobigdata(self):
         # Similar to the 'maxlen' test, but the RR doesn't even fit in a
         # single message.
-        self.xfrsess._soa = self.soa_rrset
+        self.__responder._soa = self.soa_rrset
         test_rr = create_generic(Name('.'), 65513) # 1 byte larger than 'max'
-        self.xfrsess._iterator = [self.soa_rrset, test_rr]
+        self.__responder._iterator = [self.soa_rrset, test_rr]
         # the reply method should fail with exception
-        self.assertRaises(XfroutSessionError, self.xfrsess._reply_xfrout_query,
+        self.assertRaises(XfroutSessionError, self.__responder.respond,
                           self.getmsg())
         # The first message should still have been sent and contain the
         # beginning SOA, and only that RR
@@ -1154,13 +1172,13 @@ class TestXfroutSession(TestXfroutSessionBase):
         # And there should have been no other messages sent
         self.assertEqual(0, len(self.sock.sendqueue))
 
-    def test_reply_xfrout_query_ixfr_soa_only(self):
+    def test_respond_ixfr_soa_only(self):
         # Creating an IXFR response that contains only one RR, which is the
         # SOA of the current version.
-        self.xfrsess._soa = create_soa(SOA_CURRENT_VERSION)
-        self.xfrsess._iterator = None
-        self.xfrsess._jnl_reader = None
-        self.xfrsess._reply_xfrout_query(self.getmsg())
+        self.__responder._soa = create_soa(SOA_CURRENT_VERSION)
+        self.__responder._iterator = None
+        self.__responder._jnl_reader = None
+        self.__responder.respond(self.getmsg())
         reply_msg = self.sock.read_msg(Message.PRESERVE_ORDER)
         answer = reply_msg.get_section(Message.SECTION_ANSWER)
         self.assertEqual(1, len(answer))

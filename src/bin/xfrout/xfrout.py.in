@@ -192,13 +192,17 @@ class XfroutSession():
         self._request_typestr = None
         self._acl = default_acl
         self._zone_config = zone_config
-        self.ClientClass = client_class # parameterize this for testing
         self._soa = None # will be set in _xfrout_setup or in tests
+        self._iterator = None # will be set to a reader for AXFR
         self._jnl_reader = None # will be set to a reader for IXFR
         # Creation of self.counters should be done before of
         # invoking self._handle()
         self._counters = counters
         self._handle()
+
+        # These are parameterized for testing; they are essentially constant.
+        self.ClientClass = client_class
+        self._responder_class = XfroutResponder
 
     def create_tsig_ctx(self, tsig_record, tsig_key_ring):
         return TSIGContext(tsig_record.get_name(),
@@ -352,7 +356,6 @@ class XfroutSession():
         header_len = struct.pack('H', socket.htons(render.get_length()))
         self._send_data(header_len)
         self._send_data(render.get_data())
-
 
     def _reply_query_with_error_rcode(self, msg, rcode_):
         if not msg:
@@ -556,7 +559,11 @@ class XfroutSession():
                 self._counters.inc('ixfr_running')
             logger.info(XFROUT_XFR_TRANSFER_STARTED, self._request_typestr,
                         format_addrinfo(self._remote), zone_str)
-            self._reply_xfrout_query(msg)
+            responder = self._responder_class(self._sock, self._server,
+                                              self._soa, self._iterator,
+                                              self._jnl_reader, self._tsig_ctx,
+                                              self._tsig_len)
+            responder.respond(msg)
         except Exception as err:
             # count unixsockets send errors
             self._counters.inc('socket', 'unixdomain', 'senderr')
@@ -574,6 +581,37 @@ class XfroutSession():
         logger.info(XFROUT_XFR_TRANSFER_DONE, self._request_typestr,
                     format_addrinfo(self._remote), zone_str)
 
+class XfroutResponder():
+    def __init__(self, sock, server, soa, iterator, jnl_reader, tsig_ctx,
+                 tsig_len):
+        self._sock = sock
+        self._server = server
+        self._soa = soa
+        self._iterator = iterator
+        self._jnl_reader = jnl_reader
+        self._tsig_ctx = tsig_ctx
+        self._tsig_len = tsig_len
+
+    def _send_data(self, data):
+        size = len(data)
+        total_count = 0
+        while total_count < size:
+            count = self._sock.send(data[total_count:])
+            total_count += count
+
+    def _send_message(self, msg, tsig_ctx=None):
+        render = MessageRenderer()
+        # As defined in RFC5936 section3.4, perform case-preserving name
+        # compression for AXFR message.
+        render.set_compress_mode(MessageRenderer.CASE_SENSITIVE)
+        render.set_length_limit(XFROUT_MAX_MESSAGE_SIZE)
+
+        msg.to_wire(render, tsig_ctx)
+
+        header_len = struct.pack('H', socket.htons(render.get_length()))
+        self._send_data(header_len)
+        self._send_data(render.get_data())
+
     def _clear_message(self, msg):
         qid = msg.get_qid()
         opcode = msg.get_opcode()
@@ -587,25 +625,7 @@ class XfroutSession():
         msg.set_header_flag(Message.HEADERFLAG_QR)
         return msg
 
-    def _send_message_with_last_soa(self, msg, rrset_soa, message_upper_len):
-        '''Add the SOA record to the end of message.
-
-        If it would exceed the maximum allowable size of a message, a new
-        message will be created to send out the last SOA.
-
-        We assume a message with a single SOA can always fit the buffer
-        with or without TSIG.  In theory this could be wrong if TSIG is
-        stupidly large, but in practice this assumption should be reasonable.
-        '''
-        if message_upper_len + get_rrset_len(rrset_soa) > \
-                XFROUT_MAX_MESSAGE_SIZE:
-            self._send_message(msg, self._tsig_ctx)
-            msg = self._clear_message(msg)
-
-        msg.add_rrset(Message.SECTION_ANSWER, rrset_soa)
-        self._send_message(msg, self._tsig_ctx)
-
-    def _reply_xfrout_query(self, msg):
+    def respond(self, msg):
         msg.make_response()
         msg.set_header_flag(Message.HEADERFLAG_AA)
         # Reserved space for the fixed header size, the size of the question
@@ -671,6 +691,24 @@ class XfroutSession():
 
         # Add and send the trailing SOA
         self._send_message_with_last_soa(msg, self._soa, message_upper_len)
+
+    def _send_message_with_last_soa(self, msg, rrset_soa, message_upper_len):
+        '''Add the SOA record to the end of message.
+
+        If it would exceed the maximum allowable size of a message, a new
+        message will be created to send out the last SOA.
+
+        We assume a message with a single SOA can always fit the buffer
+        with or without TSIG.  In theory this could be wrong if TSIG is
+        stupidly large, but in practice this assumption should be reasonable.
+        '''
+        if message_upper_len + get_rrset_len(rrset_soa) > \
+                XFROUT_MAX_MESSAGE_SIZE:
+            self._send_message(msg, self._tsig_ctx)
+            msg = self._clear_message(msg)
+
+        msg.add_rrset(Message.SECTION_ANSWER, rrset_soa)
+        self._send_message(msg, self._tsig_ctx)
 
 class XfroutServer(BUNDYServer):
     """The top-level server class for Xfrout.
