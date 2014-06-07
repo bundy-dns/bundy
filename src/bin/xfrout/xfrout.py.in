@@ -595,13 +595,15 @@ class XfroutResponder():
         build the response.
 
         """
+        # The class attributes are essentially private, but most of them are
+        # defined as 'protected' so test code can inspect or tweak them.
         if opt_args:
             (self._soa,
              self._iterator,
              self._jnl_reader,
              self._tsig_len) = opt_args
         self._sock = sock
-        self._server = server
+        self.__server = server
         self._tsig_ctx = tsig_ctx
 
     def _send_data(self, data):
@@ -666,7 +668,7 @@ class XfroutResponder():
         # Add the rest of the zone/diff contets
         for rrset in self._iterator:
             # Check if xfrout is shutdown
-            if  self._server._shutdown_event.is_set():
+            if  self.__server._shutdown_event.is_set():
                 logger.info(XFROUT_STOPPING)
                 return
 
