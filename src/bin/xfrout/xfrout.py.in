@@ -178,6 +178,17 @@ def make_blocking(filenum, on):
     fcntl.fcntl(filenum, fcntl.F_SETFL, flags)
 
 class XfroutSession():
+    """Handle a single xfrout session.
+
+    This class is responsible for handling an xfrout session:
+    - parse the query
+    - authenticate the client
+    - build response
+    - send response
+    The latter half, which can be time consuming and/or involve blocking
+    operations, is delegated to a helper class, XfroutResponder.
+
+    """
     def __init__(self, sock, request_data, server, tsig_key_ring, remote,
                  default_acl, zone_config, counters,
                  client_class=DataSourceClient):
@@ -192,17 +203,16 @@ class XfroutSession():
         self._request_typestr = None
         self._acl = default_acl
         self._zone_config = zone_config
+        self.ClientClass = client_class # parameterize this for testing
         self._soa = None # will be set in _xfrout_setup or in tests
-        self._iterator = None # will be set to a reader for AXFR
+        self._iterator = None # will be set to an iterator to build response
         self._jnl_reader = None # will be set to a reader for IXFR
         # Creation of self.counters should be done before of
         # invoking self._handle()
         self._counters = counters
-        self._handle()
 
-        # These are parameterized for testing; they are essentially constant.
-        self.ClientClass = client_class
-        self._responder_class = XfroutResponder
+        # Now handle the xfr query.
+        self._handle()
 
     def create_tsig_ctx(self, tsig_record, tsig_key_ring):
         return TSIGContext(tsig_record.get_name(),
@@ -337,33 +347,14 @@ class XfroutSession():
             return self._zone_config[config_key]['transfer_acl']
         return self._acl
 
-    def _send_data(self, data):
-        size = len(data)
-        total_count = 0
-        while total_count < size:
-            count = self._sock.send(data[total_count:])
-            total_count += count
-
-    def _send_message(self, msg, tsig_ctx=None):
-        render = MessageRenderer()
-        # As defined in RFC5936 section3.4, perform case-preserving name
-        # compression for AXFR message.
-        render.set_compress_mode(MessageRenderer.CASE_SENSITIVE)
-        render.set_length_limit(XFROUT_MAX_MESSAGE_SIZE)
-
-        msg.to_wire(render, tsig_ctx)
-
-        header_len = struct.pack('H', socket.htons(render.get_length()))
-        self._send_data(header_len)
-        self._send_data(render.get_data())
-
-    def _reply_query_with_error_rcode(self, msg, rcode_):
+    def _reply_query_with_error_rcode(self, msg, rcode):
         if not msg:
             return # query message is invalid. send nothing back.
 
-        msg.make_response()
-        msg.set_rcode(rcode_)
-        self._send_message(msg, self._tsig_ctx)
+        responder = XfroutResponder(self._sock, self._server, self._soa,
+                                    self._iterator, self._jnl_reader,
+                                    self._tsig_ctx, self._tsig_len)
+        responder.respond_with_rcode(msg, rcode)
 
     def _get_zone_soa(self, zone_name):
         '''Retrieve the SOA RR of the given zone.
@@ -559,10 +550,10 @@ class XfroutSession():
                 self._counters.inc('ixfr_running')
             logger.info(XFROUT_XFR_TRANSFER_STARTED, self._request_typestr,
                         format_addrinfo(self._remote), zone_str)
-            responder = self._responder_class(self._sock, self._server,
-                                              self._soa, self._iterator,
-                                              self._jnl_reader, self._tsig_ctx,
-                                              self._tsig_len)
+            responder = XfroutResponder(self._sock, self._server,
+                                        self._soa, self._iterator,
+                                        self._jnl_reader, self._tsig_ctx,
+                                        self._tsig_len)
             responder.respond(msg)
         except Exception as err:
             # count unixsockets send errors
@@ -582,6 +573,13 @@ class XfroutSession():
                     format_addrinfo(self._remote), zone_str)
 
 class XfroutResponder():
+    """Build and send an xfr response.
+
+    This is a helper class of XfroutSession, and deals with time consuming
+    operations (iterating over possibly large zone data and sending it
+    to the client).
+
+    """
     def __init__(self, sock, server, soa, iterator, jnl_reader, tsig_ctx,
                  tsig_len):
         self._sock = sock
@@ -624,6 +622,11 @@ class XfroutResponder():
         msg.set_header_flag(Message.HEADERFLAG_AA)
         msg.set_header_flag(Message.HEADERFLAG_QR)
         return msg
+
+    def respond_with_rcode(self, msg, rcode):
+        msg.make_response()
+        msg.set_rcode(rcode)
+        self._send_message(msg, self._tsig_ctx)
 
     def respond(self, msg):
         msg.make_response()

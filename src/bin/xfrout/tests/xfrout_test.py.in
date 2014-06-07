@@ -174,16 +174,6 @@ class MyXfroutSession(XfroutSession):
     def _handle(self):
         pass
 
-    def _close_socket(self):
-        pass
-
-    def _send_data(self, data):
-        size = len(data)
-        total_count = 0
-        while total_count < size:
-            count = self._sock.send(data[total_count:])
-            total_count += count
-
 class Dbserver:
     def __init__(self):
         self._shutdown_event = threading.Event()
@@ -305,6 +295,8 @@ class TestXfroutSessionBase(unittest.TestCase):
         self._make_blocking_history = []
         xfrout.make_blocking = lambda x, y: self.__make_blocking(x, y)
 
+        self.__orig_responder_class = xfrout.XfroutResponder
+
         self.sock = MySocket(socket.AF_INET,socket.SOCK_STREAM)
         self.xfrsess = MyXfroutSession(self.sock, None, Dbserver(),
                                        TSIGKeyRing(),
@@ -328,6 +320,7 @@ class TestXfroutSessionBase(unittest.TestCase):
     def tearDown(self):
         xfrout.make_blocking = self.__orig_make_blocking
         xfrout.get_rrset_len = self.orig_get_rrset_len
+        xfrout.XfroutResponder = self.__orig_responder_class
         # transfer_counter must be always be reset no matter happens within
         # the XfroutSession object.  We check the condition here.
         self.assertEqual(0, self.xfrsess._server.transfer_counter)
@@ -610,19 +603,25 @@ class TestXfroutSession(TestXfroutSessionBase):
                          self.xfrsess._get_transfer_acl(Name('EXAMPLE.COM'),
                                                         RRClass.IN))
 
-    def test_reply_xfrout_query_with_error_rcode(self):
-        msg = self.getmsg()
-        self.xfrsess._reply_query_with_error_rcode(msg, Rcode(3))
-        get_msg = self.sock.read_msg()
-        self.assertEqual(get_msg.get_rcode().to_text(), "NXDOMAIN")
+    def test_reply_with_error_rcode(self):
+        respond_with_rcode_params = []
+        class MyResponder:
+            def __init__(self, sock, *args):
+                self.__sock = sock
 
-        # tsig signed message
-        msg = self.getmsg()
-        self.xfrsess._tsig_ctx = self.create_mock_tsig_ctx(TSIGError.NOERROR)
-        self.xfrsess._reply_query_with_error_rcode(msg, Rcode(3))
-        get_msg = self.sock.read_msg()
-        self.assertEqual(get_msg.get_rcode().to_text(), "NXDOMAIN")
-        self.assertTrue(self.message_has_tsig(get_msg))
+            def respond_with_rcode(self, msg, rcode):
+                respond_with_rcode_params.append((msg, rcode))
+
+        xfrout.XfroutResponder = MyResponder
+
+        # if the passed message is None, the call is no-op
+        self.xfrsess._reply_query_with_error_rcode(None, Rcode.NXDOMAIN)
+        self.assertFalse(respond_with_rcode_params)
+
+        # just check the expected responder method is called (msg content
+        # doesn't matter)
+        self.xfrsess._reply_query_with_error_rcode(True, Rcode.NXDOMAIN)
+        self.assertEqual([(True, Rcode.NXDOMAIN)], respond_with_rcode_params)
 
     def test_get_rrset_len(self):
         self.assertEqual(82, get_rrset_len(self.soa_rrset))
@@ -795,7 +794,7 @@ class TestXfroutSession(TestXfroutSessionBase):
                           self.xfrsess._counters.get,
                           'zones', TEST_RRCLASS_STR,
                           TEST_ZONE_NAME_STR, 'xfrreqdone')
-        self.xfrsess._responder_class = MyResponder
+        xfrout.XfroutResponder = MyResponder
         self.xfrsess.dns_xfrout_start(self.mdata)
         self.assertEqual(self.sock.readsent(), b"success")
         self.assertGreater(self.xfrsess._counters.get(
@@ -1184,6 +1183,21 @@ class TestXfroutResponder(TestXfroutSessionBase):
         self.assertEqual(1, len(answer))
         self.assertTrue(rrsets_equal(create_soa(SOA_CURRENT_VERSION),
                                      answer[0]))
+
+    def test_respond_with_rcode(self):
+        msg = self.getmsg()
+        self.__responder.respond_with_rcode(msg, Rcode(3))
+        get_msg = self.sock.read_msg()
+        self.assertEqual(get_msg.get_rcode().to_text(), "NXDOMAIN")
+
+        # tsig signed message
+        msg = self.getmsg()
+        self.__responder._tsig_ctx = \
+            self.create_mock_tsig_ctx(TSIGError.NOERROR)
+        self.__responder.respond_with_rcode(msg, Rcode(3))
+        get_msg = self.sock.read_msg()
+        self.assertEqual(get_msg.get_rcode().to_text(), "NXDOMAIN")
+        self.assertTrue(self.message_has_tsig(get_msg))
 
 class TestXfroutSessionWithSQLite3(TestXfroutSessionBase):
     '''Tests for XFR-out sessions using an SQLite3 DB.
