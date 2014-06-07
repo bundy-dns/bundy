@@ -262,7 +262,7 @@ ZoneData::removeNode(util::MemorySegment& mem_sgmt, ZoneNode* node) {
     }
     // We shouldn't remove the origin node.  Since DomainTree::remove() doesn't
     // take care of the case, we need to do the check here.
-    if (node == origin_node_) {
+    if (node == getOriginNode()) {
         return;
     }
     zone_tree_->remove(mem_sgmt, node, nullDeleter);
