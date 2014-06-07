@@ -319,7 +319,9 @@ class TestXfroutSessionBase(unittest.TestCase):
                                        bundy.acl.dns.REQUEST_LOADER.load(
                                            [{"action": "ACCEPT"}]),
                                        {},
-                                       xfrout.Counters(xfrout.SPECFILE_LOCATION))
+                                       xfrout.Counters(
+                                           xfrout.SPECFILE_LOCATION))
+        self.xfrsess._server._counters = self.xfrsess._counters
         self.set_request_type(RRType.AXFR) # test AXFR by default
         self.mdata = self.create_request_data()
         self.soa_rrset = create_soa(SOA_CURRENT_VERSION)
@@ -805,11 +807,12 @@ class TestXfroutSession(TestXfroutSessionBase):
             return Rcode.NOERROR
         self.xfrsess._xfrout_setup = noerror
 
-        class MyResponder:
+        class MyResponder(xfrout.XfroutResponder):
             def __init__(self, sock, *args):
+                super().__init__(sock, *args)
                 self.__sock = sock
 
-            def respond(self, msg):
+            def _do_respond(self, msg):
                 self.__sock.send(b"success")
 
         self.assertRaises(bundy.cc.data.DataNotFoundError,
@@ -829,8 +832,11 @@ class TestXfroutResponder(TestXfroutSessionBase):
         xfrsess = self.xfrsess
         iterator = None
         self.__responder = XfroutResponder(xfrsess._sock, xfrsess._server,
-                                           xfrsess._tsig_ctx, xfrsess._soa,
-                                           iterator, xfrsess._jnl_reader,
+                                           xfrsess._tsig_ctx, xfrsess._remote,
+                                           TEST_ZONE_NAME, TEST_RRCLASS,
+                                           xfrsess._request_type,
+                                           xfrsess._soa, iterator,
+                                           xfrsess._jnl_reader,
                                            xfrsess._tsig_len)
 
     def test_send_data(self):

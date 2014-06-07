@@ -548,17 +548,11 @@ class XfroutSession():
             return self._reply_with_error_rcode(msg, rcode_)
 
         try:
-            # increment Xfr starts by RRType
-            if self._request_type == RRType.AXFR:
-                self._counters.inc('axfr_running')
-            else:
-                self._counters.inc('ixfr_running')
-            logger.info(XFROUT_XFR_TRANSFER_STARTED, self._request_typestr,
-                        format_addrinfo(self._remote), zone_str)
             responder = XfroutResponder(self._sock, self._server,
-                                        self._tsig_ctx, self._soa,
-                                        self._iterator, self._jnl_reader,
-                                        self._tsig_len)
+                                        self._tsig_ctx, self._remote, zone_name,
+                                        zone_class, self._request_type,
+                                        self._soa, self._iterator,
+                                        self._jnl_reader, self._tsig_len)
             th = threading.Thread(target=responder.respond, args=(msg,))
             th.daemon = True
             th.start()
@@ -567,17 +561,6 @@ class XfroutSession():
             self._counters.inc('socket', 'unixdomain', 'senderr')
             logger.error(XFROUT_XFR_TRANSFER_ERROR, self._request_typestr,
                     format_addrinfo(self._remote), zone_str, err)
-        finally:
-            # decrement Xfr starts by RRType
-            if self._request_type == RRType.AXFR:
-                self._counters.dec('axfr_running')
-            else:
-                self._counters.dec('ixfr_running')
-        # count done Xfr requests by each zone name
-        self._counters.inc('zones', zone_class.to_text(),
-                           zone_name.to_text(), 'xfrreqdone')
-        logger.info(XFROUT_XFR_TRANSFER_DONE, self._request_typestr,
-                    format_addrinfo(self._remote), zone_str)
 
 class XfroutResponder():
     """Build and send an xfr response.
@@ -598,13 +581,18 @@ class XfroutResponder():
         # The class attributes are essentially private, but most of them are
         # defined as 'protected' so test code can inspect or tweak them.
         if opt_args:
-            (self._soa,
+            (self.__remote,     # tuple: see format_addrinfo()
+             self.__zone_name,  # dns.Name, the zone name to be transferred
+             self.__zone_class, # dns.RRClass, the RR class of the zone
+             self.__req_type,   # dns.RRType: either AXFR or IXFR
+             self._soa,
              self._iterator,
              self._jnl_reader,
              self._tsig_len) = opt_args
         self._sock = sock
         self.__server = server
         self._tsig_ctx = tsig_ctx
+        self.__counters = self.__server._counters
 
     def _send_data(self, data):
         size = len(data)
@@ -644,7 +632,32 @@ class XfroutResponder():
         msg.set_rcode(rcode)
         self._send_message(msg, self._tsig_ctx)
 
+    def __update_running_counter(self, update_fn, req_type):
+        update_fn('axfr_running' if req_type == RRType.AXFR else 'ixfr_running')
+
     def respond(self, msg):
+        """Public interface to building and sending a normal response."""
+        zone_str = format_zone_str(self.__zone_name, self.__zone_class)
+        logger.info(XFROUT_XFR_TRANSFER_STARTED, self.__req_type,
+                    format_addrinfo(self.__remote), zone_str)
+
+        self.__update_running_counter(self.__counters.inc, self.__req_type)
+        try:
+            self._do_respond(msg)
+        finally:
+            self.__update_running_counter(self.__counters.dec, self.__req_type)
+        self.__counters.inc('zones', self.__zone_class.to_text(),
+                            self.__zone_name.to_text(), 'xfrreqdone')
+        logger.info(XFROUT_XFR_TRANSFER_DONE, self.__req_type,
+                    format_addrinfo(self.__remote), zone_str)
+
+    def _do_respond(self, msg):
+        """Perform actual job of building and sending a normal response.
+
+        This is essentially a dedicated private subroutine of respond(),
+        but defined as 'protected' so tests can replace it.
+
+        """
         msg.make_response()
         msg.set_header_flag(Message.HEADERFLAG_AA)
         # Reserved space for the fixed header size, the size of the question
