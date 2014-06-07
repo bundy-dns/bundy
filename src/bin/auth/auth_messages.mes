@@ -195,6 +195,17 @@ errors such as severe memory shortage or some internal bug.  If that
 happens, and if it's not in the middle of terminating bundy-auth, it's
 probably better to stop and restart it.
 
+% AUTH_DATASRC_CLIENTS_SKIP_SEGMENT_RESET skipped resetting memory segment for %1/%2 that is not in use.
+The data source builder thread received a command to reset a shared
+memory segment for zone data provided that the segment is currently
+used by the authoritative server, but the segment was acutally not
+in use, and the command was ignored.  This can happen in normal
+initialization, i.e., both the authoritative server and the memory
+manager just starts.  This initial reset command is just for segment
+reader modules to be synchronized with the memory manager, and the
+actual reset will be delayed until the memory manager completes
+building the segment data with any un-applied updates.
+
 % AUTH_DATA_SOURCE data source database file: %1
 This is a debug message produced by the authoritative server when it accesses a
 database data source, listing the file that is being accessed.

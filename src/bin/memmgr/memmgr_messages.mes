@@ -87,12 +87,12 @@ for a zone from other module.
 % MEMMGR_LOADZONE_FAIL failed to handle command: %1
 Error happend in handling the zoneload command.
 
-% MEMMGR_LOAD_COMPLETED load completed for '%1/%2', %3 new load command, %4 readers notified
+% MEMMGR_COMMAND_COMPLETED %1 command completed for '%2/%3', %4 more command, %5 readers notified
 An informational message.  The memmgr was notified from a helper
-thread of the completion of loading zone data.  The corresponding data
-source and RR class names are shown.  It also shows whether a new load
-command was immediately sent to the thread, and how many segment
-readers were notified.
+thread of the completion of validating or loading zone data.  The
+corresponding data source and RR class names are shown.  It also shows
+whether a new command was immediately sent to the thread, and how many
+segment readers were notified.
 
 % MEMMGR_NO_DATASRC_CONF failed to add data source configuration: %1
 The memmgr daemon tried to incorporate data source configuration on

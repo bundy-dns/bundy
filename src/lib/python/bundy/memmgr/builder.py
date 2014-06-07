@@ -15,6 +15,7 @@
 
 import json
 from bundy.datasrc import ConfigurableClientList
+import bundy.datasrc
 from bundy.memmgr.datasrc_info import SegmentInfo
 
 from bundy.log_messages.libmemmgr_messages import *
@@ -25,6 +26,11 @@ class MemorySegmentBuilder:
     waits for commands from the memory manager, and then executes them
     in the given order sequentially.
     """
+
+    # Internal return code for __reset_segment()
+    __RESET_SEGMENT_OK = 0
+    __RESET_SEGMENT_FAILED = 1
+    __RESET_SEGMENT_CREATED = 2
 
     def __init__(self, sock, cv, command_queue, response_queue):
         """ The constructor takes the following arguments:
@@ -73,7 +79,54 @@ class MemorySegmentBuilder:
         self._response_queue.append(('bad_command',))
         self._shutdown = True
 
-    def __handle_load(self, zone_name, dsrc_info, rrclass, dsrc_name):
+    def __handle_validate(self, args):
+        """Handle 'validate' command.
+
+        Command arguments are the same 'load' except the last one:
+        'action': callable without any parameter itself, encapsulating
+                  any segment-specific validation logic.  It returns
+                  a result of the validation.
+
+        This method simply calls the passed action, and returns the result
+        back to the memmgr with other command arguments.  This is run in
+        the builder thread simply because it may take time.
+
+        """
+        _, dsrc_info, rrclass, dsrc_name, action = args
+
+        logger.debug(logger.DBGLVL_TRACE_BASIC,
+                     LIBMEMMGR_BUILDER_SEGMENT_VALIDATE, dsrc_name, rrclass)
+        try:
+            result = action()
+        except Exception as ex:
+            logger.error(LIBMEMMGR_BUILDER_SEGMENT_VALIDATE_FAIL, dsrc_name,
+                         rrclass, ex)
+            result = False
+        self._response_queue.append(('validate-completed', dsrc_info, rrclass,
+                                     dsrc_name, result))
+
+    def __reset_segment(self, clist, dsrc_name, rrclass, params):
+        try:
+            clist.reset_memory_segment(dsrc_name,
+                                       ConfigurableClientList.READ_WRITE,
+                                       params)
+            logger.debug(logger.DBGLVL_TRACE_BASIC,
+                         LIBMEMMGR_BUILDER_SEGMENT_RESET, dsrc_name, rrclass)
+            return self.__RESET_SEGMENT_OK
+        except Exception as ex:
+            logger.error(LIBMEMMGR_BUILDER_RESET_SEGMENT_ERROR, dsrc_name,
+                         rrclass, ex)
+        try:
+            clist.reset_memory_segment(dsrc_name, ConfigurableClientList.CREATE,
+                                       params)
+            logger.info(LIBMEMMGR_BUILDER_SEGMENT_CREATED, dsrc_name, rrclass)
+            return self.__RESET_SEGMENT_CREATED
+        except Exception as ex:
+            logger.error(LIBMEMMGR_BUILDER_SEGMENT_CREATE_ERROR, dsrc_name,
+                         rrclass, ex)
+        return self.__RESET_SEGMENT_FAILED
+
+    def _handle_load(self, zone_name, dsrc_info, rrclass, dsrc_name):
         # This method is called when handling the 'load' command. The
         # following tuple is passed:
         #
@@ -92,49 +145,68 @@ class MemorySegmentBuilder:
         #    data source.
         #
         #  * dsrc_name is a string, specifying a data source name.
+        #
+        # This is essentially a 'private' method, but allows tests to call it
+        # directly; for other purposes shouldn't be called outside of the class.
 
         clist = dsrc_info.clients_map[rrclass]
         sgmt_info = dsrc_info.segment_info_map[(rrclass, dsrc_name)]
         params = json.dumps(sgmt_info.get_reset_param(SegmentInfo.WRITER))
-        clist.reset_memory_segment(dsrc_name,
-                                   ConfigurableClientList.READ_WRITE,
-                                   params)
-        logger.debug(logger.DBGLVL_TRACE_BASIC, LIBMEMMGR_BUILDER_SEGMENT_OPEND,
-                     dsrc_name, rrclass)
+        result = self.__reset_segment(clist, dsrc_name, rrclass, params)
+        if result == self.__RESET_SEGMENT_FAILED:
+            self._response_queue.append(('load-completed', dsrc_info, rrclass,
+                                         dsrc_name, False))
+            return
 
+        # If we were told to load a single zone but had to create a new
+        # segment, we'll need to load all zones, not just this one.
+        if result == self.__RESET_SEGMENT_CREATED and zone_name is not None:
+            logger.info(LIBMEMMGR_BUILDER_SEGMENT_LOAD_ALL, zone_name, rrclass,
+                        dsrc_name)
+            zone_name = None
         if zone_name is not None:
             zones = [(None, zone_name)]
         else:
             zones = clist.get_zone_table_accessor(dsrc_name, True)
 
         for _, zone_name in zones:
-            catch_load_error = (zone_name is None) # install empty zone initially
-            result, writer = clist.get_cached_zone_writer(zone_name, catch_load_error,
-                                                          dsrc_name)
-            if result != ConfigurableClientList.CACHE_STATUS_ZONE_SUCCESS:
-                logger.error(LIBMEMMGR_BUILDER_GET_ZONE_WRITER_ERROR, zone_name, dsrc_name)
+            # install empty zone initially
+            catch_load_error = (zone_name is None)
+            try:
+                result, writer = clist.get_cached_zone_writer(zone_name,
+                                                              catch_load_error,
+                                                              dsrc_name)
+                if result != ConfigurableClientList.CACHE_STATUS_ZONE_SUCCESS:
+                    # handle this with other genuine exception below
+                    raise bundy.datasrc.Error('result=%d' % result)
+            except bundy.datasrc.Error as ex:
+                logger.error(LIBMEMMGR_BUILDER_GET_ZONE_WRITER_ERROR,
+                             zone_name, dsrc_name, ex)
                 continue
 
             try:
                 error = writer.load()
                 if error is not None:
-                    logger.error(LIBMEMMGR_BUILDER_ZONE_WRITER_LOAD_1_ERROR, zone_name, dsrc_name, error)
+                    logger.error(LIBMEMMGR_BUILDER_ZONE_WRITER_LOAD_1_ERROR,
+                                 zone_name, dsrc_name, error)
                     continue
+                writer.install()
             except Exception as e:
-                logger.error(LIBMEMMGR_BUILDER_ZONE_WRITER_LOAD_2_ERROR, zone_name, dsrc_name, str(e))
-                continue
-            writer.install()
+                logger.error(LIBMEMMGR_BUILDER_ZONE_WRITER_LOAD_2_ERROR,
+                             zone_name, dsrc_name, e)
+                # fall through to cleanup
             writer.cleanup()
 
         # need to reset the segment so readers can read it (note: memmgr
         # itself doesn't have to keep it open, but there's currently no
-        # public API to just clear the segment)
+        # public API to just clear the segment).  This 'reset' should succeed,
+        # so we'll let any exception be propagated.
         clist.reset_memory_segment(dsrc_name,
                                    ConfigurableClientList.READ_ONLY,
                                    params)
 
         self._response_queue.append(('load-completed', dsrc_info, rrclass,
-                                     dsrc_name))
+                                     dsrc_name, True))
 
     def run(self):
         """ This is the method invoked when the builder thread is
@@ -164,12 +236,16 @@ class MemorySegmentBuilder:
                     command = command_tuple[0]
                     logger.debug(logger.DBGLVL_TRACE_BASIC,
                                  LIBMEMMGR_BUILDER_RECEIVED_COMMAND, command)
-                    if command == 'load':
-                        # See the comments for __handle_load() for
+                    if command == 'validate':
+                        self.__handle_validate(command_tuple)
+                    elif command == 'load':
+                        # See the comments for _handle_load() for
                         # details of the tuple passed to the "load"
                         # command.
-                        _, zone_name, dsrc_info, rrclass, dsrc_name = command_tuple
-                        self.__handle_load(zone_name, dsrc_info, rrclass, dsrc_name)
+                        _, zone_name, dsrc_info, rrclass, dsrc_name = \
+                            command_tuple
+                        self._handle_load(zone_name, dsrc_info, rrclass,
+                                          dsrc_name)
                     elif command == 'shutdown':
                         self.__handle_shutdown()
                         # When the shutdown command is received, we do

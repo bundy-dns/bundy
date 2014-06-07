@@ -672,7 +672,6 @@ private:
                 name(arg->get("data-source-name")->stringValue());
             const bundy::data::ConstElementPtr& segment_params =
                 arg->get("segment-params");
-            typename MutexType::Locker locker(*map_mutex_);
             const boost::shared_ptr<bundy::datasrc::ConfigurableClientList>&
                 list = (**clients_map_)[rrclass];
             if (!list) {
@@ -681,6 +680,23 @@ private:
                     .arg(rrclass);
                 std::terminate();
             }
+            if (arg->contains("inuse-only") &&
+                arg->get("inuse-only")->boolValue()) {
+                BOOST_FOREACH(const datasrc::DataSourceStatus& st,
+                              list->getStatus()) {
+                    if (st.getName() != name) {
+                        continue;
+                    }
+                    if (st.getSegmentState() != bundy::datasrc::SEGMENT_INUSE) {
+                        LOG_DEBUG(auth_logger, DBGLVL_TRACE_BASIC,
+                                  AUTH_DATASRC_CLIENTS_SKIP_SEGMENT_RESET).
+                            arg(name).arg(rrclass);
+                        return;
+                    }
+                }
+            }
+
+            typename MutexType::Locker locker(*map_mutex_);
             if (!list->resetMemorySegment(name,
                     bundy::datasrc::memory::ZoneTableSegment::READ_ONLY,
                     segment_params)) {
@@ -862,7 +878,8 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::doUpdateZone(
                   "/" << rrclass << ": not configured for the class");
     }
 
-    const bundy::data::ConstElementPtr datasrc_name_elem = arg->get("datasource");
+    const bundy::data::ConstElementPtr datasrc_name_elem =
+        arg->get("datasource");
     const std::string& datasrc_name = datasrc_name_elem ?
         datasrc_name_elem->stringValue() : "";
 
