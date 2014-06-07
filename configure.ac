@@ -1688,8 +1688,6 @@ AC_CONFIG_FILES([compatcheck/Makefile
                  src/lib/util/threads/Makefile
                  src/lib/util/threads/tests/Makefile
                  src/lib/util/unittests/Makefile
-                 src/lib/xfr/Makefile
-                 src/lib/xfr/tests/Makefile
                  src/Makefile
                  tests/lettuce/Makefile
                  tests/lettuce/setup_intree_bundy.sh

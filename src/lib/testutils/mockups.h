@@ -22,8 +22,6 @@
 #include <cc/data.h>
 #include <cc/session.h>
 
-#include <xfr/xfrout_client.h>
-
 #include <asiodns/asiodns.h>
 
 #include <utility>
@@ -171,50 +169,6 @@ public:
     virtual int value() { return (0); }
 private:
     bool done_;
-};
-
-// Mock Xfrout client
-class MockXfroutClient : public bundy::xfr::AbstractXfroutClient {
-public:
-    MockXfroutClient() :
-        is_connected_(false), connect_ok_(true), send_ok_(true),
-        disconnect_ok_(true)
-    {}
-
-    virtual void connect() {
-        if (!connect_ok_) {
-            bundy_throw(bundy::xfr::XfroutError,
-                      "xfrout connection disabled for test");
-        }
-        is_connected_ = true;
-    }
-
-    virtual void disconnect() {
-        if (!disconnect_ok_) {
-            bundy_throw(bundy::xfr::XfroutError,
-                      "closing xfrout connection is disabled for test");
-        }
-        is_connected_ = false;
-    }
-
-    virtual int sendXfroutRequestInfo(int, const void*, uint16_t) {
-        if (!send_ok_) {
-            bundy_throw(bundy::xfr::XfroutError,
-                       "xfrout connection send is disabled for test");
-        }
-        return (0);
-    }
-
-    bool isConnected() const { return (is_connected_); }
-    void disableConnect() { connect_ok_ = false; }
-    void disableDisconnect() { disconnect_ok_ = false; }
-    void enableDisconnect() { disconnect_ok_ = true; }
-    void disableSend() { send_ok_ = false; }
-private:
-    bool is_connected_;
-    bool connect_ok_;
-    bool send_ok_;
-    bool disconnect_ok_;
 };
 
 } // end of testutils
