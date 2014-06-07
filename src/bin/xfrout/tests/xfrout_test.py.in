@@ -1187,9 +1187,8 @@ class TestXfroutResponder(TestXfroutSessionBase):
         self.__responder._soa = self.soa_rrset
         test_rr = create_generic(Name('.'), 65513) # 1 byte larger than 'max'
         self.__responder._iterator = [self.soa_rrset, test_rr]
-        # the reply method should fail with exception
-        self.assertRaises(XfroutSessionError, self.__responder.respond,
-                          self.getmsg())
+        # the reply method should fail (error should be logged)
+        self.__responder.respond(self.getmsg())
         # The first message should still have been sent and contain the
         # beginning SOA, and only that RR
         r = self.sock.read_msg()

@@ -557,10 +557,7 @@ class XfroutSession():
             th.daemon = True
             th.start()
         except Exception as err:
-            # count unixsockets send errors
-            self._counters.inc('socket', 'unixdomain', 'senderr')
-            logger.error(XFROUT_XFR_TRANSFER_ERROR, self._request_typestr,
-                    format_addrinfo(self._remote), zone_str, err)
+            pass
 
 class XfroutResponder():
     """Build and send an xfr response.
@@ -644,8 +641,13 @@ class XfroutResponder():
         self.__update_running_counter(self.__counters.inc, self.__req_type)
         try:
             self._do_respond(msg)
-        finally:
-            self.__update_running_counter(self.__counters.dec, self.__req_type)
+        except Exception as err:
+            # count unixsockets send errors
+            self.__counters.inc('socket', 'unixdomain', 'senderr')
+            logger.error(XFROUT_XFR_TRANSFER_ERROR, self.__req_type,
+                    format_addrinfo(self.__remote), zone_str, err)
+
+        self.__update_running_counter(self.__counters.dec, self.__req_type)
         self.__counters.inc('zones', self.__zone_class.to_text(),
                             self.__zone_name.to_text(), 'xfrreqdone')
         logger.info(XFROUT_XFR_TRANSFER_DONE, self.__req_type,
