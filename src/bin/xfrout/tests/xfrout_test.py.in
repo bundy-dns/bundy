@@ -829,9 +829,9 @@ class TestXfroutResponder(TestXfroutSessionBase):
         xfrsess = self.xfrsess
         iterator = None
         self.__responder = XfroutResponder(xfrsess._sock, xfrsess._server,
-                                           xfrsess._soa, iterator,
-                                           xfrsess._jnl_reader,
-                                           xfrsess._tsig_ctx, xfrsess._tsig_len)
+                                           xfrsess._tsig_ctx, xfrsess._soa,
+                                           iterator, xfrsess._jnl_reader,
+                                           xfrsess._tsig_len)
 
     def test_send_data(self):
         self.__responder._send_data(self.mdata)
@@ -1236,6 +1236,12 @@ class TestXfroutSessionWithSQLite3(TestXfroutSessionBase):
         self.xfrsess._server.get_db_file = lambda : TESTDATA_SRCDIR + \
             'test.sqlite3'
         self.ns_name = 'a.dns.example.com.'
+        self.__orig_thread_class = xfrout.threading.Thread
+        xfrout.threading.Thread = FakeThread
+
+    def tearDown(self):
+        xfrout.threading.Thread = self.__orig_thread_class
+        super().tearDown()
 
     def check_axfr_stream(self, response):
         '''Common checks for AXFR(-style) response for the test zone.

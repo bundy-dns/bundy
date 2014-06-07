@@ -351,9 +351,7 @@ class XfroutSession():
         if not msg:
             return # query message is invalid. send nothing back.
 
-        responder = XfroutResponder(self._sock, self._server, self._soa,
-                                    self._iterator, self._jnl_reader,
-                                    self._tsig_ctx, self._tsig_len)
+        responder = XfroutResponder(self._sock, self._server, self._tsig_ctx)
 
         # Start a thread that sends the resposne.  We'll make it as
         # a daemon thread so if the main thread dies unexpectedly the
@@ -558,8 +556,8 @@ class XfroutSession():
             logger.info(XFROUT_XFR_TRANSFER_STARTED, self._request_typestr,
                         format_addrinfo(self._remote), zone_str)
             responder = XfroutResponder(self._sock, self._server,
-                                        self._soa, self._iterator,
-                                        self._jnl_reader, self._tsig_ctx,
+                                        self._tsig_ctx, self._soa,
+                                        self._iterator, self._jnl_reader,
                                         self._tsig_len)
             th = threading.Thread(target=responder.respond, args=(msg,))
             th.daemon = True
@@ -589,15 +587,22 @@ class XfroutResponder():
     to the client).
 
     """
-    def __init__(self, sock, server, soa, iterator, jnl_reader, tsig_ctx,
-                 tsig_len):
+    def __init__(self, sock, server, tsig_ctx, *opt_args):
+        """Constructor.
+
+        XfroutResponder can be constructed for both normal and error responses.
+        For normal responses 'opt_args' will contain other information to
+        build the response.
+
+        """
+        if opt_args:
+            (self._soa,
+             self._iterator,
+             self._jnl_reader,
+             self._tsig_len) = opt_args
         self._sock = sock
         self._server = server
-        self._soa = soa
-        self._iterator = iterator
-        self._jnl_reader = jnl_reader
         self._tsig_ctx = tsig_ctx
-        self._tsig_len = tsig_len
 
     def _send_data(self, data):
         size = len(data)
