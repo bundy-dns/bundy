@@ -354,6 +354,10 @@ class XfroutSession():
         responder = XfroutResponder(self._sock, self._server, self._soa,
                                     self._iterator, self._jnl_reader,
                                     self._tsig_ctx, self._tsig_len)
+
+        # Start a thread that sends the resposne.  We'll make it as
+        # a daemon thread so if the main thread dies unexpectedly the
+        # child thread will be automatically killed.
         th = threading.Thread(target=responder.respond_with_rcode,
                               args=(msg, rcode))
         th.daemon = True
@@ -557,7 +561,9 @@ class XfroutSession():
                                         self._soa, self._iterator,
                                         self._jnl_reader, self._tsig_ctx,
                                         self._tsig_len)
-            responder.respond(msg)
+            th = threading.Thread(target=responder.respond, args=(msg,))
+            th.daemon = True
+            th.start()
         except Exception as err:
             # count unixsockets send errors
             self._counters.inc('socket', 'unixdomain', 'senderr')
@@ -1050,7 +1056,7 @@ class XfroutServer(BUNDYServer):
             # child thread will be automatically killed.
             th = threading.Thread(target=self.__start_session,
                                   args=(sock, req_data, remote_addr))
-            th.daemon = True
+            th.daemon = True    # see _reply_with_error_rcode
             th.start()
         except Exception as ex:
             req_session[0].close()
