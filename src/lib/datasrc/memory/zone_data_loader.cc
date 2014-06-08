@@ -290,11 +290,8 @@ getSerialFromZoneData(RRClass rrclass, ZoneData* zone_data) {
         const RdataSet* rdataset = origin_node->getData();
         rdataset = RdataSet::find(rdataset, RRType::SOA());
         if (rdataset) {
-            // explicitly instantiate TreeNodeRRset before passing it to
-            // getSerialFromRRset(); some versions of g++ don't seem to treat
-            // is as a reference of the base class if we pass a temporary.
-            const TreeNodeRRset rrset(rrclass, origin_node, rdataset, false);
-            return (getSerialFromRRset(rrset));
+            return (getSerialFromRRset(
+                        TreeNodeRRset(rrclass, origin_node, rdataset, false)));
         }
     }
     return (NULL);
