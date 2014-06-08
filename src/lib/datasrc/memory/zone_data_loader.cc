@@ -268,7 +268,7 @@ applyDiffs(ZoneJournalReaderPtr jnl_reader,
     }
 }
 
-boost::optional<dns::Serial>
+const dns::Serial*
 getSerialFromRRset(const dns::AbstractRRset& rrset) {
     if (rrset.getRdataCount() != 1) {
         // This is basically a bug of the data source implementation, but we
@@ -280,10 +280,10 @@ getSerialFromRRset(const dns::AbstractRRset& rrset) {
     dns::RdataIteratorPtr rdit = rrset.getRdataIterator();
     const dns::rdata::generic::SOA& soa =
         dynamic_cast<const dns::rdata::generic::SOA&>(rdit->getCurrent());
-    return (soa.getSerial());
+    return (new dns::Serial(soa.getSerial()));
 }
 
-boost::optional<dns::Serial>
+const dns::Serial*
 getSerialFromZoneData(RRClass rrclass, ZoneData* zone_data) {
     if (zone_data) {
         const ZoneNode* origin_node = zone_data->getOriginNode();
@@ -294,7 +294,7 @@ getSerialFromZoneData(RRClass rrclass, ZoneData* zone_data) {
                         TreeNodeRRset(rrclass, origin_node, rdataset, false)));
         }
     }
-    return (boost::optional<dns::Serial>());
+    return (NULL);
 }
 
 void
@@ -358,7 +358,7 @@ private:
     const std::string zone_file_;
     const DataSourceClient* const datasrc_client_;
     ZoneData* const old_data_;
-    const boost::optional<dns::Serial> old_serial_;
+    boost::scoped_ptr<const dns::Serial> old_serial_;
     ZoneJournalReaderPtr jnl_reader_;
 };
 
@@ -383,8 +383,8 @@ ZoneDataLoader::ZoneDataLoaderImpl::doLoad() {
                         << zone_name_ << "/" << rrclass_ << "in " <<
                         datasrc_client_->getDataSourceName());
         }
-        const boost::optional<dns::Serial> new_serial =
-            getSerialFromRRset(*new_soarrset);
+        boost::scoped_ptr<const dns::Serial> new_serial(
+            getSerialFromRRset(*new_soarrset));
         if (old_serial_ && (*old_serial_ == *new_serial)) {
             LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_LOAD_SAME_SERIAL).
                 arg(zone_name_).arg(rrclass_).arg(old_serial_->getValue()).
@@ -512,15 +512,15 @@ ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon(
 
             // Check loaded serial.  Note that if checkZone() passed, we
             // should have SOA in the ZoneData.
-            const dns::Serial new_serial =
-                *getSerialFromZoneData(rrclass_, loaded_data);
-            if (old_serial_ && *old_serial_ >= new_serial) {
+            boost::scoped_ptr<const dns::Serial>new_serial(
+                getSerialFromZoneData(rrclass_, loaded_data));
+            if (old_serial_ && *old_serial_ >= *new_serial) {
                 LOG_WARN(logger, DATASRC_MEMORY_LOADED_SERIAL_NOT_INCREASED).
                     arg(zone_name_).arg(rrclass_).
-                    arg(old_serial_->getValue()).arg(new_serial.getValue());
+                    arg(old_serial_->getValue()).arg(new_serial->getValue());
             }
             LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_LOADED).
-                arg(zone_name_).arg(rrclass_).arg(new_serial.getValue()).
+                arg(zone_name_).arg(rrclass_).arg(new_serial->getValue()).
                 arg(loaded_data->isSigned() ? " (DNSSEC signed)" : "");
 
             return (LoadResult(data_holder->release(), true));
