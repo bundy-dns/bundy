@@ -32,7 +32,7 @@ libdatasrc_memory_la_SOURCES += zone_data_updater.h zone_data_updater.cc
 libdatasrc_memory_la_SOURCES += zone_data_loader.h zone_data_loader.cc
 libdatasrc_memory_la_SOURCES += memory_client.h memory_client.cc
 libdatasrc_memory_la_SOURCES += zone_writer.h zone_writer.cc
-libdatasrc_memory_la_SOURCES += load_action.h
+libdatasrc_memory_la_SOURCES += loader_creator.h
 libdatasrc_memory_la_SOURCES += util_internal.h
 
 nodist_libdatasrc_memory_la_SOURCES = memory_messages.h memory_messages.cc

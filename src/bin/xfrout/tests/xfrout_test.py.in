@@ -1501,7 +1501,8 @@ class TestXfroutServer(unittest.TestCase):
 
         # The listen socket should have been closed, so any socket operation
         # should fail.
-        self.assertRaises(OSError, self.__server._listen_socket.getsockname)
+        self.assertRaises(socket.error,
+                          self.__server._listen_socket.getsockname)
         self.assertFalse(os.path.exists(xfrout.UNIX_SOCKET_FILE))
         self.assertTrue(self.__server._shutdown_event.is_set())
         self.assertTrue(self.__server._notifier.shutdown_called)
@@ -1712,7 +1713,7 @@ class TestXfroutServer(unittest.TestCase):
         self.__server._remove_unused_sock_file = lambda x: None
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         sock.bind(self.__temp_sock_file)
-        self.assertRaises(OSError, self.__server._setup_listen_socket,
+        self.assertRaises(socket.error, self.__server._setup_listen_socket,
                           self.__temp_sock_file)
         self.assertEqual(self.__server._counters.get(
             'socket', 'unixdomain', 'bindfail'), 1)
