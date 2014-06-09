@@ -268,6 +268,14 @@ applyDiffs(ZoneJournalReaderPtr jnl_reader,
     }
 }
 
+// The following two are helper to extract SOA serial from the zone data
+// or the underlying data source.  The returned object is dynamically allocated
+// and must be explicitly deleted by the caller (in practice, the returned
+// pointer should be immediately encapsulated in a smart pointer).
+// Note: ideally we should be able to use boost::optional for such cases,
+// but some versions of g++ seem to have a bug and raise a spurious warning
+// for the usage we'd take here.  So, for wider portability we take the less
+// safer/cleaner approach.
 const dns::Serial*
 getSerialFromRRset(const dns::AbstractRRset& rrset) {
     if (rrset.getRdataCount() != 1) {
