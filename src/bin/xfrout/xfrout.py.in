@@ -1080,35 +1080,19 @@ class XfroutServer(BUNDYServer):
                 raise XfroutSessionError('unexpected session protocol: %d' %
                                          req_session[0].proto)
             (sock, local_addr, remote_addr, req_data) = req_session
-
-            # We basically don't expect an exception in the following, but
-            # since we perform some low-level system operation we catch any
-            # unexpected failures.
-
-            # Start a thread that handles the xfr query.  We'll make it as
-            # a daemon thread so if the main thread dies unexpectedly the
-            # child thread will be automatically killed.
-            th = threading.Thread(target=self.__start_session,
-                                  args=(sock, req_data, remote_addr))
-            th.daemon = True    # see _reply_with_error_rcode
-            th.start()
         except Exception as ex:
             req_session[0].close()
             logger.error(XFROUT_REQUEST_FAIL, ex)
-
-    def __start_session(self, sock, req_data, remote_addr):
-        """Entry point of xfrout session threads."""
-        with self.__lock:
-            acl = self._acl
-            zone_config = self._zone_config
-        remote = (sock.family, sock.type, remote_addr)
+            return
 
         # XfroutSession ctor is basically exception free, and takes care of any
         # cleanup on failure, so we just construct it.  The constructor will
-        # complete the request.
+        # complete the request (by delegating the sending of the response to
+        # a separate thread).
+        remote = (sock.family, sock.type, remote_addr)
         XfroutSession(sock, req_data, self,
                       bundy.server_common.tsig_keyring.get_keyring(),
-                      remote, acl, zone_config, self._counters)
+                      remote, self._acl, self._zone_config, self._counters)
 
 def main():
     exit_code = XfroutServer().run('xfrout')
