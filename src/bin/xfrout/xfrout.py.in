@@ -178,6 +178,21 @@ def make_blocking(filenum, on):
     fcntl.fcntl(filenum, fcntl.F_SETFL, flags)
 
 class _SessionCleaner():
+    """A helper for XfroutSession and XfroutResponder to clean up resources.
+
+    Objects of these classes will instantiate this class and hold it as
+    an attribute so the resources maintained in this class will be released
+    in an appropriate way when the last reference to the object is released.
+    This will help simplify the resource management and avoid leak since
+    XfroutSession and XfroutResponder will share these resources and will be
+    run on different threads.
+
+    While it's guaranteed that the resources are automatically released
+    eventually, it's generally advisable to explicitly destroy this object
+    when the use of it is completed; the automatic cleanup is mainly intended
+    as a safeguard against an unexpected exception.
+
+    """
     def __init__(self, sock, xfrout_server):
         self.__sock = sock
         self.__xfrout_server = xfrout_server
