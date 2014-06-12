@@ -33,7 +33,7 @@ class NopClient : public DataSourceClient {
 public:
     NopClient() : DataSourceClient("nop") {}
     virtual FindResult findZone(const bundy::dns::Name&) const {
-        return (FindResult(result::NOTFOUND, ZoneFinderPtr()));
+        return (FindResult(result::NOTFOUND, ZoneFinderPtr(), 0));
     }
     virtual ZoneUpdaterPtr getUpdater(const bundy::dns::Name&, bool, bool)
         const

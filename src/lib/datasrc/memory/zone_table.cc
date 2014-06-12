@@ -155,12 +155,12 @@ findCommon(const Name& name, TreeType& zones, NodeType** nodep) {
         break;
     case ZoneTableTree::NOTFOUND:
         // We have no data there, so translate the pointer to NULL as well
-        return (ResultType(result::NOTFOUND, NULL));
+        return (ResultType(result::NOTFOUND, NULL, 0));
     default:
         // Can Not Happen
         assert(0);
         // Because of warning
-        return (ResultType(result::NOTFOUND, NULL));
+        return (ResultType(result::NOTFOUND, NULL, 0));
     }
 
     // Can Not Happen (remember, NOTFOUND is handled).  node should also have
@@ -173,7 +173,7 @@ findCommon(const Name& name, TreeType& zones, NodeType** nodep) {
     const result::ResultFlags flags =
         zone_data->isEmpty() ? result::ZONE_EMPTY : result::FLAGS_DEFAULT;
     return (ResultType(my_result, zone_data->isEmpty() ? NULL : zone_data,
-                       flags));
+                       (*nodep)->getAbsoluteLabelCount(), flags));
 }
 }
 

@@ -62,9 +62,11 @@ public:
                             TreeNodeRRsetPtr rrset_param,
                             ZoneFinder::FindResultFlags flags_param,
                             const ZoneData& zone_data_param,
-                            const ZoneNode* node, const RdataSet* rdset) :
+                            const ZoneNode* node, const RdataSet* rdset,
+                            uint8_t nxrrset_labels = 0) :
         code(code_param), rrset(rrset_param), flags(flags_param),
-        zone_data(&zone_data_param), found_node(node), found_rdset(rdset)
+        zone_data(&zone_data_param), found_node(node), found_rdset(rdset),
+        nxrrset_labels_(nxrrset_labels)
     {}
 
     const ZoneFinder::Result code;
@@ -73,6 +75,7 @@ public:
     const ZoneData* const zone_data;
     const ZoneNode* const found_node;
     const RdataSet* const found_rdset;
+    const uint8_t nxrrset_labels_;
 };
 }
 using internal::ZoneFinderResultContext;
@@ -265,7 +268,8 @@ createFindResult(const RRClass& rrclass,
                  ZoneFinder::FindOptions options,
                  bool wild = false,
                  const Name* qname = NULL,
-                 bool use_minttl = false)
+                 bool use_minttl = false,
+                 uint8_t nxrrset_labels = 0)
 {
     ZoneFinder::FindResultFlags flags = ZoneFinder::RESULT_DEFAULT;
     const Name* rename = NULL;
@@ -295,7 +299,9 @@ createFindResult(const RRClass& rrclass,
     return (ZoneFinderResultContext(code, createTreeNodeRRset(node, rdataset,
                                                               rrclass, options,
                                                               rename),
-                                    flags, zone_data, node, rdataset));
+                                    flags, zone_data, node, rdataset,
+                                    code == ZoneFinder::NXRRSET ?
+                                    nxrrset_labels : 0));
 }
 
 // A helper function for NSEC-signed zones.  It searches the zone for
@@ -575,7 +581,8 @@ public:
         finder_(finder), // NOTE: when entire #2283 is done we won't need this
         rrclass_(rrclass), zone_data_(result.zone_data),
         found_node_(result.found_node),
-        found_rdset_(result.found_rdset)
+        found_rdset_(result.found_rdset),
+        nxrrset_labels_(result.nxrrset_labels_)
     {}
 
 protected:
@@ -606,6 +613,16 @@ protected:
                                          options_);
             }
         }
+    }
+
+    virtual uint8_t getMatchLabelCount() {
+        if (nxrrset_labels_ > 0) {
+            return (nxrrset_labels_);
+        }
+        if (found_node_) {
+            return (found_node_->getAbsoluteLabelCount());
+        }
+        return (0);
     }
 
 private:
@@ -677,6 +694,7 @@ private:
     const ZoneData* const zone_data_;
     const ZoneNode* const found_node_;
     const RdataSet* const found_rdset_;
+    const uint8_t nxrrset_labels_;
 };
 
 void
@@ -808,9 +826,12 @@ InMemoryZoneFinder::findInternal(const bundy::dns::Name& name,
     const FindNodeResult node_result =
         findNode(zone_data_, LabelSequence(name), node_path, options);
     if (node_result.code != SUCCESS) {
+        // We pass name's label count in case it's NXRRSET due to empty name
+        // (in which case we need to identify the match labels from qname).
         return (createFindResult(rrclass_, zone_data_, node_result.code,
                                  node_result.node, node_result.rdataset,
-                                 options));
+                                 options, false, NULL, false,
+                                 name.getLabelCount()));
     }
 
     const ZoneNode* node = node_result.node;
@@ -829,7 +850,8 @@ InMemoryZoneFinder::findInternal(const bundy::dns::Name& name,
                                                    options);
         return (createFindResult(rrclass_, zone_data_, NXRRSET,
                                  nsec_rrset.first, nsec_rrset.second,
-                                 options, wild));
+                                 options, wild, NULL, false,
+                                 node->getAbsoluteLabelCount()));
     }
 
     const RdataSet* found;

@@ -141,11 +141,13 @@ public:
         NameComparisonResult compar(origin.compare(name));
         switch (compar.getRelation()) {
             case NameComparisonResult::EQUAL:
-                return (FindResult(result::SUCCESS, finder));
+                return (FindResult(result::SUCCESS, finder,
+                                   origin.getLabelCount()));
             case NameComparisonResult::SUPERDOMAIN:
-                return (FindResult(result::PARTIALMATCH, finder));
+                return (FindResult(result::PARTIALMATCH, finder,
+                                   origin.getLabelCount()));
             default:
-                return (FindResult(result::NOTFOUND, ZoneFinderPtr()));
+                return (FindResult(result::NOTFOUND, ZoneFinderPtr(), 0));
         }
     };
     virtual std::pair<ZoneJournalReader::Result, ZoneJournalReaderPtr>
@@ -254,12 +256,14 @@ private:
                 if (rrset->getName() == name && rrset->getType() == type) {
                     return (shared_ptr<Context>(
                         new GenericContext(*this, options,
-                                           ResultContext(SUCCESS, rrset))));
+                                           ResultContext(SUCCESS, rrset),
+                                           name.getLabelCount())));
                 }
             }
             return (shared_ptr<Context>(
                 new GenericContext(*this, options,
-                                   ResultContext(NXRRSET, ConstRRsetPtr()))));
+                                   ResultContext(NXRRSET, ConstRRsetPtr()),
+                                   name.getLabelCount())));
         }
         virtual shared_ptr<Context> findAll(const Name&,
                                             vector<ConstRRsetPtr>&,

@@ -87,7 +87,8 @@ ZoneFinderContextPtr
 ZoneFinder::findAtOrigin(const dns::RRType& type, bool use_minttl,
                          FindOptions options)
 {
-    ZoneFinderContextPtr context = find(getOrigin(), type, options);
+    const Name& origin = getOrigin();
+    ZoneFinderContextPtr context = find(origin, type, options);
 
     // If we are requested to use the min TTL and the RRset's RR TTL is larger
     // than that, we need to make a copy of the RRset, replacing the TTL,
@@ -111,7 +112,8 @@ ZoneFinder::findAtOrigin(const dns::RRType& type, bool use_minttl,
                                            ResultContext(context->code,
                                                          copyRRset(rrset,
                                                                    min_ttl),
-                                                         flags_copy))));
+                                                         flags_copy),
+                                           origin.getLabelCount())));
         }
     }
 

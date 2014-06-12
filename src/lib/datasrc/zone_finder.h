@@ -269,6 +269,19 @@ public:
             getAdditionalImpl(requested_types, result);
         }
 
+        /// \brief Return the number of labels of the matching name.
+        ///
+        /// It returns the number of labels of the domain name in the
+        /// corresponding zone that determined the result of the query.
+        /// It differs depending on the query result.  In case no wildcard
+        /// is involved: for SUCCESS, NXRRSET, or CNAME, it's identical to the
+        /// number of labels of the query name.  For DELEGATION and DNAME,
+        /// it's the number of labels of the corresponding NS and DNAME RRset.
+        /// For NXDOMAIN it's 0.  If the result is SUCCESS, NXRRSET, or CNAME
+        /// as a result of wildcard substitution, it's the number of labels
+        /// of the wildcard name.
+        virtual uint8_t getMatchLabelCount() = 0;
+
     protected:
         /// \brief Return the \c ZoneFinder that created this \c Context.
         ///
@@ -338,8 +351,10 @@ public:
         /// \param options See the \c Context class.
         /// \param result See the \c Context class.
         GenericContext(ZoneFinder& finder, FindOptions options,
-                       const ResultContext& result) :
-            Context(options, result), finder_(finder)
+                       const ResultContext& result,
+                       uint8_t match_label_count) :
+            Context(options, result), finder_(finder),
+            match_label_count_(match_label_count)
         {}
 
         /// \brief The constructor for the normal findAll call.
@@ -359,9 +374,13 @@ public:
         ///       \c findAll(), storing the RRsets to be returned.
         GenericContext(ZoneFinder& finder, FindOptions options,
                        const ResultContext& result,
-                       const std::vector<bundy::dns::ConstRRsetPtr>& all_set) :
-            Context(options, result), finder_(finder), all_set_(all_set)
+                       const std::vector<bundy::dns::ConstRRsetPtr>& all_set,
+                       uint8_t match_label_count) :
+            Context(options, result), finder_(finder), all_set_(all_set),
+            match_label_count_(match_label_count)
         {}
+
+        virtual uint8_t getMatchLabelCount() { return (match_label_count_); }
 
     protected:
         virtual ZoneFinder* getFinder() { return (&finder_); }
@@ -373,6 +392,7 @@ public:
     private:
         ZoneFinder& finder_;
         std::vector<bundy::dns::ConstRRsetPtr> all_set_;
+        const uint8_t match_label_count_;
     };
 
     ///
