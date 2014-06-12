@@ -258,10 +258,6 @@ class XfroutSession():
         self.__cleaner = _SessionCleaner(self._sock,
                                          self._server if quota_ok else None)
         try:
-            # Before start, make sure the socket uses blocking I/O because
-            # responses will be sent in the blocking mode; otherwise it could
-            # result in EWOULDBLOCK and disrupt the session.
-            make_blocking(self._sock.fileno(), True)
             self.dns_xfrout_start(self._request_data, quota_ok)
         except Exception as e:
             logger.error(XFROUT_HANDLE_QUERY_ERROR, e)
@@ -599,6 +595,11 @@ class XfroutResponder():
         self.__session_cleaner = session_cleaner
         self._tsig_ctx = tsig_ctx
         self.__counters = self.__server._counters
+
+        # Before start, make sure the socket uses blocking I/O because
+        # responses will be sent in the blocking mode; otherwise it could
+        # result in EWOULDBLOCK and disrupt the session.
+        make_blocking(self._sock.fileno(), True)
 
     def _send_data(self, data):
         size = len(data)
