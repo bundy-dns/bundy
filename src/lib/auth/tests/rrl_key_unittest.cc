@@ -46,6 +46,8 @@ htonlWrapper(uint32_t val) {
 // A faked IOEndpoint for an uncommon address family, borrowed from
 // io_endpoint_unittest.
 class TestIOEndpoint : public IOEndpoint {
+public:
+    TestIOEndpoint() : IOEndpoint() {}
     virtual IOAddress getAddress() const {
         return IOAddress("2001:db8::bad:add");
     }
@@ -151,7 +153,8 @@ TEST_F(RRLKeyTest, constructAndCompare) {
 TEST_F(RRLKeyTest, badConstruct) {
     // Unexpected address family of the endpoint.  Shouldn't basically happen,
     // and should result in an exception.
-    EXPECT_THROW(RRLKey(TestIOEndpoint(), RRType::A(), NULL, RRClass::IN(),
+    const TestIOEndpoint test_ep;
+    EXPECT_THROW(RRLKey(test_ep, RRType::A(), NULL, RRClass::IN(),
                         RESPONSE_QUERY, MASK4, MASK6, 0),
                  bundy::Unexpected);
 }
