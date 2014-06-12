@@ -1561,6 +1561,8 @@ AC_CONFIG_FILES([compatcheck/Makefile
                  src/lib/asiodns/tests/Makefile
                  src/lib/asiolink/Makefile
                  src/lib/asiolink/tests/Makefile
+                 src/lib/auth/Makefile
+                 src/lib/auth/tests/Makefile
                  src/lib/bench/example/Makefile
                  src/lib/bench/Makefile
                  src/lib/bench/tests/Makefile
