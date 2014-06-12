@@ -523,7 +523,7 @@ ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon(
 
             // Check loaded serial.  Note that if checkZone() passed, we
             // should have SOA in the ZoneData.
-            boost::scoped_ptr<const dns::Serial>new_serial(
+            boost::scoped_ptr<const dns::Serial> new_serial(
                 getSerialFromZoneData(rrclass_, loaded_data));
             if (old_serial_ && *old_serial_ >= *new_serial) {
                 LOG_WARN(logger, DATASRC_MEMORY_LOADED_SERIAL_NOT_INCREASED).
