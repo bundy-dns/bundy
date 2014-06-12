@@ -177,6 +177,16 @@ def make_blocking(filenum, on):
         flags |= os.O_NONBLOCK
     fcntl.fcntl(filenum, fcntl.F_SETFL, flags)
 
+class _SessionCleaner():
+    def __init__(self, sock, xfrout_server):
+        self.__sock = sock
+        self.__xfrout_server = xfrout_server
+
+    def __del__(self):
+        if self.__xfrout_server is not None:
+            self.__xfrout_server.decrease_transfers_counter()
+        self.__sock.close()
+
 class XfroutSession():
     """Handle a single xfrout session.
 
@@ -210,6 +220,7 @@ class XfroutSession():
         # Creation of self.counters should be done before of
         # invoking self._handle()
         self._counters = counters
+        self.__cleaner = None
 
         # Now handle the xfr query.
         self._handle()
@@ -219,22 +230,18 @@ class XfroutSession():
                            tsig_record.get_rdata().get_algorithm(),
                            tsig_key_ring)
 
-    def __cleanup(self, quota_ok):
-        if quota_ok:
-            self._server.decrease_transfers_counter()
-        self._close_socket()
-
     def _handle(self):
-        ''' Handle a xfrout query, send xfrout response(s).
+        """Handle a xfrout query, initiate sending xfrout response(s).
 
         This is separated from the constructor so that we can override
         it from tests.
 
-        '''
-        # Check the xfrout quota.  We do both increase/decrease in this
-        # method so it's clear we always release it once acquired.
+        """
+        # Check the xfrout quota, and setup _SessionCleaner to make sure
+        # necessary cleanup is performed no matter how the session is completed.
         quota_ok = self._server.increase_transfers_counter()
-        ex = None
+        self.__cleaner = _SessionCleaner(self._sock,
+                                         self._server if quota_ok else None)
         try:
             # Before start, make sure the socket uses blocking I/O because
             # responses will be sent in the blocking mode; otherwise it could
@@ -242,19 +249,9 @@ class XfroutSession():
             make_blocking(self._sock.fileno(), True)
             self.dns_xfrout_start(self._request_data, quota_ok)
         except Exception as e:
-            self.__cleanup(quota_ok)
-            logger.error(XFROUT_HANDLE_QUERY_ERROR, ex)
-        else:
-            self.__cleanup(quota_ok) # temporary
+            logger.error(XFROUT_HANDLE_QUERY_ERROR, e)
 
-    def _close_socket(self):
-        '''Simply close the socket via the given FD.
-
-        This is a dedicated subroutine of handle() and is sepsarated from it
-        for the convenience of tests.
-
-        '''
-        self._sock.close()
+        self.__cleaner = None
 
     def _check_request_tsig(self, msg, request_data):
         ''' If request has a tsig record, perform tsig related checks '''
@@ -348,7 +345,8 @@ class XfroutSession():
         if not msg:
             return # query message is invalid. send nothing back.
 
-        responder = XfroutResponder(self._sock, self._server, self._tsig_ctx)
+        responder = XfroutResponder(self._sock, self._server, self._tsig_ctx,
+                                    self.__cleaner)
 
         # Start a thread that sends the resposne.  We'll make it as
         # a daemon thread so if the main thread dies unexpectedly the
@@ -545,7 +543,8 @@ class XfroutSession():
             return self._reply_with_error_rcode(msg, rcode_)
 
         responder = XfroutResponder(self._sock, self._server,
-                                    self._tsig_ctx, self._remote, zone_name,
+                                    self._tsig_ctx, self.__cleaner,
+                                    self._remote, zone_name,
                                     zone_class, self._request_type,
                                     self._soa, self._iterator,
                                     self._jnl_reader, self._tsig_len)
@@ -561,7 +560,7 @@ class XfroutResponder():
     to the client).
 
     """
-    def __init__(self, sock, server, tsig_ctx, *opt_args):
+    def __init__(self, sock, server, tsig_ctx, session_cleaner, *opt_args):
         """Constructor.
 
         XfroutResponder can be constructed for both normal and error responses.
@@ -582,6 +581,7 @@ class XfroutResponder():
              self._tsig_len) = opt_args
         self._sock = sock
         self.__server = server
+        self.__session_cleaner = session_cleaner
         self._tsig_ctx = tsig_ctx
         self.__counters = self.__server._counters
 
@@ -622,6 +622,7 @@ class XfroutResponder():
         msg.make_response()
         msg.set_rcode(rcode)
         self._send_message(msg, self._tsig_ctx)
+        self.__session_cleaner = None
 
     def __update_running_counter(self, update_fn, req_type):
         update_fn('axfr_running' if req_type == RRType.AXFR else 'ixfr_running')
@@ -646,6 +647,7 @@ class XfroutResponder():
                             self.__zone_name.to_text(), 'xfrreqdone')
         logger.info(XFROUT_XFR_TRANSFER_DONE, self.__req_type,
                     format_addrinfo(self.__remote), zone_str)
+        self.__session_cleaner = None
 
     def _do_respond(self, msg):
         """Perform actual job of building and sending a normal response.

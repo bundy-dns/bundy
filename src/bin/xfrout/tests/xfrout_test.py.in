@@ -832,7 +832,7 @@ class TestXfroutResponder(TestXfroutSessionBase):
         xfrsess = self.xfrsess
         iterator = None
         self.__responder = XfroutResponder(xfrsess._sock, xfrsess._server,
-                                           xfrsess._tsig_ctx, xfrsess._remote,
+                                           xfrsess._tsig_ctx, None, xfrsess._remote,
                                            TEST_ZONE_NAME, TEST_RRCLASS,
                                            xfrsess._request_type,
                                            xfrsess._soa, iterator,
