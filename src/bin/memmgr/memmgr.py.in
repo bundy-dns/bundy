@@ -285,7 +285,7 @@ class Memmgr(BUNDYServer):
                 if notif_name == 'validate-completed':
                     cmd = sgmt_info.complete_validate(result)
                 else:
-                    cmd = sgmt_info.complete_update()
+                    cmd = sgmt_info.complete_update(result)
 
                 # It may return another builder command on the same data source.
                 # If it is so, we execute it too, before we start

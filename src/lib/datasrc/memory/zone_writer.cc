@@ -169,6 +169,7 @@ ZoneWriter::load(std::string* error_msg) {
 void
 ZoneWriter::Impl::installFailed(const std::exception* ex) {
     data_holder_->set(NULL);
+    destroy_old_data_ = true;
     installToTable();
     LOG_ERROR(logger, DATASRC_MEMORY_MEM_LOAD_UNEXPECTED_ERROR).
         arg(origin_).arg(rrclass_).arg(ex ? ex->what() : "(unknown)");

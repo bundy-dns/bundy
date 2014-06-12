@@ -52,10 +52,11 @@ class SegmentInfo:
            |                                    |          |
            |                                    |          |
            +--> UPDATING-----complete_--->SYNCHRONIZING<---+
-                  ^          update()           |
-    start_update()|                             | sync_reader()/remove_reader()
-    events        |                             V no more old reader
-    exist       READY<------complete_----------COPYING
+                  ^|          update()           |
+    start_update()||update                       | sync_reader()/remove_reader()
+    events        ||failed                       |
+    exist         |V                             V no more old reader
+                READY<------complete_----------COPYING
                             update()
 
     A segment always begins with the 'INIT' stage, and completes validating
@@ -266,17 +267,32 @@ class SegmentInfo:
             return self.__events[0]
         return None
 
-    def complete_update(self):
-        """This method should be called when memmgr is notified by the
-        builder of the completion of segment update. It changes the
-        state from UPDATING to SYNCHRONIZING, and COPYING to READY. In
-        the former case, set of reader modules that are using the
-        "current" reader version of the segment are moved to the set
-        that are using an "old" version of segment. If there are no such
-        readers using the "old" version of segment, it pops the head
-        (oldest) event from the pending events queue and returns it. It
-        is an error if this method is called in other states than
+    def complete_update(self, succeeded):
+        """Handle the completion of a zone load/update command.
+
+        This method should be called when memmgr is notified by the
+        builder of the completion of segment update.
+
+        Parameter 'succeeded' indicates whether the load/update succeeded.
+        If it's True, this method changes the state from UPDATING to
+        SYNCHRONIZING, and COPYING to READY. In the former case, set
+        of reader modules that are using the "current" reader version
+        of the segment are moved to the set that are using an "old"
+        version of segment. If there are no such readers using the
+        "old" version of segment, it pops the head (oldest) event from
+        the pending events queue and returns it.
+
+        If 'succeeded' is False, this method changes the state to
+        READY, whether the original state is UPDATING or
+        SYNCHRONIZING.  In this case, it should be better to hold off
+        copying until the next load event happens and succeeds, rather
+        than taking the risk of making both versions broken.
+
+        It is an error if this method is called in other states than
         UPDATING and COPYING.
+
+        Parameter(s):
+        - succeeded (bool): True if the updated succeeded; False otherwise
 
         """
         # If this method is called, it means at least one load attempt is
@@ -284,11 +300,15 @@ class SegmentInfo:
         self.__loaded = True
 
         if self.__state == self.UPDATING:
-            self._switch_versions()
-            self.__state = self.SYNCHRONIZING
-            self.__old_readers = self.__readers
-            self.__readers = set()
-            return self.__sync_reader_helper()
+            if succeeded:
+                self._switch_versions()
+                self.__state = self.SYNCHRONIZING
+                self.__old_readers = self.__readers
+                self.__readers = set()
+                return self.__sync_reader_helper()
+            else:
+                self.__state = self.READY
+                self.__events.popleft() # discard the load command for COPYING
         elif self.__state == self.COPYING:
             self.__state = self.READY
             return None
