@@ -148,6 +148,28 @@ class MockDataSrcClient:
             return bundy.datasrc.ZoneJournalReader.NO_SUCH_VERSION, None
         return bundy.datasrc.ZoneJournalReader.SUCCESS, self
 
+class MockDataSrcClientsMgr():
+    TEST_DATASRC_GENID = 42
+
+    def __init__(self):
+        # Used in faked result of get_clients_map, customizable by tests
+        self.found_datasrc_client_list = self
+        self.reconfigure_param = [] # for inspection
+        self.throw_on_reconfigure = False # allow tests to override
+
+    def get_clients_map(self):
+        return (self.TEST_DATASRC_GENID,
+                {RRClass.IN: self.found_datasrc_client_list})
+
+    def reconfigure(self, arg1, arg2):
+        # the current test simply needs to know this is called with
+        # the expected arguments and exceptions are handled.  if we need more
+        # variations in tests, this mock method should be extended.
+        self.reconfigure_param.append((arg1, arg2))
+        if self.throw_on_reconfigure:
+            raise bundy.server_common.datasrc_clients_mgr.ConfigError(
+                'reconfigure failure')
+
 class MyCCSession(bundy.config.ConfigData):
     def __init__(self):
         module_spec = bundy.config.module_spec_from_file(
@@ -1389,6 +1411,7 @@ class MockCC(MockModuleCCSession, ConfigData):
         self.add_remote_params = [] # params placeholder for inspection
         self.add_remote_exception = None # to raise exception from the method
         self.__config_handler = config_handler
+        self.added_remote_modules = [] # allow public access for inspection
 
     def start(self):
         pass
@@ -1401,6 +1424,9 @@ class MockCC(MockModuleCCSession, ConfigData):
         if self.add_remote_exception is not None:
             raise self.add_remote_exception
         self.add_remote_params.append((specfile, handler))
+
+    def add_remote_config_by_name(self, name, callback):
+        self.added_remote_modules.append((name, callback))
 
 class MockXfroutServer(xfrout.XfroutServer):
     def __init__(self):
@@ -1472,6 +1498,10 @@ class FakeSessionReceiver:
 
 class TestXfroutServer(unittest.TestCase):
     def setUp(self):
+        # Mock dataSrcClientsMgr
+        self.__orig_DataSrcClientsMgr = xfrout.DataSrcClientsMgr
+        xfrout.DataSrcClientsMgr = MockDataSrcClientsMgr
+
         self.__server = MockXfroutServer()
 
         # Mock tsig_keyring module
@@ -1490,6 +1520,7 @@ class TestXfroutServer(unittest.TestCase):
         bundy.server_common.tsig_keyring = self.__tsig_keyring_orig
         notify_out.NotifyOut = self.__notify_out_orig
         sys.stdout = self.__old_stdout
+        xfrout.DataSrcClientsMgr = self.__orig_DataSrcClientsMgr
 
         # Counter is maintained globally (bad design), so we need to clear
         # every time.
@@ -1540,6 +1571,25 @@ class TestXfroutServer(unittest.TestCase):
         self.assertEqual([('::1', 53), ('', 5300)],
                          self.__server._notifier.add_slave_params)
         self.assertEqual([True], self.__server._notifier.dispatcher_params)
+        self.assertEqual([('data_sources',
+                           self.__server._datasrc_config_handler)],
+                         self.__server.mod_ccsession.added_remote_modules)
+
+    def test_datasrc_config_handler(self):
+        """Check datasrc config handler works expectedly."""
+        # This is a simple wrapper of DataSrcClientsMgr.reconfigure(), so
+        # we just check it's called as expected, and the only possible
+        # exception doesn't cause disruption.
+        self.__server._datasrc_config_handler(True, False)
+        self.assertEqual([(True, False)],
+                         self.__server._datasrc_clients_mgr.reconfigure_param)
+
+        # A similar test, but exercise the case where reconfigure() results in
+        # an exception (checking no propagation of the exception).
+        self.__server._datasrc_clients_mgr.throw_on_reconfigure = True
+        self.__server._datasrc_config_handler(1, 2)
+        self.assertEqual([(True, False), (1, 2)],
+                         self.__server._datasrc_clients_mgr.reconfigure_param)
 
     def test_shutdown_module(self):
         # test case setup, mocking some methods that will be called in shutdown

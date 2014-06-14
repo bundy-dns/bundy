@@ -21,6 +21,8 @@ import bundy.cc
 import threading
 import struct
 import signal
+from bundy.config import ModuleSpecError, ModuleCCSessionError
+from bundy.server_common.datasrc_clients_mgr import DataSrcClientsMgr
 from bundy.datasrc import DataSourceClient, ZoneFinder, ZoneJournalReader
 from bundy.server_common.bundy_server import BUNDYServer, BUNDYServerFatal
 import bundy.util.cio.socketsession
@@ -783,6 +785,7 @@ class XfroutServer(BUNDYServer):
         self._acl = None # this will be initialized in update_config_data()
         self._counters = Counters(SPECFILE_LOCATION)
         self._notifier = None
+        self._datasrc_clients_mgr = DataSrcClientsMgr()
 
         # List of the session receivers where we get the requests
         self._socksession_receivers = {}
@@ -846,10 +849,28 @@ class XfroutServer(BUNDYServer):
         it a fatal system error and let the process die.
 
         """
+        # We should be reasonably able to assume this to succeed (see xfrin)
+        self.mod_ccsession.add_remote_config_by_name(
+            'data_sources', self._datasrc_config_handler)
         self.mod_ccsession.add_remote_config(AUTH_SPECFILE_LOCATION)
         bundy.server_common.tsig_keyring.init_keyring(self.mod_ccsession)
         self.__start_notifier()
         logger.debug(DBG_PROCESS, XFROUT_STARTED)
+
+    def _datasrc_config_handler(self, new_config, config_data):
+        """Callback of data_sources configuration update.
+
+        This method must be exception free, so we catch all expected
+        exceptions internally; unexpected ones should mean a programming
+        error and will terminate the program.
+
+        """
+        try:
+            self._datasrc_clients_mgr.reconfigure(new_config, config_data)
+            genid = self._datasrc_clients_mgr.get_clients_map()[0]
+            logger.info(XFROUT_DATASRC_RECONFIGURED, genid)
+        except bundy.server_common.datasrc_clients_mgr.ConfigError as ex:
+            logger.error(XFROUT_DATASRC_CONFIG_ERROR, ex)
 
     def __start_notifier(self):
         """Subroutine of _setup_module, init and start NotifyOut thread."""

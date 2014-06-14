@@ -21,6 +21,20 @@ There was a low-level error when Xfrout tried to accept an incoming connection
 connections it already has, but this connection is dropped. The reason
 is logged.
 
+% XFROUT_DATASRC_CONFIG_ERROR failed to update data source configuration: %1
+Configuration for the global data sources is updated, but the update
+cannot be applied to xfrout.  The xfrout module will still keep running
+with the previous configuration, but the cause of the failure and
+other log messages must be carefully examined because if only xfrout
+rejects the new configuration then the entire BUNDY system will have
+inconsistent state among different modules.  If other modules accept
+the update but xfrout produces this error, the xfrout module should
+probably be restarted.
+
+% XFROUT_DATASRC_RECONFIGURED data source configuration has been updated, generation ID %1
+bundy-xfrout received a new version of data source configuration,
+and has successfully applied it to the local state.
+
 % XFROUT_DROP_FORWARDER dropping forwarder connection on file descriptor %1: %2
 There was an error on a connection with the bundy-auth server (or whatever
 connects to the Xfrout daemon). This might be OK, for example when the
