@@ -177,6 +177,31 @@ def make_blocking(filenum, on):
         flags |= os.O_NONBLOCK
     fcntl.fcntl(filenum, fcntl.F_SETFL, flags)
 
+class _SessionCleaner():
+    """A helper for XfroutSession and XfroutResponder to clean up resources.
+
+    Objects of these classes will instantiate this class and hold it as
+    an attribute so the resources maintained in this class will be released
+    in an appropriate way when the last reference to the object is released.
+    This will help simplify the resource management and avoid leak since
+    XfroutSession and XfroutResponder will share these resources and will be
+    run on different threads.
+
+    While it's guaranteed that the resources are automatically released
+    eventually, it's generally advisable to explicitly destroy this object
+    when the use of it is completed; the automatic cleanup is mainly intended
+    as a safeguard against an unexpected exception.
+
+    """
+    def __init__(self, sock, xfrout_server):
+        self.__sock = sock
+        self.__xfrout_server = xfrout_server
+
+    def __del__(self):
+        if self.__xfrout_server is not None:
+            self.__xfrout_server.decrease_transfers_counter()
+        self.__sock.close()
+
 class XfroutSession():
     """Handle a single xfrout session.
 
@@ -210,6 +235,7 @@ class XfroutSession():
         # Creation of self.counters should be done before of
         # invoking self._handle()
         self._counters = counters
+        self.__cleaner = None
 
         # Now handle the xfr query.
         self._handle()
@@ -220,44 +246,23 @@ class XfroutSession():
                            tsig_key_ring)
 
     def _handle(self):
-        ''' Handle a xfrout query, send xfrout response(s).
+        """Handle a xfrout query, initiate sending xfrout response(s).
 
         This is separated from the constructor so that we can override
         it from tests.
 
-        '''
-        # Check the xfrout quota.  We do both increase/decrease in this
-        # method so it's clear we always release it once acquired.
+        """
+        # Check the xfrout quota, and setup _SessionCleaner to make sure
+        # necessary cleanup is performed no matter how the session is completed.
         quota_ok = self._server.increase_transfers_counter()
-        ex = None
+        self.__cleaner = _SessionCleaner(self._sock,
+                                         self._server if quota_ok else None)
         try:
-            # Before start, make sure the socket uses blocking I/O because
-            # responses will be sent in the blocking mode; otherwise it could
-            # result in EWOULDBLOCK and disrupt the session.
-            make_blocking(self._sock.fileno(), True)
             self.dns_xfrout_start(self._request_data, quota_ok)
         except Exception as e:
-            # To avoid resource leak we need catch all possible exceptions
-            # We log it later to exclude the case where even logger raises
-            # an exception.
-            ex = e
+            logger.error(XFROUT_HANDLE_QUERY_ERROR, e)
 
-        # Release any critical resources
-        if quota_ok:
-            self._server.decrease_transfers_counter()
-        self._close_socket()
-
-        if ex is not None:
-            logger.error(XFROUT_HANDLE_QUERY_ERROR, ex)
-
-    def _close_socket(self):
-        '''Simply close the socket via the given FD.
-
-        This is a dedicated subroutine of handle() and is sepsarated from it
-        for the convenience of tests.
-
-        '''
-        self._sock.close()
+        self.__cleaner = None
 
     def _check_request_tsig(self, msg, request_data):
         ''' If request has a tsig record, perform tsig related checks '''
@@ -347,14 +352,20 @@ class XfroutSession():
             return self._zone_config[config_key]['transfer_acl']
         return self._acl
 
-    def _reply_query_with_error_rcode(self, msg, rcode):
+    def _reply_with_error_rcode(self, msg, rcode):
         if not msg:
             return # query message is invalid. send nothing back.
 
-        responder = XfroutResponder(self._sock, self._server, self._soa,
-                                    self._iterator, self._jnl_reader,
-                                    self._tsig_ctx, self._tsig_len)
-        responder.respond_with_rcode(msg, rcode)
+        responder = XfroutResponder(self._sock, self._server, self._tsig_ctx,
+                                    self.__cleaner)
+
+        # Start a thread that sends the resposne.  We'll make it as
+        # a daemon thread so if the main thread dies unexpectedly the
+        # child thread will be automatically killed.
+        th = threading.Thread(target=responder.respond_with_rcode,
+                              args=(msg, rcode))
+        th.daemon = True
+        th.start()
 
     def _get_zone_soa(self, zone_name):
         '''Retrieve the SOA RR of the given zone.
@@ -517,14 +528,14 @@ class XfroutSession():
         if rcode_ is None: # Dropped by ACL
             return
         elif rcode_ == Rcode.NOTAUTH or rcode_ == Rcode.REFUSED:
-            return self._reply_query_with_error_rcode(msg, rcode_)
+            return self._reply_with_error_rcode(msg, rcode_)
         elif rcode_ != Rcode.NOERROR:
-            return self._reply_query_with_error_rcode(msg, Rcode.FORMERR)
+            return self._reply_with_error_rcode(msg, Rcode.FORMERR)
         elif not quota_ok:
             logger.warn(XFROUT_QUERY_QUOTA_EXCEEDED, self._request_typestr,
                         format_addrinfo(self._remote),
                         self._server._max_transfers_out)
-            return self._reply_query_with_error_rcode(msg, Rcode.REFUSED)
+            return self._reply_with_error_rcode(msg, Rcode.REFUSED)
 
         question = msg.get_question()[0]
         zone_name = question.get_name()
@@ -540,37 +551,17 @@ class XfroutSession():
         if rcode_ != Rcode.NOERROR:
             logger.info(XFROUT_XFR_TRANSFER_FAILED, self._request_typestr,
                         format_addrinfo(self._remote), zone_str, rcode_)
-            return self._reply_query_with_error_rcode(msg, rcode_)
+            return self._reply_with_error_rcode(msg, rcode_)
 
-        try:
-            # increment Xfr starts by RRType
-            if self._request_type == RRType.AXFR:
-                self._counters.inc('axfr_running')
-            else:
-                self._counters.inc('ixfr_running')
-            logger.info(XFROUT_XFR_TRANSFER_STARTED, self._request_typestr,
-                        format_addrinfo(self._remote), zone_str)
-            responder = XfroutResponder(self._sock, self._server,
-                                        self._soa, self._iterator,
-                                        self._jnl_reader, self._tsig_ctx,
-                                        self._tsig_len)
-            responder.respond(msg)
-        except Exception as err:
-            # count unixsockets send errors
-            self._counters.inc('socket', 'unixdomain', 'senderr')
-            logger.error(XFROUT_XFR_TRANSFER_ERROR, self._request_typestr,
-                    format_addrinfo(self._remote), zone_str, err)
-        finally:
-            # decrement Xfr starts by RRType
-            if self._request_type == RRType.AXFR:
-                self._counters.dec('axfr_running')
-            else:
-                self._counters.dec('ixfr_running')
-        # count done Xfr requests by each zone name
-        self._counters.inc('zones', zone_class.to_text(),
-                           zone_name.to_text(), 'xfrreqdone')
-        logger.info(XFROUT_XFR_TRANSFER_DONE, self._request_typestr,
-                    format_addrinfo(self._remote), zone_str)
+        responder = XfroutResponder(self._sock, self._server,
+                                    self._tsig_ctx, self.__cleaner,
+                                    self._remote, zone_name,
+                                    zone_class, self._request_type,
+                                    self._soa, self._iterator,
+                                    self._jnl_reader, self._tsig_len)
+        th = threading.Thread(target=responder.respond, args=(msg,))
+        th.daemon = True
+        th.start()
 
 class XfroutResponder():
     """Build and send an xfr response.
@@ -580,15 +571,35 @@ class XfroutResponder():
     to the client).
 
     """
-    def __init__(self, sock, server, soa, iterator, jnl_reader, tsig_ctx,
-                 tsig_len):
+    def __init__(self, sock, server, tsig_ctx, session_cleaner, *opt_args):
+        """Constructor.
+
+        XfroutResponder can be constructed for both normal and error responses.
+        For normal responses 'opt_args' will contain other information to
+        build the response.
+
+        """
+        # The class attributes are essentially private, but most of them are
+        # defined as 'protected' so test code can inspect or tweak them.
+        if opt_args:
+            (self.__remote,     # tuple: see format_addrinfo()
+             self.__zone_name,  # dns.Name, the zone name to be transferred
+             self.__zone_class, # dns.RRClass, the RR class of the zone
+             self.__req_type,   # dns.RRType: either AXFR or IXFR
+             self._soa,
+             self._iterator,
+             self._jnl_reader,
+             self._tsig_len) = opt_args
         self._sock = sock
-        self._server = server
-        self._soa = soa
-        self._iterator = iterator
-        self._jnl_reader = jnl_reader
+        self.__server = server
+        self.__session_cleaner = session_cleaner
         self._tsig_ctx = tsig_ctx
-        self._tsig_len = tsig_len
+        self.__counters = self.__server._counters
+
+        # Before start, make sure the socket uses blocking I/O because
+        # responses will be sent in the blocking mode; otherwise it could
+        # result in EWOULDBLOCK and disrupt the session.
+        make_blocking(self._sock.fileno(), True)
 
     def _send_data(self, data):
         size = len(data)
@@ -627,8 +638,40 @@ class XfroutResponder():
         msg.make_response()
         msg.set_rcode(rcode)
         self._send_message(msg, self._tsig_ctx)
+        self.__session_cleaner = None
+
+    def __update_running_counter(self, update_fn, req_type):
+        update_fn('axfr_running' if req_type == RRType.AXFR else 'ixfr_running')
 
     def respond(self, msg):
+        """Public interface to building and sending a normal response."""
+        zone_str = format_zone_str(self.__zone_name, self.__zone_class)
+        logger.info(XFROUT_XFR_TRANSFER_STARTED, self.__req_type,
+                    format_addrinfo(self.__remote), zone_str)
+
+        self.__update_running_counter(self.__counters.inc, self.__req_type)
+        try:
+            self._do_respond(msg)
+        except Exception as err:
+            # count unixsockets send errors
+            self.__counters.inc('socket', 'unixdomain', 'senderr')
+            logger.error(XFROUT_XFR_TRANSFER_ERROR, self.__req_type,
+                    format_addrinfo(self.__remote), zone_str, err)
+
+        self.__update_running_counter(self.__counters.dec, self.__req_type)
+        self.__counters.inc('zones', self.__zone_class.to_text(),
+                            self.__zone_name.to_text(), 'xfrreqdone')
+        logger.info(XFROUT_XFR_TRANSFER_DONE, self.__req_type,
+                    format_addrinfo(self.__remote), zone_str)
+        self.__session_cleaner = None
+
+    def _do_respond(self, msg):
+        """Perform actual job of building and sending a normal response.
+
+        This is essentially a dedicated private subroutine of respond(),
+        but defined as 'protected' so tests can replace it.
+
+        """
         msg.make_response()
         msg.set_header_flag(Message.HEADERFLAG_AA)
         # Reserved space for the fixed header size, the size of the question
@@ -652,7 +695,7 @@ class XfroutResponder():
         # Add the rest of the zone/diff contets
         for rrset in self._iterator:
             # Check if xfrout is shutdown
-            if  self._server._shutdown_event.is_set():
+            if  self.__server._shutdown_event.is_set():
                 logger.info(XFROUT_STOPPING)
                 return
 
@@ -1037,35 +1080,19 @@ class XfroutServer(BUNDYServer):
                 raise XfroutSessionError('unexpected session protocol: %d' %
                                          req_session[0].proto)
             (sock, local_addr, remote_addr, req_data) = req_session
-
-            # We basically don't expect an exception in the following, but
-            # since we perform some low-level system operation we catch any
-            # unexpected failures.
-
-            # Start a thread that handles the xfr query.  We'll make it as
-            # a daemon thread so if the main thread dies unexpectedly the
-            # child thread will be automatically killed.
-            th = threading.Thread(target=self.__start_session,
-                                  args=(sock, req_data, remote_addr))
-            th.daemon = True
-            th.start()
         except Exception as ex:
             req_session[0].close()
             logger.error(XFROUT_REQUEST_FAIL, ex)
-
-    def __start_session(self, sock, req_data, remote_addr):
-        """Entry point of xfrout session threads."""
-        with self.__lock:
-            acl = self._acl
-            zone_config = self._zone_config
-        remote = (sock.family, sock.type, remote_addr)
+            return
 
         # XfroutSession ctor is basically exception free, and takes care of any
         # cleanup on failure, so we just construct it.  The constructor will
-        # complete the request.
+        # complete the request (by delegating the sending of the response to
+        # a separate thread).
+        remote = (sock.family, sock.type, remote_addr)
         XfroutSession(sock, req_data, self,
                       bundy.server_common.tsig_keyring.get_keyring(),
-                      remote, acl, zone_config, self._counters)
+                      remote, self._acl, self._zone_config, self._counters)
 
 def main():
     exit_code = XfroutServer().run('xfrout')

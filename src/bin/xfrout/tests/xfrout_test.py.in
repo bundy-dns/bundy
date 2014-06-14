@@ -187,6 +187,19 @@ class Dbserver:
     def decrease_transfers_counter(self):
         self.transfer_counter -= 1
 
+# A simple lightweight fake of the Python Thread class.  It actually doesn't
+# spawn a thread; the start() method simply calls the target passed to the
+# constructor from the main thread.
+class FakeThread:
+    def __init__(self, target, args):
+        self.__target = target
+        self.__args = args
+        self.daemon = False
+
+    def start(self):
+        assert(self.daemon)     # in our usage threads have to be daemonized
+        self.__target(*self.__args)
+
 class TestUtility(unittest.TestCase):
     """Test some utility functions."""
 
@@ -306,7 +319,9 @@ class TestXfroutSessionBase(unittest.TestCase):
                                        bundy.acl.dns.REQUEST_LOADER.load(
                                            [{"action": "ACCEPT"}]),
                                        {},
-                                       xfrout.Counters(xfrout.SPECFILE_LOCATION))
+                                       xfrout.Counters(
+                                           xfrout.SPECFILE_LOCATION))
+        self.xfrsess._server._counters = self.xfrsess._counters
         self.set_request_type(RRType.AXFR) # test AXFR by default
         self.mdata = self.create_request_data()
         self.soa_rrset = create_soa(SOA_CURRENT_VERSION)
@@ -328,6 +343,15 @@ class TestXfroutSessionBase(unittest.TestCase):
         self.xfrsess._counters.clear_all()
 
 class TestXfroutSession(TestXfroutSessionBase):
+    def setUp(self):
+        super().setUp()
+        self.__orig_thread_class = xfrout.threading.Thread
+        xfrout.threading.Thread = FakeThread
+
+    def tearDown(self):
+        xfrout.threading.Thread = self.__orig_thread_class
+        super().tearDown()
+
     def test_quota_error(self):
         '''Emulating the server being too busy.
 
@@ -615,12 +639,12 @@ class TestXfroutSession(TestXfroutSessionBase):
         xfrout.XfroutResponder = MyResponder
 
         # if the passed message is None, the call is no-op
-        self.xfrsess._reply_query_with_error_rcode(None, Rcode.NXDOMAIN)
+        self.xfrsess._reply_with_error_rcode(None, Rcode.NXDOMAIN)
         self.assertFalse(respond_with_rcode_params)
 
         # just check the expected responder method is called (msg content
         # doesn't matter)
-        self.xfrsess._reply_query_with_error_rcode(True, Rcode.NXDOMAIN)
+        self.xfrsess._reply_with_error_rcode(True, Rcode.NXDOMAIN)
         self.assertEqual([(True, Rcode.NXDOMAIN)], respond_with_rcode_params)
 
     def test_get_rrset_len(self):
@@ -783,11 +807,12 @@ class TestXfroutSession(TestXfroutSessionBase):
             return Rcode.NOERROR
         self.xfrsess._xfrout_setup = noerror
 
-        class MyResponder:
+        class MyResponder(xfrout.XfroutResponder):
             def __init__(self, sock, *args):
+                super().__init__(sock, *args)
                 self.__sock = sock
 
-            def respond(self, msg):
+            def _do_respond(self, msg):
                 self.__sock.send(b"success")
 
         self.assertRaises(bundy.cc.data.DataNotFoundError,
@@ -807,9 +832,12 @@ class TestXfroutResponder(TestXfroutSessionBase):
         xfrsess = self.xfrsess
         iterator = None
         self.__responder = XfroutResponder(xfrsess._sock, xfrsess._server,
+                                           xfrsess._tsig_ctx, None, xfrsess._remote,
+                                           TEST_ZONE_NAME, TEST_RRCLASS,
+                                           xfrsess._request_type,
                                            xfrsess._soa, iterator,
                                            xfrsess._jnl_reader,
-                                           xfrsess._tsig_ctx, xfrsess._tsig_len)
+                                           xfrsess._tsig_len)
 
     def test_send_data(self):
         self.__responder._send_data(self.mdata)
@@ -1159,9 +1187,8 @@ class TestXfroutResponder(TestXfroutSessionBase):
         self.__responder._soa = self.soa_rrset
         test_rr = create_generic(Name('.'), 65513) # 1 byte larger than 'max'
         self.__responder._iterator = [self.soa_rrset, test_rr]
-        # the reply method should fail with exception
-        self.assertRaises(XfroutSessionError, self.__responder.respond,
-                          self.getmsg())
+        # the reply method should fail (error should be logged)
+        self.__responder.respond(self.getmsg())
         # The first message should still have been sent and contain the
         # beginning SOA, and only that RR
         r = self.sock.read_msg()
@@ -1214,6 +1241,12 @@ class TestXfroutSessionWithSQLite3(TestXfroutSessionBase):
         self.xfrsess._server.get_db_file = lambda : TESTDATA_SRCDIR + \
             'test.sqlite3'
         self.ns_name = 'a.dns.example.com.'
+        self.__orig_thread_class = xfrout.threading.Thread
+        xfrout.threading.Thread = FakeThread
+
+    def tearDown(self):
+        xfrout.threading.Thread = self.__orig_thread_class
+        super().tearDown()
 
     def check_axfr_stream(self, response):
         '''Common checks for AXFR(-style) response for the test zone.
@@ -1436,19 +1469,6 @@ class FakeSessionReceiver:
         inspect the socket passed to the constructor.
         """
         return self._socket
-
-# A simple lightweight fake of the Python Thread class.  It actually doesn't
-# spawn a thread; the start() method simply calls the target passed to the
-# constructor from the main thread.
-class FakeThread:
-    def __init__(self, target, args):
-        self.__target = target
-        self.__args = args
-        self.daemon = False
-
-    def start(self):
-        assert(self.daemon)     # in our usage threads have to be daemonized
-        self.__target(*self.__args)
 
 class TestXfroutServer(unittest.TestCase):
     def setUp(self):

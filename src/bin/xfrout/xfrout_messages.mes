@@ -182,7 +182,7 @@ aborted due to a shutdown event.
 
 % XFROUT_XFR_TRANSFER_ERROR %1 client %2: error transferring zone %3: %4
 An uncaught exception was encountered while sending the response to
-an AXFR query. The error message of the exception is included in the
+an XFR query. The error message of the exception is included in the
 log message, but this error most likely points to incomplete exception
 handling in the code.
 
