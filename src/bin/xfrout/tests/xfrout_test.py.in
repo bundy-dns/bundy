@@ -35,6 +35,10 @@ import bundy.server_common.tsig_keyring
 TESTDATA_SRCDIR = os.getenv("TESTDATASRCDIR")
 TSIG_KEY = TSIGKey("example.com:SFuWd/q99SzF8Yzd1QbB9g==")
 
+# borrowed from server_common unit test
+DATASRC_SPECFILE = os.environ["BUNDY_FROM_BUILD"] + \
+    "/src/lib/python/bundy/server_common/tests/datasrc.spec"
+
 #
 # Commonly used (mostly constant) test parameters
 #
@@ -87,22 +91,6 @@ class MySocket():
         del self.sendqueue[:]
 
 class MockDataSrcClient:
-    def __init__(self, type, config):
-        pass
-
-    def find_zone(self, zone_name):
-        '''Mock version of find_zone().
-
-        It returns itself (subsequently acting as a mock ZoneFinder) for
-        some test zone names.  For a special name it returns NOTFOUND to
-        emulate the condition where the specified zone doen't exist.
-
-        '''
-        self._zone_name = zone_name
-        if zone_name == Name('notauth.example.com'):
-            return (bundy.datasrc.DataSourceClient.NOTFOUND, None)
-        return (bundy.datasrc.DataSourceClient.SUCCESS, self)
-
     def find(self, name, rrtype, options=ZoneFinder.FIND_DEFAULT):
         '''Mock ZoneFinder.find().
 
@@ -148,18 +136,15 @@ class MockDataSrcClient:
             return bundy.datasrc.ZoneJournalReader.NO_SUCH_VERSION, None
         return bundy.datasrc.ZoneJournalReader.SUCCESS, self
 
-class MockDataSrcClientsMgr():
+class MockDataSrcClientsMgr:
     TEST_DATASRC_GENID = 42
 
     def __init__(self):
-        # Used in faked result of get_clients_map, customizable by tests
-        self.found_datasrc_client_list = self
         self.reconfigure_param = [] # for inspection
         self.throw_on_reconfigure = False # allow tests to override
 
     def get_clients_map(self):
-        return (self.TEST_DATASRC_GENID,
-                {RRClass.IN: self.found_datasrc_client_list})
+        return (self.TEST_DATASRC_GENID, {RRClass.IN: self})
 
     def reconfigure(self, arg1, arg2):
         # the current test simply needs to know this is called with
@@ -169,6 +154,15 @@ class MockDataSrcClientsMgr():
         if self.throw_on_reconfigure:
             raise bundy.server_common.datasrc_clients_mgr.ConfigError(
                 'reconfigure failure')
+
+    def find(self, zone_name, want_exact_match, want_finder):
+        """Pretending find method on the object returned by get_clinet_list"""
+        if zone_name == Name('notauth.example.com'):
+            return None, None, None
+
+        # MockDataSrcClient can also mock ZoneFinder
+        datasrc_client = MockDataSrcClient()
+        return datasrc_client, datasrc_client, None
 
 class MyCCSession(bundy.config.ConfigData):
     def __init__(self):
@@ -196,11 +190,12 @@ class MyXfroutSession(XfroutSession):
     def _handle(self):
         pass
 
-class Dbserver:
+class MockSessionServer(xfrout.XfroutServer):
     def __init__(self):
         self._shutdown_event = threading.Event()
         self.transfer_counter = 0
         self._max_transfers_out = DEFAULT_CONFIG['transfers_out']
+        self._datasrc_clients_mgr = MockDataSrcClientsMgr()
     def get_db_file(self):
         return 'test.sqlite3'
     def increase_transfers_counter(self):
@@ -333,7 +328,7 @@ class TestXfroutSessionBase(unittest.TestCase):
         self.__orig_responder_class = xfrout.XfroutResponder
 
         self.sock = MySocket(socket.AF_INET,socket.SOCK_STREAM)
-        self.xfrsess = MyXfroutSession(self.sock, None, Dbserver(),
+        self.xfrsess = MyXfroutSession(self.sock, None, MockSessionServer(),
                                        TSIGKeyRing(),
                                        (socket.AF_INET, socket.SOCK_STREAM,
                                         ('127.0.0.1', 12345)),
@@ -684,6 +679,8 @@ class TestXfroutSession(TestXfroutSessionBase):
                 self.getmsg(), Name('notauth.example.com'), TEST_RRCLASS),
                          Rcode.NOTAUTH)
         self.assertEqual(self.xfrsess._xfrout_setup(
+            self.getmsg(), TEST_ZONE_NAME, RRClass.CH), Rcode.NOTAUTH)
+        self.assertEqual(self.xfrsess._xfrout_setup(
                 self.getmsg(), Name('nosoa.example.com'), TEST_RRCLASS),
                          Rcode.SERVFAIL)
         self.assertEqual(self.xfrsess._xfrout_setup(
@@ -800,9 +797,10 @@ class TestXfroutSession(TestXfroutSessionBase):
         self.assertEqual(get_msg.get_rcode().to_text(), "NOTAUTH")
 
     def test_dns_xfrout_start_datasrc_servfail(self):
-        def internal_raise(x, y):
+        # Emulate the case where ConfigurableClientList.find() raises.
+        def internal_raise(x, y, z):
             raise bundy.datasrc.Error('exception for the sake of test')
-        self.xfrsess.ClientClass = internal_raise
+        self.xfrsess._server._datasrc_clients_mgr.find = internal_raise
         self.xfrsess.dns_xfrout_start(self.mdata)
         self.assertEqual(self.sock.read_msg().get_rcode(), Rcode.SERVFAIL)
 
@@ -1249,19 +1247,27 @@ class TestXfroutResponder(TestXfroutSessionBase):
         self.assertTrue(self.message_has_tsig(get_msg))
 
 class TestXfroutSessionWithSQLite3(TestXfroutSessionBase):
-    '''Tests for XFR-out sessions using an SQLite3 DB.
+    """Tests for XFR-out sessions using an SQLite3 DB.
 
     These are provided mainly to confirm the implementation actually works
     in an environment closer to actual operational environments.  So we
     only check a few common cases; other details are tested using mock
     data sources.
 
-    '''
+    """
     def setUp(self):
         super().setUp()
         self.xfrsess._request_data = self.mdata
-        self.xfrsess._server.get_db_file = lambda : TESTDATA_SRCDIR + \
-            'test.sqlite3'
+        # Build mostly-real DataSrcClientsMgr
+        datasrc_cfg = bundy.config.ConfigData(
+            bundy.config.module_spec_from_file(DATASRC_SPECFILE))
+        datasrc_cfg.set_local_config({"classes":
+                                      {"IN": [{"type": "sqlite3",
+                                               "params": {"database_file":
+                                                          TESTDATA_SRCDIR + \
+                                                          'test.sqlite3'}}]}})
+        self.xfrsess._server._datasrc_clients_mgr = xfrout.DataSrcClientsMgr()
+        self.xfrsess._server._datasrc_clients_mgr.reconfigure(None, datasrc_cfg)
         self.ns_name = 'a.dns.example.com.'
         self.__orig_thread_class = xfrout.threading.Thread
         xfrout.threading.Thread = FakeThread
