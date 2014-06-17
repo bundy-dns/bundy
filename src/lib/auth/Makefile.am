@@ -11,6 +11,7 @@ lib_LTLIBRARIES = libbundy-auth.la
 
 libbundy_auth_la_SOURCES = rrl_key.h rrl_key.cc
 libbundy_auth_la_SOURCES += rrl_response_type.h
+libbundy_auth_la_SOURCES += rrl_timestamps.h
 
 libbundy_auth_la_LIBADD = $(top_builddir)/src/lib/exceptions/libbundy-exceptions.la
 libbundy_auth_la_LIBADD += $(top_builddir)/src/lib/asiolink/libbundy-asiolink.la
