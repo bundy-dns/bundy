@@ -137,6 +137,25 @@ class TestMemorySegmentBuilder(unittest.TestCase):
         self.assertEqual(len(self._builder_command_queue), 0)
         self.assertEqual(len(self._builder_response_queue), 0)
 
+    def test_cancel(self):
+        """Check response of cancel command.
+
+        For checking the main task of command we don't need a thread; so we
+        simply check it returns the expected response.
+
+        """
+        # Most of the setup is the same as test_shutdown.  We append the
+        # shutdown command to terminate the builder thread.
+        self._builder_thread.start()
+        with self._builder_cv:
+            self._builder_command_queue.append(('cancel', 'dummy arg'))
+            self._builder_command_queue.append(('shutdown',))
+            self._builder_cv.notify_all()
+        self._builder_thread.join(5)
+        self.assertFalse(self._builder_thread.isAlive())
+        self.assertEqual([('cancel-completed', 'dummy arg')],
+                         self._builder_response_queue)
+
     @unittest.skipIf(os.environ['HAVE_SHARED_MEMORY'] != 'yes',
                      'shared memory is not available')
     def test_load(self):
@@ -383,6 +402,21 @@ class TestMemorySegmentBuilderWithoutThread(unittest.TestCase):
         self.__check_load_fail(None, False, None, None)
         self.__check_load_fail(None, True, False, None)
         self.__check_load_fail(None, True, True, False)
+
+    def test_handle_cancels(self):
+        "Check the effect of cancel commands."
+
+        # The result of _handle_cancels consists of the input list elements
+        # that don't match cancel commands.  cancel commands themselves remain.
+        commands = [('validate', 'info1'), ('load', 0, 'info2'),
+                    ('validate', 'info3'),
+                    ('cancel', 'info1'), ('cancel', 'info2'),
+                    ('validate', 'info2'), ('load', 1, 'info1'),
+                    ('load', 2, 'info3'), ('shutdown',)]
+        result = self.__builder._handle_cancels(commands)
+        self.assertEqual([('validate', 'info3'), ('cancel', 'info1'),
+                          ('cancel', 'info2'), ('load', 2, 'info3'),
+                          ('shutdown',)], result)
 
 if __name__ == "__main__":
     bundy.log.init("bundy-test")

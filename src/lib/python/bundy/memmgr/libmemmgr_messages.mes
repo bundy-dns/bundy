@@ -97,6 +97,18 @@ unexpected error, and the file is probably corrupted.  The version file
 is for optimization, and failure of reading it is not fatal, but it's
 advisable to figure out the cause and fix it.
 
+% LIBMEMMGR_MAPPED_SEGMENT_REMOVED removed files for mapped memory segment, generation %1
+The use of a generation of mapped-file based memory segment has been
+completed (normally because a new generation of data sources is configured),
+and the mapped-file and other management file(s) are removed.
+
+% LIBMEMMGR_MAPPED_SEGMENT_RMFILE_FAIL failed to remove files for mapped memory segment: %1
+The use of a generation of mapped-file based memory segment has been
+completed, but removing the mapped-file or other management file(s) failed.
+This is not an expected event, but not critical, so it's not considered a
+fatal error that terminates a program.  But the administrator will have to
+figure out the reason and should probably clean up the files manually.
+
 % LIBMEMMGR_MAPPED_SEGMENT_VALIDATE Validation on mapped memory segment for file %1 %2
 The validation on a file for mapped-memory based memory segment was
 completed.  It shows either success or failure with the corresponding

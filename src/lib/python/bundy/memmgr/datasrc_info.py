@@ -96,7 +96,9 @@ class SegmentInfo:
     READY = 6 # both segments of the pair have been updated. it can now
               # handle further updates (e.g., from xfrin).
 
-    def __init__(self):
+    def __init__(self, genid):
+        # The generation ID of the corresponding data source.
+        self.__genid = genid
         # Holds the state of SegmentInfo. See the class description
         # above for the state transition diagram.
         self.__state = self.INIT
@@ -119,6 +121,11 @@ class SegmentInfo:
         self.__events = deque()
         # See loaded():
         self.__loaded = False
+
+    def get_generation_id(self):
+        "Returns the generation ID of the corresponding data source."
+
+        return self.__genid
 
     def get_state(self):
         """Returns the state of SegmentInfo (UPDATING, SYNCHRONIZING, etc)"""
@@ -443,6 +450,29 @@ class SegmentInfo:
         """
         raise SegmentInfoError('get_reset_param is not implemented')
 
+    def remove(self):
+        """Remove persistent system resource of the segment.
+
+        This method is called for a final cleanup of a single generation of
+        memory segment, which a new generation is active and the segment's
+        generation will never be used, even after a restart.  A specific
+        operation for the remove depends on the type of segment, and is
+        delegated to the '_remove()' protected method.
+
+        The caller must ensure that there is no process that uses the
+        segment, either for reading or writing.  As a check for this condition,
+        this method must not be called until both get_readers() and
+        get_old_readers() return an empty set; otherwise SegmentInfoError
+        exception will be raised.
+
+        """
+        if self.__readers or self.__old_readers:
+            raise SegmentInfoError('cannot remove SegmentInfo with readers')
+        self._remove()
+
+    def _remove(self):
+        "The default implementation of _remove(), which does nothing."
+
     def _switch_versions(self):
         """Switch internal information for the reader segment and writer
         segment.
@@ -485,7 +515,7 @@ class MappedSegmentInfo(SegmentInfo):
 
     """
     def __init__(self, genid, rrclass, datasrc_name, mgr_config):
-        super().__init__()
+        super().__init__(genid)
 
         # Something like "/var/bundy/zone-IN-1-sqlite3-mapped"
         self.__mapped_file_base = mgr_config['mapped_file_dir'] + os.sep + \
@@ -583,6 +613,26 @@ class MappedSegmentInfo(SegmentInfo):
             logger.error(LIBMEMMGR_MAPPED_SEGMENT_VERFILE_UPDATE_FAIL,
                          self.__map_versions_file, ex)
 
+    def _remove(self):
+        def rmfile(path):
+            """Trivial internal helper to remove a specific file.
+
+            Failure of removing these files is not expected but not critical,
+            so we only log any failure and move on.
+
+            """
+            if os.path.exists(path):
+                try:
+                    os.unlink(path)
+                except Exception as ex:
+                    logger.info(LIBMEMMGR_MAPPED_SEGMENT_RMFILE_FAIL, ex)
+
+        rmfile(self.__map_versions_file)
+        for vers in (0, 1):
+            mapped_file = '%s.%d' % (self.__mapped_file_base, vers)
+            rmfile(mapped_file)
+        logger.info(LIBMEMMGR_MAPPED_SEGMENT_REMOVED, self.get_generation_id())
+
 class DataSrcInfo:
     """A container for datasrc.ConfigurableClientLists and associated
     in-memory segment information corresponding to a given geration of
@@ -600,7 +650,8 @@ class DataSrcInfo:
     Attributes: these are all constant and read only.  For dict objects,
           mapping shouldn't be modified either.
       gen_id (int): The corresponding configuration generation ID.
-      clients_map (dict, bundy.dns.RRClass=>bundy.datasrc.ConfigurableClientList):
+      clients_map (dict, bundy.dns.RRClass=>
+                         bundy.datasrc.ConfigurableClientList):
           The configured client lists for all RR classes of the generation.
       segment_info_map (dict, (bundy.dns.RRClass, str)=>SegmentInfo):
           SegmentInfo objects managed in the DataSrcInfo objects.  Can be
@@ -643,3 +694,56 @@ class DataSrcInfo:
     @property
     def segment_info_map(self):
         return self.__segment_info_map
+
+    def cancel(self, released_reader):
+        """Cancel using this generation of data sources.
+
+        This method is expected to be called to stop using an old generation
+        of data sources when a new generation has been configured.  It checks
+        if there is any segment reader for any memory segment of the old
+        generation, and if all readers have left, clean up all references
+        to the old generation of data sources.  The cleanp includes removing
+        any persistent system resource for the canceled memory segment, such
+        as mapped files.  Once cleaned up, both 'clients_map' and
+        'segment_info_map' attributes will become an empty dictionary.
+
+        if 'released_reader' is not None, this method first removes the
+        reader from all underlying segments that the reader is using.
+        The caller must ensure that reader has indeed released the segments
+        of this generation.
+
+        It returns a set of remaining segment readers.  The caller can use
+        the set to notify these readers, and to detect if the cancel has been
+        completed by checking if the set is empty.
+
+        Parameter:
+          released_reader (str or None): if not None, the identifier of a
+            reader module that has released memory segments of the canceled
+            generation.
+
+        Return:
+          set of str, consisting of reader module identifiers that are still
+          using the segments of this generation.
+
+        """
+        readers = set()
+        for sgmt in self.__segment_info_map.values():
+            sgmt_readers = sgmt.get_readers().union(sgmt.get_old_readers())
+            if released_reader is not None and released_reader in sgmt_readers:
+                sgmt.remove_reader(released_reader)
+                sgmt_readers.remove(released_reader)
+            readers = readers.union(sgmt_readers)
+
+        if not readers:
+            # All readers (and the memmgr) have released this generation of
+            # segments.  We can now clean up all data source clients and
+            # segment info.  Clients first, because they may contain a
+            # reference to underlying memory segment.
+            self.__clients_map = {}
+
+            # Now we can safely remove memory segments.
+            for sgmt in self.__segment_info_map.values():
+                sgmt.remove()
+            self.__segment_info_map = {}
+
+        return readers

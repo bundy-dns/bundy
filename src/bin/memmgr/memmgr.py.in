@@ -70,9 +70,11 @@ class Memmgr(BUNDYServer):
         # segment_info_update for the reader.
         self._segment_readers = {}
 
-        # List of DataSrcInfo.  Used as a queue to maintain info for all
-        # active configuration generations.  Allow tests to inspec it.
-        self._datasrc_info_list = []
+        # Current DataSrcInfo and older generation ones (waiting for cleanup).
+        # Allow tests to inspec it (otherwise shouldn't be referenced from
+        # outside of the class)
+        self._datasrc_info = None
+        self._old_datasrc_info = {} # dict genid(int)=>DataSrcInfo
 
         self._builder_setup = False
         self._builder_command_queue = []
@@ -88,11 +90,12 @@ class Memmgr(BUNDYServer):
             # be returned with an answer, so we return either None or False
             # (separating these for testing purposes).
             try:
-                # TODO: we should eventually handle multiple generations
-                dsrc_info = self._datasrc_info_list[-1]
+                if self._datasrc_info.gen_id != args['generation-id']:
+                    return False
                 rrclass = bundy.dns.RRClass(args['data-source-class'])
                 dsrc_name = args['data-source-name']
-                sgmt_info = dsrc_info.segment_info_map[(rrclass, dsrc_name)]
+                sgmt_info = self._datasrc_info.segment_info_map[(rrclass,
+                                                                 dsrc_name)]
                 reader = args['reader']
                 if not reader in self._segment_readers:
                     logger.info(MEMMGR_DATASRC_SGMTINFO_ACK_NOREADER, reader)
@@ -109,6 +112,19 @@ class Memmgr(BUNDYServer):
             logger.debug(logger.DBGLVL_TRACE_BASIC, MEMMGR_SGMTINFO_ACK,
                          dsrc_name, rrclass)
             return False
+        elif cmd == 'release_segments_ack':
+            genid = 'unknown'
+            try:
+                genid = args['generation-id']
+                reader = args['reader']
+                datasrc_info = self._old_datasrc_info[genid]
+                if not datasrc_info.cancel(reader):
+                    del self._old_datasrc_info[genid]
+                logger.debug(logger.DBGLVL_TRACE_BASIC,
+                             MEMMGR_DATASRC_RELEASESGMT_ACK, reader, genid)
+            except Exception as ex:
+                logger.error(MEMMGR_DATASRC_RELEASESGMT_ACK_FAIL, str(genid),
+                             ex)
         elif cmd == 'loadzone':
             return self.__update_zone(cmd, args)
         else:
@@ -119,10 +135,12 @@ class Memmgr(BUNDYServer):
 
         try:
             dsrc_info, rrclass, dsrc_name, zone_name, sgmt_info = \
-                self.__handle_loadzone_args(args)
+                self.__handle_loadzone_args(cmd, args)
             # If it's manually invoked, it will be helpeful to consider
             # missing segment info an error; if it's update notification,
-            # this is a normal condition for a 'local' segment.
+            # this is a normal condition for a 'local' segment, or (relatively
+            # rarely) too old or new generation is given at the timing of
+            # reconfiguring the data source.
             if sgmt_info is None and cmd == 'loadzone':
                 raise _LoadZoneError("no memory segment in '%s' for"
                                      "RR class %s" % (dsrc_name, rrclass))
@@ -145,15 +163,13 @@ class Memmgr(BUNDYServer):
             logger.debug(logger.DBGLVL_TRACE_BASIC, MEMMGR_UPDATE_ZONE,
                          zone_name, rrclass, dsrc_name)
 
-    def __handle_loadzone_args(self, args):
+    def __handle_loadzone_args(self, cmd, args):
         "Parse loadzone args and return helpful error on failure"
 
-        if len(self._datasrc_info_list) == 0:
-            raise _LoadZoneError('no data source is configured')
-        dsrc_info = self._datasrc_info_list[-1]
         if (not 'class' in args or not 'datasource' in args or
             not 'origin' in args):
             raise _LoadZoneError('missing parameters')
+
         try:
             rrclass = bundy.dns.RRClass(args['class'])
         except bundy.dns.InvalidRRClass as ex:
@@ -163,11 +179,29 @@ class Memmgr(BUNDYServer):
         except Exception as ex: # there can be many types of error
             raise _LoadZoneError('bad zone origin:' + str(ex))
         dsrc_name = args['datasource']
+
+        # Identify the generation of data sources to be updated.  In case of
+        # an internal command from other modules, it's possible the generaion
+        # ID doesn't match of that for memmgr, depending on the timing of
+        # update and reconfiguration of data source.  Basically, we can ignore
+        # this case: older generations won't be used, and newer generations
+        # will be handled at the time of reconfiguration.
+        # For load command invoked by a user, the latest generation will be
+        # used.
+        if cmd == 'zone_updated':
+            genid = args.get('generation-id')
+            if genid is None:
+                raise _LoadZoneError('missing generation ID')
+            if self._datasrc_info.gen_id != genid:
+                logger.info(MEMMGR_UPDATEZONE_NOGENERATION,
+                            genid, zone_name, rrclass, dsrc_name)
+                return None, None, None, None, None
         try:
-            sgmt_info = dsrc_info.segment_info_map[(rrclass, dsrc_name)]
+            sgmt_info = self._datasrc_info.segment_info_map[(rrclass,
+                                                             dsrc_name)]
         except KeyError as ex:
             sgmt_info = None    # not necessarily an error, maybe it's 'local'
-        return dsrc_info, rrclass, dsrc_name, zone_name, sgmt_info
+        return self._datasrc_info, rrclass, dsrc_name, zone_name, sgmt_info
 
     def _config_handler(self, new_config):
         """Configuration handler, called via BUNDYServer.
@@ -250,7 +284,8 @@ class Memmgr(BUNDYServer):
         params = {
             'data-source-class': str(rrclass),
             'data-source-name': dsrc_name,
-            'segment-params': reset_param
+            'segment-params': reset_param,
+            'generation-id': sgmt_info.get_generation_id()
         }
         if inuse_only:
             params['inuse-only'] = True
@@ -264,8 +299,8 @@ class Memmgr(BUNDYServer):
             self._segment_readers[reader][sgmt_info] += 1
 
     def _notify_from_builder(self):
-        """
-        Read the notifications from the builder thread.
+        """Read the notifications from the builder thread.
+
         """
         self._master_sock.recv(1) # Clear the wake-up data
         notifications = None
@@ -310,6 +345,19 @@ class Memmgr(BUNDYServer):
                              notif_name.replace('-completed', ''), dsrc_name,
                              rrclass, 'without' if cmd is None else 'with',
                              len(old_readers))
+            elif notif_name == 'cancel-completed':
+                # ask all possible readers for releasing segments of the
+                # canceled generation
+                _, dsrc_info = notification
+                readers = dsrc_info.cancel(None)
+                prms = {'generation-id': dsrc_info.gen_id}
+                for reader in readers:
+                    prms['reader'] = reader
+                    rcmd = bundy.config.create_command('release_segments', prms)
+                    self.mod_ccsession._session.group_sendmsg(
+                        rcmd, SEGMENT_READER_GROUP, to=reader)
+                if not readers: # cleanup completed
+                    del self._old_datasrc_info[dsrc_info.gen_id]
             else:
                 raise ValueError('Unknown notification name: ' + notif_name)
 
@@ -321,7 +369,8 @@ class Memmgr(BUNDYServer):
         # We get responses from the builder thread on this socket pair.
         (self._master_sock, self._builder_sock) = \
             socket.socketpair(socket.AF_UNIX, socket.SOCK_STREAM)
-        self.watch_fileno(self._master_sock, rcallback=self._notify_from_builder)
+        self.watch_fileno(self._master_sock,
+                          rcallback=self._notify_from_builder)
 
         # See the documentation for MemorySegmentBuilder on how the
         # following are used.
@@ -397,25 +446,27 @@ class Memmgr(BUNDYServer):
                 logger.info(MEMMGR_CCMEMBER_DUP_SUBSCRIBED, reader)
             else:
                 self._segment_readers[reader] = {}
-                for dsrc_info in self._datasrc_info_list:
-                    for key, sgmt_info in dsrc_info.segment_info_map.items():
-                        sgmt_info.add_reader(reader)
-                        # If a reader segment has been loaded, we should tell
-                        # the reader about it.
-                        if sgmt_info.loaded():
-                            rrclass, dsrc_name = key
-                            self.__notify_readers(rrclass, dsrc_name, sgmt_info,
-                                                  [reader])
+                for key, sgmt_info in \
+                    self._datasrc_info.segment_info_map.items():
+                    sgmt_info.add_reader(reader)
+                    # If a reader segment has been loaded, we should tell
+                    # the reader about it.
+                    if sgmt_info.loaded():
+                        rrclass, dsrc_name = key
+                        self.__notify_readers(rrclass, dsrc_name, sgmt_info,
+                                              [reader])
         else:                   # must be 'unsubscribed'
             if not reader in self._segment_readers:
                 logger.warn(MEMMGR_CCMEMBER_DUP_UNSUBSCRIBED, reader)
             else:
                 del self._segment_readers[reader]
-                for dsrc_info in self._datasrc_info_list:
-                    for sgmt_info in dsrc_info.segment_info_map.values():
-                        bcmd = sgmt_info.remove_reader(reader)
-                        if bcmd is not None:
-                            self._cmd_to_builder(bcmd)
+                for old_dsrc_info in list(self._old_datasrc_info.values()):
+                    if not old_dsrc_info.cancel(reader):
+                        del self._old_datasrc_info[old_dsrc_info.gen_id]
+                for sgmt_info in self._datasrc_info.segment_info_map.values():
+                    bcmd = sgmt_info.remove_reader(reader)
+                    if bcmd is not None:
+                        self._cmd_to_builder(bcmd)
 
     def _setup_module(self):
         """Module specific initialization for BUNDYServer."""
@@ -454,6 +505,8 @@ class Memmgr(BUNDYServer):
             # about exceptions to catch.
             self.mod_ccsession.add_remote_config_by_name(
                 'data_sources', self._datasrc_config_handler)
+            if self._datasrc_info is None:
+                raise BUNDYServerFatal('failed to initialize data sources')
         except (ModuleSpecError, ModuleCCSessionError) as ex:
             logger.error(MEMMGR_NO_DATASRC_CONF, ex)
             raise BUNDYServerFatal('failed to setup memmgr module')
@@ -474,9 +527,16 @@ class Memmgr(BUNDYServer):
             self._datasrc_clients_mgr.reconfigure(new_config, config_data)
             genid, clients_map = self._datasrc_clients_mgr.get_clients_map()
             datasrc_info = DataSrcInfo(genid, clients_map, self._config_params)
-            self._datasrc_info_list.append(datasrc_info)
-            self._init_segments(datasrc_info)
 
+            # Cancel any outstanding operations running in the builder for the
+            # now-deprecated generation of segments
+            if self._datasrc_info is not None:
+                self._cmd_to_builder(('cancel', self._datasrc_info))
+                self._old_datasrc_info[self._datasrc_info.gen_id] = \
+                    self._datasrc_info
+
+            self._datasrc_info = datasrc_info
+            self._init_segments(datasrc_info)
             # Full datasrc reconfig will be rare, so would be worth logging
             # at the info level.
             logger.info(MEMMGR_DATASRC_RECONFIGURED, genid)

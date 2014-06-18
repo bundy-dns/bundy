@@ -89,12 +89,21 @@ enum CommandID {
                   ///  (implicitly assuming it's shared-memory based and is
                   ///  updated by another module).
     SEGMENT_INFO_UPDATE, ///< The memory manager sent an update about segments.
+    RELEASE_SEGMENTS, ///< The memory manager requested to release specific
+                      /// generation of memory segments.  This happens on
+                      /// data source reconfiguration.
     SHUTDOWN,     ///< Shutdown the builder; no argument
     NUM_COMMANDS
 };
 
 /// \brief Callback to be called when the command is completed.
-typedef boost::function<void ()> FinishedCallback;
+///
+/// It takes an argument of \c ConstElementPtr.  Specific content of \c arg
+/// varies for each callback.
+typedef boost::function<void (data::ConstElementPtr arg)> FinishedCallback;
+
+/// \brief A pair of the callback functor and its argument.
+typedef std::pair<FinishedCallback, data::ConstElementPtr> FinishedCallbackPair;
 
 /// \brief The data type passed from DataSrcClientsMgr to
 ///     DataSrcClientsBuilder.
@@ -388,6 +397,7 @@ public:
             "data-source-name",
             "data-source-class",
             "segment-params",
+            "generation-id",
             NULL
         };
         for (const char** param = params; *param; ++param) {
@@ -399,6 +409,18 @@ public:
         }
 
         sendCommand(datasrc_clientmgr_internal::SEGMENT_INFO_UPDATE, args,
+                    callback);
+    }
+
+    void releaseSegments(const data::ConstElementPtr& args,
+                         const datasrc_clientmgr_internal::FinishedCallback&
+                         callback =
+                         datasrc_clientmgr_internal::FinishedCallback())
+    {
+        // We defer argument validation to the builder; since this command
+        // isn't expected an answer, early rejection doesn't help and is just
+        // redundant.
+        sendCommand(datasrc_clientmgr_internal::RELEASE_SEGMENTS, args,
                     callback);
     }
 
@@ -516,16 +538,16 @@ private:
         }
 
         // Steal the callbacks into local copy.
-        std::list<datasrc_clientmgr_internal::FinishedCallback> queue;
+        std::list<datasrc_clientmgr_internal::FinishedCallbackPair> queue;
         {
             typename MutexType::Locker locker(queue_mutex_);
             queue.swap(callback_queue_);
         }
 
         // Execute the callbacks
-        BOOST_FOREACH(const datasrc_clientmgr_internal::FinishedCallback&
-                      callback, queue) {
-            callback();
+        BOOST_FOREACH(const datasrc_clientmgr_internal::FinishedCallbackPair&
+                      cbpair, queue) {
+            cbpair.first(cbpair.second);
         }
     }
 
@@ -538,7 +560,7 @@ private:
     // While the command queue is for sending commands from the main thread
     // to the work thread, this one is for the other direction. Protected
     // by the same mutex (queue_mutex_).
-    std::list<datasrc_clientmgr_internal::FinishedCallback> callback_queue_;
+    std::list<datasrc_clientmgr_internal::FinishedCallbackPair> callback_queue_;
     CondVarType cond_;          // condition variable for queue operations
     MutexType queue_mutex_;     // mutex to protect the queue
     datasrc::ClientListMapPtr clients_map_;
@@ -596,7 +618,7 @@ public:
     ///
     /// \throw None
     DataSrcClientsBuilderBase(std::list<Command>* command_queue,
-                              std::list<FinishedCallback>* callback_queue,
+                              std::list<FinishedCallbackPair>* callback_queue,
                               CondVarType* cond, MutexType* queue_mutex,
                               datasrc::ClientListMapPtr* clients_map,
                               MutexType* map_mutex,
@@ -604,7 +626,8 @@ public:
         ) :
         command_queue_(command_queue), callback_queue_(callback_queue),
         cond_(cond), queue_mutex_(queue_mutex),
-        clients_map_(clients_map), map_mutex_(map_mutex), wake_fd_(wake_fd)
+        clients_map_(clients_map), map_mutex_(map_mutex), wake_fd_(wake_fd),
+        gen_id_(-1)
     {}
 
     /// \brief The main loop.
@@ -620,29 +643,122 @@ public:
     /// \return true if the builder should keep running; false otherwise.
     bool handleCommand(const Command& command);
 
+    /// \brief Expose an internal list of post-command callback.
+    ///
+    /// This is provided for testing purposes only and should not be used
+    /// otherwise.
+    const std::list<FinishedCallbackPair>& getInternalCallbacks() const {
+        return (callbacks_);
+    }
+
 private:
     // NOOP command handler.  We use this so tests can override it; the default
     // implementation really does nothing.
-    void doNoop() {}
+    data::ConstElementPtr doNoop() { return (data::ConstElementPtr()); }
 
-    void doReconfigure(const data::ConstElementPtr& config) {
-        if (config) {
+    // The following three methods are helper to determine whether a new
+    // generation of data source clients are ready for use: they are considered
+    // ready iff all memory segments are in a state other than WAITING.
+    static bool segmentWaiting(const datasrc::DataSourceStatus& status) {
+        return (status.getSegmentState() == datasrc::SEGMENT_WAITING);
+    }
+
+    static bool
+    isClientListWaiting(const std::pair<dns::RRClass,
+                        boost::shared_ptr<datasrc::ConfigurableClientList> >&
+                        listpair)
+    {
+        const std::vector<datasrc::DataSourceStatus>& statuses =
+            listpair.second->getStatus();
+        return (std::find_if(statuses.begin(), statuses.end(), segmentWaiting)
+                != statuses.end());
+    }
+
+    static bool isClientsReady(const ClientListsMap& clients_map) {
+        return (std::find_if(clients_map.begin(), clients_map.end(),
+                             isClientListWaiting) == clients_map.end());
+    }
+
+    // Swap pending clients map with the current when all waiting memory
+    // segments are ready.
+    void installClientsMap() {
+        // Define new_clients_map outside of the block that has the lock scope;
+        // this way, after the swap, the lock is guaranteed to be released
+        // before the old data is destroyed, minimizing the lock duration.
+        {
+            typename MutexType::Locker locker(*map_mutex_);
+            pending_map_->clients_map_.swap(*clients_map_);
+        } // lock is released by leaving scope
+          // old clients_map_ data is released by leaving scope
+
+        if (pending_callback_) {
+            callbacks_.push_back(FinishedCallbackPair(pending_callback_,
+                                                      data::ConstElementPtr()));
+            pending_callback_ = FinishedCallback();
+        }
+
+        gen_id_ = pending_map_->gen_id_;
+        pending_map_.reset();
+        LOG_INFO(auth_logger, AUTH_DATASRC_CLIENTS_BUILDER_RECONFIGURE_SUCCESS).
+            arg(gen_id_);
+    }
+
+    // This method returns a bool element, whose value is true iff shared-type
+    // memory segment is going to be used.  It will be used as a callback
+    // argument so it can be used in the callback to determine whether to
+    // start listening to segment info updates.
+    data::ConstElementPtr
+    doReconfigure(const data::ConstElementPtr& mod_config) {
+        if (mod_config) {
             LOG_INFO(auth_logger,
                      AUTH_DATASRC_CLIENTS_BUILDER_RECONFIGURE_STARTED);
             try {
-                // Define new_clients_map outside of the block that
-                // has the lock scope; this way, after the swap,
-                // the lock is guaranteed to be released before
-                // the old data is destroyed, minimizing the lock
-                // duration.
-                datasrc::ClientListMapPtr new_clients_map =
-                    configureDataSource(config);
-                {
-                    typename MutexType::Locker locker(*map_mutex_);
-                    new_clients_map.swap(*clients_map_);
-                } // lock is released by leaving scope
-                LOG_INFO(auth_logger,
-                         AUTH_DATASRC_CLIENTS_BUILDER_RECONFIGURE_SUCCESS);
+                // Perform the rest of argument validation:
+                if (!mod_config->contains("classes")) {
+                    bundy_throw(InvalidParameter, "invalid data source "
+                                "configuration: must have 'classes'");
+                }
+                if (!mod_config->contains("_generation_id")) {
+                    bundy_throw(InvalidParameter, "invalid data source "
+                                "configuration: must have '_generation_id'");
+                }
+                const int64_t genid =
+                    mod_config->get("_generation_id")->intValue();
+                // make sure it's non-negative and always increasing (the
+                // initial value of gen_id_ is -1, so this condition is enough)
+                if (genid <= gen_id_) {
+                    bundy_throw(InvalidParameter, "invalid data source "
+                                "configuration: bad generation: " << genid);
+                }
+
+                // Consider any new configuration to be "pending" first.  Note
+                // that we override any existing pending generation; it does
+                // not make sense to complete such an intermediate version, and
+                // even memmgr may have stopped completing it.
+                pending_map_.reset(
+                    new PendingClientListMap(
+                        configureDataSource(mod_config->get("classes")),
+                        genid));
+
+                // Check if all memory segments are ready: if not, we are done
+                // for now, waiting for segment info updates; if so, apply the
+                // new config now.
+                if (!isClientsReady(*pending_map_->clients_map_)) {
+                    LOG_INFO(auth_logger,
+                             AUTH_DATASRC_CLIENTS_BUILDER_RECONFIGURE_PENDING).
+                        arg(genid);
+
+                    // We use shared-type memory segments iff we are here:
+                    // if we use a shared segment, it should always begin with
+                    // the WAITING state, so we should be here; if we don't use
+                    // a shared segment, all segments should be immediately
+                    // INUSE, and so we shouldn't be here.  Also, in the latter
+                    // case we immediately switch to the new generation below,
+                    // so it doesn't matter whether or not we use a shared
+                    // segment in the current generation.
+                    return (data::Element::create(true));
+                }
+                installClientsMap();
             } catch (const datasrc::ConfigurableClientList::ConfigurationError&
                      config_error) {
                 LOG_ERROR(auth_logger,
@@ -658,9 +774,47 @@ private:
                     arg(bundy_error.what());
             }
             // other exceptions are propagated, see
-            // http://bundy.bundy.org/ticket/2210#comment:13
+            // http://bind10.isc.org/ticket/2210#comment:13
+        }
+        return (data::Element::create(false));
+    }
 
-            // old clients_map_ data is released by leaving scope
+    void resetSegment(ClientListsMap& clients_map, const dns::RRClass& rrclass,
+                      const std::string& dsrc_name,
+                      const data::ConstElementPtr& segment_params,
+                      bool inuse_only)
+    {
+        const boost::shared_ptr<bundy::datasrc::ConfigurableClientList>&
+            list = (clients_map)[rrclass];
+        if (!list) {
+            LOG_FATAL(auth_logger,
+                      AUTH_DATASRC_CLIENTS_BUILDER_SEGMENT_UNKNOWN_CLASS)
+                .arg(rrclass);
+            std::terminate();
+        }
+        if (inuse_only) {
+            BOOST_FOREACH(const datasrc::DataSourceStatus& st,
+                          list->getStatus()) {
+                if (st.getName() != dsrc_name) {
+                    continue;
+                }
+                if (st.getSegmentState() != bundy::datasrc::SEGMENT_INUSE) {
+                    LOG_DEBUG(auth_logger, DBGLVL_TRACE_BASIC,
+                              AUTH_DATASRC_CLIENTS_SKIP_SEGMENT_RESET).
+                        arg(dsrc_name).arg(rrclass);
+                    return;
+                }
+            }
+        }
+
+        typename MutexType::Locker locker(*map_mutex_);
+        if (!list->resetMemorySegment(
+                dsrc_name, bundy::datasrc::memory::ZoneTableSegment::READ_ONLY,
+                segment_params)) {
+            LOG_FATAL(auth_logger,
+                      AUTH_DATASRC_CLIENTS_BUILDER_SEGMENT_NO_DATASRC)
+                .arg(rrclass).arg(dsrc_name);
+            std::terminate();
         }
     }
 
@@ -672,38 +826,38 @@ private:
                 name(arg->get("data-source-name")->stringValue());
             const bundy::data::ConstElementPtr& segment_params =
                 arg->get("segment-params");
-            const boost::shared_ptr<bundy::datasrc::ConfigurableClientList>&
-                list = (**clients_map_)[rrclass];
-            if (!list) {
-                LOG_FATAL(auth_logger,
-                          AUTH_DATASRC_CLIENTS_BUILDER_SEGMENT_UNKNOWN_CLASS)
-                    .arg(rrclass);
-                std::terminate();
-            }
-            if (arg->contains("inuse-only") &&
-                arg->get("inuse-only")->boolValue()) {
-                BOOST_FOREACH(const datasrc::DataSourceStatus& st,
-                              list->getStatus()) {
-                    if (st.getName() != name) {
-                        continue;
-                    }
-                    if (st.getSegmentState() != bundy::datasrc::SEGMENT_INUSE) {
-                        LOG_DEBUG(auth_logger, DBGLVL_TRACE_BASIC,
-                                  AUTH_DATASRC_CLIENTS_SKIP_SEGMENT_RESET).
-                            arg(name).arg(rrclass);
-                        return;
-                    }
-                }
-            }
+            const int64_t genid = arg->get("generation-id")->intValue();
+            const bool inuse_only = (arg->contains("inuse-only") &&
+                                     arg->get("inuse-only")->boolValue());
 
-            typename MutexType::Locker locker(*map_mutex_);
-            if (!list->resetMemorySegment(name,
-                    bundy::datasrc::memory::ZoneTableSegment::READ_ONLY,
-                    segment_params)) {
-                LOG_FATAL(auth_logger,
-                          AUTH_DATASRC_CLIENTS_BUILDER_SEGMENT_NO_DATASRC)
-                    .arg(rrclass).arg(name);
-                std::terminate();
+            if (gen_id_ == genid) {
+                // normal case: update on the current generation; just apply it.
+                resetSegment(**clients_map_, rrclass, name, segment_params,
+                             inuse_only);
+            } else if (pending_map_ && pending_map_->gen_id_ == genid) {
+                // update for a pending generation: apply it, and see if it's
+                // now ready, and if so, perform swap now.
+                resetSegment(*pending_map_->clients_map_, rrclass, name,
+                             segment_params, inuse_only);
+                if (isClientsReady(*pending_map_->clients_map_)) {
+                    installClientsMap();
+                }
+            } else {
+                // We should be able to ignore all other cases: We shouldn't
+                // get an update for a future generation (even newer one than
+                // pending generation) since the update must follow a data
+                // source reconfiguration, which should have been broadcasted
+                // to all modules at the same time.  Getting an older generation
+                // should also be impossible, but even if that happens we can
+                // just ignore it since we'll never need it.  Getting an
+                // intermediate generation between the current and pending
+                // might be possible if multiple generations of reconfiguration
+                // happen very rapidly, but we can ignore it, too since we'll
+                // never need that generation.  We'll still send an ack to the
+                // memmgr just in case it really waits for it.
+                LOG_INFO(auth_logger,
+                         AUTH_DATASRC_CLIENTS_BUILDER_SEGMENT_UNKNOWNGEN).
+                    arg(genid).arg(gen_id_);
             }
         } catch (const bundy::dns::InvalidRRClass& irce) {
             LOG_FATAL(auth_logger,
@@ -725,15 +879,37 @@ private:
         datasrc::ConfigurableClientList& client_list,
         const std::string& datasrc_name, const dns::RRClass& rrclass,
         const dns::Name& origin);
+    FinishedCallback doReleaseSegments(const Command& command);
 
     // The following are shared with the manager
     std::list<Command>* command_queue_;
-    std::list<FinishedCallback> *callback_queue_;
+    std::list<FinishedCallbackPair> *callback_queue_;
     CondVarType* cond_;
     MutexType* queue_mutex_;
     datasrc::ClientListMapPtr* clients_map_;
     MutexType* map_mutex_;
     int wake_fd_;
+
+    // These are local to the builder thread:
+    // Placeholder for pending new generation of data source clients.  Defined
+    // as a struct just for handling the members as a tuple.
+    struct PendingClientListMap {
+        PendingClientListMap(datasrc::ClientListMapPtr clients_map,
+                             int64_t gen_id) :
+            clients_map_(clients_map), gen_id_(gen_id)
+        {}
+        datasrc::ClientListMapPtr clients_map_;
+        const int64_t gen_id_;
+    };
+    boost::scoped_ptr<PendingClientListMap> pending_map_;
+    int64_t gen_id_;    // effective generation ID of the current clients_map_
+                        // begin with -1, and >= 0 once configured.
+
+    // local queue of call backs to be purged at the end of command handling
+    std::list<FinishedCallbackPair> callbacks_;
+
+    // placeholder for pending callback of RELEASE_SEGMENTS command.
+    FinishedCallback pending_callback_;
 };
 
 // Shortcut typedef for normal use
@@ -760,21 +936,22 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::run() {
             } // the lock is released here.
 
             while (keep_running && !current_commands.empty()) {
+                data::ConstElementPtr cbarg;
                 try {
-                    keep_running = handleCommand(current_commands.front());;
+                    keep_running = handleCommand(current_commands.front());
                 } catch (const InternalCommandError& e) {
                     LOG_ERROR(auth_logger,
                               AUTH_DATASRC_CLIENTS_BUILDER_COMMAND_ERROR).
                         arg(e.what());
                 }
-                if (current_commands.front().callback) {
-                    // Lock the queue
+                if (!callbacks_.empty()) {
+                    // Lock the queue, and move scheduled callbacks to the
+                    // shared queue.
                     typename MutexType::Locker locker(*queue_mutex_);
-                    callback_queue_->
-                        push_back(current_commands.front().callback);
+                    callback_queue_->splice(callback_queue_->end(), callbacks_);
                     // Wake up the other end. If it would block, there are data
                     // and it'll wake anyway.
-                    int result = send(wake_fd_, "w", 1, MSG_DONTWAIT);
+                    const int result = send(wake_fd_, "w", 1, MSG_DONTWAIT);
                     if (result == -1 &&
                         (errno != EWOULDBLOCK && errno != EAGAIN)) {
                         // Note: the strerror might not be thread safe, as
@@ -821,30 +998,42 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::handleCommand(
 
     const boost::array<const char*, NUM_COMMANDS> command_desc = {
         {"NOOP", "RECONFIGURE", "LOADZONE", "UPDATEZONE", "SEGMENT_INFO_UPDATE",
-         "SHUTDOWN"}
+         "RELEASE_SEGMENTS", "SHUTDOWN"}
     };
     LOG_DEBUG(auth_logger, DBGLVL_TRACE_BASIC,
               AUTH_DATASRC_CLIENTS_BUILDER_COMMAND).arg(command_desc.at(cid));
+    data::ConstElementPtr cbarg;
+    FinishedCallback callback = command.callback;
+    const bool keep_running = (command.id != SHUTDOWN);
     switch (command.id) {
     case RECONFIGURE:
-        doReconfigure(command.params);
+        cbarg = doReconfigure(command.params);
         break;
     case LOADZONE:
-    case UPDATEZONE:            // need test
+    case UPDATEZONE:
         doUpdateZone(command.id, command.params);
         break;
     case SEGMENT_INFO_UPDATE:
         doSegmentUpdate(command.params);
         break;
+    case RELEASE_SEGMENTS:
+        callback = doReleaseSegments(command);
+        break;
     case SHUTDOWN:
-        return (false);
+        break;
     case NOOP:
-        doNoop();
+        cbarg = doNoop();
         break;
     case NUM_COMMANDS:
         assert(false);          // we rejected this case above
     }
-    return (true);
+
+    // By default, if callback is specified we'll schedule it to be called.
+    if (callback) {
+        callbacks_.push_back(FinishedCallbackPair(callback, cbarg));
+    }
+
+    return (keep_running);
 }
 
 template <typename MutexType, typename CondVarType>
@@ -972,6 +1161,41 @@ DataSrcClientsBuilderBase<MutexType, CondVarType>::getZoneWriter(
     }
 
     return (boost::shared_ptr<datasrc::memory::ZoneWriter>());
+}
+
+template <typename MutexType, typename CondVarType>
+FinishedCallback
+DataSrcClientsBuilderBase<MutexType, CondVarType>::doReleaseSegments(
+    const Command& command)
+{
+    try {
+        if (!command.params) {
+            bundy_throw(InvalidParameter, "NULL argument");
+        }
+        if (!command.params->contains("generation-id")) {
+            bundy_throw(InvalidParameter, "missing 'generation-id'");
+        }
+        const int64_t genid = command.params->get("generation-id")->intValue();
+        if (gen_id_ == genid) {
+            pending_callback_ = command.callback;
+            return (FinishedCallback());
+        } else {
+            // Similar to generation mismatch for doSegmentUpdate(), it
+            // shouldn't be possible to get this command for an older or future
+            // generation.  An intermediate generation can be simply ignored
+            // (and the callback can be scheduled immediately).
+            LOG_INFO(auth_logger,
+                     AUTH_DATASRC_CLIENTS_BUILDER_RELEASE_SEGMENTS_UNKNOWNGEN).
+                arg(genid).arg(gen_id_);
+        }
+    } catch (const bundy::Exception& ex) {
+        // Should be a bug of the sender module.  Ignore the command, but
+        // don't crash.
+        bundy_throw(InternalCommandError,
+                    "error in parsing arguments for 'release segments': "
+                    << ex.what());
+    }
+    return (command.callback);
 }
 } // namespace datasrc_clientmgr_internal
 

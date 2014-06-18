@@ -16,6 +16,7 @@
 import json
 import os
 import unittest
+import glob
 
 from bundy.dns import *
 import bundy.config
@@ -41,6 +42,7 @@ class TestSegmentInfo(unittest.TestCase):
             '/zone-IN-0-sqlite3-mapped-vers.json'
         self.__mapped_file_base = self.__mapped_file_dir + \
             '/zone-IN-0-sqlite3-mapped.'
+        self.__orig_unlink = os.unlink
 
     def __create_sgmtinfo(self):
         return SegmentInfo.create('mapped', 0, RRClass.IN,
@@ -48,8 +50,9 @@ class TestSegmentInfo(unittest.TestCase):
                                               self.__mapped_file_dir})
 
     def tearDown(self):
-        if os.path.exists(self.__ver_file):
-            os.unlink(self.__ver_file)
+        os.unlink = self.__orig_unlink
+        for f in glob.glob(self.__mapped_file_dir + '/*sqlite3-mapped-vers*'):
+            os.unlink(f)
 
     def __check_sgmt_reset_param(self, user_type, expected_ver, sgmt_info=None):
         """Common check on the return value of get_reset_param() for
@@ -71,6 +74,7 @@ class TestSegmentInfo(unittest.TestCase):
         self.__check_sgmt_reset_param(SegmentInfo.READER, None)
 
         self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.INIT)
+        self.assertEqual(self.__sgmt_info.get_generation_id(), 0)
         self.assertEqual(len(self.__sgmt_info.get_readers()), 0)
         self.assertEqual(len(self.__sgmt_info.get_old_readers()), 0)
         self.assertEqual(len(self.__sgmt_info.get_events()), 0)
@@ -558,12 +562,16 @@ class TestSegmentInfo(unittest.TestCase):
     def test_missing_methods(self):
         # Bad subclass of SegmentInfo that doesn't implement mandatory methods.
         class TestSegmentInfo(SegmentInfo):
-            pass
+            def __init__(self):
+                super().__init__(0)
 
         self.assertRaises(SegmentInfoError,
                           TestSegmentInfo().get_reset_param,
                           SegmentInfo.WRITER)
         self.assertRaises(SegmentInfoError, TestSegmentInfo()._switch_versions)
+
+        # remove() is not mandatory, and does nothing by default.
+        TestSegmentInfo().remove() # shouldn't cause disruption
 
     def test_loaded(self):
         self.assertFalse(self.__sgmt_info.loaded())
@@ -581,6 +589,32 @@ class TestSegmentInfo(unittest.TestCase):
         self.__si_to_copying_state()
         self.assertTrue(self.__sgmt_info.loaded())
 
+    def test_remove(self):
+        # it's okay to call remove() without any files to remove
+        self.__sgmt_info.remove()
+
+        # create (empty) files that would be considered to be cleaned up on
+        # remove.
+        files = [self.__ver_file, '%s%d' % (self.__mapped_file_base, 0),
+                 '%s%d' % (self.__mapped_file_base, 1)]
+        for f in files:
+            with open(f, 'w'): pass
+            self.assertTrue(os.path.exists(f))
+
+        # Failure case: shouldn't crash, and the files still exist.
+        def raise_exception(arg):
+            raise ValueError('test error')
+        os.unlink = raise_exception
+        self.__sgmt_info.remove()
+        for f in files:
+            self.assertTrue(os.path.exists(f))
+
+        # Normal case: all files should be removed.
+        os.unlink = self.__orig_unlink
+        self.__sgmt_info.remove()
+        for f in files:
+            self.assertFalse(os.path.exists(f))
+
 class MockClientList:
     """A mock ConfigurableClientList class.
 
@@ -595,9 +629,11 @@ class MockClientList:
 
 class TestDataSrcInfo(unittest.TestCase):
     def setUp(self):
+        self.__orig_sgmtinfo_create = SegmentInfo.create
         self.__mapped_file_dir = os.environ['TESTDATA_WRITE_PATH']
         self.__mgr_config = {'mapped_file_dir': self.__mapped_file_dir}
-        self.__sqlite3_dbfile = os.environ['TESTDATA_WRITE_PATH'] + '/' + 'zone.db'
+        self.__sqlite3_dbfile = os.environ['TESTDATA_WRITE_PATH'] + '/' + \
+                                'zone.db'
         self.__clients_map = {
             # mixture of 'local' and 'mapped' and 'unused' (type =None)
             # segments
@@ -608,6 +644,7 @@ class TestDataSrcInfo(unittest.TestCase):
                                         ('datasrc1', 'local', None)]) }
 
     def tearDown(self):
+        SegmentInfo.create = self.__orig_sgmtinfo_create
         if os.path.exists(self.__sqlite3_dbfile):
             os.unlink(self.__sqlite3_dbfile)
 
@@ -682,6 +719,70 @@ class TestDataSrcInfo(unittest.TestCase):
         self.assertEqual(1, len(datasrc_info.segment_info_map))
         sgmt_info = datasrc_info.segment_info_map[(RRClass.IN, 'sqlite3')]
         self.assertIsNotNone(sgmt_info.get_reset_param(SegmentInfo.READER))
+
+    def test_cancel(self):
+        removed_segments = []
+        # Fake segment info to be used for tests, overriding some public
+        # methods for easier testing.
+        class TestSegmentInfo(SegmentInfo):
+            def __init__(self, *args):
+                self.readers = set()
+                self.old_readers = set()
+            def remove(self):
+                removed_segments.append(self)
+            def get_readers(self):
+                return self.readers
+            def get_old_readers(self):
+                return self.old_readers
+            def remove_reader(self, reader):
+                if reader in self.readers:
+                    self.readers.remove(reader)
+                else:
+                    self.old_readers.remove(reader)
+        # Fake the factory method so the faked SegmentInfo will be used.
+        SegmentInfo.create = lambda type, genid, c, d, e: \
+                TestSegmentInfo(genid) if type == 'mapped' else None
+
+        def check_canceled(expected_canceled):
+            if expected_canceled:
+                self.assertEqual(set(), dsrc_info.cancel(None))
+                self.assertEqual({}, dsrc_info.clients_map)
+                self.assertEqual({}, dsrc_info.segment_info_map)
+                self.assertEqual(2, len(removed_segments))
+            else:
+                self.assertNotEqual(set(), dsrc_info.cancel(None))
+                self.assertNotEqual({}, dsrc_info.clients_map)
+                self.assertNotEqual({}, dsrc_info.segment_info_map)
+                self.assertEqual(0, len(removed_segments))
+
+        # By default there's no reader for any segment.  So we can immediately
+        # cancel the whole generation.
+        dsrc_info = DataSrcInfo(42, self.__clients_map, self.__mgr_config)
+        check_canceled(True)
+
+        # Set up segment info with some readers.  Every time cancel() is called
+        # with a reader, a set of the remaining readers will be returned (and
+        # cancel isn't completed), and when all readers are removed the cancel
+        # will be completed.
+        removed_segments.clear()
+        dsrc_info = DataSrcInfo(42, self.__clients_map, self.__mgr_config)
+        dsrc_info.segment_info_map[(RRClass.IN, 'datasrc2')].readers.update(
+            {'a', 'b'})
+        dsrc_info.segment_info_map[(RRClass.CH, 'datasrc2')].readers.update(
+            {'c'})
+        dsrc_info.segment_info_map[(RRClass.CH, 'datasrc2')].old_readers.update(
+            {'b'})
+        self.assertEqual(set({'a', 'b', 'c'}), dsrc_info.cancel(None))
+        check_canceled(False)
+        self.assertEqual(set({'a', 'c'}), dsrc_info.cancel('b'))
+        check_canceled(False)
+        # Call cancel with a non-existent reader is no-op (no disruption)
+        self.assertEqual(set({'a', 'c'}), dsrc_info.cancel('d'))
+        check_canceled(False)
+        self.assertEqual(set({'c'}), dsrc_info.cancel('a'))
+        check_canceled(False)
+        self.assertEqual(set(), dsrc_info.cancel('c'))
+        check_canceled(True)
 
 if __name__ == "__main__":
     bundy.log.init("bundy-test")
