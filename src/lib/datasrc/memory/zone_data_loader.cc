@@ -212,7 +212,6 @@ logError(const dns::Name* zone_name, const dns::RRClass* rrclass,
 // for the usage we'd take here.  So, for wider portability we take the less
 // safer/cleaner approach.
 const dns::Serial*
-separate subclass.
 getSerialFromRRset(const dns::AbstractRRset& rrset) {
     if (rrset.getRdataCount() != 1) {
         // This is basically a bug of the data source implementation, but we
@@ -276,10 +275,11 @@ public:
     ZoneDataLoaderImpl(util::MemorySegment& mem_sgmt,
                        const dns::RRClass& rrclass,
                        const dns::Name& zone_name,
-                       ZoneData* old_data,
-                       const boost::optional<dns::Serial>& old_serial) :
+                       ZoneData* old_data, const dns::Serial* old_serial) :
         mem_sgmt_(mem_sgmt), rrclass_(rrclass), zone_name_(zone_name),
-        old_data_(old_data), old_serial_(old_serial), loaded_data_(NULL)
+        old_data_(old_data),
+        old_serial_(old_serial ? new dns::Serial(*old_serial) : NULL),
+        loaded_data_(NULL)
     {
         validateOldData(zone_name, old_data);
     }
@@ -346,7 +346,7 @@ protected:
     const dns::RRClass rrclass_;
     const dns::Name zone_name_;
     ZoneData* const old_data_;
-    const boost::optional<dns::Serial> old_serial_;
+    const boost::scoped_ptr<dns::Serial> old_serial_;
     boost::scoped_ptr<SegmentObjectHolder<ZoneData, RRClass> > data_holder_;
     boost::scoped_ptr<ZoneDataUpdaterHelper> update_helper_;
     ZoneData* loaded_data_;
@@ -432,8 +432,7 @@ public:
                      const dns::Name& zone_name, const std::string& zone_file,
                      ZoneData* old_data) :
         ZoneDataLoader::ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name,
-                                           old_data,
-                                           boost::optional<dns::Serial>()),
+                                           old_data, NULL),
         zone_file_(zone_file)
     {}
     virtual ~MasterFileLoader() {}
@@ -492,8 +491,7 @@ class IteratorLoader : public ZoneDataLoader::ZoneDataLoaderImpl {
 public:
     IteratorLoader(util::MemorySegment& mem_sgmt, const dns::RRClass& rrclass,
                    const dns::Name& zone_name, ZoneIteratorPtr iterator,
-                   ZoneData* old_data,
-                   const boost::optional<dns::Serial>& old_serial) :
+                   ZoneData* old_data, const dns::Serial* old_serial) :
         ZoneDataLoader::ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name,
                                            old_data, old_serial),
         iterator_(iterator)
@@ -523,14 +521,13 @@ class ReuseLoader : public ZoneDataLoader::ZoneDataLoaderImpl {
 public:
     ReuseLoader(util::MemorySegment& mem_sgmt,
                 const dns::RRClass& rrclass, const dns::Name& zone_name,
-                ZoneData* old_data,
-                const boost::optional<dns::Serial>& old_serial,
+                ZoneData* old_data, const dns::Serial& old_serial,
                 const std::string& dsrc_name) :
         ZoneDataLoader::ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name,
-                                           old_data, old_serial)
+                                           old_data, &old_serial)
     {
         LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_LOAD_SAME_SERIAL).
-            arg(zone_name).arg(rrclass).arg(old_serial->getValue()).
+            arg(zone_name).arg(rrclass).arg(old_serial.getValue()).
             arg(dsrc_name);
     }
     virtual ~ReuseLoader() {}
@@ -556,17 +553,16 @@ class JournalLoader : public ZoneDataLoader::ZoneDataLoaderImpl {
 public:
     JournalLoader(util::MemorySegment& mem_sgmt,
                   const dns::RRClass& rrclass, const dns::Name& zone_name,
-                  ZoneData* old_data,
-                  const boost::optional<dns::Serial>& old_serial,
+                  ZoneData* old_data, const dns::Serial& old_serial,
                   const dns::Serial& new_serial,
                   ZoneJournalReaderPtr jnl_reader,
                   const std::string& dsrc_name) :
         ZoneDataLoader::ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name,
-                                           old_data, old_serial),
+                                           old_data, &old_serial),
         jnl_reader_(jnl_reader)
     {
         LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_LOAD_USE_JOURNAL).
-            arg(zone_name_).arg(rrclass_).arg(old_serial->getValue()).
+            arg(zone_name_).arg(rrclass_).arg(old_serial.getValue()).
             arg(new_serial.getValue()).arg(dsrc_name);
     }
     virtual ~JournalLoader() {}
@@ -717,13 +713,13 @@ ZoneDataLoader::ZoneDataLoader(util::MemorySegment& mem_sgmt,
         bundy_throw(ZoneValidationError, "No SOA found for "
                     << zone_name << "/" << rrclass << "in " << dsrc_name);
     }
-    const boost::optional<dns::Serial> old_serial =
-        getSerialFromZoneData(rrclass, old_data);
-    const boost::optional<dns::Serial> new_serial =
-        getSerialFromRRset(*new_soarrset);
+    const boost::scoped_ptr<const dns::Serial> old_serial(
+        getSerialFromZoneData(rrclass, old_data));
+    const boost::scoped_ptr<const dns::Serial> new_serial(
+        getSerialFromRRset(*new_soarrset));
     if (old_serial && (*old_serial == *new_serial)) {
         impl_ = new ReuseLoader(mem_sgmt, rrclass, zone_name, old_data,
-                                old_serial, dsrc_name);
+                                *old_serial, dsrc_name);
         return;
     } else if (old_serial && (*old_serial < *new_serial)) {
         try {
@@ -732,8 +728,9 @@ ZoneDataLoader::ZoneDataLoader(util::MemorySegment& mem_sgmt,
                     zone_name, old_serial->getValue(), new_serial->getValue());
             if (result.second) {
                 impl_ = new JournalLoader(mem_sgmt, rrclass, zone_name,
-                                          old_data, old_serial, *new_serial,
-                                          result.second, dsrc_name);
+                                          old_data, *old_serial,
+                                          *new_serial, result.second,
+                                          dsrc_name);
                 return;
             }
         } catch (const bundy::NotImplemented&) {
@@ -742,7 +739,7 @@ ZoneDataLoader::ZoneDataLoader(util::MemorySegment& mem_sgmt,
         }
     }
     impl_ = new IteratorLoader(mem_sgmt, rrclass, zone_name, iterator,
-                               old_data, old_serial);
+                               old_data, old_serial.get());
 }
 
 ZoneDataLoader::~ZoneDataLoader() {
