@@ -1067,7 +1067,7 @@ TEST_P(ListTest, checkZoneWriterCatchesExceptions) {
     // Because of the way we called getCachedZoneWriter() with
     // catch_load_error=true, the following should not throw and must
     // return an error message in error_msg.
-    EXPECT_NO_THROW(result.second->load(&error_msg));
+    EXPECT_NO_THROW(result.second->load(0, &error_msg));
     EXPECT_FALSE(error_msg.empty());
     result.second->cleanup();
 }
@@ -1093,7 +1093,7 @@ TEST_P(ListTest, checkZoneWriterThrows) {
     // Because of the way we called getCachedZoneWriter() with
     // catch_load_error=false, the following should throw and must not
     // modify error_msg.
-    EXPECT_THROW(result.second->load(&error_msg),
+    EXPECT_THROW(result.second->load(0, &error_msg),
                  bundy::datasrc::ZoneLoaderException);
     EXPECT_TRUE(error_msg.empty());
     result.second->cleanup();

@@ -166,7 +166,7 @@ TEST_F(CacheConfigTest, getLoaderCreatorWithMasterFiles) {
     boost::scoped_ptr<memory::ZoneDataLoader> loader(
         cache_conf.getLoaderCreator(RRClass::IN(), Name::ROOT_NAME())
         (msgmt_, NULL));
-    ZoneData* zone_data = loader->load().first;
+    ZoneData* zone_data = loader->load();
     ASSERT_TRUE(zone_data);
     EXPECT_EQ(".", zone_data->getOriginNode()->
               getAbsoluteLabels(labels_buf).toText());
@@ -273,7 +273,7 @@ TEST_F(CacheConfigTest, getLoaderCreatorWithMock) {
     boost::scoped_ptr<memory::ZoneDataLoader> loader(
         cache_conf.getLoaderCreator(RRClass::IN(), Name("example.org"))
         (msgmt_, NULL));
-    ZoneData* zone_data = loader->load().first;
+    ZoneData* zone_data = loader->load();
     ASSERT_TRUE(zone_data);
     EXPECT_EQ("example.org.", zone_data->getOriginNode()->
               getAbsoluteLabels(labels_buf).toText());

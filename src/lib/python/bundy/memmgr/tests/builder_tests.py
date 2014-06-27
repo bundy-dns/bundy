@@ -16,6 +16,7 @@
 import unittest
 import os
 import socket
+import time
 import select
 import threading
 
@@ -70,6 +71,20 @@ class TestMemorySegmentBuilder(unittest.TestCase):
             if os.path.exists(self.__mapped_file_path):
                 os.unlink(self.__mapped_file_path)
 
+    # Helper for synchronizing with the builder thread: wait until all commands
+    # are completed, and send shutdown command.  Don't wait too long
+    # in case of unexpected hangup.
+    def __wait_and_shutdown(self):
+        wait_limit = 5          # seconds
+        while self._builder_command_queue:
+            time.sleep(0.5)
+            wait_limit -= 0.5
+        with self._builder_cv:
+            self._builder_command_queue.append(('shutdown',))
+            self._builder_cv.notify_all()
+        # Confirm it didn't time out.
+        self.assertTrue(wait_limit >= 0)
+
     def test_bad_command(self):
         """Tests what happens when a bad command is passed to the
         MemorySegmentBuilder.
@@ -120,8 +135,11 @@ class TestMemorySegmentBuilder(unittest.TestCase):
         # Now that the builder thread is running, send it the "shutdown"
         # command. The thread should exit its main loop and be joinable.
         with self._builder_cv:
+            # Commands before 'shutdown' must be ignore, once 'shutdown' is
+            # recognized.
+            self._builder_command_queue.append(('bad_command_0',))
             self._builder_command_queue.append(('shutdown',))
-            # Commands after 'shutdown' must be ignored.
+            # Commands after 'shutdown' must also be ignored.
             self._builder_command_queue.append(('bad_command_1',))
             self._builder_command_queue.append(('bad_command_2',))
             self._builder_cv.notify_all()
@@ -149,8 +167,8 @@ class TestMemorySegmentBuilder(unittest.TestCase):
         self._builder_thread.start()
         with self._builder_cv:
             self._builder_command_queue.append(('cancel', 'dummy arg'))
-            self._builder_command_queue.append(('shutdown',))
             self._builder_cv.notify_all()
+        self.__wait_and_shutdown()
         self._builder_thread.join(5)
         self.assertFalse(self._builder_thread.isAlive())
         self.assertEqual([('cancel-completed', 'dummy arg')],
@@ -274,8 +292,8 @@ class TestMemorySegmentBuilder(unittest.TestCase):
             # as a validation failure
             self._builder_command_queue.append(('validate', 'd', 'c', 'n',
                                                 action_raise))
-            self._builder_command_queue.append(('shutdown',))
             self._builder_cv.notify_all()
+        self.__wait_and_shutdown()
         self._builder_thread.join(5)
         self.assertFalse(self._builder_thread.isAlive())
 
@@ -295,8 +313,11 @@ class TestMemorySegmentBuilderWithoutThread(unittest.TestCase):
         self.__create_ok = False
         self.__get_cached_zone_writer_ok = True
         self.__load_ok = True
+        self.__load_twice = False
         self.__install_ok = True
+        self.__installed = False
         self.__response_queue = []
+        self.__load_arg = []
         self.__zone_table_result = [] # for get_zone_table_accessor mock
         builder_cv = threading.Condition(lock=threading.Lock())
         self.__builder = MemorySegmentBuilder(self, builder_cv, [],
@@ -305,7 +326,6 @@ class TestMemorySegmentBuilderWithoutThread(unittest.TestCase):
         self.dsrc_info = self
         self.segment_info_map = \
             {(RRClass.IN, 'testsrc'): self} # pretend to be segment info
-        self.cleanup = lambda: None         # Mock ZoneWriter.cleanup
 
     def send(self, x):          # mock socket.send()
         return 1
@@ -342,13 +362,21 @@ class TestMemorySegmentBuilderWithoutThread(unittest.TestCase):
     def get_zone_table_accessor(self, arg1, arg2):
         return self.__zone_table_result
 
-    def load(self):             # mock ZoneWriter.load()
+    def load(self, arg):             # mock ZoneWriter.load()
+        self.__load_arg.append(arg)
         if not self.__load_ok:
             raise ValueError('load fail')
+        if self.__load_twice and len(self.__load_arg) == 1:
+            return False
+        return True
 
     def install(self):          # mock ZoneWriter.install()
         if not self.__install_ok:
             raise ValueError('install fail')
+        self.__installed = True
+
+    def cleanup(self):          # Mock ZoneWriter.cleanup
+        self.__writer_cleanup_called = True
 
     def __check_reset_fail(self, name, create_ok):
         self.__reset_called = 0
@@ -374,6 +402,35 @@ class TestMemorySegmentBuilderWithoutThread(unittest.TestCase):
         self.__check_reset_fail(Name('test.example'), False)
         self.__check_reset_fail(None, True)
         self.__check_reset_fail(None, False)
+
+    def __check_load(self, twice):
+        """Common test case for successful load.
+
+        If 'twice' is True, load() will have to called twice to complete load.
+
+        """
+        # set up
+        self.__writer_cleanup_called = 0
+        self.__reset_called = 0
+        self.__load_arg = []
+        del self.__response_queue[:]
+        self.__load_twice = twice
+
+        # Do the load
+        self.__builder._handle_load(Name('test.example'), self, RRClass.IN,
+                                    'testsrc')
+
+        # Check what happened
+        self.assertEqual([1000, 1000] if twice else [1000], self.__load_arg)
+        self.assertTrue(self.__installed)
+        self.assertEqual(1, self.__writer_cleanup_called)
+        self.assertEqual(2, self.__reset_called) # reset for rw and ro
+        self.assertEqual(self.__response_queue[0],
+                         ('load-completed', self, RRClass.IN, 'testsrc', True))
+
+    def test_load(self):
+        self.__check_load(False)
+        self.__check_load(True)
 
     def __check_load_fail(self, name, writer_ok, load_ok, install_ok):
         self.__reset_called = 0
@@ -403,6 +460,50 @@ class TestMemorySegmentBuilderWithoutThread(unittest.TestCase):
         self.__check_load_fail(None, True, False, None)
         self.__check_load_fail(None, True, True, False)
 
+    def __check_load_cancel(self, reason, expect_cancel=True):
+        "Common check for cancel/shutdown interrupt during a load."
+
+        # setup
+        self.__writer_cleanup_called = 0
+        self.__reset_called = 0
+        self.__load_arg = []
+        del self.__response_queue[:]
+        self.__builder._command_queue = [('dummy', 1), reason]
+        self.gen_id = 42        # prentending to be dsrc_info for log message
+
+        # do the load
+        self.__builder._handle_load(Name('test.example'), self, RRClass.IN,
+                                    'testsrc')
+
+        # In call cases, graceful cleanup is performed.
+        self.assertEqual(1, self.__writer_cleanup_called)
+        self.assertEqual(2, self.__reset_called) # still reset for rw and ro
+
+        if expect_cancel:
+            self.assertEqual([1000], self.__load_arg) # only one call to load()
+            self.assertFalse(self.__installed) # not installed due to the cancel
+            self.assertFalse(self.__response_queue) # no response
+        else:
+            # if it's not canceled, the result is like a normal load
+            self.assertEqual([1000, 1000] if self.__load_twice else [1000],
+                             self.__load_arg)
+            self.assertTrue(self.__installed)
+            self.assertEqual(self.__response_queue[0],
+                             ('load-completed', self, RRClass.IN, 'testsrc',
+                              True))
+
+    def test_load_cancel(self):
+        # Possible can only happen if the load() isn't completed in the first
+        # call, so we should generally set up so the second load is required.
+        self.__load_twice = True
+        self.__check_load_cancel(('shutdown',))
+        self.__check_load_cancel(('cancel', self))
+        self.__check_load_cancel(('cancel', 'dummy-src'), False)
+
+        # If the first call to load() completes its task, no cancel happens.
+        self.__load_twice = False
+        self.__check_load_cancel(('shutdown',), False)
+
     def test_handle_cancels(self):
         "Check the effect of cancel commands."
 
@@ -412,11 +513,14 @@ class TestMemorySegmentBuilderWithoutThread(unittest.TestCase):
                     ('validate', 'info3'),
                     ('cancel', 'info1'), ('cancel', 'info2'),
                     ('validate', 'info2'), ('load', 1, 'info1'),
-                    ('load', 2, 'info3'), ('shutdown',)]
+                    ('load', 2, 'info3')]
         result = self.__builder._handle_cancels(commands)
         self.assertEqual([('validate', 'info3'), ('cancel', 'info1'),
-                          ('cancel', 'info2'), ('load', 2, 'info3'),
-                          ('shutdown',)], result)
+                          ('cancel', 'info2'), ('load', 2, 'info3')], result)
+
+        commands.extend([('shutdown',), ('load', 3, 'info4')])
+        result = self.__builder._handle_cancels(commands)
+        self.assertEqual([('shutdown',)], result)
 
 if __name__ == "__main__":
     bundy.log.init("bundy-test")

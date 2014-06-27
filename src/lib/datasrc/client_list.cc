@@ -175,7 +175,7 @@ ConfigurableClientList::configure(const ConstElementPtr& config,
                                               rrclass_, true);
 
                     std::string error_msg;
-                    writer.load(&error_msg);
+                    writer.load(0, &error_msg);
                     if (!error_msg.empty()) {
                         LOG_ERROR(logger, DATASRC_LOAD_ZONE_ERROR).arg(zname).
                             arg(rrclass_).arg(datasrc_name).arg(error_msg);

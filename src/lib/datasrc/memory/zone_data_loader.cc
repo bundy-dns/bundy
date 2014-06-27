@@ -67,7 +67,7 @@ namespace { // unnamed namespace
 // do it, but since we cannot guarantee the adding/removing operation is
 // exception free, we don't choose that option to maintain the common
 // expectation for destructors.
-class ZoneDataLoaderHelper : boost::noncopyable {
+class ZoneDataUpdaterHelper : boost::noncopyable {
 public:
     enum OP_MODE {ADD, DELETE};
 
@@ -75,7 +75,7 @@ public:
     typedef boost::function<void(bundy::dns::ConstRRsetPtr, OP_MODE)>
     LoadCallback;
 
-    ZoneDataLoaderHelper(util::MemorySegment& mem_sgmt,
+    ZoneDataUpdaterHelper(util::MemorySegment& mem_sgmt,
                          const bundy::dns::RRClass& rrclass,
                          const bundy::dns::Name& zone_name,
                          ZoneData& zone_data) :
@@ -101,7 +101,8 @@ private:
 };
 
 void
-ZoneDataLoaderHelper::updateFromLoad(const ConstRRsetPtr& rrset, OP_MODE mode) {
+ZoneDataUpdaterHelper::updateFromLoad(const ConstRRsetPtr& rrset, OP_MODE mode)
+{
     // Set current mode.  If the mode is changing, we first need to flush all
     // changes in the previous mode.
     if (current_mode_ && *current_mode_ != mode) {
@@ -133,7 +134,7 @@ ZoneDataLoaderHelper::updateFromLoad(const ConstRRsetPtr& rrset, OP_MODE mode) {
 }
 
 void
-ZoneDataLoaderHelper::flushNodeRRsets() {
+ZoneDataUpdaterHelper::flushNodeRRsets() {
     // There has been no add or remove operation.  Then flush is no-op too.
     if (!current_mode_) {
         return;
@@ -178,7 +179,7 @@ ZoneDataLoaderHelper::flushNodeRRsets() {
 }
 
 const Name&
-ZoneDataLoaderHelper::getCurrentName() const {
+ZoneDataUpdaterHelper::getCurrentName() const {
     if (!node_rrsets_.empty()) {
         return (node_rrsets_.begin()->second->getName());
     }
@@ -200,91 +201,6 @@ logError(const dns::Name* zone_name, const dns::RRClass* rrclass,
 {
     LOG_ERROR(logger, DATASRC_MEMORY_CHECK_ERROR).arg(*zone_name).arg(*rrclass).
         arg(reason);
-}
-
-// A wrapper for dns::MasterLoader used by ZoneDataLoader.  Essentially
-// it converts the two callback types.  Note the mostly redundant wrapper of
-// boost::bind.  It converts function<void(ConstRRsetPtr)> to
-// function<void(RRsetPtr)> (MasterLoader expects the latter).  SunStudio
-// doesn't seem to do this conversion if we just pass 'callback'.
-void
-masterLoaderWrapper(const char* const filename, const Name& origin,
-                    const RRClass& zone_class,
-                    ZoneDataLoaderHelper::LoadCallback callback)
-{
-    bool load_ok = false;       // (we don't use it)
-    dns::RRCollator collator(boost::bind(callback, _1,
-                                         ZoneDataLoaderHelper::ADD));
-
-    try {
-        dns::MasterLoader(filename, origin, zone_class,
-                          createMasterLoaderCallbacks(origin, zone_class,
-                                                      &load_ok),
-                          collator.getCallback()).load();
-        collator.flush();
-    } catch (const dns::MasterLoaderError& e) {
-        bundy_throw(ZoneLoaderException, e.what());
-    }
-}
-
-// The installer called for ZoneDataLoader using a zone iterator
-void
-generateRRsetFromIterator(ZoneIterator* iterator,
-                          ZoneDataLoaderHelper::LoadCallback callback)
-{
-    ConstRRsetPtr rrset;
-    while ((rrset = iterator->getNextRRset()) != NULL) {
-        callback(rrset, ZoneDataLoaderHelper::ADD);
-    }
-}
-
-ConstRRsetPtr
-nextDiff(std::vector<ConstRRsetPtr>::const_iterator& it,
-         const std::vector<ConstRRsetPtr>::const_iterator& it_end,
-         ZoneJournalReaderPtr& jnl_reader)
-{
-    ConstRRsetPtr next_diff;    // null by default
-    if (it != it_end) {
-        next_diff = *it;
-        ++it;
-    } else if (jnl_reader) {
-        next_diff = jnl_reader->getNextDiff();
-    }
-    return (next_diff);
-}
-
-// The installer called for ZoneDataLoader using a zone journal reader.
-// It performs some minimal sanity checks on the sequence of data, but
-// the basic assumption is that any invalid data mean implementation defect
-// (not bad user input) and shouldn't happen anyway.
-void
-applyDiffs(const std::vector<ConstRRsetPtr>* saved_diffs,
-           ZoneJournalReaderPtr jnl_reader,
-           ZoneDataLoaderHelper::LoadCallback callback)
-{
-    enum DIFF_MODE {INIT, ADD, DELETE} mode = INIT;
-    ConstRRsetPtr rrset;
-    std::vector<ConstRRsetPtr>::const_iterator it = saved_diffs->begin();
-    const std::vector<ConstRRsetPtr>::const_iterator it_end =
-        saved_diffs->end();
-    while ((rrset = nextDiff(it, it_end, jnl_reader))) {
-        if (rrset->getType() == RRType::SOA()) {
-            mode = (mode == INIT || mode == ADD) ? DELETE : ADD;
-        } else if (mode == INIT) {
-            // diff sequence doesn't begin with SOA. It means broken journal
-            // reader implementation.
-            bundy_throw(bundy::Unexpected,
-                        "broken journal reader: diff not begin with SOA");
-        }
-        callback(rrset,
-                 (mode == ADD) ?
-                 ZoneDataLoaderHelper::ADD : ZoneDataLoaderHelper::DELETE);
-    }
-    if (mode != ADD) {
-        // Diff must end in the add mode (there should at least be one
-        // add for the final SOA)
-        bundy_throw(bundy::Unexpected, "broken journal reader: incomplete");
-    }
 }
 
 // The following two are helper to extract SOA serial from the zone data
@@ -341,55 +257,408 @@ validateOldData(const Name& origin, ZoneData* old_data) {
                     "origin=" << old_name << ", expecting " << origin);
     }
 }
-
 } // end of unnamed namespace
 
+// The base implementation class of ZoneDataLoader.  Specific derived classes
+// are defined to implement details depending on the source of the data
+// (file or another data source) or how the data should be loaded (full load
+// or journal based, etc).  This base class manages common parameters and
+// resources for all loader derived classes and define some common methods.
+// Some member variables are defined as protected for the convenience of derived
+// classes.  In general this is not a good practice in terms of data
+// encapsulation, but all of these classes are hidden inside this class and
+// never intended to be used outside of it, let alone publicly, so we prefer
+// the brevity of the direct access.
 class ZoneDataLoader::ZoneDataLoaderImpl {
 public:
+    virtual ~ZoneDataLoaderImpl() {}
     ZoneDataLoaderImpl(util::MemorySegment& mem_sgmt,
                        const dns::RRClass& rrclass,
                        const dns::Name& zone_name,
-                       const std::string& zone_file,
-                       ZoneData* old_data) :
+                       ZoneData* old_data, const dns::Serial* old_serial) :
         mem_sgmt_(mem_sgmt), rrclass_(rrclass), zone_name_(zone_name),
-        zone_file_(zone_file), datasrc_client_(NULL), old_data_(old_data),
-        old_serial_(getSerialFromZoneData(rrclass, old_data))
+        old_data_(old_data),
+        old_serial_(old_serial ? new dns::Serial(*old_serial) : NULL),
+        loaded_data_(NULL)
     {
         validateOldData(zone_name, old_data);
     }
 
-    ZoneDataLoaderImpl(util::MemorySegment& mem_sgmt,
-                       const dns::RRClass& rrclass,
-                       const dns::Name& zone_name,
-                       const DataSourceClient& datasrc_client,
-                       ZoneData* old_data) :
-        mem_sgmt_(mem_sgmt), rrclass_(rrclass), zone_name_(zone_name),
-        datasrc_client_(&datasrc_client), old_data_(old_data),
-        old_serial_(getSerialFromZoneData(rrclass, old_data))
-    {
-        validateOldData(zone_name, old_data);
+    virtual bool doLoad(size_t count_limit) {
+        initUpdate(NULL);
+        const bool completed = doLoadCommon(count_limit);
+        if (completed) {
+            finishUpdate();
+        }
+        return (completed);
     }
 
-    LoadResult doLoad();
+    virtual ZoneData* commitDiffs(ZoneData* update_data) {
+        return (update_data);
+    }
 
-    ZoneData* commitDiffs(ZoneData* update_data);
+    virtual bool isDataReused() const = 0;
 
-private:
-    typedef boost::function<void(ZoneDataLoaderHelper::LoadCallback)>
-    RRsetInstaller;
-    LoadResult doLoadCommon(
-        SegmentObjectHolder<ZoneData, RRClass>* data_holder,
-        RRsetInstaller installer);
-    ZoneJournalReaderPtr getJournalReader(uint32_t begin, uint32_t end) const;
-    void saveDiffs();
+    ZoneData* getLoadedData() const {
+        return (loaded_data_);
+    }
 
+protected:
+    bool doLoadCommon(size_t count_limit);
+
+    virtual void initUpdate(ZoneData* const zone_data) {
+        if (data_holder_) {
+            return;             // nothing to do, already initialized
+        }
+        while (true) {
+            try {
+                boost::scoped_ptr<SegmentObjectHolder<ZoneData, RRClass> >
+                    holder(new SegmentObjectHolder<ZoneData, RRClass>
+                           (mem_sgmt_, rrclass_));
+                if (zone_data) {
+                    holder->set(zone_data);
+                } else {
+                    holder->set(ZoneData::create(mem_sgmt_, zone_name_));
+                }
+                data_holder_.swap(holder);
+                break;
+            } catch (const util::MemorySegmentGrown&) {
+                // If we are using existing zone data, this exception must be
+                // handled at a higher level that holds the ownership of the
+                // original data.  Otherwise, try as long as it takes to load
+                // and grow the segment.
+                if (zone_data) {
+                    throw;
+                }
+            }
+        }
+        update_helper_.reset(new ZoneDataUpdaterHelper(mem_sgmt_, rrclass_,
+                                                       zone_name_,
+                                                       *data_holder_->get()));
+    }
+
+    void finishUpdate();
+
+    virtual bool updateRRsets(size_t count_limit) = 0;
+
+protected:
     util::MemorySegment& mem_sgmt_;
     const dns::RRClass rrclass_;
     const dns::Name zone_name_;
-    const std::string zone_file_;
-    const DataSourceClient* const datasrc_client_;
     ZoneData* const old_data_;
-    boost::scoped_ptr<const dns::Serial> old_serial_;
+    const boost::scoped_ptr<dns::Serial> old_serial_;
+    boost::scoped_ptr<SegmentObjectHolder<ZoneData, RRClass> > data_holder_;
+    boost::scoped_ptr<ZoneDataUpdaterHelper> update_helper_;
+    ZoneData* loaded_data_;
+};
+
+void
+ZoneDataLoader::ZoneDataLoaderImpl::finishUpdate() {
+    const ZoneNode* origin_node = data_holder_->get()->getOriginNode();
+    const RdataSet* rdataset = origin_node->getData();
+    ZoneData* const loaded_data = data_holder_->get();
+    // If the zone is and NSEC3-signed, check if it has NSEC3PARAM.
+    // If not, it may either just go to NSEC3-unsigned, or there's an
+    // operational error in that step, depending on whether there's any
+    // NSEC3 RRs in the zone.
+    if (loaded_data->isNSEC3Signed() &&
+        RdataSet::find(rdataset, RRType::NSEC3PARAM()) == NULL) {
+        if (loaded_data->getNSEC3Data()->isEmpty()) {
+            // becoming NSEC3-unsigned.
+            LOG_INFO(logger, DATASRC_MEMORY_MEM_NSEC3_UNSIGNED).arg(zone_name_).
+                arg(rrclass_);
+            NSEC3Data* old_n3data = loaded_data->setNSEC3Data(NULL);
+            NSEC3Data::destroy(mem_sgmt_, old_n3data, rrclass_);
+        } else {
+            LOG_WARN(logger, DATASRC_MEMORY_MEM_NO_NSEC3PARAM).arg(zone_name_).
+                arg(rrclass_);
+        }
+    }
+
+    RRsetCollection collection(*loaded_data, rrclass_);
+    const dns::ZoneCheckerCallbacks
+        callbacks(boost::bind(&logError, &zone_name_, &rrclass_, _1),
+                  boost::bind(&logWarning, &zone_name_, &rrclass_, _1));
+    if (!dns::checkZone(zone_name_, rrclass_, collection, callbacks)) {
+        bundy_throw(ZoneValidationError, "Errors found when validating zone: "
+                    << zone_name_ << "/" << rrclass_);
+    }
+
+    // Check loaded serial.  Note that if checkZone() passed, we
+    // should have SOA in the ZoneData.
+    boost::scoped_ptr<const dns::Serial> new_serial(
+        getSerialFromZoneData(rrclass_, loaded_data));
+    if (old_serial_ && *old_serial_ >= *new_serial) {
+        LOG_WARN(logger, DATASRC_MEMORY_LOADED_SERIAL_NOT_INCREASED).
+            arg(zone_name_).arg(rrclass_).
+            arg(old_serial_->getValue()).arg(new_serial->getValue());
+    }
+    LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_LOADED).
+        arg(zone_name_).arg(rrclass_).arg(new_serial->getValue()).
+        arg(loaded_data->isSigned() ? " (DNSSEC signed)" : "");
+
+    loaded_data_ = data_holder_->release();
+}
+
+bool
+ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon(const size_t count_limit) {
+    // if the count is unlimited (0), use an arbitrarily large number for
+    // the temporary limit.
+    const size_t update_count_limit = count_limit == 0 ? 100000 : count_limit;
+    try {
+        bool completed = false;
+        do {
+            completed = updateRRsets(update_count_limit);
+        } while (!completed && count_limit == 0);
+        // Add any last RRsets that were left
+        update_helper_->flushNodeRRsets();
+        if (completed) {
+            // we're done with the updater.  Release internal resources sooner.
+            update_helper_.reset();
+        }
+        return (completed);
+    } catch (const util::MemorySegmentGrown&) {
+        // Nothing after creating the data holder should throw
+        // MemorySegmentGrown.  We make it sure here.
+        assert(false);
+    }
+}
+
+namespace {
+// Master-file based loader implementation.
+class MasterFileLoader : public ZoneDataLoader::ZoneDataLoaderImpl {
+public:
+    MasterFileLoader(util::MemorySegment& mem_sgmt, const dns::RRClass& rrclass,
+                     const dns::Name& zone_name, const std::string& zone_file,
+                     ZoneData* old_data) :
+        ZoneDataLoader::ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name,
+                                           old_data, NULL),
+        zone_file_(zone_file)
+    {}
+    virtual ~MasterFileLoader() {}
+    virtual bool isDataReused() const { return (false); }
+
+protected:
+    virtual void initUpdate(ZoneData* const zone_data) {
+        if (master_loader_) {
+            return;             // already initialized
+        }
+
+        // perform common initialization, and create MasterLoader (we need to
+        // hold off creating it until this point since we need update_helper_).
+        ZoneDataLoader::ZoneDataLoaderImpl::initUpdate(zone_data);
+
+        // Below, we convert the two callback types.  Note the mostly redundant
+        // wrapper of boost::bind.  It converts function<void(ConstRRsetPtr)>
+        // to function<void(RRsetPtr)> (MasterLoader expects the latter).
+        // SunStudio doesn't seem to do this conversion if we just pass a
+        // combined boost::bind object.
+        ZoneDataUpdaterHelper::LoadCallback update_helper_callback =
+            boost::bind(&ZoneDataUpdaterHelper::updateFromLoad,
+                        update_helper_.get(), _1, _2);
+        rrcollator_.reset(
+            new dns::RRCollator(boost::bind(update_helper_callback, _1,
+                                            ZoneDataUpdaterHelper::ADD)));
+        master_loader_.reset(
+            new dns::MasterLoader(zone_file_.c_str(), zone_name_, rrclass_,
+                                  createMasterLoaderCallbacks(zone_name_,
+                                                              rrclass_,
+                                                              &load_ok_),
+                                  rrcollator_->getCallback()));
+    }
+
+    virtual bool updateRRsets(size_t count_limit) {
+        try {
+            if (!master_loader_->loadIncremental(count_limit)) {
+                return (false);
+            }
+            rrcollator_->flush();
+        } catch (const dns::MasterLoaderError& e) {
+            bundy_throw(ZoneLoaderException, e.what());
+        }
+        return (true);
+    }
+
+private:
+    bool load_ok_; // we actually don't use it; only need a placeholder
+    const std::string zone_file_;
+    boost::scoped_ptr<dns::RRCollator> rrcollator_;
+    boost::scoped_ptr<dns::MasterLoader> master_loader_;
+};
+
+// Zone iterator (of a data source) based loader implementation.
+class IteratorLoader : public ZoneDataLoader::ZoneDataLoaderImpl {
+public:
+    IteratorLoader(util::MemorySegment& mem_sgmt, const dns::RRClass& rrclass,
+                   const dns::Name& zone_name, ZoneIteratorPtr iterator,
+                   ZoneData* old_data, const dns::Serial* old_serial) :
+        ZoneDataLoader::ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name,
+                                           old_data, old_serial),
+        iterator_(iterator)
+    {}
+    virtual ~IteratorLoader() {}
+    virtual bool isDataReused() const { return (false); }
+
+protected:
+    // The installer called for ZoneDataLoader using a zone iterator
+    virtual bool updateRRsets(size_t count_limit) {
+        size_t count = 0;
+        ConstRRsetPtr rrset;
+        while (count < count_limit &&
+               (rrset = iterator_->getNextRRset()) != NULL) {
+            update_helper_->updateFromLoad(rrset, ZoneDataUpdaterHelper::ADD);
+            count++;
+        }
+        return (!rrset);   // we are done iff we reach end of the iterator
+    }
+private:
+    ZoneIteratorPtr iterator_;
+};
+
+// A simple thin wrapper in case the load can be skipped because there's no
+// change in the SOA serial.
+class ReuseLoader : public ZoneDataLoader::ZoneDataLoaderImpl {
+public:
+    ReuseLoader(util::MemorySegment& mem_sgmt,
+                const dns::RRClass& rrclass, const dns::Name& zone_name,
+                ZoneData* old_data, const dns::Serial& old_serial,
+                const std::string& dsrc_name) :
+        ZoneDataLoader::ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name,
+                                           old_data, &old_serial)
+    {
+        LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_LOAD_SAME_SERIAL).
+            arg(zone_name).arg(rrclass).arg(old_serial.getValue()).
+            arg(dsrc_name);
+    }
+    virtual ~ReuseLoader() {}
+    virtual bool doLoad(size_t) {
+        loaded_data_ = old_data_;
+        return (true);
+    }
+    virtual bool isDataReused() const { return (true); }
+protected:
+    virtual bool updateRRsets(size_t) {
+        assert(false);          // this version shouldn't be called
+    }
+};
+
+// Zone journal based loader implementation.  This one only applies diffs
+// between two serial versions of the zone and can be generally expected to
+// be faster.  Obviously this only works if previous zone data are given, and
+// corresponding diff can be found via the zone journal.  Also, it directly
+// modifies the existing zone data, rather than creating a new one and replace
+// it with the old on completion.  So any intermediate failure will invalidate
+// the zone data.
+class JournalLoader : public ZoneDataLoader::ZoneDataLoaderImpl {
+public:
+    JournalLoader(util::MemorySegment& mem_sgmt,
+                  const dns::RRClass& rrclass, const dns::Name& zone_name,
+                  ZoneData* old_data, const dns::Serial& old_serial,
+                  const dns::Serial& new_serial,
+                  ZoneJournalReaderPtr jnl_reader,
+                  const std::string& dsrc_name) :
+        ZoneDataLoader::ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name,
+                                           old_data, &old_serial),
+        jnl_reader_(jnl_reader)
+    {
+        LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_LOAD_USE_JOURNAL).
+            arg(zone_name_).arg(rrclass_).arg(old_serial.getValue()).
+            arg(new_serial.getValue()).arg(dsrc_name);
+    }
+    virtual ~JournalLoader() {}
+    virtual bool isDataReused() const { return (true); }
+    virtual bool doLoad(size_t) {
+        saveDiffs();
+        loaded_data_ = old_data_;
+        return (true);
+    }
+    virtual ZoneData* commitDiffs(ZoneData* update_data) {
+        // Constructing SegmentObjectHolder can result in MemorySegmentGrown.
+        // This needs to be handled at the caller as update_data could now be
+        // invalid.  But before propagating the exception, we should release the
+        // data because the caller has the ownership and we shouldn't destroy
+        // it.
+        initUpdate(update_data);
+        try {
+            // On success, finishUpdate release the zone data in the holder.
+            doLoadCommon(0);    // must return true
+            finishUpdate();
+            return (getLoadedData());
+        } catch (...) {
+            data_holder_->release();
+            throw;
+        }
+    }
+
+protected:
+    // The installer called for ZoneDataLoader using a zone journal reader.
+    // It performs some minimal sanity checks on the sequence of data, but
+    // the basic assumption is that any invalid data mean implementation defect
+    // (not bad user input) and shouldn't happen anyway.
+    virtual bool updateRRsets(size_t) {
+        enum DIFF_MODE {INIT, ADD, DELETE} mode = INIT;
+        ConstRRsetPtr rrset;
+        std::vector<ConstRRsetPtr>::const_iterator it = saved_diffs_.begin();
+        const std::vector<ConstRRsetPtr>::const_iterator it_end =
+            saved_diffs_.end();
+        while ((rrset = nextDiff(it, it_end))) {
+            if (rrset->getType() == RRType::SOA()) {
+                mode = (mode == INIT || mode == ADD) ? DELETE : ADD;
+            } else if (mode == INIT) {
+                // diff sequence doesn't begin with SOA. It means broken journal
+                // reader implementation.
+                bundy_throw(bundy::Unexpected,
+                            "broken journal reader: diff not begin with SOA");
+            }
+            update_helper_->updateFromLoad(rrset,
+                                           (mode == ADD) ?
+                                           ZoneDataUpdaterHelper::ADD :
+                                           ZoneDataUpdaterHelper::DELETE);
+        }
+        if (mode != ADD) {
+            // Diff must end in the add mode (there should at least be one
+            // add for the final SOA)
+            bundy_throw(bundy::Unexpected, "broken journal reader: incomplete");
+        }
+
+        return (true);
+    }
+
+private:
+    void saveDiffs() {
+        int count = 0;
+        ConstRRsetPtr rrset;
+        while (count++ < MAX_SAVED_DIFFS_ &&
+               (rrset = jnl_reader_->getNextDiff())) {
+            saved_diffs_.push_back(rrset);
+        }
+        if (!rrset) {
+            jnl_reader_.reset();
+            if (saved_diffs_.empty()) {
+                // In our expected form of diff sequence, it shouldn't be empty,
+                // since there should be at least begin and end SOAs.
+                // Eliminating this case at this point makes the later
+                // processing easier.
+                bundy_throw(ZoneValidationError,
+                            "empty diff sequence is provided for load");
+            }
+        }
+    }
+
+    ConstRRsetPtr
+    nextDiff(std::vector<ConstRRsetPtr>::const_iterator& it,
+             const std::vector<ConstRRsetPtr>::const_iterator& it_end)
+    {
+        ConstRRsetPtr next_diff;    // null by default
+        if (it != it_end) {
+            next_diff = *it;
+            ++it;
+        } else if (jnl_reader_) {
+            next_diff = jnl_reader_->getNextDiff();
+        }
+        return (next_diff);
+    }
+
     ZoneJournalReaderPtr jnl_reader_;
 
     // To minimize the risk of hitting an exception from the journal reader
@@ -401,194 +670,6 @@ private:
     static const unsigned int MAX_SAVED_DIFFS_ = 100;
     std::vector<ConstRRsetPtr> saved_diffs_;
 };
-
-ZoneDataLoader::LoadResult
-ZoneDataLoader::ZoneDataLoaderImpl::doLoad() {
-    if (datasrc_client_) {
-        ZoneIteratorPtr iterator = datasrc_client_->getIterator(zone_name_);
-        if (!iterator) {
-            // This shouldn't happen for a compliant implementation of
-            // DataSourceClient, but we'll protect ourselves from buggy
-            // implementations.
-            bundy_throw(Unexpected, "getting loader creator for " << zone_name_
-                        << "/" << rrclass_ <<
-                        " resulted in Null zone iterator");
-        }
-
-        const dns::ConstRRsetPtr new_soarrset = iterator->getSOA();
-        if (!new_soarrset) {
-            // If the source data source doesn't contain SOA, post-load check
-            // will fail anyway, so rejecting loading at this point makes sense.
-            bundy_throw(ZoneValidationError, "No SOA found for "
-                        << zone_name_ << "/" << rrclass_ << "in " <<
-                        datasrc_client_->getDataSourceName());
-        }
-        boost::scoped_ptr<const dns::Serial> new_serial(
-            getSerialFromRRset(*new_soarrset));
-        if (old_serial_ && (*old_serial_ == *new_serial)) {
-            LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_LOAD_SAME_SERIAL).
-                arg(zone_name_).arg(rrclass_).arg(old_serial_->getValue()).
-                arg(datasrc_client_->getDataSourceName());
-            return (LoadResult(old_data_, false));
-        } else if (old_serial_ && (*old_serial_ < *new_serial)) {
-            jnl_reader_ = getJournalReader(old_serial_->getValue(),
-                                           new_serial->getValue());
-            if (jnl_reader_) {
-                LOG_DEBUG(logger, DBG_TRACE_BASIC,
-                          DATASRC_MEMORY_LOAD_USE_JOURNAL).
-                    arg(zone_name_).arg(rrclass_).arg(old_serial_->getValue()).
-                    arg(new_serial->getValue()).
-                    arg(datasrc_client_->getDataSourceName());
-                iterator.reset(); // we don't need the iterator any more.
-                saveDiffs();
-                return (LoadResult(old_data_, false));
-            }
-        }
-
-        return (doLoadCommon(NULL, boost::bind(generateRRsetFromIterator,
-                                               iterator.get(), _1)));
-    } else {
-        return (doLoadCommon(NULL, boost::bind(masterLoaderWrapper,
-                                               zone_file_.c_str(),
-                                               zone_name_, rrclass_, _1)));
-    }
-}
-
-ZoneJournalReaderPtr
-ZoneDataLoader::ZoneDataLoaderImpl::getJournalReader(uint32_t begin,
-                                                     uint32_t end) const
-{
-    try {
-        const std::pair<ZoneJournalReader::Result, ZoneJournalReaderPtr>
-            result = datasrc_client_->getJournalReader(zone_name_, begin, end);
-        return (result.second);
-    } catch (const bundy::NotImplemented&) {
-        // handle this case just like no journal is available for the serials.
-    }
-    return (ZoneJournalReaderPtr());
-}
-
-void
-ZoneDataLoader::ZoneDataLoaderImpl::saveDiffs() {
-    int count = 0;
-    ConstRRsetPtr rrset;
-    while (count++ < MAX_SAVED_DIFFS_ && (rrset = jnl_reader_->getNextDiff())) {
-        saved_diffs_.push_back(rrset);
-    }
-    if (!rrset) {
-        jnl_reader_.reset();
-        if (saved_diffs_.empty()) {
-            // In our expected form of diff sequence, it shouldn't be empty,
-            // since there should be at least begin and end SOAs.  Eliminating
-            // this case at this point makes the later processing easier.
-            bundy_throw(ZoneValidationError,
-                        "empty diff sequence is provided for load");
-        }
-    }
-}
-
-ZoneData*
-ZoneDataLoader::ZoneDataLoaderImpl::commitDiffs(ZoneData* update_data) {
-    // we need 'commit' only when we load diffs
-    if (!jnl_reader_ && saved_diffs_.empty()) {
-        return (update_data);
-    }
-
-    // Constructing SegmentObjectHolder result in MemorySegmentGrown.
-    // This needs to be handled at the caller as update_data could now be
-    // invalid.  But before propagating the exception, we should release the
-    // data because the caller has the ownership and we shouldn't destroy it.
-    boost::scoped_ptr<SegmentObjectHolder<ZoneData, RRClass> >
-        holder(new SegmentObjectHolder<ZoneData, RRClass>(mem_sgmt_, rrclass_));
-    try {
-        holder->set(update_data);
-        // If doLoadCommon returns the holder should have released the data.
-        return (doLoadCommon(holder.get(), boost::bind(applyDiffs,
-                                                       &saved_diffs_,
-                                                       jnl_reader_, _1)).first);
-    } catch (...) {
-        holder->release();
-        throw;
-    }
-}
-
-ZoneDataLoader::LoadResult
-ZoneDataLoader::ZoneDataLoaderImpl::doLoadCommon(
-    SegmentObjectHolder<ZoneData, RRClass>* data_holder,
-    RRsetInstaller installer)
-{
-    while (true) { // Try as long as it takes to load and grow the segment
-        bool created = false;
-        try {
-            boost::scoped_ptr<SegmentObjectHolder<ZoneData, RRClass> >
-                local_holder;
-            if (!data_holder) {
-                local_holder.reset(new SegmentObjectHolder<ZoneData, RRClass>
-                                   (mem_sgmt_, rrclass_));
-                local_holder->set(ZoneData::create(mem_sgmt_, zone_name_));
-                data_holder = local_holder.get();
-            }
-
-            // Nothing from this point on should throw MemorySegmentGrown.
-            // It is handled inside here.
-            created = true;
-
-            ZoneDataLoaderHelper loader(mem_sgmt_, rrclass_, zone_name_,
-                                        *data_holder->get());
-            installer(boost::bind(&ZoneDataLoaderHelper::updateFromLoad,
-                                  &loader, _1, _2));
-            // Add any last RRsets that were left
-            loader.flushNodeRRsets();
-
-            const ZoneNode* origin_node = data_holder->get()->getOriginNode();
-            const RdataSet* rdataset = origin_node->getData();
-            ZoneData* const loaded_data = data_holder->get();
-            // If the zone is and NSEC3-signed, check if it has NSEC3PARAM.
-            // If not, it may either just go to NSEC3-unsigned, or there's an
-            // operational error in that step, depending on whether there's any
-            // NSEC3 RRs in the zone.
-            if (loaded_data->isNSEC3Signed() &&
-                RdataSet::find(rdataset, RRType::NSEC3PARAM()) == NULL) {
-                if (loaded_data->getNSEC3Data()->isEmpty()) {
-                    // becoming NSEC3-unsigned.
-                    LOG_INFO(logger, DATASRC_MEMORY_MEM_NSEC3_UNSIGNED).
-                        arg(zone_name_).arg(rrclass_);
-                    NSEC3Data* old_n3data = loaded_data->setNSEC3Data(NULL);
-                    NSEC3Data::destroy(mem_sgmt_, old_n3data, rrclass_);
-                } else {
-                    LOG_WARN(logger, DATASRC_MEMORY_MEM_NO_NSEC3PARAM).
-                        arg(zone_name_).arg(rrclass_);
-                }
-            }
-
-            RRsetCollection collection(*loaded_data, rrclass_);
-            const dns::ZoneCheckerCallbacks
-                callbacks(boost::bind(&logError, &zone_name_, &rrclass_, _1),
-                          boost::bind(&logWarning, &zone_name_, &rrclass_, _1));
-            if (!dns::checkZone(zone_name_, rrclass_, collection, callbacks)) {
-                bundy_throw(ZoneValidationError,
-                            "Errors found when validating zone: "
-                            << zone_name_ << "/" << rrclass_);
-            }
-
-            // Check loaded serial.  Note that if checkZone() passed, we
-            // should have SOA in the ZoneData.
-            boost::scoped_ptr<const dns::Serial> new_serial(
-                getSerialFromZoneData(rrclass_, loaded_data));
-            if (old_serial_ && *old_serial_ >= *new_serial) {
-                LOG_WARN(logger, DATASRC_MEMORY_LOADED_SERIAL_NOT_INCREASED).
-                    arg(zone_name_).arg(rrclass_).
-                    arg(old_serial_->getValue()).arg(new_serial->getValue());
-            }
-            LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_LOADED).
-                arg(zone_name_).arg(rrclass_).arg(new_serial->getValue()).
-                arg(loaded_data->isSigned() ? " (DNSSEC signed)" : "");
-
-            return (LoadResult(data_holder->release(), true));
-        } catch (const util::MemorySegmentGrown&) {
-            assert(!created);
-        }
-    }
 }
 
 ZoneDataLoader::ZoneDataLoader(util::MemorySegment& mem_sgmt,
@@ -601,8 +682,8 @@ ZoneDataLoader::ZoneDataLoader(util::MemorySegment& mem_sgmt,
     LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_MEM_LOAD_FROM_FILE).
         arg(zone_name).arg(rrclass).arg(zone_file);
 
-    impl_ = new ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name, zone_file,
-                                   old_data);
+    impl_ = new MasterFileLoader(mem_sgmt, rrclass, zone_name, zone_file,
+                                 old_data);
 }
 
 ZoneDataLoader::ZoneDataLoader(util::MemorySegment& mem_sgmt,
@@ -612,20 +693,79 @@ ZoneDataLoader::ZoneDataLoader(util::MemorySegment& mem_sgmt,
                                ZoneData* old_data) :
     impl_(NULL)
 {
+    const std::string& dsrc_name = datasrc_client.getDataSourceName();
     LOG_DEBUG(logger, DBG_TRACE_BASIC, DATASRC_MEMORY_MEM_LOAD_FROM_DATASRC).
-        arg(zone_name).arg(rrclass).arg(datasrc_client.getDataSourceName());
+        arg(zone_name).arg(rrclass).arg(dsrc_name);
 
-    impl_ = new ZoneDataLoaderImpl(mem_sgmt, rrclass, zone_name,
-                                   datasrc_client, old_data);
+    ZoneIteratorPtr iterator = datasrc_client.getIterator(zone_name);
+    if (!iterator) {
+        // This shouldn't happen for a compliant implementation of
+        // DataSourceClient, but we'll protect ourselves from buggy
+        // implementations.
+        bundy_throw(Unexpected, "getting loader creator for " << zone_name
+                    << "/" << rrclass << " resulted in Null zone iterator");
+    }
+
+    const dns::ConstRRsetPtr new_soarrset = iterator->getSOA();
+    if (!new_soarrset) {
+        // If the source data source doesn't contain SOA, post-load check
+        // will fail anyway, so rejecting loading at this point makes sense.
+        bundy_throw(ZoneValidationError, "No SOA found for "
+                    << zone_name << "/" << rrclass << "in " << dsrc_name);
+    }
+    const boost::scoped_ptr<const dns::Serial> old_serial(
+        getSerialFromZoneData(rrclass, old_data));
+    const boost::scoped_ptr<const dns::Serial> new_serial(
+        getSerialFromRRset(*new_soarrset));
+    if (old_serial && (*old_serial == *new_serial)) {
+        impl_ = new ReuseLoader(mem_sgmt, rrclass, zone_name, old_data,
+                                *old_serial, dsrc_name);
+        return;
+    } else if (old_serial && (*old_serial < *new_serial)) {
+        try {
+            const std::pair<ZoneJournalReader::Result, ZoneJournalReaderPtr>
+                result = datasrc_client.getJournalReader(
+                    zone_name, old_serial->getValue(), new_serial->getValue());
+            if (result.second) {
+                impl_ = new JournalLoader(mem_sgmt, rrclass, zone_name,
+                                          old_data, *old_serial,
+                                          *new_serial, result.second,
+                                          dsrc_name);
+                return;
+            }
+        } catch (const bundy::NotImplemented&) {
+            // handle this case just like no journal is available for the
+            // serials.
+        }
+    }
+    impl_ = new IteratorLoader(mem_sgmt, rrclass, zone_name, iterator,
+                               old_data, old_serial.get());
 }
 
 ZoneDataLoader::~ZoneDataLoader() {
     delete impl_;
 }
 
-ZoneDataLoader::LoadResult
+bool
+ZoneDataLoader::isDataReused() const {
+    return (impl_->isDataReused());
+}
+
+bool
+ZoneDataLoader::loadIncremental(size_t count_limit) {
+    return (impl_->doLoad(count_limit));
+}
+
+ZoneData*
 ZoneDataLoader::load() {
-    return (impl_->doLoad());
+    const bool completed = loadIncremental(0);
+    assert(completed);
+    return (getLoadedData());
+}
+
+ZoneData*
+ZoneDataLoader::getLoadedData() const {
+    return (impl_->getLoadedData());
 }
 
 ZoneData*
