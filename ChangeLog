@@ -1,3 +1,10 @@
+781.	[func]		jinmei
+	bundy-xfrout now refers to the generic "data_sources" configuration
+	and will be more compatible with other modules.  (It still requires
+	Auth/database_file, which is SQLite3 specific, for sending out
+	notifies).
+	(git a0cb997d7ea2acf05d3b6abe203f7ac4d7bc7aa6)
+
 780.	[func]		jinmei
 	libdns++: supported the CDS RDATA.
 	(git a39c030f9b2b0b2a1a359367d23173443432490b)
