@@ -2655,8 +2655,8 @@ can use various data source backends.
         There's also <varname>Auth/database_file</varname> configuration
         variable, pointing to a SQLite3 database file. This is no longer
         used by <command>bundy-auth</command>, but it is left in place for
-        now, since other modules use it. Once <command>bundy-zonemgr</command>,
-        <command>bundy-xfrout</command> and <command>bundy-ddns</command>
+        now, since other modules use it. Once <command>bundy-zonemgr</command>
+        and <command>bundy-xfrout</command>
         are ported to the new configuration, this will disappear. But for
         now, make sure that if you use any of these modules, the new
         and old configuration correspond. The defaults are consistent, so
@@ -3188,14 +3188,6 @@ what is XfroutClient xfr_client??
         underlying data source storing the zone data be writable.
         In the current implementation this means the zone must be stored
         in an SQLite3-based data source.
-<!-- TODO -->
-	Also, in this current version, the <command>bundy-ddns</command>
-	component configures itself with the data source referring to the
-        <varname>database_file</varname> configuration parameter of
-        <command>bundy-auth</command>.
-        So this information must be configured correctly before starting
-        <command>bundy-ddns</command>.
-
         <note><simpara>
             The way to configure data sources is now being revised.
             Configuration on the data source for DDNS will be very
