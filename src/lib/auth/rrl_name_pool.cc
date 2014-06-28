@@ -28,7 +28,9 @@ namespace bundy {
 namespace auth {
 namespace detail {
 
-namespace {
+// Note: in principle this structure should be able to be defined in an
+// unnamed namespace.  But we don't do so since some environment seems to
+// (incorrectly) consider it to have internal linkage and refuse to compile.
 struct NameEntry {
     NameEntry(size_t index_param, const dns::Name& name_param) :
         index(index_param), name(name_param)
@@ -39,7 +41,6 @@ struct NameEntry {
     dns::Name name;
 };
 typedef boost::shared_ptr<NameEntry> NameEntryPtr;
-}
 
 struct NamePool::Impl {
     typedef boost::intrusive::list<
