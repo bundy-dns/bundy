@@ -20,6 +20,7 @@
 #include <boost/noncopyable.hpp>
 
 #include <utility>
+#include <cstddef>
 
 namespace bundy {
 namespace auth {
