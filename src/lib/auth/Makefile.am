@@ -10,6 +10,7 @@ CLEANFILES = *.gcno *.gcda
 lib_LTLIBRARIES = libbundy-auth.la
 
 libbundy_auth_la_SOURCES = rrl_key.h rrl_key.cc
+libbundy_auth_la_SOURCES += rrl_name_pool.h rrl_name_pool.cc
 libbundy_auth_la_SOURCES += rrl_response_type.h
 libbundy_auth_la_SOURCES += rrl_timestamps.h
 
