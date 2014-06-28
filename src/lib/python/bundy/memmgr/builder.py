@@ -336,7 +336,7 @@ class MemorySegmentBuilder:
             # Filter out commands that don't have to be executed.
             local_command_queue = \
                     self._handle_cancels(self.__local_command_queue)
-            self.__local_command_queue.clear()
+            del self.__local_command_queue[:]
 
             # Run commands passed in the command queue sequentially
             # in the given order.  For now, it only supports the
