@@ -294,7 +294,6 @@ class TestSegmentInfo(unittest.TestCase):
         self.__sgmt_info._switch_versions = lambda: count_verswitch()
         self.__sgmt_info.add_event((81,))
         self.assertEqual((81,), self.__sgmt_info.complete_update(False))
-        self.assertIsNone(e)
         self.assertEqual(self.__sgmt_info.get_state(), SegmentInfo.UPDATING)
         self.assertEqual(2, self.__ver_switched) # no switch
 
