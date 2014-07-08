@@ -58,7 +58,7 @@ class SegmentInfo:
     exist         |V                             V no more old reader
                 READY<------complete_----------COPYING
                   ^         update()             |
-                  |                           initial lodd
+                  |                           initial load
                   |                              |  +sync,remove_reader()
                   |                              V  |            |
                   +---no more old reader--SYNCHRONIZING2<--------+
@@ -351,7 +351,7 @@ class SegmentInfo:
                                    'incorrect state: ' + str(self.__state))
 
     def loaded(self):
-        """Return true iff intial loading has been fully completed.
+        """Return true iff initial loading has been fully completed.
 
         This returns True even if the load attempt failed; the main purpose
         is to tell the caller that the available segment has not just been
