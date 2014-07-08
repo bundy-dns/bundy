@@ -57,7 +57,11 @@ class SegmentInfo:
     events        ||failed                       |
     exist         |V                             V no more old reader
                 READY<------complete_----------COPYING
-                            update()
+                  ^         update()             |
+                  |                           initial load
+                  |                              |  +sync,remove_reader()
+                  |                              V  |            |
+                  +---no more old reader--SYNCHRONIZING2<--------+
 
     A segment always begins with the 'INIT' stage, and completes validating
     segments for readers and the writer.  This phase is intended to be used
@@ -93,7 +97,10 @@ class SegmentInfo:
     COPYING = 5 # all readers that used the old version of segment have
                 # been migrated to the updated version, and the old
                 # segment is now being updated.
-    READY = 6 # both segments of the pair have been updated. it can now
+    SYNCHRONIZING2 = 6 # A special state for the initial loading.  Make sure
+                       # all readers start using the segment notified at the
+                       # first SYNCHRONIZING state.
+    READY = 7 # both segments of the pair have been updated. it can now
               # handle further updates (e.g., from xfrin).
 
     def __init__(self, genid):
@@ -120,7 +127,7 @@ class SegmentInfo:
         # the stored data; it only matters for the memmgr.
         self.__events = deque()
         # See loaded():
-        self.__loaded = False
+        self.__loaded = 0
 
     def get_generation_id(self):
         "Returns the generation ID of the corresponding data source."
@@ -148,12 +155,20 @@ class SegmentInfo:
         """Returns a list of pending events in the order they arrived."""
         return list(self.__events)
 
+    # Helper on moving to the ready state.  If there's an outstanding event,
+    # immediately start the next update, moving to the UPDATING state.
+    def __check_on_ready(self):
+        self.__state = self.READY
+        return self.start_update()
+
     # Helper method used in complete_validate/update(), sync_reader() and
     # remove_reader().
     def __sync_reader_helper(self):
         if not self.__old_readers:
             if self.__state is self.SYNCHRONIZING:
                 self.__state = self.COPYING
+            elif self.__state is self.SYNCHRONIZING2:
+                return self.__check_on_ready()
             else:
                 self.__state = self.W_VALIDATING
             if self.__events:
@@ -289,11 +304,17 @@ class SegmentInfo:
         "old" version of segment, it pops the head (oldest) event from
         the pending events queue and returns it.
 
-        If 'succeeded' is False, this method changes the state to
-        READY, whether the original state is UPDATING or
-        SYNCHRONIZING.  In this case, it should be better to hold off
-        copying until the next load event happens and succeeds, rather
-        than taking the risk of making both versions broken.
+        If 'succeeded' is False and this is an update after initial loading,
+        this method changes the state to READY, whether the original state is
+        UPDATING or SYNCHRONIZING.  In this case, it should be better to hold
+        off copying until the next load event happens and succeeds, rather
+        than taking the risk of making both versions broken.  On the initial
+        load, however, we should complete the loading of both versions so
+        the segment is fully functional (accepting further updates).
+
+        Also on initial loading, this method moves the COPYING state to
+        the special SYNCHRONIZING2 state, so all readers can now actually
+        start using the segment.
 
         It is an error if this method is called in other states than
         UPDATING and COPYING.
@@ -304,34 +325,42 @@ class SegmentInfo:
         """
         # If this method is called, it means at least one load attempt is
         # completed.
-        self.__loaded = True
+        self.__loaded += 1
 
         if self.__state == self.UPDATING:
-            if succeeded:
+            if succeeded or self.__loaded == 1:
                 self._switch_versions()
                 self.__state = self.SYNCHRONIZING
                 self.__old_readers = self.__readers
                 self.__readers = set()
                 return self.__sync_reader_helper()
             else:
-                self.__state = self.READY
                 self.__events.popleft() # discard the load command for COPYING
+                return self.__check_on_ready()
         elif self.__state == self.COPYING:
-            self.__state = self.READY
+            if self.__loaded == 2:
+                self.__state = self.SYNCHRONIZING2
+                self.__old_readers = self.__readers
+                self.__readers = set()
+                return self.__sync_reader_helper()
+            else:
+                return self.__check_on_ready()
             return None
         else:
             raise SegmentInfoError('complete_update() called in ' +
                                    'incorrect state: ' + str(self.__state))
 
     def loaded(self):
-        """Return true iff at least one load attempt has been completed.
+        """Return true iff initial loading has been fully completed.
 
         This returns True even if the load attempt failed; the main purpose
         is to tell the caller that the available segment has not just been
         validated, but also is the latest.
 
         """
-        return self.__loaded
+        # We've counted the number of complete_update() calls.  If it reaches
+        # 2, both 'reader' and 'writer' versions have been loaded.
+        return self.__loaded >= 2
 
     def sync_reader(self, reader_session_id):
         """Synchronize segment info with a reader.
@@ -354,7 +383,8 @@ class SegmentInfo:
         to care about the differences based on the internal state.
 
         """
-        if self.__state not in (self.V_SYNCHRONIZING, self.SYNCHRONIZING):
+        if self.__state not in (self.V_SYNCHRONIZING, self.SYNCHRONIZING,
+                                self.SYNCHRONIZING2):
             return None
 
         if reader_session_id not in self.__old_readers:
