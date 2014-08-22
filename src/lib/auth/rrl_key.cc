@@ -104,14 +104,18 @@ RRLKey::getIPText(size_t ipv4_prefixlen, size_t ipv6_prefixlen) const {
         struct sockaddr_in6* sa6;
         sa6 = convertSockAddr<sockaddr_in6>(sa);
         sa6->sin6_family = AF_INET6;
+#ifdef HAVE_SA_LEN
         sa6->sin6_len = sizeof(*sa6);
+#endif
         BOOST_STATIC_ASSERT(sizeof(sa6->sin6_addr) >= sizeof(key_.ip));
         memcpy(&sa6->sin6_addr, key_.ip, sizeof(key_.ip));
     } else {
         struct sockaddr_in* sa4;
         sa4 = convertSockAddr<sockaddr_in>(sa);
         sa4->sin_family = AF_INET;
+#ifdef HAVE_SA_LEN
         sa4->sin_len = sizeof(*sa4);
+#endif
         sa4->sin_addr.s_addr = key_.ip[0];
     }
     const socklen_t sa_len = key_.ipv6 ?
