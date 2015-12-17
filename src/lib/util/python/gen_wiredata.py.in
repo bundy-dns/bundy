@@ -642,7 +642,7 @@ class RR:
         rdlen_data = ''
         if rdlen >= 0:
             rdlen_spec = ', RDLEN=%d' % rdlen
-            rdlen_data = '%04x' % rdlen
+            rdlen_data = '%04x' % int(rdlen)
         if self.as_rr:
             rrclass = parse_value(self.rr_class, dict_rrclass)
             f.write('\n# %s RR (QNAME=%s Class=%s TTL=%d%s)\n' %
