@@ -93,6 +93,9 @@ PyNumberMethods Serial_NumberMethods = {
     NULL, //nb_inplace_true_divide;
 
     NULL, //nb_index;
+
+    NULL, //nb_matrix_multiply
+    NULL, //nb_inplace_matrix_multiply
 };
 
 int

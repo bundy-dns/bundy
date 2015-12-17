@@ -143,7 +143,7 @@ findCommon(const Name& name, TreeType& zones, NodeType** nodep) {
     result::Result my_result;
 
     typedef DomainTree<ZoneData> ZoneTableTree;
-    typedef DomainTreeNode<ZoneData> ZoneTableNode;
+    //typedef DomainTreeNode<ZoneData> ZoneTableNode;
 
     // Translate the return codes
     switch (zones.find(name, nodep)) {
