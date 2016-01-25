@@ -94,8 +94,10 @@ PyNumberMethods Serial_NumberMethods = {
 
     NULL, //nb_index;
 
+#if PY_VERSION_HEX >= 0x03050000
     NULL, //nb_matrix_multiply
     NULL, //nb_inplace_matrix_multiply
+#endif
 };
 
 int
