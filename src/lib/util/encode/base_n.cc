@@ -12,6 +12,10 @@
 // OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 // PERFORMANCE OF THIS SOFTWARE.
 
+// workaround for PFTO (Partial Function Template Ordering) being removed from Boost 1.59
+#define BOOST_PFTO_WRAPPER(T) T
+#define BOOST_MAKE_PFTO_WRAPPER(t) t
+
 #include <util/encode/base32hex_from_binary.h>
 #include <util/encode/binary_from_base32hex.h>
 #include <util/encode/base16_from_binary.h>
