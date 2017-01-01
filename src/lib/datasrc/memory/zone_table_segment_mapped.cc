@@ -407,7 +407,7 @@ ZoneTableSegmentMapped::getMemorySegment() {
 bool
 ZoneTableSegmentMapped::isUsable() const {
     // If mem_sgmt_ is not empty, then it is usable.
-    return (mem_sgmt_ != nullptr);
+    return (!!mem_sgmt_);
 }
 
 bool
