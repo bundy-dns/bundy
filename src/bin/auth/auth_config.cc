@@ -90,7 +90,7 @@ public:
         }
     }
 private:
-    typedef auto_ptr<AddressList> AddrListPtr;
+    typedef unique_ptr<AddressList> AddrListPtr;
 public:
     virtual void build(ConstElementPtr config) {
         AddressList newAddresses = parseAddresses(config, "listen_on");
@@ -101,7 +101,7 @@ public:
          * new addresses, so we don't try to rollback if the setup is
          * unsuccessful (the above can easily throw).
          */
-        rollbackAddresses_ = old;
+        rollbackAddresses_ = move(old);
     }
     virtual void commit() {
         rollbackAddresses_.reset();

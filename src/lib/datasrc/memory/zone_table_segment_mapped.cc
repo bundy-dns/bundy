@@ -159,7 +159,7 @@ ZoneTableSegmentMapped::openReadWrite(const std::string& filename,
          MemorySegmentMapped::OPEN_OR_CREATE;
     // In case there is a problem, we throw. We want the segment to be
     // automatically destroyed then.
-    std::auto_ptr<MemorySegmentMapped> segment
+    std::unique_ptr<MemorySegmentMapped> segment
         (new MemorySegmentMapped(filename, mode));
 
     // This flag is used inside processCheckSum() and processHeader(),
@@ -187,7 +187,7 @@ MemorySegmentMapped*
 ZoneTableSegmentMapped::openReadOnly(const std::string& filename) {
     // In case the checksum or table header is missing, we throw. We
     // want the segment to be automatically destroyed then.
-    std::auto_ptr<MemorySegmentMapped> segment
+    std::unique_ptr<MemorySegmentMapped> segment
         (new MemorySegmentMapped(filename));
     // There must be a previously saved checksum.
     MemorySegment::NamedAddressResult result =
@@ -298,7 +298,7 @@ ZoneTableSegmentMapped::reset(MemorySegmentOpenMode mode,
 
     // In case current_filename_ below fails, we want the segment to be
     // automatically destroyed.
-    std::auto_ptr<MemorySegmentMapped> segment;
+    std::unique_ptr<MemorySegmentMapped> segment;
 
     switch (mode) {
     case CREATE:
@@ -407,7 +407,7 @@ ZoneTableSegmentMapped::getMemorySegment() {
 bool
 ZoneTableSegmentMapped::isUsable() const {
     // If mem_sgmt_ is not empty, then it is usable.
-    return (mem_sgmt_);
+    return (mem_sgmt_ != nullptr);
 }
 
 bool

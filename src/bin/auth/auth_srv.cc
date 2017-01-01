@@ -243,15 +243,15 @@ public:
     bool processNormalQuery(const IOMessage& io_message,
                             ConstEDNSPtr remote_edns, Message& message,
                             OutputBuffer& buffer,
-                            auto_ptr<TSIGContext> tsig_context,
+                            unique_ptr<TSIGContext> tsig_context,
                             MessageAttributes& stats_attrs);
     bool processXfrQuery(const IOMessage& io_message, Message& message,
                          OutputBuffer& buffer,
-                         auto_ptr<TSIGContext> tsig_context,
+                         unique_ptr<TSIGContext> tsig_context,
                          MessageAttributes& stats_attrs);
     bool processNotify(const IOMessage& io_message, Message& message,
                        OutputBuffer& buffer,
-                       auto_ptr<TSIGContext> tsig_context,
+                       unique_ptr<TSIGContext> tsig_context,
                        MessageAttributes& stats_attrs);
     bool processUpdate(const IOMessage& io_message);
 
@@ -398,8 +398,8 @@ void
 makeErrorMessage(MessageRenderer& renderer, Message& message,
                  OutputBuffer& buffer, const Rcode& rcode,
                  MessageAttributes& stats_attrs,
-                 std::auto_ptr<TSIGContext> tsig_context =
-                 std::auto_ptr<TSIGContext>())
+                 std::unique_ptr<TSIGContext> tsig_context =
+                 std::unique_ptr<TSIGContext>())
 {
     // extract the parameters that should be kept.
     // XXX: with the current implementation, it's not easy to set EDNS0
@@ -526,7 +526,7 @@ AuthSrv::processMessage(const IOMessage& io_message, Message& message,
     // Perform further protocol-level validation.
     // TSIG first
     // If this is set to something, we know we need to answer with TSIG as well
-    std::auto_ptr<TSIGContext> tsig_context;
+    std::unique_ptr<TSIGContext> tsig_context;
     const TSIGRecord* tsig_record(message.getTSIGRecord());
     TSIGError tsig_error(TSIGError::NOERROR());
 
@@ -544,7 +544,7 @@ AuthSrv::processMessage(const IOMessage& io_message, Message& message,
 
     if (tsig_error != TSIGError::NOERROR()) {
         makeErrorMessage(impl_->renderer_, message, buffer,
-                         tsig_error.toRcode(), stats_attrs, tsig_context);
+                         tsig_error.toRcode(), stats_attrs, move(tsig_context));
         impl_->resumeServer(server, message, stats_attrs, true);
         return;
     }
@@ -561,38 +561,38 @@ AuthSrv::processMessage(const IOMessage& io_message, Message& message,
         // note: This can only be reliable after TSIG check succeeds.
         if (opcode == Opcode::NOTIFY()) {
             send_answer = impl_->processNotify(io_message, message, buffer,
-                                               tsig_context, stats_attrs);
+                                               move(tsig_context), stats_attrs);
         } else if (opcode == Opcode::UPDATE()) {
             if (impl_->ddns_forwarder_) {
                 send_answer = impl_->processUpdate(io_message);
             } else {
                 makeErrorMessage(impl_->renderer_, message, buffer,
-                                 Rcode::NOTIMP(), stats_attrs, tsig_context);
+                                 Rcode::NOTIMP(), stats_attrs, move(tsig_context));
             }
         } else if (opcode != Opcode::QUERY()) {
             const IOEndpoint& remote_ep = io_message.getRemoteEndpoint();
             LOG_DEBUG(auth_logger, DBG_AUTH_DETAIL, AUTH_UNSUPPORTED_OPCODE)
                 .arg(message.getOpcode().toText()).arg(remote_ep);
             makeErrorMessage(impl_->renderer_, message, buffer,
-                             Rcode::NOTIMP(), stats_attrs, tsig_context);
+                             Rcode::NOTIMP(), stats_attrs, move(tsig_context));
         } else if (message.getRRCount(Message::SECTION_QUESTION) != 1) {
             makeErrorMessage(impl_->renderer_, message, buffer,
-                             Rcode::FORMERR(), stats_attrs, tsig_context);
+                             Rcode::FORMERR(), stats_attrs, move(tsig_context));
         } else {
             ConstQuestionPtr question = *message.beginQuestion();
             const RRType& qtype = question->getType();
             if (qtype == RRType::AXFR()) {
                 send_answer = impl_->processXfrQuery(io_message, message,
-                                                     buffer, tsig_context,
+                                                     buffer, move(tsig_context),
                                                      stats_attrs);
             } else if (qtype == RRType::IXFR()) {
                 send_answer = impl_->processXfrQuery(io_message, message,
-                                                     buffer, tsig_context,
+                                                     buffer, move(tsig_context),
                                                      stats_attrs);
             } else {
                 send_answer = impl_->processNormalQuery(io_message, edns,
                                                         message, buffer,
-                                                        tsig_context,
+                                                        move(tsig_context),
                                                         stats_attrs);
             }
         }
@@ -613,7 +613,7 @@ bool
 AuthSrvImpl::processNormalQuery(const IOMessage& io_message,
                                 ConstEDNSPtr remote_edns, Message& message,
                                 OutputBuffer& buffer,
-                                auto_ptr<TSIGContext> tsig_context,
+                                unique_ptr<TSIGContext> tsig_context,
                                 MessageAttributes& stats_attrs)
 {
     const bool dnssec_ok = remote_edns && remote_edns->getDNSSECAwareness();
@@ -676,13 +676,13 @@ AuthSrvImpl::processNormalQuery(const IOMessage& io_message,
 bool
 AuthSrvImpl::processXfrQuery(const IOMessage& io_message, Message& message,
                              OutputBuffer& buffer,
-                             auto_ptr<TSIGContext> tsig_context,
+                             unique_ptr<TSIGContext> tsig_context,
                              MessageAttributes& stats_attrs)
 {
     if (io_message.getSocket().getProtocol() == IPPROTO_UDP) {
         LOG_DEBUG(auth_logger, DBG_AUTH_DETAIL, AUTH_AXFR_UDP);
         makeErrorMessage(renderer_, message, buffer, Rcode::FORMERR(),
-                         stats_attrs, tsig_context);
+                         stats_attrs, move(tsig_context));
         return (true);
     }
 
@@ -693,7 +693,7 @@ AuthSrvImpl::processXfrQuery(const IOMessage& io_message, Message& message,
 bool
 AuthSrvImpl::processNotify(const IOMessage& io_message, Message& message,
                            OutputBuffer& buffer,
-                           std::auto_ptr<TSIGContext> tsig_context,
+                           std::unique_ptr<TSIGContext> tsig_context,
                            MessageAttributes& stats_attrs)
 {
     const IOEndpoint& remote_ep = io_message.getRemoteEndpoint(); // for logs
@@ -704,7 +704,7 @@ AuthSrvImpl::processNotify(const IOMessage& io_message, Message& message,
         LOG_DEBUG(auth_logger, DBG_AUTH_DETAIL, AUTH_NOTIFY_QUESTIONS)
                   .arg(message.getRRCount(Message::SECTION_QUESTION));
         makeErrorMessage(renderer_, message, buffer, Rcode::FORMERR(),
-                         stats_attrs, tsig_context);
+                         stats_attrs, move(tsig_context));
         return (true);
     }
     ConstQuestionPtr question = *message.beginQuestion();
@@ -712,7 +712,7 @@ AuthSrvImpl::processNotify(const IOMessage& io_message, Message& message,
         LOG_DEBUG(auth_logger, DBG_AUTH_DETAIL, AUTH_NOTIFY_RRTYPE)
                   .arg(question->getType().toText());
         makeErrorMessage(renderer_, message, buffer, Rcode::FORMERR(),
-                         stats_attrs, tsig_context);
+                         stats_attrs, move(tsig_context));
         return (true);
     }
 
@@ -734,7 +734,7 @@ AuthSrvImpl::processNotify(const IOMessage& io_message, Message& message,
         LOG_DEBUG(auth_logger, DBG_AUTH_DETAIL, AUTH_RECEIVED_NOTIFY_NOTAUTH)
             .arg(question->getName()).arg(question->getClass()).arg(remote_ep);
         makeErrorMessage(renderer_, message, buffer, Rcode::NOTAUTH(),
-                         stats_attrs, tsig_context);
+                         stats_attrs, move(tsig_context));
         return (true);
     }
 
