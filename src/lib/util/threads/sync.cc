@@ -25,7 +25,7 @@
 
 #include <pthread.h>
 
-using std::auto_ptr;
+using std::unique_ptr;
 
 namespace bundy {
 namespace util {
@@ -90,7 +90,7 @@ Mutex::Mutex() :
         bundy_throw(bundy::InvalidOperation, std::strerror(result));
     }
 
-    auto_ptr<Impl> impl(new Impl);
+    unique_ptr<Impl> impl(new Impl);
     result = pthread_mutex_init(&impl->mutex, &attributes);
     switch (result) {
         case 0: // All 0K

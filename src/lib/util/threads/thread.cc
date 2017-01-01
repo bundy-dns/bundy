@@ -26,7 +26,7 @@
 
 using std::string;
 using std::exception;
-using std::auto_ptr;
+using std::unique_ptr;
 using boost::scoped_ptr;
 
 namespace bundy {
@@ -104,7 +104,7 @@ public:
 Thread::Thread(const boost::function<void ()>& main) :
     impl_(NULL)
 {
-    auto_ptr<Impl> impl(new Impl(main));
+    unique_ptr<Impl> impl(new Impl(main));
     const int result = pthread_create(&impl->tid_, NULL, &Impl::run,
                                       impl.get());
     // Any error here?

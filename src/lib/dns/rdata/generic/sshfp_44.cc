@@ -112,10 +112,10 @@ SSHFP::constructFromLexer(MasterLexer& lexer) {
 SSHFP::SSHFP(const string& sshfp_str) :
     impl_(NULL)
 {
-    // We use auto_ptr here because if there is an exception in this
+    // We use unique_ptr here because if there is an exception in this
     // constructor, the destructor is not called and there could be a
     // leak of the SSHFPImpl that constructFromLexer() returns.
-    std::auto_ptr<SSHFPImpl> impl_ptr(NULL);
+    std::unique_ptr<SSHFPImpl> impl_ptr(nullptr);
 
     try {
         std::istringstream ss(sshfp_str);
