@@ -107,7 +107,7 @@ convertToPyHash(HashvalType val) {
 
     if (sizeof(HashvalType) < sizeof(Py_hash_t)) {
         // The original hash type is small enough.  Do trivial conversion.
-        const Py_hash_t mask = ~(static_cast<Py_hash_t>(-1) << hash_val_bits);
+        const Py_hash_t mask = ~(static_cast<Py_hash_t>(UINT_MAX) << hash_val_bits);
         return (static_cast<Py_hash_t>(val) & mask);
     } else {
         // Clear the highest bit of the original hash so the conversion is
