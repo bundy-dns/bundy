@@ -224,7 +224,7 @@ RequestContext_init(PyObject* po_self, PyObject* args, PyObject*) {
             // fails.
             PyErr_Clear();
 
-            auto_ptr<s_RequestContext::Data> dataptr(
+            unique_ptr<s_RequestContext::Data> dataptr(
                 new s_RequestContext::Data(remote_addr, remote_port,
                                            tsig_data, tsig_len));
             self->cppobj = new RequestContext(*dataptr->remote_ipaddr,

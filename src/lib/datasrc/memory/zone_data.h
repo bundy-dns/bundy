@@ -529,6 +529,7 @@ public:
     /// This also means it's not considered NSEC3 signed by default.
     ///
     /// \throw none
+
     bool isNSEC3Signed() const { return (!!nsec3_data_); }
 
     /// \brief Return whether or not the zone data is "empty".

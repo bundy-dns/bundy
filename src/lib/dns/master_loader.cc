@@ -33,7 +33,7 @@
 #include <cstdio> // for sscanf()
 
 using std::string;
-using std::auto_ptr;
+using std::unique_ptr;
 using std::vector;
 using std::pair;
 using boost::algorithm::iequals;
@@ -1043,7 +1043,7 @@ MasterLoader::MasterLoader(std::istream& stream,
     if (add_callback.empty()) {
         bundy_throw(bundy::InvalidParameter, "Empty add RR callback");
     }
-    auto_ptr<MasterLoaderImpl> impl(new MasterLoaderImpl("", zone_origin,
+    unique_ptr<MasterLoaderImpl> impl(new MasterLoaderImpl("", zone_origin,
                                                          zone_class, callbacks,
                                                          add_callback,
                                                          options));

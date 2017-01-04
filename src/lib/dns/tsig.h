@@ -206,6 +206,7 @@ public:
 
     /// The destructor.
     ~TSIGContext();
+
     //@}
 
     /// Sign a DNS message.

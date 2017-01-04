@@ -112,10 +112,10 @@ getRequestLoader() {
     static boost::scoped_ptr<RequestLoader> loader(NULL);
     if (loader.get() == NULL) {
         // Creator registration may throw, so we first store the new loader
-        // in a second auto pointer in order to provide the strong exception
+        // in a second unique pointer in order to provide the strong exception
         // guarantee.
-        auto_ptr<RequestLoader> loader_ptr =
-            auto_ptr<RequestLoader>(new RequestLoader(REJECT));
+        unique_ptr<RequestLoader> loader_ptr =
+            unique_ptr<RequestLoader>(new RequestLoader(REJECT));
 
         // Register default check creator(s)
         loader_ptr->registerCreator(

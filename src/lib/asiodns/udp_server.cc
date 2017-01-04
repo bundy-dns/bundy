@@ -48,9 +48,9 @@ namespace asiodns {
 
 /*
  * Some of the member variables here are shared_ptrs and some are
- * auto_ptrs. There will be one instance of Data for the lifetime
+ * unique_ptrs. There will be one instance of Data for the lifetime
  * of packet. The variables that are state only for a single packet
- * use auto_ptr, as it is more lightweight. In the case of shared
+ * use unique_ptr, as it is more lightweight. In the case of shared
  * configuration (eg. the callbacks, socket), we use shared_ptrs.
  */
 struct UDPServer::Data {
@@ -145,11 +145,11 @@ struct UDPServer::Data {
     boost::shared_ptr<asio::ip::udp::socket> socket_;
 
     // The ASIO-internal endpoint object representing the client
-    std::auto_ptr<asio::ip::udp::endpoint> sender_;
+    std::unique_ptr<asio::ip::udp::endpoint> sender_;
 
     // \c IOMessage and \c Message objects to be passed to the
     // DNS lookup and answer providers
-    std::auto_ptr<asiolink::IOMessage> io_message_;
+    std::unique_ptr<asiolink::IOMessage> io_message_;
 
     // The original query as sent by the client
     bundy::dns::MessagePtr query_message_;
@@ -172,8 +172,8 @@ struct UDPServer::Data {
     const DNSLookup* lookup_callback_;
     const DNSAnswer* answer_callback_;
 
-    std::auto_ptr<IOEndpoint> peer_;
-    std::auto_ptr<IOSocket> iosock_;
+    std::unique_ptr<IOEndpoint> peer_;
+    std::unique_ptr<IOSocket> iosock_;
 };
 
 /// The following functions implement the \c UDPServer class.
