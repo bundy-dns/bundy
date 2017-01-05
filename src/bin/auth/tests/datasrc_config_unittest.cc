@@ -146,7 +146,7 @@ protected:
         EXPECT_EQ(1, lists_.size());
     }
     FakeSession session;
-    auto_ptr<ModuleCCSession> mccs;
+    unique_ptr<ModuleCCSession> mccs;
     const string specfile;
     std::map<RRClass, ListPtr> lists_;
     string log_;
