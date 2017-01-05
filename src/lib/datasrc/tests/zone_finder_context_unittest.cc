@@ -136,7 +136,7 @@ protected:
     }
     void SetUp() {
         finder_ = client_->findZone(qzone_).zone_finder;
-        ASSERT_TRUE(finder_);
+        ASSERT_TRUE(!!finder_);
     }
 
     const RRClass qclass_;
