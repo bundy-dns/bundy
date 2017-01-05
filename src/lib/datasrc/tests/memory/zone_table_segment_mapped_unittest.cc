@@ -83,8 +83,8 @@ protected:
     bool verifyData(const MemorySegment& segment);
 
     // Ideally, this should be something similar to a
-    // SegmentObjectHolder, not an auto_ptr.
-    std::auto_ptr<ZoneTableSegment> ztable_segment_;
+    // SegmentObjectHolder, not an unique_ptr.
+    std::unique_ptr<ZoneTableSegment> ztable_segment_;
     const ConstElementPtr config_params_;
     const ConstElementPtr config_params2_;
     std::vector<TestDataElement> test_data_;
