@@ -131,7 +131,7 @@ findNSEC3Check(bool expected_matched, uint8_t expected_labels,
               static_cast<int>(result.closest_labels));
 
     vector<ConstRRsetPtr> actual_rrsets;
-    ASSERT_TRUE(result.closest_proof);
+    ASSERT_TRUE(!!result.closest_proof);
     actual_rrsets.push_back(result.closest_proof);
     rrsetsCheck(expected_closest, actual_rrsets.begin(),
                 actual_rrsets.end());
@@ -140,7 +140,7 @@ findNSEC3Check(bool expected_matched, uint8_t expected_labels,
     if (expected_next.empty()) {
         EXPECT_FALSE(result.next_proof);
     } else {
-        ASSERT_TRUE(result.next_proof);
+        ASSERT_TRUE(!!result.next_proof);
         actual_rrsets.push_back(result.next_proof);
         rrsetsCheck(expected_next, actual_rrsets.begin(),
                     actual_rrsets.end());
