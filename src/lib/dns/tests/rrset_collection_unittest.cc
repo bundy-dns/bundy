@@ -59,7 +59,7 @@ template <typename T, typename TP>
 void doFind(T& collection, const RRClass& rrclass) {
     // Test the find() that returns ConstRRsetPtr
     TP rrset = collection.find(Name("www.example.org"), rrclass, RRType::A());
-    EXPECT_TRUE(rrset);
+    EXPECT_TRUE(!!rrset);
     EXPECT_EQ(RRType::A(), rrset->getType());
     EXPECT_EQ(RRTTL(3600), rrset->getTTL());
     EXPECT_EQ(RRClass("IN"), rrset->getClass());
@@ -75,7 +75,7 @@ void doFind(T& collection, const RRClass& rrclass) {
 
     // www.example.org exists, with AAAA
     rrset = collection.find(Name("www.example.org"), rrclass, RRType::AAAA());
-    EXPECT_TRUE(rrset);
+    EXPECT_TRUE(!!rrset);
 
     // www.example.org with AAAA does not exist in RRClass::CH()
     rrset = collection.find(Name("www.example.org"), RRClass::CH(),
@@ -110,7 +110,7 @@ doAddAndRemove(RRsetCollection& collection, const RRClass& rrclass) {
     // foo.example.org/A should now exist
     rrset_found = collection.find(Name("foo.example.org"), rrclass,
                                   RRType::A());
-    EXPECT_TRUE(rrset_found);
+    EXPECT_TRUE(!!rrset_found);
     EXPECT_EQ(RRType::A(), rrset_found->getType());
     EXPECT_EQ(RRTTL(7200), rrset_found->getTTL());
     EXPECT_EQ(RRClass("IN"), rrset_found->getClass());
