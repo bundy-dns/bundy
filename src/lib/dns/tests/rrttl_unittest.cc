@@ -100,7 +100,7 @@ TEST_F(RRTTLTest, createFromText) {
     // It returns an actual RRTTL iff the given text is recognized as a
     // valid RR TTL.
     scoped_ptr<RRTTL> good_ttl(RRTTL::createFromText("3600"));
-    EXPECT_TRUE(good_ttl);
+    EXPECT_TRUE(!!good_ttl);
     EXPECT_EQ(RRTTL(3600), *good_ttl);
 
     scoped_ptr<RRTTL> bad_ttl(RRTTL::createFromText("bad"));
