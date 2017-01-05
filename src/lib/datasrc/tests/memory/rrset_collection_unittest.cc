@@ -67,7 +67,7 @@ TEST_F(RRsetCollectionTest, find) {
     const MemRRsetCollection& ccln = *collection;
     ConstRRsetPtr rrset = ccln.find(Name("www.example.org"), rrclass,
                                     RRType::A());
-    EXPECT_TRUE(rrset);
+    EXPECT_TRUE(!!rrset);
     EXPECT_EQ(RRType::A(), rrset->getType());
     EXPECT_EQ(RRTTL(3600), rrset->getTTL());
     EXPECT_EQ(RRClass("IN"), rrset->getClass());
@@ -83,7 +83,7 @@ TEST_F(RRsetCollectionTest, find) {
 
     // www.example.org exists, with AAAA
     rrset = ccln.find(Name("www.example.org"), rrclass, RRType::AAAA());
-    EXPECT_TRUE(rrset);
+    EXPECT_TRUE(!!rrset);
 
     // www.example.org with AAAA does not exist in RRClass::CH()
     rrset = ccln.find(Name("www.example.org"), RRClass::CH(),
