@@ -62,7 +62,7 @@ protected:
 TEST_F(ZoneTableAccessorTest, iteratorFromCache) {
     // Confirm basic iterator behavior.
     ZoneTableAccessor::IteratorPtr it = accessor_.getIterator();
-    ASSERT_TRUE(it);
+    ASSERT_TRUE(!it);
     EXPECT_FALSE(it->isLast());
     EXPECT_EQ(0, it->getCurrent().index); // index is always 0 for this version
     EXPECT_EQ(Name("example.com"), it->getCurrent().origin);
@@ -87,8 +87,8 @@ TEST_F(ZoneTableAccessorTest, emptyTable) {
             "{\"cache-enable\": true, \"params\": {}}"), true);
     ZoneTableAccessorCache accessor(empty_config);
     ZoneTableAccessor::IteratorPtr it = accessor.getIterator();
-    ASSERT_TRUE(it);
-    EXPECT_TRUE(it->isLast());
+    ASSERT_TRUE(!!it);
+    EXPECT_TRUE(!!it->isLast());
     EXPECT_THROW(it->getCurrent(), bundy::InvalidOperation);
     EXPECT_THROW(it->next(), bundy::InvalidOperation);
 }
@@ -103,7 +103,7 @@ TEST_F(ZoneTableAccessorTest, disabledTable) {
             " \"cache-zones\": [\"example.com\", \"example.org\"]}"), true);
     ZoneTableAccessorCache accessor(mock_config);
     ZoneTableAccessor::IteratorPtr it = accessor.getIterator();
-    ASSERT_TRUE(it);
+    ASSERT_TRUE(!!it);
     EXPECT_TRUE(it->isLast());
     EXPECT_THROW(it->getCurrent(), bundy::InvalidOperation);
     EXPECT_THROW(it->next(), bundy::InvalidOperation);
