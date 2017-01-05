@@ -245,7 +245,7 @@ protected:
     void TearDown() {
         client_.reset();
         ztable_segment_.reset();
-        EXPECT_TRUE(mem_sgmt_.allMemoryDeallocated()); // catch any leak here.
+        EXPECT_TRUE(!!mem_sgmt_.allMemoryDeallocated()); // catch any leak here.
     }
     const RRClass zclass_;
     test::MemorySegmentMock mem_sgmt_;
@@ -322,23 +322,23 @@ TEST_F(MemoryClientTest, loadFromIterator) {
 
     // First we have the SOA
     ConstRRsetPtr rrset(iterator->getNextRRset());
-    EXPECT_TRUE(rrset);
+    EXPECT_TRUE(!!rrset);
     EXPECT_EQ(RRType::SOA(), rrset->getType());
 
     // RRType::NS() RRset
     rrset = iterator->getNextRRset();
-    EXPECT_TRUE(rrset);
+    EXPECT_TRUE(!!rrset);
     EXPECT_EQ(RRType::NS(), rrset->getType());
 
     // RRType::A() RRset
     rrset = iterator->getNextRRset();
-    EXPECT_TRUE(rrset);
+    EXPECT_TRUE(!!rrset);
     EXPECT_EQ(RRType::MX(), rrset->getType());
     EXPECT_EQ(1, rrset->getRRsigDataCount()); // this RRset is signed
 
     // RRType::MX() RRset
     rrset = iterator->getNextRRset();
-    EXPECT_TRUE(rrset);
+    EXPECT_TRUE(!!rrset);
     EXPECT_EQ(RRType::A(), rrset->getType());
     EXPECT_EQ(1, rrset->getRRsigDataCount()); // also signed
 
@@ -752,12 +752,12 @@ TEST_F(MemoryClientTest, getIterator) {
 
     // First we have the SOA
     ConstRRsetPtr rrset(iterator->getNextRRset());
-    EXPECT_TRUE(rrset);
+    EXPECT_TRUE(!!rrset);
     EXPECT_EQ(RRType::SOA(), rrset->getType());
 
     // Then the NS
     rrset = iterator->getNextRRset();
-    EXPECT_TRUE(rrset);
+    EXPECT_TRUE(!!rrset);
     EXPECT_EQ(RRType::NS(), rrset->getType());
 
     // There's nothing else in this iterator
@@ -785,17 +785,17 @@ TEST_F(MemoryClientTest, getIteratorSeparateRRs) {
 
     // First we have the SOA
     ConstRRsetPtr rrset(iterator->getNextRRset());
-    EXPECT_TRUE(rrset);
+    EXPECT_TRUE(!!rrset);
     EXPECT_EQ(RRType::SOA(), rrset->getType());
 
     // Then, the NS
     rrset = iterator->getNextRRset();
-    EXPECT_TRUE(rrset);
+    EXPECT_TRUE(!!rrset);
     EXPECT_EQ(RRType::NS(), rrset->getType());
 
     // Only one RRType::A() RRset
     rrset = iterator->getNextRRset();
-    EXPECT_TRUE(rrset);
+    EXPECT_TRUE(!!rrset);
     EXPECT_EQ(RRType::A(), rrset->getType());
 
     // There's nothing else in this zone
@@ -806,22 +806,22 @@ TEST_F(MemoryClientTest, getIteratorSeparateRRs) {
 
     // First we have the SOA
     rrset = iterator2->getNextRRset();
-    EXPECT_TRUE(rrset);
+    EXPECT_TRUE(!!rrset);
     EXPECT_EQ(RRType::SOA(), rrset->getType());
 
     // Then, the NS
     rrset = iterator2->getNextRRset();
-    EXPECT_TRUE(rrset);
+    EXPECT_TRUE(!!rrset);
     EXPECT_EQ(RRType::NS(), rrset->getType());
 
     // First RRType::A() RRset
     rrset = iterator2->getNextRRset();
-    EXPECT_TRUE(rrset);
+    EXPECT_TRUE(!!rrset);
     EXPECT_EQ(RRType::A(), rrset->getType());
 
     // Second RRType::A() RRset
     rrset = iterator2->getNextRRset();
-    EXPECT_TRUE(rrset);
+    EXPECT_TRUE(!!rrset);
     EXPECT_EQ(RRType::A(), rrset->getType());
 
     // There's nothing else in this iterator
