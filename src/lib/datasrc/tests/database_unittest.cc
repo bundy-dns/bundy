@@ -1256,7 +1256,7 @@ DatabaseClientTest::checkJournal(const std::vector<JournalEntry>& expected) {
             client_->getJournalReader(zone_name,
                                       expected.front().serial_,
                                       expected.back().serial_).second;
-        ASSERT_TRUE(jnl_reader);
+        ASSERT_TRUE(!!jnl_reader);
         ConstRRsetPtr rrset;
         std::vector<JournalEntry>::const_iterator it = expected.begin();
         for (rrset = jnl_reader->getNextDiff();
@@ -1505,7 +1505,7 @@ checkIteratorSequence(ZoneIterator& it, ExpectedRRset expected_sequence[],
     vector<string> expected_rdatas;
     for (size_t i = 0; i < num_rrsets; ++i) {
         const ConstRRsetPtr rrset = it.getNextRRset();
-        ASSERT_TRUE(rrset);
+        ASSERT_TRUE(!!rrset);
 
         expected_rdatas.clear();
         expected_rdatas.push_back(expected_sequence[i].rdata1);
@@ -1593,7 +1593,7 @@ TEST_P(DatabaseClientTest, getSOAFromIterator) {
                        "1234 3600 1800 2419200 7200");
 
     ZoneIteratorPtr it(client_->getIterator(zname_));
-    ASSERT_TRUE(it);
+    ASSERT_TRUE(!!it);
     checkRRset(it->getSOA(), zname_, qclass_, RRType::SOA(), rrttl_, soa_data);
 
     // Iterate over the zone until we find an SOA.  Although there's a broken
@@ -1605,7 +1605,7 @@ TEST_P(DatabaseClientTest, getSOAFromIterator) {
            rrset->getType() != RRType::SOA()) {
         ;
     }
-    ASSERT_TRUE(rrset);
+    ASSERT_TRUE(!!rrset);
     // It should be identical to the result of getSOA().
     rrsetCheck(it->getSOA(), rrset);
 }
@@ -1617,13 +1617,13 @@ TEST_P(DatabaseClientTest, noSOAFromIterator) {
 
     // Then getSOA() should return NULL.
     ZoneIteratorPtr it(client_->getIterator(zname_));
-    ASSERT_TRUE(it);
+    ASSERT_TRUE(!!it);
     EXPECT_FALSE(it->getSOA());
 }
 
 TEST_P(DatabaseClientTest, iterateThenUpdate) {
     ZoneIteratorPtr it(client_->getIterator(zname_));
-    ASSERT_TRUE(it);
+    ASSERT_TRUE(!!it);
 
     // Try to empty the zone after getting the iterator.  Depending on the
     // underlying data source, it may result in an exception due to the
@@ -1643,7 +1643,7 @@ TEST_P(DatabaseClientTest, iterateThenUpdate) {
            rrset->getType() != RRType::SOA()) {
         ;
     }
-    ASSERT_TRUE(rrset);
+    ASSERT_TRUE(!!rrset);
     // It should be identical to the result of getSOA().
     rrsetCheck(it->getSOA(), rrset);
 }
@@ -1656,7 +1656,7 @@ TEST_P(DatabaseClientTest, updateThenIterateThenUpdate) {
     // Then iterate over it.  It should immediately reach the end, at which
     // point the transaction should be committed.
     ZoneIteratorPtr it(client_->getIterator(zname_));
-    ASSERT_TRUE(it);
+    ASSERT_TRUE(!!it);
     EXPECT_FALSE(it->getNextRRset());
 
     // So another update attempt should succeed, too.
@@ -1669,8 +1669,8 @@ TEST_P(DatabaseClientTest, updateAfterDeleteIterator) {
     // middle of zone.  The transaction should be canceled (actually no
     // different from commit though) at that point.
     ZoneIteratorPtr it(client_->getIterator(zname_));
-    ASSERT_TRUE(it);
-    EXPECT_TRUE(it->getNextRRset());
+    ASSERT_TRUE(!!it);
+    EXPECT_TRUE(!!it->getNextRRset());
     it.reset();
 
     // So another update attempt should succeed.
@@ -3114,7 +3114,7 @@ TEST_P(DatabaseClientTest, getAll) {
     it->next();
     EXPECT_TRUE(it->isLast());
     ConstRRsetPtr sig(target[a_idx]->getRRsig());
-    ASSERT_TRUE(sig);
+    ASSERT_TRUE(!!sig);
     EXPECT_EQ(RRType::RRSIG(), sig->getType());
     EXPECT_EQ("A 5 3 3600 20000101000000 20000201000000 12345 example.org. "
               "FAKEFAKEFAKE", sig->getRdataIterator()->getCurrent().toText());
@@ -3126,7 +3126,7 @@ TEST_P(DatabaseClientTest, getAll) {
     it->next();
     EXPECT_TRUE(it->isLast());
     sig = target[1 - a_idx]->getRRsig();
-    ASSERT_TRUE(sig);
+    ASSERT_TRUE(!!sig);
     EXPECT_EQ(RRType::RRSIG(), sig->getType());
     EXPECT_EQ("NSEC 5 3 3600 20000101000000 20000201000000 12345 example.org. "
               "FAKEFAKEFAKE", sig->getRdataIterator()->getCurrent().toText());
@@ -3154,7 +3154,7 @@ TEST_P(DatabaseClientTest, getOrigin) {
 
 TEST_P(DatabaseClientTest, updaterFinder) {
     updater_ = client_->getUpdater(zname_, false);
-    ASSERT_TRUE(updater_);
+    ASSERT_TRUE(!!updater_);
 
     // If this update isn't replacing the zone, the finder should work
     // just like the normal find() case.
@@ -3172,7 +3172,7 @@ TEST_P(DatabaseClientTest, updaterFinder) {
     // in the zone until something is added.
     updater_.reset();
     updater_ = client_->getUpdater(zname_, true);
-    ASSERT_TRUE(updater_);
+    ASSERT_TRUE(!!updater_);
     if (is_mock_) {
         DatabaseClient::Finder& finder = dynamic_cast<DatabaseClient::Finder&>(
             updater_->getFinder());
@@ -3316,7 +3316,7 @@ nsec3Check(const vector<ConstRRsetPtr>& expected_rrsets,
     const int zone_id = accessor.getZone(zone_name.toText()).second;
     DatabaseAccessor::IteratorContextPtr itctx =
         accessor.getNSEC3Records(expected_hash, zone_id);
-    ASSERT_TRUE(itctx);
+    ASSERT_TRUE(!!itctx);
 
     // Build a list of matched RRsets and compare the both expected and built
     // ones as sets.
@@ -4046,15 +4046,15 @@ TEST_P(DatabaseClientTest, journalReader) {
         client_->getJournalReader(zname_, 1234, 1235);
     EXPECT_EQ(ZoneJournalReader::SUCCESS, result.first);
     ZoneJournalReaderPtr jnl_reader = result.second;
-    ASSERT_TRUE(jnl_reader);
+    ASSERT_TRUE(!!jnl_reader);
     ConstRRsetPtr rrset = jnl_reader->getNextDiff();
-    ASSERT_TRUE(rrset);
+    ASSERT_TRUE(!!rrset);
     rrsetCheck(soa_, rrset);
     rrset = jnl_reader->getNextDiff();
-    ASSERT_TRUE(rrset);
+    ASSERT_TRUE(!!rrset);
     rrsetCheck(soa_end, rrset);
     rrset = jnl_reader->getNextDiff();
-    ASSERT_FALSE(rrset);
+    ASSERT_FALSE(!!rrset);
 
     // Once it reaches the end of the sequence, further read attempt will
     // result in exception.
@@ -4186,7 +4186,7 @@ TEST_P(DatabaseClientTest, createZone) {
     ASSERT_EQ(result::NOTFOUND, result.code);
 
     // Adding a new zone; it should work and return true
-    ASSERT_TRUE(client_->createZone(new_name));
+    ASSERT_TRUE(!!client_->createZone(new_name));
     const DataSourceClient::FindResult result2(client_->findZone(new_name));
     ASSERT_EQ(result::SUCCESS, result2.code);
     // And the second call should return false since
@@ -4205,7 +4205,7 @@ TEST_P(DatabaseClientTest, createZoneRollbackOnLocked) {
     // well, and the next attempt should succeed
     updater.reset();
     allowMoreTransaction(true);
-    ASSERT_TRUE(client_->createZone(new_name));
+    ASSERT_TRUE(!!client_->createZone(new_name));
 }
 
 TEST_P(DatabaseClientTest, createZoneRollbackOnExists) {
@@ -4217,7 +4217,7 @@ TEST_P(DatabaseClientTest, createZoneRollbackOnExists) {
     // The first transaction shouldn't leave any state, lock, etc, that
     // would hinder the second attempt.
     allowMoreTransaction(true);
-    ASSERT_TRUE(client_->createZone(new_name));
+    ASSERT_TRUE(!!client_->createZone(new_name));
 }
 
 TEST_P(DatabaseClientTest, deleteZone) {
@@ -4226,7 +4226,7 @@ TEST_P(DatabaseClientTest, deleteZone) {
 
     // Deleting an existing zone; it should work and return true (previously
     // existed and is now deleted)
-    EXPECT_TRUE(client_->deleteZone(zname_));
+    EXPECT_TRUE(!!client_->deleteZone(zname_));
 
     // Now it's not found by findZone
     EXPECT_EQ(result::NOTFOUND, client_->findZone(zname_).code);
@@ -4248,7 +4248,7 @@ TEST_P(DatabaseClientTest, deleteZoneRollbackOnLocked) {
     // well, and the next attempt should succeed
     updater.reset();
     allowMoreTransaction(true);
-    EXPECT_TRUE(client_->deleteZone(zname_));
+    EXPECT_TRUE(!!client_->deleteZone(zname_));
 }
 
 TEST_P(DatabaseClientTest, deleteZoneRollbackOnNotFind) {
@@ -4261,7 +4261,7 @@ TEST_P(DatabaseClientTest, deleteZoneRollbackOnNotFind) {
     // The first transaction shouldn't leave any state, lock, etc, that
     // would hinder the second attempt.
     allowMoreTransaction(true);
-    EXPECT_TRUE(client_->deleteZone(zname_));
+    EXPECT_TRUE(!!client_->deleteZone(zname_));
 }
 
 INSTANTIATE_TEST_CASE_P(, RRsetCollectionTest, ::testing::Values(&mock_param));
@@ -4272,7 +4272,7 @@ TEST_P(RRsetCollectionTest, find) {
     // Test the find() that returns ConstRRsetPtr
     ConstRRsetPtr rrset = collection.find(Name("www.example.org."),
                                           RRClass::IN(), RRType::A());
-    ASSERT_TRUE(rrset);
+    ASSERT_TRUE(!!rrset);
     EXPECT_EQ(RRType::A(), rrset->getType());
     EXPECT_EQ(RRTTL(3600), rrset->getTTL());
     EXPECT_EQ(RRClass("IN"), rrset->getClass());
@@ -4288,7 +4288,7 @@ TEST_P(RRsetCollectionTest, find) {
 
     // www.example.org exists, with AAAA
     rrset = collection.find(Name("www.example.org"), qclass_, RRType::AAAA());
-    EXPECT_TRUE(rrset);
+    EXPECT_TRUE(!!rrset);
 
     // www.example.org with AAAA does not exist in RRClass::CH()
     rrset = collection.find(Name("www.example.org"), RRClass::CH(),
@@ -4302,7 +4302,7 @@ TEST_P(RRsetCollectionTest, find) {
     // "cname.example.org." with type CNAME should return the CNAME RRset
     rrset = collection.find(Name("cname.example.org"), qclass_,
                             RRType::CNAME());
-    ASSERT_TRUE(rrset);
+    ASSERT_TRUE(!!rrset);
     EXPECT_EQ(RRType::CNAME(), rrset->getType());
     EXPECT_EQ(Name("cname.example.org"), rrset->getName());
 
@@ -4313,7 +4313,7 @@ TEST_P(RRsetCollectionTest, find) {
     // "dname.example.org." with type DNAME should return the DNAME RRset
     rrset = collection.find(Name("dname.example.org"), qclass_,
                             RRType::DNAME());
-    ASSERT_TRUE(rrset);
+    ASSERT_TRUE(!!rrset);
     EXPECT_EQ(RRType::DNAME(), rrset->getType());
     EXPECT_EQ(Name("dname.example.org"), rrset->getName());
 
@@ -4336,7 +4336,7 @@ TEST_P(RRsetCollectionTest, find) {
     // nothing.
     rrset = collection.find(Name("delegation.example.org"), qclass_,
                             RRType::NS());
-    ASSERT_TRUE(rrset);
+    ASSERT_TRUE(!!rrset);
     EXPECT_EQ(RRType::NS(), rrset->getType());
     EXPECT_EQ(Name("delegation.example.org"), rrset->getName());
 
@@ -4352,7 +4352,7 @@ TEST_P(RRsetCollectionTest, find) {
     // record.
     rrset = collection.find(Name("*.wild.example.org"), qclass_,
                             RRType::A());
-    ASSERT_TRUE(rrset);
+    ASSERT_TRUE(!!rrset);
     EXPECT_EQ(RRType::A(), rrset->getType());
     EXPECT_EQ(Name("*.wild.example.org"), rrset->getName());
 }
