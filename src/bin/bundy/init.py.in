@@ -53,6 +53,7 @@ else:
                          .replace("${datarootdir}", DATAROOTDIR)\
                          .replace("${prefix}", PREFIX)
 
+import fcntl
 import subprocess
 import signal
 import re
@@ -1372,6 +1373,8 @@ def main():
 
     # Create wakeup pipe for signal handlers
     wakeup_pipe = os.pipe()
+    flags = fcntl.fcntl(wakeup_pipe[1], fcntl.F_GETFL)
+    fcntl.fcntl(wakeup_pipe[1], fcntl.F_SETFL, flags | os.O_NONBLOCK)
     signal.set_wakeup_fd(wakeup_pipe[1])
 
     # Set signal handlers for catching child termination, as well
