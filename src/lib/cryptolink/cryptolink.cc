@@ -21,14 +21,14 @@ namespace bundy {
 namespace cryptolink {
 
 // For Botan, we use the CryptoLink class object in RAII style
-class CryptoLinkImpl {
-private:
-    Botan::LibraryInitializer botan_init_;
-};
+//class CryptoLinkImpl {
+//private:
+//    Botan::LibraryInitializer botan_init_;
+//};
 
-CryptoLink::~CryptoLink() {
-    delete impl_;
-}
+//CryptoLink::~CryptoLink() {
+//    delete impl_;
+//}
 
 CryptoLink&
 CryptoLink::getCryptoLink() {
@@ -45,17 +45,17 @@ CryptoLink::getCryptoLinkInternal() {
     return (instance);
 }
 
-void
-CryptoLink::initialize() {
-    CryptoLink& c = getCryptoLinkInternal();
-    if (c.impl_ == NULL) {
-        try {
-            c.impl_ = new CryptoLinkImpl();
-        } catch (const Botan::Exception& ex) {
-            bundy_throw(InitializationError, ex.what());
-        }
-    }
-}
+//void
+//CryptoLink::initialize() {
+//    CryptoLink& c = getCryptoLinkInternal();
+//   if (c.impl_ == NULL) {
+//        try {
+//            c.impl_ = new CryptoLinkImpl();
+//        } catch (const Botan::Exception& ex) {
+//            bundy_throw(InitializationError, ex.what());
+//        }
+//    }
+//}
 
 HMAC*
 CryptoLink::createHMAC(const void* secret, size_t secret_len,

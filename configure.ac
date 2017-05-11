@@ -123,6 +123,9 @@ AC_CHECK_DECL([__SUNPRO_CC], [SUNCXX="yes"], [SUNCXX="no"])
 AC_CHECK_DECL([__clang__], [CLANGPP="yes"], [CLANGPP="no"])
 AM_CONDITIONAL(USE_CLANGPP, test "X${CLANGPP}" = "Xyes")
 
+# Check for C++11 features support
+AX_BUNDY_CPP11
+
 dnl Determine if weare using GNU sed
 GNU_SED=no
 $SED --version 2> /dev/null | grep GNU > /dev/null 2>&1
@@ -713,6 +716,7 @@ AC_DEFUN([ACX_TRY_BOTAN_TOOL], [
             #AC_MSG_RESULT([found])
             AC_LINK_IFELSE(
                 [AC_LANG_PROGRAM([#include <botan/botan.h>
+                                  #include <botan/init.h>		
                                   #include <botan/hash.h>
                                  ],
                                  [using namespace Botan;
@@ -791,7 +795,7 @@ else
             # Ok so no script found, see if pkg-config knows of it.
             # Unfortunately, the botan.pc files also have their minor version
             # in their name, so we need to try them one by one
-            BOTAN_VERSIONS="botan-1.10 botan-1.9 botan-1.8"
+            BOTAN_VERSIONS="botan-2 botan-1.11 botan-1.10 botan-1.9 botan-1.8"
             for version in $BOTAN_VERSIONS; do
                 ACX_TRY_BOTAN_TOOL([pkg-config], ["$version --silence-errors"],
                                    [ BOTAN_CONFIG="$PKG_CONFIG $version" ]
@@ -873,13 +877,18 @@ CPPFLAGS="$BOTAN_INCLUDES $CPPFLAGS"
 LIBS_SAVED="$LIBS"
 LIBS="$LIBS $BOTAN_LIBS"
 
+
 # ac_header_preproc is an autoconf symbol (undocumented but stable) that
 # is set if the pre-processor phase passes. Thus by adding a custom
 # failure handler we can detect the difference between a header not existing
 # (or not even passing the pre-processor phase) and a header file resulting
 # in compilation failures.
 AC_CHECK_HEADERS([botan/botan.h],,[
-	if test "x$ac_header_preproc" = "xyes"; then
+        BOTAN_INCLUDES=""
+        BOTAN_LIBS=""
+        BOTAN_LDFLAGS=""
+        BOTAN_RPATH=""
+        if test "x$ac_header_preproc" = "xyes"; then
 		AC_MSG_ERROR([
 botan/botan.h was found but is unusable. The most common cause of this problem
 is attempting to use an updated C++ compiler with older C++ libraries, such as
@@ -892,6 +901,7 @@ Boost and Botan that were compiled with the same compiler version.])
 )
 AC_LINK_IFELSE(
         [AC_LANG_PROGRAM([#include <botan/botan.h>
+                          #include <botan/init.h>
                           #include <botan/hash.h>
                          ],
                          [using namespace Botan;
