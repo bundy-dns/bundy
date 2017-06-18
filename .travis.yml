@@ -1,4 +1,16 @@
+sudo: false
 language: c++
+compiler:
+  - gcc
+  - clang
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - gcc-4.8
+    - g++-4.8
+    - clang
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y libtool automake git build-essential pkg-config
@@ -8,3 +20,6 @@ before_script: autoreconf -i
 
 # Default is "./configure && make && make test", but no tests yet
 script: "./configure && make"
+
+install:
+- if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
