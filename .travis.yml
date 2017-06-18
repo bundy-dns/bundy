@@ -19,7 +19,7 @@ before_install:
 before_script: autoreconf -i
 
 # Default is "./configure && make && make test", but no tests yet
-script: "./configure && make"
+script: "./configure --without-shared-memory && make"
 
 install:
 - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
