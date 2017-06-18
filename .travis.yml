@@ -1,8 +1,8 @@
-sudo: false
+sudo: required
 language: c++
 compiler:
   - gcc
-  - clang
+#  - clang
 addons:
   apt:
     sources:
@@ -12,9 +12,9 @@ addons:
     - g++-4.8
     - clang
 before_install:
-  - apt-get -qq update
-  - apt-get install -y libtool automake git build-essential pkg-config
-  - apt-get install -y python3-dev libsqlite3-dev libbotan1.10-dev liblog4cplus-dev libgtest-dev libboost-dev python-setproctitle libssl-dev
+  - sudo apt-get -qq update
+  - sudo apt-get install -y libtool automake git build-essential pkg-config
+  - sudo apt-get install -y python3-dev libsqlite3-dev libbotan1.10-dev liblog4cplus-dev libgtest-dev libboost-dev python-setproctitle libssl-dev
 # before build script, run autoreconf
 before_script: autoreconf -i
 
