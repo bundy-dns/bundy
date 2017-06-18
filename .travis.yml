@@ -3,4 +3,8 @@ before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y libtool automake git build-essential pkg-config
   - sudo apt-get install -y python3-dev libsqlite3-dev libbotan1.10-dev liblog4cplus-dev libgtest-dev libboost-dev python-setproctitle libssl-dev
-  
+# before build script, run autoreconf
+before_script: autoreconf -i
+
+# Default is "./configure && make && make test", but no tests yet
+script: "./configure && make"
