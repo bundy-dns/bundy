@@ -1061,7 +1061,7 @@ TEST_P(ListTest, checkZoneWriterCatchesExceptions) {
     ConfigurableClientList::ZoneWriterPair
         result(list_->getCachedZoneWriter(Name("example.edu"), true));
     ASSERT_EQ(ConfigurableClientList::ZONE_SUCCESS, result.first);
-    ASSERT_TRUE(result.second);
+    ASSERT_TRUE(!!result.second);
 
     std::string error_msg;
     // Because of the way we called getCachedZoneWriter() with
@@ -1087,7 +1087,7 @@ TEST_P(ListTest, checkZoneWriterThrows) {
     ConfigurableClientList::ZoneWriterPair
         result(list_->getCachedZoneWriter(Name("example.edu"), false));
     ASSERT_EQ(ConfigurableClientList::ZONE_SUCCESS, result.first);
-    ASSERT_TRUE(result.second);
+    ASSERT_TRUE(!!result.second);
 
     std::string error_msg;
     // Because of the way we called getCachedZoneWriter() with
@@ -1351,9 +1351,9 @@ ListTest::accessorIterate(const ConstZoneTableAccessorPtr& accessor,
                           int numZones, const string& zoneName="")
 {
     // Confirm basic iterator behavior.
-    ASSERT_TRUE(accessor);
+    ASSERT_TRUE(!!accessor);
     ZoneTableAccessor::IteratorPtr it = accessor->getIterator();
-    ASSERT_TRUE(it);
+    ASSERT_TRUE(!!it);
     // Iterator does not guarantee ordering, so we look for the target
     // name anywhere in the table.
     bool found = false;

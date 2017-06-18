@@ -68,8 +68,7 @@ public:
                       const HashAlgorithm hash_algorithm) {
         Botan::HashFunction* hash;
         try {
-            hash = Botan::get_hash(
-                getBotanHashAlgorithmName(hash_algorithm));
+	  hash = Botan::HashFunction::create(getBotanHashAlgorithmName(hash_algorithm), "").release();
         } catch (const Botan::Algorithm_Not_Found&) {
             bundy_throw(bundy::cryptolink::UnsupportedAlgorithm,
                       "Unknown hash algorithm: " <<
@@ -95,10 +94,13 @@ public:
             size_t block_length = 0;
 #endif
             if (secret_len > block_length) {
-                Botan::SecureVector<Botan::byte> hashed_key =
+                Botan::secure_vector<Botan::byte> hashed_key =
                     hash->process(static_cast<const Botan::byte*>(secret),
                                   secret_len);
-                hmac_->set_key(hashed_key.begin(), hashed_key.size());
+		// OLD:               hmac_->set_key(hashed_key.begin(), hashed_key.size());
+		// TODO: AUDIT!!
+                hmac_->set_key(static_cast<const Botan::byte*>(secret),
+                               secret_len);
             } else {
                 // Botan 1.8 considers len 0 a bad key. 1.9 does not,
                 // but we won't accept it anyway, and fail early
@@ -139,12 +141,12 @@ public:
 
     void sign(bundy::util::OutputBuffer& result, size_t len) {
         try {
-            Botan::SecureVector<Botan::byte> b_result(hmac_->final());
+            Botan::secure_vector<Botan::byte> b_result(hmac_->final());
 
             if (len == 0 || len > b_result.size()) {
                 len = b_result.size();
             }
-            result.writeData(b_result.begin(), len);
+            result.writeData(b_result.data(), len);
         } catch (const Botan::Exception& exc) {
             bundy_throw(bundy::cryptolink::LibraryError, exc.what());
         }
@@ -152,12 +154,12 @@ public:
 
     void sign(void* result, size_t len) {
         try {
-            Botan::SecureVector<Botan::byte> b_result(hmac_->final());
+            Botan::secure_vector<Botan::byte> b_result(hmac_->final());
             size_t output_size = getOutputLength();
             if (output_size > len) {
                 output_size = len;
             }
-            std::memcpy(result, b_result.begin(), output_size);
+            std::memcpy(result, b_result.data(), output_size);
         } catch (const Botan::Exception& exc) {
             bundy_throw(bundy::cryptolink::LibraryError, exc.what());
         }
@@ -165,11 +167,11 @@ public:
 
     std::vector<uint8_t> sign(size_t len) {
         try {
-            Botan::SecureVector<Botan::byte> b_result(hmac_->final());
+            Botan::secure_vector<Botan::byte> b_result(hmac_->final());
             if (len == 0 || len > b_result.size()) {
                 return (std::vector<uint8_t>(b_result.begin(), b_result.end()));
             } else {
-                return (std::vector<uint8_t>(b_result.begin(), &b_result[len]));
+	      return (std::vector<uint8_t>(b_result.begin(), b_result.begin() + len));
             }
         } catch (const Botan::Exception& exc) {
             bundy_throw(bundy::cryptolink::LibraryError, exc.what());
@@ -183,7 +185,7 @@ public:
         // the check ourselves
         // SEE BELOW FOR TEMPORARY CHANGE
         try {
-            Botan::SecureVector<Botan::byte> our_mac = hmac_->final();
+            Botan::secure_vector<Botan::byte> our_mac = hmac_->final();
             if (len < getOutputLength()) {
                 // Currently we don't support truncated signature in TSIG (see
                 // #920).  To avoid validating too short signature accidently,

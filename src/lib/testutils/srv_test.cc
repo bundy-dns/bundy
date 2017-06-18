@@ -209,7 +209,7 @@ SrvTestBase::ednsBadVers() {
     parsed.fromWire(ib);
     EXPECT_EQ(bundy::dns::Rcode::BADVERS(), parsed.getRcode());
     bundy::dns::ConstEDNSPtr edns(parsed.getEDNS());
-    ASSERT_TRUE(edns);
+    ASSERT_TRUE(!!edns);
     EXPECT_FALSE(edns->getDNSSECAwareness());
 }
 

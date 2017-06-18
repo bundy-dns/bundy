@@ -368,11 +368,11 @@ private:
             if (!answer) {
                 ASSERT_FALSE(find_result->rrset);
             } else {
-                ASSERT_TRUE(find_result->rrset);
+                ASSERT_TRUE(!!find_result->rrset);
                 ConstRRsetPtr result_rrset(convertRRset(find_result->rrset));
                 rrsetCheck(answer, result_rrset);
                 if (answer_sig && (options & ZoneFinder::FIND_DNSSEC) != 0) {
-                    ASSERT_TRUE(result_rrset->getRRsig());
+                    ASSERT_TRUE(!!result_rrset->getRRsig());
                     rrsetCheck(answer_sig, result_rrset->getRRsig());
                 } else {
                     EXPECT_FALSE(result_rrset->getRRsig());
@@ -399,7 +399,7 @@ private:
 
             // Same for the RRSIG, if any.
             if (answer_sig) {
-                ASSERT_TRUE(result_rrset->getRRsig());
+                ASSERT_TRUE(!!result_rrset->getRRsig());
 
                 RRsetPtr wildsig(new RRset(name, answer_sig->getClass(),
                                            RRType::RRSIG(),
@@ -437,7 +437,7 @@ protected:
         if (!rrset_result) {
             EXPECT_FALSE(find_result->rrset);
         } else {
-            ASSERT_TRUE(find_result->rrset);
+            ASSERT_TRUE(!!find_result->rrset);
             rrsetCheck(rrset_result, convertRRset(find_result->rrset));
         }
         EXPECT_EQ((expected_flags & ZoneFinder::RESULT_WILDCARD) != 0,
@@ -457,7 +457,7 @@ protected:
             // succeed, and the two sets should be "identical".
             const ZoneFinderContextPtr result =
                 finder->find(name, cur_rrset->getType());
-            ASSERT_TRUE(result->rrset);
+            ASSERT_TRUE(!!result->rrset);
             EXPECT_TRUE(result->rrset->isSameKind(*cur_rrset));
         }
         rrsetsCheck(expected_rrsets.begin(), expected_rrsets.end(),
@@ -1737,7 +1737,7 @@ TEST_F(InMemoryZoneFinderNSEC3Test, findNSEC3Walk) {
         EXPECT_EQ(nsec3_data[i].closest_labels, result.closest_labels);
 
         if (nsec3_data[i].closest_proof != NULL) {
-            ASSERT_TRUE(result.closest_proof);
+            ASSERT_TRUE(!!result.closest_proof);
             EXPECT_EQ(Name(nsec3_data[i].closest_proof).concatenate(origin),
                       result.closest_proof->getName());
         } else {
@@ -1745,7 +1745,7 @@ TEST_F(InMemoryZoneFinderNSEC3Test, findNSEC3Walk) {
         }
 
         if (nsec3_data[i].next_proof != NULL) {
-            ASSERT_TRUE(result.next_proof);
+            ASSERT_TRUE(!!result.next_proof);
             EXPECT_EQ(Name(nsec3_data[i].next_proof).concatenate(origin),
                       result.next_proof->getName());
         } else {

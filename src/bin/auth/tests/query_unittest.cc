@@ -2716,7 +2716,7 @@ TEST_F(QueryTestForMockOnly, nxdomainWithBadWildcardNSEC3Proof) {
 TEST_P(QueryTest, emptyNameWithNSEC3) {
     enableNSEC3(rrsets_to_add_);
     const Name qname("no.example.com");
-    ASSERT_TRUE(list_->find(qname).finder_);
+    ASSERT_TRUE(!!list_->find(qname).finder_);
     ZoneFinderContextPtr result =
         list_->find(qname).finder_->find(qname, RRType::A(),
                                          ZoneFinder::FIND_DNSSEC);

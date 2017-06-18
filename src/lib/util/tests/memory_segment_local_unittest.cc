@@ -26,7 +26,7 @@ using namespace bundy::util;
 namespace {
 
 TEST(MemorySegmentLocal, TestLocal) {
-    auto_ptr<MemorySegment> segment(new MemorySegmentLocal());
+    unique_ptr<MemorySegment> segment(new MemorySegmentLocal());
 
     // By default, nothing is allocated.
     EXPECT_TRUE(segment->allMemoryDeallocated());
@@ -57,13 +57,13 @@ TEST(MemorySegmentLocal, TestLocal) {
 }
 
 TEST(MemorySegmentLocal, TestTooMuchMemory) {
-    auto_ptr<MemorySegment> segment(new MemorySegmentLocal());
+    unique_ptr<MemorySegment> segment(new MemorySegmentLocal());
 
     EXPECT_THROW(segment->allocate(ULONG_MAX), bad_alloc);
 }
 
 TEST(MemorySegmentLocal, TestBadDeallocate) {
-    auto_ptr<MemorySegment> segment(new MemorySegmentLocal());
+    unique_ptr<MemorySegment> segment(new MemorySegmentLocal());
 
     // By default, nothing is allocated.
     EXPECT_TRUE(segment->allMemoryDeallocated());
@@ -96,7 +96,7 @@ TEST(MemorySegmentLocal, TestBadDeallocate) {
 }
 
 TEST(MemorySegmentLocal, TestNullDeallocate) {
-    auto_ptr<MemorySegment> segment(new MemorySegmentLocal());
+    unique_ptr<MemorySegment> segment(new MemorySegmentLocal());
 
     // By default, nothing is allocated.
     EXPECT_TRUE(segment->allMemoryDeallocated());

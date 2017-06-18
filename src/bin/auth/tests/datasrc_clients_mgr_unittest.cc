@@ -48,7 +48,7 @@ shutdownCheck() {
     EXPECT_FALSE(cmd.params);   // no argument
 
     // Finally, the manager should wait for the thread to terminate.
-    EXPECT_TRUE(FakeDataSrcClientsBuilder::thread_waited);
+    EXPECT_TRUE(!!FakeDataSrcClientsBuilder::thread_waited);
 }
 
 // Commonly used pattern of checking member variables shared between the
@@ -175,8 +175,8 @@ TEST(DataSrcClientsMgrTest, holder) {
     mgr.reconfigure(reconfigure_arg);
     {
         TestDataSrcClientsMgr::Holder holder(mgr);
-        EXPECT_TRUE(holder.findClientList(RRClass::IN()));
-        EXPECT_TRUE(holder.findClientList(RRClass::CH()));
+        EXPECT_TRUE(!!holder.findClientList(RRClass::IN()));
+        EXPECT_TRUE(!!holder.findClientList(RRClass::CH()));
         EXPECT_EQ(2, holder.getClasses().size());
     }
     // We need to clear command queue by hand
@@ -190,7 +190,7 @@ TEST(DataSrcClientsMgrTest, holder) {
     mgr.reconfigure(reconfigure_arg);
     {
         TestDataSrcClientsMgr::Holder holder(mgr);
-        EXPECT_TRUE(holder.findClientList(RRClass::IN()));
+        EXPECT_TRUE(!!holder.findClientList(RRClass::IN()));
         EXPECT_FALSE(holder.findClientList(RRClass::CH()));
         EXPECT_EQ(RRClass::IN(), holder.getClasses()[0]);
     }
@@ -355,7 +355,7 @@ TEST(DataSrcClientsMgrTest, wakeup) {
         mgr.run_one();
         EXPECT_TRUE(called);
         EXPECT_EQ(1, tag);
-        EXPECT_TRUE(FakeDataSrcClientsBuilder::callback_queue->empty());
+        EXPECT_TRUE(!!FakeDataSrcClientsBuilder::callback_queue->empty());
 
         called = false;
         // If we wake up and don't push anything, it doesn't break.
@@ -373,7 +373,7 @@ TEST(DataSrcClientsMgrTest, wakeup) {
     }
     EXPECT_TRUE(called);
     EXPECT_EQ(2, tag);
-    EXPECT_TRUE(FakeDataSrcClientsBuilder::callback_queue->empty());
+    EXPECT_TRUE(!!FakeDataSrcClientsBuilder::callback_queue->empty());
 }
 
 TEST(DataSrcClientsMgrTest, realThread) {

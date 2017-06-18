@@ -170,7 +170,7 @@ checkBasicFields(const AbstractRRset& actual_rrset, const RdataSet* rdataset,
         EXPECT_FALSE(actual_rrset.getRRsig());
     } else {
         ConstRRsetPtr actual_sigrrset = actual_rrset.getRRsig();
-        ASSERT_TRUE(actual_sigrrset);
+        ASSERT_TRUE(!!actual_sigrrset);
         EXPECT_EQ(expected_name, actual_sigrrset->getName());
         EXPECT_EQ(expected_class, actual_sigrrset->getClass());
         EXPECT_EQ(RRType::RRSIG(), actual_sigrrset->getType());

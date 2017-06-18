@@ -147,11 +147,11 @@ TEST_F(MessageTest, headerFlag) {
 
     // set operation: by default it will be on
     message_render.setHeaderFlag(Message::HEADERFLAG_QR);
-    EXPECT_TRUE(message_render.getHeaderFlag(Message::HEADERFLAG_QR));
+    EXPECT_TRUE(!!message_render.getHeaderFlag(Message::HEADERFLAG_QR));
 
     // it can be set to on explicitly, too
     message_render.setHeaderFlag(Message::HEADERFLAG_AA, true);
-    EXPECT_TRUE(message_render.getHeaderFlag(Message::HEADERFLAG_AA));
+    EXPECT_TRUE(!!message_render.getHeaderFlag(Message::HEADERFLAG_AA));
 
     // the bit can also be cleared
     message_render.setHeaderFlag(Message::HEADERFLAG_AA, false);
@@ -184,10 +184,10 @@ TEST_F(MessageTest, getEDNS) {
     EXPECT_FALSE(message_parse.getEDNS()); // by default EDNS isn't set
 
     factoryFromFile(message_parse, "message_fromWire10.wire");
-    EXPECT_TRUE(message_parse.getEDNS());
+    EXPECT_TRUE(!!message_parse.getEDNS());
     EXPECT_EQ(0, message_parse.getEDNS()->getVersion());
     EXPECT_EQ(4096, message_parse.getEDNS()->getUDPSize());
-    EXPECT_TRUE(message_parse.getEDNS()->getDNSSECAwareness());
+    EXPECT_TRUE(!!message_parse.getEDNS()->getDNSSECAwareness());
 }
 
 TEST_F(MessageTest, setEDNS) {
@@ -550,10 +550,10 @@ TEST_F(MessageTest, parseHeader) {
     EXPECT_EQ(0x1035, message_parse.getQid());
     EXPECT_EQ(Opcode::QUERY(), message_parse.getOpcode());
     EXPECT_EQ(Rcode::NOERROR(), message_parse.getRcode());
-    EXPECT_TRUE(message_parse.getHeaderFlag(Message::HEADERFLAG_QR));
-    EXPECT_TRUE(message_parse.getHeaderFlag(Message::HEADERFLAG_AA));
+    EXPECT_TRUE(!!message_parse.getHeaderFlag(Message::HEADERFLAG_QR));
+    EXPECT_TRUE(!!message_parse.getHeaderFlag(Message::HEADERFLAG_AA));
     EXPECT_FALSE(message_parse.getHeaderFlag(Message::HEADERFLAG_TC));
-    EXPECT_TRUE(message_parse.getHeaderFlag(Message::HEADERFLAG_RD));
+    EXPECT_TRUE(!!message_parse.getHeaderFlag(Message::HEADERFLAG_RD));
     EXPECT_FALSE(message_parse.getHeaderFlag(Message::HEADERFLAG_RA));
     EXPECT_FALSE(message_parse.getHeaderFlag(Message::HEADERFLAG_AD));
     EXPECT_FALSE(message_parse.getHeaderFlag(Message::HEADERFLAG_CD));
@@ -580,9 +580,9 @@ checkMessageFromWire(const Message& message_parse,
     EXPECT_EQ(0x1035, message_parse.getQid());
     EXPECT_EQ(Opcode::QUERY(), message_parse.getOpcode());
     EXPECT_EQ(Rcode::NOERROR(), message_parse.getRcode());
-    EXPECT_TRUE(message_parse.getHeaderFlag(Message::HEADERFLAG_QR));
-    EXPECT_TRUE(message_parse.getHeaderFlag(Message::HEADERFLAG_RD));
-    EXPECT_TRUE(message_parse.getHeaderFlag(Message::HEADERFLAG_AA));
+    EXPECT_TRUE(!!message_parse.getHeaderFlag(Message::HEADERFLAG_QR));
+    EXPECT_TRUE(!!message_parse.getHeaderFlag(Message::HEADERFLAG_RD));
+    EXPECT_TRUE(!!message_parse.getHeaderFlag(Message::HEADERFLAG_AA));
 
     QuestionPtr q = *message_parse.beginQuestion();
     EXPECT_EQ(test_name, q->getName());
@@ -1034,7 +1034,7 @@ TEST_F(MessageTest, toWireTSIGTruncation3) {
     // scenario.
     InputBuffer buffer(renderer.getData(), renderer.getLength());
     message_parse.fromWire(buffer);
-    EXPECT_TRUE(message_parse.getHeaderFlag(Message::HEADERFLAG_TC));
+    EXPECT_TRUE(!!message_parse.getHeaderFlag(Message::HEADERFLAG_TC));
     // Note that the number of questions are 66, not 67 as we tried to add.
     EXPECT_EQ(66, message_parse.getRRCount(Message::SECTION_QUESTION));
     EXPECT_TRUE(message_parse.getTSIGRecord() != NULL);

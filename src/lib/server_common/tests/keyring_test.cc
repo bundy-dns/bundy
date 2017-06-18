@@ -42,7 +42,7 @@ public:
                                        false, false));
     }
     bundy::cc::FakeSession session;
-    std::auto_ptr<ModuleCCSession> mccs;
+    std::unique_ptr<ModuleCCSession> mccs;
     std::string specfile;
     void doInit(bool with_key = true) {
         // Prepare the module specification for it and the config

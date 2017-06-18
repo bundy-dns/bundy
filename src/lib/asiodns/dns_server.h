@@ -12,6 +12,8 @@
 // OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 // PERFORMANCE OF THIS SOFTWARE.
 
+#pragma clang diagnostic ignored "-Winfinite-recursion"
+
 #ifndef ASIOLINK_DNS_SERVER_H
 #define ASIOLINK_DNS_SERVER_H 1
 

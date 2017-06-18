@@ -89,7 +89,7 @@ public:
         EXPECT_NO_THROW(loaded = loader_.loadCheck(
                             Element::fromJSON(definition)));
         boost::shared_ptr<Result> result(dynamic_pointer_cast<Result>(loaded));
-        EXPECT_TRUE(result);
+        EXPECT_TRUE(!!result);
         return (result);
     }
     // Load a check and convert it to named check to examine it
