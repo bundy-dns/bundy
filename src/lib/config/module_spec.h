@@ -52,8 +52,8 @@ namespace bundy { namespace config {
         /// \param check If false, the module specification in the file
         /// is not checked to be of the correct form.
         explicit ModuleSpec(bundy::data::ConstElementPtr e,
-                            const bool check = true)
-            throw(ModuleSpecError);
+                            const bool check = true);
+
 
         /// Returns the commands part of the specification as an
         /// ElementPtr, returns an empty ElementPtr if there is none
@@ -185,8 +185,7 @@ namespace bundy { namespace config {
     /// \param check If true, the module specification in the file
     /// is checked to be of the correct form
     ModuleSpec
-    moduleSpecFromFile(const std::string& file_name, const bool check = true)
-        throw(bundy::data::JSONError, ModuleSpecError);
+    moduleSpecFromFile(const std::string& file_name, const bool check = true);
 
     /// Creates a \c ModuleSpec instance from the given input
     /// stream that contains the contents of a .spec file.
@@ -197,8 +196,7 @@ namespace bundy { namespace config {
     /// \param check If true, the module specification is checked
     /// to be of the correct form
     ModuleSpec
-    moduleSpecFromFile(std::ifstream& in, const bool check = true)
-                       throw(bundy::data::JSONError, ModuleSpecError);
+    moduleSpecFromFile(std::ifstream& in, const bool check = true);
 } }
 
 #endif // _DATA_DEF_H
