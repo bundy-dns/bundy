@@ -2048,6 +2048,7 @@ DomainTree<T>::previousNode(DomainTreeNodeChain<T>& node_path) const {
                 return (node_path.top());
             }
             // No break; here - we want to fall through. See above.
+	/* fall through */    
         case dns::NameComparisonResult::SUPERDOMAIN:
             // This is the case there's a "compressed" node and we looked for
             // only part of it. The node itself is larger than we wanted, but
