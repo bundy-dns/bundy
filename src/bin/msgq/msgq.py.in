@@ -573,7 +573,7 @@ class MsgQ:
         This is done by using an increasing counter and the current
         time."""
         self.connection_counter += 1
-        return "%x_%x@%s" % (time.time(), self.connection_counter,
+        return "%s_%s@%s" % (time.ctime(), float.hex(self.connection_counter),
                              self.hostname)
 
     def process_command_ping(self, sock, routing, data):
