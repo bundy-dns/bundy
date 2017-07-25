@@ -92,6 +92,7 @@ NameserverEntry::getAddresses(AddressVector& addresses,
                 return IN_PROGRESS;
             }
             // If we do not expect the address, then fall through to READY
+        /* fall through */
         case EXPIRED: // If expired_ok, we pretend to be ready
         case READY:
             if (!has_address_[family]) {
