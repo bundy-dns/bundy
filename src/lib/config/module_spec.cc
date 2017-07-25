@@ -197,7 +197,6 @@ namespace config {
 
 ModuleSpec::ModuleSpec(ConstElementPtr module_spec_element,
                        const bool check)
-                       throw(ModuleSpecError)
                        
 {
     module_specification = module_spec_element;
@@ -307,7 +306,6 @@ ModuleSpec::validateStatistics(ConstElementPtr data, const bool full,
 
 ModuleSpec
 moduleSpecFromFile(const std::string& file_name, const bool check)
-                   throw(JSONError, ModuleSpecError)
 {
     std::ifstream file;
 
@@ -328,7 +326,6 @@ moduleSpecFromFile(const std::string& file_name, const bool check)
 
 ModuleSpec
 moduleSpecFromFile(std::ifstream& in, const bool check)
-                   throw(JSONError, ModuleSpecError)
 {
     ConstElementPtr module_spec_element = Element::fromJSON(in);
     if (module_spec_element->contains("module_spec")) {
