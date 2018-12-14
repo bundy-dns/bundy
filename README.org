@@ -1,12 +1,14 @@
 * BUNDY - authoritative DNS Server
 
-/the BUNDY project is currently in *hibernation* status. It is not
+#+BEGIN_QUOTE
+the BUNDY project is currently in *hibernation* status. It is not
 dead, but it is also not alive either. There is currently no active
 development, and no security bug fixes. We do not recommend using
 BUNDY as a production DNS server. BUNDY, due to it's python code, is a
 great tool to prototype new DNS functions. It can be used as a
 prototyping tool. If you have interest on working on or with BUNDY,
 let us know. We can wake up BUNDY from sleep any time./
+#+END_QUOTE
 
 BUNDY provides an authoritative DNS server (with in-memory and SQLite3
 backends), DNSSEC support, dynamic DNS, zone transfers.  Supplementary
