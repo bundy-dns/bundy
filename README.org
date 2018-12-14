@@ -1,3 +1,12 @@
+* BUNDY - authoritative DNS Server
+
+/the BUNDY project is currently in *hibernation* status. It is not
+dead, but it is also not alive either. There is currently no active
+development, and no security bug fixes. We do not recommend using
+BUNDY as a production DNS server. BUNDY, due to it's python code, is a
+great tool to prototype new DNS functions. It can be used as a
+prototyping tool. If you have interest on working on or with BUNDY,
+let us know. We can wake up BUNDY from sleep any time./
 
 BUNDY provides an authoritative DNS server (with in-memory and SQLite3
 backends), DNSSEC support, dynamic DNS, zone transfers.  Supplementary
@@ -5,7 +14,7 @@ components are included for statistics collection and reporting and
 remote configuration and control are included, as is an experimental
 recursive nameserver with support for forwarding. It is the
 continuation of the BIND 10 project from the ISC hosted at
-http://bind10.isc.org/.
+[[https://web.archive.org/web/20150215124722/http://bind10.isc.org:80/wiki][http://bind10.isc.org/]].
 
 Since the June 2013 1.1.0 BIND 10 release, the new DNS highlights
 include incoming zone transfer statistics, support for CAA and TLSA
@@ -14,7 +23,7 @@ $GENERATE directive.  Note that the bundy-xfrin "use_ixfr"
 configuration item is deprecated and a new configuration
 "zones/request_ixfr" may be used to replace it.  Also use
 "database_file" under the "data_sources" module for bundy-xfrin
-inbound transfers and use bundy-loadzone -e option to create an empty
+inbound transfers and use =bundy-loadzone -e= option to create an empty
 zone prior to the first transfer.
 
 The suite also provides DHCPv4 and DHCPv6 servers, a dynamic DNS
@@ -33,7 +42,7 @@ Log.
 Installation details are documented in the Guide
 (http://bundy-dns.de/documentation.html).
 
-The ./configure options --disable-dns and --disable-dhcp
+The =./configure= options =--disable-dns= and =--disable-dhcp=
 may be used to provide an optional DHCP- or DNS-only build and
 installation.
 
