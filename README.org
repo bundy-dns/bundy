@@ -41,7 +41,7 @@ https://lists.isc.org/mailman/listinfo/kea-users.
 For the full commit history, please see the ChangeLog and the git
 Log.
 
-Installation details are documented in the Guide (see the "doc" directory.
+Installation details are documented in the Guide (see the "doc" directory).
 
 The =./configure= options =--disable-dns= and =--disable-dhcp=
 may be used to provide an optional DHCP- or DNS-only build and
